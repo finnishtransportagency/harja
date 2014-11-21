@@ -1,0 +1,47 @@
+# Liikenneviraston Harja järjestelmä #
+
+Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
+client on ClojureScript sovellus, joka käyttää Reagentia, LeafletJSää ja Bootstrap CSSää.
+
+Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
+
+## Hakemistorakenne ##
+
+Harja repon hakemistorakenne:
+
+- README                   (yleinen readme)
+- yleinen/                   (serverin ja clientin jakamat resurssit ja cljx koodi)
+  - src/
+    - harja/yleinen/
+      - lokalisointi.cljx   (sisältää namespacen, jossa funktiot käännösviestien hakemiseen yms)
+      - muita yleisiä?
+  - lokalisointi/
+    - fi.properties         (Harjan suomenkieliset viestit)
+    - en.properties?        (same in english perhaps)
+    - sv.properties?        (samma på svenska kanske)
+    
+- palvelin/                 (palvelinohjelmisto)
+  - project.clj
+  - migrations/             (tietokantamigraatioiden .sql tiedostot)
+  - src/                    (kaikki serverin sourcet tämän alla)
+    - harja/palvelin/
+      - integraatiot/       (integraatiot alla omissa namespaceissa)
+      - palvelut/           (frontille EDNää tarjoilevat endpointit)
+      - main.clj            (systeemin yläsajo, main)
+      - ...
+      
+- asiakas/                   (Harja front)
+  - project.clj
+  - src/                    (pää source folder clientille)
+    - harja/asiakas/
+      - ui/                 (yleiskäyttöisiä UI komponenttejä) 
+      - nakymat/            (eri näkymät omissa namespaceissa)
+      - main.cljs           (SPA aloitus namespace, jossa exportattu run funktio)
+      - kommunikointi.cljs  (kommunikaatio serverille)
+      - ...
+  - src-{dev|prod}/         (tuotanto/kehitysbuildeille spesifinen source)
+    - harja/asiakas/
+      - lokitus.cljs        (lokitus, tuotantoversiossa no-op, kehitysversiossa console.log tms)
+      
+
+  
