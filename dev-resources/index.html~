@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+  </head>
+  <body onload="harja.asiakas.harja()">
+    <div id="app"></div>
+  </body>
+</html>
