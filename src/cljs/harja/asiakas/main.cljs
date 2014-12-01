@@ -1,4 +1,6 @@
-(ns harja.asiakas.main)
+(ns harja.asiakas.main
+  (:require [harja.asiakas.ymparisto :as ymparisto]))
 
 (defn ^:export harja []
+  (ymparisto/alusta)
   (js/alert "harjataan..."))

@@ -25,6 +25,9 @@
                  [com.mchange/c3p0 "0.9.2.1"]
                  [yesql "0.4.0"]
                  [ragtime "0.3.7"]
+
+                 ;; REPL
+                 [com.cemerick/piggieback "0.1.3"]
                  
                  ;; Asiakas
                  
@@ -41,8 +44,8 @@
                         :compiler {:optimizations :none
                                    :source-map true
                                    :preamble ["reagent/react.js"]
-                                   :output-to "target/public/js/harja.js"
-                                   :output-dir "target/public/js/out"}}
+                                   :output-to "dev-resources/js/harja.js"
+                                   :output-dir "dev-resources/js/out"}}
                        
                        ;; FIXME: add production build
                        ]}
