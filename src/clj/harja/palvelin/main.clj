@@ -17,10 +17,21 @@
                  (todennus/feikki-http-todennus {:nimi "dev" :id "LX123456789"})
                  (todennus/http-todennus))
      :http-palvelin (component/using
-                     (http-palvelin/luo-http-palvelin (:portti http-palvelin))
+                     (http-palvelin/luo-http-palvelin (:portti http-palvelin)
+                                                      kehitysmoodi)
                      [:todennus]))))
 
 (def harja-jarjestelma nil)
+
+(defn -main [& argumentit]
+  (alter-var-root #'harja-jarjestelma
+                  (constantly
+                   (-> (lue-asetukset (or (first argumentit) "asetukset.edn"))
+                       luo-jarjestelma
+                       component/start)))
+  (.addShutdownHook (Runtime/getRuntime)
+                    (Thread. (fn []
+                               (component/stop harja-jarjestelma)))))
 
 (defn dev-start []
   (alter-var-root #'harja-jarjestelma component/start))
@@ -32,12 +43,8 @@
   (dev-stop)
   (dev-start))
 
-(defn -main [& argumentit]
-  (alter-var-root #'harja-jarjestelma
-                  (constantly
-                   (-> (lue-asetukset (or (first argumentit) "asetukset.edn"))
-                       luo-jarjestelma
-                       component/start)))
-  (.addShutdownHook (Runtime/getRuntime)
-                    (Thread. (fn []
-                               (component/stop harja-jarjestelma)))))
+(defn dev-julkaise
+  "REPL käyttöön: julkaise uusi EDN palvelu (poistaa ensin vanhan samalla nimellä)."
+  [nimi fn]
+  (http-palvelin/poista-edn-palvelu (:http-palvelin harja-jarjestelma) nimi)
+  (http-palvelin/julkaise-edn-palvelu (:http-palvelin harja-jarjestelma) nimi fn))

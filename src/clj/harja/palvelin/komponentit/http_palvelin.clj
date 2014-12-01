@@ -1,7 +1,7 @@
 (ns harja.palvelin.komponentit.http-palvelin
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :as http]
-            [compojure.core :refer [make-route defroutes] :as compojure]
+            [compojure.core  :as compojure]
             [compojure.route :as route]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -12,8 +12,8 @@
 
 (defn- reitita [req kasittelijat]
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  (log/debug "REQ ON: " (pr-str req))
-  (log/debug "kasittelijat: " kasittelijat)
+  (log/debug "REQ " (:uri req))
+  ;(log/debug "kasittelijat: " kasittelijat)
   (apply compojure/routing req kasittelijat))
 
 (defn- edn-palvelun-polku [nimi]
@@ -40,19 +40,24 @@
       (when (and (= :get (:request-method req))
                  (= polku (:uri req)))
         {:status 200
-         :headers {"Content-Type" "text/plain"} ;"application/edn"}
+         :headers {"Content-Type" "application/edn"}
          :body (pr-str (palvelu-fn (:kayttaja req)))}))))
 
-(defrecord HttpPalvelin [portti kasittelijat lopetus-fn]
+
+(defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
     (log/info "HttpPalvelin käynnistetään portissa " portti)
-    (let [todennus (:todennus this)]
+    (let [todennus (:todennus this)
+          resurssit (if kehitysmoodi
+                      (route/files "" {:root "dev-resources"})
+                      (route/resources))]
       (swap! lopetus-fn
              (constantly
               (http/run-server (fn [req]
                                  (reitita (todennus/todenna-pyynto todennus req)
-                                          (map :fn @kasittelijat)))
+                                          (conj (mapv :fn @kasittelijat)
+                                                resurssit)))
                                {:port portti})))
       this))
   (stop [this]
@@ -60,8 +65,8 @@
     (@lopetus-fn :timeout 100)
     this))
 
-(defn luo-http-palvelin [portti]
-  (->HttpPalvelin portti (atom []) (atom nil)))
+(defn luo-http-palvelin [portti kehitysmoodi]
+  (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
 
 (defn- arityt 
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
@@ -83,7 +88,7 @@ polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
       (swap! (:kasittelijat http-palvelin)
              conj {:nimi nimi :fn (edn-post-kasittelija nimi palvelu-fn)}))
     (when (ar 1)
-      ;; GET metodi, ei parametrejä
+      ;; GET metodi, vain käyttäjätiedot parametrina
       (swap! (:kasittelijat http-palvelin)
              conj {:nimi nimi :fn (edn-get-kasittelija nimi palvelu-fn)}))))
 
@@ -91,3 +96,4 @@ polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
   (swap! (:kasittelijat http-palvelin)
          (fn [kasittelijat]
            (filterv #(not= (:nimi %) nimi) kasittelijat))))
+
