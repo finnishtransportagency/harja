@@ -27,16 +27,23 @@ Harja repon hakemistorakenne:
         - lokitus.cljs      (lokitus, tuotantoversiossa no-op, kehitysversiossa console.log tms)
   - clj/                    (palvelimen koodi)
     - harja/palvelin/
+      - komponentit/        (Yleiset komponentit: tietokanta, todennus, HTTP-palvelin, jne)
       - api/                (Harja API endpointit ja tukikoodi)
-      - integraatiot/       (spesifiset järjestelmäintegraatiot omissa alinamespaceissa)
-      - palvelut/           (Harja asiakkaalle palveluija tarjoavat EDN endpointit)
+      - palvelut/           (Harja asiakkaalle palveluja tarjoavat EDN endpointit)
       - main.cljs           (palvelimen aloituspiste)
 
 - (dev-)resources/          (web-puolen resurssit)
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
-- migrations/               (tietokantamigraatioiden .sql tiedostot)
+
+## Integraatiot
+
+Integraatiot MULEeen ja niiden implementaatioprojekti on omanaan.
+
+## Tietokanta
+
+Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat omassa repossaan: harja-tietokanta 
 
 
 
