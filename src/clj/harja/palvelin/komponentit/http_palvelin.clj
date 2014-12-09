@@ -51,6 +51,11 @@
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
+                      ;;(let [files-route (route/files "" {:root "dev-resources"})]
+                      ;;  (fn [req]
+                      ;;    (let [resp (files-route req)]
+                      ;;      (if (= 200 (:status resp))
+                      ;;        (update-in resp :headers 
                       (route/resources))]
       (swap! lopetus-fn
              (constantly

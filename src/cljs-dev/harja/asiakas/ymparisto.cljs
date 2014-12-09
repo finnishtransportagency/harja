@@ -5,7 +5,10 @@
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
   []
+  (.log js/console "Alustetaan koodin uudelleenlataus")
   (lively/start "/js/harja.js"
-                (fn [] (.log js/console "Koodia ladattu uudelleen."))))
+                {:polling-rate 1000
+                 :on-reload (fn [] (.log js/console "Koodia ladattu uudelleen."))}))
+
 
 

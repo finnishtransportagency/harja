@@ -3,4 +3,6 @@
 
 (defn ^:export harja []
   (ymparisto/alusta)
-  (js/alert "harjataan..."))
+  (aset js/window "HARJA_LADATTU" true))
+
+

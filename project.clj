@@ -1,10 +1,13 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
+  :eval-in-leiningen true
   :dependencies [[org.clojure/clojure "1.7.0-alpha4"] ; siirrytään 1.7.0 heti kun valmis
                  [org.clojure/clojurescript "0.0-2371"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.3.3"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+
                  
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -16,7 +19,7 @@
                  [ch.qos.logback/logback-classic "1.1.2"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.1.16"]
+                 [http-kit "2.1.19"]
                  [compojure "1.2.1"]
                  ;;[com.domkm/silk "0.0.2" :exclusions [org.clojure/clojure]]
                  
@@ -24,19 +27,45 @@
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [com.mchange/c3p0 "0.9.2.1"]
                  [yesql "0.4.0"]
-                 [ragtime "0.3.7"]
 
-                 ;; REPL
-                 [com.cemerick/piggieback "0.1.3"]
+                 ;; GeoTools
+                 [org.geotools/gt-shapefile "12.1"]
+                 [org.geotools/gt-process-raster "12.1"]
+                 [org.geotools/gt-swing "12.1"] ;; just for experimentation, remove when no longer needed
+                 
                  
                  ;; Asiakas
                  
                  [lively "0.1.2"] 
-                 [reagent "0.4.3"]]
+                 [reagent "0.4.3"]
+
+                 
+                 
+                 ]
+
+  :dev-dependencies [;; Selain REPL
+                     [com.cemerick/piggieback "0.1.3"]
+                     ;; Testaus
+                     [clj-webdriver "0.6.0"]
+                     [org.seleniumhq.selenium/selenium-java "2.44.0"]
+                     [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]
+
+                 
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
+
   
-  :plugins [[lein-cljsbuild "1.0.3"]
-            [ragtime/ragtime.lein "0.3.7"]
+  :plugins [[com.keminglabs/cljx "0.4.0"]
+            [lein-cljsbuild "1.0.3"]
             [cider/cider-nrepl "0.8.1"]]
+
+  ;; Asiakas- ja palvelinpuolen jaettu koodi
+  :cljx {:builds [{:source-paths ["src/cljx"]
+                   :output-path "target/classes"
+                   :rules :clj}
+                  
+                  {:source-paths ["src/cljx"]
+                   :output-path "target/classes"
+                   :rules :cljs}]}
   
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds [{:id "dev"
@@ -55,4 +84,8 @@
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj"]
   :main harja.palvelin.main
+
+  ;; REPL kehitys
+  :repl-options {:init-ns harja.palvelin.main
+                 :init (harja.palvelin.main/-main)}
   )
