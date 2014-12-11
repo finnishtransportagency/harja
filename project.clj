@@ -32,6 +32,10 @@
                  [org.geotools/gt-shapefile "12.1"]
                  [org.geotools/gt-process-raster "12.1"]
                  [org.geotools/gt-swing "12.1"] ;; just for experimentation, remove when no longer needed
+
+                 ;; Microsoft dokumenttimuotojen tuki
+                 [org.apache.poi/poi "3.10.1"]
+                 [org.apache.poi/poi-scratchpad "3.10.1"]
                  
                  
                  ;; Asiakas
