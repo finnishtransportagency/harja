@@ -28,13 +28,68 @@
   [:footer {:role "contentinfo"}
    "Liikenneviraston HARJA, FIXME: muuta footer tietoa tänne"])
 
+; TODO: poista leikkidata kunhan saadaan oikeaa tialle
+(def urakat 
+  (atom [{:id 1 
+          :name "Espoon alueurakka"
+          }
+         {:id 2 
+          :name "Kuhmon alueurakka"
+          }{:id 3 
+          :name "Oulun alueurakka"
+          }
+         {:id 4 
+          :name "Suomussalmen alueurakka"
+          }
+         {:id 5 
+          :name "Vetelin alueurakka"
+          }{:id 6 
+          :name "Siikalatvan alueurakka"
+          }
+         {:id 7 
+          :name "Raahe-Ylivieska alueurakka"
+          }
+         {:id 8 
+          :name "Iin alueurakka"
+          }{:id 9 
+          :name "Kuopion alueurakka"
+          }
+         ]))
+
+(defn haku-komponentti []
+  "haku-komponentti sisältää haku-toiminnallisuuden. Parametrisoituna taipuvainen
+   monenlaiseen, kohta puolin..."
+  [:div.haku-container
+   [:input.haku-input.form-control {:type: "text"}]
+   [:div.haku-lista-container
+    [:ul.haku-lista 
+    (for [u @urakat]
+      ^{:key (:id u)}
+      [:li.haku-lista-item
+       [:div.haku-lista-item-nimi 
+        (:name u)]])]
+    ]
+   [:div.haku-tulokset "tulokset"]
+   ])
+
+(defn kartta
+  "Harjan karttakomponentti"
+  []
+  [:span
+   [:div#sidebar-left.col-sm-4
+    [:h5.haku-otsikko "Hae alueurakka kartalta tai listasta"]
+    [:div [haku-komponentti]]]
+   [:div#kartta-container.col-sm-4 "kartta"]
+   
+   ])
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
   [:span
    [header]
    (case @page
-     :kartta [:div "karttahan se siinä!"]
+     :kartta [:div [kartta]]
      :urakat [:div "jotain urakoita täällä"]
      :raportit [:div "täältä kätevästi raportteihin"])
    [footer]
