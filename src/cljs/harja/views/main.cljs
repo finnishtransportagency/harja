@@ -56,18 +56,18 @@
           }
          ]))
 
-(defn haku-komponentti []
+(defn haku-komponentti [lista]
   "haku-komponentti sisältää haku-toiminnallisuuden. Parametrisoituna taipuvainen
    monenlaiseen, kohta puolin..."
   [:div.haku-container
    [:input.haku-input.form-control {:type: "text"}]
    [:div.haku-lista-container
-    [:ul.haku-lista 
-    (for [u @urakat]
-      ^{:key (:id u)}
+    [:ul.haku-lista
+    (for [i @lista]
+      ^{:key (:id i)}
       [:li.haku-lista-item
        [:div.haku-lista-item-nimi 
-        (:name u)]])]
+        (:name i)]])]
     ]
    [:div.haku-tulokset "tulokset"]
    ])
@@ -78,9 +78,8 @@
   [:span
    [:div#sidebar-left.col-sm-4
     [:h5.haku-otsikko "Hae alueurakka kartalta tai listasta"]
-    [:div [haku-komponentti]]]
+    [:div [haku-komponentti urakat]]]
    [:div#kartta-container.col-sm-4 "kartta"]
-   
    ])
 
 (defn main
