@@ -65,7 +65,7 @@
     [:ul.haku-lista
     (for [i @lista]
       ^{:key (:id i)}
-      [:li.haku-lista-item
+      [:li.haku-lista-item {:on-click #(.log js/console (+ (-> % .-target .-className) " valittu"))} 
        [:div.haku-lista-item-nimi 
         (:name i)]])]
     ]
