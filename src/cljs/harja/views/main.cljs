@@ -30,47 +30,38 @@
 
 ; TODO: poista leikkidata kunhan saadaan oikeaa tialle
 (def urakat 
-  (atom [{:id 1 
-          :name "Espoon alueurakka"
-          }
-         {:id 2 
-          :name "Kuhmon alueurakka"
-          }{:id 3 
-          :name "Oulun alueurakka"
-          }
-         {:id 4 
-          :name "Suomussalmen alueurakka"
-          }
-         {:id 5 
-          :name "Vetelin alueurakka"
-          }{:id 6 
-          :name "Siikalatvan alueurakka"
-          }
-         {:id 7 
-          :name "Raahe-Ylivieska alueurakka"
-          }
-         {:id 8 
-          :name "Iin alueurakka"
-          }{:id 9 
-          :name "Kuopion alueurakka"
-          }
-         ]))
+  (atom [{:id 1 :name "Espoon alueurakka"}
+         {:id 2 :name "Kuhmon alueurakka"}
+         {:id 3 :name "Oulun alueurakka"}
+         {:id 4 :name "Suomussalmen alueurakka"}
+         {:id 5 :name "Vetelin alueurakka"}
+         {:id 6 :name "Siikalatvan alueurakka"}
+         {:id 7 :name "Raahe-Ylivieska alueurakka"}
+         {:id 8 :name "Iin alueurakka"}
+         {:id 9 :name "Kuopion alueurakka"}]))
 
 (defn haku-komponentti [lista]
   "haku-komponentti sisältää haku-toiminnallisuuden. Parametrisoituna taipuvainen
-   monenlaiseen, kohta puolin..."
-  [:div.haku-container
-   [:input.haku-input.form-control {:type: "text"}]
-   [:div.haku-lista-container
-    [:ul.haku-lista
-    (for [i @lista]
-      ^{:key (:id i)}
-      [:li.haku-lista-item {:on-click #(.log js/console (+ (-> % .-target .-className) " valittu"))} 
-       [:div.haku-lista-item-nimi 
-        (:name i)]])]
-    ]
-   [:div.haku-tulokset "tulokset"]
-   ])
+  monenlaiseen, kohta puolin..."
+  (let [termi (atom "")
+        valittu (atom nil)]
+    (fn []
+      [:div.haku-container
+       [:input.haku-input.form-control {:type "text" :value @termi :on-change #(do 
+                                                                                 (reset! termi (.-value (.-target %)))
+                                                                                 (.log js/console (-> % .-target .-value)))}]
+       [:div.haku-lista-container
+        [:ul.haku-lista
+         (let [selected @valittu]
+           (for [i (filter #(not= (.indexOf (.toLowerCase (% :name)) (.toLowerCase @termi)) -1) @lista)]
+             ^{:key (:id i)}
+             [:li.haku-lista-item {:on-click #(do
+                                                (reset! valittu i)
+                                                (.log js/console (str " selected on " @valittu)))
+                                   :class (when (= i selected) "selected")}  
+              [:div.haku-lista-item-nimi 
+               (:name i)]]))]]
+       [:div.haku-tulokset "tulokset"]])))
 
 (defn kartta
   "Harjan karttakomponentti"
