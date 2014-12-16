@@ -1,9 +1,16 @@
 (ns harja.palvelin.main
-  (:require [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
+  (:require
+
+   ;; Yleiset palvelinkomponenti
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   
+   ;; Harjan bisneslogiikkapalvelut
+   [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+            
+   [com.stuartsierra.component :as component]
+   [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -14,12 +21,17 @@
                                     (:kayttaja tietokanta)
                                     (:salasana tietokanta))
      :todennus (if kehitysmoodi
-                 (todennus/feikki-http-todennus {:nimi "dev" :id "LX123456789"})
+                 (todennus/feikki-http-todennus {:nimi "Tero Toripolliisi" :id "LX123456789"})
                  (todennus/http-todennus))
      :http-palvelin (component/using
                      (http-palvelin/luo-http-palvelin (:portti http-palvelin)
                                                       kehitysmoodi)
-                     [:todennus]))))
+                     [:todennus])
+
+     :kayttajatiedot (component/using
+                      (kayttajatiedot/->Kayttajatiedot)
+                      [:http-palvelin])
+     )))
 
 (def harja-jarjestelma nil)
 
@@ -44,7 +56,7 @@
   (dev-start))
 
 (defn dev-julkaise
-  "REPL käyttöön: julkaise uusi EDN palvelu (poistaa ensin vanhan samalla nimellä)."
+  "REPL käyttöön: julkaise uusi palvelu (poistaa ensin vanhan samalla nimellä)."
   [nimi fn]
-  (http-palvelin/poista-edn-palvelu (:http-palvelin harja-jarjestelma) nimi)
-  (http-palvelin/julkaise-edn-palvelu (:http-palvelin harja-jarjestelma) nimi fn))
+  (http-palvelin/poista-palvelu (:http-palvelin harja-jarjestelma) nimi)
+  (http-palvelin/julkaise-palvelu (:http-palvelin harja-jarjestelma) nimi fn))

@@ -6,6 +6,7 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
 
+            [cognitect.transit :as t]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]))
 
@@ -16,32 +17,34 @@
   ;(log/debug "kasittelijat: " kasittelijat)
   (apply compojure/routing req kasittelijat))
 
-(defn- edn-palvelun-polku [nimi]
-  (str "/edn/" (name nimi)))
+(defn- transit-palvelun-polku [nimi]
+  (str "/_/" (name nimi)))
 
-(defn- edn-post-kasittelija
-  "Luo EDN käsittelijän POST kutsuille annettuun palvelufunktioon."
+(defn- transit-post-kasittelija
+  "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn]
-  (let [polku (edn-palvelun-polku nimi)]
+  (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
-        (let [kysely (read-string (:body req))
+        (let [kysely (t/read (t/reader (:body req) :json))
               vastaus (palvelu-fn (:kayttaja req) kysely)]
           {:status 200
-           :headers {"Content-Type" "application/edn"}
-           :body (pr-str vastaus)})))))
+           :headers {"Content-Type" "application/transit+json"}
+           :body (with-open [out (java.io.ByteArrayOutputStream.)]
+                   (t/write (t/writer out :json) vastaus)
+                   (java.io.ByteArrayInputStream. (.toByteArray out)))})))))
 
-(defn- edn-get-kasittelija
-  "Luo EDN käsittelijän GET kutsuille annettuun palvelufunktioon."
+(defn- transit-get-kasittelija
+  "Luo transit käsittelijän GET kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn]
-  (let [polku (edn-palvelun-polku nimi)]
+  (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :get (:request-method req))
                  (= polku (:uri req)))
         {:status 200
-         :headers {"Content-Type" "application/edn"}
-         :body (pr-str (palvelu-fn (:kayttaja req)))}))))
+         :headers {"Content-Type" "application/transit+json"}
+         :body (t/write (palvelu-fn (:kayttaja req)))}))))
 
 
 (defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
@@ -80,10 +83,10 @@
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defn julkaise-edn-palvelu 
-  "Julkaise uusi EDN palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
-sisään käyttäjätiedot sekä sisään tulevan datan (POST body EDN muodossa parsittu) ja palauttaa Clojure 
-tietorakenteen, joka muunnetaan EDN muotoon asiakkaalle lähetettäväksi. 
+(defn julkaise-palvelu 
+  "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
+sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
+tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
 Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
 polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
   [http-palvelin nimi palvelu-fn]
@@ -91,13 +94,13 @@ polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
     (when (ar 2)
       ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
       (swap! (:kasittelijat http-palvelin)
-             conj {:nimi nimi :fn (edn-post-kasittelija nimi palvelu-fn)}))
+             conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn)}))
     (when (ar 1)
       ;; GET metodi, vain käyttäjätiedot parametrina
       (swap! (:kasittelijat http-palvelin)
-             conj {:nimi nimi :fn (edn-get-kasittelija nimi palvelu-fn)}))))
+             conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn)}))))
 
-(defn poista-edn-palvelu [http-palvelin nimi]
+(defn poista-palvelu [http-palvelin nimi]
   (swap! (:kasittelijat http-palvelin)
          (fn [kasittelijat]
            (filterv #(not= (:nimi %) nimi) kasittelijat))))

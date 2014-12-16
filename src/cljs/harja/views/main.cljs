@@ -1,7 +1,10 @@
 (ns harja.views.main
   "Harjan päänäkymä"
   (:require [bootstrap :as bs]
-            [reagent.core :refer [atom]]))
+            [reagent.core :refer [atom]]
+
+            [harja.tiedot.istunto :as istunto]
+            ))
 
 
 (def page (atom :kartta))
@@ -12,17 +15,23 @@
   (.log js/console "new page is: "
         (reset! page new-page)))
 
+(defn kayttajatiedot [kayttaja]
+  [:a {:href "#"} (:nimi @kayttaja)])
+
 (defn header []
   [bs/navbar {}
-   "Harja"
-   [:form.navbar-form.navbar-left {:role "search"}
-    [:div.form-group
-     [:input.form-control {:type "text" :placeholder "Hae..."}]]
-    [:button.btn.btn-default {:type "button"} "Hae"]]
-
-   [:a {:href "#" :on-click #(set-page! :kartta)} "Kartta"]
-   [:a {:href "#" :on-click #(set-page! :urakat)} "Urakat"]
-   [:a {:href "#" :on-click #(set-page! :raportit)} "Raportit"]])
+     "Harja"
+     [:form.navbar-form.navbar-left {:role "search"}
+      [:div.form-group
+       [:input.form-control {:type "text" :placeholder "Hae..."}]]
+      [:button.btn.btn-default {:type "button"} "Hae"]]
+     
+     [:a {:href "#" :on-click #(set-page! :kartta)} "Kartta"]
+     [:a {:href "#" :on-click #(set-page! :urakat)} "Urakat"]
+     [:a {:href "#" :on-click #(set-page! :raportit)} "Raportit"]
+     
+     :right
+     [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
   [:footer {:role "contentinfo"}

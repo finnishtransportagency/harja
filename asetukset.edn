@@ -1,2 +1,4 @@
 {
- :kehitysmoodi true}
+ :kehitysmoodi true
+;; :tietokanta {:url "foo"}
+ }

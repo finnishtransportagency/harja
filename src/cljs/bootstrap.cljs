@@ -48,15 +48,24 @@ The following keys are supported in the configuration:
          [:a.navbar-brand {:href "#"} header]]
         
         ;; Collect the nav links, forms, and other content for toggling
-        [:div.navbar-collapse {:class @collapse-state}
-         [:ul.nav.navbar-nav
-          (for [item items]
-            ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-            [:li {:class (str (when false "active")
-                              " "
-                              (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
-             item])]]]])))
-
+        (let [[left-items _ right-items] (partition-by #(= :right %) items)] 
+          [:div.navbar-collapse {:class @collapse-state}
+           (when left-items
+             [:ul.nav.navbar-nav
+              (for [item left-items]
+                ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
+                [:li {:class (str (when false "active")
+                                  " "
+                                  (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
+                 item])])
+           (when right-items
+             [:ul.nav.navbar-nav.navbar-right
+              (for [item right-items]
+                [:li {:class (str (when false "active")
+                                  " "
+                                  (:context (meta (first item))))}
+                 item])])])]])))
+ 
 (defn ^{:context "dropdown"}
   dropdown
   "A dropdown menu."

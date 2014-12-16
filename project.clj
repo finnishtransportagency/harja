@@ -8,6 +8,9 @@
                  [prismatic/schema "0.3.3"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
+                 ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
+                 [com.cognitect/transit-cljs "0.8.194"]
+                 [com.cognitect/transit-clj "0.8.259"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -39,10 +42,13 @@
                  
                  
                  ;; Asiakas
-                 
+                 [spyscope "0.1.5"]
+
+                 [cljs-ajax "0.3.3"]
                  [lively "0.1.2"] 
                  [reagent "0.4.3"]
 
+                 
                  
                  
                  ]
