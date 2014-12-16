@@ -71,8 +71,7 @@
                             (.log js/console (str " selected on " selected)))
                :class (when (= i selected) "selected")}  
               [:div.haku-lista-item-nimi 
-               (fmt i)]]))]]
-       [:div.haku-tulokset "tulokset"]])))
+               (fmt i)]]))]]])))
 
 ;; esimerkkigeometrioita näytettäväksi kartalla
 (def geometries (atom [{:type :polygon
