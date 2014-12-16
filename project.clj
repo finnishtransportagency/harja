@@ -24,7 +24,7 @@
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
                  [compojure "1.2.1"]
-                 ;;[com.domkm/silk "0.0.2" :exclusions [org.clojure/clojure]]
+
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]

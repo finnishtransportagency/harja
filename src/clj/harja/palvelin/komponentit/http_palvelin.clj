@@ -7,6 +7,7 @@
             [clojure.tools.logging :as log]
 
             [cognitect.transit :as t]
+            [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]))
 
@@ -22,18 +23,29 @@
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
-  [nimi palvelu-fn]
+  [nimi palvelu-fn skeema]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [kysely (t/read (t/reader (:body req) :json))
-              vastaus (palvelu-fn (:kayttaja req) kysely)]
-          {:status 200
-           :headers {"Content-Type" "application/transit+json"}
-           :body (with-open [out (java.io.ByteArrayOutputStream.)]
-                   (t/write (t/writer out :json) vastaus)
-                   (java.io.ByteArrayInputStream. (.toByteArray out)))})))))
+              kysely (if-not skeema
+                       kysely
+                       (try
+                         (s/validate skeema kysely)
+                         (catch Exception e
+                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
+                           ::ei-validi-kysely)))]
+          (if (= kysely ::ei-validi-kysely)
+            {:status 400
+             :body "Ei validi kysely"}
+            
+            (let [vastaus (palvelu-fn (:kayttaja req) kysely)]
+              {:status 200
+               :headers {"Content-Type" "application/transit+json"}
+               :body (with-open [out (java.io.ByteArrayOutputStream.)]
+                       (t/write (t/writer out :json) vastaus)
+                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
 (defn- transit-get-kasittelija
   "Luo transit käsittelijän GET kutsuille annettuun palvelufunktioon."
@@ -88,17 +100,18 @@
 sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
 tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
 Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
-polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
-  [http-palvelin nimi palvelu-fn]
-  (let [ar (arityt palvelu-fn)]
-    (when (ar 2)
-      ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
-      (swap! (:kasittelijat http-palvelin)
-             conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn)}))
-    (when (ar 1)
-      ;; GET metodi, vain käyttäjätiedot parametrina
-      (swap! (:kasittelijat http-palvelin)
-             conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn)}))))
+  polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
+  ([http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
+  ([http-palvelin nimi palvelu-fn skeema]
+     (let [ar (arityt palvelu-fn)]
+       (when (ar 2)
+         ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
+         (swap! (:kasittelijat http-palvelin)
+                conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn skeema)}))
+       (when (ar 1)
+         ;; GET metodi, vain käyttäjätiedot parametrina
+         (swap! (:kasittelijat http-palvelin)
+                conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn)})))))
 
 (defn poista-palvelu [http-palvelin nimi]
   (swap! (:kasittelijat http-palvelin)
