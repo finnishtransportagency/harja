@@ -8,6 +8,7 @@
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+   [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
             
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
@@ -18,6 +19,7 @@
     (component/system-map
      :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
                                     (:portti tietokanta)
+                                    (:tietokanta tietokanta)
                                     (:kayttaja tietokanta)
                                     (:salasana tietokanta))
      :todennus (if kehitysmoodi
@@ -28,9 +30,13 @@
                                                       kehitysmoodi)
                      [:todennus])
 
+     ;; Frontille tarjottavat palvelut 
      :kayttajatiedot (component/using
                       (kayttajatiedot/->Kayttajatiedot)
                       [:http-palvelin])
+     :hallintayksikot (component/using
+                       (hallintayksikot/->Hallintayksikot)
+                       [:http-palvelin :db])
      )))
 
 (def harja-jarjestelma nil)
@@ -53,7 +59,7 @@
 
 (defn dev-restart []
   (dev-stop)
-  (dev-start))
+  (-main))
 
 (defn dev-julkaise
   "REPL käyttöön: julkaise uusi palvelu (poistaa ensin vanhan samalla nimellä)."

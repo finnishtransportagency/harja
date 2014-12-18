@@ -13,11 +13,11 @@
     this))
 
 
-(defn luo-tietokanta [palvelin portti kayttaja salasana]
+(defn luo-tietokanta [palvelin portti tietokanta kayttaja salasana]
   "Luodaan Harja järjestelmälle tietokantakomponentti käyttäen yhteyspoolia PostgreSQL tietokantaan."
   (->Tietokanta (doto (ComboPooledDataSource.)
                   (.setDriverClass "org.postgresql.Driver")
-                  (.setJdbcUrl (str "jdbc:postgres://" palvelin ":" portti))
+                  (.setJdbcUrl (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta))
                   (.setUser kayttaja)
                   (.setPassword salasana)
                   ;; ylimääräiset yhteydet suljetaan puolen tunnin inaktiivisuuden jälkeen

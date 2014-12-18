@@ -1,4 +1,8 @@
 {
  :kehitysmoodi true
-;; :tietokanta {:url "foo"}
+ :tietokanta {:palvelin "localhost"
+              :tietokanta "harja"
+              :portti 5432
+              :kayttaja "tatuta"
+              :salasana ""}
  }
