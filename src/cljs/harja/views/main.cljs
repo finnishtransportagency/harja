@@ -21,7 +21,10 @@
 
 (defn header []
   [bs/navbar {}
-     "Harja"
+     [:img {
+            :id "harja-brand-icon"
+            :alt "HARJA"
+            :src "images/harja-brand-text.png"}]
      [:form.navbar-form.navbar-left {:role "search"}
       [:div.form-group
        [:input.form-control {:type "text" :placeholder "Hae..."}]]
