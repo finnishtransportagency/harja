@@ -35,8 +35,10 @@
      [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
-  [:footer {:role "contentinfo"}
-   "Liikenneviraston HARJA, FIXME: muuta footer tietoa tänne"])
+  [:footer#footer {:role "contentinfo"}
+   [:div#footer-wrap
+    [:a {:href "http://www.liikennevirasto.fi"}
+     "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]]])
 
 ; TODO: poista leikkidata kunhan saadaan oikeaa tialle
 (def urakat 
