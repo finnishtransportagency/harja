@@ -6,11 +6,12 @@
 
 (def hallintayksikot (atom nil))
 
-(defn ^:export haeppas []
-  (k/request! :hallintayksikot
-              :tie
-              (fn [yksikot]
-                (.log js/console "Yksiköt: " (pr-str yksikot))
-                (reset! hallintayksikot yksikot))))
+;; Kun käyttäjätiedot saapuvat, hae relevantit hallintayksiköt
+(t/kuuntele! :kayttajatiedot
+             (fn [kayttaja]
+               (k/request! :hallintayksikot
+                           :tie ;; FIXME: tämä otettava käyttäjän tiedoista 
+                           #(reset! hallintayksikot %))))
+
                  
  
