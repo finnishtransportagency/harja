@@ -21,7 +21,11 @@
 
 (defn header []
   [bs/navbar {}
-     "Harja"
+     [:img {
+            :id "harja-brand-icon"
+            :alt "HARJA"
+            :src "images/harja-brand-text.png"
+            :on-click #(.reload js/window.location)}]
      [:form.navbar-form.navbar-left {:role "search"}
       [:div.form-group
        [:input.form-control {:type "text" :placeholder "Hae..."}]]
@@ -35,8 +39,10 @@
      [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
-  [:footer {:role "contentinfo"}
-   "Liikenneviraston HARJA, FIXME: muuta footer tietoa tänne"])
+  [:footer#footer {:role "contentinfo"}
+   [:div#footer-wrap
+    [:a {:href "http://www.liikennevirasto.fi"}
+     "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]]])
 
 ; TODO: poista leikkidata kunhan saadaan oikeaa tialle
 (def urakat 
