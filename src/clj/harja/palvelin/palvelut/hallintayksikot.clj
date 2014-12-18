@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.skeema :as skeema]
-            [harja.kyselyt.hallintayksikot :as q]))
+            [harja.kyselyt.hallintayksikot :as q]
+            [harja.geo :refer [muunna-pg-tulokset]]))
 
 (declare hae-hallintayksikot)
                         
@@ -11,8 +12,8 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hallintayksikot (fn [user ehdot]
-                                         (hae-hallintayksikot (:db this) user ehdot)))
+                      :hallintayksikot (fn [user liikennemuoto]
+                                         (hae-hallintayksikot (:db this) user liikennemuoto)))
     
     this)
   
@@ -21,18 +22,14 @@
 
 
 (defn hae-hallintayksikot
-  "Palvelu, joka palauttaa hakuehtoihin soveltuvat hallintayksiköt, joihin annetulle käyttäjälle on näkymäoikeus."
-  [db user ehdot]
-  (->> (q/listaa-hallintayksikot-kulkumuodolle db (case (:liikennemuoto ehdot)
-                                                    :tie "T"
-                                                    :vesi "V"
-                                                    :rata "R"))
-       ;; Normalisoi PGPolygon clojure dataksi (FIXME: tästä joku geo utility namespace
-       (mapv #(if-let [alue (:alue %)]
-                (assoc % :alue (mapv (fn [p]
-                                       [(.x p) (.y p)])
-                                     (seq (.points (:alue %)))))
-                %))))
+  "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
+  [db user liikennemuoto]  
+  (-> (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
+                                                   :tie "T"
+                                                   :vesi "V"
+                                                   :rata "R"))
+      (muunna-pg-tulokset :alue)))
+
 
 
   

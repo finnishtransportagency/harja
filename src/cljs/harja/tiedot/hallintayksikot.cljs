@@ -8,7 +8,7 @@
 
 (defn ^:export haeppas []
   (k/request! :hallintayksikot
-              {:liikennemuoto :tie}
+              :tie
               (fn [yksikot]
                 (.log js/console "Yksiköt: " (pr-str yksikot))
                 (reset! hallintayksikot yksikot))))
