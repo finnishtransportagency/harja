@@ -24,7 +24,8 @@
      [:img {
             :id "harja-brand-icon"
             :alt "HARJA"
-            :src "images/harja-brand-text.png"}]
+            :src "images/harja-brand-text.png"
+            :on-click #(.reload js/window.location)}]
      [:form.navbar-form.navbar-left {:role "search"}
       [:div.form-group
        [:input.form-control {:type "text" :placeholder "Hae..."}]]
