@@ -28,6 +28,7 @@
     (log/warn "Käytetään FEIKKI käyttäjätodennusta, käyttäjä = " (pr-str kayttaja))
     this)
   (stop [this]
+    this
     )
 
   Todennus

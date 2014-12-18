@@ -13,6 +13,7 @@
                    :url s/Str}
    :kehitysmoodi Boolean
    :tietokanta {:palvelin s/Str
+                :tietokanta s/Str
                 :portti s/Int
                 :kayttaja s/Str
                 :salasana s/Str}
@@ -23,6 +24,7 @@
   {:http-palvelin {:portti 3000 :url "http://localhost:3000/"}
    :kehitysmoodi true
    :tietokanta {:palvelin "localhost"
+                :tietokanta "harja"
                 :portti 5432
                 :kayttaja "harja"
                 :salasana ""}
