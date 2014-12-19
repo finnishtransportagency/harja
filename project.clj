@@ -76,6 +76,7 @@
                   {:source-paths ["src/cljx"]
                    :output-path "target/classes"
                    :rules :cljs}]}
+  :prep-tasks [["cljx" "once"]]
   
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds [{:id "dev"
