@@ -48,7 +48,8 @@
                  [lively "0.1.2"] 
                  [reagent "0.4.3"]
 
-                 
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+ 
                  
                  
                  ]
@@ -76,6 +77,7 @@
                   {:source-paths ["src/cljx"]
                    :output-path "target/classes"
                    :rules :cljs}]}
+  :prep-tasks [["cljx" "once"]]
   
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds [{:id "dev"
