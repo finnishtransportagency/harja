@@ -5,7 +5,7 @@
             [harja.asiakas.tapahtumat :as t]))
 
 (def hallintayksikot (atom nil))
-
+ 
 ;; Kun käyttäjätiedot saapuvat, hae relevantit hallintayksiköt
 (t/kuuntele! :kayttajatiedot
              (fn [kayttaja]

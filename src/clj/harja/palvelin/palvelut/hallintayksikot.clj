@@ -28,7 +28,8 @@
                                                    :tie "T"
                                                    :vesi "V"
                                                    :rata "R"))
-      (muunna-pg-tulokset :alue)))
+      (muunna-pg-tulokset :alue)
+      vec))
 
 
 

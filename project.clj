@@ -48,7 +48,8 @@
                  [lively "0.1.2"] 
                  [reagent "0.4.3"]
 
-                 
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+ 
                  
                  
                  ]
