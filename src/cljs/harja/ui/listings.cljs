@@ -31,13 +31,13 @@
                        (.log js/console (-> % .-target .-value)))}]
        [:div.haku-lista-container
         [:ul.haku-lista
-         (let [selected @valittu term @term]
+         (let [selected @valittu
+               term @term]
+           (.log js/console "kamat: " (pr-str @list))
            (for [i (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) @list)]
              ^{:key (:id i)}
              [:li.haku-lista-item
-              {:on-click #(do
-                            (on-select i)
-                            (.log js/console (str " selected on " selected)))
+              {:on-click #(on-select i)
                :class (when (= i selected) "selected")}  
               [:div.haku-lista-item-nimi 
                (fmt i)]]))]]])))

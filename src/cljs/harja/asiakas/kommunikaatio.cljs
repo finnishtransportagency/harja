@@ -16,16 +16,17 @@ Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla ei
                   (callback-fn vastaus)
                   (do (put! chan vastaus)
                       (close! chan))))]
-     (ajax-request
-      {:uri (str "/_/" (name service))
-       :method :post
-       :params payload
-       :format (transit-request-format)
-       :response-format (transit-response-format)
-       :handler cb
-       :error-handler (fn [[_ error]]
-                        (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                        (when chan (close! chan)))}))))
+       (ajax-request
+        {:uri (str "/_/" (name service))
+         :method :post
+         :params payload
+         :format (transit-request-format)
+         :response-format (transit-response-format)
+         :handler cb
+         :error-handler (fn [[_ error]]
+                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                          (when chan (close! chan)))})
+       chan)))
 
   
 (defn ^:export test []

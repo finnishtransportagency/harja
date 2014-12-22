@@ -64,7 +64,7 @@
       (add-watch selection ::valinta
                  (fn [_ _ _ item]
                    (let [{:keys [leaflet geometries-map]} (reagent/state this)]
-                     (.log js/console "valinta: " (pr-str geometria))
+                     (.log js/console "valinta: " (pr-str item))
                      (when-let [g (geometries-map item)]
                        ;; Löytyi Leaflet shape uudelle geometrialle
                        (.fitBounds leaflet  (.getBounds g)))))))
@@ -81,7 +81,6 @@
     ))
 
 (defn- leaflet-will-update [this [_ conf]]
-  (.log js/console "NEW geom: " (pr-str (:geometries conf)))
   (update-leaflet-geometries this (-> conf :geometries)))
 
 (defn- leaflet-render [this]
@@ -112,7 +111,7 @@
 
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
-  (.log js/console "geometries: " (pr-str items))
+  ;;(.log js/console "geometries: " (pr-str items))
   (let [{:keys [leaflet geometries-map mapspec]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)
         on-select (:on-select mapspec)
@@ -122,7 +121,7 @@
                           (when-not (geometries-set item)
                             shape))
                         geometries-map)]
-      (.log js/console "Removed: " removed)
+      ;;(.log js/console "Removed: " removed)
       (.removeLayer leaflet removed))
 
     ;; Create new shapes for new geometries and update the geometries map
@@ -142,7 +141,7 @@
               (let [shape (create-shape geom)]
                 (when on-select
                   (.on shape "click" #(on-select item)))
-                (.log js/console "Added: " (pr-str geom))
+                ;;(.log js/console "Added: " (pr-str geom))
                 (.addTo shape leaflet)
                 (recur (assoc new-geometries-map item shape) items)))))))))
 
