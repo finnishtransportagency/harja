@@ -56,6 +56,7 @@
                    (.setView leaflet (clj->js new-view) @zoom))))
     (add-watch zoom ::zoom-update
                (fn [_ _ old-zoom new-zoom]
+                 ;;(.log js/console "zoom päivittyi: " old-zoom " => " new-zoom)
                  (when (not= old-zoom new-zoom)
                    (.setZoom leaflet new-zoom))))
 
@@ -64,7 +65,6 @@
       (add-watch selection ::valinta
                  (fn [_ _ _ item]
                    (let [{:keys [leaflet geometries-map]} (reagent/state this)]
-                     (.log js/console "valinta: " (pr-str geometria))
                      (when-let [g (geometries-map item)]
                        ;; Löytyi Leaflet shape uudelle geometrialle
                        (.fitBounds leaflet  (.getBounds g)))))))
@@ -81,7 +81,6 @@
     ))
 
 (defn- leaflet-will-update [this [_ conf]]
-  (.log js/console "NEW geom: " (pr-str (:geometries conf)))
   (update-leaflet-geometries this (-> conf :geometries)))
 
 (defn- leaflet-render [this]
@@ -112,7 +111,7 @@
 
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
-  (.log js/console "geometries: " (pr-str items))
+  ;;(.log js/console "geometries: " (pr-str items))
   (let [{:keys [leaflet geometries-map mapspec]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)
         on-select (:on-select mapspec)
@@ -122,7 +121,7 @@
                           (when-not (geometries-set item)
                             shape))
                         geometries-map)]
-      (.log js/console "Removed: " removed)
+      ;;(.log js/console "Removed: " removed)
       (.removeLayer leaflet removed))
 
     ;; Create new shapes for new geometries and update the geometries map
@@ -134,17 +133,15 @@
         (let [geom (geometry-fn item)]
           (if-not geom
             (recur new-geometries-map items)
-            (if-let [existing-shape (geometries-map item)]
-              ;; Have existing shape, don't need to do anything
-              (recur (assoc new-geometries-map item existing-shape) items)
-
-              ;; No existing shape, create a new shape and add it to the map
-              (let [shape (create-shape geom)]
-                (when on-select
-                  (.on shape "click" #(on-select item)))
-                (.log js/console "Added: " (pr-str geom))
-                (.addTo shape leaflet)
-                (recur (assoc new-geometries-map item shape) items)))))))))
+            (let [shape (or (geometries-map item)
+                            (doto (create-shape geom)
+                              (.on "click" #(on-select item))
+                              (.addTo leaflet)))]
+              ;; If geometry has ::fit-bounds value true, then zoom to this
+              ;; only 1 item should have this
+              (when (::fit-bounds geom)
+                (.fitBounds leaflet (.getBounds shape)))
+              (recur (assoc new-geometries-map item shape) items))))))))
 
 
 

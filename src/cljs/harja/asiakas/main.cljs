@@ -10,7 +10,7 @@
             [reagent.core :as reagent]))
 
 (defn render []
-  (reagent/render-component [main-view/main] (.getElementById js/document "app")))
+  (reagent/render [main-view/main] (.getElementById js/document "app")))
 
 (defn ^:export harja []
   (ymparisto/alusta {:on-reload render})

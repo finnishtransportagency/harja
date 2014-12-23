@@ -9,7 +9,8 @@
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
-            
+   [harja.palvelin.palvelut.urakat :as urakat]
+   
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
   (:gen-class))
@@ -37,6 +38,9 @@
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
                        [:http-palvelin :db])
+     :urakat (component/using
+              (urakat/->Urakat)
+              [:http-palvelin :db])
      )))
 
 (def harja-jarjestelma nil)

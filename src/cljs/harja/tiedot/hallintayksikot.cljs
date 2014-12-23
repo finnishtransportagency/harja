@@ -11,7 +11,9 @@
              (fn [kayttaja]
                (k/request! :hallintayksikot
                            :tie ;; FIXME: tämä otettava käyttäjän tiedoista 
-                           #(reset! hallintayksikot %))))
+                           #(reset! hallintayksikot
+                                    (mapv (fn [hy]
+                                            (assoc hy :type :hy)) %)))))
 
                  
  
