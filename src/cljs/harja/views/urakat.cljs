@@ -2,10 +2,10 @@
   "Harjan näkymä, jossa näytetään karttaa sekä kontekstisidonnaiset asiat."
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
-             
+            [bootstrap :as bs]
             [harja.ui.listings :refer [filtered-listing]]
-            [harja.ui.leaflet :refer [leaflet]]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.leaflet :refer [leaflet] :as leaflet]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija]]
             
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
@@ -35,51 +35,72 @@
     (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))
 
 (defn valitse-urakka [ur]
-  (reset! valittu-urakka ur))
+  (reset! valittu-urakka ur)
+  (if ur
+    (t/julkaise! (assoc ur :aihe :urakka-valittu))
+    (t/julkaise! {:aihe :urakkavalinta-poistettu})))
+
 
 (defn murupolku
   "Näyttää tämänhetkiset valinnat murupolkuna"
   []
-  (let [hallintayksikon-valinta (atom false)]
-    (reagent/create-class
-     {:get-initial-state (fn [this] {:hallintayksikon-valinta hallintayksikon-valinta})
-      :render (fn [this]
-                (let [hallintayksikon-valinta (-> this reagent/state :hallintayksikon-valinta)]
-                  [:ol.breadcrumb
-                   [:li [:a {:href "#" :on-click #(valitse-hallintayksikko nil)}
-                         "Koko Suomi"]]
-                   (when-let [valittu @valittu-hallintayksikko]
-                     [:li.dropdown {:class (when @hallintayksikon-valinta "open")}
-                      [:a {:href "#" 
-                           :on-click #(swap! hallintayksikon-valinta not)}
-                       (:nimi valittu)
-                       [:span.caret]]
+  (kuuntelija
+   {:hallintayksikon-valinta (atom false)
+    :urakan-valinta (atom false)}
+   
+   (fn [this]
+     (let [{:keys [hallintayksikon-valinta urakan-valinta]} (reagent/state this)]
+       [:ol.breadcrumb
+        [:li [:a {:href "#" :on-click #(valitse-hallintayksikko nil)}
+              "Koko Suomi"]]
+        (when-let [valittu @valittu-hallintayksikko]
+          [:li.dropdown {:class (when @hallintayksikon-valinta "open")}
+           [:a {:href "#" 
+                :on-click #(valitse-hallintayksikko valittu)}
+            (:nimi valittu) " "]
+           [:button.btn.btn-default.btn-xs.dropdown-toggle {:href "#" :on-click #(swap! hallintayksikon-valinta not)}
+            [:span.caret]]
+                      
+           ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
+           [:ul.dropdown-menu {:role "menu"}
+            (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
+              ^{:key (str "hy-" (:id muu-yksikko))}
+              [:li [:a {:href "#" :on-click #(do (reset! hallintayksikon-valinta false)
+                                                 (valitse-hallintayksikko muu-yksikko))} (:nimi muu-yksikko)]])]])
+        (when-let [valittu @valittu-urakka]
+          [:li.dropdown {:class (when @urakan-valinta "open")}
+           [:a {:href "#"
+                :on-click #(valitse-urakka valittu)}
+            (:nimi valittu) " "]
+           [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! urakan-valinta not)}
+            [:span.caret]]
 
-                      ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
-                      [:ul.dropdown-menu {:role "menu"}
-                       (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
-                         ^{:key (str "hy-" (:id muu-yksikko))}
-                         [:li [:a {:href "#" :on-click #(do (reset! hallintayksikon-valinta false)
-                                                            (valitse-hallintayksikko muu-yksikko))} (:nimi muu-yksikko)]])]
-          
-                      ])
-                   (when @valittu-urakka
-                     [:li [:a {:href "#"}
-                           (:nimi @valittu-urakka)]])]))             
-      :component-did-mount (fn [this]
-                             (.log js/console "murupolku: mounted!")
-                             (reagent/set-state this {::lopeta-kuuntelu (t/kuuntele! :hallintayksikkovalinta-poistettu
-                                                                                     (fn [_]
-                                                                                       (.log js/console "piilota dropdown")
-                                                                                       (reset! hallintayksikon-valinta false)))}))
-      :component-will-unmount (fn [this]
-                                ((-> this reagent/state ::lopeta-kuuntelu)))
-      })))
+           ;; Alasvetovalikko urakan nopeaa vaihtamista varten
+           [:ul.dropdown-menu {:role "menu"}
+            (for [muu-urakka (filter #(not= % valittu) @urakkalista)]
+              ^{:key (str "ur-" (:id muu-urakka))}
+              [:li [:a {:href "#" :on-click #(valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])]))
+
+   ;; Jos hallintayksikkö valitaan, piilota hallintayksikkö dropdown
+   [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu]
+   #(reset! (-> % reagent/state :hallintayksikon-valinta) false)
+
+   ;; Jos urakanvalinta tapahtuu, piilota urakka dropdown
+   [:urakka-valittu :urakkavalinta-poistettu]
+   #(reset! (-> % reagent/state :urakan-valinta) false)))
 
 
+;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
+(def +koko-suomi-sijainti+ [65.1 25.2])
+(def +koko-suomi-zoom-taso+ 5)
 
-(def view-position (atom [65.1 25.2]))
-(def zoom-level (atom 8))
+(defonce kartta-sijainti (atom +koko-suomi-sijainti+))
+(defonce zoom-taso (atom +koko-suomi-zoom-taso+))
+
+(defonce kartta-kuuntelija 
+  (t/kuuntele! :hallintayksikkovalinta-poistettu
+               #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
+                    (reset! zoom-taso +koko-suomi-zoom-taso+))))
 
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
@@ -90,8 +111,8 @@
         v-hal @valittu-hallintayksikko]
     [leaflet {:id "kartta"
               :width "100%" :height "750px" ;; set width/height as CSS units, must set height as pixels!
-              :view view-position           ;; map center position
-              :zoom zoom-level              ;; map zoom level
+              :view kartta-sijainti
+              :zoom zoom-taso
               :selection valittu-hallintayksikko
               :on-select (fn [item]
                            (condp = (:type item)
@@ -104,15 +125,20 @@
 
                            ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
                            (nil? @valittu-urakka)
-                           (vec (concat [(assoc v-hal :valittu true)]
+                           (vec (concat [(assoc v-hal
+                                           :valittu true
+                                           :leaflet/fit-bounds true)]
                                         @urakkalista))
                            
                            ;; Valittu urakka, mitä näytetään?
-                           :default [])
+                           :default [(assoc @valittu-urakka
+                                       :valittu true
+                                       :leaflet/fit-bounds true)])
               
               :geometry-fn (fn [hy]
                              (when-let [alue (:alue hy)]
                                {:type (if (:valittu hy) :line :polygon)
+                                :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
                                 :coordinates alue
                                 :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))}))
 
@@ -160,7 +186,9 @@
                  urakkalista]]])
           
           ;; Urakka valittu, tähän kaikki urakan komponentit
-          [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"])))]
+            [:span
+             [bs/dropdown-panel {} "Urakan perustiedot"
+              [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]])))]
     [:div#kartta-container.col-sm-8
      [kartta]]
     ])

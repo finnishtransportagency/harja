@@ -33,7 +33,6 @@
         [:ul.haku-lista
          (let [selected @valittu
                term @term]
-           (.log js/console "kamat: " (pr-str @list))
            (for [i (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) @list)]
              ^{:key (:id i)}
              [:li.haku-lista-item
