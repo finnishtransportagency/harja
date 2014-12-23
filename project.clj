@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
   :eval-in-leiningen true
   :dependencies [[org.clojure/clojure "1.7.0-alpha4"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-2371"]
+                 [org.clojure/clojurescript "0.0-2511"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.3.3"]
