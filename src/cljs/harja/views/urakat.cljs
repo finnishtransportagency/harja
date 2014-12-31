@@ -163,7 +163,7 @@
       (if-not v-hal
         ;; Hallintayksikköä ei ole valittu: näytetään lista hallintayksiköistä
         [:span
-         [:h5.haku-otsikko "Hae alueurakka kartalta tai listasta"]
+         [:h5.haku-otsikko "Hae hallintayksikkö kartalta tai listasta"]
          [:div
           ^{:key "hy-lista"}
           [filtered-listing {:format :nimi :haku :nimi
