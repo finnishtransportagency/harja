@@ -1,8 +1,8 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
-  :eval-in-leiningen true
+  
   :dependencies [[org.clojure/clojure "1.7.0-alpha4"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-2511"]
+                 [org.clojure/clojurescript "0.0-2657"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.3.3"]
@@ -23,7 +23,8 @@
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.2.1"]
+                 [compojure "1.3.1"]
+                 [clout "2.1.0"]
 
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -53,7 +54,7 @@
                  
                  
                  ]
-
+  
   :dev-dependencies [;; Selain REPL
                      [com.cemerick/piggieback "0.1.3"]
                      ;; Testaus
@@ -65,23 +66,25 @@
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
   
-  :plugins [[com.keminglabs/cljx "0.4.0"]
+  :plugins [[com.keminglabs/cljx "0.5.0"]
             [lein-cljsbuild "1.0.3"]
-            [cider/cider-nrepl "0.8.1"]]
+            [cider/cider-nrepl "0.8.1"]
+            ]
 
+    
   ;; Asiakas- ja palvelinpuolen jaettu koodi
   :cljx {:builds [{:source-paths ["src/cljx"]
-                   :output-path "target/classes"
+                   :output-path "target/generated/clj"
                    :rules :clj}
                   
                   {:source-paths ["src/cljx"]
-                   :output-path "target/classes"
+                   :output-path "target/generated/cljs"
                    :rules :cljs}]}
   :prep-tasks [["cljx" "once"]]
   
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs" "src/cljs-dev"]
+                        :source-paths ["src/cljs" "src/cljs-dev" "target/generated/cljs"]
                         :compiler {:optimizations :none
                                    :source-map true
                                    :preamble ["reagent/react.js"]
@@ -94,8 +97,10 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "target/generated/clj"]
+  :aot :all
   :main harja.palvelin.main
+  :auto-clean false ;; for uberjar
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
