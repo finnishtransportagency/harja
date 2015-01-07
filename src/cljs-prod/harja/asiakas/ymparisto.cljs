@@ -3,4 +3,4 @@
 
 (defn alusta
   "Alusta tuotantoympäristö, ei tee mitään erikoista nyt"
-  [])
+  [optiot])

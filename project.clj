@@ -91,7 +91,12 @@
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"}}
                        
-                       ;; FIXME: add production build
+                       {:id "prod"
+                        :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
+                        :compiler {:optimizations :advanced
+                                   :preamble ["reagent/react.min.js"]
+                                   :output-to "resources/js/harja.js"}}
+                                   
                        ]}
 
 
