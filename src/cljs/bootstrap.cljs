@@ -22,6 +22,7 @@ The following keys are supported in the configuration:
          [:ul.nav {:class style-class}
           (map-indexed 
            (fn [i [title]]
+             ^{:key title}
              [:li {:role "presentation" 
                    :class (when (= active-tab-title title)
                             "active")}
@@ -92,9 +93,9 @@ Opts can have the following keys:
       [:div.panel {:class (str "panel-" (name style))}
 
        ;; Panel heading with title and clickable open/close toggle
-       [:div.panel-heading
+       [:div.panel-heading {:on-click #(swap! open not)}
         [:h3.panel-title title] 
-        [:span.pull-right.clickable {:on-click #(swap! open not)}
+        [:span.pull-right.clickable 
          [:i.glyphicon {:class (if @open
                                  "glyphicon-minus"
                                  "glyphicon-plus")}]]]

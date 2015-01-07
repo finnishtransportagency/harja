@@ -157,7 +157,7 @@
   []
   [:span
    [murupolku]
-   [:div#sidebar-left.col-sm-4
+   [:div#sidebar-left.col-sm-6
     (let [v-hal @valittu-hallintayksikko
           v-ur @valittu-urakka]
       (if-not v-hal
@@ -185,11 +185,52 @@
                                    :on-select valitse-urakka}
                  urakkalista]]])
           
-          ;; Urakka valittu, tähän kaikki urakan komponentit
-            [:span
-             [bs/dropdown-panel {} "Urakan perustiedot"
-              [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]])))]
-    [:div#kartta-container.col-sm-8
+            ;; Urakka valittu, tähän kaikki urakan komponentit
+              [:span
+   [:h3 "Raportit"]
+   [bs/dropdown-panel {} "Työ- ja toteumaraportit" 
+    [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]
+   [bs/dropdown-panel {} "Laadunseuranta" "ei ole mitään"]
+   [bs/dropdown-panel {} "Poikkeamaraportit" "ei poikkeamia"]
+   
+   
+   [:h3 "Suunnittelu"]
+   [bs/dropdown-panel {} "Kustannussuunnitelma: kokonaishintaiset työt" "ei vielä"]
+   [bs/dropdown-panel {} "Kustannussuunnitelma: yksikköhintaiset työt" "ei vielä"]
+   [bs/dropdown-panel {} "Materiaalisuunnitelma" "ei vielä"]
+   
+   [:h3 "Toteumat"]
+   [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
+   [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]
+   
+   ]
+            
+             
+               
+            )))]
+    [:div#kartta-container.col-sm-6
      [kartta]]
     ])
            
+(comment
+  [bs/tabs {}
+             "Raportit"
+             ^{:key "raportit"}
+             [:div 
+              [bs/dropdown-panel {} "Työ- ja toteumaraportit" 
+               [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]
+              [bs/dropdown-panel {} "Laadunseuranta" "ei ole mitään"]
+              [bs/dropdown-panel {} "Poikkeamaraportit" "ei poikkeamia"]]
+             "Suunnittelu"
+             ^{:key "suunnittelu"}
+             [:div 
+              [bs/dropdown-panel {} "Kustannussuunnitelma: kokonaishintaiset työt" "ei vielä"]
+              [bs/dropdown-panel {} "Kustannussuunnitelma: yksikköhintaiset työt" "ei vielä"]
+              [bs/dropdown-panel {} "Materiaalisuunnitelma" "ei vielä"]]
+
+             "Toteumat"
+             ^{:key "toteumat"}
+             [:div
+              [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
+              [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]]]
+)
