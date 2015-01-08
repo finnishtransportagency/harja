@@ -44,7 +44,8 @@
                  
                  ;; Asiakas
                  [spyscope "0.1.5"]
-
+                 
+                 
                  [cljs-ajax "0.3.3"]
                  [lively "0.1.2"] 
                  [reagent "0.5.0-alpha"]
@@ -95,8 +96,11 @@
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
                         :compiler {:optimizations :advanced
+                                   :source-map "resources/public/js/harja.js.map"
                                    :preamble ["reagent/react.min.js"]
-                                   :output-to "resources/public/js/harja.js"}}
+                                   :output-to "resources/public/js/harja.js"
+                                   :output-dir "resources/public/js/"
+                                   :externs ["externs/leaflet.js"]}}
                                    
                        ]}
 

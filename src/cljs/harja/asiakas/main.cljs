@@ -15,7 +15,6 @@
 (defn ^:export harja []
   (ymparisto/alusta {:on-reload render})
   (render)
-  
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true))
 

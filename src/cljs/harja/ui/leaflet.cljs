@@ -13,8 +13,8 @@
 (defn- leaflet-did-mount [this]
   "Initialize LeafletJS map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
-        leaflet (js/L.map (:id mapspec)
-                          (clj->js {:scrollWheelZoom false}))
+        leaflet (js/L.Map. (:id mapspec)
+                           (clj->js {:scrollWheelZoom false}))
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)
@@ -23,7 +23,7 @@
     (.setView leaflet (clj->js @view) @zoom)
     (doseq [{:keys [type url] :as layer-spec} (:layers mapspec)]
       (let [layer (case type
-                    :tile (js/L.tileLayer
+                    :tile (js/L.TileLayer.
                            url
                            (clj->js {:attribution (:attribution layer-spec)})
                                     )
@@ -96,18 +96,18 @@
 (defmulti create-shape :type)
 
 (defmethod create-shape :polygon [{:keys [coordinates color]}]
-  (js/L.polygon (clj->js coordinates)
-                        #js {:color (or color "red")
-                             :fillOpacity 0.5}))
+  (js/L.Polygon. (clj->js coordinates)
+                 #js {:color (or color "red")
+                      :fillOpacity 0.5}))
 
 (defmethod create-shape :line [{:keys [coordinates color]}]
-  (js/L.polyline (clj->js coordinates)
-                 #js {:color (or color "blue")}))
+  (js/L.Polyline. (clj->js coordinates)
+                  #js {:color (or color "blue")}))
 
 (defmethod create-shape :point [{:keys [coordinates color]}]
-  (js/L.circle (clj->js (first coordinates))
-               10
-               #js {:color (or color "green")}))
+  (js/L.Circle. (clj->js (first coordinates))
+                10
+                #js {:color (or color "green")}))
 
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
