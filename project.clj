@@ -69,6 +69,7 @@
   :plugins [[com.keminglabs/cljx "0.5.0"]
             [lein-cljsbuild "1.0.3"]
             [cider/cider-nrepl "0.8.1"]
+            [lein-less "1.7.2"]
             ]
 
     
@@ -99,6 +100,9 @@
                                    
                        ]}
 
+  ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
+  :less {:source-paths ["dev-resources"]
+         :target-path "resources/css"}
 
 
   ;; Palvelimen buildin tietoja
@@ -110,4 +114,8 @@
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)}
+
+  ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
+  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]}
+  
   )
