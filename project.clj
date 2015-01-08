@@ -96,13 +96,13 @@
                         :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
                         :compiler {:optimizations :advanced
                                    :preamble ["reagent/react.min.js"]
-                                   :output-to "resources/js/harja.js"}}
+                                   :output-to "resources/public/js/harja.js"}}
                                    
                        ]}
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources"]
-         :target-path "resources/css"}
+         :target-path "resources/public/css"}
 
 
   ;; Palvelimen buildin tietoja

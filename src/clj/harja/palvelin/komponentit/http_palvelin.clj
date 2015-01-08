@@ -71,7 +71,7 @@
                       ;;    (let [resp (files-route req)]
                       ;;      (if (= 200 (:status resp))
                       ;;        (update-in resp :headers 
-                      (route/resources))]
+                      (route/resources ""))]
       (swap! lopetus-fn
              (constantly
               (http/run-server (fn [req]
