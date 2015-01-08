@@ -96,11 +96,15 @@
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
                         :compiler {:optimizations :advanced
-                                   :source-map "resources/public/js/harja.js.map"
+                                   
                                    :preamble ["reagent/react.min.js"]
                                    :output-to "resources/public/js/harja.js"
-                                   :output-dir "resources/public/js/"
-                                   :externs ["externs/leaflet.js"]}}
+                                   :externs ["externs/leaflet.js"]
+
+                                   ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
+                                   ;;:source-map "resources/public/js/harja.js.map"
+                                   ;;:output-dir "resources/public/js/"
+                                   }}
                                    
                        ]}
 
