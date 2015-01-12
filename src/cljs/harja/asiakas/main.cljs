@@ -15,6 +15,13 @@
 (defn ^:export harja []
   (ymparisto/alusta {:on-reload render})
   (render)
+
+  ;; Jotkut komponentit haluavat body klikkauksia kuunnella
+  (set! (.-onclick js/document.body)
+        (fn [e]
+          (t/julkaise! {:aihe :body-klikkaus
+                        :tapahtuma e})))
+  
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true))
 

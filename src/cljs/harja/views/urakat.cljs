@@ -5,7 +5,7 @@
             [bootstrap :as bs]
             [harja.ui.listings :refer [filtered-listing]]
             [harja.ui.leaflet :refer [leaflet] :as leaflet]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija sisalla?]]
             
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
@@ -45,34 +45,52 @@
   "Näyttää tämänhetkiset valinnat murupolkuna"
   []
   (kuuntelija
-   {:hallintayksikon-valinta (atom false)
-    :urakan-valinta (atom false)}
+   {:valinta-auki (atom nil) ;; nil | :hallintayksikko | :urakka
+    }
    
    (fn [this]
-     (let [{:keys [hallintayksikon-valinta urakan-valinta]} (reagent/state this)]
+     (let [valinta-auki (:valinta-auki (reagent/state this))]
        [:ol.breadcrumb
         [:li [:a {:href "#" :on-click #(valitse-hallintayksikko nil)}
               "Koko Suomi"]]
         (when-let [valittu @valittu-hallintayksikko]
-          [:li.dropdown {:class (when @hallintayksikon-valinta "open")}
-           [:a {:href "#" 
-                :on-click #(valitse-hallintayksikko valittu)}
-            (:nimi valittu) " "]
-           [:button.btn.btn-default.btn-xs.dropdown-toggle {:href "#" :on-click #(swap! hallintayksikon-valinta not)}
+          [:li.dropdown {:class (when (= :hallintayksikko @valinta-auki) "open")}
+
+           (let [vu @valittu-urakka
+                 va @valinta-auki]
+             (if (or (not (nil? vu))
+                     (= va :hallintayksikko))
+               [:a {:href "#" 
+                    :on-click #(valitse-hallintayksikko valittu)}
+                (:nimi valittu) " "]
+               [:span.valittu-hallintayksikko (:nimi valittu) " "]))
+           
+           [:button.btn.btn-default.btn-xs.dropdown-toggle {:href "#" :on-click #(swap! valinta-auki
+                                                                                        (fn [v]
+                                                                                          (if (= v :hallintayksikko)
+                                                                                            nil
+                                                                                            :hallintayksikko)))}
             [:span.caret]]
                       
            ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
            [:ul.dropdown-menu {:role "menu"}
             (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
               ^{:key (str "hy-" (:id muu-yksikko))}
-              [:li [:a {:href "#" :on-click #(do (reset! hallintayksikon-valinta false)
+              [:li [:a {:href "#" :on-click #(do (reset! valinta-auki nil)
                                                  (valitse-hallintayksikko muu-yksikko))} (:nimi muu-yksikko)]])]])
         (when-let [valittu @valittu-urakka]
-          [:li.dropdown {:class (when @urakan-valinta "open")}
-           [:a {:href "#"
-                :on-click #(valitse-urakka valittu)}
-            (:nimi valittu) " "]
-           [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! urakan-valinta not)}
+          [:li.dropdown {:class (when (= :urakka @valinta-auki) "open")}
+           
+           ;;[:a {:href "#"
+           ;;       :on-click #(valitse-urakka valittu)}
+           ;;   (:nimi valittu) " "]
+           [:span.valittu-urakka (:nimi valittu) " "]
+           
+           [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
+                                                                              (fn [v]
+                                                                                (if (= v :urakka)
+                                                                                  nil
+                                                                                  :urakka)))}
             [:span.caret]]
 
            ;; Alasvetovalikko urakan nopeaa vaihtamista varten
@@ -81,13 +99,18 @@
               ^{:key (str "ur-" (:id muu-urakka))}
               [:li [:a {:href "#" :on-click #(valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])]))
 
-   ;; Jos hallintayksikkö valitaan, piilota hallintayksikkö dropdown
-   [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu]
-   #(reset! (-> % reagent/state :hallintayksikon-valinta) false)
+   ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown
+   [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
+   #(reset! (-> % reagent/state :valinta-auki) nil)
 
-   ;; Jos urakanvalinta tapahtuu, piilota urakka dropdown
-   [:urakka-valittu :urakkavalinta-poistettu]
-   #(reset! (-> % reagent/state :urakan-valinta) false)))
+   ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
+   :body-klikkaus
+   (fn [this {klikkaus :tapahtuma}]
+     (when-not (sisalla? this klikkaus)
+       (let [valinta-auki (:valinta-auki (reagent/state this))]
+         (reset! valinta-auki false))))
+   
+   ))
 
 
 ;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
