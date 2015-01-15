@@ -128,6 +128,11 @@
                  :init (harja.palvelin.main/-main)}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]}
+  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]
+
+            ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
+            "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
+            "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
+            }
   
   )
