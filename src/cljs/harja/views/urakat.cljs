@@ -45,9 +45,11 @@
   "Näyttää tämänhetkiset valinnat murupolkuna"
   []
   (kuuntelija
+
    {:hallintayksikon-valinta (atom false)
     :urakan-valinta (atom false)}
    
+
    (fn [this]
      (let [{:keys [hallintayksikon-valinta urakan-valinta]} (reagent/state this)]
        [:ol.breadcrumb
@@ -114,6 +116,7 @@
               :view kartta-sijainti
               :zoom zoom-taso
               :selection valittu-hallintayksikko
+              :on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
               :on-select (fn [item]
                            (condp = (:type item)
                              :hy (valitse-hallintayksikko item)
@@ -137,10 +140,10 @@
               
               :geometry-fn (fn [hy]
                              (when-let [alue (:alue hy)]
-                               {:type (if (:valittu hy) :line :polygon)
-                                :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
-                                :coordinates alue
-                                :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))}))
+                               (assoc alue
+                                 :type (if (:valitty hy) :line (:type alue)) ;;{:type (if (:valittu hy) :line :polygon)
+                                 :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
+                                 :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
               :layers [{:type :tile

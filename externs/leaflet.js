@@ -115,3 +115,8 @@ L.Polyline = function(t,e) {};
  */
 L.Polygon = function(t,e) {};
 
+/**
+ * @constructor
+ * @extends {L.FeatureGroup}
+ */
+L.MultiPolygon = function(p,e) {};

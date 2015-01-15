@@ -14,7 +14,7 @@
 
 (defn- reitita [req kasittelijat]
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  (log/debug "REQ " (:uri req))
+  ;(log/debug "REQ " (:uri req))
   ;(log/debug "kasittelijat: " kasittelijat)
   (apply compojure/routing
          (if (= "/" (:uri req))
