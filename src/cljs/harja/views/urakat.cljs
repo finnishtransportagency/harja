@@ -45,14 +45,8 @@
   "Näyttää tämänhetkiset valinnat murupolkuna"
   []
   (kuuntelija
-<<<<<<< HEAD
-
-   {:hallintayksikon-valinta (atom false)
-    :urakan-valinta (atom false)}
-=======
    {:valinta-auki (atom nil) ;; nil | :hallintayksikko | :urakka
     }
->>>>>>> feature/HAR-40
    
 
    (fn [this]
