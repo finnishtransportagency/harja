@@ -109,6 +109,11 @@
                 10
                 #js {:color (or color "green")}))
 
+(defmethod create-shape :multipolygon [{:keys [polygons color]}]
+  (let [ps (clj->js (mapv :coordinates polygons))]
+    ;;(.log js/console "multipoly: " ps)
+    (js/L.MultiPolygon. ps #js {:color (or color "green")})))
+
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
   ;;(.log js/console "geometries: " (pr-str items))

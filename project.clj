@@ -9,7 +9,7 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.194"]
+                 [com.cognitect/transit-cljs "0.8.199"]
                  [com.cognitect/transit-clj "0.8.259"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
@@ -29,24 +29,27 @@
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]
-                 [com.mchange/c3p0 "0.9.2.1"]
+                 [clojunauts/postgis-jdbc "2.1.0SVN"]
+                 ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
+                 [com.mchange/c3p0 "0.9.5"]
                  [yesql "0.4.0"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.1"]
                  [org.geotools/gt-process-raster "12.1"]
+                 [org.geotools/gt-epsg-wkt "12.1"] ;; EPSG koordinaatistot
                  [org.geotools/gt-swing "12.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.10.1"]
-                 [org.apache.poi/poi-scratchpad "3.10.1"]
+                 [org.apache.poi/poi "3.11"]
+                 [org.apache.poi/poi-scratchpad "3.11"]
                  
                  
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  
                  
-                 [cljs-ajax "0.3.3"]
+                 [cljs-ajax "0.3.9"]
                  [lively "0.1.2"] 
                  [reagent "0.5.0-alpha"]
 
@@ -57,7 +60,7 @@
                  ]
   
   :dev-dependencies [;; Selain REPL
-                     [com.cemerick/piggieback "0.1.3"]
+                     ;[com.cemerick/piggieback "0.1.3"]
                      ;; Testaus
                      [clj-webdriver "0.6.0"]
                      [org.seleniumhq.selenium/selenium-java "2.44.0"]
@@ -68,9 +71,10 @@
 
   
   :plugins [[com.keminglabs/cljx "0.5.0"]
-            [lein-cljsbuild "1.0.3"]
-            [cider/cider-nrepl "0.8.1"]
+            [lein-cljsbuild "1.0.4"]
+            [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
+            [lein-ancient "0.5.5"] 
             ]
 
     
