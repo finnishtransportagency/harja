@@ -60,9 +60,9 @@
     (str "INSERT INTO toimenpidekoodi (koodi, nimi, emo) "
          "VALUES ('" koodi "', '" (str/replace nimi #" *\(level \d\)" "") "', "
          (if (and emo (not= emo koodi))
-           (str "SELECT id FROM toimenpidekoodi WHERE koodi='" emo "'")
+           (str "(SELECT id FROM toimenpidekoodi WHERE koodi='" emo "')")
            "NULL")
-         ")\n")))
+         ");\n")))
 
 (defn -main [& args]
   (assert (= 2 (count args))
