@@ -1,5 +1,5 @@
 (ns harja.ui.yleiset
-  "Yleisiä UI komponentteja"
+  "Yleisiä UI komponentteja ja apureita"
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.asiakas.tapahtumat :as t]))
 
@@ -11,6 +11,22 @@
       [:img {:src "/images/ajax-loader.gif"}]
       (when viesti
         [:div.viesti viesti])]))
+
+
+(defn sisalla? 
+  "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
+  [komponentti tapahtuma]
+  (let [dom (reagent/dom-node komponentti)
+        elt (.-target tapahtuma)]
+    (loop [ylempi (.-parentNode elt)]
+      (if (or (nil? ylempi)
+              (= ylempi js/document.body))
+        false
+        (if (= dom ylempi)
+          true
+          (recur (.-parentNode ylempi)))))))
+
+
 
 
 (defn kuuntelija
@@ -29,7 +45,7 @@ jolle annetaan yksi parametri (komponentti). Alkutila on komponentin inital-stat
                                (if-not aihe
                                  (reagent/set-state this {::kuuntelijat kahvat})
                                  (recur (concat kahvat
-                                                (doall (map #(t/kuuntele! % (fn [] (kasittelija this)))
+                                                (doall (map #(t/kuuntele! % (fn [tapahtuma] (kasittelija this tapahtuma)))
                                                             (if (keyword? aihe)
                                                               [aihe]
                                                               (seq aihe)))))
