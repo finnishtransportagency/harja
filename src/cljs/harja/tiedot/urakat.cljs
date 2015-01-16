@@ -25,7 +25,7 @@ ja sen arvo on nil jos tietoja ei ole vielä haettu palvelimelta."
     
     ;; Lähdetään taustalla hakemaan listan sisältöä
     (go
-      (let [urakat (<! (k/request! :hallintayksikon-urakat id))]
+      (let [urakat (<! (k/post! :hallintayksikon-urakat id))]
         (reset! lista (mapv (fn [ur]
                               (assoc ur :type :ur)) urakat))))
     ;; palautetaan lista välittömästi
@@ -35,7 +35,7 @@ ja sen arvo on nil jos tietoja ei ole vielä haettu palvelimelta."
 (defn hae-hallintayksikon-urakat [hallintayksikko]
   (let [ch (chan)]
     (go
-      (let [res (<! (k/request! :hallintayksikon-urakat (:id hallintayksikko)))]
+      (let [res (<! (k/post! :hallintayksikon-urakat (:id hallintayksikko)))]
         (>! ch (mapv (fn [ur]
                        (assoc ur :type :ur))
                      res))))

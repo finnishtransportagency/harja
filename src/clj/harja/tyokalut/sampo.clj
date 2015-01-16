@@ -47,18 +47,18 @@
 
 
 (defn koodi->sql [[koodi nimi]]
-  (let [emo (cond
-             ;; Viimeinen on nolla => 2. tason koodi
-             (.endsWith koodi "0")
-             (str (.substring koodi 0 2) "000")
+  (let [[emo taso] (cond
+                    ;; Viimeinen on nolla => 2. tason koodi
+                    (.endsWith koodi "0")
+                    [(str (.substring koodi 0 2) "000") 2]
 
-             ;; Viimeinen ei ole nolla => 3. tason koodi
-             (not (.endsWith koodi "0"))
-             (str (.substring koodi 0 4) "0")
+                    ;; Viimeinen ei ole nolla => 3. tason koodi
+                    (not (.endsWith koodi "0"))
+                    [(str (.substring koodi 0 4) "0") 3]
 
-             :default nil)]
-    (str "INSERT INTO toimenpidekoodi (koodi, nimi, emo) "
-         "VALUES ('" koodi "', '" (str/replace nimi #" *\(level \d\)" "") "', "
+                     :default [nil 1])]
+    (str "INSERT INTO toimenpidekoodi (koodi, nimi,taso, emo) "
+         "VALUES ('" koodi "', '" (str/replace nimi #" *\(level \d\)" "") "', " (if (= emo koodi) 1 taso) ", "
          (if (and emo (not= emo koodi))
            (str "(SELECT id FROM toimenpidekoodi WHERE koodi='" emo "')")
            "NULL")

@@ -20,7 +20,7 @@
       this))
 
   (stop [this]
-    (poista-palvelu :hallintayksikon-urakat)
+    (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
     this))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]

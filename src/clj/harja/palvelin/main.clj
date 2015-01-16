@@ -10,6 +10,7 @@
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.urakat :as urakat]
+   [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
@@ -41,6 +42,10 @@
      :urakat (component/using
               (urakat/->Urakat)
               [:http-palvelin :db])
+
+     :toimenpidekoodit (component/using
+                        (toimenpidekoodit/->Toimenpidekoodit)
+                        [:http-palvelin :db])
      )))
 
 (def harja-jarjestelma nil)

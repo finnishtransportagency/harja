@@ -7,6 +7,7 @@
             [harja.ui.leaflet :refer [leaflet]]
 
             [harja.views.urakat :as urakat]
+            [harja.views.hallinta :as hallinta]
             ))
 
 
@@ -56,7 +57,8 @@
    (case @sivu
      :urakat [urakat/urakat]
      :raportit [:div "täältä kätevästi raportteihin"]
-     :hallinta [:div "hallintaliittymä täällä"])
+     :hallinta [hallinta/hallinta]
+     )
    [footer]
    ])
 
