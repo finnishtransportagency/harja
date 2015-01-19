@@ -54,8 +54,10 @@
                  [reagent "0.5.0-alpha"]
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
- 
-                 
+
+                 ;; reititys
+                 [secretary "1.2.1"]
+
                  
                  ]
   
