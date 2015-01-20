@@ -1,6 +1,6 @@
 (ns harja.views.toimenpidekoodit
   "Toimenpidekoodien ylläpitonäkymä"
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom wrap] :as reagent]
             [harja.asiakas.kommunikaatio :as k]
             [clojure.string :as str]
             [bootstrap :as bs]))
@@ -9,9 +9,9 @@
 
 (def uusi-tehtava "uuden tehtävän kirjoittaminen" (atom ""))
 
-(def valittu-taso1 "Valittu 1. tason SAMPO koodi" (atom nil))
-(def valittu-taso2 "Valittu 2. tason SAMPO koodi" (atom nil))
-(def valittu-taso3 "Valittu 3. tason SAMPO koodi" (atom nil))
+(defonce valittu-taso1 (atom nil))
+(defonce valittu-taso2 (atom nil))
+(defonce valittu-taso3 (atom nil))
 
 (defonce valittu-toimenpidekoodi (atom nil))
 
@@ -48,10 +48,49 @@
                (swap! koodit assoc id koodi))))) 
 
 (defn poista-tehtavakoodi [koodi]
-  (k/post! :poista-toimenpidekoodi koodi
-           (fn [ok]
-             (.log js/console "poisto: " ok)
-             (swap! koodit dissoc (:id koodi)))))
+  (when (js/confirm (str "Poistetaanko tehtäväkoodi " (:nimi koodi) "?")) 
+    (k/post! :poista-toimenpidekoodi koodi
+             (fn [ok]
+               (.log js/console "poisto: " ok)
+               (swap! koodit dissoc (:id koodi))))))
+
+(defn muokkaa-tehtavakoodi [koodi uusi-tehtavakoodi]
+  (.log js/console "muokkaa " (pr-str koodi) " => " uusi-tehtavakoodi)
+  (let [ok (fn [& _]            
+             (swap! koodit update-in [(:id koodi)]
+                    #(assoc %
+                       :muokattu nil
+                       :nimi uusi-tehtavakoodi)))]
+    (if (= (:nimi koodi) uusi-tehtavakoodi)
+      ;; ei tarvitse muokata, sama koodi
+      (ok)
+
+      ;; pyydetään palvelinta vaihtamaan koodi
+      (k/post! :muokkaa-toimenpidekoodi (assoc koodi :nimi uusi-tehtavakoodi)
+               ok))))
+
+(def tehtavakoodin-muokkausrivi
+  (with-meta
+    (fn [koodi muokattu]
+      [:tr
+       [:td [:input {:type "text"
+                     :on-change #(reset! muokattu (-> % .-target .-value))
+                     :on-key-down #(case (.-keyCode %)
+                                     13 (muokkaa-tehtavakoodi koodi @muokattu)
+                                     27 (reset! muokattu nil)
+                                     nil)
+                     :value @muokattu}]]
+       [:td
+        [:span
+         [:span.glyphicon.glyphicon-ok-sign.pull-left
+          {:on-click #(muokkaa-tehtavakoodi koodi @muokattu)}]
+         [:span.glyphicon.glyphicon-remove-sign.pull-right
+          {:on-click #(reset! muokattu nil)}]]]])
+    {:component-did-mount #(-> (reagent/dom-node %)
+                               (.getElementsByTagName "input")
+                               (aget 0)
+                               .focus)}))
+                 
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
@@ -109,12 +148,21 @@
                   [:tr [:td.eiTehtavia {:colspan 2} "Ei tehtäviä"]]
                   (for [tpk tehtavat]
                     ^{:key (:id tpk)}
-                    [:tr
-                     [:td (:nimi tpk)]
-                     [:td
-                      [:span.glyphicon.glyphicon-edit]
-                      [:span.glyphicon.glyphicon-trash {:on-click #(poista-tehtavakoodi tpk)
-                                                        :aria-hidden true}]]])))
+                    (if-let [muokattu (:muokattu tpk)]
+                      ;; Tätä riviä muokataan
+                      [tehtavakoodin-muokkausrivi tpk (wrap muokattu
+                                                            swap! koodit assoc-in [(:id tpk) :muokattu])]
+                      ;; Normaali rivi
+                      [:tr
+                       [:td 
+                        [:span.tehtavakoodi (:nimi tpk)]]
+                       [:td
+                        [:span.glyphicon.glyphicon-edit.pull-left
+                         {:on-click #(swap! koodit update-in [(:id tpk) :muokattu]
+                                            (fn [_] (:nimi tpk)))}]
+                        [:span.glyphicon.glyphicon-trash.pull-right
+                         {:on-click #(poista-tehtavakoodi tpk)
+                          :aria-hidden true}]]]))))
               [:tr.uusitehtavakoodi
                [:td [:input {:type "text" :placeholder "Tehtävän nimi..." :value @uusi-tehtava
                              :on-change #(reset! uusi-tehtava (-> % .-target .-value))

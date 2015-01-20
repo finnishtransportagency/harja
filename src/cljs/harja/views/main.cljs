@@ -8,16 +8,11 @@
 
             [harja.views.urakat :as urakat]
             [harja.views.hallinta :as hallinta]
+
+            [harja.asiakas.navigaatio :refer [sivu vaihda-sivu!]]
             ))
 
 
-
-(def sivu (atom :urakat))
-
-(defn vaihda-sivu!
-  "Vaihda nykyinen sivu haluttuun."
-  [uusi-sivu]
-  (reset! sivu uusi-sivu))
 
 (defn kayttajatiedot [kayttaja]
   [:a {:href "#"} (:nimi @kayttaja)])

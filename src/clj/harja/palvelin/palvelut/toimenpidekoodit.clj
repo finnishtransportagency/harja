@@ -7,7 +7,9 @@
 
 (declare hae-toimenpidekoodit
          lisaa-toimenpidekoodi
-         poista-toimenpidekoodi)
+         poista-toimenpidekoodi
+         muokkaa-toimenpidekoodi)
+
 
 (defrecord Toimenpidekoodit []
   component/Lifecycle
@@ -21,10 +23,14 @@
     (julkaise-palvelu (:http-palvelin this) :poista-toimenpidekoodi
                       (fn [kayttaja koodi]
                         (poista-toimenpidekoodi (:db this) kayttaja koodi)))
+    (julkaise-palvelu (:http-palvelin this) :muokkaa-toimenpidekoodi
+                      (fn [kayttaja koodi]
+                        (muokkaa-toimenpidekoodi (:db this) kayttaja koodi)))
     this)
 
   (stop [this]
-    (doseq [p [:hae-toimenpidekoodit :lisaa-toimenpidekoodi :poista-toimenpidekoodi]]
+    (doseq [p [:hae-toimenpidekoodit :lisaa-toimenpidekoodi
+               :poista-toimenpidekoodi :muokkaa-toimenpidekoodi]]
       (poista-palvelu (:http-palvelin this) p))
     this))
 
@@ -47,3 +53,8 @@
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
   [db {kayttaja :id} {id :id}]
   (= 1 (q/poista-toimenpidekoodi! db kayttaja id)))
+
+(defn muokkaa-toimenpidekoodi
+  "Muokkaa toimenpidekoodin nimeä. Palauttaa true jos muokkaus tehtiin, false muuten."
+  [db {kayttaja :id} {id :id nimi :nimi}]
+  (= 1 (q/muokkaa-toimenpidekoodi! db kayttaja nimi id)))
