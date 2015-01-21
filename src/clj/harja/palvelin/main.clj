@@ -10,6 +10,7 @@
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.urakat :as urakat]
+   [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
@@ -24,7 +25,7 @@
                                     (:kayttaja tietokanta)
                                     (:salasana tietokanta))
      :todennus (if kehitysmoodi
-                 (todennus/feikki-http-todennus {:nimi "Tero Toripolliisi" :id "LX123456789"})
+                 (todennus/feikki-http-todennus {:etunimi "Tero" :sukunimi "Toripolliisi" :id 1 :kayttajanimi "LX123456789"})
                  (todennus/http-todennus))
      :http-palvelin (component/using
                      (http-palvelin/luo-http-palvelin (:portti http-palvelin)
@@ -41,6 +42,10 @@
      :urakat (component/using
               (urakat/->Urakat)
               [:http-palvelin :db])
+
+     :toimenpidekoodit (component/using
+                        (toimenpidekoodit/->Toimenpidekoodit)
+                        [:http-palvelin :db])
      )))
 
 (def harja-jarjestelma nil)

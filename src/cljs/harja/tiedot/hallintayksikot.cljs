@@ -9,11 +9,11 @@
 ;; Kun käyttäjätiedot saapuvat, hae relevantit hallintayksiköt
 (t/kuuntele! :kayttajatiedot
              (fn [kayttaja]
-               (k/request! :hallintayksikot
-                           :tie ;; FIXME: tämä otettava käyttäjän tiedoista 
-                           #(reset! hallintayksikot
-                                    (mapv (fn [hy]
-                                            (assoc hy :type :hy)) %)))))
+               (k/post! :hallintayksikot
+                        :tie ;; FIXME: tämä otettava käyttäjän tiedoista 
+                        #(reset! hallintayksikot
+                                 (mapv (fn [hy]
+                                         (assoc hy :type :hy)) %)))))
 
                  
  

@@ -18,7 +18,8 @@
     this)
   
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :hallintayksikot)))
+    (poista-palvelu (:http-palvelin this) :hallintayksikot)
+    this))
 
 
 (defn hae-hallintayksikot

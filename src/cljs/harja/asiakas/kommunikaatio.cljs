@@ -4,10 +4,12 @@
             [cljs.core.async :refer [put! close! chan]]
             [harja.asiakas.tapahtumat :as tapahtumat]))
 
-(defn request!
+
+
+(defn post!
   "Lähetä palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
 Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla eikä palauta kanavaa."
-  ([service payload] (request! service payload nil))
+  ([service payload] (post! service payload nil))
   ([service payload callback-fn]
      (let [chan (when-not callback-fn
                   (chan))

@@ -104,3 +104,14 @@ Opts can have the following keys:
        (when @open
          [:div.panel-body
           content])])))
+
+(defn panel
+  ([options content] (panel options nil content))
+  ([options title content]
+     [:div.panel {:class (case (or (:style options) :default)
+                           :default "panel-default")}
+      (when title
+        [:div.panel-heading
+         [:h3.panel-title title]])
+      [:div.panel-body
+       content]]))
