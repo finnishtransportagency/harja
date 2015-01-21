@@ -1,6 +1,6 @@
 -- name: hae-kaikki-toimenpidekoodit
 -- Listaa kaikki toimenpidekoodit.
-SELECT id,koodi,nimi,emo,taso FROM toimenpidekoodi;
+SELECT id,koodi,nimi,emo,taso FROM toimenpidekoodi WHERE poistettu=false;
 
 
 -- name: lisaa-toimenpidekoodi<!
