@@ -31,5 +31,4 @@ Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla ei
        chan)))
 
   
-(defn ^:export test []
-  (request! :ping {:foo 1} #(.log js/console "sain takaisin: " %)))
+
