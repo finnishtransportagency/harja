@@ -5,10 +5,14 @@
             [clojure.string :as str]
             [bootstrap :as bs]))
 
+;; PENDING: en laittanut näille omia harja.tiedot alla olevaa nimiavaruutta
+;; siirretään omaansa, jos näitä kooditietoja tarvitaan muualtakin kuin täältä
+;; hallintanäkymästä.
 (def koodit "id->koodi mäppäys kaikista toimenpidekoodeista" (atom nil))
 
-(add-watch koodit ::debug (fn [_ _ old new]
-                            (.log js/console "koodit: " (pr-str old) " => " (pr-str new))))
+(comment
+  (add-watch koodit ::debug (fn [_ _ old new]
+                              (.log js/console "koodit: " (pr-str old) " => " (pr-str new)))))
 
 (def uusi-tehtava "uuden tehtävän kirjoittaminen" (atom ""))
 
