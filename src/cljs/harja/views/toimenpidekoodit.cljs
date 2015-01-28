@@ -7,6 +7,9 @@
 
 (def koodit "id->koodi mäppäys kaikista toimenpidekoodeista" (atom nil))
 
+(add-watch koodit ::debug (fn [_ _ old new]
+                            (.log js/console "koodit: " (pr-str old) " => " (pr-str new))))
+
 (def uusi-tehtava "uuden tehtävän kirjoittaminen" (atom ""))
 
 (defonce valittu-taso1 (atom nil))
