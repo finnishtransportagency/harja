@@ -40,11 +40,7 @@
                  [org.geotools/gt-epsg-wkt "12.1"] ;; EPSG koordinaatistot
                  [org.geotools/gt-swing "12.1"] ;; just for experimentation, remove when no longer needed
 
-                 ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.11"]
-                 [org.apache.poi/poi-scratchpad "3.11"]
-                 
-                 
+                                 
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  
@@ -58,6 +54,11 @@
                  ;; reititys
                  [secretary "1.2.1"]
 
+                 ;; Microsoft dokumenttimuotojen tuki
+                 [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
+                 [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.11"] ;; .xlsx tiedoston lukua varten
+                 [org.clojure/data.json "0.2.5"]
                  
                  ]
   
@@ -66,7 +67,10 @@
                      ;; Testaus
                      [clj-webdriver "0.6.0"]
                      [org.seleniumhq.selenium/selenium-java "2.44.0"]
-                     [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]
+                     [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]
+
+
+                     ]
 
                  
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi

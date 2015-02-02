@@ -52,6 +52,9 @@ L.marker.prototype.getLatLng = function(){};
 L.TileLayer = function(a, b){};
 
 /** @constructor */
+L.TileLayer.WMS = function(a,b){};
+
+/** @constructor */
 L.Icon = function(a){};
 L.Icon.prototype.iconSize = null;
 L.Icon.prototype.shadowSize = null;

@@ -1,6 +1,7 @@
 (ns harja.ui.leaflet
   (:require [reagent.core :as reagent :refer [atom]]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;;;
@@ -27,10 +28,11 @@
                            url
                            (clj->js {:attribution (:attribution layer-spec)})
                                     )
-                    :wms (js/L.tileLayer.wms
+                    :wms (js/L.TileLayer.WMS.
                           url
-                          (clj->js {:format "image/png"
+                          (clj->js {:format (or (:format layer-spec) "image/png")
                                     :fillOpacity 1.0
+                                    :layers (str/join "," (:layers layer-spec))
                                     })))]
         ;;(.log js/console "L.tileLayer = " layer)
         (.addTo layer leaflet)))

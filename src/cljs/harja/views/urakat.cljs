@@ -129,6 +129,18 @@
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
+(defn wms-url
+  "Määrittelee WMS osoitteen, suhteellisena sovelluksen osoitteeseen."
+  []
+  (let [l (.-location js/document)
+        port (.-port l)]
+    (str (.-protocol l)
+         "//"
+         (.-hostname l)
+         (when-not (or (= port "80")
+                       (= port "443"))
+           (str ":" port))
+         "/wms/rasteriaineistot?")))
 
 (defn kartta []
   (let [hals @hal/hallintayksikot
@@ -168,9 +180,16 @@
                                  :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
-              :layers [{:type :tile
-                        :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
-                        :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
+              :layers [{:type :wms
+                        :url (wms-url)
+                        :layers ["yleiskartta_1m"]
+                        :format "image/png"
+                        :transparent true
+                        :attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
+                        
+                       ;;{:type :tile
+                       ;; :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+                       ;; :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
 
               }
      ]))
