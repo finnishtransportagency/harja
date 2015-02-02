@@ -140,7 +140,7 @@
          (when-not (or (= port "80")
                        (= port "443"))
            (str ":" port))
-         "/wms/rasteriaineistot?")))
+         "/wms/rasteriaineistot/image?")))
 
 (defn kartta []
   (let [hals @hal/hallintayksikot
