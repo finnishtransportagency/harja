@@ -185,6 +185,7 @@
                         :layers ["yleiskartta_1m"]
                         :format "image/png"
                         :transparent true
+                        :srs "EPSG:3067"
                         :attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
                         
                        ;;{:type :tile

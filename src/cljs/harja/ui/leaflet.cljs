@@ -33,6 +33,7 @@
                           (clj->js {:format (or (:format layer-spec) "image/png")
                                     :fillOpacity 1.0
                                     :layers (str/join "," (:layers layer-spec))
+                                    :srs (:srs layer-spec)
                                     })))]
         ;;(.log js/console "L.tileLayer = " layer)
         (.addTo layer leaflet)))
