@@ -17,6 +17,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää navigaation tilan
 (defonce sivu (atom :urakat))
 
+(defn kasittele-url!
+  "Käsittelee urlin (route) muutokset."
+  [url]
+  (.log js/console url))
+
+;; Quick and dirty history configuration.
+(let [h (History.)]
+  (events/listen h EventType/NAVIGATE #(kasittele-url! (.-token %)))
+  (doto h (.setEnabled true)))
 
 (defn vaihda-sivu!
   "Vaihda nykyinen sivu haluttuun."
