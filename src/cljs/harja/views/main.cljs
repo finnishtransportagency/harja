@@ -9,7 +9,7 @@
             [harja.views.urakat :as urakat]
             [harja.views.hallinta :as hallinta]
 
-            [harja.asiakas.navigaatio :refer [sivu vaihda-sivu!]]
+            [harja.tiedot.navigaatio :refer [sivu vaihda-sivu!]]
             ))
 
 
