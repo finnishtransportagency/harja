@@ -51,8 +51,6 @@
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
-                 ;; reititys
-                 [secretary "1.2.1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
@@ -117,6 +115,8 @@
                                    }}
                                    
                        ]}
+
+  :clean-targets #^{:protect false} ["dev-resources/js/out" "target"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less"]
