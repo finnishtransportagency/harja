@@ -7,15 +7,45 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    ;; Reititykset
    [goog.events :as events]
    [goog.history.EventType :as EventType]
+   [reagent.core :refer [atom]]
    
-   [reagent.core :refer [atom]])
-
+   [harja.asiakas.tapahtumat :as t]
+   [harja.tiedot.urakat :as ur])
   
+   (:require-macros [cljs.core.async.macros :refer [go]])
   
   (:import goog.History))
 
-;; Atomi, joka sisältää navigaation tilan
+;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
+
+;; Atomi, joka sisältää valitun hallintayksikön
+(def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
+
+;; Atomi, joka sisältää valitun urakan
+(def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
+
+;; Atomi, joka sisältää valitun hallintayksikön urakat
+(def urakkalista "Hallintayksikon urakat" (atom nil))
+
+;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
+(defn valitse-hallintayksikko [yks]
+  (reset! valittu-hallintayksikko yks)
+  (reset! urakkalista nil)
+  (reset! valittu-urakka nil)
+  (if yks
+    (do
+      (go (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks))))
+      (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu)))
+    (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))
+
+(defn valitse-urakka [ur]
+  (reset! valittu-urakka ur)
+  (if ur
+    (t/julkaise! (assoc ur :aihe :urakka-valittu))
+    (t/julkaise! {:aihe :urakkavalinta-poistettu})))
+
+
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."

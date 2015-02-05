@@ -5,114 +5,17 @@
             [bootstrap :as bs]
             [harja.ui.listings :refer [filtered-listing]]
             [harja.ui.leaflet :refer [leaflet] :as leaflet]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija sisalla?]]
+            [harja.ui.yleiset :as yleiset]
             
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
             
             [harja.asiakas.tapahtumat :as t]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-(def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
-
-(def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
-
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
-
-(def urakkalista "Hallintayksikon urakat" (atom nil))
-
-(defn valitse-hallintayksikko [yks]
-  (reset! valittu-hallintayksikko yks)
-  (reset! urakkalista nil)
-  (reset! valittu-urakka nil)
-  (if yks
-    (do
-      (go (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks))))
-      (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu)))
-        
-    (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))
-
-(defn valitse-urakka [ur]
-  (reset! valittu-urakka ur)
-  (if ur
-    (t/julkaise! (assoc ur :aihe :urakka-valittu))
-    (t/julkaise! {:aihe :urakkavalinta-poistettu})))
-
-
-(defn murupolku
-  "Näyttää tämänhetkiset valinnat murupolkuna"
-  []
-  (kuuntelija
-   {:valinta-auki (atom nil) ;; nil | :hallintayksikko | :urakka
-    }
-   
-
-   (fn [this]
-     (let [valinta-auki (:valinta-auki (reagent/state this))]
-       [:ol.breadcrumb
-        [:li [:a {:href "#" :on-click #(valitse-hallintayksikko nil)}
-              "Koko Suomi"]]
-        (when-let [valittu @valittu-hallintayksikko]
-          [:li.dropdown {:class (when (= :hallintayksikko @valinta-auki) "open")}
-
-           (let [vu @valittu-urakka
-                 va @valinta-auki]
-             (if (or (not (nil? vu))
-                     (= va :hallintayksikko))
-               [:a {:href "#" 
-                    :on-click #(valitse-hallintayksikko valittu)}
-                (:nimi valittu) " "]
-               [:span.valittu-hallintayksikko (:nimi valittu) " "]))
-           
-           [:button.btn.btn-default.btn-xs.dropdown-toggle {:href "#" :on-click #(swap! valinta-auki
-                                                                                        (fn [v]
-                                                                                          (if (= v :hallintayksikko)
-                                                                                            nil
-                                                                                            :hallintayksikko)))}
-            [:span.caret]]
-                      
-           ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
-           [:ul.dropdown-menu {:role "menu"}
-            (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
-              ^{:key (str "hy-" (:id muu-yksikko))}
-              [:li [:a {:href "#" :on-click #(do (reset! valinta-auki nil)
-                                                 (valitse-hallintayksikko muu-yksikko))} (:nimi muu-yksikko)]])]])
-        (when-let [valittu @valittu-urakka]
-          [:li.dropdown {:class (when (= :urakka @valinta-auki) "open")}
-           
-           ;;[:a {:href "#"
-           ;;       :on-click #(valitse-urakka valittu)}
-           ;;   (:nimi valittu) " "]
-           [:span.valittu-urakka (:nimi valittu) " "]
-           
-           [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
-                                                                              (fn [v]
-                                                                                (if (= v :urakka)
-                                                                                  nil
-                                                                                  :urakka)))}
-            [:span.caret]]
-
-           ;; Alasvetovalikko urakan nopeaa vaihtamista varten
-           [:ul.dropdown-menu {:role "menu"}
-            (for [muu-urakka (filter #(not= % valittu) @urakkalista)]
-              ^{:key (str "ur-" (:id muu-urakka))}
-              [:li [:a {:href "#" :on-click #(valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])]))
-
-   ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown
-   [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
-   #(reset! (-> % reagent/state :valinta-auki) nil)
-
-   ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
-   :body-klikkaus
-   (fn [this {klikkaus :tapahtuma}]
-     (when-not (sisalla? this klikkaus)
-       (let [valinta-auki (:valinta-auki (reagent/state this))]
-         (reset! valinta-auki false))))
-   
-   ))
-
 
 ;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
 (def +koko-suomi-sijainti+ [65.1 25.2])
@@ -144,31 +47,31 @@
 
 (defn kartta []
   (let [hals @hal/hallintayksikot
-        v-hal @valittu-hallintayksikko]
+        v-hal @nav/valittu-hallintayksikko]
     [leaflet {:id "kartta"
               :width "100%" :height "750px" ;; set width/height as CSS units, must set height as pixels!
               :view kartta-sijainti
               :zoom zoom-taso
-              :selection valittu-hallintayksikko
+              :selection nav/valittu-hallintayksikko
               :on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
               :on-select (fn [item]
                            (condp = (:type item)
-                             :hy (valitse-hallintayksikko item)
-                             :ur (valitse-urakka item)))
+                             :hy (nav/valitse-hallintayksikko item)
+                             :ur (nav/valitse-urakka item)))
               :geometries (cond
                            ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
                            (nil? v-hal)
                            hals
 
                            ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                           (nil? @valittu-urakka)
+                           (nil? @nav/valittu-urakka)
                            (vec (concat [(assoc v-hal
                                            :valittu true
                                            :leaflet/fit-bounds true)]
-                                        @urakkalista))
+                                        @nav/urakkalista))
                            
                            ;; Valittu urakka, mitä näytetään?
-                           :default [(assoc @valittu-urakka
+                           :default [(assoc @nav/valittu-urakka
                                        :valittu true
                                        :leaflet/fit-bounds true)])
               
@@ -180,17 +83,17 @@
                                  :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
-              :layers [{:type :wms
-                        :url (wms-url)
-                        :layers ["yleiskartta_1m"]
-                        :format "image/png"
-                        :transparent true
-                        :srs "EPSG:3067"
-                        :attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
+              :layers [;;{:type :wms
+                        ;;:url (wms-url)
+                        ;;:layers ["yleiskartta_1m"]
+                        ;;:format "image/png"
+                        ;;:transparent true
+                        ;;:srs "EPSG:3067"
+                        ;;:attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
                         
-                       ;;{:type :tile
-                       ;; :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
-                       ;; :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
+                       {:type :tile
+                        :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+                        :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
 
               }
      ]))
@@ -201,10 +104,9 @@
   "Harjan karttasivu."
   []
   [:span
-   [murupolku]
    [:div#sidebar-left.col-sm-6
-    (let [v-hal @valittu-hallintayksikko
-          v-ur @valittu-urakka]
+    (let [v-hal @nav/valittu-hallintayksikko
+          v-ur @nav/valittu-urakka]
       (if-not v-hal
         ;; Hallintayksikköä ei ole valittu: näytetään lista hallintayksiköistä
         [:span
@@ -212,23 +114,23 @@
          [:div
           ^{:key "hy-lista"}
           [filtered-listing {:format :nimi :haku :nimi
-                             :selection valittu-hallintayksikko
-                             :on-select valitse-hallintayksikko}
+                             :selection nav/valittu-hallintayksikko
+                             :on-select nav/valitse-hallintayksikko}
            hal/hallintayksikot]]]
         
         ;; Hallintayksikko on valittu, mutta urakkaa ei: näytetään luettelossa urakat
         (if-not v-ur
           ;;(let [urakat (ur/hallintayksikon-urakat v-hal)]
-            (if (nil? @urakkalista)
-              [ajax-loader "Urakoita haetaan..."]
+            (if (nil? @nav/urakkalista)
+              [yleiset/ajax-loader "Urakoita haetaan..."]
               [:span
                [:h5.haku-otsikko "Hae urakka kartalta tai listasta"]
                [:div
                 ^{:key "ur-lista"}
                 [filtered-listing {:format :nimi :haku :nimi
-                                   :selection valittu-urakka
-                                   :on-select valitse-urakka}
-                 urakkalista]]])
+                                   :selection nav/valittu-urakka
+                                   :on-select nav/valitse-urakka}
+                 nav/urakkalista]]])
           
             ;; Urakka valittu, tähän kaikki urakan komponentit
               [:span

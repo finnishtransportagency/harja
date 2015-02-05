@@ -6,6 +6,7 @@
             [harja.ui.listings :refer [filtered-listing]]
             [harja.ui.leaflet :refer [leaflet]]
 
+            [harja.views.murupolku :as murupolku]
             [harja.views.urakat :as urakat]
             [harja.views.hallinta :as hallinta]
 
@@ -49,6 +50,7 @@
   []
   [:span
    [header]
+   [murupolku/murupolku]
    (case @sivu
      :urakat [urakat/urakat]
      :raportit [:div "täältä kätevästi raportteihin"]
