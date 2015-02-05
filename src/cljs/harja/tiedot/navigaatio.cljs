@@ -19,6 +19,13 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
+;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
+(def kartan-koko "Kartan koko" (atom :M))
+
+(defn vaihda-kartan-koko! [uusi-koko]
+  (reset! kartan-koko uusi-koko)
+  (t/julkaise! {:aihe :kartan-koko-vaihdettu :uusi-koko uusi-koko}))
+
 ;; Atomi, joka sisältää valitun hallintayksikön
 (def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
 

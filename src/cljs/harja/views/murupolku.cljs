@@ -10,6 +10,24 @@
             [harja.tiedot.navigaatio :as nav])
             )
 
+(defn kartan-koko-kontrollit []
+  (let [koko @nav/kartan-koko 
+        vaihda-koko (fn [e] (nav/vaihda-kartan-koko! (case (.-value (.-target e))
+                                                       "hidden" :hidden 
+                                                       "S" :S 
+                                                       "M" :M 
+                                                       "L" :L)))]
+       
+       [:div.btn-group.pull-right.kartan-koko-kontrollit
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "hidden" :on-change vaihda-koko :checked (if (= koko :hidden) true false)} " Piilota"]]
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "S" :on-change vaihda-koko :checked (if (= koko :S) true false)} " S"]]
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "M" :on-change vaihda-koko :checked (if (= koko :M) true false)} " M"]]
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "L" :on-change vaihda-koko :checked (if (= koko :L) true false) } " L"]]]))
+
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
@@ -20,7 +38,8 @@
 
    (fn [this]
      (let [valinta-auki (:valinta-auki (reagent/state this))]
-       [:ol.breadcrumb
+       [:span
+        [:ol.breadcrumb
         [:li [:a {:href "#" :on-click #(nav/valitse-hallintayksikko nil)}
               "Koko maa"]]
         (when-let [valittu @nav/valittu-hallintayksikko]
@@ -67,7 +86,10 @@
            [:ul.dropdown-menu {:role "menu"}
             (for [muu-urakka (filter #(not= % valittu) @nav/urakkalista)]
               ^{:key (str "ur-" (:id muu-urakka))}
-              [:li [:a {:href "#" :on-click #(nav/valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])]))
+              [:li [:a {:href "#" :on-click #(nav/valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])
+        [:span.pull-right
+         [kartan-koko-kontrollit]]]
+        ]))
 
    ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown
    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
