@@ -20,7 +20,10 @@
   (t/kuuntele! :hallintayksikkovalinta-poistettu
                #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
                     (reset! zoom-taso +koko-suomi-zoom-taso+))))
-                        
+               
+;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
+(def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
+
 (defn kartta []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko]
@@ -53,10 +56,11 @@
               
               :geometry-fn (fn [hy]
                              (when-let [alue (:alue hy)]
-                               (assoc alue
+                               (when (map? alue)
+                                  (assoc alue
                                  :type (if (:valitty hy) :line (:type alue)) ;;{:type (if (:valittu hy) :line :polygon)
                                  :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
-                                 :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))
+                                 :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
               :layers [;;{:type :wms

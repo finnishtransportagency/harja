@@ -4,7 +4,7 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija sisalla?]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla?]]
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav])
@@ -40,8 +40,7 @@
      (let [valinta-auki (:valinta-auki (reagent/state this))]
        [:span
         [:ol.breadcrumb
-        [:li [:a {:href "#" :on-click #(nav/valitse-hallintayksikko nil)}
-              "Koko maa"]]
+        [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
         (when-let [valittu @nav/valittu-hallintayksikko]
           [:li.dropdown {:class (when (= :hallintayksikko @valinta-auki) "open")}
 
@@ -49,12 +48,11 @@
                  va @valinta-auki]
              (if (or (not (nil? vu))
                      (= va :hallintayksikko))
-               [:a {:href "#" 
-                    :on-click #(nav/valitse-hallintayksikko valittu)}
-                (:nimi valittu) " "]
+               [linkki (str (:nimi valittu) " ") #(nav/valitse-hallintayksikko valittu)
+                ]
                [:span.valittu-hallintayksikko (:nimi valittu) " "]))
            
-           [:button.btn.btn-default.btn-xs.dropdown-toggle {:href "#" :on-click #(swap! valinta-auki
+           [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                                         (fn [v]
                                                                                           (if (= v :hallintayksikko)
                                                                                             nil
@@ -65,14 +63,10 @@
            [:ul.dropdown-menu {:role "menu"}
             (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
               ^{:key (str "hy-" (:id muu-yksikko))}
-              [:li [:a {:href "#" :on-click #(do (reset! valinta-auki nil)
-                                                 (nav/valitse-hallintayksikko muu-yksikko))} (:nimi muu-yksikko)]])]])
+              [:li [linkki (:nimi muu-yksikko) #(do (reset! valinta-auki nil)
+                                                 (nav/valitse-hallintayksikko muu-yksikko)) ]])]])
         (when-let [valittu @nav/valittu-urakka]
           [:li.dropdown {:class (when (= :urakka @valinta-auki) "open")}
-           
-           ;;[:a {:href "#"
-           ;;       :on-click #(valitse-urakka valittu)}
-           ;;   (:nimi valittu) " "]
            [:span.valittu-urakka (:nimi valittu) " "]
            
            [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
@@ -86,7 +80,7 @@
            [:ul.dropdown-menu {:role "menu"}
             (for [muu-urakka (filter #(not= % valittu) @nav/urakkalista)]
               ^{:key (str "ur-" (:id muu-urakka))}
-              [:li [:a {:href "#" :on-click #(nav/valitse-urakka muu-urakka)} (:nimi muu-urakka)]])]])
+              [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])]])
         [:span.pull-right
          [kartan-koko-kontrollit]]]
         ]))

@@ -5,14 +5,17 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.listings :refer [filtered-listing]]
             [harja.ui.leaflet :refer [leaflet]]
-
-            [harja.views.murupolku :as murupolku]
-            [harja.views.urakat :as urakat]
-            [harja.views.kartta :as kartta]
-            [harja.views.hallinta :as hallinta]
-
+            [harja.ui.yleiset :refer [linkki]]
+            
             [harja.tiedot.navigaatio :as nav]
-            ))
+            [harja.views.murupolku :as murupolku]
+            
+            [harja.views.urakat :as urakat]
+            [harja.views.raportit :as raportit]
+            [harja.views.tilannekuva :as tilannekuva]
+            [harja.views.ilmoitukset :as ilmoitukset]
+            [harja.views.kartta :as kartta]
+            [harja.views.hallinta :as hallinta]))
 
 
 
@@ -31,9 +34,11 @@
        [:input.form-control {:type "text" :placeholder "Hae..."}]]
       [:button.btn.btn-default {:type "button"} "Hae"]]
      
-   [:a {:href "#" :on-click #(nav/vaihda-sivu! :urakat)} "Urakat"]
-   [:a {:href "#" :on-click #(nav/vaihda-sivu! :raportit)} "Raportit"]
-   [:a {:href "#" :on-click #(nav/vaihda-sivu! :hallinta)} "Hallinta"]
+   [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]
+   [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]
+   [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]
+   [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]
+   [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]
      
      :right
      [kayttajatiedot istunto/kayttaja]])
@@ -43,12 +48,6 @@
    [:div#footer-wrap
     [:a {:href "http://www.liikennevirasto.fi"}
      "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]]])
-
-(comment
-  {:class (case @nav/kartan-koko
-                                :M "col-sm-6"
-                                :L "")})
-
 
 (defn main
   "Harjan UI:n pääkomponentti"
@@ -66,7 +65,9 @@
      [:div#sidebar-left {:class sisallon-luokka}
       (case @nav/sivu ;;tänne dynaaminen koko...
         :urakat [urakat/urakat]
-        :raportit [:div "täältä kätevästi raportteihin"]
+        :raportit [raportit/raportit]
+        :tilannekuva [tilannekuva/tilannekuva]
+        :ilmoitukset [ilmoitukset/ilmoitukset]
         :hallinta [hallinta/hallinta]
         )]
      ;; TODO: kartan containerin koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä

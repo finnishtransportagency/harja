@@ -99,7 +99,19 @@
                                    :source-map true
                                    :preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
-                                   :output-dir "dev-resources/js/out"}}
+                                   :output-dir "dev-resources/js/out"}
+                        :notify-command ["terminal-notifier"
+                                         "-title"
+                                         "Harja"
+                                         "-subtitle"
+                                         "cljsbuild"
+                                         "-group"
+                                         "some-group"
+                                         "-sound"
+                                         "default"
+                                         "-activate"
+                                         "com.googlecode.iTerm2"
+                                         "-message"]}
                        
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
