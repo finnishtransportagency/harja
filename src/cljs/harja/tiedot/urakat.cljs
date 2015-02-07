@@ -2,7 +2,7 @@
   "Harjan urakkalistausten tietojen hallinta"
   (:require [harja.asiakas.kommunikaatio :as k]
             [reagent.core :refer [atom]]
-            [cljs.core.async :refer [chan <! >!]])
+            [cljs.core.async :refer [chan <! >! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def +urakkalistat+
@@ -38,6 +38,6 @@ ja sen arvo on nil jos tietoja ei ole vielä haettu palvelimelta."
       (let [res (<! (k/post! :hallintayksikon-urakat (:id hallintayksikko)))]
         (>! ch (mapv (fn [ur]
                        (assoc ur :type :ur))
-                     res))))
+                     res)))
+      (close! ch))
     ch))
-              

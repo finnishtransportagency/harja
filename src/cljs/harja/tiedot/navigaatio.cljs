@@ -9,8 +9,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [goog.Uri :as Uri]
    [goog.history.EventType :as EventType]
    [reagent.core :refer [atom]]
+   [cljs.core.async :refer [<! >! chan close!]]
    
    [harja.asiakas.tapahtumat :as t]
+   [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur])
   
    (:require-macros [cljs.core.async.macros :refer [go]])
@@ -18,7 +20,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (:import goog.History))
 
 
-(declare kasittele-url! paivita-url)
+(declare kasittele-url! paivita-url valitse-urakka)
 
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
@@ -38,6 +40,28 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
+
+(add-watch valittu-hallintayksikko :loki 
+           (fn [_ _ old new]
+             (.log js/console "valittu-hallintayksikko " 
+                   old " => " new)))
+(add-watch urakkalista :loki 
+           (fn [_ _ old new]
+             (.log js/console "urakkalista " 
+                   old " => " new)))
+
+(defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
+  ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
+  (if-not (= hy-id (:id @valittu-hallintayksikko))
+    (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
+      (reset! valittu-hallintayksikko yks)
+      (reset! urakkalista nil)
+      (reset! valittu-urakka nil)
+      (paivita-url)
+      (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
+        (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
+      ;; else
+      (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
@@ -78,16 +102,13 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   [uusi-sivu]
     (when-not (= @sivu uusi-sivu)
       (reset! sivu uusi-sivu)
-      (.log js/console "when-not ennen kutsua päivitä url " uusi-sivu)
       (paivita-url))
     )
 
 
-;; käyttäjä asettaa browseriin urlin / tulee bookmarkista
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
-  (.log js/console "in kasittele-url " url)
   (let [uri (goog.Uri/parse url)
         polku (.getPath uri)
         parametrit (.getQueryData uri)]
@@ -97,12 +118,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       "tilannekuva" (vaihda-sivu! :tilannekuva)
       "ilmoitukset" (vaihda-sivu! :ilmoitukset)
       "hallinta" (vaihda-sivu! :hallinta))
-    (when-let [hy (.get parametrit "hy")]
-      (.log js/console "hyksikkö valittu " hy)
-      (reset! valittu-hallintayksikko {:id (js/parseInt hy) :nimi "hy demo"}))
-    (when-let [u (.get parametrit "u")]
-      (.log js/console "urakka valittu " u)
-      (valitse-urakka {:id (js/parseInt u) :nimi "urakka demo" }))))
+    (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
+      (if-let [u (some-> parametrit (.get "u") js/parseInt)] 
+      (aseta-hallintayksikko-ja-urakka hy u)
+      ;; else
+      (go
+        (reset! valittu-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
+      ))
+    ))
 
 (.setEnabled historia true)
 (kasittele-url! (-> js/document .-location .-hash (.substring 1)))
