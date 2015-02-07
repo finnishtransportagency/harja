@@ -27,7 +27,9 @@
           (recur (.-parentNode ylempi)))))))
 
 
-
+;;
+(defn linkki [otsikko toiminto]
+  [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
 (defn kuuntelija
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
