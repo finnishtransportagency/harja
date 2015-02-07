@@ -32,6 +32,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reset! kartan-koko uusi-koko)
   (t/julkaise! {:aihe :kartan-koko-vaihdettu :uusi-koko uusi-koko}))
 
+;; I-vaiheessa aina :tie
+(def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
+
+;; I-vaiheessa aina :hoito tai :yllapito (mieti myöhemmin jaetaanko ylläpidon urakat tarkemmin)
+(def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi" (atom :hoito))
+
+(def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
+
 ;; Atomi, joka sisältää valitun hallintayksikön
 (def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
 
@@ -63,6 +71,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       ;; else
       (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
 
+(defn vaihda-urakkatyyppi! [ut]
+  (when (= @valittu-vaylamuoto :tie)
+    (reset! valittu-urakkatyyppi ut)))
+  
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
   (reset! valittu-hallintayksikko yks)

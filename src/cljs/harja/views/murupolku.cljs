@@ -4,13 +4,29 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla?]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? radiovalinta]]
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav])
             )
 
-(defn kartan-koko-kontrollit []
+
+(comment urakkatyyppi-kontrollit []
+  (let [ut @nav/valittu-urakkatyyppi 
+        vaihda-tyyppi (fn [e] (nav/vaihda-urakkatyyppi! (case (.-value (.-target e))
+                                                       "hoito" :hoito 
+                                                       "yllapito" :yllapito)))]
+       
+       [:div.btn-group.pull-right.murupolku-suodatus
+        [:span.pull-left "Urakkatyyppi "]
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "hoito" :on-change vaihda-tyyppi 
+                   :checked (if (= ut :hoito) true false)} " Hoito"]]
+         [:label.btn.btn-primary
+          [:input {:type "radio" :value "yllapito" :on-change vaihda-tyyppi 
+                   :checked (if (= ut :yllapito) true false)} " Ylläpito"]]]))
+
+(comment kartan-koko-kontrollit []
   (let [koko @nav/kartan-koko 
         vaihda-koko (fn [e] (nav/vaihda-kartan-koko! (case (.-value (.-target e))
                                                        "hidden" :hidden 
@@ -18,7 +34,8 @@
                                                        "M" :M 
                                                        "L" :L)))]
        
-       [:div.btn-group.pull-right.kartan-koko-kontrollit
+       [:div.btn-group.pull-right.murupolku-suodatus
+        [:span.pull-left "Kartan koko "]
          [:label.btn.btn-primary
           [:input {:type "radio" :value "hidden" :on-change vaihda-koko :checked (if (= koko :hidden) true false)} " Piilota"]]
          [:label.btn.btn-primary
@@ -82,7 +99,10 @@
               ^{:key (str "ur-" (:id muu-urakka))}
               [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])]])
         [:span.pull-right
-         [kartan-koko-kontrollit]]]
+         [radiovalinta "Kartan koko" @nav/kartan-koko nav/vaihda-kartan-koko!
+          "Piilota" :hidden "S" :S "M" :M "L" :L]
+         [radiovalinta "Urakkatyyppi" @nav/valittu-urakkatyyppi nav/vaihda-urakkatyyppi!
+          "Hoito" :hoito "Ylläpito" :yllapito]]]
         ]))
 
    ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown

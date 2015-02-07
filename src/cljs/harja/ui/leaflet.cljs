@@ -2,7 +2,8 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [clairvoyant.core :as trace :include-macros true])
+            ;;[clairvoyant.core :as trace :include-macros true])
+  )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 

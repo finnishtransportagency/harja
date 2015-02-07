@@ -31,6 +31,16 @@
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
+(defn radiovalinta [otsikko valinta valitse-fn & vaihtoehdot]
+  
+  (let [vaihda-tyyppi (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
+       
+       [:div.btn-group.pull-right.murupolku-suodatus
+        [:span.pull-left otsikko " "]
+         (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
+           [:label.btn.btn-primary
+                   [:input {:type "radio" :value (name arvo) :on-change vaihda-tyyppi 
+                            :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 (defn kuuntelija
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
 Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit annetulle komponentille.

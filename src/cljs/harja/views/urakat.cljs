@@ -68,5 +68,3 @@
           
             ;; Urakka valittu, tähän kaikki urakan komponentit
             [urakka/urakka v-ur])))])
-           
-
