@@ -7,7 +7,8 @@
             ;; ja hakevat tietoa tarpeen mukaan
             [harja.tiedot.hallintayksikot :as hal]
             
-            [reagent.core :as reagent]))
+            [reagent.core :as reagent]
+            [harja.loki :refer [log]]))
 
 (defn render []
   (reagent/render [main-view/main] (.getElementById js/document "app")))
@@ -24,6 +25,7 @@
                         :tapahtuma e})))
   
   (t/julkaise! {:aihe :harja-ladattu})
-  (aset js/window "HARJA_LADATTU" true))
+  (aset js/window "HARJA_LADATTU" true)
+  )
 
 

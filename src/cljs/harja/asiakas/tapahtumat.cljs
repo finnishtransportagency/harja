@@ -1,6 +1,6 @@
 (ns harja.asiakas.tapahtumat
   "Harjan asiakaspään eventbus"
-  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all]])
+  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def julkaisukanava (chan))
@@ -28,6 +28,20 @@ voi lopettaa."
       (sub julkaisu aihe kanava)
       #(unsub julkaisu aihe kanava))))
 
+(defn odota!
+  "Kuuntelee annetun aiheen seuraavaa tapahtumaa ja poistaa kuuntelijan. Palauttaa kanavan, 
+  josta tapahtuman voi lukea."
+  [aihe]
+  (let [ch (chan)
+        ch1 (chan)
+        lopeta-fn (kuuntele! aihe ch1)]
+    (go (let [seuraava (<! ch1)]
+          (lopeta-fn)
+          (>! ch seuraava)
+          (close! ch)))
+    ch))
+
+  
 (defn julkaise!
   "Julkaise tapahtuma. Tapahtuman tulee olla mäppi, jossa on vähintään :aihe avain."
   [tapahtuma]
