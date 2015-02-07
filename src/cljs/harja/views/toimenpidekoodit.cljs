@@ -3,8 +3,12 @@
   (:require [reagent.core :refer [atom wrap] :as reagent]
             [harja.asiakas.kommunikaatio :as k]
             [clojure.string :as str]
-            [bootstrap :as bs]))
+            [bootstrap :as bs]
+            [clairvoyant.core :as trace :include-macros true]
+            ))
 
+(trace/trace-forms ;; trace start
+ 
 ;; PENDING: en laittanut näille omia harja.tiedot alla olevaa nimiavaruutta
 ;; siirretään omaansa, jos näitä kooditietoja tarvitaan muualtakin kuin täältä
 ;; hallintanäkymästä.
@@ -182,7 +186,8 @@
                      "Tallenna"]]]]]])
           ]))
     
-    {:component-did-mount (fn [this]
+    {:displayName  "toimenpidekoodit"
+     :component-did-mount (fn [this]
                             (k/post! :hae-toimenpidekoodit nil
                                      #(loop [acc {}
                                              [tpk & tpkt] %]
@@ -193,3 +198,4 @@
 
   
  
+) ;; trace end

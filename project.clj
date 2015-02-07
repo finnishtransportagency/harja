@@ -43,7 +43,7 @@
                                  
                  ;; Asiakas
                  [spyscope "0.1.5"]
-                 
+                 [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
                  
                  [cljs-ajax "0.3.9"]
                  [lively "0.1.2"] 

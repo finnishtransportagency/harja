@@ -1,8 +1,10 @@
 (ns harja.ui.leaflet
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clairvoyant.core :as trace :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the LeafletJS
@@ -11,6 +13,7 @@
 (declare update-leaflet-geometries)
 
 
+ 
 (defn- leaflet-did-mount [this]
   "Initialize LeafletJS map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -163,4 +166,5 @@
      :component-did-mount leaflet-did-mount
      :component-will-update leaflet-will-update
      :render leaflet-render}))
+
 

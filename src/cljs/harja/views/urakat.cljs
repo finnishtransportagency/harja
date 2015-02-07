@@ -12,12 +12,12 @@
             
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+
+            [harja.views.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
-(def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defn wms-url
   "Määrittelee WMS osoitteen, suhteellisena sovelluksen osoitteeseen."
@@ -67,44 +67,6 @@
                  nav/urakkalista]]])
           
             ;; Urakka valittu, tähän kaikki urakan komponentit
-              [:span
-   [:h3 "Raportit"]
-   [bs/dropdown-panel {} "Työ- ja toteumaraportit" 
-    [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]
-   [bs/dropdown-panel {} "Laadunseuranta" "ei ole mitään"]
-   [bs/dropdown-panel {} "Poikkeamaraportit" "ei poikkeamia"]
-   
-   
-   [:h3 "Suunnittelu"]
-   [bs/dropdown-panel {} "Kustannussuunnitelma: kokonaishintaiset työt" "ei vielä"]
-   [bs/dropdown-panel {} "Kustannussuunnitelma: yksikköhintaiset työt" "ei vielä"]
-   [bs/dropdown-panel {} "Materiaalisuunnitelma" "ei vielä"]
-   
-   [:h3 "Toteumat"]
-   [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
-   [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]
-   
-   ])))])
+            [urakka/urakka v-ur])))])
            
-(comment
-  [bs/tabs {}
-             "Raportit"
-             ^{:key "raportit"}
-             [:div 
-              [bs/dropdown-panel {} "Työ- ja toteumaraportit" 
-               [:div "hei, ihan urakkakin valittuna? hieno juttu! ei täällä vielä mitään tosin ole"]]
-              [bs/dropdown-panel {} "Laadunseuranta" "ei ole mitään"]
-              [bs/dropdown-panel {} "Poikkeamaraportit" "ei poikkeamia"]]
-             "Suunnittelu"
-             ^{:key "suunnittelu"}
-             [:div 
-              [bs/dropdown-panel {} "Kustannussuunnitelma: kokonaishintaiset työt" "ei vielä"]
-              [bs/dropdown-panel {} "Kustannussuunnitelma: yksikköhintaiset työt" "ei vielä"]
-              [bs/dropdown-panel {} "Materiaalisuunnitelma" "ei vielä"]]
 
-             "Toteumat"
-             ^{:key "toteumat"}
-             [:div
-              [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
-              [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]]]
-)
