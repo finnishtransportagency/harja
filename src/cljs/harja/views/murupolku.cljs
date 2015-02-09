@@ -4,8 +4,10 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? radiovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasvetovalinta radiovalinta]]
 
+            [harja.loki :refer [log]]
+            [harja.tiedot.urakoitsijat :as urakoitsijat]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav])
             )
@@ -54,7 +56,9 @@
    
 
    (fn [this]
-     (let [valinta-auki (:valinta-auki (reagent/state this))]
+     (let [valinta-auki (:valinta-auki (reagent/state this))
+           urakoitsija @nav/valittu-urakoitsija
+           urakoitsijat @urakoitsijat/urakoitsijat]
        [:span
         [:ol.breadcrumb
         [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
@@ -85,7 +89,7 @@
         (when-let [valittu @nav/valittu-urakka]
           [:li.dropdown {:class (when (= :urakka @valinta-auki) "open")}
            [:span.valittu-urakka (:nimi valittu) " "]
-           
+            
            [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                               (fn [v]
                                                                                 (if (= v :urakka)
@@ -98,7 +102,14 @@
             (for [muu-urakka (filter #(not= % valittu) @nav/urakkalista)]
               ^{:key (str "ur-" (:id muu-urakka))}
               [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])]])
+        
         [:span.pull-right
+         ;;(log "urakoitsijat " (pr-str urakoitsijat) nil)
+         [alasvetovalinta urakoitsija
+          #(do (log "%" % )(if % (:nimi %) "Kaikki"))
+          nav/valitse-urakoitsija!
+          urakoitsijat]
+         
          [radiovalinta "Kartan koko" @nav/kartan-koko nav/vaihda-kartan-koko!
           "Piilota" :hidden "S" :S "M" :M "L" :L]
          [radiovalinta "Urakkatyyppi" @nav/valittu-urakkatyyppi nav/vaihda-urakkatyyppi!

@@ -8,6 +8,7 @@
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+   [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.urakat :as urakat]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -36,6 +37,9 @@
      :kayttajatiedot (component/using
                       (kayttajatiedot/->Kayttajatiedot)
                       [:http-palvelin])
+     :urakoitsijat (component/using
+                       (urakoitsijat/->Urakoitsijat)
+                       [:http-palvelin :db])
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
                        [:http-palvelin :db])

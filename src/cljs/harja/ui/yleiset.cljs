@@ -1,6 +1,7 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja ja apureita"
   (:require [reagent.core :refer [atom] :as reagent]
+            [harja.loki :refer [log]]
             [harja.asiakas.tapahtumat :as t]))
 
 (defn ajax-loader
@@ -30,6 +31,26 @@
 ;;
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
+
+(defn alasvetovalinta [valinta format-fn valitse-fn vaihtoehdot]
+ ;; (let [auki (atom false)]
+ ;;   (fn []
+      (log "valinta " (pr-str valinta))
+      (log "vaihtoehdot " (pr-str vaihtoehdot))
+      [:div.dropdown {:class (when true "open")}
+         [:button.btn.btn-default {:type "button"
+                                   :on-click #(do 
+                                               (swap! auki not)
+                                               nil)} ;; Reactin mielestä ei kiva palauttaa booleania handleristä
+          (format-fn valinta) 
+          " " [:span.caret]]
+           [:ul.dropdown-menu
+            (for [vaihtoehto vaihtoehdot]
+              ^{:key (hash vaihtoehto)}
+              [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                     ;(reset! auki false)
+                                                     ))])
+                   ]]);;))
 
 (defn radiovalinta [otsikko valinta valitse-fn & vaihtoehdot]
   

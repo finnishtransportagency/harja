@@ -11,6 +11,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [reagent.core :refer [atom]]
    [cljs.core.async :refer [<! >! chan close!]]
    
+   [harja.loki :refer [log tarkkaile!]]
    [harja.asiakas.tapahtumat :as t]
    [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur])
@@ -40,6 +41,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
 
+
+(def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
+                         tätä valintaa voi käyttää esim. alueurakoitden 
+                         urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
+
 ;; Atomi, joka sisältää valitun hallintayksikön
 (def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
 
@@ -49,14 +55,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 
-(add-watch valittu-hallintayksikko :loki 
-           (fn [_ _ old new]
-             (.log js/console "valittu-hallintayksikko " 
-                   old " => " new)))
-(add-watch urakkalista :loki 
-           (fn [_ _ old new]
-             (.log js/console "urakkalista " 
-                   old " => " new)))
+(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
+
+(tarkkaile! "urakkalista" urakkalista)
+
+(tarkkaile! "valittu-urakoitsija" valittu-urakoitsija)
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
@@ -71,6 +74,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       ;; else
       (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
 
+(defn valitse-urakoitsija! [u]
+  (log "navigaatio.cljs: valitse-urakoitsija " u)
+   (reset! valittu-urakoitsija u))
+  
 (defn vaihda-urakkatyyppi! [ut]
   (when (= @valittu-vaylamuoto :tie)
     (reset! valittu-urakkatyyppi ut)))
