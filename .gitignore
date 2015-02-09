@@ -1,0 +1,10 @@
+*.DS_Store
+asetukset.edn
+resources/public
+target
+.lein-repl-history
+.nrepl-port
+.repl/
+dev-resources/js/harja.js
+dev-resources/js/out/
+logs/
