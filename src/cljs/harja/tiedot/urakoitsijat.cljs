@@ -10,8 +10,6 @@
 
 (def urakoitsijat "Urakoitsijat" (atom nil))
 
-(tarkkaile! "urakoitsijat" urakoitsijat)
-
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]
     (go

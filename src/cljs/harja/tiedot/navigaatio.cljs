@@ -55,11 +55,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 
-(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
-
-(tarkkaile! "urakkalista" urakkalista)
-
-(tarkkaile! "valittu-urakoitsija" valittu-urakoitsija)
+;; kehittäessä voit tarkkailla atomien tilan muutoksia
+;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
@@ -75,7 +72,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
 
 (defn valitse-urakoitsija! [u]
-  (log "navigaatio.cljs: valitse-urakoitsija " u)
    (reset! valittu-urakoitsija u))
   
 (defn vaihda-urakkatyyppi! [ut]

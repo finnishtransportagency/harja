@@ -71,14 +71,12 @@
         [:span.pull-right.murupolku-suotimet
          [:div [:span.urakoitsija-otsikko "Urakoitsija"]
                   [alasvetovalinta {:valinta urakoitsija
-                                    :format-fn #(do (log "%" % )(if % (:nimi %) "Kaikki"))
+                                    :format-fn #(if % (:nimi %) "Kaikki")
                                     :valitse-fn nav/valitse-urakoitsija!
                                     :class "alasveto-urakoitsija"}
                     urakoitsijat
                     ]]
-         
-         [radiovalinta "Kartan koko" @nav/kartan-koko nav/vaihda-kartan-koko!
-          "Piilota" :hidden "S" :S "M" :M "L" :L]
+
          [radiovalinta "Urakkatyyppi" @nav/valittu-urakkatyyppi nav/vaihda-urakkatyyppi!
           "Hoito" :hoito "Ylläpito" :yllapito]]]
         ]))

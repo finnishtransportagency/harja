@@ -24,10 +24,32 @@
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
+(defn kartan-koko-kontrollit
+  []
+  (let [koko @nav/kartan-koko]
+    [:div.kartan-koko-kontrollit
+    [:span.otsikko "Kartan koko "]
+    [:button {:type "button"
+      :on-click #(nav/vaihda-kartan-koko! (case koko
+        :hidden :hidden
+        :S :hidden
+        :M :S
+        :L :M)
+      nil)}
+      [:span.glyphicon.glyphicon-minus-sign.gi-2x]]
+    [:button {:type "button"
+      :on-click #(nav/vaihda-kartan-koko! (case koko
+        :hidden :S
+        :S :M
+        :M :L
+        :L :L)
+      nil)}
+      [:span.glyphicon.glyphicon-plus-sign.gi-2x]]]))
+
 (defn kartta []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko]
-    [leaflet {:id "kartta"
+     [leaflet {:id "kartta"
               :width "100%" :height "100%" ;; set width/height as CSS units, must set height as pixels!
               :view kartta-sijainti
               :zoom zoom-taso
@@ -75,5 +97,4 @@
                         :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
                         :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
 
-              }
-     ]))
+              }]))
