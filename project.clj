@@ -47,7 +47,7 @@
                  
                  [cljs-ajax "0.3.9"]
                  [lively "0.1.2"] 
-                 [reagent "0.5.0-alpha"]
+                 [reagent "0.5.0-alpha2"]
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
