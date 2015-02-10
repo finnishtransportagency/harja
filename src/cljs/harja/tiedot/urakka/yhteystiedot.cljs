@@ -14,11 +14,8 @@
     paivystajat))
 
 (defn hae-urakan-yhteyshenkilot [urakka-id]
-  (let [paivystajat (atom [])]
-    (go
-      (reset! paivystajat
-              (<! (k/post! :hae-urakan-yhteyshenkilot urakka-id))))
-    paivystajat))
+  (k/post! :hae-urakan-yhteyshenkilot urakka-id))
+
 
 (defn tallenna-urakan-paivystajat [urakka-id paivystajat]
   (k/post! :tallenna-urakan-paivystajat [urakka-id paivystajat]))

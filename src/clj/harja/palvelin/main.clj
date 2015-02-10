@@ -12,6 +12,7 @@
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.urakat :as urakat]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
+   [harja.palvelin.palvelut.yhteyshenkilot]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
@@ -46,7 +47,10 @@
      :urakat (component/using
               (urakat/->Urakat)
               [:http-palvelin :db])
-
+     :yhteyshenkilot (component/using
+                      (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
+                      [:http-palvelin :db])
+     
      :toimenpidekoodit (component/using
                         (toimenpidekoodit/->Toimenpidekoodit)
                         [:http-palvelin :db])

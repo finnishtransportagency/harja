@@ -2,6 +2,8 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [schema.core :as s]
+            [harja.loki :refer [log]]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [bootstrap :as bs]))
 
 (defmulti tee-kentta (fn [t _] (:tyyppi t)))
@@ -48,38 +50,44 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko muokkaa-fn poista-fn muokkaustila]} skeema tiedot]
   (let [muokattava (atom nil)]
-    [:div.panel.panel-default.grid
-     [:div.panel-heading
-      [:h6.panel-title otsikko]
-      [:span.pull-right
-       [:button.btn.btn-default.btn-sm (bs/icon-pencil) " Muokkaa"]]]
-     [:div.panel-body
-      [:table.grid
-       [:thead
-        [:tr
-         (for [otsikko (map :otsikko skeema)]
-           [:th otsikko])
-         [:th.toiminnot ""]]]
+    (fn [{:keys [otsikko muokkaa-fn poista-fn muokkaustila]} skeema tiedot]
+      (log "renderöi grid: " (pr-str tiedot))
+      [:div.panel.panel-default.grid
+       [:div.panel-heading
+        [:h6.panel-title otsikko]
+        [:span.pull-right
+         [:button.btn.btn-default.btn-sm (bs/icon-pencil) " Muokkaa"]]]
+       [:div.panel-body
+        (if (nil? tiedot)
+          (ajax-loader)
+          [:table.grid
+           [:thead
+            [:tr
+             (for [otsikko (map :otsikko skeema)]
+               [:th otsikko])
+             [:th.toiminnot ""]]]
 
-       [:tbody
-        (let [rivit @tiedot
-              muokattava @muokattava]
-          (map-indexed
-           (fn [i rivi]
-             (let [muokkaa (or (= :aina muokkaustila)
-                               (= muokattava rivi))]
-               ^{:key (or (:id rivi) (hash rivi))}
-               [:tr {:class (str (if (even? i)
-                                   "parillinen"
-                                   "pariton")
-                                 (when muokkaa " muokattava"))}
-                (for [{:keys [nimi fmt] :as s} skeema]
-                  (if muokkaa
-                    [:td (tee-kentta s (r/wrap
-                                        (get rivi nimi)
-                                        (fn [uusi]
-                                          (muokkaa-fn i rivi
-                                                      (assoc rivi nimi uusi)))))]
-                    [:td ((or fmt str) (get rivi nimi))]))]))
-           rivit))]]]]))
+           [:tbody
+            (let [rivit tiedot
+                  muokattava @muokattava]
+              (map-indexed
+                 (fn [i rivi]
+                   (let [muokkaa (or (= :aina muokkaustila)
+                                     (= muokattava rivi))]
+                     ^{:key (or (:id rivi) (hash rivi))}
+                     [:tr {:class (str (if (even? i)
+                                         "parillinen"
+                                         "pariton")
+                                       (when muokkaa " muokattava"))}
+                      (for [{:keys [nimi hae fmt] :as s} skeema]
+                        (if muokkaa
+                          [:td (tee-kentta s (r/wrap
+                                              (if nimi (get rivi nimi)
+                                                  (hae rivi))
+                                              (fn [uusi]
+                                                (muokkaa-fn i rivi
+                                                            (assoc rivi nimi uusi)))))]
+                          [:td ((or fmt str) (if nimi (get rivi nimi)
+                                                 (hae rivi)))]))]))
+                 rivit))]])]])))
   
