@@ -32,32 +32,30 @@
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
-(defn alasvetovalinta [valinta format-fn valitse-fn vaihtoehdot]
- ;; (let [auki (atom false)]
- ;;   (fn []
-      (log "valinta " (pr-str valinta))
-      (log "vaihtoehdot " (pr-str vaihtoehdot))
-      [:div.dropdown {:class (when true "open")}
+(defn alasvetovalinta [_ vaihtoehdot]
+  (let [auki (atom false)]
+    (fn [{:keys [valinta format-fn valitse-fn class]} vaihtoehdot]
+      [:div.dropdown {:class (str class " " (when @auki "open"))}
          [:button.btn.btn-default {:type "button"
                                    :on-click #(do 
                                                (swap! auki not)
                                                nil)} ;; Reactin mielestä ei kiva palauttaa booleania handleristä
-          (format-fn valinta) 
+          [:span.valittu (format-fn valinta)] 
           " " [:span.caret]]
            [:ul.dropdown-menu
             (for [vaihtoehto vaihtoehdot]
               ^{:key (hash vaihtoehto)}
               [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                     ;(reset! auki false)
+                                                     (reset! auki false)
                                                      ))])
-                   ]]);;))
+                   ]])))
 
 (defn radiovalinta [otsikko valinta valitse-fn & vaihtoehdot]
   
   (let [vaihda-tyyppi (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
        
-       [:div.btn-group.pull-right.murupolku-suodatus
-        [:span.pull-left otsikko " "]
+       [:div.btn-group.pull-right.murupolku-radiovalinta
+        [:div otsikko " "]
          (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
            [:label.btn.btn-primary
                    [:input {:type "radio" :value (name arvo) :on-change vaihda-tyyppi 

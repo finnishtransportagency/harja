@@ -1,5 +1,18 @@
 @import "common";
 
+.alasveto-urakoitsija {
+	width: 110px;
+	button {
+		height: 32px;
+		width: 100px;
+	}
+ 	.valittu {
+ 		display: inline-block;
+ 		overflow-x: hidden;
+		text-align: left;
+ 		width: 65px;
+ 	}
+}
 #footer {
 	bottom: 0;
 	clear: both;
@@ -57,7 +70,25 @@ button.btn-sm span {
 .korostettu {
    background-color: wheat;
 }
-.murupolku-suodatus {
+.murupolku {
+	height: 65px;
+	.urakoitsija-otsikko {
+		display: inline-block;
+	}
+	> li {
+		height: 65px;
+		margin-top: 15px;
+	}
+}
+.murupolku-suotimet {
+	position: relative;
+	top: -6px;
+	> * {
+		display: inline-block;
+		margin-left: 10px;
+	}
+}
+.murupolku-radiovalinta {
 	top: -6px;
 	margin: 0 5px;
 	> * {

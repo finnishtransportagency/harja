@@ -12,41 +12,6 @@
             [harja.tiedot.navigaatio :as nav])
             )
 
-
-(comment urakkatyyppi-kontrollit []
-  (let [ut @nav/valittu-urakkatyyppi 
-        vaihda-tyyppi (fn [e] (nav/vaihda-urakkatyyppi! (case (.-value (.-target e))
-                                                       "hoito" :hoito 
-                                                       "yllapito" :yllapito)))]
-       
-       [:div.btn-group.pull-right.murupolku-suodatus
-        [:span.pull-left "Urakkatyyppi "]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "hoito" :on-change vaihda-tyyppi 
-                   :checked (if (= ut :hoito) true false)} " Hoito"]]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "yllapito" :on-change vaihda-tyyppi 
-                   :checked (if (= ut :yllapito) true false)} " Ylläpito"]]]))
-
-(comment kartan-koko-kontrollit []
-  (let [koko @nav/kartan-koko 
-        vaihda-koko (fn [e] (nav/vaihda-kartan-koko! (case (.-value (.-target e))
-                                                       "hidden" :hidden 
-                                                       "S" :S 
-                                                       "M" :M 
-                                                       "L" :L)))]
-       
-       [:div.btn-group.pull-right.murupolku-suodatus
-        [:span.pull-left "Kartan koko "]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "hidden" :on-change vaihda-koko :checked (if (= koko :hidden) true false)} " Piilota"]]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "S" :on-change vaihda-koko :checked (if (= koko :S) true false)} " S"]]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "M" :on-change vaihda-koko :checked (if (= koko :M) true false)} " M"]]
-         [:label.btn.btn-primary
-          [:input {:type "radio" :value "L" :on-change vaihda-koko :checked (if (= koko :L) true false) } " L"]]]))
-
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
@@ -60,7 +25,7 @@
            urakoitsija @nav/valittu-urakoitsija
            urakoitsijat @urakoitsijat/urakoitsijat]
        [:span
-        [:ol.breadcrumb
+        [:ol.breadcrumb.murupolku
         [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
         (when-let [valittu @nav/valittu-hallintayksikko]
           [:li.dropdown {:class (when (= :hallintayksikko @valinta-auki) "open")}
@@ -103,12 +68,14 @@
               ^{:key (str "ur-" (:id muu-urakka))}
               [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])]])
         
-        [:span.pull-right
-         ;;(log "urakoitsijat " (pr-str urakoitsijat) nil)
-         [alasvetovalinta urakoitsija
-          #(do (log "%" % )(if % (:nimi %) "Kaikki"))
-          nav/valitse-urakoitsija!
-          urakoitsijat]
+        [:span.pull-right.murupolku-suotimet
+         [:div [:span.urakoitsija-otsikko "Urakoitsija"]
+                  [alasvetovalinta {:valinta urakoitsija
+                                    :format-fn #(do (log "%" % )(if % (:nimi %) "Kaikki"))
+                                    :valitse-fn nav/valitse-urakoitsija!
+                                    :class "alasveto-urakoitsija"}
+                    urakoitsijat
+                    ]]
          
          [radiovalinta "Kartan koko" @nav/kartan-koko nav/vaihda-kartan-koko!
           "Piilota" :hidden "S" :S "M" :M "L" :L]
