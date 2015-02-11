@@ -34,16 +34,14 @@
         :hidden :hidden
         :S :hidden
         :M :S
-        :L :M)
-      nil)}
+        :L :M))}
       [:span.glyphicon.glyphicon-minus-sign.gi-2x]]
     [:button {:type "button"
       :on-click #(nav/vaihda-kartan-koko! (case koko
         :hidden :S
         :S :M
         :M :L
-        :L :L)
-      nil)}
+        :L :L))}
       [:span.glyphicon.glyphicon-plus-sign.gi-2x]]]))
 
 (defn kartta []
