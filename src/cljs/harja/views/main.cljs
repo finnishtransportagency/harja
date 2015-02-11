@@ -22,7 +22,7 @@
 (defn kayttajatiedot [kayttaja]
   [:a {:href "#"} (:nimi @kayttaja)])
 
-(defn header []
+(defn header [s]
   [bs/navbar {}
      [:img {
             :id "harja-brand-icon"
@@ -33,12 +33,19 @@
       [:div.form-group
        [:input.form-control {:type "text" :placeholder "Hae..."}]]
       [:button.btn.btn-default {:type "button"} "Hae"]]
-     
-   [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]
-   [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]
-   [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]
-   [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]
-   [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]
+
+   ;; FIXME: active luokka valitulle sivulle
+   [:ul#sivut.nav.nav-pills
+    [:li {:role "presentation" :class (when (= s :urakat) "active")}
+     [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]]
+    [:li {:role "presentation" :class (when (= s :raportit) "active")}
+     [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]]
+    [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
+     [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]]
+    [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
+     [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
+    [:li {:role "presentation" :class (when (= s :hallinta) "active")}
+     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
      
      :right
      [kayttajatiedot istunto/kayttaja]])
@@ -52,31 +59,32 @@
 (defn main
   "Harjan UI:n pääkomponentti"
   []
-  [:span
-  [header]
-  [murupolku/murupolku]
+  (let [sivu @nav/sivu]
+    [:span
+     [header sivu]
+     [murupolku/murupolku]
   
-  (let [[sisallon-luokka kartan-luokka] (case @nav/kartan-koko
-                                          :hidden ["col-sm-12" "hide"]
-                                          :S ["col-sm-10" "col-sm-2 kartta-s"]
-                                          :M ["col-sm-6" "col-sm-6 kartta-m"]
-                                          :L ["hide" "col-sm-12 kartta-l"])]
-    ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-    [:div.container
-     [:div.row
-      [:div.col-sm-12
-       [kartta/kartan-koko-kontrollit]]]
-     [:div.row
-      [:div#sidebar-left {:class sisallon-luokka}
-      (case @nav/sivu
-        :urakat [urakat/urakat]
-        :raportit [raportit/raportit]
-        :tilannekuva [tilannekuva/tilannekuva]
-        :ilmoitukset [ilmoitukset/ilmoitukset]
-        :hallinta [hallinta/hallinta]
-        )]
-     [:div#kartta-container {:class kartan-luokka}
-      [kartta/kartta]]]])
-  [footer]
-  ])
+     (let [[sisallon-luokka kartan-luokka] (case @nav/kartan-koko
+                                             :hidden ["col-sm-12" "hide"]
+                                             :S ["col-sm-10" "col-sm-2 kartta-s"]
+                                             :M ["col-sm-6" "col-sm-6 kartta-m"]
+                                             :L ["hide" "col-sm-12 kartta-l"])]
+       ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
+       [:div.container
+        [:div.row
+         [:div.col-sm-12
+          [kartta/kartan-koko-kontrollit]]]
+        [:div.row
+         [:div#sidebar-left {:class sisallon-luokka}
+          (case sivu
+            :urakat [urakat/urakat]
+            :raportit [raportit/raportit]
+            :tilannekuva [tilannekuva/tilannekuva]
+            :ilmoitukset [ilmoitukset/ilmoitukset]
+            :hallinta [hallinta/hallinta]
+            )]
+         [:div#kartta-container {:class kartan-luokka}
+          [kartta/kartta]]]])
+     [footer]
+     ]))
 

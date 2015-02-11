@@ -20,7 +20,7 @@
   (js/setInterval #(let [less (aget js/window "less")
                          refresh (aget less "refresh")]
                      (refresh true))
-                  1000))
+                  5000))
 
 
 

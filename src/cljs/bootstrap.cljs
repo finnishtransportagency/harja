@@ -16,7 +16,7 @@ The following keys are supported in the configuration:
                       :pills "nav-pills"
                       :tabs "nav-tabs")
         tabs (partition 2 alternating-title-and-component)]
-    (fn []
+    (fn [config & alternating-title-and-component]
       (let [[active-tab-title active-component] (nth tabs @active)]
         [:span 
          [:ul.nav {:class style-class}
@@ -35,7 +35,7 @@ The following keys are supported in the configuration:
   "A Bootstrap navbar component"
   [options header & items]
   (let [collapse-state (atom "collapse")]
-    (fn []
+    (fn [options header & items]
       [:nav.navbar.navbar-default {:role "navigation"}
        [:div.container-fluid
         
@@ -89,7 +89,7 @@ Opts can have the following keys:
   [opts title content]
   (let [open (or (:open opts) (atom false))
         style (or (:style opts) :default)]
-    (fn []
+    (fn [opts title content]
       [:div.panel {:class (str "panel-" (name style))}
 
        ;; Panel heading with title and clickable open/close toggle
