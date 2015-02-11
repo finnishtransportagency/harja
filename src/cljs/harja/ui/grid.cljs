@@ -22,7 +22,12 @@
            :on-change #(reset! data (-> % .-target .-value))}
    ])
 
-                               
+
+(defmethod tee-kentta :email [kentta data]
+  [:input {:type "email"
+           :value @data
+           :on-change #(reset! data (-> % .-target .-value))}])
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -42,21 +47,25 @@ Optiot on mappi optioita:
                 jos muuttaminen on ok.
   :poista-fn    funktio, jolle annetaan indeksi vektoriin ja rivin tiedot. Poistamisen
                 tulee tehdä tarvittavat muutokset atomille, jos poistaminen on ok.
-  :muokkaustila :aina tai :nappi (oletus). Jos muokkaustila on :aina on kaikki rivit
-                lomakekenttiä koko ajan. Jos muokkaustila on :nappi on rivin perässä
-                muokkausta kuvaava painike, jota painamalla kyseinen rivi muuttuu
-                muokattavaksi.
   
   "
-  [{:keys [otsikko muokkaa-fn poista-fn muokkaustila]} skeema tiedot]
-  (let [muokattava (atom nil)]
-    (fn [{:keys [otsikko muokkaa-fn poista-fn muokkaustila]} skeema tiedot]
+  [{:keys [otsikko muokkaa-fn poista-fn]} skeema tiedot]
+  (let [muokataan (atom false)]
+    (fn [{:keys [otsikko muokkaa-fn poista-fn]} skeema tiedot]
       (log "renderöi grid: " (pr-str tiedot))
       [:div.panel.panel-default.grid
        [:div.panel-heading
         [:h6.panel-title otsikko]
-        [:span.pull-right
-         [:button.btn.btn-default.btn-sm (bs/icon-pencil) " Muokkaa"]]]
+        (if-not @muokataan
+          [:span.pull-right
+           [:button.btn.btn-primary.btn-sm {:on-click #(do (swap! muokataan not) nil)}
+            (bs/icon-pencil) " Muokkaa"]]
+          [:span.pull-right.muokkaustoiminnot
+           [:button.btn.btn-primary.btn-sm {:on-click #(do (swap! muokataan not) nil)} ;; kutsu tallenna-fn
+            (bs/icon-ok) " Tallenna"]
+           
+           [:button.btn.btn-default.btn-sm {:on-click #(do (reset! muokataan false) nil)}
+            (bs/icon-ban-circle) " Peruuta"]])]
        [:div.panel-body
         (if (nil? tiedot)
           (ajax-loader)
@@ -69,25 +78,27 @@ Optiot on mappi optioita:
 
            [:tbody
             (let [rivit tiedot
-                  muokattava @muokattava]
+                  muokataan @muokataan]
               (map-indexed
+               (if muokataan
                  (fn [i rivi]
-                   (let [muokkaa (or (= :aina muokkaustila)
-                                     (= muokattava rivi))]
-                     ^{:key (or (:id rivi) (hash rivi))}
-                     [:tr {:class (str (if (even? i)
-                                         "parillinen"
-                                         "pariton")
-                                       (when muokkaa " muokattava"))}
-                      (for [{:keys [nimi hae fmt] :as s} skeema]
-                        (if muokkaa
-                          [:td (tee-kentta s (r/wrap
-                                              (if nimi (get rivi nimi)
-                                                  (hae rivi))
-                                              (fn [uusi]
-                                                (muokkaa-fn i rivi
-                                                            (assoc rivi nimi uusi)))))]
-                          [:td ((or fmt str) (if nimi (get rivi nimi)
-                                                 (hae rivi)))]))]))
-                 rivit))]])]])))
-  
+                   ^{:key (or (:id rivi) (hash rivi))}
+                   [:tr.muokataan {:class (str (if (even? i)
+                                                 "parillinen"
+                                                 "pariton"))}
+                    (for [{:keys [nimi hae fmt] :as s} skeema]
+                      [:td (tee-kentta s (r/wrap
+                                          (if hae
+                                            (hae rivi)
+                                            (get rivi nimi))
+                                          (fn [uusi]
+                                            (muokkaa-fn i rivi
+                                                        (assoc rivi nimi uusi)))))])])
+                 (fn [i rivi]
+                   [:tr {:class (if (even? i) "parillinen" "pariton")}
+                    (for [{:keys [nimi hae fmt]} skeema]
+                      [:td ((or fmt str) (if hae
+                                           (hae rivi)
+                                           (get rivi nimi)))])]))
+               rivit))]])]])))
+

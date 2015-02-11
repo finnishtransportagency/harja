@@ -26,12 +26,22 @@
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
         yhteyshenkilot (into []
-                             (map #(dissoc % :yu)) ; Poistetaan kenttiä, joita emme halua frontille välittää
+                             (comp
+                              ;; Muodostetaan organisaatiosta parempi
+                              (map #(if-let [urk-id (:urakoitsija_id %)]
+                                      (assoc % :organisaatio {:tyyppi :urakoitsija
+                                                              :id urk-id
+                                                              :nimi (:urakoitsija_nimi %)})
+                                      %))
+                              ;; Poistetaan kenttiä, joita emme halua frontille välittää
+                              (map #(dissoc % :yu :urakoitsija_id :urakoitsija_nimi)))
                              tulokset)
         linkit (into #{} (map :yu) tulokset)
-        paivystykset (q/hae-paivystykset db linkit)]
+        paivystykset (if (empty? linkit) [] (q/hae-paivystykset db linkit))]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
+
+
 
 
 
