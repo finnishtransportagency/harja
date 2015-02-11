@@ -13,6 +13,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    
    [harja.loki :refer [log tarkkaile!]]
    [harja.asiakas.tapahtumat :as t]
+   [harja.tiedot.urakoitsijat :as urk]
    [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur])
   
@@ -76,7 +77,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   
 (defn vaihda-urakkatyyppi! [ut]
   (when (= @valittu-vaylamuoto :tie)
-    (reset! valittu-urakkatyyppi ut)))
+    (reset! valittu-urakkatyyppi ut)
+    (swap! valittu-urakoitsija #(let [nykyisen-urakkatyypin-urakoitsijat (case ut
+                                                                        :hoito @urk/urakoitsijat-hoito
+                                                                         @urk/urakoitsijat-yllapito
+                                                                        )]
+                                  (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+                                    %
+                                    nil)))))
   
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
