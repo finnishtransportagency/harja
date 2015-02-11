@@ -4,4 +4,3 @@
 SELECT id, nimi, alue::POLYGON
   FROM urakka
  WHERE hallintayksikko_id = :hallintayksikko
- 

@@ -22,8 +22,11 @@
 
    (fn [this]
      (let [valinta-auki (:valinta-auki (reagent/state this))
+           urakkatyyppi @nav/valittu-urakkatyyppi
            urakoitsija @nav/valittu-urakoitsija
-           urakoitsijat @urakoitsijat/urakoitsijat]
+           urakoitsijat @urakoitsijat/urakoitsijat
+           urakoitsijat-hoito @urakoitsijat/urakoitsijat-hoito
+           urakoitsijat-yllapito @urakoitsijat/urakoitsijat-yllapito]
        [:span
         [:ol.breadcrumb.murupolku
         [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
@@ -74,10 +77,13 @@
                                     :format-fn #(if % (:nimi %) "Kaikki")
                                     :valitse-fn nav/valitse-urakoitsija!
                                     :class "alasveto-urakoitsija"}
-                    urakoitsijat
-                    ]]
+                                    (vec (conj (filter (if (= urakkatyyppi :hoito)
+                                      #(urakoitsijat-hoito (:id %))
+                                      #(urakoitsijat-yllapito (:id %)))
+                                      urakoitsijat) nil))
+                                    ]]
 
-         [radiovalinta "Urakkatyyppi" @nav/valittu-urakkatyyppi nav/vaihda-urakkatyyppi!
+         [radiovalinta "Urakkatyyppi" urakkatyyppi nav/vaihda-urakkatyyppi!
           "Hoito" :hoito "Ylläpito" :yllapito]]]
         ]))
 

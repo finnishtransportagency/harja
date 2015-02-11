@@ -41,3 +41,23 @@ ja sen arvo on nil jos tietoja ei ole vielä haettu palvelimelta."
                      res)))
       (close! ch))
     ch))
+
+(defn hae-urakkatyypin-urakoitsijat [urakkatyyppi]
+  (let [ch (chan)]
+    (go
+      (let [res (<! (k/post! :urakkatyypin-urakoitsijat (:id tyyppi)))]
+        (>! ch (mapv (fn [ur]
+                       (assoc ur :type :ur))
+                     res)))
+      (close! ch))
+    ch))
+
+(defn hae-yllapidon-urakoitsijat [urakkatyyppi]
+  (let [ch (chan)]
+    (go
+      (let [res (<! (k/post! :yllapidon-urakoitsijat))]
+        (>! ch (mapv (fn [ur]
+                       (assoc ur :type :ur))
+                     res)))
+      (close! ch))
+    ch))

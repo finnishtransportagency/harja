@@ -1,16 +1,20 @@
 @import "common";
 
 .alasveto-urakoitsija {
-	width: 110px;
+	width: 200px;
 	button {
 		height: 32px;
-		width: 100px;
+		width: 180px;
 	}
  	.valittu {
  		display: inline-block;
  		overflow-x: hidden;
 		text-align: left;
- 		width: 65px;
+ 		width: 150px;
+ 	}
+ 	.caret {
+ 		position: relative;
+ 		top: -5px;
  	}
 }
 #footer {
@@ -98,9 +102,8 @@ button.btn-sm span {
 	}
 }
 .murupolku-radiovalinta {
-	top: -6px;
 	margin: 0 5px;
-	> * {
+	> label {
 		padding: 5px;
 	}
 }

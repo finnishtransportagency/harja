@@ -10,6 +10,13 @@
 
 (def urakoitsijat "Urakoitsijat" (atom nil))
 
+(def urakoitsijat-hoito "Hoidon urakoitsijat" (atom nil))
+
+(def urakoitsijat-yllapito "Ylläpidon urakoitsijat" (atom nil))
+
+(tarkkaile! "urakoitsijat-hoito" urakoitsijat-hoito)
+(tarkkaile! "urakoitsijat-yllapito" urakoitsijat-yllapito)
+
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]
     (go
@@ -20,4 +27,32 @@
 
 (t/kuuntele! :harja-ladattu (fn [_]
                               (go (reset! urakoitsijat (<! (k/post! :hae-urakoitsijat
+                                                                     nil))))))
+
+(defn ^:export hae-urakkatyypin-urakoitsijat [urakkatyyppi]
+  (let [ch (chan)]
+    (go
+      (let [res (<! (k/post! :urakkatyypin-urakoitsijat urakkatyyppi))]
+        (>! ch res))
+      (close! ch))
+    ch))
+
+(defn ^:export hae-yllapidon-urakoitsijat [urakkatyyppi]
+  (let [ch (chan)]
+    (go
+      (let [res (<! (k/post! :yllapidon-urakoitsijat urakkatyyppi))]
+        (>! ch res))
+      (close! ch))
+    ch))
+
+(t/kuuntele! :harja-ladattu (fn [_]
+                              (go (reset! urakoitsijat (<! (k/post! :hae-urakoitsijat
+                                                                     nil))))))
+
+(t/kuuntele! :harja-ladattu (fn [_]
+                              (go (reset! urakoitsijat-hoito (<! (k/post! :urakkatyypin-urakoitsijat
+                                                                     :hoito))))))
+
+(t/kuuntele! :harja-ladattu (fn [_]
+                              (go (reset! urakoitsijat-yllapito (<! (k/post! :yllapidon-urakoitsijat
                                                                      nil))))))

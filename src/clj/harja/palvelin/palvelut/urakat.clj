@@ -30,4 +30,3 @@
   (-> (q/listaa-urakat-hallintayksikolle db hallintayksikko-id)
       (muunna-pg-tulokset :alue)
       vec))
-
