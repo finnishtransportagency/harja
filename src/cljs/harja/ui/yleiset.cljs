@@ -1,9 +1,21 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja ja apureita"
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as t]))
 
+(defonce korkeus (atom (-> js/document .-body .-clientHeight)))
+(defonce leveys (atom (-> js/document .-body .-clientWidth)))
+
+(defonce koon-kuuntelija (do (set! (.-onresize js/window)
+                                   (fn [_]
+                                     (reset! korkeus (-> js/document .-body .-clientHeight))
+                                     (reset! leveys (-> js/document .-body .-clientWidth))))
+                             true))
+
+(tarkkaile! "korkeus" korkeus)
+(tarkkaile! "leveys" leveys)
+  
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
