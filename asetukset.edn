@@ -3,6 +3,6 @@
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
-              :kayttaja "tatuta"
+              :kayttaja "harja"
               :salasana ""}
  }
