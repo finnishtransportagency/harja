@@ -4,14 +4,10 @@
 
             [harja.views.toimenpidekoodit :as tp]
             [harja.ui.grid :as g]
-
-            [clairvoyant.core :as trace :include-macros true]
             ))
 
 
-(trace/trace-forms  ;; trace start 
-
- (defn hallinta []
+(defn hallinta []
   ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
   [:div
    [tp/toimenpidekoodit]
@@ -19,5 +15,3 @@
    ]
   )
 
-
-) ;; trace end
