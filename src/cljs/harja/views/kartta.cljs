@@ -28,14 +28,15 @@
 
 (defn kartan-koko-kontrollit
   []
-  (let [koko @nav/kartan-koko]
-    [:span.kartan-koko-kontrollit
-    [:div.ikoni-pienenna {
+  (let [koko @nav/kartan-koko
+        sivu @nav/sivu]
+    [:span.kartan-koko-kontrollit {:class (when (= sivu :tilannekuva) "hide")}
+    [:div.ikoni-pienenna {:class (when (= koko :S) "hide")
       :on-click #(nav/vaihda-kartan-koko! (case koko
         :S :S
         :M :S
         :L :M))}]
-    [:div.ikoni-suurenna {
+    [:div.ikoni-suurenna {:class (when (= koko :L) "hide")
       :on-click #(nav/vaihda-kartan-koko! (case koko
         :hidden :S
         :S :M
