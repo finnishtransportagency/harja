@@ -3,9 +3,13 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.loki :refer [log]]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+
+            ;;[cljs-time.format :as df]
+            )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
 
@@ -14,25 +18,28 @@
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    paivystajat nil]
 
-  (do  
-    (log "urakka-yleiset: " yhteyshenkilot)
+  (do
+    (log "URAKKANI ON: " ur)
     [:div
-     "Urakan tunnus: foo" [:br]
-     "Aikaväli: 123123" [:br]
-     "Hallintayksikkö: sehän näkyy jo murupolussa" [:br]
-     "Urakoitsija: Urakkapojat Oy" [:br]
-       
+     [bs/panel {}
+      "Yleiset tiedot"
+      [yleiset/tietoja {}
+       "Urakan nimi:" (:nimi ur)
+       "Urakan tunnus:" (:sampoid ur)
+       "Aikaväli:" "FIXME"
+       "Urakoitsija:" (:nimi (:urakoitsija ur))]]
+        
      [grid/grid
       {:otsikko "Yhteyshenkilöt"}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
        {:otsikko "Organisaatio" :hae #(get-in % [:organisaatio :nimi]) :tyyppi :string}
        {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string}
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :string}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string} ;; mieti eri tyyppejä :puhelin / :email / jne...
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
       @yhteyshenkilot
-      ]
-       
+      ] 
+        
      [grid/grid
       {:otsikko "Päivystystiedot"}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}

@@ -25,12 +25,12 @@
 (defn hae-hallintayksikot
   "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
   [db user liikennemuoto]  
-  (-> (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
+  (into []
+        (muunna-pg-tulokset :alue)
+        (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
                                                    :tie "T"
                                                    :vesi "V"
-                                                   :rata "R"))
-      (muunna-pg-tulokset :alue)
-      vec))
+                                                   :rata "R"))))
 
 
 

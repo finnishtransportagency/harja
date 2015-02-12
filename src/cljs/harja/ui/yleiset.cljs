@@ -99,3 +99,11 @@ jolle annetaan yksi parametri (komponentti). Alkutila on komponentin inital-stat
                                     (k))))})))
                              
     
+(defn tietoja
+  "Tekee geneerisen tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
+  [optiot & otsikot-ja-arvot]
+  [:div.tietoja
+   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)]
+     [:div.tietorivi
+      [:span.tietokentta otsikko]
+      [:span.tietoarvo arvo]])])

@@ -14,10 +14,10 @@ The following keys are supported in the configuration:
   (let [active (or (:active config) (atom 0))
         style-class (case (or (:style config) :tabs)
                       :pills "nav-pills"
-                      :tabs "nav-tabs")
-        tabs (partition 2 alternating-title-and-component)]
+                      :tabs "nav-tabs")]
     (fn [config & alternating-title-and-component]
-      (let [[active-tab-title active-component] (nth tabs @active)]
+      (let [tabs (partition 2 alternating-title-and-component)
+            [active-tab-title active-component] (nth tabs @active)]
         [:span 
          [:ul.nav {:class style-class}
           (map-indexed 

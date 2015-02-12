@@ -51,6 +51,7 @@
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
+                 ;;[cljs-time "0.1.0"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature

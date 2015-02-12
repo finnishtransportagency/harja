@@ -27,6 +27,11 @@
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
   ;;(Thread/sleep 2000) ;;; FIXME: this is to try out "ajax loading" ui
-  (-> (q/listaa-urakat-hallintayksikolle db hallintayksikko-id)
-      (muunna-pg-tulokset :alue)
-      vec))
+  (into []
+        (comp (muunna-pg-tulokset :alue)
+              (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
+                                           :nimi (:urakoitsija_nimi %)
+                                           :ytunnus (:urakoitsija_ytunnus %)}))
+              (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus)))
+        (q/listaa-urakat-hallintayksikolle db hallintayksikko-id)))
+

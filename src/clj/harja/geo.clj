@@ -52,15 +52,14 @@
   (pg->clj [_] nil))
 
 (defmacro muunna-pg-tulokset
-  "Ottaa sisään SQL haun tulokset ja muuntaa annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
-  [tulokset & sarakkeet]
+  "Palauttaa transducerin, joka muuntaa jokaisen SQL tulosrivin annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
+  [& sarakkeet]
   (let [tulosrivi (gensym)]
     `(map (fn [~tulosrivi]
             (assoc ~tulosrivi
               ~@(mapcat (fn [sarake]
                           [sarake `(pg->clj (get ~tulosrivi ~sarake))])
-                        sarakkeet)))
-          ~tulokset)))
+                        sarakkeet))))))
 
 
 
