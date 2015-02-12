@@ -5,7 +5,9 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.leaflet :refer [leaflet] :as leaflet]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.yleiset :as yleiset]
+            ))
             
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
@@ -48,7 +50,7 @@
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko]
      [leaflet {:id "kartta"
-              :width "100%" :height "100%" ;; set width/height as CSS units, must set height as pixels!
+               :width "100%" :height (max (int (* 0.90 (- @yleiset/korkeus 150))) 350) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
               :view kartta-sijainti
               :zoom zoom-taso
               :selection nav/valittu-hallintayksikko

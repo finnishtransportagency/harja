@@ -4,13 +4,13 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as t]))
 
-(defonce korkeus (atom (-> js/document .-body .-clientHeight)))
-(defonce leveys (atom (-> js/document .-body .-clientWidth)))
+(defonce korkeus (atom (-> js/window .-innerHeight)))
+(defonce leveys (atom (-> js/window .-innerWidth)))
 
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
-                                     (reset! korkeus (-> js/document .-body .-clientHeight))
-                                     (reset! leveys (-> js/document .-body .-clientWidth))))
+                                     (reset! korkeus (-> js/window .-innerHeight))
+                                     (reset! leveys (-> js/window .-innerWidth))))
                              true))
 
 (tarkkaile! "korkeus" korkeus)

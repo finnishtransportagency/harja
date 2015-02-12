@@ -90,11 +90,11 @@
 (defn- leaflet-will-update [this [_ conf]]
   (update-leaflet-geometries this (-> conf :geometries)))
 
-(defn- leaflet-render [this]
-  (let [mapspec (-> this reagent/state :mapspec)]
+(defn- leaflet-render [mapspec]
+  (.log js/console "mapspec koko: " (:width mapsepc) " x " (:height mapspec))
   [:div {:id (:id mapspec)
          :style {:width (:width mapspec)
-                 :height (:height mapspec)}}]))
+                 :height (:height mapspec)}}])
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to LeafletJS
@@ -166,6 +166,6 @@
     {:get-initial-state (fn [_] {:mapspec mapspec})
      :component-did-mount leaflet-did-mount
      :component-will-update leaflet-will-update
-     :render leaflet-render}))
+     :reagent-render leaflet-render}))
 
 
