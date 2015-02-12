@@ -91,7 +91,6 @@
   (update-leaflet-geometries this (-> conf :geometries)))
 
 (defn- leaflet-render [mapspec]
-  (.log js/console "mapspec koko: " (:width mapsepc) " x " (:height mapspec))
   [:div {:id (:id mapspec)
          :style {:width (:width mapspec)
                  :height (:height mapspec)}}])
