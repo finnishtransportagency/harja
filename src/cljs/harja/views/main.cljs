@@ -64,8 +64,10 @@
   (let [sivu @nav/sivu
         kartan-koko @nav/kartan-koko]
     [:span
-     [header sivu]
-     [murupolku/murupolku]
+     [:div.container
+      [header sivu]]
+     [:div.container
+      [murupolku/murupolku]]
   
      (let [[sisallon-luokka kartan-luokka] 
                                               (case (cond
