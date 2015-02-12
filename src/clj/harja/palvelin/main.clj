@@ -23,8 +23,8 @@
     (component/system-map
      :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
                                     (:portti tietokanta)
-                                    (:tietokanta tietokanta)
-                                    (:kayttaja tietokanta)
+                                   (:tietokanta tietokanta)
+                                   (:kayttaja tietokanta)
                                     (:salasana tietokanta))
      :todennus (if kehitysmoodi
                  (todennus/feikki-http-todennus {:etunimi "Tero" :sukunimi "Toripolliisi" :id 1 :kayttajanimi "LX123456789"})
