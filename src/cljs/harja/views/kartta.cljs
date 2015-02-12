@@ -29,24 +29,20 @@
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko]
-    [:div.kartan-koko-kontrollit
-    [:span.otsikko "Kartan koko "]
-    [:button {:type "button"
+    [:span.kartan-koko-kontrollit
+    [:div.ikoni-pienenna {
       :on-click #(nav/vaihda-kartan-koko! (case koko
-        :hidden :hidden
-        :S :hidden
+        :S :S
         :M :S
-        :L :M))}
-      [:span.glyphicon.glyphicon-minus-sign.gi-2x]]
-    [:button {:type "button"
+        :L :M))}]
+    [:div.ikoni-suurenna {
       :on-click #(nav/vaihda-kartan-koko! (case koko
         :hidden :S
         :S :M
         :M :L
-        :L :L))}
-      [:span.glyphicon.glyphicon-plus-sign.gi-2x]]]))
+        :L :L))}]]))
 
-(defn kartta []
+(defn kartta-leaflet []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko]
      [leaflet {:id "kartta"
@@ -98,3 +94,8 @@
                         :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors"}]
 
               }]))
+
+(defn kartta []
+  [:span
+   [kartan-koko-kontrollit]
+   [kartta-leaflet]])

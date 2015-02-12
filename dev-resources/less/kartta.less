@@ -1,0 +1,51 @@
+.ikoni-kartta-ctrl {
+	display: inline-block;
+	height: 40px;
+	margin-right: 5px;
+	opacity: 0.7;
+	width: 40px;
+}
+.ikoni-pienenna {
+	.ikoni-kartta-ctrl;
+	background-image: url("../images/pienenna.svg");
+	margin-right: 5px;
+}
+.ikoni-suurenna {
+	.ikoni-kartta-ctrl;
+	background-image: url("../images/suurenna.svg");
+}
+.kartan-koko-kontrollit {
+	padding-right: 15px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 1; //kartan päällä > 0
+	button {
+		height: 39px;
+		width: 44px;
+	}
+	.otsikko {
+		bottom: 5px;
+		height: 39px;
+		position: relative;
+	}
+	.gi-2x {
+		font-size: 2em;
+		margin-top: 3px;
+	}
+}
+.kartan-koko-label {
+	margin: 6px;
+}
+.kartta-s {
+	height: 333px;
+//	width: 60px;
+}
+.kartta-m {
+	height: 700px;
+	width: 50%;
+}
+.kartta-l {
+	height: 700px;
+	width: 100%
+}

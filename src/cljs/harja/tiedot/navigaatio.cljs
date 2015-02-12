@@ -141,6 +141,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       "tilannekuva" (vaihda-sivu! :tilannekuva)
       "ilmoitukset" (vaihda-sivu! :ilmoitukset)
       "hallinta" (vaihda-sivu! :hallinta)
+      "about" (vaihda-sivu! :about)
       (vaihda-sivu! :urakat))
     (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
       (if-let [u (some-> parametrit (.get "u") js/parseInt)] 

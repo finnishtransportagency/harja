@@ -15,7 +15,8 @@
             [harja.views.tilannekuva :as tilannekuva]
             [harja.views.ilmoitukset :as ilmoitukset]
             [harja.views.kartta :as kartta]
-            [harja.views.hallinta :as hallinta]))
+            [harja.views.hallinta :as hallinta]
+            [harja.views.about :as about]))
 
 
 
@@ -45,8 +46,9 @@
     [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
      [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
     [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
-     
+     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]
+    [:li {:role "presentation" :class (when (= s :about) "active")}
+     [linkki "About" #(nav/vaihda-sivu! :about)]]]
      :right
      [kayttajatiedot istunto/kayttaja]])
 
@@ -72,9 +74,6 @@
        ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
        [:div.container
         [:div.row
-         [:div.col-sm-12
-          [kartta/kartan-koko-kontrollit]]]
-        [:div.row
          [:div#sidebar-left {:class sisallon-luokka}
           (case sivu
             :urakat [urakat/urakat]
@@ -82,6 +81,7 @@
             :tilannekuva [tilannekuva/tilannekuva]
             :ilmoitukset [ilmoitukset/ilmoitukset]
             :hallinta [hallinta/hallinta]
+            :about [about/about]
             )]
          [:div#kartta-container {:class kartan-luokka}
           [kartta/kartta]]]])
