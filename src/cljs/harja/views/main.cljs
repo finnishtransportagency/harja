@@ -61,16 +61,22 @@
 (defn main
   "Harjan UI:n pääkomponentti"
   []
-  (let [sivu @nav/sivu]
+  (let [sivu @nav/sivu
+        kartan-koko @nav/kartan-koko]
     [:span
      [header sivu]
      [murupolku/murupolku]
   
-     (let [[sisallon-luokka kartan-luokka] (case @nav/kartan-koko
-                                             :hidden ["col-sm-12" "hide"]
-                                             :S ["col-sm-10" "col-sm-2 kartta-s"]
-                                             :M ["col-sm-6" "col-sm-6 kartta-m"]
-                                             :L ["hide" "col-sm-12 kartta-l"])]
+     (let [[sisallon-luokka kartan-luokka] 
+                                              (case (cond
+                                                      (= sivu :hallinta) :hidden
+                                                      (= sivu :about) :hidden
+                                                      (= sivu :tilannekuva) :L
+                                                      :default kartan-koko)
+                                                  :hidden ["col-sm-12" "hide"]
+                                                  :S ["col-sm-10" "col-sm-2 kartta-s"]
+                                                  :M ["col-sm-6" "col-sm-6 kartta-m"]
+                                                  :L ["hide" "col-sm-12 kartta-l"])]
        ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
        [:div.container
         [:div.row
