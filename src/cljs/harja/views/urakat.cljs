@@ -9,6 +9,7 @@
             
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
+            [harja.loki :refer [log]]
             
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
@@ -40,7 +41,10 @@
    ;; TODO: urakkasivun koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä
    
     (let [v-hal @nav/valittu-hallintayksikko
-          v-ur @nav/valittu-urakka]
+          v-ur @nav/valittu-urakka
+          v-urk @nav/valittu-urakoitsija
+          v-ur-tyyppi @nav/valittu-urakkatyyppi
+          urakkalista @nav/urakkalista]
       (if-not v-hal
         ;; Hallintayksikköä ei ole valittu: näytetään lista hallintayksiköistä
         [:span
@@ -50,12 +54,11 @@
           [filtered-listing {:format :nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko}
-           hal/hallintayksikot]]]
+           @hal/hallintayksikot]]]
         
         ;; Hallintayksikko on valittu, mutta urakkaa ei: näytetään luettelossa urakat
         (if-not v-ur
-          ;;(let [urakat (ur/hallintayksikon-urakat v-hal)]
-            (if (nil? @nav/urakkalista)
+            (if (nil? urakkalista)
               [yleiset/ajax-loader "Urakoita haetaan..."]
               [:span
                [:h5.haku-otsikko "Hae urakka kartalta tai listasta"]
@@ -64,7 +67,11 @@
                 [filtered-listing {:format :nimi :haku :nimi
                                    :selection nav/valittu-urakka
                                    :on-select nav/valitse-urakka}
-                 nav/urakkalista]]])
+                 (into []
+                       (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
+                                          (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
+                             (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                       urakkalista)]]])
           
             ;; Urakka valittu, tähän kaikki urakan komponentit
             [urakka/urakka v-ur])))])

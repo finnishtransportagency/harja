@@ -32,6 +32,8 @@
               (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                            :nimi (:urakoitsija_nimi %)
                                            :ytunnus (:urakoitsija_ytunnus %)}))
+              (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+              
               (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus)))
         (q/listaa-urakat-hallintayksikolle db hallintayksikko-id)))
 

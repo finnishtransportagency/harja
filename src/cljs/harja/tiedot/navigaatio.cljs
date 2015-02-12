@@ -148,7 +148,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (aseta-hallintayksikko-ja-urakka hy u)
       ;; else
       (go
-        (reset! valittu-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
+        (valitse-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
       ))
     ))
 
