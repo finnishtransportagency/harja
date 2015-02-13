@@ -8,25 +8,27 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
 
-            ;;[cljs-time.format :as df]
+            [cljs-time.format :as df]
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
+ 
 
+(def fi-date (df/formatter "dd.MM.yyyy"))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    paivystajat nil]
 
   (do
-    (log "URAKKANI ON: " ur)
+    (log "URAKKANI ON: " ur " ALKAA: " (:alkupvm ur) " JA LOPPUU " (:loppupvm ur))
     [:div
      [bs/panel {}
       "Yleiset tiedot"
       [yleiset/tietoja {}
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
-       "Aikaväli:" "FIXME"
+       "Aikaväli:" (fi-date (:alkupvm ur)) " -- " (fi-date (:loppupvm ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
         
      [grid/grid
