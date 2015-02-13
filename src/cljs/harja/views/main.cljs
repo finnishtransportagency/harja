@@ -46,9 +46,7 @@
     [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
      [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
     [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]
-    [:li {:role "presentation" :class (when (= s :about) "active")}
-     [linkki "About" #(nav/vaihda-sivu! :about)]]]
+     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
      :right
      [kayttajatiedot istunto/kayttaja]])
 
@@ -56,7 +54,9 @@
   [:footer#footer {:role "contentinfo"}
    [:div#footer-wrap
     [:a {:href "http://www.liikennevirasto.fi"}
-     "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]]])
+     "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]
+    [:div 
+     [linkki "Tietoja" #(nav/vaihda-sivu! :about)]]]])
 
 (defn main
   "Harjan UI:n pääkomponentti"
