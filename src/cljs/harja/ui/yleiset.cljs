@@ -64,13 +64,13 @@
 
 (defn radiovalinta [otsikko valinta valitse-fn & vaihtoehdot]
   
-  (let [vaihda-tyyppi (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
+  (let [vaihda-valinta (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
        
        [:div.btn-group.pull-right.murupolku-radiovalinta
         [:div otsikko " "]
          (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
            [:label.btn.btn-primary
-                   [:input {:type "radio" :value (name arvo) :on-change vaihda-tyyppi 
+                   [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta 
                             :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 (defn kuuntelija
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
