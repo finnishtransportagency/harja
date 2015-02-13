@@ -2,9 +2,10 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [schema.core :as s]
-            [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader]]
-            [bootstrap :as bs]))
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.yleiset :refer [ajax-loader linkki]]
+            [bootstrap :as bs]
+            [harja.ui.ikonit :as ikonit]))
 
 (defmulti tee-kentta (fn [t _] (:tyyppi t)))
 
@@ -42,63 +43,102 @@ on nimetyillä avaimilla. Lisäksi riveillä on hyvä olla :id attribuutti, jota
 key arvona Reactille. Jos :id arvoa ei ole, otetaan koko rivin hashcode avaimeksi.
 
 Optiot on mappi optioita:
-  :muokkaa-fn   funktio, jolle annetaan indeksi vektoriin, vanhat rivin tiedot ja uudet
-                rivin tiedot. Muokkauksen tulee tehdä tarvittavat muutokset atomille, 
-                jos muuttaminen on ok.
+  :tallenna-fn   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+
   :poista-fn    funktio, jolle annetaan indeksi vektoriin ja rivin tiedot. Poistamisen
                 tulee tehdä tarvittavat muutokset atomille, jos poistaminen on ok.
   
   "
-  [{:keys [otsikko muokkaa-fn poista-fn]} skeema tiedot]
-  (let [muokataan (atom false)]
-    (fn [{:keys [otsikko muokkaa-fn poista-fn]} skeema tiedot]
-      (log "renderöi grid: " (pr-str tiedot))
-      [:div.panel.panel-default.grid
-       [:div.panel-heading
-        [:h6.panel-title otsikko]
-        (if-not @muokataan
-          [:span.pull-right
-           [:button.btn.btn-primary.btn-sm {:on-click #(do (swap! muokataan not) nil)}
-            (bs/icon-pencil) " Muokkaa"]]
-          [:span.pull-right.muokkaustoiminnot
-           [:button.btn.btn-primary.btn-sm {:on-click #(do (swap! muokataan not) nil)} ;; kutsu tallenna-fn
-            (bs/icon-ok) " Tallenna"]
-           
-           [:button.btn.btn-default.btn-sm {:on-click #(do (reset! muokataan false) nil)}
-            (bs/icon-ban-circle) " Peruuta"]])]
-       [:div.panel-body
-        (if (nil? tiedot)
-          (ajax-loader)
-          [:table.grid
-           [:thead
-            [:tr
-             (for [otsikko (map :otsikko skeema)]
-               [:th otsikko])
-             [:th.toiminnot ""]]]
+  [{:keys [otsikko tallenna-fn]} skeema tiedot]
+  (let [muokatut (atom nil) ;; muokattu datajoukko
+        viimeksi-poistettu-idx (atom nil)
+        uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
+        historia (atom [])
 
-           [:tbody
-            (let [rivit tiedot
-                  muokataan @muokataan]
-              (map-indexed
-               (if muokataan
-                 (fn [i rivi]
-                   ^{:key (or (:id rivi) (hash rivi))}
-                   [:tr.muokataan {:class (str (if (even? i)
-                                                 "parillinen"
-                                                 "pariton"))}
-                    (for [{:keys [nimi hae fmt] :as s} skeema]
-                      [:td (tee-kentta s (r/wrap
-                                          (if hae
-                                            (hae rivi)
-                                            (get rivi nimi))
-                                          (fn [uusi]
-                                            (muokkaa-fn i rivi
-                                                        (assoc rivi nimi uusi)))))])])
-                 (fn [i rivi]
-                   [:tr {:class (if (even? i) "parillinen" "pariton")}
-                    (for [{:keys [nimi hae fmt]} skeema]
-                      [:td ((or fmt str) (if hae
-                                           (hae rivi)
-                                           (get rivi nimi)))])]))
-               rivit))]])]])))
+        ;; Tekee yhden muokkauksen säilyttäen undo historian
+        muokkaa! (fn [funktio & argumentit]
+                   (swap! historia conj @muokatut)
+                   (apply swap! muokatut funktio argumentit))
+
+        ;; Peruu yhden muokkauksen
+        peru! (fn []
+                (reset! muokatut (peek @historia))
+                (swap! historia pop))
+        ]
+    ;;(tarkkaile! "muokatut" muokatut)
+    (fn [{:keys [otsikko tallenna-fn]} skeema tiedot]
+      (let [muokataan (not (nil? @muokatut))]
+        [:div.panel.panel-default.grid
+         [:div.panel-heading
+          [:h6.panel-title otsikko
+           (when-not (empty? @historia)
+             [:span.peru {:on-click peru!}
+              (ikonit/peru)])
+           ]
+          
+          (if-not muokataan
+            [:span.pull-right
+             [:button.btn.btn-primary.btn-sm {:on-click #(do (reset! muokatut tiedot) nil)}
+              (ikonit/pencil) " Muokkaa"]]
+            [:span.pull-right.muokkaustoiminnot
+             [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(muokkaa! conj {:id (swap! uusi-id dec)})}
+              (ikonit/plus-sign) " Lisää rivi"]
+
+             [:button.btn.btn-primary.btn-sm.grid-tallenna
+              {:on-click #(do (reset! muokatut nil) nil)} ;; kutsu tallenna-fn
+              (ikonit/ok) " Tallenna"]
+           
+             [:button.btn.btn-default.btn-sm.grid-peru
+              {:on-click #(do (reset! muokatut nil)
+                              (reset! viimeksi-poistettu-idx nil))}
+              (ikonit/ban-circle) " Peruuta"]
+
+             
+             ])
+          ]
+         [:div.panel-body
+          (if (nil? tiedot)
+            (ajax-loader)
+            [:table.grid
+             [:thead
+              [:tr
+               (for [otsikko (map :otsikko skeema)]
+                 [:th otsikko])
+               (when muokataan
+                 [:th.toiminnot " "])
+               [:th.toiminnot ""]]]
+
+             [:tbody
+              (let [rivit (if muokataan @muokatut tiedot)]
+                (map-indexed
+                 (if muokataan
+                   (fn [i rivi]
+                     (when-not (::poistettu rivi)
+                       ^{:key (or (:id rivi) (hash rivi))}
+                       [:tr.muokataan {:class (str (if (even? i)
+                                                     "parillinen"
+                                                     "pariton"))}
+                        (for [{:keys [nimi hae fmt] :as s} skeema]
+                          [:td (tee-kentta s (r/wrap
+                                              (if hae
+                                                (hae rivi)
+                                                (get rivi nimi))
+                                              (fn [uusi]
+                                                (muokkaa! assoc-in [i nimi] uusi))))])
+                        [:td.toiminnot
+                         [:span {:on-click #(muokkaa! (fn [muokatut]
+                                                        (into []
+                                                              (filter (fn [r]
+                                                                        (not= r rivi)))
+                                                              muokatut)))}
+                          
+                          (ikonit/trash)]]
+                        ]))
+                     (fn [i rivi]
+                       [:tr {:class (if (even? i) "parillinen" "pariton")}
+                        (for [{:keys [nimi hae fmt]} skeema]
+                          [:td ((or fmt str) (if hae
+                                               (hae rivi)
+                                               (get rivi nimi)))])]))
+                 rivit))]])]]))))
 

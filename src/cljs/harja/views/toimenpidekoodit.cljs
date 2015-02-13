@@ -4,10 +4,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [clojure.string :as str]
             [bootstrap :as bs]
-            [clairvoyant.core :as trace :include-macros true]
+            [harja.ui.ikonit :as ikonit]
             ))
 
-(trace/trace-forms ;; trace start
+
  
 ;; PENDING: en laittanut näille omia harja.tiedot alla olevaa nimiavaruutta
 ;; siirretään omaansa, jos näitä kooditietoja tarvitaan muualtakin kuin täältä
@@ -93,15 +93,17 @@
                      :value @muokattu}]]
        [:td
         [:span
-         [:span.glyphicon.glyphicon-ok-sign.pull-left
-          {:on-click #(muokkaa-tehtavakoodi koodi @muokattu)}]
-         [:span.glyphicon.glyphicon-remove-sign.pull-right
-          {:on-click #(reset! muokattu nil)}]]]])
+         [:span.pull-left 
+          {:on-click #(muokkaa-tehtavakoodi koodi @muokattu)}
+          (ikonit/ok-sign)]
+        [:span.pull-right ]
+         {:on-click #(reset! muokattu nil)}
+         (ikonit/remove-sign)]]])
     {:component-did-mount #(-> (reagent/dom-node %)
                                (.getElementsByTagName "input")
                                (aget 0)
                                .focus)}))
-                 
+                
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
@@ -168,12 +170,12 @@
                        [:td 
                         [:span.tehtavakoodi (:nimi tpk)]]
                        [:td
-                        [:span.glyphicon.glyphicon-edit.pull-left
-                         {:on-click #(swap! koodit update-in [(:id tpk) :muokattu]
-                                            (fn [_] (:nimi tpk)))}]
-                        [:span.glyphicon.glyphicon-trash.pull-right
-                         {:on-click #(poista-tehtavakoodi tpk)
-                          :aria-hidden true}]]]))))
+                        [:span {:on-click #(swap! koodit update-in [(:id tpk) :muokattu]
+                                                  (fn [_] (:nimi tpk)))}
+                         (ikonit/edit)]
+                        [:span {:on-click #(poista-tehtavakoodi tpk)
+                                :aria-hidden true}
+                         (ikonit/trash)]]]))))
               [:tr.uusitehtavakoodi
                [:td [:input {:type "text" :placeholder "Tehtävän nimi..." :value @uusi-tehtava
                              :on-change #(reset! uusi-tehtava (-> % .-target .-value))
@@ -198,4 +200,3 @@
 
   
  
-) ;; trace end
