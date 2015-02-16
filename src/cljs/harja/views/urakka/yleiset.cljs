@@ -6,15 +6,17 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.loki :refer [log]]
+            [harja.pvm :as pvm]
+            
             [cljs.core.async :refer [<!]]
-
-            [cljs-time.format :as df]
+            
+        
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
  
 
-(def fi-date (df/formatter "dd.MM.yyyy"))
+
 
 ;; hallintayksikkö myös
 ;; organisaatio = valinta siitä mitä on tietokannassa
@@ -32,7 +34,7 @@
       [yleiset/tietoja {}
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
-       "Aikaväli:" (fi-date (:alkupvm ur)) " -- " (fi-date (:loppupvm ur))
+       "Aikaväli:" (pvm/pvm (pvm/js->goog (:alkupvm ur))) " -- " ;; (fi-date (:loppupvm ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
         
      [grid/grid
