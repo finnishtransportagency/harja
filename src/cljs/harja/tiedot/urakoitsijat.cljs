@@ -8,11 +8,11 @@
             [cljs.core.async :refer [chan <! >! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def urakoitsijat "Urakoitsijat" (atom nil))
+(def urakoitsijat "Urakoitsijat" (atom #{}))
 
-(def urakoitsijat-hoito "Hoidon urakoitsijat" (atom nil))
+(def urakoitsijat-hoito "Hoidon urakoitsijat" (atom #{}))
 
-(def urakoitsijat-yllapito "Ylläpidon urakoitsijat" (atom nil))
+(def urakoitsijat-yllapito "Ylläpidon urakoitsijat" (atom #{}))
 
 (tarkkaile! "urakoitsijat-hoito" urakoitsijat-hoito)
 (tarkkaile! "urakoitsijat-yllapito" urakoitsijat-yllapito)
