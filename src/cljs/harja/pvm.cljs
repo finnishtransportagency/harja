@@ -7,7 +7,7 @@
 (defn js->goog
   "Muunna Javascript päivämäärä goog muotoon"
   [js-date]
-  (DateTime. (.getYear js-date)
+  (DateTime. (+ 1900 (.getYear js-date))
              (.getMonth js-date)
              (.getDate js-date)
              (.getHours js-date)

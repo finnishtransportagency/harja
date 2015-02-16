@@ -27,14 +27,14 @@
    paivystajat nil]
 
   (do
-    (log "URAKKANI ON: " ur " ALKAA: " (:alkupvm ur) " JA LOPPUU " (:loppupvm ur))
+    (log "URAKKANI ON: " (pr-str ur), "alku: " (:alkupvm ur))
     [:div
      [bs/panel {}
       "Yleiset tiedot"
       [yleiset/tietoja {}
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
-       "Aikaväli:" (pvm/pvm (pvm/js->goog (:alkupvm ur))) " -- " ;; (fi-date (:loppupvm ur))
+       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
         
      [grid/grid
