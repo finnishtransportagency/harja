@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [schema.core :as s]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [ajax-loader linkki]]
+            [harja.ui.yleiset :refer [ajax-loader linkki alasvetovalinta]]
             [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]))
 
@@ -29,10 +29,63 @@
            :value @data
            :on-change #(reset! data (-> % .-target .-value))}])
 
+(defmethod tee-kentta :puhelin [kentta data]
+  [:input {:type "tel"
+           :value @data
+           :on-change #(let [uusi (-> % .-target .-value)]
+                         (when (re-matches #"(\s|\d)*" uusi)
+                           (reset! data uusi)))}]) 
+
+(defmethod tee-kentta :valinta [{:keys [valinta-nayta valinta-arvo valinnat]} data]
+  (let [arvo (or valinta-arvo :id)
+        nayta (or valinta-nayta str)
+        nykyinen-arvo (arvo @data)]
+    [:select {:value nykyinen-arvo
+              :on-change (fn [e]
+                           (let [uusi-arvo (-> e .-target .-value)]
+                             (reset! data (first (filter #(= (str (arvo %))
+                                                             uusi-arvo)
+                                                         valinnat)))))}
+     (for [v valinnat]
+       ^{:key (arvo v)}
+       [:option {:value (arvo v)} (nayta v)])]))
+
+
+(defmethod tee-kentta :kombo [{:keys [valinnat]} data]
+  (let [auki (atom false)]
+    (fn [{:keys [valinnat]} data]
+      (let [nykyinen-arvo @data]
+        [:div.dropdown {:class (when @auki "open")}
+         [:input.kombo {:type "text" :value nykyinen-arvo
+                        :on-change #(reset! data (-> % .-target .-value))}]
+         [:button {:on-click #(do (swap! auki not) nil)}
+          [:span.caret ""]]
+         [:ul.dropdown-menu {:role "menu"}
+          (for [v (filter #(not= -1 (.indexOf (.toLowerCase (str %)) (.toLowerCase nykyinen-arvo))) valinnat)]
+            ^{:key (hash v)}
+            [:li {:role "presentation"} [linkki v #(do (reset! data v)
+                                                       (reset! auki false))]])]]))))
+
+(comment tee-kentta :kombo [{:keys [valinnat]} data]
+  (let [auki (atom false)]
+    (fn [{:keys [valinnat]} data]
+      [:div.dropdown
+       [:input {:type "text" :value data}]
+       [:button {:on-click #(do (swap! auki not) nil)}
+        [:span.caret ""]]
+       [:ul.dropdown-menu {:role "menu"}
+        (for [v (filter #(.startsWith (str %) data) valinnat)]
+          ^{:key (hash v)}
+          [:li {:role "presentation"} [linkki v #(do (reset! data v)
+                                                     (reset! auki false))]])]])))
+
+       
+   
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
-  :nimi       kentän nimi datassa
+  :nimi       kentän hakufn
+  :fmt        kentän näyttämis fn (oletus str)
   :otsikko    ihmiselle näytettävä otsikko
   :tyyppi     kentän tietotyyppi, yksi #{:string :int :pvm :aika :pvm-aika}
   
@@ -43,13 +96,11 @@ on nimetyillä avaimilla. Lisäksi riveillä on hyvä olla :id attribuutti, jota
 key arvona Reactille. Jos :id arvoa ei ole, otetaan koko rivin hashcode avaimeksi.
 
 Optiot on mappi optioita:
-  :tallenna-fn   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+  :tallenna   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
 
-  :poista-fn    funktio, jolle annetaan indeksi vektoriin ja rivin tiedot. Poistamisen
-                tulee tehdä tarvittavat muutokset atomille, jos poistaminen on ok.
   
   "
-  [{:keys [otsikko tallenna-fn]} skeema tiedot]
+  [{:keys [otsikko tallenna]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         viimeksi-poistettu-idx (atom nil)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -78,7 +129,7 @@ Optiot on mappi optioita:
                 (swap! historia pop))
         ]
     ;;(tarkkaile! "muokatut" muokatut)
-    (fn [{:keys [otsikko tallenna-fn]} skeema tiedot]
+    (fn [{:keys [otsikko tallenna]} skeema tiedot]
       (let [muokataan (not (nil? @muokatut))]
         [:div.panel.panel-default.grid
          [:div.panel-heading
@@ -101,7 +152,7 @@ Optiot on mappi optioita:
               (ikonit/plus-sign) " Lisää rivi"]
 
              [:button.btn.btn-primary.btn-sm.grid-tallenna
-              {:on-click #(do (reset! muokatut nil) nil)} ;; kutsu tallenna-fn
+              {:on-click #(do (tallenna @muokatut) nil)} ;; kutsu tallenna-fn: määrittele paluuarvo?
               (ikonit/ok) " Tallenna"]
            
              [:button.btn.btn-default.btn-sm.grid-peru
@@ -135,12 +186,12 @@ Optiot on mappi optioita:
                                                      "parillinen"
                                                      "pariton"))}
                         (for [{:keys [nimi hae fmt] :as s} skeema]
-                          [:td (tee-kentta s (r/wrap
+                          [:td [tee-kentta s (r/wrap
                                               (if hae
                                                 (hae rivi)
                                                 (get rivi nimi))
                                               (fn [uusi]
-                                                (muokkaa! assoc-in [i nimi] uusi))))])
+                                                (muokkaa! assoc-in [i nimi] uusi)))]])
                         [:td.toiminnot
                          [:span {:on-click #(muokkaa! (fn [muokatut]
                                                         (into []

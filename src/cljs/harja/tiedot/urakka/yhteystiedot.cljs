@@ -6,6 +6,10 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
+(defn hae-yhteyshenkilotyypit []
+  (k/post! :hae-yhteyshenkilotyypit nil))
+
+   
 (defn hae-urakan-paivystajat [urakka-id]
   (let [paivystajat (atom [])]
     (go

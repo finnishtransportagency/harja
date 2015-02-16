@@ -22,9 +22,12 @@
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid
 
+
+
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
-   paivystajat nil]
+   paivystajat nil
+   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit nil))]
 
   (do
     (log "URAKKANI ON: " (pr-str ur), "alku: " (:alkupvm ur))
@@ -35,15 +38,22 @@
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+       "Tilaaja:" (:nimi (:hallintayksikko ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
         
      [grid/grid
-      {:otsikko "Yhteyshenkilöt"}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string :leveys "15%"}
-       {:otsikko "Organisaatio" :hae #(get-in % [:organisaatio :nimi]) :tyyppi :string :leveys "15%"}
+      {:otsikko "Yhteyshenkilöt"
+       :tallenna #(log "TALLENNETAAN: " (pr-str %)) }
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"}
+       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
+        :tyyppi :valinta
+        :valinta-arvo :id
+        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+       
        {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "15%"}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :string :leveys "15%"}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string :leveys "15%"}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "15%"}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "15%"}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}]
       @yhteyshenkilot
       ] 

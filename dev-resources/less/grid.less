@@ -6,6 +6,10 @@ div.grid {
 	padding: 0px;
     }
     table {
+	td {
+	    // jotta pulldown valinnat näkyvät
+	    overflow: visible;
+	}
 	width: 100%;
 	border-collapse: collapse;
 	table-layout: fixed;
@@ -28,17 +32,24 @@ div.grid {
 	width: 20px;
     }
 
-    td input {
-	width: 100%;
+    td {
+
+	input, select {
+	    width: 100%;
+	}
+	.kombo {
+	    width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
+	}
     }
     
     .muokkaustoiminnot {
 	button { margin-right: 1em; }
+	.ikoni {
+	    position: relative;
+	    top: 5px;
+	}
     }
 
-    table td {
-	overflow: hidden;
-    }
     table th {
 	overflow: hidden;
     }

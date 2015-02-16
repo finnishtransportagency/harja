@@ -14,4 +14,8 @@ SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu, yu.yhteyshenkilo
   FROM paivystys p LEFT JOIN yhteyshenkilo_urakka yu ON p.yhteyshenkilo_urakka = yu.id
  WHERE p.yhteyshenkilo_urakka IN (:linkit)
 
+-- name: hae-yhteyshenkilotyypit
+-- Hakee käytetyt yhteyshenkilötyypit
+SELECT DISTINCT(rooli) FROM yhteyshenkilo_urakka
+
  
