@@ -5,7 +5,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.listings :refer [filtered-listing]]
             [harja.ui.leaflet :refer [leaflet]]
-            [harja.ui.yleiset :refer [linkki]]
+            [harja.ui.yleiset :refer [linkki] :as yleiset]
             
             [harja.tiedot.navigaatio :as nav]
             [harja.views.murupolku :as murupolku]
@@ -51,12 +51,12 @@
      [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
-  [:footer#footer {:role "contentinfo"}
-   [:div#footer-wrap
-    [:a {:href "http://www.liikennevirasto.fi"}
-     "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]
-    [:div 
-     [linkki "Tietoja" #(nav/vaihda-sivu! :about)]]]])
+   [:footer#footer.container {:role "contentinfo" }
+     [:div#footer-content
+      [:a {:href "http://www.liikennevirasto.fi"}
+       "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]
+      [:div
+       [linkki "Tietoja" #(nav/vaihda-sivu! :about)]]]])
 
 (defn main
   "Harjan UI:n pääkomponentti"
