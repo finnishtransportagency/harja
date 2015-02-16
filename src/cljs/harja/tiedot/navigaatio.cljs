@@ -91,6 +91,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reset! valittu-hallintayksikko yks)
   (reset! urakkalista nil)
   (reset! valittu-urakka nil)
+  (reset! kartan-koko :M)
   (paivita-url)
   (if yks
     (do
@@ -101,6 +102,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (paivita-url)
+  (reset! kartan-koko :S)
   (if ur
     (t/julkaise! (assoc ur :aihe :urakka-valittu))
     (t/julkaise! {:aihe :urakkavalinta-poistettu})))
