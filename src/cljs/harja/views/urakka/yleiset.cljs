@@ -16,6 +16,10 @@
 
 (def fi-date (df/formatter "dd.MM.yyyy"))
 
+;; hallintayksikkö myös
+;; organisaatio = valinta siitä mitä on tietokannassa
+;; sampoid
+
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    paivystajat nil]
@@ -33,12 +37,12 @@
         
      [grid/grid
       {:otsikko "Yhteyshenkilöt"}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-       {:otsikko "Organisaatio" :hae #(get-in % [:organisaatio :nimi]) :tyyppi :string}
-       {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :string}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string :leveys "15%"}
+       {:otsikko "Organisaatio" :hae #(get-in % [:organisaatio :nimi]) :tyyppi :string :leveys "15%"}
+       {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "15%"}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :string :leveys "15%"}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string :leveys "15%"}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}]
       @yhteyshenkilot
       ] 
         

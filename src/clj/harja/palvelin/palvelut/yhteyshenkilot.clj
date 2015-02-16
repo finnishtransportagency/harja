@@ -28,18 +28,20 @@
         yhteyshenkilot (into []
                              (comp
                               ;; Muodostetaan organisaatiosta parempi
-                              (map #(if-let [urk-id (:urakoitsija_id %)]
-                                      (assoc % :organisaatio {:tyyppi :urakoitsija
-                                                              :id urk-id
-                                                              :nimi (:urakoitsija_nimi %)})
+                              (map #(if-let [org-id (:organisaatio_id %)]
+                                      (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
+                                                              :id org-id
+                                                              :nimi (:organisaatio_nimi %)})
                                       %))
                               ;; Poistetaan kenttiä, joita emme halua frontille välittää
-                              (map #(dissoc % :yu :urakoitsija_id :urakoitsija_nimi)))
+                              (map #(dissoc % :yu :organisaatio_id :organisaatio_nimi)))
                              tulokset)
         linkit (into #{} (map :yu) tulokset)
         paivystykset (if (empty? linkit) [] (q/hae-paivystykset db linkit))]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
+
+
 
 
 

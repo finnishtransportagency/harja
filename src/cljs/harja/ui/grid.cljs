@@ -55,13 +55,25 @@ Optiot on mappi optioita:
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
 
+        viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
+        
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [funktio & argumentit]
-                   (swap! historia conj @muokatut)
+                   (if  (= funktio assoc-in)
+                     ;; assoc-in muutos polkuun, ei tallenneta historiaa jos sama polku kuin edellisessä
+                     (do 
+                       (when-not (= (first argumentit) @viime-assoc)
+                         (swap! historia conj @muokatut))
+                       (reset! viime-assoc (first argumentit)))
+                     ;; muu muutos, tallennetaan historia aina
+                     (do (swap! historia conj @muokatut)
+                         (reset! viime-assoc nil)))
                    (apply swap! muokatut funktio argumentit))
+
 
         ;; Peruu yhden muokkauksen
         peru! (fn []
+               
                 (reset! muokatut (peek @historia))
                 (swap! historia pop))
         ]
@@ -71,9 +83,7 @@ Optiot on mappi optioita:
         [:div.panel.panel-default.grid
          [:div.panel-heading
           [:h6.panel-title otsikko
-           (when-not (empty? @historia)
-             [:span.peru {:on-click peru!}
-              (ikonit/peru)])
+           
            ]
           
           (if-not muokataan
@@ -81,6 +91,12 @@ Optiot on mappi optioita:
              [:button.btn.btn-primary.btn-sm {:on-click #(do (reset! muokatut tiedot) nil)}
               (ikonit/pencil) " Muokkaa"]]
             [:span.pull-right.muokkaustoiminnot
+             (when-not (empty? @historia)
+               [:button.btn.btn-sm.btn-default
+                {:on-click #(do (.stopPropagation %)
+                                (.preventDefault %)
+                                (peru!))}
+                (ikonit/peru)])
              [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(muokkaa! conj {:id (swap! uusi-id dec)})}
               (ikonit/plus-sign) " Lisää rivi"]
 
@@ -102,8 +118,8 @@ Optiot on mappi optioita:
             [:table.grid
              [:thead
               [:tr
-               (for [otsikko (map :otsikko skeema)]
-                 [:th otsikko])
+               (for [{:keys [otsikko leveys]} skeema]
+                 [:th {:width leveys} otsikko])
                (when muokataan
                  [:th.toiminnot " "])
                [:th.toiminnot ""]]]

@@ -19,7 +19,10 @@
     (aset logger "info" (fn [& args])))
   (js/setInterval #(let [less (aget js/window "less")
                          refresh (aget less "refresh")]
-                     (refresh true))
+                     (try
+                       (refresh true)
+                       (catch js/Object o
+                         (.log js/console "Virhe Less päivityksessä: " o))))
                   5000))
 
 
