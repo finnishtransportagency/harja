@@ -101,7 +101,11 @@
                                (recur (conj row (.getObject rs i)) (inc i))
                                row)))
                  (.next rs)))))))
-        
-    ]
-    (.
-    
+
+(defn u
+  "UPDATE Harjan kantaan"
+  [& sql]
+  (with-open [c (.getConnection (:datasource (:db harja-jarjestelma)))
+              ps (.prepareStatement c (reduce str sql))]
+    (.executeUpdate ps)))
+
