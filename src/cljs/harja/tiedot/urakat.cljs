@@ -16,23 +16,3 @@
                               (map #(assoc % :type :ur))) res)))
       (close! ch))
     ch))
-
-(defn hae-urakkatyypin-urakoitsijat [urakkatyyppi]
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/post! :urakkatyypin-urakoitsijat urakkatyyppi))]
-        (>! ch (mapv (fn [ur]
-                       (assoc ur :type :ur))
-                     res)))
-      (close! ch))
-    ch))
-
-(defn hae-yllapidon-urakoitsijat [urakkatyyppi]
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/post! :yllapidon-urakoitsijat nil))]
-        (>! ch (mapv (fn [ur]
-                       (assoc ur :type :ur))
-                     res)))
-      (close! ch))
-    ch))

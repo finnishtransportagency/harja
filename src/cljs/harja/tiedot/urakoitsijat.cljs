@@ -29,7 +29,7 @@
                               (go (reset! urakoitsijat (<! (k/post! :hae-urakoitsijat
                                                                      nil))))))
 
-(defn ^:export hae-urakkatyypin-urakoitsijat [urakkatyyppi]
+(defn hae-urakkatyypin-urakoitsijat [urakkatyyppi]
   (let [ch (chan)]
     (go
       (let [res (<! (k/post! :urakkatyypin-urakoitsijat urakkatyyppi))]
@@ -37,7 +37,7 @@
       (close! ch))
     ch))
 
-(defn ^:export hae-yllapidon-urakoitsijat [urakkatyyppi]
+(defn hae-yllapidon-urakoitsijat [urakkatyyppi]
   (let [ch (chan)]
     (go
       (let [res (<! (k/post! :yllapidon-urakoitsijat urakkatyyppi))]
