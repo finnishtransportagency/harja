@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.urakoitsijat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [harja.skeema :as skeema]
             [clojure.tools.logging :as log]
             [harja.kyselyt.urakoitsijat :as q]))
 
