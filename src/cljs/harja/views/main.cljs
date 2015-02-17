@@ -3,7 +3,7 @@
   (:require [bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.listings :refer [filtered-listing]]
+            [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.yleiset :refer [linkki] :as yleiset]
             

@@ -1,7 +1,7 @@
 (ns harja.ui.listings
   (:require [reagent.core :as reagent :refer [atom]]))
 
-(defn filtered-listing
+(defn suodatettu-lista
   "Luettelo, jossa on hakukenttä filtteröinnille.
   opts voi sisältää
   :term      hakutermin atomi
@@ -10,8 +10,8 @@
   :haku      funktio jolla haetaan itemistä, kenttä jota vasten hakusuodatus (oletus :name)
   :on-select funktio, jolla valinta tehdään (oletuksena reset! valinta-atomille)
 
-  list sisältää luettelon josta hakea."
-  [opts list]
+  lista sisältää luettelon josta hakea."
+  [opts lista]
   (let [term (or (:term opts) (atom ""))
         valittu (or (:selection opts) (atom nil))
         fmt (or (:format opts) str)
@@ -26,9 +26,9 @@
         korostus-idx (atom nil)
 
         ]
-    (fn [opts list]
+    (fn [opts lista]
       
-      (let [itemit (fn [term] (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) list))] 
+      (let [itemit (fn [term] (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) lista))] 
         [:div.haku-container
              
              [:input.haku-input.form-control

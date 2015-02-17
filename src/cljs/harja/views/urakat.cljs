@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
             [bootstrap :as bs]
-            [harja.ui.listings :refer [filtered-listing]]
+            [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.leaflet :refer [leaflet] :as leaflet]
             [harja.ui.yleiset :as yleiset]
             
@@ -51,7 +51,7 @@
          [:h5.haku-otsikko "Hae hallintayksikkö kartalta tai listasta"]
          [:div
           ^{:key "hy-lista"}
-          [filtered-listing {:format :nimi :haku :nimi
+          [suodatettu-lista {:format :nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko}
            @hal/hallintayksikot]]]
@@ -64,7 +64,7 @@
                [:h5.haku-otsikko "Hae urakka kartalta tai listasta"]
                [:div
                 ^{:key "ur-lista"}
-                [filtered-listing {:format :nimi :haku :nimi
+                [suodatettu-lista {:format :nimi :haku :nimi
                                    :selection nav/valittu-urakka
                                    :on-select nav/valitse-urakka}
                  (into []
