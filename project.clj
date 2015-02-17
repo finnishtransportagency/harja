@@ -75,27 +75,16 @@
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
   
-  :plugins [[com.keminglabs/cljx "0.5.0"]
-            [lein-cljsbuild "1.0.4"]
+  :plugins [[lein-cljsbuild "1.0.4"]
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"] 
             ]
 
-    
-  ;; Asiakas- ja palvelinpuolen jaettu koodi
-  :cljx {:builds [{:source-paths ["src/cljx"]
-                   :output-path "target/generated/clj"
-                   :rules :clj}
-                  
-                  {:source-paths ["src/cljx"]
-                   :output-path "target/generated/cljs"
-                   :rules :cljs}]}
-  :prep-tasks [["cljx" "once"]]
-  
+
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs" "src/cljs-dev" "target/generated/cljs"]
+                        :source-paths ["src/cljs" "src/cljs-dev"]
                         :compiler {:optimizations :none
                                    :source-map true
                                    :preamble ["reagent/react.js"]
@@ -115,7 +104,7 @@
                                          "-message"]}
                        
                        {:id "prod"
-                        :source-paths ["src/cljs" "src/cljs-prod" "target/generated/cljs"]
+                        :source-paths ["src/cljs" "src/cljs-prod"]
                         :compiler {:optimizations :advanced
                                    
                                    :preamble ["reagent/react.min.js"]
@@ -137,7 +126,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "target/generated/clj"]
+  :source-paths ["src/clj"]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
