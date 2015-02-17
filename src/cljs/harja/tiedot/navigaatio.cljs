@@ -53,6 +53,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun urakan
 (def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
 
+(tarkkaile! "valittu-urakka" valittu-urakka)
+
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 
@@ -66,9 +68,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (reset! valittu-hallintayksikko yks)
       (reset! urakkalista nil)
       (reset! valittu-urakka nil)
-      (paivita-url)
       (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
-        (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
+      (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
       ;; else
       (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
 
@@ -88,6 +89,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
+  ;;(js* "debugger;")
   (reset! valittu-hallintayksikko yks)
   (reset! urakkalista nil)
   (reset! valittu-urakka nil)
@@ -109,16 +111,18 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
-  (events/listen h EventType/NAVIGATE #(kasittele-url! (.-token %)))
+                    (events/listen h EventType/NAVIGATE #(do (log "NAVIGOINTIEVENTTI")
+                                                             (kasittele-url! (.-token %))))
   h))
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
 (defn paivita-url []
   (let [url (str (name @sivu)
                  "?"
-   (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
-   (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
+                 (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
+                 (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
     (when (not= url (.-token historia))
+      (log "URL != token :: " url " != " (.getToken historia))
       (.setToken historia url))
   ))
 
@@ -147,12 +151,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (vaihda-sivu! :urakat))
     (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
       (if-let [u (some-> parametrit (.get "u") js/parseInt)] 
-      (aseta-hallintayksikko-ja-urakka hy u)
-      ;; else
-      (go
-        (valitse-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
-      ))
+        (do (log "ASETA HALLINTAYKSIKKO JA URAKKA")
+            (aseta-hallintayksikko-ja-urakka hy u))
+        ;; else
+        (go
+          (log "ASETA VAIN HALLINTAYKSIKKO")
+          (valitse-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
+        ))
     ))
 
 (.setEnabled historia true)
-(kasittele-url! (-> js/document .-location .-hash (.substring 1)))
+
