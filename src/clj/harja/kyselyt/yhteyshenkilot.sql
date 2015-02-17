@@ -18,4 +18,18 @@ SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu, yu.yhteyshenkilo
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT(rooli) FROM yhteyshenkilo_urakka
 
- 
+-- name: luo-yhteyshenkilo<!
+-- Tekee uuden yhteys
+INSERT INTO yhteyshenkilo (etunimi,sukunimi,tyopuhelin,matkapuhelin,sahkoposti,organisaatio) values (:etu, :suku, :tyopuh, :matkapuh, :email, :org)
+
+-- name: liita-yhteyshenkilo-urakkaan<!
+-- Liittää yhteyshenkilön urakkaan
+INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka) VALUES (:yht, :urakka)
+
+-- name: paivita-yhteyshenkilo!
+-- Päivittää yhteyshenkilön tiedot
+UPDATE yhteyshenkilo SET etunumi=:etu, sukunimi=:suku, tyopuhelin=:tyopuh, matkapuhelin=:matkapuh, sahkoposti=:email, organisaatio=:org WHERE id = :id
+
+-- name: hae-urakan-yhteyshenkilo-idt
+-- Hakee yhteyshenkilöiden id, jotka ovat liitetty annettuun urakkaan
+SELECT yhteyshenkilo FROM yhteyshenkilo_urakka WHERE urakka = :urakka

@@ -40,21 +40,17 @@
   (let [arvo (or valinta-arvo :id)
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
-    [:select {:value nykyinen-arvo
-              :on-change (fn [e]
-                           (let [uusi-arvo (-> e .-target .-value)]
-                             (reset! data (first (filter #(= (str (arvo %))
-                                                             uusi-arvo)
-                                                         valinnat)))))}
-     (for [v valinnat]
-       ^{:key (arvo v)}
-       [:option {:value (arvo v)} (nayta v)])]))
+    [alasvetovalinta {:valinta @data
+                      :valitse-fn #(do (log "valinta: " %)
+                                       (reset! data %))
+                      :format-fn valinta-nayta}
+     valinnat]))
 
 
 (defmethod tee-kentta :kombo [{:keys [valinnat]} data]
   (let [auki (atom false)]
     (fn [{:keys [valinnat]} data]
-      (let [nykyinen-arvo @data]
+      (let [nykyinen-arvo (or @data "")]
         [:div.dropdown {:class (when @auki "open")}
          [:input.kombo {:type "text" :value nykyinen-arvo
                         :on-change #(reset! data (-> % .-target .-value))}]
@@ -65,19 +61,6 @@
             ^{:key (hash v)}
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
                                                        (reset! auki false))]])]]))))
-
-(comment tee-kentta :kombo [{:keys [valinnat]} data]
-  (let [auki (atom false)]
-    (fn [{:keys [valinnat]} data]
-      [:div.dropdown
-       [:input {:type "text" :value data}]
-       [:button {:on-click #(do (swap! auki not) nil)}
-        [:span.caret ""]]
-       [:ul.dropdown-menu {:role "menu"}
-        (for [v (filter #(.startsWith (str %) data) valinnat)]
-          ^{:key (hash v)}
-          [:li {:role "presentation"} [linkki v #(do (reset! data v)
-                                                     (reset! auki false))]])]])))
 
        
    

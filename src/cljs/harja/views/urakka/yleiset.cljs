@@ -43,7 +43,9 @@
         
      [grid/grid
       {:otsikko "Yhteyshenkilöt"
-       :tallenna #(log "TALLENNETAAN: " (pr-str %)) }
+       :tallenna #(do (log "TALLENNETAAN: " (pr-str %))
+                      (go (let [res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) %))]
+                            (log "vastasi: " (pr-str res)))))}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta

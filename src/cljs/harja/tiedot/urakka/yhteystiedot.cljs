@@ -6,6 +6,13 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
+(defn tallenna-urakan-yhteyshenkilot
+  "Tallentaa urakan yhteyshenkilöt, palauttaa kanavan, josta vastauksen voi lukea."
+  [urakka-id yhteyshenkilot]
+  (k/post! :tallenna-urakan-yhteyshenkilot
+           {:urakka-id urakka-id
+            :yhteyshenkilot yhteyshenkilot}))
+
 (defn hae-yhteyshenkilotyypit []
   (k/post! :hae-yhteyshenkilotyypit nil))
 
