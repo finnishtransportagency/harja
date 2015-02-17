@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.hallintayksikot
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [harja.skeema :as skeema]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.geo :refer [muunna-pg-tulokset]]))
 
