@@ -66,7 +66,8 @@
     ;; käyttäjän oikeudet urakkaan
 
     ;; ketä yhteyshenkilöitä tässä urakassa on
-    (let [nykyiset-yhteyshenkilot (into #{} (q/hae-urakan-yhteyshenkilo-idt db urakka-id))]
+    (let [nykyiset-yhteyshenkilot (into #{} (map :yhteyshenkilo)
+                                        (q/hae-urakan-yhteyshenkilo-idt db urakka-id))]
       
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
@@ -75,20 +76,24 @@
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
             (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id", joka ei ole liitetty urakkaan!")
-            (q/paivita-yhteyshenkilo! db
-                                      (:etunimi yht) (:sukunimi yht)
-                                      (:tyopuhelin yht) (:matkapuhelin yht)
-                                      (:sahkoposti yht)
-                                      (:id (:organisaatio yht))
-                                      id))
+            (do (q/paivita-yhteyshenkilo! c
+                                          (:etunimi yht) (:sukunimi yht)
+                                          (:tyopuhelin yht) (:matkapuhelin yht)
+                                          (:sahkoposti yht)
+                                          (:id (:organisaatio yht))
+                                          id)
+                (q/aseta-yhteyshenkilon-rooli! c (:rooli yht) id urakka-id)))
           
           ;; Uusi yhteyshenkilö, luodaan rivi
-          (let [id (:id (q/luo-yhteyshenkilo<! db
+          (let [id (:id (q/luo-yhteyshenkilo<! c
                                                (:etunimi yht) (:sukunimi yht)
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
                                                (:id (:organisaatio yht))))]
-            (q/liita-yhteyshenkilo-urakkaan<! db id urakka-id)))))))
+            (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
+
+      ;; kaikki ok
+      (hae-urakan-yhteyshenkilot c user urakka-id))))
 
 
 

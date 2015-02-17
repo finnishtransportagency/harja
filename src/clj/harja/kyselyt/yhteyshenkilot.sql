@@ -20,15 +20,24 @@ SELECT DISTINCT(rooli) FROM yhteyshenkilo_urakka
 
 -- name: luo-yhteyshenkilo<!
 -- Tekee uuden yhteys
-INSERT INTO yhteyshenkilo (etunimi,sukunimi,tyopuhelin,matkapuhelin,sahkoposti,organisaatio) values (:etu, :suku, :tyopuh, :matkapuh, :email, :org)
+INSERT INTO yhteyshenkilo (rooli, etunimi,sukunimi,tyopuhelin,matkapuhelin,sahkoposti,organisaatio)
+     VALUES (:rooli, :etu, :suku, :tyopuh, :matkapuh, :email, :org)
 
+-- name: aseta-yhteyshenkilon-rooli!
+UPDATE yhteyshenkilo_urakka
+   SET rooli=:rooli
+ WHERE yhteyshenkilo=:id AND urakka=:urakka
+ 
 -- name: liita-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan
-INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka) VALUES (:yht, :urakka)
+INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, :yht, :urakka)
 
 -- name: paivita-yhteyshenkilo!
 -- Päivittää yhteyshenkilön tiedot
-UPDATE yhteyshenkilo SET etunumi=:etu, sukunimi=:suku, tyopuhelin=:tyopuh, matkapuhelin=:matkapuh, sahkoposti=:email, organisaatio=:org WHERE id = :id
+UPDATE yhteyshenkilo
+   SET etunimi=:etu, sukunimi=:suku, tyopuhelin=:tyopuh, matkapuhelin=:matkapuh,
+       sahkoposti=:email, organisaatio=:org
+ WHERE id = :id
 
 -- name: hae-urakan-yhteyshenkilo-idt
 -- Hakee yhteyshenkilöiden id, jotka ovat liitetty annettuun urakkaan

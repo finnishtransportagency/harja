@@ -168,13 +168,17 @@ Optiot on mappi optioita:
                        [:tr.muokataan {:class (str (if (even? i)
                                                      "parillinen"
                                                      "pariton"))}
-                        (for [{:keys [nimi hae fmt] :as s} skeema]
+                        (for [{:keys [nimi hae aseta fmt] :as s} skeema]
                           [:td [tee-kentta s (r/wrap
                                               (if hae
                                                 (hae rivi)
                                                 (get rivi nimi))
                                               (fn [uusi]
-                                                (muokkaa! assoc-in [i nimi] uusi)))]])
+                                                (log "uusi: " uusi)
+                                                (if aseta
+                                                  (muokkaa! update-in [i] (fn [rivi]
+                                                                            (aseta rivi uusi)))
+                                                  (muokkaa! assoc-in [i nimi] uusi))))]])
                         [:td.toiminnot
                          [:span {:on-click #(muokkaa! (fn [muokatut]
                                                         (into []

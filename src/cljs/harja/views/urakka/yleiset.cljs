@@ -9,7 +9,7 @@
             [harja.pvm :as pvm]
             
             [cljs.core.async :refer [<!]]
-            
+            [clojure.string :as str]
         
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -43,9 +43,21 @@
         
      [grid/grid
       {:otsikko "Yhteyshenkilöt"
-       :tallenna #(do (log "TALLENNETAAN: " (pr-str %))
-                      (go (let [res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) %))]
-                            (log "vastasi: " (pr-str res)))))}
+       :tallenna (fn [uudet-yhteyshenkilot]
+                   (do (log "TALLENNETAAN: " (pr-str uudet-yhteyshenkilot))
+                       (go (let [data (into []
+                                            ;; Kaikki tiedon mankelointi ennen lähetystä tähän
+                                            (comp (map #(if-let [nimi (:nimi %)]
+                                                          (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                                            (assoc %
+                                                              :etunimi etu
+                                                              :sukunimi suku))
+                                                          %)))
+                                            uudet-yhteyshenkilot)
+                                           
+                                 res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) data))]
+                             (reset! yhteyshenkilot res)
+                             true))))}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
@@ -53,7 +65,16 @@
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
-       {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "15%"}
+       {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                nimi
+                                (str (:etunimi %)
+                                     (when-let [suku (:sukunimi %)]
+                                       (str " " suku))))
+        :aseta (fn [yht arvo]
+                 (assoc yht :nimi arvo))
+        
+        
+        :tyyppi :string :leveys "15%"}
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "15%"}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "15%"}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}]
