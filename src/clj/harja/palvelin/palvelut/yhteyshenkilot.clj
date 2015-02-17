@@ -10,7 +10,9 @@
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit
-         tallenna-urakan-yhteyshenkilot)
+         tallenna-urakan-yhteyshenkilot
+
+         hae-urakan-paivystajat)
 
 (defrecord Yhteyshenkilot []
   component/Lifecycle
@@ -22,17 +24,20 @@
       (julkaise-palvelu :hae-yhteyshenkilotyypit
                         (fn [user _]
                           (hae-yhteyshenkilotyypit (:db this) user)))
-
+      (julkaise-palvelu :hae-urakan-paivystajat
+                        (fn [user urakka-id]
+                          (hae-urakan-paivystajat (:db this) user urakka-id)))
       (julkaise-palvelu :tallenna-urakan-yhteyshenkilot
                         (fn [user tiedot]
                           (tallenna-urakan-yhteyshenkilot (:db this) user tiedot))))
     this)
 
   (stop [this]
-    (doto (:http-palvelin this)
-      (poista-palvelu :hae-urakan-yhteyshenkilot)
-      (poista-palvelu :hae-yhteyshenkilotyypit)
-      (poista-palvelu :tallenna-urakan-yhteyshenkilot))
+    (doseq [p [:hae-urakan-yhteyshenkilot
+               :hae-yhteyshenkilotyypit
+               :tallenna-urakan-yhteyshenkilot
+               :hae-urakan-paivystajat]]
+      (poista-palvelu (:http-palvelin this) p))
     this))
 
 (defn hae-yhteyshenkilotyypit [db user]
@@ -53,9 +58,7 @@
                                       %))
                               ;; Poistetaan kenttiä, joita emme halua frontille välittää
                               (map #(dissoc % :yu :organisaatio_id :organisaatio_nimi :organisaatio_tyyppi)))
-                             tulokset)
-        linkit (into #{} (map :yu) tulokset)
-        paivystykset (if (empty? linkit) [] (q/hae-paivystykset db linkit))]
+                             tulokset)]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
@@ -97,7 +100,12 @@
 
 
 
-
+(defn hae-urakan-paivystajat [db user urakka-id]
+  (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
+  (into []
+        ;; munklaukset tässä
+        (q/hae-urakan-paivystajat db urakka-id)))
+                               
 
 
 

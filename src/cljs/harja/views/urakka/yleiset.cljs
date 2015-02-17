@@ -22,15 +22,28 @@
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid
 
-
+(defn tallenna-yhteyshenkilot [ur yhteyshenkilot uudet-yhteyshenkilot]
+  (go (let [data (into []
+                       ;; Kaikki tiedon mankelointi ennen lähetystä tähän
+                       (comp (map #(if-let [nimi (:nimi %)]
+                                     (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                       (assoc %
+                                         :etunimi etu
+                                         :sukunimi suku))
+                                     %)))
+                       uudet-yhteyshenkilot)
+            
+            res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) data))]
+        (reset! yhteyshenkilot res)
+        true)))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
-   paivystajat nil
-   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit nil))]
+   paivystajat (<! (yht/hae-urakan-paivystajat (:id ur)))
+   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))]
 
   (do
-    (log "URAKKANI ON: " (pr-str ur), "alku: " (:alkupvm ur))
+    (log "paivystajat: " (pr-str paivystajat))
     [:div
      [bs/panel {}
       "Yleiset tiedot"
@@ -43,21 +56,8 @@
         
      [grid/grid
       {:otsikko "Yhteyshenkilöt"
-       :tallenna (fn [uudet-yhteyshenkilot]
-                   (do (log "TALLENNETAAN: " (pr-str uudet-yhteyshenkilot))
-                       (go (let [data (into []
-                                            ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                                            (comp (map #(if-let [nimi (:nimi %)]
-                                                          (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                                            (assoc %
-                                                              :etunimi etu
-                                                              :sukunimi suku))
-                                                          %)))
-                                            uudet-yhteyshenkilot)
-                                           
-                                 res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) data))]
-                             (reset! yhteyshenkilot res)
-                             true))))}
+       :tyhja "Ei yhteyshenkilöitä."
+       :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
@@ -82,73 +82,31 @@
       ] 
         
      [grid/grid
-      {:otsikko "Päivystystiedot"}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-       {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string}
-       {:otsikko "Nimi" :nimi :nimi :tyyppi :string}
-       {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :string}
-       {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :string} ;; mieti eri tyyppejä :puhelin / :email / jne...
-       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppin :email}]
+      {:otsikko "Päivystystiedot"
+       :tyhja "Ei päivystystietoja."}
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string :leveys "15%"}
+       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
+        :tyyppi :valinta
+        :valinta-arvo :id
+        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+       {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                nimi
+                                (str (:etunimi %)
+                                     (when-let [suku (:sukunimi %)]
+                                       (str " " suku))))
+        :aseta (fn [yht arvo]
+                 (assoc yht :nimi arvo))
+        
+        
+        :tyyppi :string :leveys "15%"}
+       {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :puhelin :leveys "10%"}
+       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppin :email :leveys "15%"}]
       @paivystajat
       ]
        
      ]))
 
 
-
-(comment
-(defn yleiset
-  "Yleiset välilehti"
-  [ur]
-  (let [paivita (fn [this]
-                  (let [{:keys [yhteyshenkilot paivystajat]} (reagent/state this)]
-                    (go
-                      (log "haetaan urakan henkilöitä: " (:id ur))
-                      (let [henkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))]
-                        (log "urakan henkilöt: " (pr-str henkilot))
-                        (reset! yhteyshenkilot henkilot ;(vec (filter #(= (:rooli %) :yhteyshenkilo)))
-                                )))))]
-                  
-    (reagent/create-class
-     {:display-name "urakka-yleiset"
-      :get-initial-state
-      (fn [this] {:yhteyshenkilot (atom nil)
-                  :paivystajat (atom nil)})
-
-      :component-did-mount
-      (fn [this]
-        (paivita this))
-      :reagent-render
-      (fn [ur]
-        (let [{:keys [yhteyshenkilot paivystajat]} (reagent/state (reagent/current-component))]
-          (log "urakka-yleiset: " (pr-str yhteyshenkilot))
-          [:div
-           "Urakan tunnus: foo" [:br]
-           "Aikaväli: 123123" [:br]
-           "Hallintayksikkö: sehän näkyy jo murupolussa" [:br]
-           "Urakoitsija: Urakkapojat Oy" [:br]
-       
-           [grid/grid
-            {:otsikko "Yhteyshenkilöt"}
-            [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-             {:otsikko "Organisaatio" :hae #(get-in % [:organisaatio :nimi]) :tyyppi :string}
-             {:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string}
-             {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :string}
-             {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :string} ;; mieti eri tyyppejä :puhelin / :email / jne...
-             {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-            @yhteyshenkilot
-            ]
-       
-           [grid/grid
-            {:otsikko "Päivystystiedot"}
-            [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-             {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string}
-             {:otsikko "Nimi" :nimi :nimi :tyyppi :string}
-             {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :string}
-             {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :string} ;; mieti eri tyyppejä :puhelin / :email / jne...
-             {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppin :email}]
-            @paivystajat
-            ]
-       
-           ]))}))))
 

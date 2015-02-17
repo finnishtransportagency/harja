@@ -8,11 +8,12 @@ SELECT y.id, y.etunimi, y.sukunimi, y.kayttajatunnus, y.tyopuhelin, y.matkapuhel
        LEFT JOIN organisaatio org ON y.organisaatio = org.id
  WHERE yu.urakka = :urakka
 
--- name: hae-paivystykset
--- Hakee päivystykset annetulle joukolle urakka<->yhteyshenkilö linkkejä
-SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu, yu.yhteyshenkilo
-  FROM paivystys p LEFT JOIN yhteyshenkilo_urakka yu ON p.yhteyshenkilo_urakka = yu.id
- WHERE p.yhteyshenkilo_urakka IN (:linkit)
+-- name: hae-urakan-paivystajat
+-- Hakee urakan päivystykset
+SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu,
+       y.etunimi, y.sukunimi, y.sahkoposti, y.tyopuhelin, y.matkapuhelin, y.organisaatio
+  FROM paivystys p LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
+ WHERE p.urakka = :urakka
 
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit

@@ -30,3 +30,6 @@
 
 (defn tallenna-urakan-paivystajat [urakka-id paivystajat]
   (k/post! :tallenna-urakan-paivystajat [urakka-id paivystajat]))
+
+(defn hae-urakan-paivystajat [urakka-id]
+  (k/post! :hae-urakan-paivystajat urakka-id))
