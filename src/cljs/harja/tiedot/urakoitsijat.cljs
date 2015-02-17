@@ -37,10 +37,10 @@
       (close! ch))
     ch))
 
-(defn hae-yllapidon-urakoitsijat [urakkatyyppi]
+(defn hae-yllapidon-urakoitsijat []
   (let [ch (chan)]
     (go
-      (let [res (<! (k/post! :yllapidon-urakoitsijat urakkatyyppi))]
+      (let [res (<! (k/get! :yllapidon-urakoitsijat))]
         (>! ch res))
       (close! ch))
     ch))
@@ -54,5 +54,4 @@
                                                                      :hoito))))))
 
 (t/kuuntele! :harja-ladattu (fn [_]
-                              (go (reset! urakoitsijat-yllapito (<! (k/post! :yllapidon-urakoitsijat
-                                                                     nil))))))
+                              (go (reset! urakoitsijat-yllapito (<! (k/get! :yllapidon-urakoitsijat))))))

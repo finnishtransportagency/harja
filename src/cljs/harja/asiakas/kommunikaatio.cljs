@@ -7,7 +7,7 @@
 
 
 (defn post!
-  "Lähetä palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+  "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
 Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla eikä palauta kanavaa."
   ([service payload] (post! service payload nil))
   ([service payload callback-fn]
@@ -30,5 +30,26 @@ Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla ei
                           (when chan (close! chan)))})
        chan)))
 
-  
 
+
+(defn get!
+  "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+Kahden parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla eikä palauta kanavaa."
+  ([service] (get! service nil))
+  ([service callback-fn]
+     (let [chan (when-not callback-fn
+                  (chan))
+           cb (fn [[_ vastaus]]
+                (if callback-fn
+                  (callback-fn vastaus)
+                  (do (put! chan vastaus)
+                      (close! chan))))]
+       (ajax-request
+        {:uri (str "/_/" (name service))
+         :method :get
+         :response-format (transit-response-format)
+         :handler cb
+         :error-handler (fn [[_ error]]
+                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                          (when chan (close! chan)))})
+       chan)))

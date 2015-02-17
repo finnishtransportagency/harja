@@ -57,9 +57,12 @@
     (fn [req]
       (when (and (= :get (:request-method req))
                  (= polku (:uri req)))
+        (let [vastaus (palvelu-fn (:kayttaja req))]
         {:status 200
          :headers {"Content-Type" "application/transit+json"}
-         :body (t/write (palvelu-fn (:kayttaja req)))}))))
+         :body (with-open [out (java.io.ByteArrayOutputStream.)]
+                       (t/write (t/writer out :json) vastaus)
+                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))
 
 
 (defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]

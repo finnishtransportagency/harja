@@ -17,7 +17,7 @@
       (fn [user urakkatyyppi]
         (urakkatyypin-urakoitsijat (:db this) user urakkatyyppi)))
     (julkaise-palvelu (:http-palvelin this) :yllapidon-urakoitsijat 
-      (fn [user _]
+      (fn [user]
         (yllapidon-urakoitsijat (:db this) user)))
     this)
   
