@@ -1,6 +1,7 @@
 (ns harja.pvm
   "Yleiset päivämääräkäsittelyn asiat asiakaspuolella."
-  (:require [cljs-time.format :as df])
+  (:require [cljs-time.format :as df]
+            [harja.loki :refer [log]])
   (:import (goog.date DateTime)))
 
 
@@ -29,6 +30,7 @@
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]
+  (log "MUUNNETAAN AIKA " obj " kentät: " (pr-str kentat))
   (loop [obj obj
          [k & kentat] kentat]
     (if-not k

@@ -190,13 +190,13 @@
     
     {:displayName  "toimenpidekoodit"
      :component-did-mount (fn [this]
-                            (k/post! :hae-toimenpidekoodit nil
-                                     #(loop [acc {}
-                                             [tpk & tpkt] %]
-                                        (if-not tpk
-                                          (reset! koodit acc)
-                                          (recur (assoc acc (:id tpk) tpk)
-                                                 tpkt)))))}))
+                            (let [res (<! (k/post! :hae-toimenpidekoodit nil))]
+                              (loop [acc {}
+                                     [tpk & tpkt] res]
+                                (if-not tpk
+                                  (reset! koodit acc)
+                                  (recur (assoc acc (:id tpk) tpk)
+                                         tpkt)))))}))
 
   
  

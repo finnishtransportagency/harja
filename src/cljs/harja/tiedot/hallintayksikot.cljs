@@ -33,11 +33,10 @@
 (t/kuuntele! :kayttajatiedot
              (fn [kayttaja]
                (when-not @hallintayksikot
-                 (k/post! :hallintayksikot
-                          :tie ;; FIXME: tämä otettava käyttäjän tiedoista 
-                          #(reset! hallintayksikot
-                                   (mapv (fn [hy]
-                                           (assoc hy :type :hy)) %))))))
+                 (go (reset! hallintayksikot
+                             (<! (k/post! :hallintayksikot
+                                         :tie ;; FIXME: tämä otettava käyttäjän tiedoista
+                                         (map #(assoc % :type :hy)))))))))
 
                  
  

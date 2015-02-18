@@ -47,3 +47,25 @@ SELECT yhteyshenkilo FROM yhteyshenkilo_urakka WHERE urakka = :urakka
 -- name: poista-yhteyshenkilo!
 -- Poistaa yhteyshenkilön, joka on annetussa urakassa.
 DELETE FROM yhteyshenkilo WHERE id=:id AND id IN (SELECT yhteyshenkilo FROM yhteyshenkilo_urakka WHERE urakka=:urakka)
+
+
+-- name: poista-paivystaja!
+-- Poista päivystäjän annetusta urakasta.,
+DELETE FROM yhteyshenkilo WHERE id = (SELECT yhteyshenkilo
+                                        FROM paivystys
+				       WHERE yhteyshenkilo=:yhteyshenkilo AND urakka=:urakka)
+
+-- name: luo-paivystys<!
+-- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
+INSERT INTO paivystys
+            (vastuuhenkilo, varahenkilo, alku,loppu,urakka,yhteyshenkilo)
+     VALUES (true, false, :alku, :loppu, :urakka, :yhteyshenkilo)
+
+-- name: hae-paivystyksen-yhteyshenkilo-id
+-- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
+SELECT yhteyshenkilo FROM paivystys WHERE id=:id AND urakka=:urakka
+
+-- name: paivita-paivystys!
+-- Päivittää päivystyksen tiedot
+UPDATE paivystys SET alku=:alku, loppu=:loppu
+ WHERE id=:id AND urakka=:urakka

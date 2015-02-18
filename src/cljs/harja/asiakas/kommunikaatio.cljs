@@ -6,50 +6,35 @@
 
 
 
+(defn- kysely [palvelu metodi parametrit transducer]
+  (let [chan (chan)
+        cb (fn [[_ vastaus]]
+             (put! chan (if transducer (into [] transducer vastaus) vastaus))
+             (close! chan))]
+    (ajax-request {:uri (str "/_/" (name palvelu))
+                 :method metodi
+                 :params parametrit
+                 :format (transit-request-format)
+                 :response-format (transit-response-format)
+                 :handler cb
+                 :error-handler (fn [[_ error]]
+                                  (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                  (close! chan))})
+    chan))
+
 (defn post!
   "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
-Kolmen parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla eikä palauta kanavaa."
+Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service payload] (post! service payload nil))
-  ([service payload callback-fn]
-     (let [chan (when-not callback-fn
-                  (chan))
-           cb (fn [[_ vastaus]]
-                (if callback-fn
-                  (callback-fn vastaus)
-                  (do (put! chan vastaus)
-                      (close! chan))))]
-       (ajax-request
-        {:uri (str "/_/" (name service))
-         :method :post
-         :params payload
-         :format (transit-request-format)
-         :response-format (transit-response-format)
-         :handler cb
-         :error-handler (fn [[_ error]]
-                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                          (when chan (close! chan)))})
-       chan)))
+  ([service payload transducer]
+     (kysely service :post payload transducer)))
 
 
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
-Kahden parametrin versio ottaa lisäksi callbackin jota kutsua vastausarvolla eikä palauta kanavaa."
+Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service] (get! service nil))
-  ([service callback-fn]
-     (let [chan (when-not callback-fn
-                  (chan))
-           cb (fn [[_ vastaus]]
-                (if callback-fn
-                  (callback-fn vastaus)
-                  (do (put! chan vastaus)
-                      (close! chan))))]
-       (ajax-request
-        {:uri (str "/_/" (name service))
-         :method :get
-         :response-format (transit-response-format)
-         :handler cb
-         :error-handler (fn [[_ error]]
-                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                          (when chan (close! chan)))})
-       chan)))
+  ([service transducer]
+     (kysely service :get nil transducer)))
+

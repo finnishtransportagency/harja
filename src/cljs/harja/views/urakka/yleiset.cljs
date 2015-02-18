@@ -117,7 +117,7 @@
      [grid/grid
       {:otsikko "Päivystystiedot"
        :tyhja "Ei päivystystietoja."
-       :tallenna #(tallenna-paivystajat yr paivystajat %)}
+       :tallenna #(tallenna-paivystajat ur paivystajat %)}
       [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                 nimi
                                 (str (:etunimi %)
@@ -137,8 +137,8 @@
        {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :puhelin :leveys "10%"}
        {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :puhelin :leveys "10%"}
        {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "15%"}
-       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :leveys "10%"}
-       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :leveys "10%"}
+       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}
+       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}
        ]
       @paivystajat
       ]

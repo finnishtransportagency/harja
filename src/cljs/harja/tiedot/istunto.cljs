@@ -13,7 +13,6 @@
   (t/julkaise! (merge {:aihe :kayttajatiedot} k)))
 
 (t/kuuntele! :harja-ladattu (fn []
-                              (k/post! :kayttajatiedot
-                                       (reset! istunto-alkoi (js/Date.))
-                                       aseta-kayttaja)))
+                              (go (aseta-kayttaja (<! (k/post! :kayttajatiedot
+                                                               (reset! istunto-alkoi (js/Date.))))))))
 

@@ -3,7 +3,8 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -20,11 +21,9 @@
 
    
 (defn hae-urakan-paivystajat [urakka-id]
-  (let [paivystajat (atom [])]
-    (go
-      (reset! paivystajat
-              (<! (k/post! :hae-urakan-paivystajat urakka-id))))
-    paivystajat))
+  (k/post! :hae-urakan-paivystajat urakka-id
+           (map #(pvm/muunna-aika % :alku :loppu))))
+
 
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
@@ -33,11 +32,10 @@
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id paivystajat poistettavat]
-  (log "TALLENNA-URAKAN-PAIVYSTAJAT")
   (k/post! :tallenna-urakan-paivystajat
            {:urakka-id urakka-id
             :paivystajat paivystajat
-            :poistettu poistettavat}))
+            :poistettu poistettavat}
+           (map #(pvm/muunna-aika % :alku :loppu))))
 
-(defn hae-urakan-paivystajat [urakka-id]
-  (k/post! :hae-urakan-paivystajat urakka-id))
+
