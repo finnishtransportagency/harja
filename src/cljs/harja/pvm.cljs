@@ -15,6 +15,17 @@
              (.getSeconds js-date)
              (.getMilliseconds js-date)))
 
+(defn goog->js
+  "Muunna goog päivämäärä Javascript muotoon"
+  [goog-date]
+  (js/Date. (- (.getYear goog-date) 1900)
+            (.getMonth goog-date)
+             (.getDate goog-date)
+             (.getHours goog-date)
+             (.getMinutes goog-date)
+             (.getSeconds goog-date)
+             (.getMilliseconds goog-date)))
+
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]
@@ -25,6 +36,15 @@
       (recur (assoc obj k (js->goog (get obj k)))
              kentat))))
 
+(defn muunna-aika-js
+  "Muuntaa annetun mäpin annetut päivämääräkentät goog.date.DateTime muodosta JS date instansseiksi."
+  [obj & kentat]
+  (loop [obj obj
+         [k & kentat] kentat]
+    (if-not k
+      obj
+      (recur (assoc obj k (goog->js (get obj k)))
+             kentat))))
 (def fi-pvm
   "Päiväämäärän formatointi suomalaisessa muodossa"
   (df/formatter "d.MM.yyyy"))

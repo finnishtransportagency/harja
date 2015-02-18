@@ -23,18 +23,50 @@
 ;; sampoid
 
 (defn tallenna-yhteyshenkilot [ur yhteyshenkilot uudet-yhteyshenkilot]
-  (go (let [data (into []
-                       ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                       (comp (map #(if-let [nimi (:nimi %)]
-                                     (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                       (assoc %
-                                         :etunimi etu
-                                         :sukunimi suku))
-                                     %)))
-                       uudet-yhteyshenkilot)
-            
-            res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) data))]
+  (go (let [tallennettavat
+            (into []
+                  ;; Kaikki tiedon mankelointi ennen lähetystä tähän
+                  (comp (filter #(not (:harja.ui.grid/poistettu %)))
+                        (map #(if-let [nimi (:nimi %)]
+                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                  (assoc %
+                                    :etunimi etu
+                                    :sukunimi suku))
+                                %)))
+                  uudet-yhteyshenkilot)
+            poistettavat
+            (into []
+                  (keep #(when (and (:harja.ui.grid/poistettu %)
+                                    (> (:id %) 0))
+                           (:id %)))
+                  uudet-yhteyshenkilot)
+            res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
+        true)))
+
+(defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
+  (log "tallenna päivystäjät!")
+  (go (let [tallennettavat
+            (into []
+                  ;; Kaikki tiedon mankelointi ennen lähetystä tähän
+                  (comp (filter #(not (:harja.ui.grid/poistettu %)))
+                        (map #(if-let [nimi (:nimi %)]
+                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                  (assoc %
+                                    :etunimi etu
+                                    :sukunimi suku))
+                                %))
+                        ;; goog->js date
+                        (map #(pvm/muunna-aika-js % :alku :loppu)))
+                  uudet-paivystajat)
+            poistettavat
+            (into []
+                  (keep #(when (and (:harja.ui.grid/poistettu %)
+                                    (> (:id %) 0))
+                           (:id %)))
+                  uudet-paivystajat)
+            res (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
+        (reset! paivystajat res)
         true)))
 
 (deftk yleiset [ur]
@@ -58,7 +90,8 @@
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"}
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"
+        :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
         :valinta-arvo :id
@@ -75,15 +108,16 @@
         
         
         :tyyppi :string :leveys "15%"}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "15%"}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "15%"}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}]
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "30%"}]
       @yhteyshenkilot
       ] 
         
      [grid/grid
       {:otsikko "Päivystystiedot"
-       :tyhja "Ei päivystystietoja."}
+       :tyhja "Ei päivystystietoja."
+       :tallenna #(tallenna-paivystajat yr paivystajat %)}
       [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                 nimi
                                 (str (:etunimi %)

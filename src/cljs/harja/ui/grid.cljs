@@ -8,7 +8,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defmulti tee-kentta (fn [t _] (:tyyppi t)))
@@ -93,6 +94,18 @@
                                           (reset! data %)
                                           (reset! teksti (pvm/pvm %))) :pvm nykyinen-pvm}]]]))))
 
+(defmulti validoi-saanto (fn [saanto data optiot] saanto))
+
+(defmethod validoi-saanto :ei-tyhja [_ data [viesti]]
+  (when (str/blank? data)
+    viesti))
+
+(defn validoi
+  "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
+  [data saannot]
+  (keep #(fn [[saanto & optiot]]
+           (apply validoi-saanto saanto data optiot))
+        saannot))
 
    
 (defn grid
@@ -190,36 +203,36 @@ Optiot on mappi optioita:
                [:th.toiminnot ""]]]
 
              [:tbody
-              (let [rivit (if muokataan @muokatut tiedot)]
+              (let [rivit (filterv #(not (::poistettu %))
+                                   (if muokataan @muokatut tiedot))]
                 (if (empty? rivit)
                   [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                   (map-indexed
                    (if muokataan
                      (fn [i rivi]
-                       (when-not (::poistettu rivi)
-                         ^{:key (or (:id rivi) (hash rivi))}
-                         [:tr.muokataan {:class (str (if (even? i)
-                                                       "parillinen"
-                                                       "pariton"))}
-                          (for [{:keys [nimi hae aseta fmt] :as s} skeema]
-                            [:td [tee-kentta s (r/wrap
-                                                (if hae
-                                                  (hae rivi)
-                                                  (get rivi nimi))
-                                                (fn [uusi]
-                                                  (if aseta
-                                                    (muokkaa! update-in [i] (fn [rivi]
-                                                                              (aseta rivi uusi)))
-                                                    (muokkaa! assoc-in [i nimi] uusi))))]])
-                          [:td.toiminnot
-                           [:span {:on-click #(muokkaa! (fn [muokatut]
-                                                          (into []
-                                                                (filter (fn [r]
-                                                                          (not= r rivi)))
-                                                                muokatut)))}
+                       ^{:key (or (:id rivi) (hash rivi))}
+                       [:tr.muokataan {:class (str (if (even? i)
+                                                     "parillinen"
+                                                     "pariton"))}
+                        (for [{:keys [nimi hae aseta fmt] :as s} skeema]
+                          (let [arvo (if hae
+                                       (hae rivi)
+                                       (get rivi nimi))
+                                virheet (validoi arvo (:validoi s))]
+                            [:td {:class (when-not (empty? virheet)
+                                           "has-error")}
+                             [tee-kentta s (r/wrap
+                                            arvo
+                                            (fn [uusi]
+                                              (if aseta
+                                                (muokkaa! update-in [i] (fn [rivi]
+                                                                          (aseta rivi uusi)))
+                                                (muokkaa! assoc-in [i nimi] uusi))))]]))
+                        [:td.toiminnot
+                         [:span {:on-click #(muokkaa! assoc-in [i ::poistettu] true)}
                           
-                            (ikonit/trash)]]
-                          ]))
+                          (ikonit/trash)]]
+                        ])
                      (fn [i rivi]
                        [:tr {:class (if (even? i) "parillinen" "pariton")}
                         (for [{:keys [nimi hae fmt]} skeema]
