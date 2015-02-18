@@ -21,8 +21,8 @@ SELECT DISTINCT(rooli) FROM yhteyshenkilo_urakka
 
 -- name: luo-yhteyshenkilo<!
 -- Tekee uuden yhteys
-INSERT INTO yhteyshenkilo (rooli, etunimi,sukunimi,tyopuhelin,matkapuhelin,sahkoposti,organisaatio)
-     VALUES (:rooli, :etu, :suku, :tyopuh, :matkapuh, :email, :org)
+INSERT INTO yhteyshenkilo (etunimi,sukunimi,tyopuhelin,matkapuhelin,sahkoposti,organisaatio)
+     VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org)
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
@@ -43,3 +43,7 @@ UPDATE yhteyshenkilo
 -- name: hae-urakan-yhteyshenkilo-idt
 -- Hakee yhteyshenkilöiden id, jotka ovat liitetty annettuun urakkaan
 SELECT yhteyshenkilo FROM yhteyshenkilo_urakka WHERE urakka = :urakka
+
+-- name: poista-yhteyshenkilo!
+-- Poistaa yhteyshenkilön, joka on annetussa urakassa.
+DELETE FROM yhteyshenkilo WHERE id=:id AND id IN (SELECT yhteyshenkilo FROM yhteyshenkilo_urakka WHERE urakka=:urakka)

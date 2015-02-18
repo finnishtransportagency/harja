@@ -62,19 +62,22 @@
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
-(defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot]}]
+(defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (assert (vector? yhteyshenkilot) "Yhteyshenkilöiden tulee olla vektori")
   (jdbc/with-db-transaction [c db]
     ;; käyttäjän oikeudet urakkaan
 
+    (doseq [id poistettu]
+      (q/poista-yhteyshenkilo! c id urakka-id))
+    
     ;; ketä yhteyshenkilöitä tässä urakassa on
     (let [nykyiset-yhteyshenkilot (into #{} (map :yhteyshenkilo)
                                         (q/hae-urakan-yhteyshenkilo-idt db urakka-id))]
       
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
-        (log/info "Tallennetaan yhteyshenkilö " id " urakkaan " urakka-id)
+        (log/info "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
         (if (> id 0)
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
@@ -106,7 +109,6 @@
         ;; munklaukset tässä
         (q/hae-urakan-paivystajat db urakka-id)))
                                
-
 
 
 
