@@ -6,7 +6,8 @@
             [harja.ui.yleiset :refer [ajax-loader linkki alasvetovalinta]]
             [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]
-
+            [harja.pvm :as pvm]
+            [harja.ui.pvm :as pvm-valinta]
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -65,7 +66,34 @@
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
                                                        (reset! auki false))]])]]))))
 
-       
+
+  
+(defmethod tee-kentta :pvm [_ data]
+  
+  (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
+        teksti (atom (if-let [p @data]
+                       (pvm/pvm p)
+                       ""))
+        ;; picker auki?
+        auki (atom false)
+
+        muuta! (fn [t]
+                 (let [d (pvm/->pvm t)]
+                   (log "TEKSTI: " t ", pvm: " d)
+                   (reset! teksti t)
+                   (reset! data d)))
+        ]
+    (fn [_ data]
+      (let [nykyinen-pvm @data
+            nykyinen-teksti @teksti]
+        [:span [:input.pvm {:value nykyinen-teksti
+                            :on-change #(muuta! (-> % .-target .-value))}]
+         [:div.aikavalinta
+          [pvm-valinta/pvm {:valitse #(do (log "PVM: " %)
+                                          (reset! data %)
+                                          (reset! teksti (pvm/pvm %))) :pvm nykyinen-pvm}]]]))))
+
+
    
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -88,7 +116,6 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko tallenna tyhja]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
-        viimeksi-poistettu-idx (atom nil)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
 
@@ -128,12 +155,12 @@ Optiot on mappi optioita:
              [:button.btn.btn-primary.btn-sm {:on-click #(do (reset! muokatut tiedot) nil)}
               (ikonit/pencil) " Muokkaa"]]
             [:span.pull-right.muokkaustoiminnot
-             (when-not (empty? @historia)
-               [:button.btn.btn-sm.btn-default
-                {:on-click #(do (.stopPropagation %)
+             [:button.btn.btn-sm.btn-default
+              {:disabled  (empty? @historia)
+               :on-click #(do (.stopPropagation %)
                                 (.preventDefault %)
                                 (peru!))}
-                (ikonit/peru)])
+              (ikonit/peru) " Kumoa"]
              [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(muokkaa! conj {:id (swap! uusi-id dec)})}
               (ikonit/plus-sign) " Lisää rivi"]
 
@@ -144,7 +171,7 @@ Optiot on mappi optioita:
            
              [:button.btn.btn-default.btn-sm.grid-peru
               {:on-click #(do (reset! muokatut nil)
-                              (reset! viimeksi-poistettu-idx nil))}
+                              (reset! historia []))}
               (ikonit/ban-circle) " Peruuta"]
 
              

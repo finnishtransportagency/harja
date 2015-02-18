@@ -84,13 +84,7 @@
      [grid/grid
       {:otsikko "Päivystystiedot"
        :tyhja "Ei päivystystietoja."}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string :leveys "15%"}
-       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
-        :tyyppi :valinta
-        :valinta-arvo :id
-        :valinta-nayta #(if % (:nimi %) "- valitse -")
-        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-       {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+      [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                 nimi
                                 (str (:etunimi %)
                                      (when-let [suku (:sukunimi %)]
@@ -100,9 +94,18 @@
         
         
         :tyyppi :string :leveys "15%"}
+       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
+        :tyyppi :valinta
+        :valinta-arvo :id
+        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+       
        {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :puhelin :leveys "10%"}
        {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :puhelin :leveys "10%"}
-       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppin :email :leveys "15%"}]
+       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "15%"}
+       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :leveys "10%"}
+       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :leveys "10%"}
+       ]
       @paivystajat
       ]
        
