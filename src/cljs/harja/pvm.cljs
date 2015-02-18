@@ -19,18 +19,17 @@
 (defn goog->js
   "Muunna goog päivämäärä Javascript muotoon"
   [goog-date]
-  (js/Date. (- (.getYear goog-date) 1900)
+  (js/Date. (.getYear goog-date)
             (.getMonth goog-date)
-             (.getDate goog-date)
-             (.getHours goog-date)
-             (.getMinutes goog-date)
-             (.getSeconds goog-date)
-             (.getMilliseconds goog-date)))
+            (.getDate goog-date)
+            (.getHours goog-date)
+            (.getMinutes goog-date)
+            (.getSeconds goog-date)
+            (.getMilliseconds goog-date)))
 
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]
-  (log "MUUNNETAAN AIKA " obj " kentät: " (pr-str kentat))
   (loop [obj obj
          [k & kentat] kentat]
     (if-not k

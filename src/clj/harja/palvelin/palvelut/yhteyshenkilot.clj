@@ -75,6 +75,7 @@
     ;; käyttäjän oikeudet urakkaan
 
     (doseq [id poistettu]
+      (log/info "POISTAN yhteyshenkilön " id " urakasta " urakka-id)
       (q/poista-yhteyshenkilo! c id urakka-id))
     
     ;; ketä yhteyshenkilöitä tässä urakassa on
@@ -113,6 +114,11 @@
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (into []
         ;; munklaukset tässä
+        (map #(if-let [org-id (:organisaatio_id %)]
+                (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
+                                        :id org-id
+                                        :nimi (:organisaatio_nimi %)})
+                %))
         (q/hae-urakan-paivystajat db urakka-id)))
                                
 
@@ -120,7 +126,7 @@
   (jdbc/with-db-transaction [c db]
 
     (doseq [id poistettu]
-      (q/poista-paivystaja! id urakka-id))
+      (q/poista-paivystaja! c id urakka-id))
 
     (doseq [p paivystajat]
       (if (< (:id p) 0)
@@ -134,7 +140,8 @@
                              urakka-id (:id yht) ))
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
-        (let [yht-id (q/hae-paivystyksen-yhteyshenkilo-id (:id p) urakka-id)]
+        (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
+          (log/info "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
           (q/paivita-yhteyshenkilo! c
                                     (:etunimi p) (:sukunimi p)
                                     (:tyopuhelin p) (:matkapuhelin p)

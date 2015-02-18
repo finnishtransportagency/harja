@@ -11,6 +11,7 @@
 (defn tallenna-urakan-yhteyshenkilot
   "Tallentaa urakan yhteyshenkilöt, palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id yhteyshenkilot poistettavat]
+  (log "TALLENNA URAKAN YHTEYSHENKILOT: " (pr-str yhteyshenkilot) " \n JA POISTETAAN: " (pr-str poistettavat))
   (k/post! :tallenna-urakan-yhteyshenkilot
            {:urakka-id urakka-id
             :yhteyshenkilot yhteyshenkilot

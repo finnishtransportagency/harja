@@ -26,7 +26,7 @@
   (go (let [tallennettavat
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  (comp (filter #(not (:harja.ui.grid/poistettu %)))
+                  (comp (filter #(not (:poistettu %)))
                         (map #(if-let [nimi (:nimi %)]
                                 (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                                   (assoc %
@@ -36,7 +36,7 @@
                   uudet-yhteyshenkilot)
             poistettavat
             (into []
-                  (keep #(when (and (:harja.ui.grid/poistettu %)
+                  (keep #(when (and (:poistettu %)
                                     (> (:id %) 0))
                            (:id %)))
                   uudet-yhteyshenkilot)
@@ -49,7 +49,7 @@
   (go (let [tallennettavat
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  (comp (filter #(not (:harja.ui.grid/poistettu %)))
+                  (comp (filter #(not (:poistettu %)))
                         (map #(if-let [nimi (:nimi %)]
                                 (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                                   (assoc %
@@ -61,7 +61,7 @@
                   uudet-paivystajat)
             poistettavat
             (into []
-                  (keep #(when (and (:harja.ui.grid/poistettu %)
+                  (keep #(when (and (:poistettu %)
                                     (> (:id %) 0))
                            (:id %)))
                   uudet-paivystajat)
@@ -134,8 +134,8 @@
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
-       {:otsikko "Puhelin (virka)" :nimi :puhelin :tyyppi :puhelin :leveys "10%"}
-       {:otsikko "Puhelin (gsm)" :nimi :gsm :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"}
        {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "15%"}
        {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}
        {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}

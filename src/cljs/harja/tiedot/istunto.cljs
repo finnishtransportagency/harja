@@ -2,7 +2,9 @@
   "Harjan istunnon tiedot"
   (:require [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
-            [reagent.core :refer [atom]]))
+            [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
  
 (def kayttaja (atom nil))
 
@@ -13,6 +15,7 @@
   (t/julkaise! (merge {:aihe :kayttajatiedot} k)))
 
 (t/kuuntele! :harja-ladattu (fn []
-                              (go (aseta-kayttaja (<! (k/post! :kayttajatiedot
-                                                               (reset! istunto-alkoi (js/Date.))))))))
+                              (go
+                                (aseta-kayttaja (<! (k/post! :kayttajatiedot
+                                                             (reset! istunto-alkoi (js/Date.))))))))
 

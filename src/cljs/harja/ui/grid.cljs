@@ -203,7 +203,7 @@ Optiot on mappi optioita:
                [:th.toiminnot ""]]]
 
              [:tbody
-              (let [rivit (filterv #(not (::poistettu %))
+              (let [rivit (filterv #(not (:poistettu %))
                                    (if muokataan @muokatut tiedot))]
                 (if (empty? rivit)
                   [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
@@ -229,7 +229,7 @@ Optiot on mappi optioita:
                                                                           (aseta rivi uusi)))
                                                 (muokkaa! assoc-in [i nimi] uusi))))]]))
                         [:td.toiminnot
-                         [:span {:on-click #(muokkaa! assoc-in [i ::poistettu] true)}
+                         [:span {:on-click #(muokkaa! assoc-in [i :poistettu] true)}
                           
                           (ikonit/trash)]]
                         ])

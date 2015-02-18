@@ -11,8 +11,11 @@ SELECT y.id, y.etunimi, y.sukunimi, y.kayttajatunnus, y.tyopuhelin, y.matkapuhel
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
 SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu,
-       y.etunimi, y.sukunimi, y.sahkoposti, y.tyopuhelin, y.matkapuhelin, y.organisaatio
-  FROM paivystys p LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
+       y.etunimi, y.sukunimi, y.sahkoposti, y.tyopuhelin, y.matkapuhelin, y.organisaatio,
+       org.id as organisaatio_id, org.nimi as organisaatio_nimi, org.tyyppi as organisaatio_tyyppi
+  FROM paivystys p
+       LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
+       LEFT JOIN organisaatio org ON y.organisaatio = org.id
  WHERE p.urakka = :urakka
 
 -- name: hae-yhteyshenkilotyypit
@@ -53,7 +56,7 @@ DELETE FROM yhteyshenkilo WHERE id=:id AND id IN (SELECT yhteyshenkilo FROM yhte
 -- Poista päivystäjän annetusta urakasta.,
 DELETE FROM yhteyshenkilo WHERE id = (SELECT yhteyshenkilo
                                         FROM paivystys
-				       WHERE yhteyshenkilo=:yhteyshenkilo AND urakka=:urakka)
+				       WHERE id=:id AND urakka=:urakka)
 
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
