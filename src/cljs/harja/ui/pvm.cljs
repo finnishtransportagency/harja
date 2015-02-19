@@ -11,10 +11,10 @@
                   "Syys" "Loka" "Marras" "Joulu"])
 
 (defn- pilko-viikoiksi [vuosi kk]
-  (.log js/console "vuosi: " vuosi ", kk: " kk)
+  ;;(.log js/console "vuosi: " vuosi ", kk: " kk)
   (let [kk (inc kk) ;; cljs-time käyttää luonnollisia kk numeroita
         kk-alku (t/date-time vuosi kk 1)
-        _ (log "kk-alku on: " kk-alku)
+        ;;_ (log "kk-alku on: " kk-alku)
         viikon-alku (loop [pvm (t/date-time vuosi kk 1)]
                       (if (= 1 (t/day-of-week pvm))
                         pvm
@@ -97,7 +97,7 @@ Seuraavat optiot ovat mahdollisia:
                                                (= (t/year paiva) (t/year pvm)))
                                       "pvm-valittu")
                                                
-                             :on-click #(do (.log js/console "CLK") (valitse paiva) nil)}
+                             :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
                   (t/day paiva)])])]]))})))
 
 

@@ -3,6 +3,7 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [harja.loki :refer [log]]
+            [cljs.core.async :refer [<! timeout]]
   )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -153,7 +154,8 @@
               ;; If geometry has ::fit-bounds value true, then zoom to this
               ;; only 1 item should have this
               (when (::fit-bounds geom)
-                (.fitBounds leaflet (.getBounds shape)))
+                (go (<! (timeout 100))
+                    (.fitBounds leaflet (.getBounds shape))))
               (recur (assoc new-geometries-map item shape) items))))))))
 
 

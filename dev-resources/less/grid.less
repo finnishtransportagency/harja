@@ -24,11 +24,27 @@ div.grid {
 		z-index: 1000;
 		margin-top: 0px;
 	    }
+
+	    
+	    .virheet {
+		display: none;
+		position: relative;
+	    }
+	    	    
+	    .virhe {
+		position: absolute;
+		bottom: 5px;
+		background-color: red;
+	    }
 	}
 
 	td:hover {
 	    // jotta pulldown valinnat näkyvät
 	    overflow: visible;
+
+	    .virheet {
+		display: block;
+	    }
 	}
 
 	width: 100%;
@@ -53,10 +69,10 @@ div.grid {
 	width: 20px;
     }
 
-    td {
-
-
+    .has-error {
+	border-top: solid 2px red !important;
     }
+	    
     
     .muokkaustoiminnot {
 	button { margin-right: 1em; }

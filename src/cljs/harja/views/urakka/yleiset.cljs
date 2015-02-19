@@ -10,6 +10,7 @@
             
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
+            [cljs-time.core :as t]
         
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -108,8 +109,8 @@
         
         
         :tyyppi :string :leveys "15%"}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%" :pituus 16}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%" :pituus 16}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "30%"}]
       @yhteyshenkilot
       ] 
@@ -135,14 +136,27 @@
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"
+        :pituus 16}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
+        :pituus 16}
        {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "15%"}
-       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}
-       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"}
-       ]
-      @paivystajat
-      ]
+       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+        :validoi [[:ei-tyhja "Aseta alkupvm"]
+                  (fn [alku rivi]
+                    (let [loppu (:loppu rivi)]
+                      (when (and alku loppu
+                               (t/before? loppu alku))
+                        "Alkupvm ei voi olla lopun jälkeen.")))
+                  ]}
+       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+        :validoi [[:ei-tyhja "Aseta loppupvm"]
+                  (fn [loppu rivi]
+                    (let [alku (:loppu rivi)]
+                      (when (and alku loppu
+                                 (t/before? loppu alku))
+                        "Loppupvm ei voi olla alkua ennen.")))]} ]
+      @paivystajat ]
        
      ]))
 

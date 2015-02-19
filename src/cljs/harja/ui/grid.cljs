@@ -37,6 +37,7 @@
 (defmethod tee-kentta :puhelin [kentta data]
   [:input {:type "tel"
            :value @data
+           :max-length (:pituus kentta)
            :on-change #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"(\s|\d)*" uusi)
                            (reset! data uusi)))}]) 
@@ -87,27 +88,31 @@
     (fn [_ data]
       (let [nykyinen-pvm @data
             nykyinen-teksti @teksti]
-        [:span {:on-mouse-over #(reset! auki true)
-                :on-mouse-out #(reset! auki false)}
+        [:span {:on-click #(do (reset! auki true) nil)}
          [:input.pvm {:value nykyinen-teksti
                       :on-change #(muuta! (-> % .-target .-value))}]
          (when @auki
            [:div.aikavalinta
-            [pvm-valinta/pvm {:valitse #(do (log "PVM: " %)
+            [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                             (reset! data %)
-                                            (reset! teksti (pvm/pvm %))) :pvm nykyinen-pvm}]])]))))
+                                            (reset! teksti (pvm/pvm %)))
+                              :pvm nykyinen-pvm}]])]))))
 
-(defmulti validoi-saanto (fn [saanto data optiot] saanto))
+(defmulti validoi-saanto (fn [saanto data  & optiot] saanto))
 
-(defmethod validoi-saanto :ei-tyhja [_ data [viesti]]
+(defmethod validoi-saanto :ei-tyhja [_ data & [viesti]]
+  (log "eihän ole tyhjä? " (pr-str data))
   (when (str/blank? data)
     viesti))
 
 (defn validoi
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
-  [data saannot]
-  (keep #(fn [[saanto & optiot]]
-           (apply validoi-saanto saanto data optiot))
+  [data rivi saannot]
+  (keep (fn [saanto]
+          (if (fn? saanto)
+            (saanto data rivi)
+            (let [[saanto & optiot] saanto]
+              (apply validoi-saanto saanto data optiot))))
         saannot))
 
    
@@ -198,8 +203,6 @@ Optiot on mappi optioita:
                [:button.btn.btn-default.btn-sm.grid-peru
                 {:on-click #(do (nollaa-muokkaustiedot!) nil)}
                 (ikonit/ban-circle) " Peruuta"]
-
-             
                ])
             ]
            [:div.panel-body
@@ -230,11 +233,14 @@ Optiot on mappi optioita:
                             (let [arvo (if hae
                                          (hae rivi)
                                          (get rivi nimi))
-                                  virheet (validoi arvo (:validoi s))]
+                                  virheet (validoi arvo rivi (:validoi s))]
                               [:td {:class (str (when-not (empty? virheet)
-                                                  "has-error"))
-                                    
-                                    }
+                                                  "has-error"))}
+                               (when-not (empty? virheet)
+                                 [:div.virheet
+                                  [:div.virhe
+                                   (for [v virheet]
+                                     [:span v])]])
                                [tee-kentta s (r/wrap
                                               arvo
                                               (fn [uusi]
