@@ -19,8 +19,12 @@
   (todenna-pyynto [this req]
     (let [headerit (:headers req)
           kayttaja-id (headerit "KOKA_USER_ID")]
-      (log/warn "FIXME: toteuta tämä!")
-      req)))
+      (log/warn "FIXME: KOKA headereista todennus!")
+      (assoc req
+        :kayttaja {:etunimi "Tero"
+                   :sukunimi "Toripolliisi"
+                   :id 1
+                   :kayttajanimi "LX123456789"}))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
   component/Lifecycle
