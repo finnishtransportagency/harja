@@ -30,8 +30,8 @@
                         (map #(if-let [nimi (:nimi %)]
                                 (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                                   (assoc %
-                                    :etunimi etu
-                                    :sukunimi suku))
+                                    :etunimi (str/trim etu)
+                                    :sukunimi (str/trim suku)))
                                 %)))
                   uudet-yhteyshenkilot)
             poistettavat
@@ -53,8 +53,8 @@
                         (map #(if-let [nimi (:nimi %)]
                                 (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                                   (assoc %
-                                    :etunimi etu
-                                    :sukunimi suku))
+                                    :etunimi (str/trim etu)
+                                    :sukunimi (str/trim suku)))
                                 %))
                         ;; goog->js date
                         (map #(pvm/muunna-aika-js % :alku :loppu)))
@@ -113,7 +113,8 @@
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "30%"}]
       @yhteyshenkilot
       ] 
-        
+
+     
      [grid/grid
       {:otsikko "Päivystystiedot"
        :tyhja "Ei päivystystietoja."

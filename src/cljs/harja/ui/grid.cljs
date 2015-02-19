@@ -153,91 +153,102 @@ Optiot on mappi optioita:
                
                 (reset! muokatut (peek @historia))
                 (swap! historia pop))
-        ]
-    ;;(tarkkaile! "muokatut" muokatut)
-    (fn [{:keys [otsikko tallenna]} skeema tiedot]
-      (let [muokataan (not (nil? @muokatut))]
-        [:div.panel.panel-default.grid
-         [:div.panel-heading
-          [:h6.panel-title otsikko
+
+        nollaa-muokkaustiedot! (fn []
+                                 (reset! muokatut nil)
+                                 (reset! historia nil)
+                                 (reset! viime-assoc nil)
+                                 (reset! uusi-id 0))
+                                 ]
+    (r/create-class
+     {:component-will-receive-props
+      (fn [this new-argv]
+        ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
+        (nollaa-muokkaustiedot!))
+      
+      :reagent-render 
+      (fn [{:keys [otsikko tallenna]} skeema tiedot]
+        (let [muokataan (not (nil? @muokatut))]
+          [:div.panel.panel-default.grid
+           [:div.panel-heading
+            [:h6.panel-title otsikko
            
-           ]
+             ]
           
-          (if-not muokataan
-            [:span.pull-right
-             [:button.btn.btn-primary.btn-sm {:on-click #(do (reset! muokatut tiedot) nil)}
-              (ikonit/pencil) " Muokkaa"]]
-            [:span.pull-right.muokkaustoiminnot
-             [:button.btn.btn-sm.btn-default
-              {:disabled  (empty? @historia)
-               :on-click #(do (.stopPropagation %)
+            (if-not muokataan
+              [:span.pull-right
+               [:button.btn.btn-primary.btn-sm {:on-click #(do (reset! muokatut tiedot) nil)}
+                (ikonit/pencil) " Muokkaa"]]
+              [:span.pull-right.muokkaustoiminnot
+               [:button.btn.btn-sm.btn-default
+                {:disabled  (empty? @historia)
+                 :on-click #(do (.stopPropagation %)
                                 (.preventDefault %)
                                 (peru!))}
-              (ikonit/peru) " Kumoa"]
-             [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(muokkaa! conj {:id (swap! uusi-id dec)})}
-              (ikonit/plus-sign) " Lisää rivi"]
+                (ikonit/peru) " Kumoa"]
+               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(muokkaa! conj {:id (swap! uusi-id dec)})}
+                (ikonit/plus-sign) " Lisää rivi"]
 
-             [:button.btn.btn-primary.btn-sm.grid-tallenna
-              {:on-click #(go (if (<! (tallenna @muokatut))
-                                (reset! muokatut nil)))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-              (ikonit/ok) " Tallenna"]
+               [:button.btn.btn-primary.btn-sm.grid-tallenna
+                {:on-click #(go (if (<! (tallenna @muokatut))
+                                  (nollaa-muokkaustiedot!)))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                (ikonit/ok) " Tallenna"]
            
-             [:button.btn.btn-default.btn-sm.grid-peru
-              {:on-click #(do (reset! muokatut nil)
-                              (reset! historia []))}
-              (ikonit/ban-circle) " Peruuta"]
+               [:button.btn.btn-default.btn-sm.grid-peru
+                {:on-click #(do (nollaa-muokkaustiedot!) nil)}
+                (ikonit/ban-circle) " Peruuta"]
 
              
-             ])
-          ]
-         [:div.panel-body
-          (if (nil? tiedot)
-            (ajax-loader)
-            [:table.grid
-             [:thead
-              [:tr
-               (for [{:keys [otsikko leveys]} skeema]
-                 [:th {:width leveys} otsikko])
-               (when muokataan
-                 [:th.toiminnot " "])
-               [:th.toiminnot ""]]]
+               ])
+            ]
+           [:div.panel-body
+            (if (nil? tiedot)
+              (ajax-loader)
+              [:table.grid
+               [:thead
+                [:tr
+                 (for [{:keys [otsikko leveys]} skeema]
+                   [:th {:width leveys} otsikko])
+                 (when muokataan
+                   [:th.toiminnot " "])
+                 [:th.toiminnot ""]]]
 
-             [:tbody
-              (let [rivit (filterv #(not (:poistettu %))
-                                   (if muokataan @muokatut tiedot))]
-                (if (empty? rivit)
-                  [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
-                  (map-indexed
-                   (if muokataan
-                     (fn [i rivi]
-                       ^{:key (or (:id rivi) (hash rivi))}
-                       [:tr.muokataan {:class (str (if (even? i)
-                                                     "parillinen"
-                                                     "pariton"))}
-                        (for [{:keys [nimi hae aseta fmt] :as s} skeema]
-                          (let [arvo (if hae
-                                       (hae rivi)
-                                       (get rivi nimi))
-                                virheet (validoi arvo (:validoi s))]
-                            [:td {:class (when-not (empty? virheet)
-                                           "has-error")}
-                             [tee-kentta s (r/wrap
-                                            arvo
-                                            (fn [uusi]
-                                              (if aseta
-                                                (muokkaa! update-in [i] (fn [rivi]
-                                                                          (aseta rivi uusi)))
-                                                (muokkaa! assoc-in [i nimi] uusi))))]]))
-                        [:td.toiminnot
-                         [:span {:on-click #(muokkaa! assoc-in [i :poistettu] true)}
+               [:tbody
+                (let [rivit (filterv #(not (:poistettu %))
+                                     (if muokataan @muokatut tiedot))]
+                  (if (empty? rivit)
+                    [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
+                    (map-indexed
+                     (if muokataan
+                       (fn [i rivi]
+                         ^{:key (or (:id rivi) (hash rivi))}
+                         [:tr.muokataan {:class (str (if (even? i)
+                                                       "parillinen"
+                                                       "pariton"))}
+                          (for [{:keys [nimi hae aseta fmt] :as s} skeema]
+                            (let [arvo (if hae
+                                         (hae rivi)
+                                         (get rivi nimi))
+                                  virheet (validoi arvo (:validoi s))]
+                              [:td {:class (when-not (empty? virheet)
+                                             "has-error")}
+                               [tee-kentta s (r/wrap
+                                              arvo
+                                              (fn [uusi]
+                                                (if aseta
+                                                  (muokkaa! update-in [i] (fn [rivi]
+                                                                            (aseta rivi uusi)))
+                                                  (muokkaa! assoc-in [i nimi] uusi))))]]))
+                          [:td.toiminnot
+                           [:span {:on-click #(muokkaa! assoc-in [i :poistettu] true)}
                           
-                          (ikonit/trash)]]
-                        ])
-                     (fn [i rivi]
-                       [:tr {:class (if (even? i) "parillinen" "pariton")}
-                        (for [{:keys [nimi hae fmt]} skeema]
-                          [:td ((or fmt str) (if hae
-                                               (hae rivi)
-                                               (get rivi nimi)))])]))
-                   rivit)))]])]]))))
+                            (ikonit/trash)]]
+                          ])
+                       (fn [i rivi]
+                         [:tr {:class (if (even? i) "parillinen" "pariton")}
+                          (for [{:keys [nimi hae fmt]} skeema]
+                            [:td ((or fmt str) (if hae
+                                                 (hae rivi)
+                                                 (get rivi nimi)))])]))
+                     rivit)))]])]]))})))
 
