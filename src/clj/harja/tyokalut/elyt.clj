@@ -3,34 +3,22 @@
   (:import (org.geotools.data.shapefile ShapefileDataStore)
            (org.geotools.map MapContent FeatureLayer))
   (:require [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.shp :as shp])
   (:gen-class))
 
 
 
 (defn testaa [^ShapefileDataStore shp]
   (.getCo shp))
-(defn- feature-propertyt
-  "Muuntaa yhden featuren kaikki property mäpiksi, jossa avain on keyword."
-  [feature]
-  (loop [acc {}
-         [p & ps] (seq (.getProperties feature))]
-    (if-not p
-      acc
-      (recur (assoc acc
-               (keyword (.toLowerCase (.getLocalPart (.getName p))))
-               (.getValue p))
-             ps))))
+
+
     
 (defn- lue-elyt
   "Lukee LiVin Elyt_infra.shp tiedostosta ELYt (ent. tiepiirit) ja palauttaa niiden tiedot mäppinä."
   [tiedosto]
-  (let [ely-featuret (-> tiedosto
-                         io/as-url
-                         ShapefileDataStore.
-                         .getFeatureSource
-                         .getFeatures .toArray seq)
-        ely-propertyt (map feature-propertyt ely-featuret)]
+  (let [ely-featuret (shp/featuret (shp/lue-shapefile tiedosto))
+        ely-propertyt (map shp/feature-propertyt ely-featuret)]
     (zipmap (map :numero ely-propertyt)
             (map (fn [e]
                    {:nimi (:nimi e)
@@ -49,28 +37,7 @@
                 "Uusimaa" "UUD"})
 
 
-(defn geom->pg [alue]
-  (if (= 1 (.getNumGeometries alue))
-    ;; Sisältää yksittäisen polygonin, otetaan se vain
-    (let [p (.getGeometryN alue 0)]
-      (str "ST_GeomFromText('POLYGON(("
-           (str/join ", "
-                     (map #(str (.x %) " " (.y %)) (seq (.getCoordinates p)))) ;;"x1 y1, x2 y2, xN yN"
-           "))')::GEOMETRY"))
 
-    ;; useita polygoneja
-    (str "ST_GeomFromText('MULTIPOLYGON("
-         (str/join ","
-                   (loop [acc []
-                          i 0]
-                     (if (= i (.getNumGeometries alue))
-                       acc
-                       (recur (conj acc
-                                    (str "((" (str/join ", "
-                                                        (map #(str (.x %) " " (.y %))
-                                                             (seq (.getCoordinates (.getGeometryN alue i))))) "))"))
-                              (inc i)))))
-         ")')::GEOMETRY")))
                      
                    
 
@@ -79,7 +46,7 @@
   [elyt]
   (for [{:keys [nimi alue]} (sort-by :numero (vals elyt))]
     (str "\nINSERT INTO hallintayksikko (liikennemuoto, nimi, lyhenne, alue) VALUES ('T', '" nimi "', '" (lyhenteet nimi) "', "
-         (geom->pg alue) ");")))
+         (shp/geom->pg alue) ");")))
 
     
 (defn -main [& args]
