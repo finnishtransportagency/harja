@@ -118,7 +118,7 @@
                                    
                        ]}
 
-  :clean-targets #^{:protect false} ["dev-resources/js/out" "target"]
+  :clean-targets #^{:protect false} ["dev-resources/js/out" "target" "resources/public/js/harja.js"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less"]
