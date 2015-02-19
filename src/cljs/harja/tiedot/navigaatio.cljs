@@ -135,7 +135,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (paivita-url))
     )
 
-(def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan." (atom @urakkalista))
+(def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan." (atom nil))
 (tarkkaile! "suodatettu-urakkalista" suodatettu-urakkalista)
 
 (let [tarkkailija (fn [& _]
