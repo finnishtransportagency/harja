@@ -42,18 +42,17 @@
    
     (let [v-hal @nav/valittu-hallintayksikko
           v-ur @nav/valittu-urakka
-          v-urk @nav/valittu-urakoitsija
-          v-ur-tyyppi @nav/valittu-urakkatyyppi
           urakkalista @nav/urakkalista]
       (if-not v-hal
         ;; Hallintayksikköä ei ole valittu: näytetään lista hallintayksiköistä
         [:span
-         [:h5.haku-otsikko "Hae hallintayksikkö kartalta tai listasta"]
+         [:h5.haku-otsikko "Valitse hallintayksikkö kartalta tai listasta"]
          [:div
           ^{:key "hy-lista"}
           [suodatettu-lista {:format :nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
-                             :on-select nav/valitse-hallintayksikko}
+                             :on-select nav/valitse-hallintayksikko
+                             :aputeksti "Kirjoita hallintayksikön nimi tähän"}
            @hal/hallintayksikot]]]
         
         ;; Hallintayksikko on valittu, mutta urakkaa ei: näytetään luettelossa urakat
@@ -61,17 +60,14 @@
             (if (nil? urakkalista)
               [yleiset/ajax-loader "Urakoita haetaan..."]
               [:span
-               [:h5.haku-otsikko "Hae urakka kartalta tai listasta"]
+               [:h5.haku-otsikko "Hae hallintayksikön urakoita"]
                [:div
                 ^{:key "ur-lista"}
                 [suodatettu-lista {:format :nimi :haku :nimi
                                    :selection nav/valittu-urakka
-                                   :on-select nav/valitse-urakka}
-                 (into []
-                       (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
-                                          (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
-                             (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                       urakkalista)]]])
+                                   :on-select nav/valitse-urakka
+                                   :aputeksti "Kirjoita urakan nimi tähän"}
+                 @nav/suodatettu-urakkalista]]])
           
             ;; Urakka valittu, tähän kaikki urakan komponentit
             [urakka/urakka v-ur])))])

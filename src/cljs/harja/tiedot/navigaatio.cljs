@@ -136,12 +136,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
     )
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan." (atom nil))
-(tarkkaile! "suodatettu-urakkalista" suodatettu-urakkalista)
 
 (let [tarkkailija (fn [& _]
                     (let [v-ur-tyyppi @valittu-urakkatyyppi
                           v-urk @valittu-urakoitsija]
-                      (log "in tarkkailija")
                       (reset! suodatettu-urakkalista (into []
                                                            (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
                                                                               (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
@@ -149,8 +147,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                                                            @urakkalista))))]
   (add-watch valittu-urakkatyyppi :ut tarkkailija)
   (add-watch valittu-urakoitsija :ut tarkkailija)
+  (add-watch urakkalista :ut tarkkailija)
   (add-watch valittu-urakka :ut tarkkailija)
-  (tarkkailija)
   )
 
 (defn kasittele-url!

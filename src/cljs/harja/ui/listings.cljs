@@ -9,6 +9,7 @@
   :format    funktio jolla itemi muutetaan stringiksi, oletus str
   :haku      funktio jolla haetaan itemistä, kenttä jota vasten hakusuodatus (oletus :name)
   :on-select funktio, jolla valinta tehdään (oletuksena reset! valinta-atomille)
+  :aputeksti 
 
   lista sisältää luettelon josta hakea."
   [opts lista]
@@ -34,6 +35,7 @@
              [:input.haku-input.form-control
               {:type "text"
                :value @term
+               :placeholder (:aputeksti opts)
       
                ;; käsitellään ylos/alas/enter näppäimet, joilla listasta voi valita näppäimistöllä
                :on-key-down #(let [kc (.-keyCode %)]
