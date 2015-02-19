@@ -74,7 +74,8 @@
         [:div otsikko " "]
          (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
            [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
-                   [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta 
+                   [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta
+                            :disabled (if disabled "disabled" "")
                             :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 (defn kuuntelija
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
