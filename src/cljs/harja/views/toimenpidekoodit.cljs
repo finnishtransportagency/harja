@@ -5,7 +5,9 @@
             [clojure.string :as str]
             [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]
-            ))
+            [cljs.core.async :refer [<!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
+
 
 
  
@@ -190,13 +192,13 @@
     
     {:displayName  "toimenpidekoodit"
      :component-did-mount (fn [this]
-                            (let [res (<! (k/post! :hae-toimenpidekoodit nil))]
-                              (loop [acc {}
-                                     [tpk & tpkt] res]
-                                (if-not tpk
-                                  (reset! koodit acc)
-                                  (recur (assoc acc (:id tpk) tpk)
-                                         tpkt)))))}))
+                            (go (let [res (<! (k/post! :hae-toimenpidekoodit nil))]
+                                  (loop [acc {}
+                                         [tpk & tpkt] res]
+                                    (if-not tpk
+                                      (reset! koodit acc)
+                                      (recur (assoc acc (:id tpk) tpk)
+                                             tpkt))))))}))
 
   
  
