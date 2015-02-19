@@ -87,12 +87,15 @@
     (fn [_ data]
       (let [nykyinen-pvm @data
             nykyinen-teksti @teksti]
-        [:span [:input.pvm {:value nykyinen-teksti
-                            :on-change #(muuta! (-> % .-target .-value))}]
-         [:div.aikavalinta
-          [pvm-valinta/pvm {:valitse #(do (log "PVM: " %)
-                                          (reset! data %)
-                                          (reset! teksti (pvm/pvm %))) :pvm nykyinen-pvm}]]]))))
+        [:span {:on-mouse-over #(reset! auki true)
+                :on-mouse-out #(reset! auki false)}
+         [:input.pvm {:value nykyinen-teksti
+                      :on-change #(muuta! (-> % .-target .-value))}]
+         (when @auki
+           [:div.aikavalinta
+            [pvm-valinta/pvm {:valitse #(do (log "PVM: " %)
+                                            (reset! data %)
+                                            (reset! teksti (pvm/pvm %))) :pvm nykyinen-pvm}]])]))))
 
 (defmulti validoi-saanto (fn [saanto data optiot] saanto))
 
