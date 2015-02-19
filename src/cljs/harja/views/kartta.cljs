@@ -36,7 +36,11 @@
         :S :S
         :M :S
         :L :M))}]
-    [:div.ikoni-suurenna {:class (when (= koko :L) "hide")
+    [:div.ikoni-suurenna {:class (case koko
+                                   :L "hide"
+                                   :M ""
+                                   :S "kulmassa-kelluva"
+                                   :hidden "")
       :on-click #(nav/vaihda-kartan-koko! (case koko
         :hidden :S
         :S :M

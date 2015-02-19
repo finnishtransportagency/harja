@@ -76,7 +76,7 @@
                                                       (= sivu :tilannekuva) :L
                                                       :default kartan-koko)
                                                   :hidden ["col-sm-12" "hide"]
-                                                  :S ["col-sm-10" "col-sm-2"]
+                                                  :S ["col-sm-12" "piilota-kartta"]
                                                   :M ["col-sm-6" "col-sm-6"]
                                                   :L ["hide" "col-sm-12"])]
        ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
