@@ -46,7 +46,7 @@
       (if-not v-hal
         ;; Hallintayksikköä ei ole valittu: näytetään lista hallintayksiköistä
         [:span
-         [:h5.haku-otsikko "Valitse hallintayksikkö kartalta tai listasta"]
+         [:h5.haku-otsikko "Valitse hallintayksikkö"]
          [:div
           ^{:key "hy-lista"}
           [suodatettu-lista {:format :nimi :haku :nimi
@@ -60,7 +60,7 @@
             (if (nil? urakkalista)
               [yleiset/ajax-loader "Urakoita haetaan..."]
               [:span
-               [:h5.haku-otsikko "Hae hallintayksikön urakoita"]
+               [:h5.haku-otsikko "Valitse hallintayksikön urakka"]
                [:div
                 ^{:key "ur-lista"}
                 [suodatettu-lista {:format :nimi :haku :nimi
