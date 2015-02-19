@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            ;;[clairvoyant.core :as trace :include-macros true])
+            [harja.loki :refer [log]]
   )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -101,12 +101,13 @@
 
 (defmulti create-shape :type)
 
-(defmethod create-shape :polygon [{:keys [coordinates color]}]
+(defmethod create-shape :polygon [{:keys [coordinates color fill]}]
   (js/L.Polygon. (clj->js coordinates)
                  #js {:color (or color "red")
+                      :fill fill
                       :fillOpacity 0.5}))
 
-(defmethod create-shape :line [{:keys [coordinates color]}]
+(defmethod create-shape :line [{:keys [coordinates color] :as line}]
   (js/L.Polyline. (clj->js coordinates)
                   #js {:color (or color "blue")}))
 
@@ -115,10 +116,11 @@
                 10
                 #js {:color (or color "green")}))
 
-(defmethod create-shape :multipolygon [{:keys [polygons color]}]
+(defmethod create-shape :multipolygon [{:keys [polygons color fill]}]
   (let [ps (clj->js (mapv :coordinates polygons))]
     ;;(.log js/console "multipoly: " ps)
-    (js/L.MultiPolygon. ps #js {:color (or color "green")})))
+    (js/L.MultiPolygon. ps #js {:color (or color "green")
+                                :fill fill})))
 
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."

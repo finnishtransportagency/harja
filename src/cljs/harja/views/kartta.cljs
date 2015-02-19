@@ -7,6 +7,7 @@
             [harja.ui.leaflet :refer [leaflet] :as leaflet]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
+            [harja.loki :refer [log]]
             ))
             
 
@@ -50,7 +51,7 @@
 (defn kartta-leaflet []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko]
-     [leaflet {:id "kartta"
+    [leaflet {:id "kartta"
                :width "100%" :height (max (int (* 0.90 (- @yleiset/korkeus 150))) 350) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
               :view kartta-sijainti
               :zoom zoom-taso
@@ -80,10 +81,10 @@
               :geometry-fn (fn [hy]
                              (when-let [alue (:alue hy)]
                                (when (map? alue)
-                                  (assoc alue
-                                 :type (if (:valitty hy) :line (:type alue)) ;;{:type (if (:valittu hy) :line :polygon)
-                                 :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
-                                 :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))))))
+                                 (assoc alue
+                                   :fill (if (:valittu hy) false true)
+                                   :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
+                                   :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
               :layers [;;{:type :wms

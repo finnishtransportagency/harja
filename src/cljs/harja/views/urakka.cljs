@@ -10,7 +10,6 @@
 (defn urakka
   "Urakkanäkymä"
   [ur]
-  (.log js/console "URAKKA ON : " (pr-str ur))
   
   [bs/tabs {}
    "Yleiset"
