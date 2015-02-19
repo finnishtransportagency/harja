@@ -91,9 +91,9 @@
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "15%"
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "17%"
         :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
-       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
+       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "17%"
         :tyyppi :valinta
         :valinta-arvo :id
         :valinta-nayta #(if % (:nimi %) "- valitse -")
@@ -106,12 +106,10 @@
                                        (str " " suku))))
         :aseta (fn [yht arvo]
                  (assoc yht :nimi arvo))
-        
-        
         :tyyppi :string :leveys "15%"}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%" :pituus 16}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%" :pituus 16}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "30%"}]
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "22%"}]
       @yhteyshenkilot
       ] 
 
