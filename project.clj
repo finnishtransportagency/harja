@@ -1,15 +1,15 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
   
-  :dependencies [[org.clojure/clojure "1.7.0-alpha4"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-2657"]
+  :dependencies [[org.clojure/clojure "1.7.0-alpha5"] ; siirrytään 1.7.0 heti kun valmis
+                 [org.clojure/clojurescript "0.0-2850"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "0.3.3"]
+                 [prismatic/schema "0.3.7"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.199"]
+                 [com.cognitect/transit-cljs "0.8.205"]
                  [com.cognitect/transit-clj "0.8.259"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
@@ -35,20 +35,22 @@
                  [yesql "0.4.0"]
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "12.1"]
-                 [org.geotools/gt-process-raster "12.1"]
-                 [org.geotools/gt-epsg-wkt "12.1"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "12.1"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "12.2"]
+                 [org.geotools/gt-process-raster "12.2"]
+                 [org.geotools/gt-epsg-wkt "12.2"] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "12.2"] ;; just for experimentation, remove when no longer needed
 
                                  
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
                  
-                 [cljs-ajax "0.3.9"]
-                 [lively "0.1.2"] 
-                 [reagent "0.5.0-alpha2"]
+                 [cljs-ajax "0.3.10"]
+                 [lively "0.2.0"] 
 
+                 [reagent "0.5.0-alpha2"]
+                 [cljsjs/react "0.12.2-6"]
+                 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  [com.andrewmcveigh/cljs-time "0.3.2"]
@@ -87,7 +89,7 @@
                         :source-paths ["src/cljs" "src/cljs-dev"]
                         :compiler {:optimizations :none
                                    :source-map true
-                                   :preamble ["reagent/react.js"]
+                                   ;;:preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"}
                         :notify-command ["terminal-notifier"
@@ -107,7 +109,7 @@
                         :source-paths ["src/cljs" "src/cljs-prod"]
                         :compiler {:optimizations :advanced
                                    
-                                   :preamble ["reagent/react.min.js"]
+                                   ;;:preamble ["reagent/react.min.js"]
                                    :output-to "resources/public/js/harja.js"
                                    :externs ["externs/leaflet.js"]
 
@@ -118,7 +120,9 @@
                                    
                        ]}
 
-  :clean-targets #^{:protect false} ["dev-resources/js/out" "target" "resources/public/js/harja.js"]
+  :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
+                                     "resources/public/js/harja.js"
+                                     "resource/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less"]

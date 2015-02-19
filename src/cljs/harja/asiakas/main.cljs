@@ -8,7 +8,9 @@
             [harja.tiedot.hallintayksikot :as hal]
             
             [reagent.core :as reagent]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+
+            [cljsjs.react]))
 
 (defn render []
   (reagent/render [main-view/main] (.getElementById js/document "app")))

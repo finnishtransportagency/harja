@@ -1,6 +1,6 @@
 (ns harja.asiakas.ymparisto
   "Dev ympäristön spesifisiä asioita."
-  (:require lively))
+  (:require [lively.core :as lively]))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
@@ -22,7 +22,7 @@
                      (try
                        (refresh true)
                        (catch js/Object o
-                         (.log js/console "Virhe Less päivityksessä: " o))))
+                         (.log js/console "Virhe Less päivityksessä: " o)))) 
                   5000))
 
 
