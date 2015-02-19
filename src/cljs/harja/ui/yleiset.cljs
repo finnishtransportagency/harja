@@ -44,11 +44,15 @@
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
+(defn alasveto-ei-loydoksia [teksti]
+  [:div.alasveto-ei-loydoksia teksti])
+
 (defn alasvetovalinta [_ vaihtoehdot]
   (let [auki (atom false)]
-    (fn [{:keys [valinta format-fn valitse-fn class]} vaihtoehdot]
+    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
       [:div.dropdown {:class (str class " " (when @auki "open"))}
          [:button.btn.btn-default {:type "button"
+                                   :disabled (if disabled "disabled" "")
                                    :on-click #(do 
                                                (swap! auki not)
                                                nil)} ;; Reactin mielestä ei kiva palauttaa booleania handleristä
@@ -62,14 +66,14 @@
                                                      ))])
                    ]])))
 
-(defn radiovalinta [otsikko valinta valitse-fn & vaihtoehdot]
+(defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
   
   (let [vaihda-valinta (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
        
        [:div.btn-group.pull-right.murupolku-radiovalinta
         [:div otsikko " "]
          (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
-           [:label.btn.btn-primary
+           [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
                    [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta 
                             :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 (defn kuuntelija

@@ -4,7 +4,7 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasvetovalinta radiovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
@@ -70,23 +70,29 @@
          
          ;; Alasvetovalikko urakan nopeaa vaihtamista varten
          [:ul.dropdown-menu {:role "menu"}
-          (for [muu-urakka (filter #(not= % valittu) @nav/urakkalista)]
-            ^{:key (str "ur-" (:id muu-urakka))}
-            [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])]])
+          
+          (let [muut-urakat (filter #(not= % valittu) @nav/suodatettu-urakkalista)]
+            
+            (if (empty? muut-urakat)
+            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
+            (for [muu-urakka muut-urakat]
+              ^{:key (str "ur-" (:id muu-urakka))}
+              [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])
       
       [:span.pull-right.murupolku-suotimet
        [:div [:span.urakoitsija-otsikko "Urakoitsija"]
         [alasvetovalinta {:valinta urakoitsija
                           :format-fn #(if % (:nimi %) "Kaikki")
                           :valitse-fn nav/valitse-urakoitsija!
-                          :class "alasveto-urakoitsija"}
+                          :class "alasveto-urakoitsija"
+                          :disabled (boolean @nav/valittu-urakka)}
          (vec (conj (filter (if (= urakkatyyppi :hoito)
                               #(urakoitsijat-hoito (:id %))
                               #(urakoitsijat-yllapito (:id %)))
                             urakoitsijat) nil))
          ]]
        
-       [radiovalinta "Urakkatyyppi" urakkatyyppi nav/vaihda-urakkatyyppi!
+       [radiovalinta "Urakkatyyppi" urakkatyyppi nav/vaihda-urakkatyyppi! (boolean @nav/valittu-urakka)
         "Hoito" :hoito "Ylläpito" :yllapito]]]
      ]))
 

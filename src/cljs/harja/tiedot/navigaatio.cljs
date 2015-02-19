@@ -58,6 +58,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 
+
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
@@ -134,6 +135,23 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (paivita-url))
     )
 
+(def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan." (atom @urakkalista))
+(tarkkaile! "suodatettu-urakkalista" suodatettu-urakkalista)
+
+(let [tarkkailija (fn [& _]
+                    (let [v-ur-tyyppi @valittu-urakkatyyppi
+                          v-urk @valittu-urakoitsija]
+                      (log "in tarkkailija")
+                      (reset! suodatettu-urakkalista (into []
+                                                           (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
+                                                                              (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
+                                                                 (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                                                           @urakkalista))))]
+  (add-watch valittu-urakkatyyppi :ut tarkkailija)
+  (add-watch valittu-urakoitsija :ut tarkkailija)
+  (add-watch valittu-urakka :ut tarkkailija)
+  (tarkkailija)
+  )
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
