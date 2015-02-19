@@ -27,7 +27,15 @@
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
   ;;(Thread/sleep 2000) ;;; FIXME: this is to try out "ajax loading" ui
   (into []
-        (comp (muunna-pg-tulokset :alue)
+        (comp (muunna-pg-tulokset :alue :alueurakan_alue)
+
+              ;; Jos alueurakan alue on olemassa, käytetään sitä alueena
+              (map #(if-let [alueurakka (:alueurakan_alue %)]
+                      (-> %
+                          (dissoc :alueurakan_alue)
+                          (assoc  :alue alueurakka))
+                      (dissoc % :alueurakan_alue)))
+              
               (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                            :nimi (:urakoitsija_nimi %)
                                            :ytunnus (:urakoitsija_ytunnus %)}))
