@@ -150,7 +150,6 @@ Optiot on mappi optioita:
                          (reset! viime-assoc nil)))
                    (apply swap! muokatut funktio argumentit))
 
-
         ;; Peruu yhden muokkauksen
         peru! (fn []
                
@@ -161,8 +160,7 @@ Optiot on mappi optioita:
                                  (reset! muokatut nil)
                                  (reset! historia nil)
                                  (reset! viime-assoc nil)
-                                 (reset! uusi-id 0))
-                                 ]
+                                 (reset! uusi-id 0))]
     (r/create-class
      {:component-will-receive-props
       (fn [this new-argv]
@@ -233,8 +231,10 @@ Optiot on mappi optioita:
                                          (hae rivi)
                                          (get rivi nimi))
                                   virheet (validoi arvo (:validoi s))]
-                              [:td {:class (when-not (empty? virheet)
-                                             "has-error")}
+                              [:td {:class (str (when-not (empty? virheet)
+                                                  "has-error"))
+                                    
+                                    }
                                [tee-kentta s (r/wrap
                                               arvo
                                               (fn [uusi]

@@ -6,11 +6,31 @@ div.grid {
 	padding: 0px;
     }
     table {
-	td { overflow: hidden; }
+	td {
+	    overflow: hidden;
+
+	    input, select {
+		width: 100%;
+		z-index: 10;
+	    }
+	    .kombo {
+		width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
+	    }
+	    .dropdown {
+		width: 99%;
+		
+	    }
+	    .dropdown-menu {
+		z-index: 1000;
+		margin-top: 0px;
+	    }
+	}
+
 	td:hover {
 	    // jotta pulldown valinnat näkyvät
 	    overflow: visible;
 	}
+
 	width: 100%;
 	border-collapse: collapse;
 	table-layout: fixed;
@@ -35,16 +55,7 @@ div.grid {
 
     td {
 
-	input, select {
-	    width: 100%;
-	    z-index: 10;
-	}
-	.kombo {
-	    width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
-	}
-	.dropdown {
-	    width: 99%;
-	}
+
     }
     
     .muokkaustoiminnot {
