@@ -11,4 +11,4 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
        LEFT JOIN hanke h ON u.hanke=h.id
        LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro       
- WHERE hallintayksikko = :hallintayksikko
+ WHERE (hallintayksikko = :hallintayksikko OR au.elynumero = hal.elynumero)

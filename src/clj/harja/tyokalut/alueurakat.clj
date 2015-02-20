@@ -4,10 +4,12 @@
             [clojure.java.io :as io])
   (:gen-class))
 
-(defn alueurakka->sql [{:keys [the_geom urakka_nro]}]
+(defn alueurakka->sql [{:keys [the_geom urakka_nro ely_nro]}]
   (str
-   "INSERT INTO alueurakka (alueurakkanro, alue) VALUES ('" urakka_nro "', "
+   "INSERT INTO alueurakka (alueurakkanro, alue, elynumero) VALUES ('" urakka_nro "', "
    (shp/geom->pg the_geom)
+   ", "
+   ely_nro
    ");\n"))
 
 (defn -main [& args]
