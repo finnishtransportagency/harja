@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! timeout]]
+            [harja.tiedot.navigaatio :as nav]
   )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -25,7 +26,13 @@
         zoom (:zoom mapspec)
         selection (:selection mapspec)
         item-geometry (or (:geometry-fn mapspec) identity)]
-      
+
+    ;; Leaflet voi jäädä jumiin, jos kartan DOM elementtiä muuttelee eikä kerro siitä
+    (add-watch nav/kartan-koko ::paivita-kartan-koko
+               (fn [& _]
+                 (js/setTimeout #(do (log "kartan koko muuttui")
+                                     (.invalidateSize leaflet)) 100)))
+               
     (.setView leaflet (clj->js @view) @zoom)
     (doseq [{:keys [type url] :as layer-spec} (:layers mapspec)]
       (let [layer (case type
