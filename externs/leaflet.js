@@ -28,6 +28,8 @@ L.Map.prototype.setView = function(a, b){};
 
 L.Map.prototype.fitBounds = function(bounds){};
 
+L.Map.prototype.invalidateSize = function(){};
+
 /** @return {L.LatLng} */
 L.Map.prototype.getCenter = function() {};
 
