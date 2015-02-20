@@ -9,7 +9,8 @@
             [cognitect.transit :as t]
             [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
-            [harja.palvelin.komponentit.todennus :as todennus]))
+            [harja.palvelin.komponentit.todennus :as todennus])
+  (:import (java.text SimpleDateFormat)))
 
 
 (defn- reitita [req kasittelijat]
@@ -26,12 +27,13 @@
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
-  [nimi palvelu-fn skeema]
+  [nimi palvelu-fn optiot]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
-        (let [kysely (t/read (t/reader (:body req) :json))
+        (let [skeema (:skeema optiot)
+              kysely (t/read (t/reader (:body req) :json))
               kysely (if-not skeema
                        kysely
                        (try
@@ -50,19 +52,35 @@
                        (t/write (t/writer out :json) vastaus)
                        (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
+(def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
+
 (defn- transit-get-kasittelija
   "Luo transit käsittelijän GET kutsuille annettuun palvelufunktioon."
-  [nimi palvelu-fn]
+  [nimi palvelu-fn optiot]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :get (:request-method req))
                  (= polku (:uri req)))
-        (let [vastaus (palvelu-fn (:kayttaja req))]
-        {:status 200
-         :headers {"Content-Type" "application/transit+json"}
-         :body (with-open [out (java.io.ByteArrayOutputStream.)]
+        (let [last-modified-fn (:last-modified optiot)
+              last-modified (and last-modified-fn (last-modified-fn (:kayttaja req)))
+              if-modified-since-header (some-> req :headers (get "if-modified-since"))
+              if-modified-since (when if-modified-since-header
+                                  (.parse (SimpleDateFormat. muokkaus-pvm-muoto) if-modified-since-header))]
+          
+          (if (and last-modified 
+                   if-modified-since
+                   (not (.after last-modified if-modified-since)))
+            {:status 304}
+            (let [vastaus (palvelu-fn (:kayttaja req))]
+              {:status 200
+               :headers (merge {"Content-Type" "application/transit+json"}
+                               (if last-modified
+                                 {"cache-control" "private, max-age=0, must-revalidate"
+                                  "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
+                                 {"cache-control" "no-cache"}))
+               :body (with-open [out (java.io.ByteArrayOutputStream.)]
                        (t/write (t/writer out :json) vastaus)
-                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))
+                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
 
 (defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
@@ -106,18 +124,25 @@
 sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
 tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
 Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
-  polkuun /edn/nimi (ilman keywordin kaksoispistettä)."
+  polkuun /edn/nimi (ilman keywordin kaksoispistettä).
+
+Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
+
+  :last-modified    fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
+                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
+"
+  
   ([http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
-  ([http-palvelin nimi palvelu-fn skeema]
+  ([http-palvelin nimi palvelu-fn optiot]
      (let [ar (arityt palvelu-fn)]
        (when (ar 2)
          ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
          (swap! (:kasittelijat http-palvelin)
-                conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn skeema)}))
+                conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
        (when (ar 1)
          ;; GET metodi, vain käyttäjätiedot parametrina
          (swap! (:kasittelijat http-palvelin)
-                conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn)})))))
+                conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
 
 (defn poista-palvelu [http-palvelin nimi]
   (swap! (:kasittelijat http-palvelin)
