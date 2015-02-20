@@ -192,7 +192,7 @@
     
     {:displayName  "toimenpidekoodit"
      :component-did-mount (fn [this]
-                            (go (let [res (<! (k/post! :hae-toimenpidekoodit nil))]
+                            (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
                                   (loop [acc {}
                                          [tpk & tpkt] res]
                                     (if-not tpk

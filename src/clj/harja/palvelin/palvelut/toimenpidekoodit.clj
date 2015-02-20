@@ -2,7 +2,8 @@
    (:require [com.stuartsierra.component :as component]
              [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
 
-             [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]))
+             [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]
+             [clojure.tools.logging :as log]))
 
 (declare hae-toimenpidekoodit
          lisaa-toimenpidekoodi
@@ -14,8 +15,10 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this) :hae-toimenpidekoodit
-                      (fn [kayttaja _]
-                        (hae-toimenpidekoodit (:db this) kayttaja)))
+                      (fn [kayttaja]
+                        (hae-toimenpidekoodit (:db this) kayttaja))
+                      {:last-modified (fn [user]
+                                        (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
     (julkaise-palvelu (:http-palvelin this) :lisaa-toimenpidekoodi
                       (fn [kayttaja koodi]
                         (lisaa-toimenpidekoodi (:db this) kayttaja koodi)))
