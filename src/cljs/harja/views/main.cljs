@@ -8,6 +8,7 @@
             [harja.ui.yleiset :refer [linkki] :as yleiset]
             
             [harja.tiedot.navigaatio :as nav]
+                        
             [harja.views.murupolku :as murupolku]
             
             [harja.views.urakat :as urakat]
@@ -51,7 +52,7 @@
      [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
-   [:footer#footer.container {:role "contentinfo" }
+   [:footer#footer.container {:role "contentinfo" :style {:top (max @yleiset/sisallon-korkeus (- @yleiset/korkeus 55))}}
      [:div#footer-content
       [:a {:href "http://www.liikennevirasto.fi"}
        "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]
