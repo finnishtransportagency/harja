@@ -1,3 +1,9 @@
+
+#kartta {
+  // tämä tarvitaan ettei leaflet sekoa kartan kokovaihteluissa
+  position: absolute;
+}
+
 .ikoni-kartta-ctrl {
 	background-color: #FFF;
 	display: inline-block;
@@ -39,6 +45,7 @@
 		margin-top: 3px;
 	}
 }
+/*
 .kulmassa-kelluva {
 	background-image: url("../images/palauta_kartta.png");
 	height: 150px;
@@ -46,12 +53,21 @@
 	opacity: 1;
 	width: 160px;
 	&:hover { transform: scale(1.01); }
+}*/
+
+.kulma-kartta {
+    .ikoni-suurenna {
+	position: absolute;
+	left: -25px;
+	top: 150px;
+    }
 }
+
 .piilota-kartta {
 	position: relative;
 	right: 0;
 	top: 0;
-	#kartta {
+	     #kartta {
 		display: none;
 	}
 }

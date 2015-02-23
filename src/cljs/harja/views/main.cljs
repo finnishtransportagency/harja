@@ -70,15 +70,15 @@
       [murupolku/murupolku]]
   
      (let [[sisallon-luokka kartan-luokka] 
-                                              (case (cond
-                                                      (= sivu :hallinta) :hidden
-                                                      (= sivu :about) :hidden
-                                                      (= sivu :tilannekuva) :L
-                                                      :default kartan-koko)
-                                                  :hidden ["col-sm-12" "hide"]
-                                                  :S ["col-sm-12" "piilota-kartta"]
-                                                  :M ["col-sm-6" "col-sm-6"]
-                                                  :L ["hide" "col-sm-12"])]
+           (case (cond
+                  (= sivu :hallinta) :hidden
+                  (= sivu :about) :hidden
+                  (= sivu :tilannekuva) :L
+                  :default kartan-koko)
+             :hidden ["col-sm-12" "hide"]
+             :S ["col-sm-12" "kulma-kartta"] ;piilota-kartta"]
+             :M ["col-sm-6" "col-sm-6"]
+             :L ["hide" "col-sm-12"])]
        ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
        [:div.container
         [:div.row

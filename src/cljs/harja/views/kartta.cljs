@@ -32,27 +32,37 @@
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
     [:span.kartan-koko-kontrollit {:class (when (= sivu :tilannekuva) "hide")}
-    [:div.ikoni-pienenna {:class (when (= koko :S) "hide")
-      :on-click #(nav/vaihda-kartan-koko! (case koko
-        :S :S
-        :M :S
-        :L :M))}]
-    [:div.ikoni-suurenna {:class (case koko
-                                   :L "hide"
-                                   :M ""
-                                   :S "kulmassa-kelluva"
-                                   :hidden "")
-      :on-click #(nav/vaihda-kartan-koko! (case koko
-        :hidden :S
-        :S :M
-        :M :L
-        :L :L))}]]))
+     [:div.ikoni-pienenna {:class (when (= koko :S) "hide")
+                           :on-click #(nav/vaihda-kartan-koko! (case koko
+                                                                 :S :S
+                                                                 :M :S
+                                                                 :L :M))}]
+     [:div.ikoni-suurenna {:class (case koko
+                                    :L "hide"
+                                    :M ""
+                                    :S "kulmassa-kelluva"
+                                    :hidden "")
+                           :on-click #(nav/vaihda-kartan-koko!
+                                       (case koko
+                                         :hidden :S
+                                         :S :M
+                                         :M :L
+                                         :L :L))}]]))
 
 (defn kartta-leaflet []
   (let [hals @hal/hallintayksikot
-        v-hal @nav/valittu-hallintayksikko]
+        v-hal @nav/valittu-hallintayksikko
+        koko @nav/kartan-koko
+        kork @yleiset/korkeus
+        lev @yleiset/leveys]
     [leaflet {:id "kartta"
-               :width "100%" :height (max (int (* 0.90 (- @yleiset/korkeus 150))) 350) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
+              :width (if (= koko :S) "160px" "100%")
+              :height (if (= koko :S) "150px"
+                          (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
+              :style (when (= koko :S)
+                       {:position "absolute"
+                        :left (- lev 160)
+                        :top 150})
               :view kartta-sijainti
               :zoom zoom-taso
               :selection nav/valittu-hallintayksikko
@@ -87,13 +97,13 @@
                                    :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
-              :layers [;;{:type :wms
-                        ;;:url (wms-url)
-                        ;;:layers ["yleiskartta_1m"]
-                        ;;:format "image/png"
-                        ;;:transparent true
-                        ;;:srs "EPSG:3067"
-                        ;;:attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
+              :layers [ ;;{:type :wms
+                       ;;:url (wms-url)
+                       ;;:layers ["yleiskartta_1m"]
+                       ;;:format "image/png"
+                       ;;:transparent true
+                       ;;:srs "EPSG:3067"
+                       ;;:attribution "Maanmittauslaitoksen Karttakuvapalvelu (WMS)"}]
                         
                        {:type :tile
                         :url "http://{s}.tile.osm.org/{z}/{x}/{y}.png"

@@ -16,12 +16,17 @@
 (declare update-leaflet-geometries)
 
 
- 
+(def ^:export the-kartta (atom nil))
+
+(defn ^:export invalidate-size []
+  (.invalidateSize @the-kartta))
+
 (defn- leaflet-did-mount [this]
   "Initialize LeafletJS map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
         leaflet (js/L.Map. (:id mapspec)
                            (clj->js {:scrollWheelZoom false}))
+        _ (reset! the-kartta leaflet)
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)
@@ -100,8 +105,9 @@
 
 (defn- leaflet-render [mapspec]
   [:div {:id (:id mapspec)
-         :style {:width (:width mapspec)
-                 :height (:height mapspec)}}])
+         :style (merge {:width (:width mapspec)
+                        :height (:height mapspec)}
+                       (:style mapspec))}])
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to LeafletJS
