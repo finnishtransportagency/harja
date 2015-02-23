@@ -132,7 +132,7 @@
                  (assoc yht :nimi arvo))
         
         
-        :tyyppi :string :leveys "15%"}
+        :tyyppi :string :leveys "20%"}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
         :valinta-arvo :id
@@ -143,7 +143,7 @@
         :pituus 16}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
         :pituus 16}
-       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "15%"}
+       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}
        {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
         :validoi [[:ei-tyhja "Aseta alkupvm"]
                   (fn [alku rivi]
