@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
   
   :dependencies [[org.clojure/clojure "1.7.0-alpha5"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-2850"]
+                 [org.clojure/clojurescript "0.0-2913"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.3.7"]
@@ -48,8 +48,8 @@
                  [cljs-ajax "0.3.10"]
                  [lively "0.2.0"] 
 
-                 [reagent "0.5.0-alpha2"]
-                 [cljsjs/react "0.12.2-6"]
+                 [reagent "0.5.0-alpha3" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [cljsjs/react-with-addons "0.12.2-7"]
                  
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
@@ -77,15 +77,13 @@
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
   
-  :plugins [[lein-cljsbuild "1.0.4"]
+  :plugins [[lein-cljsbuild "1.0.5"]
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"] 
-            ]
-
-
-  ;; Asiakaspuolen cljs buildin tietoja
-  :cljsbuild {:builds [{:id "dev"
+            ]  ;; Asiakaspuolen cljs buildin tietoja
+  :cljsbuild {
+              :builds [{:id "dev"
                         :source-paths ["src/cljs" "src/cljs-dev"]
                         :compiler {:optimizations :none
                                    :source-map true
@@ -103,7 +101,9 @@
                                          "default"
                                          "-activate"
                                          "com.googlecode.iTerm2"
-                                         "-message"]}
+                                         "-message"]
+                        
+                        }
                        
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljs-prod"]
