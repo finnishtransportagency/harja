@@ -4,6 +4,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as t]))
 
+(declare kuuntelija)
+
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
 (defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
@@ -54,51 +56,60 @@
   [:div.alasveto-ei-loydoksia teksti])
 
 (defn alasvetovalinta [_ vaihtoehdot]
-  (let [auki (atom false)]
-    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
-      [:div.dropdown {:class (str class " " (when @auki "open"))}
-       [:button.btn.btn-default
-        {:type "button"
-         :disabled (if disabled "disabled" "")
-         :on-click #(do 
-                      (swap! auki not)
-                      nil)
-         :on-key-down #(let [kc (.-keyCode %)]
-                         (when (or (= kc 38)
-                                   (= kc 40)
-                                   (= kc 13))
-                           (.preventDefault %)
-                           (when-not (empty? vaihtoehdot)
-                             (let [nykyinen-valittu-idx (loop [i 0]
-                                                          (if (= i (count vaihtoehdot))
-                                                            nil
-                                                            (if (= (nth vaihtoehdot i) valinta)
-                                                              i
-                                                              (recur (inc i)))))]
-                               (case kc
-                                 38 ;; nuoli ylös
-                                 (if (or (nil? nykyinen-valittu-idx)
-                                         (= 0 nykyinen-valittu-idx))
-                                   (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
-                                   (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+  (kuuntelija
+   {:auki (atom false)}
 
-                                 40 ;; nuoli alas
-                                 (if (or (nil? nykyinen-valittu-idx)
-                                         (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
-                                   (valitse-fn (nth vaihtoehdot 0))
-                                   (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+   (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
+     (let [auki (:auki (reagent/state (reagent/current-component)))]
+       [:div.dropdown {:class (str class " " (when @auki "open"))}
+        [:button.btn.btn-default
+         {:type "button"
+          :disabled (if disabled "disabled" "")
+          :on-click #(do 
+                       (swap! auki not)
+                       nil)
+          :on-key-down #(let [kc (.-keyCode %)]
+                          (when (or (= kc 38)
+                                    (= kc 40)
+                                    (= kc 13))
+                            (.preventDefault %)
+                            (when-not (empty? vaihtoehdot)
+                              (let [nykyinen-valittu-idx (loop [i 0]
+                                                           (if (= i (count vaihtoehdot))
+                                                             nil
+                                                             (if (= (nth vaihtoehdot i) valinta)
+                                                               i
+                                                               (recur (inc i)))))]
+                                (case kc
+                                  38 ;; nuoli ylös
+                                  (if (or (nil? nykyinen-valittu-idx)
+                                          (= 0 nykyinen-valittu-idx))
+                                    (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                    (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+
+                                  40 ;; nuoli alas
+                                  (if (or (nil? nykyinen-valittu-idx)
+                                          (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                    (valitse-fn (nth vaihtoehdot 0))
+                                    (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
                                
-                                 13 ;; enter
-                                 (reset! auki false))))))}
-        [:span.valittu (format-fn valinta)] 
-        " " [:span.caret]]
-       [:ul.dropdown-menu
-        (for [vaihtoehto vaihtoehdot]
-          ^{:key (hash vaihtoehto)}
-          [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                   (reset! auki false)
-                                                   ))])
-        ]])))
+                                  13 ;; enter
+                                  (reset! auki false))))))}
+         [:span.valittu (format-fn valinta)] 
+         " " [:span.caret]]
+        [:ul.dropdown-menu
+         (for [vaihtoehto vaihtoehdot]
+           ^{:key (hash vaihtoehto)}
+           [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                    (reset! auki false)
+                                                    ))])
+         ]]))
+
+   :body-klikkaus
+   (fn [this {klikkaus :tapahtuma}]
+     (when-not (sisalla? this klikkaus)
+       (reset! (:auki (reagent/state this)) false)))
+   ))
 
 (defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
   
@@ -120,7 +131,7 @@ jolle annetaan yksi parametri (komponentti). Alkutila on komponentin inital-stat
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
     (reagent/create-class
      {:get-initial-state (fn [this] alkutila)
-      :render (fn [this] (render-fn this))
+      :reagent-render render-fn
       :component-did-mount (fn [this _]
                              (loop [kahvat []
                                     [[aihe kasittelija] & kuuntelijat] kuuntelijat]
