@@ -8,7 +8,8 @@
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
-(defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
+;;(defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
+
 
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
@@ -20,9 +21,9 @@
 (tarkkaile! "korkeus" korkeus)
 (tarkkaile! "leveys" leveys)
 
-(defonce sisallon-koon-kuuntelija (do
-                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
-                                    true))
+;;(defonce sisallon-koon-kuuntelija (do
+;;                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
+;;                                    true))
 
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."

@@ -52,7 +52,7 @@
      [kayttajatiedot istunto/kayttaja]])
 
 (defn footer []
-   [:footer#footer.container {:role "contentinfo" :style {:top (max @yleiset/sisallon-korkeus (- @yleiset/korkeus 55))}}
+   [:footer#footer.container {:role "contentinfo" :style {:top (max @yleiset/korkeus 500)}} ;; sisallon-korkeus
      [:div#footer-content
       [:a {:href "http://www.liikennevirasto.fi"}
        "Liikennevirasto, vaihde 0295 34 3000, faksi 0295 34 3700, etunimi.sukunimi(at)liikennevirasto.fi"]
