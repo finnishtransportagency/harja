@@ -2,10 +2,12 @@
   "Tämä nimiavaruus hallinnoi urakan yhteystietoja ja päivystäjiä."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
 
 
 (defn tallenna-urakan-yhteyshenkilot
@@ -18,7 +20,13 @@
             :poistettu poistettavat}))
 
 (defn hae-yhteyshenkilotyypit []
-  (k/post! :hae-yhteyshenkilotyypit nil))
+  (comment
+    (k/post! :hae-yhteyshenkilotyypit nil))
+  (let [ch (chan)]
+    (go (>! ch ["Aluevastaava" "Työmaapäällikkö" "Kunnossapitopäällikkö"
+                "Sillanvalvoja" "Kelikeskus" "Tieliikennekeskus"]))
+    ch))
+
 
    
 (defn hae-urakan-paivystajat [urakka-id]

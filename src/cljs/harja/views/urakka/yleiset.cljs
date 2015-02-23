@@ -91,7 +91,12 @@
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :kombo :valinnat @yhteyshenkilotyypit :leveys "17%"
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta  :leveys "17%"
+        :valinta-arvo identity
+        :valinta-nayta #(if (nil? %) "- valitse -" %)
+        
+        :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
+        
         :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "17%"
         :tyyppi :valinta

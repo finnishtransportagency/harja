@@ -51,20 +51,48 @@
   (let [auki (atom false)]
     (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
       [:div.dropdown {:class (str class " " (when @auki "open"))}
-         [:button.btn.btn-default {:type "button"
-                                   :disabled (if disabled "disabled" "")
-                                   :on-click #(do 
-                                               (swap! auki not)
-                                               nil)} ;; Reactin mielestä ei kiva palauttaa booleania handleristä
-          [:span.valittu (format-fn valinta)] 
-          " " [:span.caret]]
-           [:ul.dropdown-menu
-            (for [vaihtoehto vaihtoehdot]
-              ^{:key (hash vaihtoehto)}
-              [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                     (reset! auki false)
-                                                     ))])
-                   ]])))
+       [:button.btn.btn-default
+        {:type "button"
+         :disabled (if disabled "disabled" "")
+         :on-click #(do 
+                      (swap! auki not)
+                      nil)
+         :on-key-down #(let [kc (.-keyCode %)]
+                         (when (or (= kc 38)
+                                   (= kc 40)
+                                   (= kc 13))
+                           (.preventDefault %)
+                           (when-not (empty? vaihtoehdot)
+                             (let [nykyinen-valittu-idx (loop [i 0]
+                                                          (if (= i (count vaihtoehdot))
+                                                            nil
+                                                            (if (= (nth vaihtoehdot i) valinta)
+                                                              i
+                                                              (recur (inc i)))))]
+                               (case kc
+                                 38 ;; nuoli ylös
+                                 (if (or (nil? nykyinen-valittu-idx)
+                                         (= 0 nykyinen-valittu-idx))
+                                   (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                   (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+
+                                 40 ;; nuoli alas
+                                 (if (or (nil? nykyinen-valittu-idx)
+                                         (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                   (valitse-fn (nth vaihtoehdot 0))
+                                   (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+                               
+                                 13 ;; enter
+                                 (reset! auki false))))))}
+        [:span.valittu (format-fn valinta)] 
+        " " [:span.caret]]
+       [:ul.dropdown-menu
+        (for [vaihtoehto vaihtoehdot]
+          ^{:key (hash vaihtoehto)}
+          [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                   (reset! auki false)
+                                                   ))])
+        ]])))
 
 (defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
   
