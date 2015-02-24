@@ -55,6 +55,7 @@ The following keys are supported in the configuration:
              [:ul.nav.navbar-nav
               (for [item left-items]
                 ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
+                ^{:key (hash item)}
                 [:li {:class (str (when false "active")
                                   " "
                                   (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
@@ -62,6 +63,7 @@ The following keys are supported in the configuration:
            (when right-items
              [:ul.nav.navbar-nav.navbar-right
               (for [item right-items]
+                ^{:key (hash item)}
                 [:li {:class (str (when false "active")
                                   " "
                                   (:context (meta (first item))))}

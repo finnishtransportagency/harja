@@ -121,13 +121,10 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :nimi       kentän hakufn
   :fmt        kentän näyttämis fn (oletus str)
   :otsikko    ihmiselle näytettävä otsikko
-  :tyyppi     kentän tietotyyppi, yksi #{:string :int :pvm :aika :pvm-aika}
+  :tyyppi     kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
-Tiedot tulee olla atomi, jossa on vektori riveistä. Jokainen rivi on mappi, jossa kentät
-on nimetyillä avaimilla. Lisäksi riveillä on hyvä olla :id attribuutti, jota käytetään rivin
-key arvona Reactille. Jos :id arvoa ei ole, otetaan koko rivin hashcode avaimeksi.
 
 Optiot on mappi optioita:
   :tallenna   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
@@ -212,7 +209,8 @@ Optiot on mappi optioita:
               [:table.grid
                [:thead
                 [:tr
-                 (for [{:keys [otsikko leveys]} skeema]
+                 (for [{:keys [otsikko leveys nimi]} skeema]
+                   ^{:key (str nimi)}
                    [:th {:width leveys} otsikko])
                  (when muokataan
                    [:th.toiminnot {:width "5%"} " "])
@@ -235,6 +233,7 @@ Optiot on mappi optioita:
                                            (hae rivi)
                                            (get rivi nimi))
                                     virheet (validoi arvo rivi (:validoi s))]
+                                ^{:key (str nimi)}
                                 [:td {:class (str (when-not (empty? virheet)
                                                     "has-error"))}
                                  (when-not (empty? virheet)
@@ -259,8 +258,10 @@ Optiot on mappi optioita:
                               (ikonit/trash)]]
                             ]))
                        (fn [i rivi]
+                         ^{:key (:id rivi)}
                          [:tr {:class (if (even? i) "parillinen" "pariton")}
                           (for [{:keys [nimi hae fmt]} skeema]
+                            ^{:key (str nimi)}
                             [:td ((or fmt str) (if hae
                                                  (hae rivi)
                                                  (get rivi nimi)))])]))

@@ -113,16 +113,15 @@
    ))
 
 (defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
-  
   (let [vaihda-valinta (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
-       
-       [:div.btn-group.pull-right.murupolku-radiovalinta
-        [:div otsikko " "]
-         (for [[otsikko arvo] (partition 2 vaihtoehdot)] 
-           [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
-                   [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta
-                            :disabled (if disabled "disabled" "")
-                            :checked (if (= arvo valinta) true false)} " " otsikko]])]))
+    [:div.btn-group.pull-right.murupolku-radiovalinta
+     [:div otsikko " "]
+     (for [[otsikko arvo] (partition 2 vaihtoehdot)]
+       ^{:key (hash otsikko)}
+       [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
+        [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta
+                 :disabled (if disabled "disabled" "")
+                 :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 (defn kuuntelija
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
 Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit annetulle komponentille.
@@ -155,6 +154,7 @@ jolle annetaan yksi parametri (komponentti). Alkutila on komponentin inital-stat
   [optiot & otsikot-ja-arvot]
   [:div.tietoja
    (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)]
+     ^{:key otsikko}
      [:div.tietorivi
       [:span.tietokentta otsikko]
       [:span.tietoarvo arvo]])])

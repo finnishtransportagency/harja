@@ -26,26 +26,31 @@
 
 (defn header [s]
   [bs/navbar {}
-     [:img {
-            :id "harja-brand-icon"
-            :alt "HARJA"
+   [:img {
+          :id "harja-brand-icon"
+          :alt "HARJA"
             :src "images/harja-brand-text.png"
-            :on-click #(.reload js/window.location)}]
-     [:form.navbar-form.navbar-left {:role "search"}
-      [:div.form-group
-       [:input.form-control {:type "text" :placeholder "Hae..."}]]
-      [:button.btn.btn-default {:type "button"} "Hae"]]
+          :on-click #(.reload js/window.location)}]
+   [:form.navbar-form.navbar-left {:role "search"}
+    [:div.form-group
+     [:input.form-control {:type "text" :placeholder "Hae..."}]]
+    [:button.btn.btn-default {:type "button"} "Hae"]]
 
    ;; FIXME: active luokka valitulle sivulle
    [:ul#sivut.nav.nav-pills
+
     [:li {:role "presentation" :class (when (= s :urakat) "active")}
      [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]]
+
     [:li {:role "presentation" :class (when (= s :raportit) "active")}
      [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]]
+
     [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
      [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]]
+
     [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
      [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
+
     [:li {:role "presentation" :class (when (= s :hallinta) "active")}
      [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
      :right
