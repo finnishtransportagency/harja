@@ -68,7 +68,8 @@
   "Harjan UI:n pääkomponentti"
   []
   (let [sivu @nav/sivu
-        kartan-koko @nav/kartan-koko]
+        kartan-koko @nav/kartan-koko
+        korkeus @yleiset/korkeus]
     [:span
      [:div.container
       [header sivu]]
@@ -86,7 +87,7 @@
              :M ["col-sm-6" "col-sm-6"]
              :L ["hide" "col-sm-12"])]
        ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-       [:div.container
+       [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
         [:div.row
          [:div#sidebar-left {:class sisallon-luokka}
           (case sivu
