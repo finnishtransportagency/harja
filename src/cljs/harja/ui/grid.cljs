@@ -81,22 +81,29 @@
 
         muuta! (fn [t]
                  (let [d (pvm/->pvm t)]
-                   (log "TEKSTI: " t ", pvm: " d)
                    (reset! teksti t)
                    (reset! data d)))
         ]
-    (fn [_ data]
-      (let [nykyinen-pvm @data
-            nykyinen-teksti @teksti]
-        [:span {:on-click #(do (reset! auki true) nil)}
-         [:input.pvm {:value nykyinen-teksti
-                      :on-change #(muuta! (-> % .-target .-value))}]
-         (when @auki
-           [:div.aikavalinta
-            [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                            (reset! data %)
-                                            (reset! teksti (pvm/pvm %)))
-                              :pvm nykyinen-pvm}]])]))))
+    (r/create-class
+     {:component-will-receive-props
+      (fn [this [_ _ data]]
+        (swap! teksti #(if-let [p @data]
+                         (pvm/pvm p)
+                         %)))
+      
+      :reagent-render
+      (fn [_ data]
+        (let [nykyinen-pvm @data
+              nykyinen-teksti @teksti]
+          [:span {:on-click #(do (reset! auki true) nil)}
+           [:input.pvm {:value nykyinen-teksti
+                        :on-change #(muuta! (-> % .-target .-value))}]
+           (when @auki
+             [:div.aikavalinta
+              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                              (reset! data %)
+                                              (reset! teksti (pvm/pvm %)))
+                                :pvm nykyinen-pvm}]])]))})))
 
 (defmulti validoi-saanto (fn [saanto data  & optiot] saanto))
 
