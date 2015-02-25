@@ -60,10 +60,11 @@
                               (map #(if-let [org-id (:organisaatio_id %)]
                                       (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
                                                               :id org-id
-                                                              :nimi (:organisaatio_nimi %)})
+                                                              :nimi (:organisaatio_nimi %)
+                                                              :lyhenne (:organisaatio_lyhenne %)})
                                       %))
                               ;; Poistetaan kenttiä, joita emme halua frontille välittää
-                              (map #(dissoc % :yu :organisaatio_id :organisaatio_nimi :organisaatio_tyyppi)))
+                              (map #(dissoc % :yu :organisaatio_id :organisaatio_nimi :organisaatio_tyyppi :organisaatio_lyhenne)))
                              tulokset)]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
@@ -125,6 +126,7 @@
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
   (jdbc/with-db-transaction [c db]
 
+    (log/info "SAATIIN päivystäjät: " paivystajat)
     (doseq [id poistettu]
       (q/poista-paivystaja! c id urakka-id))
 

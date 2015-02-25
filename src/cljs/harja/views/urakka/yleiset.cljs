@@ -46,7 +46,7 @@
         true)))
 
 (defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
-  (log "tallenna päivystäjät!")
+  (log "tallenna päivystäjät!" (pr-str uudet-paivystajat))
   (go (let [tallennettavat
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
@@ -132,7 +132,8 @@
                  (assoc yht :nimi arvo))
         
         
-        :tyyppi :string :leveys "20%"}
+        :tyyppi :string :leveys "20%"
+        :validoi [[:ei-tyhja  "Anna päivystäjän nimi"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
         :valinta-arvo :id
@@ -143,7 +144,8 @@
         :pituus 16}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
         :pituus 16}
-       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"}
+       {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
+        :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
        {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
         :validoi [[:ei-tyhja "Aseta alkupvm"]
                   (fn [alku rivi]
@@ -155,7 +157,7 @@
        {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
         :validoi [[:ei-tyhja "Aseta loppupvm"]
                   (fn [loppu rivi]
-                    (let [alku (:loppu rivi)]
+                    (let [alku (:alku rivi)]
                       (when (and alku loppu
                                  (t/before? loppu alku))
                         "Loppupvm ei voi olla alkua ennen.")))]} ]

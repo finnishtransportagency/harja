@@ -2,7 +2,7 @@
 -- Hakee annetun urakan kaikki yhteyshenkilöt, sekä urakoitsijan että tilaajan puolelta
 SELECT y.id, y.etunimi, y.sukunimi, y.kayttajatunnus, y.tyopuhelin, y.matkapuhelin, y.sahkoposti,
        yu.rooli, yu.id as yu,
-       org.id as organisaatio_id, org.nimi as organisaatio_nimi, org.tyyppi as organisaatio_tyyppi
+       org.id as organisaatio_id, org.nimi as organisaatio_nimi, org.tyyppi as organisaatio_tyyppi, org.lyhenne as organisaatio_lyhenne
   FROM yhteyshenkilo y
        LEFT JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo=y.id
        LEFT JOIN organisaatio org ON y.organisaatio = org.id
