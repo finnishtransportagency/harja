@@ -26,7 +26,9 @@ The following keys are supported in the configuration:
              [:li {:role "presentation" 
                    :class (when (= active-tab-title title)
                             "active")}
-              [:a {:href "#" :on-click #(reset! active i)}
+              [:a {:href "#" :on-click #(do 
+                                          (.preventDefault %)
+                                          (reset! active i))}
                title]])
            tabs)]
          [:div.valilehti active-component]]))))
