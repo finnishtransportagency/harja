@@ -5,6 +5,7 @@
             
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
+            [harja.views.hallinta.kayttajat :as kayttajat]
             [harja.ui.grid :as g]
             ))
 
@@ -13,7 +14,10 @@
   ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
 
    [bs/tabs {}
-   
+    
+    ^{:key "kayttajat"}
+    [kayttajat/kayttajat]
+
    ;; todo käännä toisin päin kun indeksit valmis
       "Indeksit"
    ^{:key "indeksit"}
