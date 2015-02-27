@@ -63,6 +63,6 @@
                                     (> (:id %) 0))
                            (:id %)))
                   uudet-indeksit)
-            res (<! (i/tallenna-indeksit (:id ur) tallennettavat poistettavat))]
+            res (<! (i/tallenna-indeksit tallennettavat poistettavat))]
         (reset! indeksit res)
         true)))
