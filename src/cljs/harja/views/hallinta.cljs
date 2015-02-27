@@ -17,7 +17,7 @@
    ;; todo käännä toisin päin kun indeksit valmis
       "Indeksit"
    ^{:key "indeksit"}
-   [i/indeksit]
+   [i/indeksit-elementti]
    
    "Tehtävät"
    ^{:key "tehtävät"}

@@ -53,8 +53,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun urakan
 (def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
 
-(tarkkaile! "valittu-urakka" valittu-urakka)
-
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 

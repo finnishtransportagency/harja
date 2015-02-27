@@ -10,6 +10,7 @@
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
    [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
+   [harja.palvelin.palvelut.indeksit :as indeksit]
    [harja.palvelin.palvelut.urakat :as urakat]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    [harja.palvelin.palvelut.yhteyshenkilot]
@@ -45,6 +46,9 @@
                        [:http-palvelin :db])
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
+                       [:http-palvelin :db])
+     :indeksit (component/using
+                       (indeksit/->Indeksit)
                        [:http-palvelin :db])
      :urakat (component/using
               (urakat/->Urakat)
