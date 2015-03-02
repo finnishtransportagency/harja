@@ -14,6 +14,7 @@
    [harja.palvelin.palvelut.urakat :as urakat]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    [harja.palvelin.palvelut.yhteyshenkilot]
+   [harja.palvelin.palvelut.kayttajat :as kayttajat]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -60,6 +61,9 @@
      :toimenpidekoodit (component/using
                         (toimenpidekoodit/->Toimenpidekoodit)
                         [:http-palvelin :db])
+     :kayttajat (component/using
+                 (kayttajat/->Kayttajat)
+                 [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)

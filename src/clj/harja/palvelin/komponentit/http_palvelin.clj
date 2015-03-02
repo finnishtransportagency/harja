@@ -82,6 +82,32 @@
                        (t/write (t/writer out :json) vastaus)
                        (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
+(defprotocol HttpPalvelut
+  "Protokolla HTTP palveluiden julkaisemiseksi."
+  
+  (julkaise-palvelu
+    [this nimi palvelu-fn]
+    [this nimi palvelu-fn optiot]
+    "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
+sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
+tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
+Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
+  polkuun /edn/nimi (ilman keywordin kaksoispistettä).
+
+Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
+
+  :last-modified    fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
+                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.")
+  
+  (poista-palvelu [this nimi]
+    "Poistaa nimetyn palvelun käsittelijän."))
+
+(defn- arityt 
+  "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
+  [f]
+  (->> f class .getDeclaredMethods
+       (map #(-> % .getParameterTypes alength))
+       (into #{})))
 
 (defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
@@ -107,45 +133,29 @@
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
     (@lopetus-fn :timeout 100)
-    this))
+    this)
+
+
+  HttpPalvelut
+  (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
+  (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
+    (let [ar (arityt palvelu-fn)]
+      (when (ar 2)
+        ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
+        (swap! kasittelijat
+               conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
+      (when (ar 1)
+        ;; GET metodi, vain käyttäjätiedot parametrina
+        (swap! kasittelijat
+               conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)}))))
+
+  (poista-palvelu [this nimi]
+    (swap! kasittelijat
+           (fn [kasittelijat]
+             (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [portti kehitysmoodi]
   (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
 
-(defn- arityt 
-  "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
-  [f]
-  (->> f class .getDeclaredMethods
-       (map #(-> % .getParameterTypes alength))
-       (into #{})))
 
-(defn julkaise-palvelu 
-  "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
-sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
-tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
-Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
-  polkuun /edn/nimi (ilman keywordin kaksoispistettä).
-
-Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
-
-  :last-modified    fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
-                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
-"
-  
-  ([http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
-  ([http-palvelin nimi palvelu-fn optiot]
-     (let [ar (arityt palvelu-fn)]
-       (when (ar 2)
-         ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
-         (swap! (:kasittelijat http-palvelin)
-                conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
-       (when (ar 1)
-         ;; GET metodi, vain käyttäjätiedot parametrina
-         (swap! (:kasittelijat http-palvelin)
-                conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
-
-(defn poista-palvelu [http-palvelin nimi]
-  (swap! (:kasittelijat http-palvelin)
-         (fn [kasittelijat]
-           (filterv #(not= (:nimi %) nimi) kasittelijat))))
 

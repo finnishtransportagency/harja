@@ -66,21 +66,22 @@
   :dev-dependencies [;; Selain REPL
                      ;[com.cemerick/piggieback "0.1.3"]
                      ;; Testaus
-                     [clj-webdriver "0.6.0"]
-                     [org.seleniumhq.selenium/selenium-java "2.44.0"]
-                     [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]
 
 
                      ]
-
-                 
+  
+  :profiles {:test {:dependencies [[clj-webdriver "0.6.0"]
+                                   [org.seleniumhq.selenium/selenium-java "2.44.0"]
+                                   [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
+  
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
   
   :plugins [[lein-cljsbuild "1.0.5"]
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
-            [lein-ancient "0.5.5"] 
+            [lein-ancient "0.5.5"]
+            [mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id "dev"
@@ -146,6 +147,7 @@
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
+            "testit" ["with-profiles" "test" "do" "clean," "compile," "test"]
             }
   
   )

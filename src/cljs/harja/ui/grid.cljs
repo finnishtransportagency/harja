@@ -153,6 +153,7 @@ Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän va
 
 Optiot on mappi optioita:
   :tallenna   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+              jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita
 
   
   "
@@ -232,8 +233,9 @@ Optiot on mappi optioita:
           
             (if-not muokataan
               [:span.pull-right
-               [:button.btn.btn-primary.btn-sm {:on-click #(aloita-muokkaus! tiedot)}
-                (ikonit/pencil) " Muokkaa"]]
+               (when tallenna
+                 [:button.btn.btn-primary.btn-sm {:on-click #(aloita-muokkaus! tiedot)}
+                  (ikonit/pencil) " Muokkaa"])]
               [:span.pull-right.muokkaustoiminnot
                [:button.btn.btn-sm.btn-default
                 {:disabled  (empty? @historia)
