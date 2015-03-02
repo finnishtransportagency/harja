@@ -33,7 +33,8 @@
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
-                 [yesql "0.4.0"]
+                 [yesql "0.4.0" :exclusions [[instaparse :classifier "*"]]]
+                 [instaparse "1.3.5"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]
