@@ -26,6 +26,7 @@
                  [compojure "1.3.1"]
                  [clout "2.1.0"]
 
+                 [org.clojure/core.cache "0.6.4"]
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]

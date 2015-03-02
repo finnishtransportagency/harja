@@ -30,9 +30,11 @@
                                    (:tietokanta tietokanta)
                                    (:kayttaja tietokanta)
                                     (:salasana tietokanta))
-     :todennus (if kehitysmoodi
-                 (todennus/feikki-http-todennus {:etunimi "Tero" :sukunimi "Toripolliisi" :id 1 :kayttajanimi "LX123456789"})
-                 (todennus/http-todennus))
+     :todennus (component/using
+                (if false ;; kehitysmoodi
+                  (todennus/feikki-http-todennus {:etunimi "Tero" :sukunimi "Toripolliisi" :id 1 :kayttajanimi "LX123456789"})
+                  (todennus/http-todennus))
+                [:db])
      :http-palvelin (component/using
                      (http-palvelin/luo-http-palvelin (:portti http-palvelin)
                                                       kehitysmoodi)

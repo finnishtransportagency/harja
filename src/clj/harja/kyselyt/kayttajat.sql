@@ -1,3 +1,10 @@
+-- name: hae-kirjautumistiedot
+-- Hakee annetulle KOKA käyttäjätunnukselle kirjautumistiedot
+SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
+       o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi
+  FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE k.kayttajanimi = :koka
+
 -- name: hae-kayttajat
 -- Hakee käyttäjiä käyttäjähallinnan listausta varten.
 -- Haun suorittava käyttäjä annetaan parametrina ja vain käyttäjät, jotka hän saa nähdä palautetaan.
