@@ -188,7 +188,12 @@ Optiot on mappi optioita:
                             vanhat-tiedot @muokatut
                             vanhat-virheet @virheet
                             uudet-tiedot (swap! muokatut assoc id {:id id})]
-                        (swap! historia conj [vanhat-tiedot vanhat-virheet])))
+                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
+                        (swap! virheet (fn [virheet]
+                                         (let [rivin-virheet (validoi-rivi (get uudet-tiedot id) skeema)]
+                                           (if (empty? rivin-virheet)
+                                             (dissoc virheet id)
+                                             (assoc virheet id rivin-virheet))))))) 
 
 
 
