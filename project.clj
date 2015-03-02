@@ -10,7 +10,7 @@
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.205"]
-                 [com.cognitect/transit-clj "0.8.259"]
+                 [com.cognitect/transit-clj "0.8.269"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -23,8 +23,8 @@
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.3.1"]
-                 [clout "2.1.0"]
+                 [compojure "1.3.2"]
+                 
 
                  [org.clojure/core.cache "0.6.4"]
                  
@@ -82,7 +82,7 @@
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [mvxcvi/whidbey "0.5.1"]
+            ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id "dev"

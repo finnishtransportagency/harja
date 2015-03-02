@@ -30,7 +30,9 @@
         :tyhja "Ei käyttäjiä."
         }
        
-       [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %))}]
+       [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %))}
+        {:otsiko "Tyyppi" :nimi :tyyppi}
+        ]
        
        @kayttajat]
       
