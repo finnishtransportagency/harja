@@ -298,26 +298,30 @@ Optiot on mappi optioita:
                                [:tr.muokataan {:class (str (if (even? i)
                                                              "parillinen"
                                                              "pariton"))}
-                                (for [{:keys [nimi hae aseta fmt] :as s} skeema]
+                                (for [{:keys [nimi hae aseta fmt muokattava?] :as s} skeema]
                                   (let [arvo (if hae
                                                (hae rivi)
                                                (get rivi nimi))
                                         kentan-virheet (get rivin-virheet nimi)]
                                     ^{:key (str nimi)}
-                                    [:td {:class (str (when-not (empty? kentan-virheet)
-                                                        "has-error"))}
-                                     (when-not (empty? kentan-virheet)
-                                       [:div.virheet
-                                        [:div.virhe
-                                         (for [v kentan-virheet]
-                                           [:span v])]])
-                                     [tee-kentta s (r/wrap
-                                                    arvo
-                                                    (fn [uusi]
-                                                      (if aseta
-                                                        (muokkaa! id (fn [rivi]
-                                                                       (aseta rivi uusi)))
-                                                        (muokkaa! id assoc nimi uusi))))]]))
+                                    (if (or (nil? muokattava?) (muokattava? rivi))
+                                      [:td {:class (str (when-not (empty? kentan-virheet)
+                                                          "has-error"))}
+                                       (when-not (empty? kentan-virheet)
+                                         [:div.virheet
+                                          [:div.virhe
+                                           (for [v kentan-virheet]
+                                             [:span v])]])
+                                       [tee-kentta s (r/wrap
+                                                       arvo
+                                                       (fn [uusi]
+                                                         (if aseta
+                                                           (muokkaa! id (fn [rivi]
+                                                                          (aseta rivi uusi)))
+                                                           (muokkaa! id assoc nimi uusi))))]]
+                                      [:td ((or fmt str) (if hae
+                                                 (hae rivi)
+                                                 (get rivi nimi)))])))
                                 [:td.toiminnot
                                  [:span {:on-click #(muokkaa! id assoc :poistettu true)}
                                   (ikonit/trash)]]])))

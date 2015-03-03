@@ -13,7 +13,12 @@
 
  
  (defn indeksi-grid [indeksin-nimi]
-   (let [indeksit @i/indeksit]
+   (let [indeksit @i/indeksit
+         rivit (map #(assoc (second %) :kannassa? true)
+                (filter (fn [[[nimi _] _]]
+                              (= nimi indeksin-nimi)
+                              ) indeksit))
+         varatut-vuodet (into #{} (map :vuosi rivit))]
      [grid/grid
            {:otsikko indeksin-nimi
             :tyhja (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
@@ -23,9 +28,10 @@
              :valinta-arvo identity
              :valinta-nayta #(if (nil? %) "- valitse -" %)
              
-             :valinnat (vec (range 2010 2045))
+             :valinnat (vec (filter #(not (varatut-vuodet %)) (range 2010 2045)))
              
-             :validoi [[:ei-tyhja  "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]}
+             :validoi [[:ei-tyhja  "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
+             :muokattava? #(not (:kannassa? %))}
             
             {:otsikko "tammi" :nimi 1 :tyyppi :numero :leveys "7%"}
             {:otsikko "helmi" :nimi 2 :tyyppi :numero :leveys "7%"}
@@ -40,9 +46,7 @@
             {:otsikko "marras" :nimi 11 :tyyppi :numero :leveys "7%"}
             {:otsikko "joulu" :nimi 12 :tyyppi :numero :leveys "7%"}
             ]
-           (map second (filter (fn [[[nimi _] _]]
-                              (= nimi indeksin-nimi)
-                              ) indeksit))
+           rivit
            ]))
  
 (defn indeksit-elementti []
