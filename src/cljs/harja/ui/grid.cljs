@@ -303,14 +303,15 @@ Optiot on mappi optioita:
                                                (hae rivi)
                                                (get rivi nimi))
                                         kentan-virheet (get rivin-virheet nimi)]
-                                    ^{:key (str nimi)}
                                     (if (or (nil? muokattava?) (muokattava? rivi))
+                                      ^{:key (str nimi)}
                                       [:td {:class (str (when-not (empty? kentan-virheet)
                                                           "has-error"))}
                                        (when-not (empty? kentan-virheet)
                                          [:div.virheet
                                           [:div.virhe
                                            (for [v kentan-virheet]
+                                             ^{:key (hash v)}
                                              [:span v])]])
                                        [tee-kentta s (r/wrap
                                                        arvo
@@ -319,6 +320,7 @@ Optiot on mappi optioita:
                                                            (muokkaa! id (fn [rivi]
                                                                           (aseta rivi uusi)))
                                                            (muokkaa! id assoc nimi uusi))))]]
+                                      ^{:key (str nimi)}
                                       [:td ((or fmt str) (if hae
                                                  (hae rivi)
                                                  (get rivi nimi)))])))
