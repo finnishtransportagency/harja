@@ -140,7 +140,8 @@
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)}
+                 :init (harja.palvelin.main/-main)
+                 :port 4005}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]
