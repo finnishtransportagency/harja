@@ -105,25 +105,32 @@
                                               (reset! teksti (pvm/pvm %)))
                                 :pvm nykyinen-pvm}]])]))})))
 
-(defmulti validoi-saanto (fn [saanto data  & optiot] saanto))
+(defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
 
-(defmethod validoi-saanto :ei-tyhja [_ data & [viesti]]
+(defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
+  (let [rivit-arvoittain (group-by nimi (vals taulukko))]
+    (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
+    (when (> (count (get rivit-arvoittain data)) 1)
+      viesti)))
+
+
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
-  [data rivi saannot]
+  [nimi data rivi taulukko saannot]
   (keep (fn [saanto]
           (if (fn? saanto)
             (saanto data rivi)
             (let [[saanto & optiot] saanto]
-              (apply validoi-saanto saanto data optiot))))
+              (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
         saannot))
 
 (defn validoi-rivi
   "Tekee validoinnin yhden rivin kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori."
-  [rivi skeema]
+  [taulukko rivi skeema]
   (loop [v {}
          [s & skeema] skeema]
     (if-not s
@@ -131,10 +138,10 @@
       (let [{:keys [nimi hae validoi]} s]
         (if (empty? validoi)
           (recur v skeema)
-          (let [virheet (validoi-saannot (if hae
+          (let [virheet (validoi-saannot nimi (if hae
                                                   (hae rivi)
                                                   (get rivi nimi))
-                                                rivi
+                                                rivi taulukko
                                                 validoi)]
             (recur (if (empty? virheet) v (assoc v nimi virheet))
                    skeema)))))))
@@ -146,6 +153,7 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :nimi       kentän hakufn
   :fmt        kentän näyttämis fn (oletus str)
   :otsikko    ihmiselle näytettävä otsikko
+  :tunniste   rivin tunnistava kenttä, oletuksena :id
   :tyyppi     kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
@@ -157,7 +165,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tyhja]} skeema tiedot]
+  [{:keys [otsikko tallenna tyhja tunniste]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -167,7 +175,7 @@ Optiot on mappi optioita:
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
                    (log "muokataan " id " \n funktio : " funktio )
-                   (log "muokatut: " muokatut)
+                   (log "muokatut: " (pr-str muokatut))
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          uudet-tiedot (swap! muokatut
@@ -178,7 +186,7 @@ Optiot on mappi optioita:
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
-                                        (let [rivin-virheet (validoi-rivi (get uudet-tiedot id) skeema)]
+                                        (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))))
@@ -190,7 +198,7 @@ Optiot on mappi optioita:
                             uudet-tiedot (swap! muokatut assoc id {:id id})]
                         (swap! historia conj [vanhat-tiedot vanhat-virheet])
                         (swap! virheet (fn [virheet]
-                                         (let [rivin-virheet (validoi-rivi (get uudet-tiedot id) skeema)]
+                                         (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
                                            (if (empty? rivin-virheet)
                                              (dissoc virheet id)
                                              (assoc virheet id rivin-virheet))))))) 
@@ -213,11 +221,11 @@ Optiot on mappi optioita:
         aloita-muokkaus! (fn [tiedot]
                            (nollaa-muokkaustiedot!)
                            (loop [muok (array-map)
-                                  [r & rivit] (reverse tiedot)]
+                                  [r & rivit] tiedot]
                              (if-not r
                                (reset! muokatut muok)
                                (recur (assoc muok
-                                        (:id r) r)
+                                        ((or tunniste :id) r) r)
                                       rivit)))
                            nil)
         ]
@@ -321,7 +329,7 @@ Optiot on mappi optioita:
                       [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                       (map-indexed
                        (fn [i rivi]
-                         ^{:key (:id rivi)}
+                         ^{:key ((or tunniste :id) rivi)}
                          [:tr {:class (if (even? i) "parillinen" "pariton")}
                           (for [{:keys [nimi hae fmt]} skeema]
                             ^{:key (str nimi)}

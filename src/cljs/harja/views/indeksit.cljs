@@ -17,14 +17,15 @@
      [grid/grid
            {:otsikko indeksin-nimi
             :tyhja (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
-            :tallenna #(i/tallenna-indeksit indeksit %)}
+            :tallenna #(i/tallenna-indeksit indeksit %)
+            :tunniste :vuosi}
            [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :valinta  :leveys "17%"
              :valinta-arvo identity
              :valinta-nayta #(if (nil? %) "- valitse -" %)
              
-             :valinnat (vec (range 2015 2045))
+             :valinnat (vec (range 2010 2045))
              
-             :validoi [[:ei-tyhja  "Anna indeksin vuosi"]]}
+             :validoi [[:ei-tyhja  "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]}
             
             {:otsikko "tammi" :nimi 1 :tyyppi :numero :leveys "7%"}
             {:otsikko "helmi" :nimi 2 :tyyppi :numero :leveys "7%"}
