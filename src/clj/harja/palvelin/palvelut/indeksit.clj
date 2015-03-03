@@ -6,7 +6,7 @@
             
             [harja.kyselyt.indeksit :as q]))
 
-(declare hae-indeksit tallenna-indeksit)
+(declare hae-indeksit tallenna-indeksi)
                         
 (defrecord Indeksit []
   component/Lifecycle
@@ -15,14 +15,14 @@
      (julkaise-palvelu
        :indeksit (fn [user]
          (hae-indeksit (:db this) user)))
-     (julkaise-palvelu :tallenna-indeksit
+     (julkaise-palvelu :tallenna-indeksi
        (fn [user tiedot]
-         (tallenna-indeksit (:db this) user tiedot))))
+         (tallenna-indeksi (:db this) user tiedot))))
    this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
-    (poista-palvelu (:http-palvelin this) :tallenna-indeksit)
+    (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
     this))
 
 
@@ -41,8 +41,7 @@
                                 :vuosi (:vuosi (first kuukaudet))))
                        indeksit-vuosittain))))
 
-(defn tallenna-indeksit [db user {:keys [indeksit poistettu]}]
-  ;; TODO!
-    (log/info "tallenna-indeksit sanoo: OLE KILTTI JA TOTEUTA MINUT")
+(defn tallenna-indeksi [db user {:keys [nimi indeksit poistettu]}]
+    (log/info "tallenna-indeksit " nimi + " indeksit " + indeksit " poistettu " poistettu)
       ((jdbc/with-db-transaction [c db]
                                  (hae-indeksit c user))))

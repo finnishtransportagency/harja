@@ -22,8 +22,9 @@
      [grid/grid
            {:otsikko indeksin-nimi
             :tyhja (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
-            :tallenna #(i/tallenna-indeksit indeksit %)
-            :tunniste :vuosi}
+            :tallenna #(tallenna-indeksi indeksin-nimi rivit %)
+            :tunniste :vuosi
+            :voi-poistaa? #(not (:kannassa? %))}
            [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :valinta  :leveys "17%"
              :valinta-arvo identity
              :valinta-nayta #(if (nil? %) "- valitse -" %)
@@ -52,22 +53,22 @@
 (defn indeksit-elementti []
     (i/hae-indeksit)
       [:span.indeksit
-       [indeksi-grid "MAKU 2005"]
+       [indeksi-grid "MAKU 2005"] ;; nimellä haetaan indeksi kannasta
        [:hr]
        [indeksi-grid "MAKU 2010"]])
 
-(defn tallenna-indeksit [indeksit uudet-indeksit]
+(defn tallenna-indeksi [nimi indeksivuodet uudet-indeksivuodet]
   (go (let [tallennettavat
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (comp (filter #(not (:poistettu %))))
-                  uudet-indeksit)
+                  uudet-indeksivuodet)
             poistettavat
             (into []
                   (keep #(when (and (:poistettu %)
-                                    (> (:id %) 0))
-                           (:id %)))
-                  uudet-indeksit)
-            res (<! (i/tallenna-indeksit tallennettavat poistettavat))]
+                                    (:kannassa? %))
+                           (:vuosi %)))
+                  uudet-indeksivuodet)
+            res (<! (i/tallenna-indeksi nimi tallennettavat poistettavat))]
         (reset! indeksit res)
         true)))

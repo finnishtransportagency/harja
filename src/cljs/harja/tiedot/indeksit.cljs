@@ -17,10 +17,11 @@
                (<! (k/get! :indeksit))))))
  
  
-(defn tallenna-indeksit
+(defn tallenna-indeksi
   "Tallentaa indeksit, palauttaa kanavan, josta vastauksen voi lukea."
-  [indeksit poistettavat]
-  (log "TALLENNA indeksit: " (pr-str indeksit) " \n JA POISTETAAN: " (pr-str poistettavat))
-  (k/post! :tallenna-indeksit
-           {:indeksit indeksit
+  [nimi indeksit poistettavat]
+  (log "TALLENNA indeksi: " nimi " indeksit " (pr-str indeksit) " \n JA POISTETAAN: " (pr-str poistettavat))
+  (k/post! :tallenna-indeksi
+           {:nimi nimi
+            :indeksit indeksit
             :poistettu poistettavat}))

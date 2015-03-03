@@ -150,11 +150,12 @@
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
-  :nimi       kentän hakufn
-  :fmt        kentän näyttämis fn (oletus str)
-  :otsikko    ihmiselle näytettävä otsikko
-  :tunniste   rivin tunnistava kenttä, oletuksena :id
-  :tyyppi     kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :nimi         kentän hakufn
+  :fmt          kentän näyttämis fn (oletus str)
+  :otsikko      ihmiselle näytettävä otsikko
+  :tunniste     rivin tunnistava kenttä, oletuksena :id
+  :voi-poistaa? voiko rivin poistaa
+  :tyyppi       kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -165,7 +166,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tyhja tunniste]} skeema tiedot]
+  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa?]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -236,7 +237,7 @@ Optiot on mappi optioita:
         (nollaa-muokkaustiedot!))
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna]} skeema tiedot]
+      (fn [{:keys [otsikko tallenna voi-poistaa?]} skeema tiedot]
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
@@ -325,8 +326,8 @@ Optiot on mappi optioita:
                                                  (hae rivi)
                                                  (get rivi nimi)))])))
                                 [:td.toiminnot
-                                 [:span {:on-click #(muokkaa! id assoc :poistettu true)}
-                                  (ikonit/trash)]]])))
+                                 (when (or (nil? voi-poistaa?) (voi-poistaa? rivi)) [:span {:on-click #(muokkaa! id assoc :poistettu true)}
+                                                                   (ikonit/trash)])]])))
                          (seq muokatut)))))
 
                   ;; Näyttömuoto
