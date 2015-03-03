@@ -81,7 +81,7 @@
                            (vec (concat [(assoc v-hal
                                            :valittu true
                                            :leaflet/fit-bounds true)]
-                                        @nav/urakkalista))
+                                        @nav/suodatettu-urakkalista))
                            
                            ;; Valittu urakka, mitä näytetään?
                            :default [(assoc @nav/valittu-urakka
