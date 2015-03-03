@@ -50,5 +50,9 @@
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:id 2 :etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :kayttajanimi "jvh"})
 
-;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisää uusia.
+;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
 (def +testikayttajia+ 2)
+
+;; Tätä käytetään testiindeksien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
+;; Nämä ovat indeksivuosi-pareja, esim. MAKU 2005 vuonna 2014 olisi yksi entry, ja MAKU 2005 vuonna 2015 toinen.
+(def +testiindekseja+ 4)
