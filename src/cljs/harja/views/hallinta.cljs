@@ -14,14 +14,14 @@
   ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
 
    [bs/tabs {}
-    ;; todo käännä toisin päin kun indeksit valmis
-    "Indeksit"
-    ^{:key "indeksit"}
-    [i/indeksit-elementti]
-    
+
     "Käyttäjät"
     ^{:key "kayttajat"}
     [kayttajat/kayttajat]
+
+    "Indeksit"
+    ^{:key "indeksit"}
+    [i/indeksit-elementti]
     
     "Tehtävät"
     ^{:key "tehtävät"}
