@@ -63,12 +63,7 @@
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (comp (filter #(not (:poistettu %))))
                   uudet-indeksivuodet)
-            poistettavat
-            (into []
-                  (keep #(when (and (:poistettu %)
-                                    (:kannassa? %))
-                           (:vuosi %)))
-                  uudet-indeksivuodet)
-            res (<! (i/tallenna-indeksi nimi tallennettavat poistettavat))]
-        (reset! indeksit res)
+            res (<! (i/tallenna-indeksi nimi tallennettavat))]
+        (log "res " res)
+        (reset! @i/indeksit res)
         true)))

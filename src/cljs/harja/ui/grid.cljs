@@ -25,11 +25,9 @@
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
         (fn [kentta data]
-          (let [nykyinen-teksti @teksti
-                nykyinen-data @data]
+          (let [nykyinen-teksti @teksti]
             [:input {:type "text"
                      :value nykyinen-teksti
-                     :data-numero nykyinen-data
                      :on-change #(let [v (-> % .-target .-value)]
                                    (when (or (= v "") 
                                            (re-matches #"\d+((\.|,)\d*)?" v))
