@@ -11,6 +11,7 @@
             )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(declare tallenna-indeksi)
  
  (defn indeksi-grid [indeksin-nimi]
    (let [indeksit @i/indeksit
@@ -64,6 +65,5 @@
                   (comp (filter #(not (:poistettu %))))
                   uudet-indeksivuodet)
             res (<! (i/tallenna-indeksi nimi tallennettavat))]
-        (log "res " res)
         (reset! i/indeksit res)
         true)))

@@ -8,7 +8,7 @@
             
             [harja.kyselyt.indeksit :as q]))
 
-(declare hae-indeksit hae-indeksi tallenna-indeksi)
+(declare hae-indeksit tallenna-indeksi)
                         
 (defrecord Indeksit []
   component/Lifecycle
@@ -68,7 +68,7 @@
                                                                                                (second (first %))) 
                                                                                            nykyiset-arvot))) :vuosi)
                                       vuosi (:vuosi indeksivuosi)
-                                      indeksivuosi (dissoc indeksivuosi :vuosi :kannassa?)
+                                      indeksivuosi (dissoc indeksivuosi :vuosi :kannassa? :id)
                                       indeksivuosi-kkt (difference (into #{} (keys indeksivuosi))
                                                                    (into #{} (keep (fn [[kk val]]
                                                                                      (when (not (number? val)) kk)) indeksivuosi)))
@@ -90,5 +90,5 @@
                                                      nimi vuosi kk (get indeksivuosi kk)))
                                   (doseq [kk poistettavat]
                                     (q/poista-indeksi! c 
-                                                       nimi vuosi kk))
+                                                       nimi vuosi kk))))
                                   (hae-indeksit c user))))

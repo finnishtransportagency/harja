@@ -19,9 +19,7 @@
  
 (defn tallenna-indeksi
   "Tallentaa indeksit, palauttaa kanavan, josta vastauksen voi lukea."
-  [nimi indeksit poistettavat]
-  (log "TALLENNA indeksi: " nimi " indeksit " (pr-str indeksit) " \n JA POISTETAAN: " (pr-str poistettavat))
+  [nimi indeksit]
   (k/post! :tallenna-indeksi
            {:nimi nimi
-            :indeksit indeksit
-            :poistettu poistettavat}))
+            :indeksit indeksit}))
