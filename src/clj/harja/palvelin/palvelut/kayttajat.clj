@@ -4,7 +4,8 @@
             [com.stuartsierra.component :as component]
 
             [harja.palvelin.oikeudet :as oik]
-            [harja.kyselyt.kayttajat :as q]))
+            [harja.kyselyt.kayttajat :as q]
+            [harja.kyselyt.konversio :as konv]))
 
 (declare hae-kayttajat)
 
@@ -23,8 +24,11 @@
 (defn hae-kayttajat
   "Hae käyttäjät tiedot frontille varten"
   [db user hakuehto alku maara]
-  ;; MUISTA: käyttäjän oikeuksien sallimat käyttäjät vain!
-  (let [kayttajat (into [] (q/hae-kayttajat db (:id user) hakuehto alku maara))
+  
+  (let [kayttajat (into []
+                        (comp (map konv/organisaatio)
+                              (map #(konv/array->vec % :roolit)))
+                        (q/hae-kayttajat db (:id user) hakuehto alku maara))
         lkm (:lkm (first (q/hae-kayttajat-lkm db (:id user) hakuehto)))]
     
     [lkm kayttajat]))

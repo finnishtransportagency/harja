@@ -174,7 +174,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa?]} skeema tiedot]
+  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? rivi-klikattu]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -245,7 +245,7 @@ Optiot on mappi optioita:
         (nollaa-muokkaustiedot!))
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa?]} skeema tiedot]
+      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu]} skeema tiedot]
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
@@ -345,7 +345,9 @@ Optiot on mappi optioita:
                       (map-indexed
                        (fn [i rivi]
                          ^{:key ((or tunniste :id) rivi)}
-                         [:tr {:class (if (even? i) "parillinen" "pariton")}
+                         [:tr {:class (if (even? i) "parillinen" "pariton")
+                               :on-click (when rivi-klikattu
+                                           #(rivi-klikattu rivi))}
                           (for [{:keys [nimi hae fmt]} skeema]
                             ^{:key (str nimi)}
                             [:td ((or fmt str) (if hae

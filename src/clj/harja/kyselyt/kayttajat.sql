@@ -9,7 +9,9 @@ SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
 -- Hakee käyttäjiä käyttäjähallinnan listausta varten.
 -- Haun suorittava käyttäjä annetaan parametrina ja vain käyttäjät, jotka hän saa nähdä palautetaan.
 SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
-       o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi
+       o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi,
+       array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = k.id),
+                 (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = k.id)) as roolit
   FROM kayttaja k
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
  WHERE
@@ -29,7 +31,6 @@ OFFSET :alku
 -- Hakee lukumäärän käyttäjälukumäärälle, jonka hae-kayttajat palauttaisi ilman LIMIT/OFFSET määritystä.
 SELECT COUNT(k.id) as lkm
   FROM kayttaja k
-   
  WHERE
        -- tarkistetaan käyttöoikeus: pääkäyttäjä näkee kaikki, muuten oman organisaation
        ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo') > 0
