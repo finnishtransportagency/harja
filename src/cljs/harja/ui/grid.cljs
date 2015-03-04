@@ -23,11 +23,21 @@
 
 
 (defmethod tee-kentta :numero [kentta data]
-  [:input {:type "number"
-           :value @data
-           :on-change #(reset! data (-> % .-target .-value))}
-   ])
-
+  (let [teksti (atom (str @data))]
+        (fn [kentta data]
+          (let [nykyinen-teksti @teksti
+                nykyinen-data @data]
+            [:input {:type "text"
+                     :value nykyinen-teksti
+                     :data-numero nykyinen-data
+                     :on-change #(let [v (-> % .-target .-value)]
+                                   (when (or (= v "") 
+                                           (re-matches #"\d+((\.|,)\d*)?" v))
+                                     (reset! teksti v))
+                                   (let [numero (js/parseFloat v)]
+                                       (reset! data
+                                               (when (not (js/isNaN numero))
+                                                 numero))))}]))))
 
 (defmethod tee-kentta :email [kentta data]
   [:input {:type "email"
@@ -175,7 +185,7 @@ Optiot on mappi optioita:
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
-                   (log "muokataan " id " \n funktio : " funktio )
+                   ;;(log "muokataan " id " \n funktio : " funktio )
                    (log "muokatut: " (pr-str muokatut))
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
