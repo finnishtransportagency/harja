@@ -44,9 +44,8 @@
                        indeksit-vuosittain))))
 
 (defn hae-indeksi
-  "Palvelu, joka palauttaa indeksin nimellä"
+  "Sisäinen funktio joka palauttaa indeksin nimellä"
   [db nimi]
-    (log/info "hae-indeksi " nimi)
         (let 
           [indeksit-vuosittain  (seq (group-by
                             (fn [rivi]
@@ -59,34 +58,37 @@
                                 :vuosi (:vuosi (first kuukaudet))))
                        indeksit-vuosittain))))
 
-;;
 (defn tallenna-indeksi [db user {:keys [nimi indeksit]}]
-
-  (log/info "tallenna-indeksit " nimi + " indeksit " + indeksit)
+  "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
+  (assert (vector? indeksit) "indeksit tulee olla vektori")
   (let [nykyiset-arvot (hae-indeksi db nimi)]
-    (log/info "indeksi nykyiset-arvot " nykyiset-arvot)
-    (log/info "nykyiset-arvot keys " (keys nykyiset-arvot))
-    (log/info "nykyiset-arvot vals" (vals  nykyiset-arvot))
     (jdbc/with-db-transaction [c db]
-      (doseq [indeksivuosi indeksit]
-        (let [nykyinen-indeksivuosi (dissoc (second (first (filter #(= (:vuosi indeksivuosi) 
-         (second (first %))) 
-        nykyiset-arvot))) :vuosi)
-        indeksivuosi (dissoc indeksivuosi :vuosi :kannassa?)
-        indeksivuosi-kkt (difference (into #{} (keys indeksivuosi))
-                                     (into #{} (keep (fn [[kk val]]
-                                                       (when (not (number? val)) kk)) indeksivuosi)))
-        nykyinen-indeksivuosi-kkt (into #{} (keys nykyinen-indeksivuosi))
-        paivitettavat (intersection indeksivuosi-kkt nykyinen-indeksivuosi-kkt)
-        paivitettavat-eri-sisalto (into #{} (keep (fn [kk]
-                                                  (when-not (= (float (get indeksivuosi kk)) (float (get nykyinen-indeksivuosi kk)))
-                                                    kk)) paivitettavat))
-        lisattavat (difference indeksivuosi-kkt nykyinen-indeksivuosi-kkt)
-        poistettavat (difference nykyinen-indeksivuosi-kkt indeksivuosi-kkt)
-        ]
-
-        ;; 1) update 2) insert 3) delete operaatiot tilanteen mukaan
-        (log/info "paivitettavat-eri-sisalto " paivitettavat-eri-sisalto)
-        (log/info "lisattavat " lisattavat)
-        (log/info "poistettavat " poistettavat)))
-      (hae-indeksit c user))))
+                              (doseq [indeksivuosi indeksit]
+                                (let [nykyinen-indeksivuosi (dissoc (second (first (filter #(= (:vuosi indeksivuosi) 
+                                                                                               (second (first %))) 
+                                                                                           nykyiset-arvot))) :vuosi)
+                                      vuosi (:vuosi indeksivuosi)
+                                      indeksivuosi (dissoc indeksivuosi :vuosi :kannassa?)
+                                      indeksivuosi-kkt (difference (into #{} (keys indeksivuosi))
+                                                                   (into #{} (keep (fn [[kk val]]
+                                                                                     (when (not (number? val)) kk)) indeksivuosi)))
+                                      nykyinen-indeksivuosi-kkt (into #{} (keys nykyinen-indeksivuosi))
+                                      paivitettavat (intersection indeksivuosi-kkt nykyinen-indeksivuosi-kkt)
+                                      paivitettavat-eri-sisalto (into #{} (keep (fn [kk]
+                                                                                  (when-not (= (float (get indeksivuosi kk)) (float (get nykyinen-indeksivuosi kk)))
+                                                                                    kk)) paivitettavat))
+                                      lisattavat (difference indeksivuosi-kkt nykyinen-indeksivuosi-kkt)
+                                      poistettavat (difference nykyinen-indeksivuosi-kkt indeksivuosi-kkt)
+                                      ]
+                                  
+                                  ;; 1) update 2) insert 3) delete operaatiot tilanteen mukaan
+                                  (doseq [kk paivitettavat-eri-sisalto]
+                                    (q/paivita-indeksi! c 
+                                                        (get indeksivuosi kk) nimi vuosi kk))
+                                  (doseq [kk lisattavat]
+                                    (q/luo-indeksi<! c 
+                                                     nimi vuosi kk (get indeksivuosi kk)))
+                                  (doseq [kk poistettavat]
+                                    (q/poista-indeksi! c 
+                                                       nimi vuosi kk))
+                                  (hae-indeksit c user))))

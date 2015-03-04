@@ -65,5 +65,5 @@
                   uudet-indeksivuodet)
             res (<! (i/tallenna-indeksi nimi tallennettavat))]
         (log "res " res)
-        (reset! @i/indeksit res)
+        (reset! i/indeksit res)
         true)))
