@@ -17,7 +17,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur])
   
-   (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]])
   
   (:import goog.History))
 
@@ -28,10 +29,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defonce sivu (atom :urakat))
 
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
-(def kartan-koko "Kartan koko" (atom :M))
+(def kartan-kokovalinta "Kartan koko" (atom :M))
 
 (defn vaihda-kartan-koko! [uusi-koko]
-  (reset! kartan-koko uusi-koko)
+  (reset! kartan-kokovalinta uusi-koko)
   (t/julkaise! {:aihe :kartan-koko-vaihdettu :uusi-koko uusi-koko}))
 
 ;; I-vaiheessa aina :tie
@@ -62,6 +63,23 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyissä."
   (atom #{}))
 
+(def kartan-koko
+  "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
+  (reaction (let [valittu-koko @kartan-kokovalinta
+                  tk @tarvitsen-karttaa
+                  sivu @sivu]
+              (if-not (empty? tk)
+                ;; joku tarvitsee karttaa, pakotetaan M kokoon
+                :M
+
+                ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
+                ;; tai palautetaan käyttäjän valitsema koko
+                (cond (= sivu :hallinta) :hidden
+                      (= sivu :about) :hidden
+                      (= sivu :tilannekuva) :L
+                      :default valittu-koko)))))
+
+                  
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
@@ -95,7 +113,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reset! valittu-hallintayksikko yks)
   (reset! urakkalista nil)
   (reset! valittu-urakka nil)
-  (reset! kartan-koko :M)
+  (reset! kartan-kokovalinta :M)
   (paivita-url)
   (if yks
     (do
@@ -106,7 +124,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (paivita-url)
-  (reset! kartan-koko :S)
+  (reset! kartan-kokovalinta :S)
   (if ur
     (t/julkaise! (assoc ur :aihe :urakka-valittu))
     (t/julkaise! {:aihe :urakkavalinta-poistettu})))

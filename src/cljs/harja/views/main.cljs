@@ -79,11 +79,7 @@
       [murupolku/murupolku]]
   
      (let [[sisallon-luokka kartan-luokka] 
-           (case (cond
-                  (= sivu :hallinta) :hidden
-                  (= sivu :about) :hidden
-                  (= sivu :tilannekuva) :L
-                  :default kartan-koko)
+           (case kartan-koko
              :hidden ["col-sm-12" "hide"]
              :S ["col-sm-12" "kulma-kartta"] ;piilota-kartta"]
              :M ["col-sm-6" "col-sm-6"]

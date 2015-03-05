@@ -5,6 +5,7 @@
 
             [harja.tiedot.kayttajat :as k]
             [harja.tiedot.urakat :as u]
+            [harja.tiedot.navigaatio :as nav]
             
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -139,18 +140,27 @@
              [roolivalinta "tilaajan kayttaja"]
              [roolivalinta "urakanvalvoja"
               ^{:key "urakat"}
-              [grid/grid
-               {:otsikko "Urakat"
-                :tyhja "Ei liitettyjä urakoita."
-                :tallenna #(swap! urakanvalvoja-urakat %)}
-               [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
-                 :tyyppi :haku
-                 :nayta :nimi
-                 :lahde u/urakka-haku}
-                {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
-                {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string }]
+              [:span
+               [grid/grid
+                {:otsikko "Urakat"
+                 :tyhja "Ei liitettyjä urakoita."
+                 :tallenna #(swap! urakanvalvoja-urakat %)}
+                [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
+                  :tyyppi :haku
+                  :nayta :nimi
+                  :lahde u/urakka-haku}
+                 {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
+                 {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string }]
 
-               []]]
+                []]
+               [:button {:on-click #(do (.preventDefault %)
+                                        (swap! nav/tarvitsen-karttaa
+                                               (fn [tk]
+                                                 (if (tk :kayttajat)
+                                                   (disj tk :kayttajat)
+                                                   (conj tk :kayttajat)))))}
+                "tarvitaanpas karttaa"]
+               ]]
              [roolivalinta "vaylamuodon vastuuhenkilo"
               ^{:key "vaylamuoto"}
               [:div "väylämuoto"]]

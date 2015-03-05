@@ -31,7 +31,8 @@
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
-    [:span.kartan-koko-kontrollit {:class (when (= sivu :tilannekuva) "hide")}
+    [:span.kartan-koko-kontrollit {:class (when (or (not (empty? @nav/tarvitsen-karttaa))
+                                                    (= sivu :tilannekuva)) "hide")}
      [:div.ikoni-pienenna {:class (when (= koko :S) "hide")
                            :on-click #(nav/vaihda-kartan-koko! (case koko
                                                                  :S :S
@@ -54,7 +55,10 @@
         v-hal @nav/valittu-hallintayksikko
         koko @nav/kartan-koko
         kork @yleiset/korkeus
-        lev @yleiset/leveys]
+        lev @yleiset/leveys
+        koko (if-not (empty? @nav/tarvitsen-karttaa)
+               :M
+               koko)]
     [leaflet {:id "kartta"
               :width (if (= koko :S) "160px" "100%")
               :height (if (= koko :S) "150px"

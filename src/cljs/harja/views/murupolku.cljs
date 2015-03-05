@@ -26,10 +26,11 @@
            urakoitsijat @urakoitsijat/urakoitsijat
            urakoitsijat-hoito @urakoitsijat/urakoitsijat-hoito
            urakoitsijat-yllapito @urakoitsijat/urakoitsijat-yllapito]
-       [:span {:class (cond 
-                       (= @nav/sivu :hallinta) "hide"
-                       (= @nav/sivu :about) "hide"
-                       :default "")}
+       [:span {:class (when (empty? @nav/tarvitsen-karttaa)
+                        (cond 
+                         (= @nav/sivu :hallinta) "hide"
+                         (= @nav/sivu :about) "hide"
+                         :default ""))}
         [:ol.breadcrumb.murupolku
          [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
          (when-let [valittu @nav/valittu-hallintayksikko]
