@@ -40,8 +40,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; I-vaiheessa aina :hoito tai :yllapito (mieti myöhemmin jaetaanko ylläpidon urakat tarkemmin)
 (def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi" (atom :hoito))
 
-(def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
-
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden 
@@ -59,6 +57,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
+
+(def tarvitsen-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin. 
+  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyissä."
+  (atom #{}))
+
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
