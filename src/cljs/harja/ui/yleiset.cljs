@@ -49,6 +49,26 @@
           (recur (.-parentNode ylempi)))))))
 
 
+(defn nuolivalinta
+  "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter, 
+joita kutsutaan kun niiden näppäimiä paineetaan."
+  [ylos alas enter]
+  #(let [kc (.-keyCode %)]
+     (when (or (= kc 38)
+               (= kc 40)
+               (= kc 13))
+       (.preventDefault %)
+       (case kc
+         38 ;; nuoli ylös
+         (ylos)
+
+         40 ;; nuoli alas
+         (alas)
+
+         13 ;; enter
+         (enter)))))
+
+  
 ;;
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])

@@ -6,112 +6,13 @@
             [harja.ui.yleiset :refer [ajax-loader linkki alasvetovalinta]]
             [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]
-            [harja.pvm :as pvm]
-            [harja.ui.pvm :as pvm-valinta]
+            [harja.ui.kentat :refer [tee-kentta]]
+
             [cljs.core.async :refer [<!]]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defmulti tee-kentta (fn [t _] (:tyyppi t)))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex]} data]
-  [:input {:on-change #(reset! data (-> % .-target .-value))
-           :value @data
-           :class (if @data ;; validoi
-                    "ok"
-                    "virhe")}])
-
-
-(defmethod tee-kentta :numero [kentta data]
-  (let [teksti (atom (str @data))]
-        (fn [kentta data]
-          (let [nykyinen-teksti @teksti]
-            [:input {:type "text"
-                     :value nykyinen-teksti
-                     :on-change #(let [v (-> % .-target .-value)]
-                                   (when (or (= v "") 
-                                           (re-matches #"\d+((\.|,)\d*)?" v))
-                                     (reset! teksti v))
-                                   (let [numero (js/parseFloat v)]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero))))}]))))
-
-(defmethod tee-kentta :email [kentta data]
-  [:input {:type "email"
-           :value @data
-           :on-change #(reset! data (-> % .-target .-value))}])
-
-(defmethod tee-kentta :puhelin [kentta data]
-  [:input {:type "tel"
-           :value @data
-           :max-length (:pituus kentta)
-           :on-change #(let [uusi (-> % .-target .-value)]
-                         (when (re-matches #"(\s|\d)*" uusi)
-                           (reset! data uusi)))}]) 
-
-(defmethod tee-kentta :valinta [{:keys [valinta-nayta valinta-arvo valinnat]} data]
-  (let [arvo (or valinta-arvo :id)
-        nayta (or valinta-nayta str)
-        nykyinen-arvo (arvo @data)]
-    [alasvetovalinta {:valinta @data
-                      :valitse-fn #(do (log "valinta: " %)
-                                       (reset! data %))
-                      :format-fn valinta-nayta}
-     valinnat]))
-
-
-(defmethod tee-kentta :kombo [{:keys [valinnat]} data]
-  (let [auki (atom false)]
-    (fn [{:keys [valinnat]} data]
-      (let [nykyinen-arvo (or @data "")]
-        [:div.dropdown {:class (when @auki "open")}
-         [:input.kombo {:type "text" :value nykyinen-arvo
-                        :on-change #(reset! data (-> % .-target .-value))}]
-         [:button {:on-click #(do (swap! auki not) nil)}
-          [:span.caret ""]]
-         [:ul.dropdown-menu {:role "menu"}
-          (for [v (filter #(not= -1 (.indexOf (.toLowerCase (str %)) (.toLowerCase nykyinen-arvo))) valinnat)]
-            ^{:key (hash v)}
-            [:li {:role "presentation"} [linkki v #(do (reset! data v)
-                                                       (reset! auki false))]])]]))))
-
-
-  
-(defmethod tee-kentta :pvm [_ data]
-  
-  (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
-        teksti (atom (if-let [p @data]
-                       (pvm/pvm p)
-                       ""))
-        ;; picker auki?
-        auki (atom false)
-
-        muuta! (fn [t]
-                 (let [d (pvm/->pvm t)]
-                   (reset! teksti t)
-                   (reset! data d)))
-        ]
-    (r/create-class
-     {:component-will-receive-props
-      (fn [this [_ _ data]]
-        (swap! teksti #(if-let [p @data]
-                         (pvm/pvm p)
-                         %)))
-      
-      :reagent-render
-      (fn [_ data]
-        (let [nykyinen-pvm @data
-              nykyinen-teksti @teksti]
-          [:span {:on-click #(do (reset! auki true) nil)}
-           [:input.pvm {:value nykyinen-teksti
-                        :on-change #(muuta! (-> % .-target .-value))}]
-           (when @auki
-             [:div.aikavalinta
-              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                              (reset! data %)
-                                              (reset! teksti (pvm/pvm %)))
-                                :pvm nykyinen-pvm}]])]))})))
 
 (defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
 
@@ -256,7 +157,8 @@ Optiot on mappi optioita:
             (if-not muokataan
               [:span.pull-right
                (when tallenna
-                 [:button.btn.btn-primary.btn-sm {:on-click #(aloita-muokkaus! tiedot)}
+                 [:button.btn.btn-primary.btn-sm {:on-click #(do (.preventDefault %)
+                                                                 (aloita-muokkaus! tiedot))}
                   (ikonit/pencil) " Muokkaa"])]
               [:span.pull-right.muokkaustoiminnot
                [:button.btn.btn-sm.btn-default
@@ -265,17 +167,19 @@ Optiot on mappi optioita:
                                 (.preventDefault %)
                                 (peru!))}
                 (ikonit/peru) " Kumoa"]
-               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click lisaa-rivi!}
+               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                          (lisaa-rivi!))}
                 (ikonit/plus-sign) " Lisää rivi"]
 
                [:button.btn.btn-primary.btn-sm.grid-tallenna
                 {:disabled (not (empty? @virheet))
-                 :on-click #(go (if (<! (tallenna  (mapv second @muokatut)))
-                                  (nollaa-muokkaustiedot!)))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                 :on-click #(do (.preventDefault %)
+                                (go (if (<! (tallenna  (mapv second @muokatut)))
+                                  (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                 (ikonit/ok) " Tallenna"]
            
                [:button.btn.btn-default.btn-sm.grid-peru
-                {:on-click #(do (nollaa-muokkaustiedot!) nil)}
+                {:on-click #(do (.preventDefault %) (nollaa-muokkaustiedot!) nil)}
                 (ikonit/ban-circle) " Peruuta"]
                ])
             ]
@@ -334,8 +238,10 @@ Optiot on mappi optioita:
                                                  (hae rivi)
                                                  (get rivi nimi)))])))
                                 [:td.toiminnot
-                                 (when (or (nil? voi-poistaa?) (voi-poistaa? rivi)) [:span {:on-click #(muokkaa! id assoc :poistettu true)}
-                                                                   (ikonit/trash)])]])))
+                                 (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
+                                   [:span {:on-click #(do (.preventDefault %)
+                                                          (muokkaa! id assoc :poistettu true))}
+                                    (ikonit/trash)])]])))
                          (seq muokatut)))))
 
                   ;; Näyttömuoto

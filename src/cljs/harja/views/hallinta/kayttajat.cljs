@@ -4,10 +4,14 @@
             [cljs.core.async :refer [<! chan]]
 
             [harja.tiedot.kayttajat :as k]
+            [harja.tiedot.urakat :as u]
+            
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [bootstrap :as bs]
+
+            [harja.ui.leaflet :refer [leaflet]]
             
             [harja.loki :refer [log]]
             [clojure.string :as str])
@@ -29,6 +33,7 @@
    "urakoitsijan laatuvastaava" "Urakoitsijan laatuvastaava"})
 
 (def valittu-kayttaja (atom nil))
+
 
 (defn kayttajaluettelo
   "Käyttäjälistauskomponentti"
@@ -84,10 +89,10 @@
                          [:div.rooli
                           [:div.roolivalinta
                            [:input {:type "checkbox" :checked valittu
-                                    :on-change #(toggle-rooli! rooli %)
+                                    :on-change #(toggle-rooli! rooli)
                                     :name rooli}]
                            [:label {:for rooli
-                                    :on-click #(toggle-rooli! rooli %)} (+rooli->kuvaus+ rooli)]]
+                                    :on-click #(toggle-rooli! rooli)} (+rooli->kuvaus+ rooli)]]
                           (when (and valittu (not (empty? sisalto)))
                             [:div.rooli-lisavalinnat
                              sisalto])]))
@@ -134,7 +139,18 @@
              [roolivalinta "tilaajan kayttaja"]
              [roolivalinta "urakanvalvoja"
               ^{:key "urakat"}
-              [:div "URAKAT TÄNNE"]]
+              [grid/grid
+               {:otsikko "Urakat"
+                :tyhja "Ei liitettyjä urakoita."
+                :tallenna #(swap! urakanvalvoja-urakat %)}
+               [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
+                 :tyyppi :haku
+                 :nayta :nimi
+                 :lahde u/urakka-haku}
+                {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
+                {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string }]
+
+               []]]
              [roolivalinta "vaylamuodon vastuuhenkilo"
               ^{:key "vaylamuoto"}
               [:div "väylämuoto"]]
