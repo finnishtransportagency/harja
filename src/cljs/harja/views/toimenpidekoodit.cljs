@@ -171,7 +171,7 @@
                       [:tr
                        [:td 
                         [:span.tehtavakoodi (:nimi tpk)]]
-                       [:td
+                       [:td.muokkaustoiminnot
                         [:span {:on-click #(swap! koodit update-in [(:id tpk) :muokattu]
                                                   (fn [_] (:nimi tpk)))}
                          (ikonit/edit)]
