@@ -74,7 +74,7 @@
               :on-select (fn [item]
                            (condp = (:type item)
                              :hy (nav/valitse-hallintayksikko item)
-                             :ur (nav/valitse-urakka item)))
+                             :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))))
               :geometries (cond
                            ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
                            (nil? v-hal)

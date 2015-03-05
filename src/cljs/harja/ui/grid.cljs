@@ -55,16 +55,27 @@
             (recur (if (empty? virheet) v (assoc v nimi virheet))
                    skeema)))))))
 
-   
+(defprotocol Grid
+  "Ohjausprotokolla, jolla gridin muokkaustilaa voidaan kysellä ja manipuloida."
+
+  (lisaa-rivi! [g rivin-tiedot] "Lisää muokkaustilassa uuden rivin. 
+Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
+
+  (hae-muokkaustila [g] "Hakee tämänhetkisen muokkaustilan, joka on mäppi id:stä rivin tietoihin.")
+  ;; PENDING: lisää tänne tarvittaessa muita metodeja
+  )
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
-  :nimi         kentän hakufn
-  :fmt          kentän näyttämis fn (oletus str)
-  :otsikko      ihmiselle näytettävä otsikko
-  :tunniste     rivin tunnistava kenttä, oletuksena :id
-  :voi-poistaa? voiko rivin poistaa
-  :tyyppi       kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :nimi            kentän hakufn
+  :fmt             kentän näyttämis fn (oletus str)
+  :otsikko         ihmiselle näytettävä otsikko
+  :tunniste        rivin tunnistava kenttä, oletuksena :id
+  :voi-poistaa?    voiko rivin poistaa
+  :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :rivi-klikattu   funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
+  :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina muokatut atom
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -75,7 +86,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? rivi-klikattu]} skeema tiedot]
+  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? rivi-klikattu muokkaa-footer]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -101,17 +112,20 @@ Optiot on mappi optioita:
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))))
 
-        lisaa-rivi! (fn []
-                      (let [id (swap! uusi-id dec)
-                            vanhat-tiedot @muokatut
-                            vanhat-virheet @virheet
-                            uudet-tiedot (swap! muokatut assoc id {:id id})]
-                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
-                        (swap! virheet (fn [virheet]
-                                         (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
-                                           (if (empty? rivin-virheet)
-                                             (dissoc virheet id)
-                                             (assoc virheet id rivin-virheet))))))) 
+        ohjaus (reify Grid
+                 (lisaa-rivi! [_ rivin-tiedot]
+                   (let [id (swap! uusi-id dec)
+                         vanhat-tiedot @muokatut
+                         vanhat-virheet @virheet
+                         uudet-tiedot (swap! muokatut assoc id (merge rivin-tiedot {:id id}))]
+                     (swap! historia conj [vanhat-tiedot vanhat-virheet])
+                     (swap! virheet (fn [virheet]
+                                      (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
+                                        (if (empty? rivin-virheet)
+                                          (dissoc virheet id)
+                                          (assoc virheet id rivin-virheet)))))))
+                 (hae-muokkaustila [_]
+                   @muokatut)) 
 
 
 
@@ -146,7 +160,7 @@ Optiot on mappi optioita:
         (nollaa-muokkaustiedot!))
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu]} skeema tiedot]
+      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer]} skeema tiedot]
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
@@ -168,7 +182,7 @@ Optiot on mappi optioita:
                                 (peru!))}
                 (ikonit/peru) " Kumoa"]
                [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                          (lisaa-rivi!))}
+                                                                          (lisaa-rivi! ohjaus {}))}
                 (ikonit/plus-sign) " Lisää rivi"]
 
                [:button.btn.btn-primary.btn-sm.grid-tallenna
@@ -259,7 +273,10 @@ Optiot on mappi optioita:
                             [:td ((or fmt str) (if hae
                                                  (hae rivi)
                                                  (get rivi nimi)))])])
-                       rivit))))]])]]))})))
+                       rivit))))]])
+            (when (and muokataan muokkaa-footer)
+              [muokkaa-footer ohjaus])
+            ]]))})))
 
 
 

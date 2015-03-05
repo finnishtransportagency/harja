@@ -1,6 +1,6 @@
 (ns harja.views.hallinta.kayttajat
   "Käyttäjähallinnan näkymä"
-  (:require [reagent.core :refer [atom] :as re]
+  (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! chan]]
 
             [harja.tiedot.kayttajat :as k]
@@ -15,6 +15,7 @@
             [harja.ui.leaflet :refer [leaflet]]
             
             [harja.loki :refer [log]]
+            [harja.asiakas.tapahtumat :as t]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -73,6 +74,48 @@
       
       )))
 
+(defn valitse-kartalta [g]
+  (let [kuuntelija (atom nil)]
+    (r/create-class
+     {:component-will-unmount
+      (fn [this]
+        ;; poista kuuntelija
+        (when-let [kuuntelija @kuuntelija]
+          (log "poista kuuntelija")
+          (kuuntelija))
+        ;; poista kartan pakotus
+        (swap! nav/tarvitsen-karttaa
+               (fn [tk]
+                 (disj tk :kayttajat))))
+      
+      :reagent-render
+      (fn [g]
+        [:div
+         [:button.btn.btn-default
+          {:on-click #(do (.preventDefault %)
+                          (swap! nav/tarvitsen-karttaa
+                                 (fn [tk]
+                                   (if (tk :kayttajat)
+                                     (disj tk :kayttajat)
+                                     (conj tk :kayttajat))))
+                          
+                          (swap! kuuntelija
+                                 (fn [k]
+                                   (if k
+                                     (do (k) nil)
+                                     (t/kuuntele! :urakka-klikattu
+                                                  (fn [urakka]
+                                                    (log "urakka valittu: " urakka)
+                                                    (let [urakat (into #{}
+                                                                       (map (comp :id :urakka))
+                                                                       (vals (grid/hae-muokkaustila g)))]
+                                                      (when-not (urakat (:id urakka))
+                                                        (grid/lisaa-rivi! g {:urakka urakka})))))))))}
+          (if (nil? @kuuntelija)
+            "Valitse kartalta"
+            "Piilota kartta")]])})))
+
+
 (defn kayttajatiedot [k]
   (let [tyyppi (case (:tyyppi (:organisaatio k))
                  (:hallintayksikko :liikennevirasto) :tilaaja
@@ -97,6 +140,8 @@
                           (when (and valittu (not (empty? sisalto)))
                             [:div.rooli-lisavalinnat
                              sisalto])]))
+
+        urakka-valittu (atom nil)
         ]
     (fn [k]
       (log "K: " (pr-str k))
@@ -144,7 +189,9 @@
                [grid/grid
                 {:otsikko "Urakat"
                  :tyhja "Ei liitettyjä urakoita."
-                 :tallenna #(swap! urakanvalvoja-urakat %)}
+                 :tallenna #(swap! urakanvalvoja-urakat %)
+                 :muokkaa-footer valitse-kartalta
+                 }
                 [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
                   :tyyppi :haku
                   :nayta :nimi
@@ -153,13 +200,7 @@
                  {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string }]
 
                 []]
-               [:button {:on-click #(do (.preventDefault %)
-                                        (swap! nav/tarvitsen-karttaa
-                                               (fn [tk]
-                                                 (if (tk :kayttajat)
-                                                   (disj tk :kayttajat)
-                                                   (conj tk :kayttajat)))))}
-                "tarvitaanpas karttaa"]
+                 
                ]]
              [roolivalinta "vaylamuodon vastuuhenkilo"
               ^{:key "vaylamuoto"}

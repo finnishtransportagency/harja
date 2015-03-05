@@ -121,6 +121,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu)))
     (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))
 
+
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (paivita-url)
@@ -129,6 +130,21 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
     (t/julkaise! (assoc ur :aihe :urakka-valittu))
     (t/julkaise! {:aihe :urakkavalinta-poistettu})))
 
+(defonce urakka-klikkaus-kuuntelija
+  (t/kuuntele! :urakka-klikattu
+               ;; FIXME: tämä pitäisi faktoroida elegantimmaksi
+               ;; joku tapa pitää olla sanoa, mitä halutaan tapahtuvan kun urakkaa
+               ;; klikataan
+               ;;
+               ;; Ehkä joku pino kartan valintatapahtumien kuuntelijoita, jonne voi lisätä
+               ;; itsensä ja ne ajettaisiin uusin ensin. Jos palauttaa true, ei ajeta muita.
+               ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
+                      
+               (fn [urakka]
+                 (log "KLIKATTU URAKKAA: " (:nimi urakka))
+                 (when (empty? @tarvitsen-karttaa)
+                   (valitse-urakka urakka)))))
+              
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
                     (events/listen h EventType/NAVIGATE #(do (log "NAVIGOINTIEVENTTI")
@@ -154,21 +170,16 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       (paivita-url))
     )
 
-(def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan." (atom nil))
-
-(let [tarkkailija (fn [& _]
-                    (let [v-ur-tyyppi @valittu-urakkatyyppi
-                          v-urk @valittu-urakoitsija]
-                      (reset! suodatettu-urakkalista (into []
-                                                           (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
-                                                                              (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
-                                                                 (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                                                           @urakkalista))))]
-  (add-watch valittu-urakkatyyppi :ut tarkkailija)
-  (add-watch valittu-urakoitsija :ut tarkkailija)
-  (add-watch urakkalista :ut tarkkailija)
-  (add-watch valittu-urakka :ut tarkkailija)
-  )
+(def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
+  (reaction
+   (let [v-ur-tyyppi @valittu-urakkatyyppi
+         v-urk @valittu-urakoitsija
+         urakkalista @urakkalista]
+     (into []
+           (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
+                              (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
+                 (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+           urakkalista))))
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
