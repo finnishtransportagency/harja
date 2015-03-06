@@ -265,7 +265,9 @@ Optiot on mappi optioita:
                       (map-indexed
                        (fn [i rivi]
                          ^{:key ((or tunniste :id) rivi)}
-                         [:tr {:class (if (even? i) "parillinen" "pariton")
+                         [:tr {:class (str (if (even? i) "parillinen" "pariton")
+                                           (when rivi-klikattu
+                                             " klikattava"))
                                :on-click (when rivi-klikattu
                                            #(rivi-klikattu rivi))}
                           (for [{:keys [nimi hae fmt]} skeema]
