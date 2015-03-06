@@ -56,7 +56,8 @@
         (.addTo layer leaflet)))
     ;;(.log js/console "L.map = " leaflet)
     (reagent/set-state this {:leaflet leaflet
-                             :geometries-map {}})
+                             :geometries-map {}
+                             :hover nil})
 
     ;; If mapspec defines callbacks, bind them to leaflet
     (when-let [on-click (:on-click mapspec)]
@@ -104,10 +105,19 @@
   (update-leaflet-geometries this (-> conf :geometries)))
 
 (defn- leaflet-render [mapspec]
-  [:div {:id (:id mapspec)
-         :style (merge {:width (:width mapspec)
-                        :height (:height mapspec)}
-                       (:style mapspec))}])
+  (let [c (reagent/current-component)]
+    [:span 
+     [:div {:id (:id mapspec)
+            :style (merge {:width (:width mapspec)
+                           :height (:height mapspec)}
+                          (:style mapspec))}]
+     (when-let [t (:tooltip-fn mapspec)]
+       (when-let [hover (-> c reagent/state :hover)]
+         (go (<! (timeout 1000))
+             (when (= hover (:hover (reagent/state c)))
+               (reagent/set-state c {:hover nil})))
+         [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (:y hover)}}
+          (t hover)]))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to LeafletJS
@@ -139,7 +149,7 @@
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
   ;;(.log js/console "geometries: " (pr-str items))
-  (let [{:keys [leaflet geometries-map mapspec]} (reagent/state component)
+  (let [{:keys [leaflet geometries-map mapspec hover]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)
         on-select (:on-select mapspec)
         geometries-set (into #{} items)]
@@ -163,6 +173,12 @@
             (let [shape (or (geometries-map item)
                             (doto (create-shape geom)
                               (.on "click" #(on-select item))
+                              (.on "mouseover" #(reagent/set-state component
+                                                                   {:hover (assoc item
+                                                                             :x (-> % .-containerPoint .-x)
+                                                                             :y (-> % .-containerPoint .-y))
+                                                                             }))
+                              (.on "mouseout" #(reagent/set-state component {:hover nil}))
                               (.addTo leaflet)))]
               ;; If geometry has ::fit-bounds value true, then zoom to this
               ;; only 1 item should have this

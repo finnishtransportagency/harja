@@ -11,6 +11,7 @@
             ))
             
 
+
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 ;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
 (def +koko-suomi-sijainti+ [65.1 25.2])
@@ -75,6 +76,7 @@
                            (condp = (:type item)
                              :hy (nav/valitse-hallintayksikko item)
                              :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))))
+              :tooltip-fn :nimi 
               :geometries (cond
                            ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
                            (nil? v-hal)
