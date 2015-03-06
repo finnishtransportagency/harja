@@ -13,6 +13,8 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro       
  WHERE hallintayksikko = :hallintayksikko
 
+-- TODO: joinaa molempiin sopimusnumero, fiksaa myös perustietoihin se näkyviin
+
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,

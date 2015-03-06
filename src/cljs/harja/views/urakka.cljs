@@ -5,6 +5,7 @@
             [harja.asiakas.tapahtumat :as t]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
+            [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.tiedot.urakka.yhteystiedot :as yht]))
 
 (defn urakka
@@ -19,10 +20,7 @@
    
    "Suunnittelu"
    ^{:key "suunnittelu"}
-   [:div 
-    [bs/dropdown-panel {} "Kustannussuunnitelma: kokonaishintaiset työt" "ei vielä"]
-    [bs/dropdown-panel {} "Kustannussuunnitelma: yksikköhintaiset työt" "ei vielä"]
-    [bs/dropdown-panel {} "Materiaalisuunnitelma" "ei vielä"]]
+   [suunnittelu/suunnittelu ur]
    
    "Toteumat"
    ^{:key "toteumat"}

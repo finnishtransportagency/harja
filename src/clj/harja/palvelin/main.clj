@@ -12,6 +12,7 @@
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.indeksit :as indeksit]
    [harja.palvelin.palvelut.urakat :as urakat]
+   [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    [harja.palvelin.palvelut.yhteyshenkilot]
    [harja.palvelin.palvelut.kayttajat :as kayttajat]
@@ -56,10 +57,12 @@
      :urakat (component/using
               (urakat/->Urakat)
               [:http-palvelin :db])
+     :yksikkohintaiset-tyot (component/using
+              (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot)
+              [:http-palvelin :db])
      :yhteyshenkilot (component/using
                       (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
                       [:http-palvelin :db])
-     
      :toimenpidekoodit (component/using
                         (toimenpidekoodit/->Toimenpidekoodit)
                         [:http-palvelin :db])
