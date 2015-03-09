@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
+            [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.tools.logging :as log]))
 
@@ -47,7 +48,8 @@
         (map #(assoc % :tyyppi (keyword (:tyyppi %))))
               
         (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
+                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))
+        (map #(konv/array->vec % :sopimusnumerot))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?

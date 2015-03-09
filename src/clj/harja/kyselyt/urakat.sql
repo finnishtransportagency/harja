@@ -5,15 +5,15 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        u.alkupvm, u.loppupvm, u.tyyppi,
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
+       (SELECT array_agg(sampoid) FROM sopimus WHERE urakka = u.id) as sopimusnumerot,
        ST_Simplify(au.alue, 50) as alueurakan_alue
   FROM urakka u
        LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
        LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
        LEFT JOIN hanke h ON u.hanke=h.id
-       LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro       
+       LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
  WHERE hallintayksikko = :hallintayksikko
 
--- TODO: joinaa molempiin sopimusnumero, fiksaa myös perustietoihin se näkyviin
 
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
@@ -21,6 +21,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        u.alkupvm, u.loppupvm, u.tyyppi,
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
+       (SELECT array_agg(sampoid) FROM sopimus WHERE urakka = u.id) as sopimusnumerot,
        ST_Simplify(au.alue, 50) as alueurakan_alue
   FROM urakka u
        LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
