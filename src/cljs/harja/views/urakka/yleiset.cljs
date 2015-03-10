@@ -73,14 +73,14 @@
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    paivystajat (<! (yht/hae-urakan-paivystajat (:id ur)))
-   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))]
+   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))] 
 
   (do
     (log "paivystajat: " (pr-str paivystajat))
     [:div
      [bs/panel {}
       "Yleiset tiedot" 
-      [yleiset/tietoja {}
+      [yleiset/tietoja {} 
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
