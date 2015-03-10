@@ -183,7 +183,6 @@ Optiot on mappi optioita:
       
       :reagent-render 
       (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema tiedot]
-        (log "render...")
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
