@@ -29,7 +29,7 @@
                         (let [{:keys [~@nimet]} (reagent.core/state this#)]
                           (cljs.core.async.macros/go
                             ~@(map (fn [[nimi tyyppi form]]
-                                     (when (= tyyppi atom)
+                                     (when (= tyyppi :atom)
                                        `(reset! ~nimi (let [res# ~form]
                                                         (.log js/console "uusi " ~(str nimi) "= " res#)
                                                         res#))))
@@ -57,7 +57,7 @@
 
            :component-will-receive-props
            (fn [this#  new-argv#]
-             ;;(.log js/console "PROPSIT TULI: this=" this# ", new-argv="   new-argv#)
+             (.log js/console "PROPSIT TULI: this=" this# ", new-argv="   new-argv#)
              (apply paivita# this# (rest new-argv#)))
              
            :reagent-render
