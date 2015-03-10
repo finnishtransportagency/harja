@@ -6,6 +6,7 @@
             [harja.ui.yleiset :refer [alasvetovalinta linkki ajax-loader nuolivalinta]]
             [harja.ui.protokollat :refer [hae]]
             [harja.loki :refer [log]]
+            [clojure.string :as str]
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -87,7 +88,7 @@
                                    (when (or (= v "") 
                                            (re-matches #"\d+((\.|,)\d*)?" v))
                                      (reset! teksti v))
-                                   (let [numero (js/parseFloat v)]
+                                   (let [numero (js/parseFloat (str/replace v #"," "."))]
                                        (reset! data
                                                (when (not (js/isNaN numero))
                                                  numero))))}]))))
