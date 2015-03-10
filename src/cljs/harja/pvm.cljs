@@ -27,6 +27,9 @@
             (.getSeconds goog-date)
             (.getMilliseconds goog-date)))
 
+(defn nyt []
+  (DateTime.))
+
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]
@@ -48,7 +51,7 @@
              kentat))))
 (def fi-pvm
   "Päiväämäärän formatointi suomalaisessa muodossa"
-  (df/formatter "d.MM.yyyy"))
+  (df/formatter "dd.MM.yyyy"))
             
 (defn pvm
   "Formatoi päivämäärän suomalaisessa muodossa"

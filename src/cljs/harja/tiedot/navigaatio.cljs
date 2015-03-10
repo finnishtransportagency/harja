@@ -141,7 +141,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
                       
                (fn [urakka]
-                 (log "KLIKATTU URAKKAA: " (:nimi urakka))
+                 ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
                  (when (empty? @tarvitsen-karttaa)
                    (valitse-urakka urakka)))))
               

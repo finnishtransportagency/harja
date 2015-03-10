@@ -21,6 +21,27 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                             :ytunnus (:org_ytunnus rivi)})
       (dissoc :org_id :org_nimi :org_tyyppi :org_lyhenne :org_ytunnus)))
 
+(defn alaviiva->rakenne
+  "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim. 
+  {:id 1 :urakka_hallintayksikko_nimi \"POP ELY\"} => {:id 1 :urakka {:hallintayksikko {:nimi \"POP ELY\"}}}"
+  [m]
+  (let [ks (into []
+                 (comp (map name)
+                       (filter #(when (not= -1 (.indexOf % "_")) %))
+                       (map (fn [k]
+                              [(keyword k)
+                               (into []
+                                     (map keyword)
+                                     (.split k "_"))])))
+                 (keys m))]
+    (loop [m m
+           [[vanha-key uusi-key] & ks] ks]
+      (if-not vanha-key
+        m
+        (let [arvo (get m vanha-key)]
+          (recur (assoc-in (dissoc m vanha-key)
+                           uusi-key arvo)
+                 ks))))))
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."
   [rivi kentta]

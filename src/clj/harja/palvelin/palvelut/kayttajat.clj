@@ -7,7 +7,8 @@
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.konversio :as konv]))
 
-(declare hae-kayttajat)
+(declare hae-kayttajat
+         hae-kayttajan-tiedot)
 
 (defrecord Kayttajat []
   component/Lifecycle
@@ -15,9 +16,14 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-kayttajat (fn [user params]
                                        (apply hae-kayttajat (:db this) user params)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-kayttajan-tiedot
+                      (fn [user kayttaja-id]
+                        (hae-kayttajan-tiedot (:db this) user kayttaja-id)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-kayttajat)
+    (poista-palvelu (:http-palvelin this) :hae-kayttajan-tiedot)
     this))
 
 
@@ -32,3 +38,10 @@
         lkm (:lkm (first (q/hae-kayttajat-lkm db (:id user) hakuehto)))]
     
     [lkm kayttajat]))
+
+(defn hae-kayttajan-tiedot
+  "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
+  [db user kayttaja-id]
+  {:urakka-roolit (into []
+                        (map konv/alaviiva->rakenne)
+                        (q/hae-kayttajan-urakka-roolit db kayttaja-id))})

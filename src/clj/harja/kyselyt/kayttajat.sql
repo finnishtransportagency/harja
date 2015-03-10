@@ -42,3 +42,14 @@ SELECT COUNT(k.id) as lkm
        AND
        (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
          
+-- name: hae-kayttajan-urakka-roolit
+-- Hakee käyttäjän urakka roolit.
+SELECT rooli, urakka as urakka_id, luotu,
+       ur.nimi as urakka_nimi,
+       urk.nimi as urakka_urakoitsija_nimi, urk.id as urakka_urakoitsija_id,
+       hal.nimi as urakka_hallintayksikko_nimi, hal.id as urakka_hallintayksikko_id
+  FROM kayttaja_urakka_rooli
+       LEFT JOIN urakka ur ON urakka=ur.id
+       LEFT JOIN organisaatio urk ON ur.urakoitsija=urk.id
+       LEFT JOIN organisaatio hal ON ur.hallintayksikko=hal.id
+ WHERE kayttaja = :kayttaja AND poistettu = false
