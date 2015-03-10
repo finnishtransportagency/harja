@@ -6,9 +6,10 @@
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.yleiset :refer [linkki] :as yleiset]
+            [harja.ui.modal :refer [modal-container]]
             
             [harja.tiedot.navigaatio :as nav]
-                        
+            
             [harja.views.murupolku :as murupolku]
             
             [harja.views.urakat :as urakat]
@@ -99,5 +100,6 @@
          [:div#kartta-container {:class kartan-luokka}
           [kartta/kartta]]]])
      [footer]
+     [modal-container]
      ]))
 

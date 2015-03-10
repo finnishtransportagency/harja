@@ -5,10 +5,14 @@
 
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.kayttajat :as q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+
+            [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log]))
 
 (declare hae-kayttajat
-         hae-kayttajan-tiedot)
+         hae-kayttajan-tiedot
+         tallenna-kayttajan-tiedot)
 
 (defrecord Kayttajat []
   component/Lifecycle
@@ -20,10 +24,15 @@
                       :hae-kayttajan-tiedot
                       (fn [user kayttaja-id]
                         (hae-kayttajan-tiedot (:db this) user kayttaja-id)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-kayttajan-tiedot
+                      (fn [user tiedot]
+                           (tallenna-kayttajan-tiedot (:db this) user tiedot)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-kayttajat)
     (poista-palvelu (:http-palvelin this) :hae-kayttajan-tiedot)
+    (poista-palvelu (:http-palvelin this) :tallenna-kayttajan-tiedot)
     this))
 
 
@@ -45,3 +54,12 @@
   {:urakka-roolit (into []
                         (map konv/alaviiva->rakenne)
                         (q/hae-kayttajan-urakka-roolit db kayttaja-id))})
+(defn tallenna-kayttajan-tiedot
+  "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
+  [db user {:keys [kayttaja-id tiedot]}]
+  (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
+  (jdbc/with-db-transaction [c db]
+                                 
+    (hae-kayttajan-tiedot c user kayttaja-id)))
+
+  

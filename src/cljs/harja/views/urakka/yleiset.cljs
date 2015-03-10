@@ -79,7 +79,7 @@
     (log "paivystajat: " (pr-str paivystajat))
     [:div
      [bs/panel {}
-      "Yleiset tiedot"
+      "Yleiset tiedot" 
       [yleiset/tietoja {}
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
@@ -87,7 +87,7 @@
        "Tilaaja:" (:nimi (:hallintayksikko ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
         
-     [grid/grid
+     [grid/grid 
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}

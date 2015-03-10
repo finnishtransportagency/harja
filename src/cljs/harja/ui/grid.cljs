@@ -378,7 +378,6 @@ Optiot on mappi optioita:
     (r/create-class
      {:component-will-receive-props
       (fn [this new-argv]
-        ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
         (log "muokkausgridi sai propseja")
         )
       

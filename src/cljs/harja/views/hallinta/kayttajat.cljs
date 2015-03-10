@@ -10,6 +10,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.modal :refer [modal] :as modal]
             [bootstrap :as bs]
 
             [harja.ui.leaflet :refer [leaflet]]
@@ -182,6 +183,30 @@
         
         urakanvalvoja-urakat (atom (array-map))
         tilaajan-laadunvalvontakonsultti-urakat (atom (array-map))
+
+        poista-painettu (atom nil)
+
+        ;; tekee muokattavasta urakkalistasta tallenusmuotoisen
+        urakat-tallennus (fn [muokattavat rooli]
+                           (map (fn [urakkarooli]
+                                  ;; poistetaan urakka ja hallintayksikkö ja lähetetään vain id:t
+                                  (assoc urakkarooli
+                                    :urakka {:id (get-in urakkarooli [:urakka :id])}
+                                    ;;:hallintayksikko {:id (get-in urakkarooli [:hallintayksikko :id])}
+                                    :rooli rooli))
+                                (vals muokattavat)))
+        
+        tallenna! (fn []
+                    (log "TALLENNETAAN KÄYTTÄJÄÄ")
+                    (k/tallenna-kayttajan-tiedot (:id k)
+                                                 {:roolit @roolit
+                                                  :urakka-roolit (into []
+                                                                       (concat
+                                                                        (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
+                                                                        (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")))
+                                                  })
+                    (reset! valittu-kayttaja nil))
+        
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
@@ -264,7 +289,37 @@
                [roolivalinta "urakoitsijan kayttaja"]
                [roolivalinta "urakoitsijan laatuvastaava"]]
               )]]
-       
+
+          [:div.form-group
+           [:label.col-sm-2.control-label
+            "Toiminnot:"]
+           [:div.col-sm-10.toiminnot
+            [:button.btn.btn-primary {:on-click #(do (.preventDefault %)
+                                                     (tallenna!))}
+             (ikonit/ok) " Tallenna"]
+            [:span.pull-right
+             [:button.btn.btn-danger {:disabled (when @poista-painettu "disabled")
+                                      :on-click #(do (.preventDefault %)
+                                                     (reset! poista-painettu true))}
+              (ikonit/ban-circle) " Poista käyttöoikeus"]
+             (when @poista-painettu
+               [modal {:otsikko "Poistetaanko käyttöoikeus?"
+                       :footer [:span
+                                [:button.btn.btn-default {:type "button"
+                                                          :on-click #(do (.preventDefault %)
+                                                                         (modal/piilota!))}
+                                 "Peruuta"]
+                                [:button.btn.btn-danger {:type "button"
+                                                         :on-click #(do (.preventDefault %)
+                                                                        (modal/piilota!)
+                                                                        (log "POISTETAAN KÄYTTÄJÄ"))}
+                                 "Poista käyttöoikeus"]
+                                ]
+                       :sulje #(reset! poista-painettu false)}
+                [:div "Haluatko varmasti poistaa käyttäjän "
+                 [:b (:etunimi k) " " (:sukunimi k)] " käyttöoikeuden?"]])]
+            ]]
+          
           ]])})))
               
 (defn kayttajat
