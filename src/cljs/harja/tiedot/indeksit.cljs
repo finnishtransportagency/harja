@@ -12,7 +12,7 @@
 (def indeksit (atom nil))
 
  (defn hae-indeksit []
-   (if (empty? @indeksit)
+   (if (nil? @indeksit)
            (go (reset! indeksit
                (<! (k/get! :indeksit))))))
  
