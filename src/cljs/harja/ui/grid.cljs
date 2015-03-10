@@ -160,7 +160,7 @@ Optiot on mappi optioita:
         (nollaa-muokkaustiedot!))
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer]} skeema tiedot]
+      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer tyhja]} skeema tiedot]
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
