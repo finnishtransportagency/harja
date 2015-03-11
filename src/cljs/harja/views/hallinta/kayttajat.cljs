@@ -39,6 +39,20 @@
 
 (def valittu-kayttaja (atom nil))
 
+(defonce haku (atom ""))
+(defonce sivu (atom 0))
+(defonce sivuja (atom 0))
+
+(def kayttajat (atom nil))
+(defonce kayttajien-haku
+  (run! (let [haku @haku
+              sivu @sivu]
+          (go (let [[lkm data] (<! (k/hae-kayttajat haku (* sivu 50) 50))]
+                (reset! sivuja (int (js/Math.ceil (/ lkm 50))))
+                (reset! kayttajat data))))))
+
+
+    
 
 (defn kayttajaluettelo
   "Käyttäjälistauskomponentti"
@@ -49,11 +63,8 @@
         kayttajat (atom nil)]
 
     ;; Haetaan sivun ja datan perusteella, hakee uudestaan jos data muuttuu
-    (run! (let [haku @haku
-                sivu @sivu]
-            (go (let [[lkm data] (<! (k/hae-kayttajat haku (* sivu 50) 50))]
-                  (reset! sivuja (int (js/Math.ceil (/ lkm 50))))
-                  (reset! kayttajat data)))))
+
+    
 
     (fn []
       [grid/grid
@@ -212,7 +223,11 @@
 
         poista! (fn []
                   (log "POISTETAAN KÄYTTÖOIKEUS")
-                  (k/poista-kayttaja! (:id k)))
+                  (if (k/poista-kayttaja! (:id k))
+                    (do (reset! valittu-kayttaja nil)
+                        (
+                    
+                  )
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
