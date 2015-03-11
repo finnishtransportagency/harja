@@ -70,9 +70,7 @@
      :leveys "30%"}
 
     {:otsikko "Roolit" :nimi :roolit
-     :fmt #(do
-             (log "ROOLIT " (pr-str %))
-             (str/join ", " (map +rooli->kuvaus+ %)))
+     :fmt #(str/join ", " (map +rooli->kuvaus+ %))
      :leveys "40%"}
     ]
        
@@ -107,20 +105,24 @@
                                    (if (tk avain)
                                      (disj tk avain)
                                      (conj tk avain))))
+
+                            (when-not (nil? @nav/valittu-urakka)
+                              ;; Ei voi olla urakan kontekstissa, jos valitaan urakoita
+                              (nav/valitse-urakka nil))
                           
-                          (swap! kuuntelija
-                                 (fn [k]
-                                   (if k
-                                     (do (k) nil)
-                                     (t/kuuntele! :urakka-klikattu
-                                                  (fn [urakka]
-                                                    ;(log "urakka valittu: " (pr-str urakka))
-                                                    (let [urakat (into #{}
-                                                                       (map (comp :id :urakka))
-                                                                       (vals (grid/hae-muokkaustila g)))]
-                                                      (when-not (urakat (:id urakka))
-                                                        (grid/lisaa-rivi! g {:urakka urakka
-                                                                             :luotu (pvm/nyt)})))))))))}
+                            (swap! kuuntelija
+                                   (fn [k]
+                                     (if k
+                                       (do (k) nil)
+                                       (t/kuuntele! :urakka-klikattu
+                                                    (fn [urakka]
+                                        ;(log "urakka valittu: " (pr-str urakka))
+                                                      (let [urakat (into #{}
+                                                                         (map (comp :id :urakka))
+                                                                         (vals (grid/hae-muokkaustila g)))]
+                                                        (when-not (urakat (:id urakka))
+                                                          (grid/lisaa-rivi! g {:urakka urakka
+                                                                               :luotu (pvm/nyt)})))))))))}
           (if (nil? @kuuntelija)
             "Valitse kartalta"
             "Piilota kartta")]]))})))
@@ -215,7 +217,6 @@
                                                       (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
                                                       (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
                                                }))]
-                        (log "UUDET TIEDOTHAN OLI " (pr-str uudet-tiedot))
                         (reset! valittu-kayttaja nil)
                         (swap! kayttajalista
                                (fn [kl]
@@ -239,7 +240,7 @@
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
     (run! (let [tiedot @tiedot]
-            (log "TIEDOT: " (pr-str tiedot))
+            
             (let [urakka-roolit (group-by :rooli (:urakka-roolit tiedot))]
               (reset! urakanvalvoja-urakat
                       (urakat-muokattava (or (get urakka-roolit "urakanvalvoja") [])))
@@ -256,14 +257,10 @@
     
                                    
     (r/create-class
-     {:component-will-receive-props
-      (fn [this & [arg]]
-        
-        (log "UUSI K: " (pr-str (nth arg 1))))
+     {
       
       :reagent-render
       (fn [k]
-        (log "K: " (pr-str k))
         [:div.kayttajatiedot
          [:button.btn.btn-default {:on-click #(reset! valittu-kayttaja nil)}
           (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
