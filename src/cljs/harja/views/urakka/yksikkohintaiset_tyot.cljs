@@ -26,6 +26,11 @@
   (reset! valittu-sopimusnumero sn)
   )
 
+(def +hoitokauden-alkukk-indeksi+ "9")
+(def +hoitokauden-alkupv-indeksi+ "1")
+(def +hoitokauden-loppukk-indeksi+ "8")
+(def +hoitokauden-loppupv-indeksi+ "30")
+
 (def +hoitokauden-alkupvm+ "1.10.yyyy")
 
 (def +hoitokauden-loppupvm+ "30.09.yyyy")
@@ -33,17 +38,16 @@
 (def valittu-hoitokausi "Hoitokausi" (atom nil))
 
 (defn valitse-hoitokausi! [hk]
-  (reset! valittu-hoitokausi hk)
-  )
+  (reset! valittu-hoitokausi hk))
 
 (defn hoitokaudet [alkupvm loppupvm]
   (let [ensimmainen-vuosi (.getYear alkupvm)
         viimeinen-vuosi (.getYear loppupvm)]
     (mapv (fn [vuosi]
-            (str (str/replace +hoitokauden-alkupvm+ #"yyyy" (str vuosi))
-                  " \u2014 " ;;dash
-                  (str/replace +hoitokauden-loppupvm+ #"yyyy" (str (inc vuosi)))))
-            (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
+              {:alkupvm (pvm/luo-pvm vuosi +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
+               :loppupvm (pvm/luo-pvm (inc vuosi) +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
+          (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
+
 
 (deftk yksikkohintaiset-tyot [ur]
   [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
@@ -79,9 +83,32 @@
       [:div.label-ja-alasveto
        [:span.alasvedon-otsikko "Hoitokausi"]
        [alasvetovalinta {:valinta @valittu-hoitokausi
-                         :format-fn str
+                         ;;\u2014 on väliviivan unikoodi
+                         :format-fn #(if % (str (pvm/pvm (:alkupvm %)) 
+                                                " \u2014 " (pvm/pvm (:loppupvm %))) "Valitse")
                          :valitse-fn valitse-hoitokausi!
                          :class "alasveto"
                          }
         @urakan-hoitokaudet
-        ]]]]))
+        ]]]
+     
+          [grid/grid
+           {:otsikko "Yksikköhintaiset työt"
+            :tyhja (if (nil? nelostason-tpt) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+            :tallenna #(tallenna-tyot %)
+            :tunniste :id
+            :voi-poistaa? false}
+           
+           ;; sarakkeet
+           [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string  :leveys "30%"}
+            
+            {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @valittu-hoitokausi))) :nimi :maara-alku :tyyppi :numero :leveys "15%"}
+            {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-loppu :tyyppi :numero :leveys "15%"}
+            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "5%"}
+            {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi numero :leveys "10%"}
+            {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "10%"}
+            {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :string :leveys "15%"}
+            ]
+           @tyot
+           ]
+          ]))

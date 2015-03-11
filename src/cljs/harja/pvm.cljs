@@ -30,6 +30,9 @@
 (defn nyt []
   (DateTime.))
 
+(defn luo-pvm [vuosi kk pv]
+  (DateTime. vuosi kk pv))
+
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]
