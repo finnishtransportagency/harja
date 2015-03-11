@@ -177,7 +177,6 @@ Optiot on mappi optioita:
       (fn [this new-argv]
         ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
         (nollaa-muokkaustiedot!)
-        (log "PROPSEJA TULI:" (second new-argv))
         (when muokkaa-aina
           (aloita-muokkaus! (nth new-argv 3))))
       
