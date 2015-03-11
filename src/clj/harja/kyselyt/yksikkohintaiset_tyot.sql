@@ -1,5 +1,7 @@
 -- name: listaa-urakan-yksikkohintaiset-tyot
 -- Hakee kaikki yksikkohintaiset-tyot
-SELECT 	  alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka
-  FROM 	  yksikkohintainen_tyo
-  	WHERE urakka = :urakka
+SELECT yt.alkupvm, yt.loppupvm, yt.maara, yt.yksikko, yt.yksikkohinta, yt.tehtava, yt.urakka,
+	   tk.nimi as tehtavan_nimi
+  FROM yksikkohintainen_tyo yt
+	   LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id
+ WHERE urakka = :urakka
