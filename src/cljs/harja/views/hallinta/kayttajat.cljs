@@ -43,13 +43,13 @@
 (defonce sivu (atom 0))
 (defonce sivuja (atom 0))
 
-(def kayttajat (atom nil))
+(def kayttajalista (atom nil))
 (defonce kayttajien-haku
   (run! (let [haku @haku
               sivu @sivu]
           (go (let [[lkm data] (<! (k/hae-kayttajat haku (* sivu 50) 50))]
                 (reset! sivuja (int (js/Math.ceil (/ lkm 50))))
-                (reset! kayttajat data))))))
+                (reset! kayttajalista data))))))
 
 
     
@@ -57,37 +57,25 @@
 (defn kayttajaluettelo
   "Käyttäjälistauskomponentti"
   []
-  (let [haku (atom "")
-        sivu (atom 0)
-        sivuja (atom 0)
-        kayttajat (atom nil)]
-
-    ;; Haetaan sivun ja datan perusteella, hakee uudestaan jos data muuttuu
-
-    
-
-    (fn []
-      [grid/grid
-       {:otsikko "Käyttäjät"
-        :tyhja "Ei käyttäjiä."
-        :rivi-klikattu #(reset! valittu-kayttaja %)
-        }
+  [grid/grid
+   {:otsikko "Käyttäjät"
+    :tyhja "Ei käyttäjiä."
+    :rivi-klikattu #(reset! valittu-kayttaja %)
+    }
        
-       [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
-        {:otsikko "Organisaatio" :nimi :org-nimi
-         :hae #(:nimi (:organisaatio %))
-         :leveys "30%"}
+   [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
+    {:otsikko "Organisaatio" :nimi :org-nimi
+     :hae #(:nimi (:organisaatio %))
+     :leveys "30%"}
 
-        {:otsikko "Roolit" :nimi :roolit
-         :fmt #(do
-                 (log "ROOLIT " %)
-                 (str/join ", " (map +rooli->kuvaus+ %)))
-         :leveys "40%"}
-        ]
+    {:otsikko "Roolit" :nimi :roolit
+     :fmt #(do
+             (log "ROOLIT " %)
+             (str/join ", " (map +rooli->kuvaus+ %)))
+     :leveys "40%"}
+    ]
        
-       @kayttajat]
-      
-      )))
+   @kayttajalista])
 
 (defn valitse-kartalta [g]
   (let [kuuntelija (atom nil)
@@ -157,8 +145,6 @@
     urakat-atom]])
   
 
-
-
 (defn kayttajatiedot [k]
   (let [tyyppi (case (:tyyppi (:organisaatio k))
                    (:hallintayksikko :liikennevirasto) :tilaaja
@@ -225,9 +211,9 @@
                   (log "POISTETAAN KÄYTTÖOIKEUS")
                   (if (k/poista-kayttaja! (:id k))
                     (do (reset! valittu-kayttaja nil)
-                        (
-                    
-                  )
+                        )))
+                         
+                  
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
