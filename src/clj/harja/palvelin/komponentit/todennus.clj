@@ -14,11 +14,13 @@
   (get (swap! kayttajatiedot
               #(cache/through (fn [id]
                                 (let [kt (first  (q/hae-kirjautumistiedot db id))]
-                                  (-> kt
-                                      (assoc :organisaatio {:id (:org_id kt)
-                                                            :nimi (:org_nimi kt)
-                                                            :tyyppi (:org_tyyppi kt)})
-                                      (dissoc :org_id :org_nimi :org_tyyppi))))
+                                  (if (nil? kt)
+                                    nil
+                                    (-> kt
+                                        (assoc :organisaatio {:id (:org_id kt)
+                                                              :nimi (:org_nimi kt)
+                                                              :tyyppi (:org_tyyppi kt)})
+                                        (dissoc :org_id :org_nimi :org_tyyppi)))))
                               %
                               koka-remote-id))
        koka-remote-id))

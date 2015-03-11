@@ -1,7 +1,9 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
   "Palvelu, jolla voi hakea perustietoja nykyisestä käyttäjästä"
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.palvelut.kayttajat :as k]
+            [clojure.tools.logging :as log]))
 
 (declare hae-kayttajatiedot)
 
@@ -9,7 +11,8 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :kayttajatiedot hae-kayttajatiedot)
+                      :kayttajatiedot (fn [user alku]
+                                        (hae-kayttajatiedot (:db this) user alku)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :kayttajatiedot)
@@ -18,8 +21,13 @@
 
 (defn hae-kayttajatiedot
   "Hae tämänhetkisen käyttäjän tiedot frontille varten"
-  [user alku]
-  ;; FIXME: tämän pitäisi palauttaa myös käyttäjän roolit yms hyödyllistä tietoa,
-  ;; jota fronttipuoli voi käyttää, nyt vain käyttäjä sellaisenaan
-  user)
+  [db user alku]
+  (if (nil? user)
+    ;; Jos käyttäjää ei ole löytynyt, palautetaan frontille tieto
+    {:poistettu true}
+    (let [user (merge user
+                      (k/hae-kayttajan-tiedot db user (:id user)))]
+      (log/info "USER: " user)
+      user)))
+  
   

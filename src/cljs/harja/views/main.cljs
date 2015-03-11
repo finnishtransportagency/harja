@@ -67,39 +67,52 @@
       [:div
        [linkki "Tietoja" #(nav/vaihda-sivu! :about)]]]])
 
+(defn ladataan []
+  [:div {:style {:position "absolute" :top "50%" :left "50%"}}
+   [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
+    [yleiset/ajax-loader "Ladataan..."]]])
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
   (let [sivu @nav/sivu
         kartan-koko @nav/kartan-koko
-        korkeus @yleiset/korkeus]
-    [:span
-     [:div.container
-      [header sivu]]
-     [:div.container
-      [murupolku/murupolku]]
+        korkeus @yleiset/korkeus
+        kayttaja @istunto/kayttaja]
+
+    (if (nil? kayttaja)
+      [ladataan]
+      (if (or (:poistettu kayttaja)
+              (empty? (:roolit kayttaja)))
+        [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+      
+        [:span
+         [:div.container
+          [header sivu]]
+         [:div.container
+          [murupolku/murupolku]]
   
-     (let [[sisallon-luokka kartan-luokka] 
-           (case kartan-koko
-             :hidden ["col-sm-12" "hide"]
-             :S ["col-sm-12" "kulma-kartta"] ;piilota-kartta"]
-             :M ["col-sm-6" "col-sm-6"]
-             :L ["hide" "col-sm-12"])]
-       ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-       [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-        [:div.row
-         [:div#sidebar-left {:class sisallon-luokka}
-          (case sivu
-            :urakat [urakat/urakat]
-            :raportit [raportit/raportit]
-            :tilannekuva [tilannekuva/tilannekuva]
-            :ilmoitukset [ilmoitukset/ilmoitukset]
-            :hallinta [hallinta/hallinta]
-            :about [about/about]
-            )]
-         [:div#kartta-container {:class kartan-luokka}
-          [kartta/kartta]]]])
-     [footer]
-     [modal-container]
-     ]))
+         (let [[sisallon-luokka kartan-luokka] 
+               (case kartan-koko
+                 :hidden ["col-sm-12" "hide"]
+                 :S ["col-sm-12" "kulma-kartta"] ;piilota-kartta"]
+                 :M ["col-sm-6" "col-sm-6"]
+                 :L ["hide" "col-sm-12"])]
+           ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
+           [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+            [:div.row
+             [:div#sidebar-left {:class sisallon-luokka}
+              (case sivu
+                :urakat [urakat/urakat]
+                :raportit [raportit/raportit]
+                :tilannekuva [tilannekuva/tilannekuva]
+                :ilmoitukset [ilmoitukset/ilmoitukset]
+                :hallinta [hallinta/hallinta]
+                :about [about/about]
+                )]
+             [:div#kartta-container {:class kartan-luokka}
+              [kartta/kartta]]]])
+         [footer]
+         [modal-container]
+         ]))))
 

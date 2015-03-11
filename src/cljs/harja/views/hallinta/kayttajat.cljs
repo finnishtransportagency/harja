@@ -68,7 +68,9 @@
          :leveys "30%"}
 
         {:otsikko "Roolit" :nimi :roolit
-         :fmt #(str/join ", " (map +rooli->kuvaus+ %))
+         :fmt #(do
+                 (log "ROOLIT " %)
+                 (str/join ", " (map +rooli->kuvaus+ %)))
          :leveys "40%"}
         ]
        
@@ -198,15 +200,19 @@
         
         tallenna! (fn []
                     (log "TALLENNETAAN KÄYTTÄJÄÄ")
-                    (k/tallenna-kayttajan-tiedot (:id k)
-                                                 {:roolit @roolit
-                                                  :urakka-roolit (into []
-                                                                       (concat
-                                                                        (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
-                                                                        (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")))
-                                                  })
+                    (k/tallenna-kayttajan-tiedot!
+                     (:id k)
+                     {:roolit @roolit
+                      :urakka-roolit (into []
+                                           (concat
+                                            (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
+                                            (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")))
+                      })
                     (reset! valittu-kayttaja nil))
-        
+
+        poista! (fn []
+                  (log "POISTETAAN KÄYTTÖOIKEUS")
+                  (k/poista-kayttaja! (:id k)))
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))

@@ -31,7 +31,7 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
         (>! ch (muunna-kayttajan-tiedot tiedot))))
     ch))
 
-(defn tallenna-kayttajan-tiedot
+(defn tallenna-kayttajan-tiedot!
   "Tallentaa käyttäjän roolitiedot muokkausnäkymästä. Palauttaa uudet tiedot."
   [kayttaja-id tiedot]
   (log "TALLENNA KAYTTAJA " kayttaja-id "\nTIEDOILLA: " (pr-str tiedot))
@@ -47,3 +47,5 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
         (>! ch (muunna-kayttajan-tiedot tiedot))))
     ch))
 
+(defn poista-kayttaja! [id]
+  (k/post! :poista-kayttaja id))

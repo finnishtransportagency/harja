@@ -4,23 +4,25 @@ SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
        o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi
   FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
  WHERE k.kayttajanimi = :koka
+   AND k.poistettu = false
 
 -- name: hae-kayttajat
 -- Hakee käyttäjiä käyttäjähallinnan listausta varten.
 -- Haun suorittava käyttäjä annetaan parametrina ja vain käyttäjät, jotka hän saa nähdä palautetaan.
 SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
        o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi,
-       array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = k.id),
-                 (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = k.id)) as roolit
+       array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = k.id AND poistettu=false),
+                 (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = k.id AND poistettu=false)) as roolit
   FROM kayttaja k
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
  WHERE
        -- tarkistetaan käyttöoikeus: pääkäyttäjä näkee kaikki, muuten oman organisaation
-       ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo') > 0
+       ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo' AND poistettu=false) > 0
         OR
 	k.organisaatio IN (SELECT kor.organisaatio FROM kayttaja_organisaatio_rooli kor
 	                    WHERE kor.kayttaja = :hakija
-			      AND kor.rooli = 'urakoitsijan paakayttaja'))
+			      AND kor.rooli = 'urakoitsijan paakayttaja'
+			      ))
        -- tarkistetaan hakuehto
        AND
        (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
@@ -33,11 +35,12 @@ SELECT COUNT(k.id) as lkm
   FROM kayttaja k
  WHERE
        -- tarkistetaan käyttöoikeus: pääkäyttäjä näkee kaikki, muuten oman organisaation
-       ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo') > 0
+       ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo' AND poistettu=false) > 0
         OR
 	k.organisaatio IN (SELECT kor.organisaatio FROM kayttaja_organisaatio_rooli kor
 	                    WHERE kor.kayttaja = :hakija
-			      AND kor.rooli = 'urakoitsijan paakayttaja'))
+			      AND kor.rooli = 'urakoitsijan paakayttaja'
+			      ))
        -- tarkistetaan hakuehto
        AND
        (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
@@ -53,3 +56,30 @@ SELECT rooli, urakka as urakka_id, luotu,
        LEFT JOIN organisaatio urk ON ur.urakoitsija=urk.id
        LEFT JOIN organisaatio hal ON ur.hallintayksikko=hal.id
  WHERE kayttaja = :kayttaja AND poistettu = false
+
+-- name: lisaa-urakka-rooli<!
+-- Lisää annetulle käyttäjälle roolin urakkaan.
+INSERT INTO kayttaja_urakka_rooli (luoja, luotu, kayttaja, urakka, rooli) VALUES (:luoja, NOW(), :kayttaja, :urakka, :rooli::kayttajarooli)
+
+-- name: poista-urakka-rooli!
+-- Poista käyttäjän rooli annetusta urakkasta.
+UPDATE kayttaja_urakka_rooli SET poistettu=true, muokkaaja=:muokkaaja, muokattu=NOW() WHERE kayttaja=:kayttaja AND urakka=:urakka AND rooli=:rooli::kayttajarooli
+
+-- name: hae-kayttajan-roolit
+-- Palauttaa kaikki käyttäjän roolit (sekä urakka että tavalliset).
+SELECT array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = :kayttaja AND poistettu=false),
+                 (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = :kayttaja AND poistettu=false)) as roolit
+		 
+
+-- name: poista-rooli!
+-- Poista käyttäjältä rooli.
+UPDATE kayttaja_rooli SET poistettu=true, muokkaaja=:muokkaaja, muokattu=NOW() WHERE kayttaja=:kayttaja AND rooli=:rooli::kayttajarooli
+
+-- name: lisaa-rooli<!
+-- Lisää käyttäjälle rooli.
+INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW(), :kayttaja, :rooli::kayttajarooli)
+
+
+-- name: poista-kayttaja!
+-- Merkitsee annetun käyttäjän poistetuksi
+UPDATE kayttaja SET poistettu=true,muokkaaja=:muokkaaja,muokattu=NOW() WHERE id=:kayttaja
