@@ -15,7 +15,8 @@ SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
                  (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = k.id AND poistettu=false)) as roolit
   FROM kayttaja k
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
- WHERE
+ WHERE k.poistettu = false
+   AND
        -- tarkistetaan käyttöoikeus: pääkäyttäjä näkee kaikki, muuten oman organisaation
        ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo' AND poistettu=false) > 0
         OR
@@ -24,8 +25,7 @@ SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
 			      AND kor.rooli = 'urakoitsijan paakayttaja'
 			      ))
        -- tarkistetaan hakuehto
-       AND
-       (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
+   AND (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
 OFFSET :alku
  LIMIT :maara
 
@@ -33,7 +33,8 @@ OFFSET :alku
 -- Hakee lukumäärän käyttäjälukumäärälle, jonka hae-kayttajat palauttaisi ilman LIMIT/OFFSET määritystä.
 SELECT COUNT(k.id) as lkm
   FROM kayttaja k
- WHERE
+ WHERE k.poistettu = false
+   AND
        -- tarkistetaan käyttöoikeus: pääkäyttäjä näkee kaikki, muuten oman organisaation
        ((SELECT COUNT(*) FROM kayttaja_rooli WHERE kayttaja=:hakija AND rooli='jarjestelmavastuuhenkilo' AND poistettu=false) > 0
         OR
@@ -42,8 +43,7 @@ SELECT COUNT(k.id) as lkm
 			      AND kor.rooli = 'urakoitsijan paakayttaja'
 			      ))
        -- tarkistetaan hakuehto
-       AND
-       (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
+   AND (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
          
 -- name: hae-kayttajan-urakka-roolit
 -- Hakee käyttäjän urakka roolit.

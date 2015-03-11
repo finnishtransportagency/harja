@@ -7,6 +7,7 @@
             [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.yleiset :refer [linkki] :as yleiset]
             [harja.ui.modal :refer [modal-container]]
+            [harja.ui.viesti :refer [viesti-container]]
             
             [harja.tiedot.navigaatio :as nav]
             
@@ -114,5 +115,6 @@
               [kartta/kartta]]]])
          [footer]
          [modal-container]
+         [viesti-container]
          ]))))
 

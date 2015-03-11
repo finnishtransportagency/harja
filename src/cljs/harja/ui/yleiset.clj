@@ -45,7 +45,7 @@
                                                  (= tyyppi :atom)
                                                  `(~(keyword nimi) (reagent.core/atom nil))
 
-                                                 (= tyyppi :reaction)
+                                                 (= tyyppi :reaction) ;; FIXME: tämä ei näe aiempia, tee letissä
                                                  `(~(keyword nimi) (reagent.ratom/reaction ~form))))
                                               tilat))]
                state#))

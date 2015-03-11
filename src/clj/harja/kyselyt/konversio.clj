@@ -49,3 +49,11 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
     kentta (if-let [a (get rivi kentta)]
              (vec (.getArray a))
              [])))
+
+(defn array->set
+  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi."
+  [rivi kentta]
+  (assoc rivi
+    kentta (if-let [a (get rivi kentta)]
+             (into #{} (.getArray a))
+             #{})))

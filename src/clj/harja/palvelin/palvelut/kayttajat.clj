@@ -50,7 +50,7 @@
   
   (let [kayttajat (into []
                         (comp (map konv/organisaatio)
-                              (map #(konv/array->vec % :roolit)))
+                              (map #(konv/array->set % :roolit)))
                         (q/hae-kayttajat db (:id user) hakuehto alku maara))
         lkm (:lkm (first (q/hae-kayttajat-lkm db (:id user) hakuehto)))]
     

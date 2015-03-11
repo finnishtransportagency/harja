@@ -11,6 +11,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.viesti :as viesti]
             [bootstrap :as bs]
 
             [harja.ui.leaflet :refer [leaflet]]
@@ -43,7 +44,7 @@
 (defonce sivu (atom 0))
 (defonce sivuja (atom 0))
 
-(def kayttajalista (atom nil))
+(defonce kayttajalista (atom nil))
 (defonce kayttajien-haku
   (run! (let [haku @haku
               sivu @sivu]
@@ -70,7 +71,7 @@
 
     {:otsikko "Roolit" :nimi :roolit
      :fmt #(do
-             (log "ROOLIT " %)
+             (log "ROOLIT " (pr-str %))
              (str/join ", " (map +rooli->kuvaus+ %)))
      :leveys "40%"}
     ]
@@ -182,7 +183,10 @@
         
         urakanvalvoja-urakat (atom (array-map))
         tilaajan-laadunvalvontakonsultti-urakat (atom (array-map))
-
+        urakan-vastuuhenkilo-urakat (atom (array-map))
+        urakoitsijan-kayttaja-urakat (atom (array-map))
+        urakoitsijan-laatuvastaava-urakat (atom (array-map))
+        
         poista-painettu (atom nil)
 
         ;; tekee muokattavasta urakkalistasta tallenusmuotoisen
@@ -197,23 +201,40 @@
         
         tallenna! (fn []
                     (log "TALLENNETAAN KÄYTTÄJÄÄ")
-                    (k/tallenna-kayttajan-tiedot!
-                     (:id k)
-                     {:roolit @roolit
-                      :urakka-roolit (into []
-                                           (concat
-                                            (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
-                                            (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")))
-                      })
-                    (reset! valittu-kayttaja nil))
+                    (go 
+                      (let [uudet-tiedot
+                            (<! (k/tallenna-kayttajan-tiedot!
+                                              (:id k)
+                                              {:roolit @roolit
+                                               :urakka-roolit
+                                               (into []
+                                                     (concat
+                                                      (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
+                                                      (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")
+                                                      (urakat-tallennus @urakan-vastuuhenkilo-urakat "urakoitsijan urakan vastuuhenkilo")
+                                                      (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
+                                                      (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
+                                               }))]
+                        (log "UUDET TIEDOTHAN OLI " (pr-str uudet-tiedot))
+                        (reset! valittu-kayttaja nil)
+                        (swap! kayttajalista
+                               (fn [kl]
+                                 (mapv #(if (= (:id %) (:id k))
+                                          ;; päivitetään käyttäjän roolit näkymään
+                                          (assoc % :roolit (:roolit uudet-tiedot))
+                                          %) kl)))
+                        (viesti/nayta! "Käyttäjä tallennettu." :success))))
 
         poista! (fn []
-                  (log "POISTETAAN KÄYTTÖOIKEUS")
-                  (if (k/poista-kayttaja! (:id k))
-                    (do (reset! valittu-kayttaja nil)
-                        )))
-                         
-                  
+                  (go 
+                    (if (<! (k/poista-kayttaja! (:id k)))
+                      (do (log "poistettiin")
+                          (reset! valittu-kayttaja nil)
+                          (swap! kayttajalista
+                                 (fn [kl]
+                                   (filterv #(not= (:id %) (:id k)) kl)))
+                          (viesti/nayta! [:span "Käyttäjän " [:b (:etunimi k) " " (:sukunimi k)] " käyttöoikeus poistettu."]))
+                      (viesti/nayta! "Käyttöoikeuden poisto epäonnistui!" :warning))))                  
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
@@ -223,7 +244,15 @@
               (reset! urakanvalvoja-urakat
                       (urakat-muokattava (or (get urakka-roolit "urakanvalvoja") [])))
               (reset! tilaajan-laadunvalvontakonsultti-urakat
-                      (urakat-muokattava (or (get urakka-roolit "tilaajan laadunvalvontakonsultti") []))))))
+                      (urakat-muokattava (or (get urakka-roolit "tilaajan laadunvalvontakonsultti") [])))
+              (reset! urakan-vastuuhenkilo-urakat
+                      (urakat-muokattava (or (get urakka-roolit "urakoitsijan urakan vastuuhenkilo") [])))
+              (reset! urakoitsijan-kayttaja-urakat
+                      (urakat-muokattava (or (get urakka-roolit "urakoitsijan kayttaja") [])))
+              (reset! urakoitsijan-laatuvastaava-urakat
+                      (urakat-muokattava (or (get urakka-roolit "urakoitsijan laatuvastaava") [])))
+              
+              )))
     
                                    
     (r/create-class
@@ -247,7 +276,12 @@
            {}
            "Nimi:" [:span.nimi (:etunimi k) " " (:sukunimi k)]
            "Sähköposti:" [:span.sahkoposti (:sahkoposti k)]
-           "Puhelinnumero:" [:span.puhelin (:puhelin k)]]]
+           "Puhelinnumero:" [:span.puhelin (:puhelin k)]
+           (case (:tyyppi (:organisaatio k))
+             :liikennevirasto ""
+             :hallintayksikko "Hallintayksikkö:"
+             :urakoitsija "Urakoitsija:") (:nimi (:organisaatio k))
+           ]]
      
          [:form.form-horizontal
 
@@ -292,9 +326,16 @@
               ;; urakoitsijan roolit
               [:span
                [roolivalinta "urakoitsijan paakayttaja"]
-               [roolivalinta "urakoitsijan urakan vastuuhenkilo"]
-               [roolivalinta "urakoitsijan kayttaja"]
-               [roolivalinta "urakoitsijan laatuvastaava"]]
+               [roolivalinta "urakoitsijan urakan vastuuhenkilo"
+                ^{:key "urakat"}
+                [urakkalista urakan-vastuuhenkilo-urakat]]
+               
+               [roolivalinta "urakoitsijan kayttaja"
+                ^{:key "urakat"}
+                [urakkalista urakoitsijan-kayttaja-urakat]]
+               [roolivalinta "urakoitsijan laatuvastaava"
+                ^{:key "urakat"}
+                [urakkalista urakoitsijan-laatuvastaava-urakat]]]
               )]]
 
           [:div.form-group
@@ -319,7 +360,7 @@
                                 [:button.btn.btn-danger {:type "button"
                                                          :on-click #(do (.preventDefault %)
                                                                         (modal/piilota!)
-                                                                        (log "POISTETAAN KÄYTTÄJÄ"))}
+                                                                        (poista!))}
                                  "Poista käyttöoikeus"]
                                 ]
                        :sulje #(reset! poista-painettu false)}

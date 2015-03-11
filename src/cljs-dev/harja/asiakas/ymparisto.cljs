@@ -1,10 +1,13 @@
 (ns harja.asiakas.ymparisto
   "Dev ympäristön spesifisiä asioita."
-  (:require [lively.core :as lively]))
+  (:require [lively.core :as lively]
+            [clojure.browser.repl :as repl]))
+
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
   [options]
+  (.log js/console "REPL yhteys: " (repl/connect "http://localhost:9000/repl"))
   (.log js/console "Alustetaan koodin uudelleenlataus")
   (lively/start "/js/harja.js"
                 {:polling-rate 1000
