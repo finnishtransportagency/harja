@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
   
   :dependencies [[org.clojure/clojure "1.7.0-alpha5"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-2913"]
+                 [org.clojure/clojurescript "0.0-3058"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.3.7"]
@@ -66,7 +66,7 @@
                  ]
   
   :dev-dependencies [;; Selain REPL
-                     ;[com.cemerick/piggieback "0.1.3"]
+
                      ;; Testaus
 
 
@@ -151,6 +151,8 @@
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
             "testit" ["with-profiles" "test" "do" "clean," "compile," "test"]
+
+            "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             }
   
   )
