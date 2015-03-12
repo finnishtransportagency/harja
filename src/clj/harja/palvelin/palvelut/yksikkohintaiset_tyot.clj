@@ -30,4 +30,7 @@
   (log/info "hae-urakan-yksikkohintaiset-tyot" urakka-id)
   ;; FIXME: oikeus checki tähän tai queryyn urakkaroolin kautta
   (into []
+        (map #(assoc % 
+                     :maara (float (:maara %)) 
+                     :yksikkohinta (float (:yksikkohinta %))))
         (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))

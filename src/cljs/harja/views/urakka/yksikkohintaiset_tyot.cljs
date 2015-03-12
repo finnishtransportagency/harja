@@ -31,10 +31,6 @@
 (def +hoitokauden-loppukk-indeksi+ "8")
 (def +hoitokauden-loppupv-indeksi+ "30")
 
-(def +hoitokauden-alkupvm+ "1.10.yyyy")
-
-(def +hoitokauden-loppupvm+ "30.09.yyyy")
-
 (def valittu-hoitokausi "Hoitokausi" (atom nil))
 
 (defn valitse-hoitokausi! [hk]
@@ -55,6 +51,7 @@
    kolmostason-tpt nil
    nelostason-tpt nil
    urakan-hoitokaudet nil
+   tyorivit nil 
    ]
   
   (do
@@ -63,12 +60,30 @@
             (reset! nelostason-tpt (vec (get toimenpiteet-ja-tehtavat 4)))
             (reset! urakan-hoitokaudet (hoitokaudet (:alkupvm ur) (:loppupvm ur)))))
     
+    ;; vain valitun hoitokauden tyot talteen
+    (run! (let [tehtavien-rivit (group-by :tehtava (filter (fn [t] 
+                                                             (or
+                                                               (pvm/sama-pvm? (:alkupvm t) (:alkupvm @valittu-hoitokausi))
+                                                               (pvm/sama-pvm? (:loppupvm t) (:loppupvm @valittu-hoitokausi)))
+                                                             ) @tyot))]
+            
+            (reset! tyorivit
+                    (mapv (fn [[_ tehtavan-rivit]]
+                            (let [pohja (first tehtavan-rivit)]
+                              (merge pohja
+                                     (zipmap (map #(if (= (.getYear (:alkupvm @valittu-hoitokausi))
+                                                          (.getYear (:alkupvm %)))
+                                                     :maara-alku :maara-loppu) tehtavan-rivit)
+                                             (map :maara tehtavan-rivit))
+                                     
+                                     {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
+                                     ))) tehtavien-rivit))))
     ;; varmista järkevät oletusvalinnat
     (if (nil? @valittu-sopimusnumero)
-          (valitse-sopimusnumero! (first (:sopimusnumerot ur))))
+      (valitse-sopimusnumero! (first (:sopimusnumerot ur))))
     (if (nil? @valittu-hoitokausi)
-          (valitse-hoitokausi! (first @urakan-hoitokaudet)))
-
+      (valitse-hoitokausi! (first @urakan-hoitokaudet)))
+    
     [:div.yksikkohintaiset-tyot 
      [:div.alasvetovalikot
       [:div.label-ja-alasveto 
@@ -92,23 +107,22 @@
         @urakan-hoitokaudet
         ]]]
      
-          [grid/grid
-           {:otsikko "Yksikköhintaiset työt"
-            :tyhja (if (nil? nelostason-tpt) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-            :tallenna #(tallenna-tyot %)
-            :tunniste :id
-            :voi-poistaa? false}
-           
-           ;; sarakkeet
-           [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string  :leveys "30%"}
-            
-            {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @valittu-hoitokausi))) :nimi :maara-alku :tyyppi :numero :leveys "15%"}
-            {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-loppu :tyyppi :numero :leveys "15%"}
-            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "5%"}
-            {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi numero :leveys "10%"}
-            {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "10%"}
-            {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :string :leveys "15%"}
-            ]
-           @tyot
-           ]
-          ]))
+     [grid/grid
+      {:otsikko "Yksikköhintaiset työt"
+       :tyhja (if (nil? nelostason-tpt) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+       :tallenna #(tallenna-tyot %)
+       :tunniste :tehtava
+       :voi-poistaa? false}
+      
+      ;; sarakkeet
+      [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string  :leveys "25%"}
+       
+       {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @valittu-hoitokausi))) :nimi :maara-alku :tyyppi :numero :leveys "15%"}
+       {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-loppu :tyyppi :numero :leveys "15%"}
+       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
+       {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi numero :leveys "15%"}
+       {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(str (.toFixed % 2) " \u20AC")}
+       ]
+      @tyorivit
+      ]
+     ]))

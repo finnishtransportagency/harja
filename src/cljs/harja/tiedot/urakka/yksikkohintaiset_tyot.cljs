@@ -9,4 +9,5 @@
 
 
 (defn hae-urakan-yksikkohintaiset-tyot [urakka-id]
-  (k/post! :yksikkohintaiset-tyot urakka-id))
+  (k/post! :yksikkohintaiset-tyot urakka-id
+           (map #(pvm/muunna-aika % :alkupvm :loppupvm))))
