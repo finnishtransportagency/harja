@@ -46,6 +46,7 @@
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
+                 [binaryage/devtools "0.1.1"] ;; cljs data chrome inspectoriin
                  
                  [cljs-ajax "0.3.10"]
                  [lively "0.2.0"] 
