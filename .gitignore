@@ -10,3 +10,4 @@ dev-resources/js/out/
 logs/
 /resources/gitlog.edn
 .lein-failures
+figwheel_server.log
