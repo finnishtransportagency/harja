@@ -49,7 +49,8 @@
                  [binaryage/devtools "0.1.1"] ;; cljs data chrome inspectoriin
                  
                  [cljs-ajax "0.3.10"]
-                 [lively "0.2.0"] 
+                 ;;[lively "0.2.0"]
+                 [figwheel "0.2.5-SNAPSHOT"]
 
                  [reagent "0.5.0-alpha3" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.12.2-7"]
@@ -84,6 +85,7 @@
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
+            [lein-figwheel "0.2.5-SNAPSHOT"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
@@ -144,6 +146,10 @@
                  :init (harja.palvelin.main/-main)
                  :port 4005}
 
+  ;; Clientin reload ja REPL
+  :figwheel {:server-port 3449
+
+             }
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]
 

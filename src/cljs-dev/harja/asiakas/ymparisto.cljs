@@ -1,21 +1,25 @@
 (ns harja.asiakas.ymparisto
   "Dev ympäristön spesifisiä asioita."
-  (:require [lively.core :as lively]
-            [clojure.browser.repl :as repl]))
+  (:require
+   ;;[lively.core :as lively]
+   [figwheel.client :as fw]))
 
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
   [options]
-  (.log js/console "REPL yhteys: " (repl/connect "http://localhost:9000/repl"))
   (.log js/console "Alustetaan koodin uudelleenlataus")
-  (lively/start "/js/harja.js"
-                {:polling-rate 1000
-                 :on-reload (fn []
-                              (.log js/console "Koodia ladattu uudelleen.")
-                              (when-let [on-reload (:on-reload options)]
-                                (on-reload)))})
-
+  ;;(lively/start "/js/harja.js"
+  ;;              {:polling-rate 1000
+  ;;               :on-reload (fn []
+  ;;                           (.log js/console "Koodia ladattu uudelleen.")
+  ;;                            (when-let [on-reload (:on-reload options)]
+  ;;                              (on-reload)))})
+  (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
+             :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
+                          (when-let [on-reload (:on-reload options)]
+                            (on-reload)))})
+  
   (.log js/console "Alustetaan less.js uudelleenlataus")
   (let [less (aget js/window "less")
         logger (aget less "logger")]
