@@ -4,6 +4,7 @@
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]))
 
 (declare hallintayksikon-urakat
@@ -31,25 +32,33 @@
 
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
-
+        
         ;; Jos alueurakan alue on olemassa, käytetään sitä alueena
         (map #(if-let [alueurakka (:alueurakan_alue %)]
                 (-> %
                     (dissoc :alueurakan_alue)
                     (assoc  :alue alueurakka))
                 (dissoc % :alueurakan_alue)))
-              
+        
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
+        
+        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja 
+        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
+        (map #(update-in % [:sopimukset] (fn [jdbc-array]
+                                           (if (nil? jdbc-array)
+                                             {}
+                                             (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
+                                                                    [(Long/parseLong id) sampoid]
+                                                                    )) (.getArray jdbc-array)))))))
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
         (map #(assoc % :tyyppi (keyword (:tyyppi %))))
-              
+        
         (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))
-        (map #(konv/array->vec % :sopimusnumerot))))
+                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?

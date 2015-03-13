@@ -5,7 +5,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        u.alkupvm, u.loppupvm, u.tyyppi,
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
-       (SELECT array_agg(sampoid) FROM sopimus WHERE urakka = u.id) as sopimusnumerot,
+       (SELECT array_agg(concat(id, '=', sampoid)) FROM sopimus s WHERE urakka = u.id)  as sopimukset,
        ST_Simplify(au.alue, 50) as alueurakan_alue
   FROM urakka u
        LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
@@ -14,14 +14,13 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
  WHERE hallintayksikko = :hallintayksikko
 
-
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        u.alkupvm, u.loppupvm, u.tyyppi,
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
-       (SELECT array_agg(sampoid) FROM sopimus WHERE urakka = u.id) as sopimusnumerot,
+       (SELECT array_agg(concat(id, '=', sampoid)) FROM sopimus s WHERE urakka = u.id)  as sopimukset,
        ST_Simplify(au.alue, 50) as alueurakan_alue
   FROM urakka u
        LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id

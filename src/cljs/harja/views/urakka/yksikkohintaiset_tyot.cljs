@@ -62,9 +62,11 @@
     
     ;; vain valitun hoitokauden tyot talteen
     (run! (let [tehtavien-rivit (group-by :tehtava (filter (fn [t] 
-                                                             (or
-                                                               (pvm/sama-pvm? (:alkupvm t) (:alkupvm @valittu-hoitokausi))
-                                                               (pvm/sama-pvm? (:loppupvm t) (:loppupvm @valittu-hoitokausi)))
+                                                             (and 
+                                                               (= (:sopimus t) (first @valittu-sopimusnumero))
+                                                               (or
+                                                                 (pvm/sama-pvm? (:alkupvm t) (:alkupvm @valittu-hoitokausi))
+                                                                 (pvm/sama-pvm? (:loppupvm t) (:loppupvm @valittu-hoitokausi))))
                                                              ) @tyot))]
             
             (reset! tyorivit
@@ -80,7 +82,7 @@
                                      ))) tehtavien-rivit))))
     ;; varmista järkevät oletusvalinnat
     (if (nil? @valittu-sopimusnumero)
-      (valitse-sopimusnumero! (first (:sopimusnumerot ur))))
+      (valitse-sopimusnumero! (first (:sopimukset ur))))
     (if (nil? @valittu-hoitokausi)
       (valitse-hoitokausi! (first @urakan-hoitokaudet)))
     
@@ -89,11 +91,11 @@
       [:div.label-ja-alasveto 
        [:span.alasvedon-otsikko "Sopimusnumero"]
        [alasvetovalinta {:valinta @valittu-sopimusnumero
-                         :format-fn str
+                         :format-fn second
                          :valitse-fn valitse-sopimusnumero!
                          :class "alasveto"
                          }
-        (:sopimusnumerot ur)
+        (:sopimukset ur)
         ]]
       [:div.label-ja-alasveto
        [:span.alasvedon-otsikko "Hoitokausi"]
@@ -110,7 +112,7 @@
      [grid/grid
       {:otsikko "Yksikköhintaiset työt"
        :tyhja (if (nil? nelostason-tpt) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-       :tallenna #(tallenna-tyot %)
+       :tallenna #(@valittu-sopimusnumero @valittu-hoitokausi tyorivit %)
        :tunniste :tehtava
        :voi-poistaa? false}
       
@@ -120,9 +122,13 @@
        {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @valittu-hoitokausi))) :nimi :maara-alku :tyyppi :numero :leveys "15%"}
        {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-loppu :tyyppi :numero :leveys "15%"}
        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
-       {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi numero :leveys "15%"}
+       {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
        {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(str (.toFixed % 2) " \u20AC")}
        ]
       @tyorivit
       ]
      ]))
+
+(defn tallenna-tyot [sopimusnumero hoitokausi tyot uudet-tyot]
+  ())
+  
