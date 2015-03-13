@@ -5,3 +5,13 @@ SELECT yt.alkupvm, yt.loppupvm, yt.maara, yt.yksikko, yt.yksikkohinta, yt.tehtav
   FROM yksikkohintainen_tyo yt
 	   LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id
  WHERE urakka = :urakka
+
+ -- name: paivita-urakan-yksikkohintainen-tyo!
+-- Päivittää urakan hoitokauden yksikkohintaiset tyot
+UPDATE yksikkohintainen_tyo
+   SET maara =:maara, yksikko =:yksikko, yksikkohinta =:yksikkohinta
+ WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava 
+ 	   AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+
+ 	   --SET alkupvm =:alkupvm, loppupvm =:loppupvm, maara =:maara, yksikko =:yksikko,
+   --yksikkohinta =:yksikkohinta, tehtava =:tehtava, urakka =:urakka, sopimus =:sopimus,

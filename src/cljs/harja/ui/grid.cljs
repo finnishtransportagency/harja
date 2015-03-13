@@ -73,6 +73,7 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :otsikko         ihmiselle näytettävä otsikko
   :tunniste        rivin tunnistava kenttä, oletuksena :id
   :voi-poistaa?    voiko rivin poistaa
+  :voi-lisata?     voiko rivin lisätä (boolean)
   :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
@@ -89,7 +90,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? rivi-klikattu
+  [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
            muokkaa-footer muokkaa-aina muutos
            uusi-rivi]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
@@ -181,7 +182,7 @@ Optiot on mappi optioita:
           (aloita-muokkaus! (nth new-argv 3))))
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema tiedot]
+      (fn [{:keys [otsikko tallenna voi-poistaa? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema tiedot]
         (let [muokataan (not (nil? @muokatut))]
           [:div.panel.panel-default.grid
            [:div.panel-heading
@@ -202,9 +203,11 @@ Optiot on mappi optioita:
                                 (.preventDefault %)
                                 (peru!))}
                 (ikonit/peru) " Kumoa"]
+               
+               (when-not (= false voi-lisata?)
                [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                           (lisaa-rivi! ohjaus {}))}
-                (ikonit/plus-sign) " Lisää rivi"]
+                (ikonit/plus-sign) " Lisää rivi"])
 
                (when-not muokkaa-aina
                  [:button.btn.btn-primary.btn-sm.grid-tallenna
