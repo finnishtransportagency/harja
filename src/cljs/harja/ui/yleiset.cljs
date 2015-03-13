@@ -18,9 +18,6 @@
                                      ))
                              true))
 
-(tarkkaile! "korkeus" korkeus)
-(tarkkaile! "leveys" leveys)
-
 ;;(defonce sisallon-koon-kuuntelija (do
 ;;                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
 ;;                                    true))
