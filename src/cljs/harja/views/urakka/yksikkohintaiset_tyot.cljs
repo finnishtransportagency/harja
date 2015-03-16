@@ -45,16 +45,20 @@
           (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
 
 (defn tallenna-tyot [ur sopimusnumero hoitokausi tyot vanhat-tyot uudet-tyot]
-  (log "tallenna-tyot" (:id ur) sopimusnumero hoitokausi tyot vanhat-tyot uudet-tyot)
-  (log "tallenna-tyot uudet työt" uudet-tyot)
-  ;;(when-not (= vanhat-tyot uudet-tyot)
+  (log "tallenna-tyot enter, uudet työt" uudet-tyot)
     (go (let [muuttuneet
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   uudet-tyot)
-            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero hoitokausi uudet-tyot))]
+            
+            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero hoitokausi muuttuneet))]
+        (log "res" res)
         ;;(reset! tyot res)
         true)));;)
+
+(defn luo-tyhja-tyo [tp ur hk]
+  {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :urakka (:id ur) :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
+
 
 (deftk yksikkohintaiset-tyot [ur]
   [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
@@ -78,27 +82,28 @@
                                                                (or
                                                                  (pvm/sama-pvm? (:alkupvm t) (:alkupvm @valittu-hoitokausi))
                                                                  (pvm/sama-pvm? (:loppupvm t) (:loppupvm @valittu-hoitokausi))))
-                                                             ) @tyot))]
+                                                             ) @tyot))
+                kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
+                tyhjat-tyot  (map #(luo-tyhja-tyo % ur @valittu-hoitokausi) (filter (fn [tp]
+                                                                  (not (kirjatut-tehtavat (:id tp)))) @nelostason-tpt))]
             
             (reset! tyorivit
-                    (mapv (fn [[_ tehtavan-rivit]]
-                            (let [pohja (first tehtavan-rivit)]
-                              (merge pohja
-                                     (zipmap (map #(if (= (.getYear (:alkupvm @valittu-hoitokausi))
-                                                          (.getYear (:alkupvm %)))
-                                                     :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
-                                             (map :maara tehtavan-rivit))
-                                     
-                                     {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
-                                     ))) tehtavien-rivit))))
+                           (concat (mapv (fn [[_ tehtavan-rivit]]
+                                                       (let [pohja (first tehtavan-rivit)]
+                                                         (merge pohja
+                                                                (zipmap (map #(if (= (.getYear (:alkupvm @valittu-hoitokausi))
+                                                                                     (.getYear (:alkupvm %)))
+                                                                                :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
+                                                                        (map :maara tehtavan-rivit))
+                                                                
+                                                                {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
+                                                                ))) tehtavien-rivit) tyhjat-tyot))))
     ;; varmista järkevät oletusvalinnat
     (if (nil? @valittu-sopimusnumero)
       (valitse-sopimusnumero! (first (:sopimukset ur))))
     (if (nil? @valittu-hoitokausi)
       (valitse-hoitokausi! (first @urakan-hoitokaudet)))
     
-    (log "valittu-sopimusnumero" valittu-sopimusnumero)
-    (log "valittu-hoitokausi" valittu-hoitokausi)
     [:div.yksikkohintaiset-tyot 
      [:div.alasvetovalikot
       [:div.label-ja-alasveto 
@@ -139,7 +144,7 @@
        {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
        {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
-       {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(str (.toFixed % 2) " \u20AC")}
+       {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]
       @tyorivit
       ]
