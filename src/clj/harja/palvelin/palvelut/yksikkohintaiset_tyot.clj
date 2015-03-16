@@ -54,7 +54,7 @@
                                       
                                       maara-kkt-1-9 (:maara-kkt-10-12 tyo)
                                       alkupvm-kkt-1-9 (:alkupvm tyo) ;;TODO: tähän loppuupvm:n vuosi ja 1.1.yyyy
-                                      loppupvm-kkt-1-9 (:loppupvm tyo) 
+                                      loppupvm-kkt-1-9 (:loppupvm tyo)]
                                   (log/info "palvelu: tyo" tyo)
                                                                 ;; hanskaa nämä kahteen eri riviin 
                                                                 ;: :maara-kkt-10-12  :maara-kkt-10-12
@@ -62,4 +62,4 @@
                                                               (q/paivita-urakan-yksikkohintainen-tyo! maara-kkt-10-12, yksikko, yksikkohinta,
                                                                 ;;                                                   urakka-id, sopimus, tehtava, hoitokausi-alkupvm, hoitokausi-loppupvm)
                                                                   (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
-                                  )))
+                                  ))))
