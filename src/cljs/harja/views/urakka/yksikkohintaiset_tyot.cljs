@@ -36,9 +36,9 @@
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 
-(defn hoitokaudet [alkupvm loppupvm]
-  (let [ensimmainen-vuosi (.getYear alkupvm)
-        viimeinen-vuosi (.getYear loppupvm)]
+(defn hoitokaudet [ur]
+  (let [ensimmainen-vuosi (.getYear (:alkupvm ur))
+        viimeinen-vuosi (.getYear (:loppupvm ur))]
     (mapv (fn [vuosi]
               {:alkupvm (pvm/luo-pvm vuosi +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
                :loppupvm (pvm/luo-pvm (inc vuosi) +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
@@ -69,7 +69,7 @@
     (run! (let [toimenpiteet-ja-tehtavat (group-by :taso @toimenpiteet-ja-tehtavat)]
             (reset! kolmostason-tpt (vec (get toimenpiteet-ja-tehtavat 3)))
             (reset! nelostason-tpt (vec (get toimenpiteet-ja-tehtavat 4)))
-            (reset! urakan-hoitokaudet (hoitokaudet (:alkupvm ur) (:loppupvm ur)))))
+            (reset! urakan-hoitokaudet (hoitokaudet ur))))
     
     ;; vain valitun hoitokauden tyot talteen
     (run! (let [tehtavien-rivit (group-by :tehtava (filter (fn [t]

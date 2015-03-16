@@ -15,3 +15,10 @@ UPDATE yksikkohintainen_tyo
 
  	   --SET alkupvm =:alkupvm, loppupvm =:loppupvm, maara =:maara, yksikko =:yksikko,
    --yksikkohinta =:yksikkohinta, tehtava =:tehtava, urakka =:urakka, sopimus =:sopimus,
+
+-- name: lisaa-urakan-yksikkohintainen-tyo
+INSERT INTO yksikkohintainen_tyo 
+            (alkupvm, loppupvm, maara, 
+  		     yksikko, yksikkohinta, tehtava, urakka, sopimus
+	 VALUES (:alkupvm, :loppupvm, :maara,
+  			 :yksikko, :yksikkohinta, :tehtava, :urakka, :sopimus

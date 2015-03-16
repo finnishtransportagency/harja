@@ -42,7 +42,7 @@
 (defn tallenna-urakan-yksikkohintaiset-tyot 
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot"
   [db user {:keys [urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm tyot] :as tiedot}] ;; tyot
-  ;;(assert (vector? tyot) "tyot tulee olla vektori")
+  (assert (vector? tyot) "tyot tulee olla vektori")
   (log/info "tallenna-urakan-yksikkohintaiset-tyot palvelu" urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm)
   (log/info "palvelu: työt" tyot)
   (let [nykyiset-arvot []]
@@ -59,7 +59,7 @@
                                                                 ;; hanskaa nämä kahteen eri riviin 
                                                                 ;: :maara-kkt-10-12  :maara-kkt-10-12
                                                                 ;; :maara-kkt-1-19 :maara-kkt-1-19
-                                                              (q/paivita-urakan-yksikkohintainen-tyo! maara-kkt-10-12, yksikko, yksikkohinta,
+                                                              ;;(q/paivita-urakan-yksikkohintainen-tyo! maara-kkt-10-12, yksikko, yksikkohinta,
                                                                 ;;                                                   urakka-id, sopimus, tehtava, hoitokausi-alkupvm, hoitokausi-loppupvm)
                                                                   (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
-                                  ))))
+                                  )))
