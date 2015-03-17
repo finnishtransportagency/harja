@@ -52,12 +52,12 @@
                   uudet-tyot)
             
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero hoitokausi muuttuneet))]
-        (log "res" res)
-        ;;(reset! tyot res)
+        (reset! tyot (map #(pvm/muunna-aika % :alkupvm :loppupvm) res))
         true)));;)
 
 (defn luo-tyhja-tyo [tp ur hk]
-  {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :urakka (:id ur) :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
+  {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :urakka (:id ur) 
+   :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
 
 
 (deftk yksikkohintaiset-tyot [ur]
