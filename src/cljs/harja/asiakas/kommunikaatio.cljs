@@ -5,13 +5,19 @@
             [harja.asiakas.tapahtumat :as tapahtumat]))
 
 
+(defn polku []
+  ;; FIXME: tämä on vähän ruma
+  (if (= "testiextranet.liikennevirasto.fi" (.-host js/location))
+    "/harja/_/"
+    "/_/"))
+    
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (put! chan (if transducer (into [] transducer vastaus) vastaus))
              (close! chan))]
-    (ajax-request {:uri (str "/_/" (name palvelu))
+    (ajax-request {:uri (str (polku) (name palvelu))
                  :method metodi
                  :params parametrit
                  :format (transit-request-format)
