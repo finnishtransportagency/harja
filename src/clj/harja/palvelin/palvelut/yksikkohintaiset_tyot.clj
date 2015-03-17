@@ -50,10 +50,12 @@
   (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot db user urakka-id)]
     (jdbc/with-db-transaction [c db]
                               (doseq [tyo tyot]
-                                (let [tyot-nyk-hoitokausi (filter #(or (= (:alkupvm %) hoitokausi-alkupvm)
-                                                                       (= (:loppupvm %) hoitokausi-loppupvm)) 
+                                (let [valitun-hoitokauden-ja-sopimusnumeron-tyot (filter #(and
+                                                                                            (= (:sopimus %) sopimusnumero) 
+                                                                                            (or (= (:alkupvm %) hoitokausi-alkupvm)
+                                                                                                (= (:loppupvm %) hoitokausi-loppupvm))) 
                                                                   nykyiset-arvot)
-                                      tyot-kannassa (into #{}  (map :tehtava tyot-nyk-hoitokausi))]
+                                      tyot-kannassa (into #{}  (map :tehtava valitun-hoitokauden-ja-sopimusnumeron-tyot))]
                                   
                                   (if (not (tyot-kannassa (:tehtava tyo)))
                                     ;; insert

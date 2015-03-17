@@ -19,13 +19,6 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
 
-
-(def valittu-sopimusnumero "Sopimusnumero" (atom nil))
-
-(defn valitse-sopimusnumero! [sn]
-  (reset! valittu-sopimusnumero sn)
-  )
-
 (def +hoitokauden-alkukk-indeksi+ "9")
 (def +hoitokauden-alkupv-indeksi+ "1")
 (def +hoitokauden-loppukk-indeksi+ "8")
@@ -40,13 +33,13 @@
   (let [ensimmainen-vuosi (.getYear (:alkupvm ur))
         viimeinen-vuosi (.getYear (:loppupvm ur))]
     (mapv (fn [vuosi]
-              {:alkupvm (pvm/luo-pvm vuosi +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
-               :loppupvm (pvm/luo-pvm (inc vuosi) +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
+            {:alkupvm (pvm/luo-pvm vuosi +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
+             :loppupvm (pvm/luo-pvm (inc vuosi) +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
           (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
 
 (defn tallenna-tyot [ur sopimusnumero hoitokausi tyot vanhat-tyot uudet-tyot]
   (log "tallenna-tyot enter, uudet työt" uudet-tyot)
-    (go (let [muuttuneet
+  (go (let [muuttuneet
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   uudet-tyot)
@@ -66,6 +59,7 @@
    kolmostason-tpt nil
    nelostason-tpt nil
    urakan-hoitokaudet nil
+   valittu-sopimusnumero (first (:sopimukset ur))
    tyorivit nil 
    ]
   
@@ -85,24 +79,27 @@
                                                              ) @tyot))
                 kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
                 tyhjat-tyot  (map #(luo-tyhja-tyo % ur @valittu-hoitokausi) (filter (fn [tp]
-                                                                  (not (kirjatut-tehtavat (:id tp)))) @nelostason-tpt))]
+                                                                                      (not (kirjatut-tehtavat (:id tp)))) @nelostason-tpt))]
             
             (reset! tyorivit
-                           (concat (mapv (fn [[_ tehtavan-rivit]]
-                                                       (let [pohja (first tehtavan-rivit)]
-                                                         (merge pohja
-                                                                (zipmap (map #(if (= (.getYear (:alkupvm @valittu-hoitokausi))
-                                                                                     (.getYear (:alkupvm %)))
-                                                                                :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
-                                                                        (map :maara tehtavan-rivit))
-                                                                
-                                                                {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
-                                                                ))) tehtavien-rivit) tyhjat-tyot))))
+                    (vec (concat (mapv (fn [[_ tehtavan-rivit]]
+                                         (let [pohja (first tehtavan-rivit)]
+                                           (merge pohja
+                                                  (zipmap (map #(if (= (.getYear (:alkupvm @valittu-hoitokausi))
+                                                                       (.getYear (:alkupvm %)))
+                                                                  :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
+                                                          (map :maara tehtavan-rivit))
+                                                  
+                                                  {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
+                                                  ))) tehtavien-rivit) tyhjat-tyot)))))
     ;; varmista järkevät oletusvalinnat
-    (if (nil? @valittu-sopimusnumero)
-      (valitse-sopimusnumero! (first (:sopimukset ur))))
+    ;;(if (nil? @valittu-sopimusnumero)
+    ;;(valitse-sopimusnumero! (first (:sopimukset ur))))
     (if (nil? @valittu-hoitokausi)
       (valitse-hoitokausi! (first @urakan-hoitokaudet)))
+    
+    (log "urakan-hoitokaudet" urakan-hoitokaudet)
+    (log "valittu-sopimusnumero" valittu-sopimusnumero)
     
     [:div.yksikkohintaiset-tyot 
      [:div.alasvetovalikot
@@ -110,7 +107,7 @@
        [:span.alasvedon-otsikko "Sopimusnumero"]
        [alasvetovalinta {:valinta @valittu-sopimusnumero
                          :format-fn second
-                         :valitse-fn valitse-sopimusnumero!
+                         :valitse-fn #(reset! valittu-sopimusnumero %)
                          :class "alasveto"
                          }
         (:sopimukset ur)
@@ -150,4 +147,3 @@
      ]))
 
 
-  
