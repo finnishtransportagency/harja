@@ -14,7 +14,7 @@ UPDATE yksikkohintainen_tyo
  WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava 
  	   AND alkupvm =:alkupvm AND loppupvm =:loppupvm 
 
--- name: lisaa-urakan-yksikkohintainen-tyo
+-- name: lisaa-urakan-yksikkohintainen-tyo<!
 INSERT INTO yksikkohintainen_tyo 
             (maara, yksikko, yksikkohinta, 
              urakka, sopimus, tehtava,

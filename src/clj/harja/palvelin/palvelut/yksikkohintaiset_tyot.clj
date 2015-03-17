@@ -57,16 +57,13 @@
                                   
                                   (if (not (tyot-kannassa (:tehtava tyo)))
                                     ;; insert
-                                    (comment 
-                                      (log/info "insert ei ole vielä implementoitu " tyo)
-                                    (q/lisaa-urakan-yksikkohintainen-tyo c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                                         urakka-id sopimusnumero (:tehtava tyo)
-                                                                         (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                         (java.sql.Date. (.getTime (:loppupvm tyo)))))
+                                    (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                                           urakka-id sopimusnumero (:tehtava tyo)
+                                                                           (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                                           (java.sql.Date. (.getTime (:loppupvm tyo))))
                                     ;;update
-                                    (do 
-                                      (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                                              urakka-id sopimusnumero (:tehtava tyo)
-                                                                              (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                              (java.sql.Date. (.getTime (:loppupvm tyo))))))))
+                                    (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                                            urakka-id sopimusnumero (:tehtava tyo)
+                                                                            (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                                            (java.sql.Date. (.getTime (:loppupvm tyo)))))))
                               (hae-urakan-yksikkohintaiset-tyot c user urakka-id))))
