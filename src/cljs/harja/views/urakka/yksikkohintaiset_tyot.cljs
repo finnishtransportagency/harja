@@ -141,7 +141,7 @@
       [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string  :leveys "25%"}
        
        {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
-       {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
+       {:otsikko (str "Määrä 1-9/"  (.getYear (:loppupvm @valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
        {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
        {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}

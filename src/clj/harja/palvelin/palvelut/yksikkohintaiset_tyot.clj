@@ -37,8 +37,8 @@
   ;; FIXME: oikeus checki tähän tai queryyn urakkaroolin kautta
   (into []
         (map #(assoc % 
-                     :maara (float (:maara %)) 
-                     :yksikkohinta (float (:yksikkohinta %))))
+                     :maara (if (:maara %) (float (:maara %))) 
+                     :yksikkohinta (if (:yksikkohinta %) (float (:yksikkohinta %)))))
         (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot 
@@ -57,12 +57,12 @@
                                   
                                   (if (not (tyot-kannassa (:tehtava tyo)))
                                     ;; insert
-                                    (do 
-                                      (log/info "insert this " tyo))
-                                    ;;(q/lisaa-urakan-yksikkohintainen-tyo c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                    ;;                                                                     urakka-id sopimusnumero (:tehtava tyo)
-                                    ;;                                                                   (java.sql.Date. (.getTime (:alkupvm tyo))))
-                                    ;;                                     (java.sql.Date. (.getTime (:loppupvm tyo)))
+                                    (comment 
+                                      (log/info "insert ei ole vielä implementoitu " tyo)
+                                    (q/lisaa-urakan-yksikkohintainen-tyo c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                                         urakka-id sopimusnumero (:tehtava tyo)
+                                                                         (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                                         (java.sql.Date. (.getTime (:loppupvm tyo)))))
                                     ;;update
                                     (do 
                                       (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
