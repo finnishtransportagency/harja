@@ -92,7 +92,7 @@
        {:otsikko (str "Määrä 1-9/"  (.getYear (:loppupvm @suunnittelu/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
        {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
-       {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
+       {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]
       @tyorivit
       ]
