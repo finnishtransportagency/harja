@@ -4,9 +4,10 @@
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+            [harja.tiedot.urakka.suunnittelu :as suunnittelu]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.views.urakka.suunnittelu :as suunnittelu]
+            
             
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]

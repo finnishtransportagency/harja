@@ -19,9 +19,6 @@
   )
 
 (defn hoitokauden-vuodet [tyot hoitokausi]
-  ;; pvm:t kohdalleen
-  (log "hoitokauden-vuodet tyot" tyot)
-  (log "hoitokauden-vuodet hoitokausi" hoitokausi)
   ;; luodaan yhdestä rivistä kaksi riviä, hoitokauden molempien vuosien osat
   (mapcat (let [alkupvm-10-12 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:alkupvm hoitokausi))) 9 1)) ;;1.10.yyyy
                 loppupvm-10-12 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:alkupvm hoitokausi))) 11 31)) ;;31.12.yyyy
