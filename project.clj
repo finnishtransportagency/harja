@@ -42,6 +42,8 @@
                  [org.geotools/gt-epsg-wkt "12.2"] ;; EPSG koordinaatistot
                  [org.geotools/gt-swing "12.2"] ;; just for experimentation, remove when no longer needed
 
+                 ;; XML zipper
+                 [org.clojure/data.zip "0.1.1"]
                                  
                  ;; Asiakas
                  [spyscope "0.1.5"]
@@ -52,7 +54,7 @@
                  ;;[lively "0.2.0"]
                  [figwheel "0.2.5-SNAPSHOT"]
 
-                 [reagent "0.5.0-alpha3" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.12.2-7"]
                  
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
