@@ -64,13 +64,15 @@
               idx @valittu-idx]
           (if (= :haetaan nykyiset-tulokset)
             [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
-            (map-indexed (fn [i t]
-                           ^{:key (hash t)}
-                           [:li {:class (when (= i idx) "korostettu") :role "presentation"}
-                            [linkki ((or nayta str) t) #(do (reset! data t)
-                                                            (reset! teksti ((or nayta str) t))
-                                                            (reset! tulokset nil))]])
-                         nykyiset-tulokset)))]])))
+            (if (empty? nykyiset-tulokset)
+              [:span.ei-hakutuloksia "Ei tuloksia"]
+              (map-indexed (fn [i t]
+                             ^{:key (hash t)}
+                             [:li {:class (when (= i idx) "korostettu") :role "presentation"}
+                              [linkki ((or nayta str) t) #(do (reset! data t)
+                                                              (reset! teksti ((or nayta str) t))
+                                                              (reset! tulokset nil))]])
+                           nykyiset-tulokset))))]])))
 
                 
                              
