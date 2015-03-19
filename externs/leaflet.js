@@ -150,3 +150,9 @@ L.Polygon = function(t,e) {};
  * @extends {L.FeatureGroup}
  */
 L.MultiPolygon = function(p,e) {};
+
+/**
+ * @param {string} eventType
+ * @param {function({{containerPoint: L.Point}})} callback
+ */ 
+L.MultiPolygon.prototype.on = function(eventType, callback) {};
