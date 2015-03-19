@@ -173,11 +173,12 @@
             (let [shape (or (geometries-map item)
                             (doto (create-shape geom)
                               (.on "click" #(on-select item))
-                              (.on "mouseover" #(reagent/set-state component
+                              (.on "mouseover" #(do (log "EVENTTI ON " %)
+                                                    (reagent/set-state component
                                                                    {:hover (assoc item
                                                                              :x (-> % .-containerPoint .-x)
                                                                              :y (-> % .-containerPoint .-y))
-                                                                             }))
+                                                                             })))
                               (.on "mouseout" #(reagent/set-state component {:hover nil}))
                               (.addTo leaflet)))]
               ;; If geometry has ::fit-bounds value true, then zoom to this

@@ -103,6 +103,13 @@ L.divIcon = function(options){};
  */
 L.Path = function() {};
 
+
+/**
+ * @param {string} eventType
+ * @param {function({{containerPoint: L.Point}})} callback
+ */ 
+L.Path.prototype.on = function(eventType, callback);
+    
 /**
  * @return {L.LatLng}
  */
