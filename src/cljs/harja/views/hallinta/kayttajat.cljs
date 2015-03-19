@@ -98,21 +98,28 @@
         (swap! nav/tarvitsen-karttaa
                (fn [tk]
                  (disj tk avain))))
+
+      :component-will-update
+      (fn [this _]
+        (if (not (@nav/tarvitsen-karttaa avain))
+          (when-let [kk @kuuntelija]
+            (log "en tarvitse karttaa, mutta minulla on kuuntelija... poistetaan!")
+            (kk)
+            (reset! kuuntelija nil))))
       
       :reagent-render
       (fn [g]
-        (let [tk @nav/tarvitsen-karttaa]
+        (let [tk @nav/tarvitsen-karttaa
+              kk @kuuntelija]
+         
           [:div
            [:button.btn.btn-default
-            {:disabled (if (and (not (empty? tk))
-                                (not (contains? tk avain)))
-                         true false)
-             :on-click #(do (.preventDefault %)
+            {:on-click #(do (.preventDefault %)
                             (swap! nav/tarvitsen-karttaa
                                  (fn [tk]
                                    (if (tk avain)
                                      (disj tk avain)
-                                     (conj tk avain))))
+                                     #{avain})))
 
                             (when-not (nil? @nav/valittu-urakka)
                               ;; Ei voi olla urakan kontekstissa, jos valitaan urakoita
