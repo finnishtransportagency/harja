@@ -1,7 +1,7 @@
 (ns harja.views.hallinta.kayttajat
   "Käyttäjähallinnan näkymä"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! chan]]
+            [cljs.core.async :refer [<! >! chan]]
 
             [harja.tiedot.kayttajat :as k]
             [harja.tiedot.urakat :as u]
@@ -15,6 +15,7 @@
             [bootstrap :as bs]
 
             [harja.ui.leaflet :refer [leaflet]]
+            [harja.ui.protokollat :as protokollat]
             
             [harja.loki :refer [log]]
             [harja.asiakas.tapahtumat :as t]
@@ -38,18 +39,18 @@
    "urakoitsijan kayttaja" "Urakoitsijan käyttäjä"
    "urakoitsijan laatuvastaava" "Urakoitsijan laatuvastaava"})
 
-(def valittu-kayttaja (atom nil))
+
+(def valittu-kayttaja
+  "Tällä hetkellä muokattava käyttäjä"
+  (atom nil))
 
 (defonce haku (atom ""))
-(defonce sivu (atom 0))
-(defonce sivuja (atom 0))
+
 
 (defonce kayttajalista (atom nil))
 (defonce kayttajien-haku
-  (run! (let [haku @haku
-              sivu @sivu]
-          (go (let [[lkm data] (<! (k/hae-kayttajat haku (* sivu 50) 50))]
-                (reset! sivuja (int (js/Math.ceil (/ lkm 50))))
+  (run! (let [haku @haku]
+          (go (let [[lkm data] (<! (k/hae-kayttajat haku 0 500))]
                 (reset! kayttajalista data))))))
 
 
@@ -140,7 +141,17 @@
     [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
       :tyyppi :haku
       :nayta :nimi :fmt :nimi
-      :lahde u/urakka-haku}
+      :lahde (reify protokollat/Haku
+               ;; Tehdään oma haku urakkahaun pohjalta, joka ei näytä jo valittuja urakoita
+               (hae [_ teksti]
+                 (let [ch (chan)]
+                   (go (let [res (<! (protokollat/hae u/urakka-haku teksti))
+                             urakat (into #{} (map (comp :id :urakka))
+                                          (vals @urakat-atom))]
+                         (>! ch (into []
+                                      (filter #(not (urakat (:id %))))
+                                      res))))
+                   ch)))}
      {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
      {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string
       :fmt pvm/pvm :muokattava? (constantly false) }]
