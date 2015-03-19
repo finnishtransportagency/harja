@@ -176,8 +176,8 @@
                               (.on "mouseover" #(do (log "EVENTTI ON " %)
                                                     (reagent/set-state component
                                                                    {:hover (assoc item
-                                                                             :x (-> % .-containerPoint .-x)
-                                                                             :y (-> % .-containerPoint .-y))
+                                                                             :x (aget % "containerPoint" "x")
+                                                                             :y (aget % "containerPoint" "y"))
                                                                              })))
                               (.on "mouseout" #(reagent/set-state component {:hover nil}))
                               (.addTo leaflet)))]
