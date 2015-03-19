@@ -46,7 +46,15 @@ Integraatiot MULEeen ja niiden implementaatioprojekti on omanaan.
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat omassa repossaan: harja-tietokanta 
 
 
-
-      
-
-  
+## Testipalvelimen tietokannan päivitys
+ * Avaa VPN putki <br/>
+ <code>
+    [jarnova@harja-jenkins ~]$ sudo bash <br/>
+    [root@harja-jenkins jarnova]# su jenkins <br/>
+    bash-4.2$ ssh harja-db1-test <br/>
+    Last login: Mon Mar 16 15:23:22 2015 from 172.17.238.100 <br/>
+    [jenkins@harja-db1-test ~]$ sudo bash <br/>
+    [root@harja-db1-test jenkins]# su postgres <br/>
+    bash-4.2$ psql harja <br/>
+</code>
+ * Tee temput
