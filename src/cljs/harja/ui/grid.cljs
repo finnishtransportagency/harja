@@ -99,42 +99,33 @@ Optiot on mappi optioita:
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
         viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
-
+        
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                   (let [id (swap! uusi-id dec)
-                         vanhat-tiedot @muokatut
-                         vanhat-virheet @virheet
-                         vanha-jarjestys @jarjestys
-                         uudet-tiedot (swap! muokatut assoc id
-                                             ((or uusi-rivi identity)
-                                              (merge rivin-tiedot {:id id})))
-                         uusi-jarjestys (swap! jarjestys conj id)]
-                     (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
-                     (swap! virheet (fn [virheet]
-                                      (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
-                                        (if (empty? rivin-virheet)
-                                          (dissoc virheet id)
-                                          (assoc virheet id rivin-virheet)))))
-                     
-                     (log "KUTSUTAAN MUUTOSTA LISÄYKSEN JÄLKEEN: " muutos)
-                     (when muutos
-                       (muutos this))))
+                              (let [id (swap! uusi-id dec)
+                                    vanhat-tiedot @muokatut
+                                    vanhat-virheet @virheet
+                                    vanha-jarjestys @jarjestys
+                                    uudet-tiedot (swap! muokatut assoc id
+                                                        ((or uusi-rivi identity)
+                                                         (merge rivin-tiedot {:id id :koskematon true})))
+                                    uusi-jarjestys (swap! jarjestys conj id)]
+                                (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
+                                (when muutos
+                                  (muutos this))))
                  (hae-muokkaustila [_]
-                   @muokatut))
+                                   @muokatut))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
-                   ;;(log "muokataan " id " \n funktio : " funktio )
-                   (log "muokatut: " (pr-str muokatut))
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut
                                              (fn [muokatut]
-                                               (apply update-in muokatut [id]
-                                                      funktio argumentit)))]
-                     
+                                               (update-in muokatut [id]
+                                                          (fn [rivi]
+                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
@@ -143,7 +134,6 @@ Optiot on mappi optioita:
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
-                     (log "KUTSUTAAN MUUTOSTA: " muutos)
                      (when muutos
                        (muutos ohjaus))))
 
@@ -232,7 +222,7 @@ Optiot on mappi optioita:
                  [:button.btn.btn-primary.btn-sm.grid-tallenna
                   {:disabled (not (empty? @virheet))
                    :on-click #(do (.preventDefault %)
-                                (go (if (<! (tallenna  (mapv second @muokatut)))
+                                (go (if (<! (tallenna  (filter (fn [rivi] (not (:koskematon rivi))) (mapv second @muokatut))))
                                       (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                   (ikonit/ok) " Tallenna"])
                
@@ -347,47 +337,44 @@ Optiot on mappi optioita:
 
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                   (let [id (swap! uusi-id dec)
-                         vanhat-tiedot @muokatut
-                         vanhat-virheet @virheet
-                         uudet-tiedot (swap! muokatut assoc id
-                                             ((or uusi-rivi identity)
-                                              (merge rivin-tiedot {:id id})))]
-                     (swap! historia conj [vanhat-tiedot vanhat-virheet])
-                     (swap! virheet (fn [virheet]
-                                      (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
-                                        (if (empty? rivin-virheet)
-                                          (dissoc virheet id)
-                                          (assoc virheet id rivin-virheet)))))
-                     (when muutos
-                       (muutos this))))
+                              (let [id (swap! uusi-id dec)
+                                    vanhat-tiedot @muokatut
+                                    vanhat-virheet @virheet
+                                    uudet-tiedot (swap! muokatut assoc id
+                                                        ((or uusi-rivi identity)
+                                                         (merge rivin-tiedot {:id id :koskematon true})))]
+                                (swap! historia conj [vanhat-tiedot vanhat-virheet])
+                                (swap! virheet (fn [virheet]
+                                                 (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
+                                                   (if (empty? rivin-virheet)
+                                                     (dissoc virheet id)
+                                                     (assoc virheet id rivin-virheet)))))
+                                (when muutos
+                                  (muutos this))))
                  (hae-muokkaustila [_]
-                   @muokatut))
+                                   @muokatut))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
-                   ;;(log "muokataan " id " \n funktio : " funktio )
-                   (log "muokatut: " (pr-str muokatut))
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          uudet-tiedot (swap! muokatut
                                              (fn [muokatut]
-                                               (apply update-in muokatut [id]
-                                                      funktio argumentit)))]
+                                               (update-in muokatut [id]
+                                                          (fn [rivi]
+                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))))]
                      
                      (when-not (= vanhat-tiedot uudet-tiedot)
-                       ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
                                         (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
-                     (log "KUTSUTAAN MUUTOSTA: " muutos)
                      (when muutos
                        (muutos ohjaus))))
-
-
+        
+        
         ;; Peruu yhden muokkauksen
         peru! (fn []
                 (let [[muok virh] (peek @historia)]
