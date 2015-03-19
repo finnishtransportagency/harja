@@ -77,6 +77,13 @@
        
    @kayttajalista])
 
+(defn valitut-urakat [urakat-map]
+  (into #{}
+        (comp
+         (filter #(not (:poistettu %)))
+         (map (comp :id :urakka)))
+        (vals urakat-map)))
+              
 (defn valitse-kartalta [g]
   (let [kuuntelija (atom nil)
         avain (gensym "kayttajat")]
@@ -118,9 +125,7 @@
                                        (t/kuuntele! :urakka-klikattu
                                                     (fn [urakka]
                                         ;(log "urakka valittu: " (pr-str urakka))
-                                                      (let [urakat (into #{}
-                                                                         (map (comp :id :urakka))
-                                                                         (vals (grid/hae-muokkaustila g)))]
+                                                      (let [urakat (valitut-urakat (grid/hae-muokkaustila g))]
                                                         (when-not (urakat (:id urakka))
                                                           (grid/lisaa-rivi! g {:urakka urakka
                                                                                :luotu (pvm/nyt)})))))))))}
@@ -146,8 +151,8 @@
                (hae [_ teksti]
                  (let [ch (chan)]
                    (go (let [res (<! (protokollat/hae u/urakka-haku teksti))
-                             urakat (into #{} (map (comp :id :urakka))
-                                          (vals @urakat-atom))]
+                             urakat (valitut-urakat @urakat-atom)]
+                         (log "JO OLEMASSA OLEVAT " urakat)
                          (>! ch (into []
                                       (filter #(not (urakat (:id %))))
                                       res))))
