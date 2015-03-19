@@ -97,7 +97,25 @@ e.latlng.lng = {};
 
 L.divIcon = function(options){};
 
+/**
+ * @constructor
+ * @struct
+ * @param {number} x 
+ * @param {number} y
+ * @param {boolean=} opt_round
+ */
+L.Point = function(x,y,round) {};
 
+var p1 = new L.Point(1,2);
+
+/** {number} */
+p1.x;
+
+/** {number} */
+p1.y;
+
+
+    
 /**
  * @constructor
  */
@@ -108,7 +126,7 @@ L.Path = function() {};
  * @param {string} eventType
  * @param {function({{containerPoint: L.Point}})} callback
  */ 
-L.Path.prototype.on = function(eventType, callback);
+L.Path.prototype.on = function(eventType, callback) {};
     
 /**
  * @return {L.LatLng}
