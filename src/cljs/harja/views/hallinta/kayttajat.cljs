@@ -131,8 +131,8 @@
                                        (do (k) nil)
                                        (t/kuuntele! :urakka-klikattu
                                                     (fn [urakka]
-                                        ;(log "urakka valittu: " (pr-str urakka))
                                                       (let [urakat (valitut-urakat (grid/hae-muokkaustila g))]
+                                                        (log "jo valitut urakat: " urakat ", nyt ollaan valitsemassa: " (dissoc urakka :alue))
                                                         (when-not (urakat (:id urakka))
                                                           (grid/lisaa-rivi! g {:urakka urakka
                                                                                :luotu (pvm/nyt)})))))))))}
