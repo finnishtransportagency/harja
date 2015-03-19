@@ -27,7 +27,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
        LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
        LEFT JOIN hanke h ON u.hanke=h.id
        LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro       
- WHERE u.nimi LIKE :teksti
-    OR hal.nimi LIKE :teksti
-    OR urk.nimi LIKE :teksti
+ WHERE u.nimi ILIKE :teksti
+    OR hal.nimi ILIKE :teksti
+    OR urk.nimi ILIKE :teksti
  
