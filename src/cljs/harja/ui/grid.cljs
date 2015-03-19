@@ -201,34 +201,41 @@ Optiot on mappi optioita:
             [:h6.panel-title otsikko
            
              ]
-          
+            
             (if-not muokataan
               [:span.pull-right
                (when tallenna
                  [:button.btn.btn-primary.btn-sm {:on-click #(do (.preventDefault %)
-                                                                 (aloita-muokkaus! tiedot))}
+                                                               (aloita-muokkaus! tiedot))}
                   (ikonit/pencil) " Muokkaa"])]
               [:span.pull-right.muokkaustoiminnot
                [:button.btn.btn-sm.btn-default
                 {:disabled  (empty? @historia)
                  :on-click #(do (.stopPropagation %)
-                                (.preventDefault %)
-                                (peru!))}
+                              (.preventDefault %)
+                              (peru!))}
                 (ikonit/peru) " Kumoa"]
                
                (when-not (= false voi-lisata?)
-               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+                 [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                           (lisaa-rivi! ohjaus {}))}
-                (ikonit/plus-sign) " Lisää rivi"])
-
+                  (ikonit/plus-sign) " Lisää rivi"])
+               
+               [:span {:class (str (if (empty? @virheet)
+                                     "hide"
+                                     "taulukossa-virheita"))}
+                [:span.hidden-xs (if (> (count @virheet) 1) 
+                                   "Korjaa virheet ennen tallennusta "
+                                   "Korjaa virhe ennen tallennusta ")]
+                (ikonit/warning-sign)]
                (when-not muokkaa-aina
                  [:button.btn.btn-primary.btn-sm.grid-tallenna
                   {:disabled (not (empty? @virheet))
                    :on-click #(do (.preventDefault %)
-                                  (go (if (<! (tallenna  (mapv second @muokatut)))
-                                        (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                (go (if (<! (tallenna  (mapv second @muokatut)))
+                                      (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                   (ikonit/ok) " Tallenna"])
-           
+               
                (when-not muokkaa-aina
                  [:button.btn.btn-default.btn-sm.grid-peru
                   {:on-click #(do (.preventDefault %) (nollaa-muokkaustiedot!) nil)}
