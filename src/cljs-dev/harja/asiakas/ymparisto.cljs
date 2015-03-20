@@ -10,16 +10,16 @@
    [harja.app-test]))
 
 
-(defmethod test/report [:harja :pass] [& things]
-  (doseq [t things]
-    (.log js/console "PASS: " (pr-str t))))
 
 (defmethod test/report [:harja :fail] [event]
+  (.log js/console "FAIL: " (pr-str event))
   (viesti/nayta! [:div.testfail
                   [:h3 "Testi epäonnistui:"]
                   [:div.expected "Odotettu: " (pr-str (:expected event))]
-                  [:div.actual "Saatu: " (pr-str (:actual event))]]
-                 :danger ))
+                  [:div.actual "Saatu: " (pr-str (:actual event))]
+                  (when-let [m (:message event)]
+                    [:div.testmessage "Viesti: " m])]
+                 :danger))
 
 
 (defn ^:export aja-testit []
