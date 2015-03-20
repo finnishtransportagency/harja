@@ -4,13 +4,28 @@
    ;;[lively.core :as lively]
    [figwheel.client :as fw]
 
+   [harja.ui.viesti :as viesti]
    ;; require kaikki testit
    [cljs.test :as test]
    [harja.app-test]))
 
 
+(defmethod test/report [:harja :pass] [& things]
+  (doseq [t things]
+    (.log js/console "PASS: " (pr-str t))))
+
+(defmethod test/report [:harja :fail] [event]
+  (viesti/nayta! [:div.testfail
+                  [:h3 "Testi epäonnistui:"]
+                  [:div.expected "Odotettu: " (pr-str (:expected event))]
+                  [:div.actual "Saatu: " (pr-str (:actual event))]]
+                 :danger ))
+
+
 (defn ^:export aja-testit []
-  (test/run-tests 'harja.app-test))
+  (test/run-tests (merge (test/empty-env)
+                         {:reporter :harja})
+                  'harja.app-test))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."

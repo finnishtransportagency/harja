@@ -25,5 +25,6 @@
 
 (deftest hae-urakan-hoitokaudet []
   (log "hae-urakan-hoitokaudet-testi" (s/hoitokaudet +testi-urakka+))
-  (is (= 6 (count (s/hoitokaudet +testi-urakka+)))) 
+  (is (= 6 (count (s/hoitokaudet +testi-urakka+))))  
   )
+ 
