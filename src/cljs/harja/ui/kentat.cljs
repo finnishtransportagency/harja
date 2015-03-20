@@ -25,15 +25,18 @@
       [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
        
        [:input {:value @teksti
-                :on-change #(let [v (-> % .-target .-value)]
-                              (reset! data nil)
-                              (reset! teksti v)
-                              (if (> (count v) 2)
-                                (do (reset! tulokset :haetaan)
-                                    (go (let [tul (<! (hae lahde v))]
-                                          (reset! tulokset tul)
-                                          (reset! valittu-idx nil))))
-                                (reset! tulokset nil)))
+                :on-change #(when (= (.-activeElement js/document) (.-target %))
+                              ;; tehdään haku vain jos elementti on fokusoitu
+                              ;; IE triggeröi on-change myös ohjelmallisista muutoksista
+                              (let [v (-> % .-target .-value)]
+                                (reset! data nil)
+                                (reset! teksti v)
+                                (if (> (count v) 2)
+                                  (do (reset! tulokset :haetaan)
+                                      (go (let [tul (<! (hae lahde v))]
+                                            (reset! tulokset tul)
+                                            (reset! valittu-idx nil))))
+                                  (reset! tulokset nil))))
                 :on-key-down (nuolivalinta #(let [t @tulokset]
                                               (log "YLÖS " @valittu-idx)
                                               (when (vector? t)
