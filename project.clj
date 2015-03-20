@@ -75,6 +75,13 @@
 
 
                      ]
+  :dev {:node-dependencies [[karma "0.12.31"]
+                                       [karma-chrome-launcher "0.1.7"]
+                                       [karma-phantomjs-launcher "0.1.4"]
+                                       [karma-ievms "0.0.4"]
+                                       [es5-shim "4.1.0"]
+                                       [console-polyfill "0.1.2"]
+                                       [karma-junit-reporter "0.2.2"]]}
   
   :profiles {:test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
@@ -92,25 +99,20 @@
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id "dev"
-                        :source-paths ["src/cljs" "src/cljs-dev"]
+                        :source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
                         :compiler {:optimizations :none
                                    :source-map true
                                    ;;:preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"}
-                        :notify-command ["terminal-notifier"
-                                         "-title"
-                                         "Harja"
-                                         "-subtitle"
-                                         "cljsbuild"
-                                         "-group"
-                                         "some-group"
-                                         "-sound"
-                                         "default"
-                                         "-activate"
-                                         "com.googlecode.iTerm2"
-                                         "-message"]
-                        
+                       :test {:source-paths ["src/cljs" "test/cljs"]
+                                               :compiler {:output-to "target/cljs/test/test.js"
+                                                          :output-dir "target/cljs/test"
+                                                          :optimizations :none
+                                                          :pretty-print true
+                                                          :source-map "target/cljs/test/test.js.map"}
+                                               :notify-command ["./run-karma.sh"]}
+                                               ;;:warning-handlers [utils.cljs-warning-handler/handle]} 
                         }
                        
                        {:id "prod"
