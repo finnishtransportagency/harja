@@ -9,7 +9,7 @@
    [harja.app-test]))
 
 
-(defn aja-testit []
+(defn ^:export aja-testit []
   (test/run-tests 'harja.app-test))
 
 (defn alusta
