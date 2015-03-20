@@ -1,17 +1,13 @@
 (ns harja.app-test
-  (:require [harja.asiakas.main :as app]
-            [harja.loki :refer [log]]
+  (:require [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [cljs.test :as test])
-  
-  (:require-macros [cljs.test :refer [deftest is use-fixtures]]))
+            [cljs.test :as test :refer-macros [deftest is]])
+  )
 
 
 (enable-console-print!)
 
-(deftest dummy-failing-test
-  (is (= 1 2)))
 
 (def +hoitokauden-alkukk-indeksi+ "9")
 (def +hoitokauden-alkupv-indeksi+ "1")
@@ -29,5 +25,5 @@
 
 (deftest hae-urakan-hoitokaudet []
   (log "hae-urakan-hoitokaudet-testi" (s/hoitokaudet +testi-urakka+))
-  (is 5 (count (s/hoitokaudet +testi-urakka+)))
+  (is (= 6 (count (s/hoitokaudet +testi-urakka+)))) 
   )
