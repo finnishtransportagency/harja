@@ -37,8 +37,8 @@
   ;; FIXME: oikeus checki tähän tai queryyn urakkaroolin kautta
   (into []
         (map #(assoc % 
-                     :maara (if (:maara %) (float (:maara %))) 
-                     :yksikkohinta (if (:yksikkohinta %) (float (:yksikkohinta %)))))
+                     :maara (if (:maara %) (double (:maara %))) 
+                     :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))
         (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot 

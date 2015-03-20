@@ -3,8 +3,6 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as c]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))

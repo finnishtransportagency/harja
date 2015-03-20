@@ -91,12 +91,12 @@
                      :value nykyinen-teksti
                      :on-change #(let [v (-> % .-target .-value)]
                                    (when (or (= v "") 
-                                           (re-matches #"\d+((\.|,)\d*)?" v))
-                                     (reset! teksti v))
-                                   (let [numero (js/parseFloat (str/replace v #"," "."))]
+                                             (re-matches #"\d{1,10}((\.|,)\d{0,2})?" v))
+                                     (reset! teksti v)
+                                     (let [numero (js/parseFloat (str/replace v #"," "."))]
                                        (reset! data
                                                (when (not (js/isNaN numero))
-                                                 numero))))}]))))
+                                                 numero)))))}]))))
 
 
 
