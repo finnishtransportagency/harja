@@ -75,6 +75,11 @@ SELECT array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = :
 -- Poista käyttäjältä rooli.
 UPDATE kayttaja_rooli SET poistettu=true, muokkaaja=:muokkaaja, muokattu=NOW() WHERE kayttaja=:kayttaja AND rooli=:rooli::kayttajarooli
 
+-- name: poista-urakka-roolit!
+-- Poista käyttäjältä urakka roolit.
+UPDATE kayttaja_urakka_rooli SET poistettu=true, muokkaaja=:muokkaaja, muokattu=NOW()
+ WHERE kayttaja=:kayttaja AND rooli=:rooli::kayttajarooli
+ 
 -- name: lisaa-rooli<!
 -- Lisää käyttäjälle rooli.
 INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW(), :kayttaja, :rooli::kayttajarooli)

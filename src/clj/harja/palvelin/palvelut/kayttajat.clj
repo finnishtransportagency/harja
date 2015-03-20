@@ -91,7 +91,9 @@
 
       (doseq [poistettava-rooli (set/difference vanhat-roolit (:roolit tiedot))]
         (log/info "Poistetaan käyttäjältä rooli " poistettava-rooli)
-        (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli))
+        (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli)
+        (q/poista-urakka-roolit! c (:id user) kayttaja-id poistettava-rooli)
+        )
           
       
       (doseq [{:keys [rooli urakka] :as urakka-rooli} (:urakka-roolit tiedot)]
