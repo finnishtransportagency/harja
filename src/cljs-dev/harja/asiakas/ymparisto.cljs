@@ -2,8 +2,15 @@
   "Dev ympäristön spesifisiä asioita."
   (:require
    ;;[lively.core :as lively]
-   [figwheel.client :as fw]))
+   [figwheel.client :as fw]
 
+   ;; require kaikki testit
+   [cljs.test :as test]
+   [harja.app-test]))
+
+
+(defn ^:export aja-testit []
+  (test/run-tests 'harja.app-test))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
@@ -18,7 +25,9 @@
   (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
                           (when-let [on-reload (:on-reload options)]
-                            (on-reload)))})
+                            (on-reload)
+                            (aja-testit)
+                            ))})
   
   (.log js/console "Alustetaan less.js uudelleenlataus")
   (let [less (aget js/window "less")

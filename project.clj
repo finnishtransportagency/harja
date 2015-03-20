@@ -76,9 +76,37 @@
 
                      ]
   
+  
   :profiles {:test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
+             ;;:dev {:node-dependencies [[karma "0.12.31"]
+             ;;                          [karma-chrome-launcher "0.1.7"]
+             ;;                          [karma-phantomjs-launcher "0.1.4"]
+             ;;                          [es5-shim "4.1.0"]
+             ;;                          [console-polyfill "0.1.2"]
+             ;;                          [karma-junit-reporter "0.2.2"]]
+             ;;      
+             ;;      :plugins [[lein-npm "0.5.0"]
+             ;;                [com.jakemccrary/lein-test-refresh "0.6.0"]]
+             ;;      :test-refresh {:notify-command ["./notify.sh"]}
+             ;;      :repl-options {:init-ns user}
+             ;;      :source-paths ["dev/clj" "test/clj" "target/cljx/cljs" "target/test-cjx/clj" "src/cljs"]
+             ;;      :cljsbuild {:builds {:main {:source-paths ["dev/cljs"]
+             ;;                                  :compiler {:optimizations :none
+             ;;                                             :pretty-print true
+             ;;                                             :source-map true}
+             ;;                                  :notify-command ["./notify.sh"]}
+             ;;                           :test {:source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
+             ;;                                  :compiler {:output-to "target/cljs/test/test.js"
+             ;;                                             :output-dir "target/cljs/test"
+             ;;                                             :optimizations :none
+             ;;                                             :pretty-print true
+             ;;                                             :source-map "target/cljs/test/test.js.map"}
+             ;;                                  :notify-command ["./run-karma.sh"]
+             ;;                                  :warning-handlers [utils.cljs-warning-handler/handle]}}
+             ;;                  :test-commands {"ci" ["./node_modules/karma/bin/karma" "start" "karma.ci.conf.js"]}}}}
+  
   
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
@@ -92,26 +120,22 @@
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id "dev"
-                        :source-paths ["src/cljs" "src/cljs-dev"]
+                        :source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
                         :compiler {:optimizations :none
                                    :source-map true
                                    ;;:preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
-                                   :output-dir "dev-resources/js/out"}
-                        :notify-command ["terminal-notifier"
-                                         "-title"
-                                         "Harja"
-                                         "-subtitle"
-                                         "cljsbuild"
-                                         "-group"
-                                         "some-group"
-                                         "-sound"
-                                         "default"
-                                         "-activate"
-                                         "com.googlecode.iTerm2"
-                                         "-message"]
-                        
-                        }
+                                   :output-dir "dev-resources/js/out"}}
+                       {:id "test"
+                        :source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
+                        :compiler {:output-to "target/cljs/test/test.js"
+                                   :output-dir "target/cljs/test"
+                                   :optimizations :none
+                                   :pretty-print true
+                                   :source-map "target/cljs/test/test.js.map"}
+                        :notify-command ["./run-karma.sh"]}
+                       ;;:warning-handlers [utils.cljs-warning-handler/handle]} 
+                       
                        
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljs-prod"]
