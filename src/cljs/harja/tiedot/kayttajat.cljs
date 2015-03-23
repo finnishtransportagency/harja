@@ -31,6 +31,12 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
         (>! ch (muunna-kayttajan-tiedot tiedot))))
     ch))
 
+(defn hae-organisaation-urakat
+  "Hakee kaikki organisaation urakat."
+  [org-id]
+  (k/post! :hae-organisaation-urakat org-id))
+
+
 (defn tallenna-kayttajan-tiedot!
   "Tallentaa käyttäjän roolitiedot muokkausnäkymästä. Palauttaa uudet tiedot."
   [kayttaja-id tiedot]

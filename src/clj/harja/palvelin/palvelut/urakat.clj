@@ -9,7 +9,8 @@
 
 (declare hallintayksikon-urakat
          urakan-tiedot
-         hae-urakoita)
+         hae-urakoita
+         hae-organisaation-urakat)
 
 
 (defrecord Urakat []
@@ -22,12 +23,15 @@
       (julkaise-palvelu http :hae-urakoita
                         (fn [user teksti]
                           (hae-urakoita (:db this) user teksti)))
+      (julkaise-palvelu http :hae-organisaation-urakat
+                        (fn [user organisaatio-id]
+                          (hae-organisaation-urakat (:db this) user organisaatio-id)))
       this))
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
     (poista-palvelu (:http-palvelin this) :hae-urakoita)
-    
+    (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
     this))
 
 (def urakka-xf
@@ -73,3 +77,10 @@
   (into []
         urakka-xf
         (q/hae-urakoita db (str "%" teksti "%"))))
+
+(defn hae-organisaation-urakat [db user organisaatio-id]
+  (log/debug "Haetaan urakat organisaatiolle: " organisaatio-id)
+  []
+  (into []
+        urakka-xf
+        (q/hae-organisaation-urakat db organisaatio-id)))

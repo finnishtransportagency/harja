@@ -112,8 +112,8 @@
         (let [tk @nav/tarvitsen-karttaa
               kk @kuuntelija]
          
-          [:div
-           [:button.btn.btn-default
+          [:span
+           [:button.btn.btn-default.pull-right
             {:on-click #(do (.preventDefault %)
                             (swap! nav/tarvitsen-karttaa
                                  (fn [tk]
@@ -140,12 +140,26 @@
             "Valitse kartalta"
             "Piilota kartta")]]))})))
 
-(defn urakkalista [urakat-atom]
+(defn urakkalista [urakat-atom organisaatio]
   [:span
    [grid/muokkaus-grid
     {:otsikko "Urakat"
      :tyhja "Ei liitettyjä urakoita."
-     :muokkaa-footer valitse-kartalta
+     :muokkaa-footer (fn [g]
+                       [:div.urakkalista-napit
+                        (when-not (= :liikennevirasto (:tyyppi organisaatio))
+                          [:button.btn.btn-default {:on-click #(do (.preventDefault %)
+                                                   (go (let [res (<! (k/hae-organisaation-urakat (:id organisaatio)))
+                                                             urakat (valitut-urakat @urakat-atom)]
+                                                         (log "TULI URAKOITA: " res)
+                                                         (doseq [u res]
+                                                           (when-not (urakat (:id u))
+                                                             (swap! urakat-atom assoc (:id u) {:urakka u :luotu (pvm/nyt)}))))))}
+                           (str "Lisää kaikki " (case (:tyyppi organisaatio)
+                                                  :hallintayksikko "hallintayksikon"
+                                                  :urakoitsija "urakoitsijan") " urakat")])
+                        [valitse-kartalta g]])
+                                               
      :uusi-rivi #(assoc % :luotu (pvm/nyt))
      :muutos (fn [g]
                (log "gridi muuttui: " g))
@@ -172,7 +186,8 @@
   
 
 (defn kayttajatiedot [k]
-  (let [tyyppi (case (:tyyppi (:organisaatio k))
+  (let [organisaatio (:organisaatio k)
+        tyyppi (case (:tyyppi organisaatio)
                    (:hallintayksikko :liikennevirasto) :tilaaja
                    :urakoitsija :urakoitsija
                    nil)
@@ -202,9 +217,9 @@
         tiedot (atom {})
 
         ;; tekee urakkalistasta {<idx> <urakka>} array-mapin, muokkausgridiä varten
-        urakat-muokattava #(into (array-map)
-                                 (map-indexed (fn [i urakka]
-                                                [i urakka]) %))
+        urakat-muokattava #(into {}
+                                 (map (fn [urakka]
+                                        [(:id urakka) urakka]) %))
         
         urakanvalvoja-urakat (atom (array-map))
         tilaajan-laadunvalvontakonsultti-urakat (atom (array-map))
@@ -329,7 +344,7 @@
                [roolivalinta "tilaajan kayttaja"]
                [roolivalinta "urakanvalvoja"
                 ^{:key "urakat"}
-                [urakkalista urakanvalvoja-urakat]]
+                [urakkalista urakanvalvoja-urakat organisaatio]]
                [roolivalinta "vaylamuodon vastuuhenkilo"
                 ^{:key "vaylamuoto"}
                 [:div
@@ -341,21 +356,21 @@
                [roolivalinta "tilaajan asiantuntija"]
                [roolivalinta "tilaajan laadunvalvontakonsultti"
                 ^{:key "urakat"}
-                [urakkalista tilaajan-laadunvalvontakonsultti-urakat]]]
+                [urakkalista tilaajan-laadunvalvontakonsultti-urakat organisaatio]]]
 
               ;; urakoitsijan roolit
               [:span
                [roolivalinta "urakoitsijan paakayttaja"]
                [roolivalinta "urakoitsijan urakan vastuuhenkilo"
                 ^{:key "urakat"}
-                [urakkalista urakan-vastuuhenkilo-urakat]]
+                [urakkalista urakan-vastuuhenkilo-urakat organisaatio]]
                
                [roolivalinta "urakoitsijan kayttaja"
                 ^{:key "urakat"}
-                [urakkalista urakoitsijan-kayttaja-urakat]]
+                [urakkalista urakoitsijan-kayttaja-urakat organisaatio]]
                [roolivalinta "urakoitsijan laatuvastaava"
                 ^{:key "urakat"}
-                [urakkalista urakoitsijan-laatuvastaava-urakat]]]
+                [urakkalista urakoitsijan-laatuvastaava-urakat organisaatio]]]
               )]]
 
           [:div.form-group
