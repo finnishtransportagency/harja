@@ -83,6 +83,7 @@
       [yleiset/tietoja {} 
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
+       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
        "Tilaaja:" (:nimi (:hallintayksikko ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
