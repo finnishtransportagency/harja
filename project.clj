@@ -116,6 +116,7 @@
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.2.5-SNAPSHOT"]
+            [lein-marginalia "0.8.0"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
@@ -178,7 +179,7 @@
 
              }
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar"]
+  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "marg"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
