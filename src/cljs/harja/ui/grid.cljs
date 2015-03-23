@@ -89,7 +89,8 @@ Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän va
 
 Optiot on mappi optioita:
   :tallenna        funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
-                   jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita
+                   jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
+                   jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :rivi-klikattu   funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muokkaa-aina    jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
@@ -208,8 +209,10 @@ Optiot on mappi optioita:
             (if-not muokataan
               [:span.pull-right
                (when tallenna
-                 [:button.btn.btn-primary.btn-sm {:on-click #(do (.preventDefault %)
-                                                               (aloita-muokkaus! tiedot))}
+                 [:button.btn.btn-primary.btn-sm (if (= :ei-mahdollinen tallenna)
+                                                   {:disabled (= :ei-mahdollinen tallenna)}
+                                                   {:on-click #(do (.preventDefault %)
+                                                                 (aloita-muokkaus! tiedot))})
                   (ikonit/pencil) " Muokkaa"])]
               [:span.pull-right.muokkaustoiminnot
                [:button.btn.btn-sm.btn-default

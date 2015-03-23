@@ -8,7 +8,7 @@
 (def rooli:tilaajan-kayttaja                 "tilaajan kayttaja")
 (def rooli:urakanvalvoja                     "urakanvalvoja")
 (def rooli:vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
-(def rooli:liikennepäivystaja                "liikennepäivystäjä")
+(def rooli:liikennepaivystaja                "liikennepäivystäjä")
 (def rooli:tilaajan-asiantuntija             "tilaajan asiantuntija")
 (def rooli:tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
 (def rooli:urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")

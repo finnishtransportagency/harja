@@ -7,7 +7,7 @@
             [harja.tiedot.urakka.suunnittelu :as suunnittelu]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            
+            [harja.tiedot.istunto :as istunto]
             
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -89,8 +89,11 @@
      [grid/grid
       {:otsikko "Yksikköhintaiset työt"
        :tyhja (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-       :tallenna #(tallenna-tyot ur @suunnittelu/valittu-sopimusnumero @suunnittelu/valittu-hoitokausi 
-                                 tyot @tyorivit %)
+       :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
+                                             (:id ur)
+                                             #(tallenna-tyot ur @suunnittelu/valittu-sopimusnumero @suunnittelu/valittu-hoitokausi 
+                                                             tyot @tyorivit %)
+                                             :ei-mahdollinen)
        :tunniste :tehtava
        :voi-lisata? false
        :voi-poistaa? (constantly false)
