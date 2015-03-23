@@ -60,8 +60,6 @@
    ]
   
   (do
-    
-    ;; vain valitun hoitokauden tyot talteen
     (run! (let [{:keys [alkupvm loppupvm] :as valittu-hoitokausi} @suunnittelu/valittu-hoitokausi
                 tehtavien-rivit (group-by :tehtava
                                           (filter (fn [t]
@@ -73,8 +71,6 @@
                 tyhjat-tyot  (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
                                   (filter (fn [tp]
                                             (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
-            ;;(log "tehtavien rivit: " tehtavien-rivit)
-            ;;(log "tyhjat-tyot: " tyhjat-tyot)
             (reset! tyorivit
                     (ryhmittele-tehtavat
                      @toimenpiteet-ja-tehtavat

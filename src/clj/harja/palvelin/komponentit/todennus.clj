@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.logging :as log]
             [clojure.core.cache :as cache]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kayttajat :as q]))
 
 
@@ -19,7 +20,8 @@
                                     (-> kt
                                         (assoc :organisaatio {:id (:org_id kt)
                                                               :nimi (:org_nimi kt)
-                                                              :tyyppi (:org_tyyppi kt)})
+                                                              :tyyppi (:org_tyyppi kt)}
+                                               :urakkaroolit (map konv/alaviiva->rakenne (q/hae-kayttajan-urakka-roolit db (:id kt))))
                                         (dissoc :org_id :org_nimi :org_tyyppi)))))
                               %
                               koka-remote-id))

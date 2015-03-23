@@ -1,6 +1,7 @@
 (ns harja.palvelin.oikeudet
   "Kaikki palvelinpuolen käyttöoikeustarkistukset."
-  )
+   (:require
+            [clojure.tools.logging :as log]))
 
 
 (def rooli:jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
@@ -24,13 +25,19 @@
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [kayttaja rooli urakka-id]
-   (if-let [urakkaroolit (some-> (:urakkaroolit kayttaja)
-                                 (get urakka-id))]
-     (if (urakkaroolit rooli)
-       true
-       false)
-     false))
-     
+  (if-let [urakkaroolit (some->> (:urakkaroolit kayttaja)
+                                 (filter #(= (:id (:urakka %)) urakka-id))
+                                 (map :rooli) 
+                                 (into #{}))]
+    (if (urakkaroolit rooli)
+      true
+      false)
+    false))
 
 
-  
+(defn vaadi-rooli-urakassa
+  [kayttaja rooli urakka-id]
+  (when-not (rooli-urakassa? kayttaja rooli urakka-id)
+    (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s' urakassa jonka id on %3$s", (:kayttajanimi kayttaja) rooli urakka-id)]
+    (log/warn viesti)
+        (throw (RuntimeException. viesti)))))

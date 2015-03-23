@@ -8,6 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             
+            [harja.palvelin.oikeudet :as oikeudet]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]))
 
 (declare hae-urakan-yksikkohintaiset-tyot tallenna-urakan-yksikkohintaiset-tyot)
@@ -44,28 +45,28 @@
 (defn tallenna-urakan-yksikkohintaiset-tyot 
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot"
   [db user {:keys [urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm tyot] :as tiedot}]
+  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli:urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
-  (log/info "tallenna-urakan-yksikkohintaiset-tyot palvelu" urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm)
-  
-  (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot db user urakka-id)]
-    (jdbc/with-db-transaction [c db]
-                              (doseq [tyo tyot]
-                                (let [valitun-hoitokauden-ja-sopimusnumeron-tyot (filter #(and
-                                                                                            (= (:sopimus %) sopimusnumero) 
-                                                                                            (or (= (:alkupvm %) hoitokausi-alkupvm)
-                                                                                                (= (:loppupvm %) hoitokausi-loppupvm))) 
-                                                                  nykyiset-arvot)
-                                      tyot-kannassa (into #{}  (map :tehtava valitun-hoitokauden-ja-sopimusnumeron-tyot))]
-                                  
-                                  (if (not (tyot-kannassa (:tehtava tyo)))
-                                    ;; insert
-                                    (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                                           urakka-id sopimusnumero (:tehtava tyo)
-                                                                           (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                           (java.sql.Date. (.getTime (:loppupvm tyo))))
-                                    ;;update
-                                    (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                                            urakka-id sopimusnumero (:tehtava tyo)
-                                                                            (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                            (java.sql.Date. (.getTime (:loppupvm tyo)))))))
-                              (hae-urakan-yksikkohintaiset-tyot c user urakka-id))))
+  (jdbc/with-db-transaction [c db]
+        (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
+              valitun-hoitokauden-ja-sopimusnumeron-tyot (filter #(and
+                                                                    (= (:sopimus %) sopimusnumero) 
+                                                                    ;; olettaa hoidon au:n hoitokausirakenteen
+                                                                    ;; --> ei välttämättä toimi ylläpidon urakoissa
+                                                                    (or (= (:alkupvm %) hoitokausi-alkupvm)
+                                                                        (= (:loppupvm %) hoitokausi-loppupvm))) 
+                                                                 nykyiset-arvot)
+              tyot-kannassa (into #{}  (map :tehtava valitun-hoitokauden-ja-sopimusnumeron-tyot))]
+          (doseq [tyo tyot]
+            (if (not (tyot-kannassa (:tehtava tyo)))
+              ;; insert
+              (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                     urakka-id sopimusnumero (:tehtava tyo)
+                                                     (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                     (java.sql.Date. (.getTime (:loppupvm tyo))))
+              ;;update
+              (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                      urakka-id sopimusnumero (:tehtava tyo)
+                                                      (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                      (java.sql.Date. (.getTime (:loppupvm tyo)))))))
+      (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
