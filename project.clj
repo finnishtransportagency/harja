@@ -163,6 +163,7 @@
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj"]
+  :test-paths ["test/clj"]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
