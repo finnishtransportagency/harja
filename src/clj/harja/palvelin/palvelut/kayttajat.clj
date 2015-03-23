@@ -74,6 +74,7 @@
           vanhat-roolit (:roolit vanhat-tiedot)
                                  
           vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
+      ;; FIXME:
       ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
                                         ;(when (oik/roolissa? user oik/rooli:jarjestelmavastuuhenkilo)
       
