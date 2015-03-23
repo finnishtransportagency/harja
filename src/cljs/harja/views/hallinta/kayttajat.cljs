@@ -384,8 +384,8 @@
                                  "Poista käyttöoikeus"]
                                 ]
                        :sulje #(reset! poista-painettu false)}
-                [:div "Haluatko varmasti poistaa käyttäjän " ;; FIXME: tarkempi teksti, että kyse harjan käyttöoikeudesta
-                 [:b (:etunimi k) " " (:sukunimi k)] " käyttöoikeuden?"]])]
+                [:div "Haluatko varmasti poistaa käyttäjän " 
+                 [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]])]
             ]]
           
           ]])})))
