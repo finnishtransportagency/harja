@@ -33,5 +33,5 @@
 (defn hae-urakan-toimenpiteet-ja-tehtavat
   "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
   [db user urakka-id]
-        (into []
-              (q/hae-urakan-toimenpiteet-ja-tehtavat db urakka-id)))
+  (into []
+        (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)))

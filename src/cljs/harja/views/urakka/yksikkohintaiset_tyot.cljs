@@ -37,48 +37,62 @@
   {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :urakka (:id ur) 
    :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
 
+(defn ryhmittele-tehtavat
+  "Ryhmittelee 4. tason tehtävät. Lisää väliotsikot eri tehtävien väliin"
+  [toimenpiteet-tasoittain tyorivit]
+  (let [otsikko (fn [{:keys [tehtava]}]
+              (some (fn [[t1 t2 t3 t4]]
+                      (when (= (:id t4) tehtava)
+                       (str (:nimi t1) " / " (:nimi t2) " / " (:nimi t3))))
+                    toimenpiteet-tasoittain))
+        otsikon-mukaan (group-by otsikko tyorivit)]
+    (mapcat (fn [[otsikko rivit]]
+              (concat [(grid/otsikko otsikko)] rivit))
+            (seq otsikon-mukaan))))
+
+  
 
 (deftk yksikkohintaiset-tyot [ur]
+
   [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
    toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur)))
-   kolmostason-tpt nil
-   nelostason-tpt nil
    tyorivit nil 
    ]
   
   (do
-    (run! (let [toimenpiteet-ja-tehtavat (group-by :taso @toimenpiteet-ja-tehtavat)]
-            (reset! kolmostason-tpt (vec (get toimenpiteet-ja-tehtavat 3)))
-            (reset! nelostason-tpt (vec (get toimenpiteet-ja-tehtavat 4)))))
     
     ;; vain valitun hoitokauden tyot talteen
-    (run! (let [tehtavien-rivit (group-by :tehtava (filter (fn [t]
-                                                             (and 
-                                                               (= (:sopimus t) (first @suunnittelu/valittu-sopimusnumero))
-                                                               (or
-                                                                 (pvm/sama-pvm? (:alkupvm t) (:alkupvm @suunnittelu/valittu-hoitokausi))
-                                                                 (pvm/sama-pvm? (:loppupvm t) (:loppupvm @suunnittelu/valittu-hoitokausi))))
-                                                             ) @tyot))
+    (run! (let [{:keys [alkupvm loppupvm] :as valittu-hoitokausi} @suunnittelu/valittu-hoitokausi
+                tehtavien-rivit (group-by :tehtava
+                                          (filter (fn [t]
+                                                    (and (= (:sopimus t) (first @suunnittelu/valittu-sopimusnumero))
+                                                         (or (pvm/sama-pvm? (:alkupvm t) alkupvm)
+                                                             (pvm/sama-pvm? (:loppupvm t) loppupvm)))) @tyot))
+                nelostason-tpt (map #(nth % 3) @toimenpiteet-ja-tehtavat)
                 kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
-                tyhjat-tyot  (map #(luo-tyhja-tyo % ur @suunnittelu/valittu-hoitokausi) (filter (fn [tp]
-                                                                                      (not (kirjatut-tehtavat (:id tp)))) @nelostason-tpt))]
-            
+                tyhjat-tyot  (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
+                                  (filter (fn [tp]
+                                            (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
+            (log "tehtavien rivit: " tehtavien-rivit)
+            (log "tyhjat-tyot: " tyhjat-tyot)
             (reset! tyorivit
-                    (vec (concat (mapv (fn [[_ tehtavan-rivit]]
-                                         (let [pohja (first tehtavan-rivit)]
-                                           (merge pohja
-                                                  (zipmap (map #(if (= (.getYear (:alkupvm @suunnittelu/valittu-hoitokausi))
-                                                                       (.getYear (:alkupvm %)))
-                                                                  :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
-                                                          (map :maara tehtavan-rivit))
+                    (ryhmittele-tehtavat
+                     @toimenpiteet-ja-tehtavat
+                     (vec (concat (mapv (fn [[_ tehtavan-rivit]]
+                                          (let [pohja (first tehtavan-rivit)]
+                                            (merge pohja
+                                                   (zipmap (map #(if (= (.getYear (:alkupvm @suunnittelu/valittu-hoitokausi))
+                                                                        (.getYear (:alkupvm %)))
+                                                                   :maara-kkt-10-12 :maara-kkt-1-9) tehtavan-rivit)
+                                                           (map :maara tehtavan-rivit))
                                                   
-                                                  {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}
-                                                  ))) tehtavien-rivit) tyhjat-tyot)))))
-    
+                                                   {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}))) tehtavien-rivit)
+                                  tyhjat-tyot))))))
+    (log "toimenpiteet-ja-tehtävät: " @toimenpiteet-ja-tehtavat)
     [:div.yksikkohintaiset-tyot     
      [grid/grid
       {:otsikko "Yksikköhintaiset työt"
-       :tyhja (if (nil? nelostason-tpt) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+       :tyhja (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
        :tallenna #(tallenna-tyot ur @suunnittelu/valittu-sopimusnumero @suunnittelu/valittu-hoitokausi 
                                  tyot @tyorivit %)
        :tunniste :tehtava
@@ -94,7 +108,7 @@
        {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
        {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]
-      @tyorivit
+       @tyorivit
       ]
      ]))
 

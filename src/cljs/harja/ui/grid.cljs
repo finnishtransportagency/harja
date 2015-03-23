@@ -12,7 +12,16 @@
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defrecord Otsikko [teksti])
 
+(defn otsikko
+  "Luo otsikon annetulla tekstillä."
+  [teksti]
+  (->Otsikko teksti))
+
+    
+(defn otsikko? [x]
+  (instance? Otsikko x))
 
 (defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
 
@@ -94,7 +103,7 @@ Optiot on mappi optioita:
            muokkaa-footer muokkaa-aina muutos
            uusi-rivi]} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
-        jarjestys (atom nil) ;; id:t indekseissä
+        jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
@@ -165,11 +174,15 @@ Optiot on mappi optioita:
                                (do 
                                  (reset! muokatut muok)
                                  (reset! jarjestys jarj)) 
-                               (let [id ((or tunniste :id) r)]
-                                 (recur (assoc muok
-                                          id r)
-                                        (conj jarj id)
-                                        rivit))))
+                               (if (otsikko? r)
+                                 (recur muok
+                                        (conj jarj r)
+                                        rivit)
+                                 (let [id ((or tunniste :id) r)]
+                                   (recur (assoc muok
+                                            id r)
+                                          (conj jarj id)
+                                          rivit)))))
                            nil)
         ]
     (when muokkaa-aina
@@ -251,48 +264,54 @@ Optiot on mappi optioita:
                   (let [muokatut @muokatut
                         jarjestys @jarjestys]
                     (if (empty? muokatut)
-                      [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
+                      [:tr.tyhja [:td {:colSpan (inc (count skeema))} tyhja]]
                       (let [kaikki-virheet @virheet]
                         (doall (map-indexed
                                 (fn [i id]
-                                  (let [rivi (get muokatut id)
-                                        rivin-virheet (get kaikki-virheet id)]
-                                    (when-not (:poistettu rivi)
-                                      ^{:key id}
-                                      [:tr.muokataan {:class (str (if (even? i)
-                                                                    "parillinen"
-                                                                    "pariton"))}
-                                       (for [{:keys [nimi hae aseta fmt muokattava?] :as s} skeema]
-                                         (let [arvo (if hae
-                                                      (hae rivi)
-                                                      (get rivi nimi))
-                                               kentan-virheet (get rivin-virheet nimi)]
-                                           (if (or (nil? muokattava?) (muokattava? rivi))
-                                             ^{:key (str nimi)}
-                                             [:td {:class (str (when-not (empty? kentan-virheet)
-                                                                 "has-error"))}
-                                              (when-not (empty? kentan-virheet)
-                                                [:div.virheet
-                                                 [:div.virhe
-                                                  (for [v kentan-virheet]
-                                                    ^{:key (hash v)}
-                                                    [:span v])]])
-                                              [tee-kentta s (r/wrap
-                                                             arvo
-                                                             (fn [uusi]
-                                                               (if aseta
-                                                                 (muokkaa! id (fn [rivi]
-                                                                                (aseta rivi uusi)))
-                                                                 (muokkaa! id assoc nimi uusi))))]]
-                                             ^{:key (str nimi)}
-                                             [:td ((or fmt str) (if hae
-                                                                  (hae rivi)
-                                                                  (get rivi nimi)))])))
-                                       [:td.toiminnot
-                                        (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-                                          [:span {:on-click #(do (.preventDefault %)
-                                                                 (muokkaa! id assoc :poistettu true))}
-                                           (ikonit/trash)])]])))
+                                  (if (otsikko? id)
+                                    (let [teksti (:teksti id)]
+                                      ^{:key teksti}
+                                      [:tr.otsikko
+                                       [:td {:colSpan (inc (count skeema))}
+                                        [:h5 teksti]]])
+                                    (let [rivi (get muokatut id)
+                                          rivin-virheet (get kaikki-virheet id)]
+                                      (when-not (:poistettu rivi)
+                                        ^{:key id}
+                                        [:tr.muokataan {:class (str (if (even? i)
+                                                                      "parillinen"
+                                                                      "pariton"))}
+                                         (for [{:keys [nimi hae aseta fmt muokattava?] :as s} skeema]
+                                           (let [arvo (if hae
+                                                        (hae rivi)
+                                                        (get rivi nimi))
+                                                 kentan-virheet (get rivin-virheet nimi)]
+                                             (if (or (nil? muokattava?) (muokattava? rivi))
+                                               ^{:key (str nimi)}
+                                               [:td {:class (str (when-not (empty? kentan-virheet)
+                                                                   "has-error"))}
+                                                (when-not (empty? kentan-virheet)
+                                                  [:div.virheet
+                                                   [:div.virhe
+                                                    (for [v kentan-virheet]
+                                                      ^{:key (hash v)}
+                                                      [:span v])]])
+                                                [tee-kentta s (r/wrap
+                                                               arvo
+                                                               (fn [uusi]
+                                                                 (if aseta
+                                                                   (muokkaa! id (fn [rivi]
+                                                                                  (aseta rivi uusi)))
+                                                                   (muokkaa! id assoc nimi uusi))))]]
+                                               ^{:key (str nimi)}
+                                               [:td ((or fmt str) (if hae
+                                                                    (hae rivi)
+                                                                    (get rivi nimi)))])))
+                                         [:td.toiminnot
+                                          (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
+                                            [:span {:on-click #(do (.preventDefault %)
+                                                                   (muokkaa! id assoc :poistettu true))}
+                                             (ikonit/trash)])]]))))
                                 jarjestys)))))
 
                   ;; Näyttömuoto
@@ -301,17 +320,23 @@ Optiot on mappi optioita:
                       [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                       (doall (map-indexed
                               (fn [i rivi]
-                                ^{:key ((or tunniste :id) rivi)}
-                                [:tr {:class (str (if (even? i) "parillinen" "pariton")
-                                                  (when rivi-klikattu
-                                                    " klikattava"))
-                                      :on-click (when rivi-klikattu
-                                                  #(rivi-klikattu rivi))}
-                                 (for [{:keys [nimi hae fmt]} skeema]
-                                   ^{:key (str nimi)}
-                                   [:td ((or fmt str) (if hae
-                                                        (hae rivi)
-                                                        (get rivi nimi)))])])
+                                (if (otsikko? rivi)
+                                  ^{:key (:teksti rivi)}
+                                  [:tr.otsikko
+                                   [:td {:colSpan (inc (count skeema))}
+                                    [:h5 (:teksti rivi)]]]
+                                  
+                                  ^{:key ((or tunniste :id) rivi)}
+                                  [:tr {:class (str (if (even? i) "parillinen" "pariton")
+                                                    (when rivi-klikattu
+                                                      " klikattava"))
+                                        :on-click (when rivi-klikattu
+                                                    #(rivi-klikattu rivi))}
+                                   (for [{:keys [nimi hae fmt]} skeema]
+                                     ^{:key (str nimi)}
+                                     [:td ((or fmt str) (if hae
+                                                          (hae rivi)
+                                                          (get rivi nimi)))])]))
                               rivit)))))]])
             (when (and muokataan muokkaa-footer)
               [muokkaa-footer ohjaus])
