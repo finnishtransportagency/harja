@@ -1,10 +1,11 @@
 (ns harja.palvelin.main
   (:require
 
-   ;; Yleiset palvelinkomponenti
+   ;; Yleiset palvelinkomponentit
    [harja.palvelin.komponentit.tietokanta :as tietokanta]
    [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
    [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.fim :as fim]
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -42,6 +43,9 @@
                                                       kehitysmoodi)
                      [:todennus])
 
+     ;; FIM REST rajapinta
+     :fim (fim/->FIM (:url (:fim asetukset)))
+     
      ;; Frontille tarjottavat palvelut 
      :kayttajatiedot (component/using
                       (kayttajatiedot/->Kayttajatiedot)

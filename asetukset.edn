@@ -5,4 +5,5 @@
               :portti 5432
               :kayttaja "harja"
               :salasana ""}
+ :fim {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
  }

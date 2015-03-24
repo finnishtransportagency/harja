@@ -2,16 +2,25 @@
   "Komponentti FIM käyttäjätietojen hakemiseen."
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
-            [clojure.data.zip.xml :as z]))
+            [clojure.data.zip.xml :as z]
+            [com.stuartsierra.component :as component]
+            [org.httpkit.client :as http]
+            [clojure.string :as str]))
+
+;; Kentät, joita voidaan hakea:
+;; ObjectID EmployeeEndDate
+;; AccountName FirstName MiddleName LastName
+;; JobTitle Company OfficePhone OfficeLocation Toimiala Department Yksikko
+;; MobilePhone Email City roomnumber Manager KayttonimiPaivystysnumero
 
 (def +fim-elementit+
-  "Mäppäys FIM elementeistä suomenkielisiin avaimiin"
+  "Mäppäys FIM elementeistä suomenkielisiin avaimiin ja mahdollisiin prosessointeihin"
   {:ObjectID :tunniste
    :AccountName :kayttajatunnus
    :FirstName :etunimi
    :LastName :sukunimi
    :Email :email
-   :MobilePhone :puhelin
+   :MobilePhone [:puhelin #(str/replace % " " "")]
    :Company :organisaatio})
 
 (defn lue-fim-vastaus
@@ -22,8 +31,34 @@
            (fn [p]
              (into {}
                    (map (fn [[elementti avain]]
-                          [avain (z/xml1-> p elementti z/text)]))
+                          (if (vector? avain)
+                            (let [[avain muunnos] avain]
+                              [avain (z/xml1-> p elementti z/text muunnos)])
+                            [avain (z/xml1-> p elementti z/text)])))
                    +fim-elementit+))))
 
-(defn lue-xml [string]
-  (xml-zip (parse (java.io.ByteArrayInputStream. (.getBytes string)))))
+(defn lue-xml [bytet]
+  (xml-zip (parse (java.io.ByteArrayInputStream. bytet))))
+
+  
+(defn hae
+  "Hakee FIM palvelusta käyttäjätunnuksella."
+  [fim kayttajatunnus]
+  (let [{:keys [status body error]} @(http/get (:url fim)
+                                               {:timeout 5000 ; 5 sekuntia
+                                                :as :byte-array
+                                                :query-params {:filterproperty "AccountName"
+                                                               :filter kayttajatunnus
+                                                               :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"}})]
+    (if error
+      (throw (RuntimeException. "FIM haku epäonnistui: " error))
+      (first (lue-fim-vastaus (lue-xml body))))))
+            
+
+(defrecord FIM [url]
+  component/Lifecycle
+  (start [this]
+    this)
+
+  (stop [this]
+    this))

@@ -17,6 +17,7 @@
                 :portti s/Int
                 :kayttaja s/Str
                 :salasana s/Str}
+   :fim {:url s/Str}
    :logback-konfiguraatio s/Str}) 
 
 (def oletusasetukset
