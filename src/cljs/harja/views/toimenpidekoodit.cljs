@@ -1,11 +1,16 @@
 (ns harja.views.toimenpidekoodit
   "Toimenpidekoodien ylläpitonäkymä"
   (:require [reagent.core :refer [atom wrap] :as reagent]
-            [harja.asiakas.kommunikaatio :as k]
+            [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [bootstrap :as bs]
+            
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.ikonit :as ikonit]
-            [cljs.core.async :refer [<!]])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.grid :as grid]
+            [harja.loki :refer [log]]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -26,86 +31,46 @@
 (defonce valittu-taso2 (atom nil))
 (defonce valittu-taso3 (atom nil))
 
-(defonce valittu-toimenpidekoodi (atom nil))
+(defonce valittu-toimenpidekoodi (atom nil))                
 
-(defn nayta-koodi
-  "Esitysmuoto koodille, näyttää kaikki vanhemmat myös"
-  [koodi]
-  (let [koodit @koodit]
-    (loop [acc []
-           koodi koodi]
-      (if-not koodi
-        [:span.toimepidekoodi
-         (butlast (interleave
-                   (for [{:keys [nimi koodi taso]} (reverse acc)]
-                     [:span {:class (str "taso" taso)}
-                      koodi " " nimi])
-                   (repeat " / ")))]
-        (recur (conj acc koodi)
-               (get koodit (:emo koodi)))))))
+(defn resetoi-koodit [tiedot]
+  (loop [acc {}
+         [tpk & tpkt] tiedot]
+    (if-not tpk
+      (reset! koodit acc)
+      (recur (assoc acc (:id tpk) tpk)
+             tpkt))))
 
-  
-(defn hae-koodeja [termi]
-  (let [termi (.toLowerCase termi)]
-    (vec (filter (fn [{koodi :koodi nimi :nimi}]
-                   (or (not= -1 (.indexOf koodi termi))
-                       (not= -1 (.indexOf (.toLowerCase nimi) termi))))
-                 (vals @koodit)))))
-
-
-(defn lisaa-tehtavakoodi [taso3 tehtavanimi]
-  (k/post! :lisaa-toimenpidekoodi {:nimi tehtavanimi
-                                   :emo (:id taso3)}
-           (fn [koodi]
-             (if-let [id (:id koodi)]
-               (swap! koodit assoc id koodi))))) 
-
-(defn poista-tehtavakoodi [koodi]
-  (when (js/confirm (str "Poistetaanko tehtäväkoodi " (:nimi koodi) "?")) 
-    (k/post! :poista-toimenpidekoodi koodi
-             (fn [ok]
-               (.log js/console "poisto: " ok)
-               (swap! koodit dissoc (:id koodi))))))
-
-(defn muokkaa-tehtavakoodi [koodi uusi-tehtavakoodi]
-  (.log js/console "muokkaa " (pr-str koodi) " => " uusi-tehtavakoodi)
-  (let [ok (fn [& _]            
-             (swap! koodit update-in [(:id koodi)]
-                    #(assoc %
-                       :muokattu nil
-                       :nimi uusi-tehtavakoodi)))]
-    (if (= (:nimi koodi) uusi-tehtavakoodi)
-      ;; ei tarvitse muokata, sama koodi
-      (ok)
-
-      ;; pyydetään palvelinta vaihtamaan koodi
-      (k/post! :muokkaa-toimenpidekoodi (assoc koodi :nimi uusi-tehtavakoodi)
-               ok))))
-
-(def tehtavakoodin-muokkausrivi
-  (with-meta
-    (fn [koodi muokattu]
-      [:tr
-       [:td [:input {:type "text"
-                     :on-change #(reset! muokattu (-> % .-target .-value))
-                     :on-key-down #(case (.-keyCode %)
-                                     13 (muokkaa-tehtavakoodi koodi @muokattu)
-                                     27 (reset! muokattu nil)
-                                     nil)
-                     :value @muokattu}]]
-       [:td
-        [:span
-         [:span.pull-left 
-          {:on-click #(muokkaa-tehtavakoodi koodi @muokattu)}
-          (ikonit/ok-sign)]
-        [:span.pull-right ]
-         {:on-click #(reset! muokattu nil)}
-         (ikonit/remove-sign)]]])
-    {:component-did-mount #(-> (reagent/dom-node %)
-                               (.getElementsByTagName "input")
-                               (aget 0)
-                               .focus)}))
-                
+(defn tallenna-tehtavat [tehtavat uudet-tehtavat]
+  (go (let [lisattavat
+          (mapv #(assoc % :emo (:id @valittu-taso3))
+                (into []
+                      (comp (filter 
+                              #(and 
+                                 (not (:poistettu %))
+                                 (< (:id %) 0))))
+                      uudet-tehtavat))
+          muokattavat (into []
+                            (filter (fn [t]
+                                      ;; vain muuttuneet "vanhat" rivit
+                                      (not (some #(= % t) tehtavat)))
+                                    (into []
+                                          (comp (filter 
+                                                  #(and 
+                                                     (not (:poistettu %))
+                                                     (> (:id %) 0))))
+                                          uudet-tehtavat)))
+          poistettavat 
+          (into []
+                (keep #(when (and (:poistettu %)
+                                  (> (:id %) 0))
+                         (:id %)))
+                uudet-tehtavat)
+          res (<! (k/post! :tallenna-tehtavat
+                           {:lisattavat lisattavat
+                            :muokattavat muokattavat
+                            :poistettavat poistettavat}))]
+      (resetoi-koodit res))))
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
@@ -148,57 +113,24 @@
 
          [:br]
          (when-let [emo3 (:id taso3)]
-           [bs/panel {}
-            "Tehtävät"
-            [:table.tehtavakoodit
-             [:thead
-              [:tr
-               [:th "Nimi"]
-               [:th "Toiminnot"]
-               ]]
-             
-             [:tbody
-              (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))]
-                (if (empty? tehtavat)
-                  [:tr [:td.eiTehtavia {:colspan 2} "Ei tehtäviä"]]
-                  (for [tpk tehtavat]
-                    ^{:key (:id tpk)}
-                    (if-let [muokattu (:muokattu tpk)]
-                      ;; Tätä riviä muokataan
-                      [tehtavakoodin-muokkausrivi tpk (wrap muokattu
-                                                            swap! koodit assoc-in [(:id tpk) :muokattu])]
-                      ;; Normaali rivi
-                      [:tr
-                       [:td 
-                        [:span.tehtavakoodi (:nimi tpk)]]
-                       [:td.muokkaustoiminnot
-                        [:span {:on-click #(swap! koodit update-in [(:id tpk) :muokattu]
-                                                  (fn [_] (:nimi tpk)))}
-                         (ikonit/edit)]
-                        [:span {:on-click #(poista-tehtavakoodi tpk)
-                                :aria-hidden true}
-                         (ikonit/trash)]]]))))
-              [:tr.uusitehtavakoodi
-               [:td [:input {:type "text" :placeholder "Tehtävän nimi..." :value @uusi-tehtava
-                             :on-change #(reset! uusi-tehtava (-> % .-target .-value))
-                             :on-key-up #(when (and (= 13 (.-keyCode %))
-                                                       (not (empty? @uusi-tehtava)))
-                                              (lisaa-tehtavakoodi taso3 @uusi-tehtava)
-                                              (reset! uusi-tehtava ""))}]]
-               [:td [:button.btn.btn-primary.btn-sm {:on-click #(do (lisaa-tehtavakoodi taso3 @uusi-tehtava)
-                                                                    (reset! uusi-tehtava ""))}
-                     "Tallenna"]]]]]])
+           (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))]
+             [grid/grid
+              {:otsikko "Tehtävät"
+               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+               :tallenna (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo 
+                                            #(tallenna-tehtavat tehtavat %) 
+                                            :ei-mahdollinen)
+               :tunniste :id}
+              
+              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "85%"}
+               {:otsikko "Yksikkö" :nimi :yksikko    :tyyppi :string :leveys "15%"}]
+              tehtavat]))
           ]))
     
     {:displayName  "toimenpidekoodit"
      :component-did-mount (fn [this]
                             (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
-                                  (loop [acc {}
-                                         [tpk & tpkt] res]
-                                    (if-not tpk
-                                      (reset! koodit acc)
-                                      (recur (assoc acc (:id tpk) tpk)
-                                             tpkt))))))}))
+                                  (resetoi-koodit res))))}))
 
   
  

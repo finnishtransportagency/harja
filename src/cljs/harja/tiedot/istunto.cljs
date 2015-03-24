@@ -34,7 +34,24 @@
 (def rooli-urakoitsijan-kayttaja             "urakoitsijan kayttaja")
 (def rooli-urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
-;; mahdollisesti jaettavaa koodia backendin kanssa? Checkaa kun clojure 1.7 otetaan käyttöön
+(defn roolissa?
+  "Tarkistaa onko käyttäjällä tietty rooli."
+  [rooli]
+    (if (some #{rooli} (:roolit @kayttaja))
+      true
+      false))
+
+(defn jos-rooli
+  "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii. 
+  Palauttaa muutoin-komponentin jos ei kyseistä roolia."
+  ([rooli sitten] (jos-rooli rooli sitten nil))
+  ([rooli sitten muutoin]
+    (if (and @kayttaja (roolissa? rooli))
+     sitten
+     (let [viesti (str "Käyttäjällä '" (:kayttajanimi @kayttaja) "' ei vaadittua roolia '" rooli)]
+       (log viesti) 
+       muutoin))))
+
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [rooli urakka-id]
@@ -46,8 +63,6 @@
       true
       false)
     false))
-
-
 
 (defn jos-rooli-urakassa
   "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii. 

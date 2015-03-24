@@ -21,6 +21,7 @@
                                         (assoc :organisaatio {:id (:org_id kt)
                                                               :nimi (:org_nimi kt)
                                                               :tyyppi (:org_tyyppi kt)}
+                                               :roolit (into #{} (:roolit (konv/array->vec (first (q/hae-kayttajan-roolit db (:id kt))) :roolit)))
                                                :urakkaroolit (map konv/alaviiva->rakenne (q/hae-kayttajan-urakka-roolit db (:id kt))))
                                         (dissoc :org_id :org_nimi :org_tyyppi)))))
                               %

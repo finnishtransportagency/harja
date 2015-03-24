@@ -19,8 +19,17 @@
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli."
   [kayttaja rooli]
-  (if ((:roolit kayttaja) rooli)
-    true false))
+  
+  (if (some #{rooli} (:roolit kayttaja))
+      true
+      false))
+
+(defn vaadi-rooli
+    [kayttaja rooli]
+  (when-not (roolissa? kayttaja rooli)
+    (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s'", (:kayttajanimi kayttaja) rooli)]
+    (log/warn viesti)
+        (throw (RuntimeException. viesti)))))
 
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
