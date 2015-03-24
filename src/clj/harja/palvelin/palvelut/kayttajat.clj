@@ -6,7 +6,8 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.konversio :as konv]
-
+            [harja.palvelin.komponentit.fim :as fim]
+            
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
             [clojure.set :as set]))
@@ -14,7 +15,9 @@
 (declare hae-kayttajat
          hae-kayttajan-tiedot
          tallenna-kayttajan-tiedot
-         poista-kayttaja)
+         poista-kayttaja
+         hae-fim-kayttaja
+         hae-organisaatioita)
 
 (defrecord Kayttajat []
   component/Lifecycle
@@ -34,6 +37,15 @@
                       :poista-kayttaja
                       (fn [user kayttaja-id]
                         (poista-kayttaja (:db this) user kayttaja-id)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-fim-kayttaja
+                      (fn [user tunnus]
+                        (hae-fim-kayttaja (:db this) (:fim this) user tunnus)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-organisaatioita
+                      (fn [user teksti]
+                        (hae-organisaatioita (:db this) user teksti)))
+    
                            
     this)
   (stop [this]
@@ -41,6 +53,9 @@
     (poista-palvelu (:http-palvelin this) :hae-kayttajan-tiedot)
     (poista-palvelu (:http-palvelin this) :tallenna-kayttajan-tiedot)
     (poista-palvelu (:http-palvelin this) :poista-kayttaja)
+    (poista-palvelu (:http-palvelin this) :hae-fim-kayttaja)
+    (poista-palvelu (:http-palvelin this) :hae-organisaatioita)
+    
     this))
 
 
@@ -122,8 +137,22 @@
       true
       false)))
 
-                             
-                       
-      
-            
+(def organisaatio-xf
+  (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
+(defn hae-fim-kayttaja [db fim user tunnus]
+  (if-let [kayttaja (fim/hae fim tunnus)]
+    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))]
+      (if org
+        ;; Liitetään olemassaoleva organisaatio käyttäjälle
+        (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
+        
+        ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
+        (dissoc kayttaja :organisaatio)))
+    :ei-loydy))
+
+            
+(defn hae-organisaatioita [db user teksti]
+  (into []
+        organisaatio-xf
+        (q/hae-organisaatioita db (str "%" teksti "%"))))

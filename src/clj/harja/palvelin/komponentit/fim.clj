@@ -19,7 +19,7 @@
    :AccountName :kayttajatunnus
    :FirstName :etunimi
    :LastName :sukunimi
-   :Email :email
+   :Email :sahkoposti
    :MobilePhone [:puhelin #(str/replace % " " "")]
    :Company :organisaatio})
 

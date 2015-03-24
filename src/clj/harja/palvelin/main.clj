@@ -76,7 +76,7 @@
                         [:http-palvelin :db])
      :kayttajat (component/using
                  (kayttajat/->Kayttajat)
-                 [:http-palvelin :db])
+                 [:http-palvelin :db :fim])
      )))
 
 (defonce harja-jarjestelma nil)

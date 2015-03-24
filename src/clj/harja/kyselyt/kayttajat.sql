@@ -88,3 +88,17 @@ INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW()
 -- name: poista-kayttaja!
 -- Merkitsee annetun käyttäjän poistetuksi
 UPDATE kayttaja SET poistettu=true,muokkaaja=:muokkaaja,muokattu=NOW() WHERE id=:kayttaja
+
+-- name: hae-organisaatio-nimella
+-- Hakee nimetyn organisaation. Tämä kysely on FIM käyttäjän tietojen yhdistämistä varten.
+-- Ei tee käyttäjätarkistusta.
+SELECT o.id as id, o.nimi as nimi, o.tyyppi as tyyppi
+  FROM organisaatio o
+ WHERE o.nimi = :nimi
+
+-- name: hae-organisaatioita
+-- Käyttäjän organisaatiohaku nimen osalla.
+SELECT o.id as id, o.nimi as nimi, o.tyyppi as tyyppi
+  FROM organisaatio o
+ WHERE o.nimi ILIKE :haku
+

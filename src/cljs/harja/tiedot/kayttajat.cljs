@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.tapahtumat :as t]
 
+            [harja.ui.protokollat :refer [Haku hae]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -55,3 +56,12 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
 
 (defn poista-kayttaja! [id]
   (k/post! :poista-kayttaja id))
+
+(defn hae-fim-kayttaja [tunnus]
+  (k/post! :hae-fim-kayttaja tunnus))
+
+(def organisaatio-haku
+  "Hakulähde organisaatioiden hakemiseksi."
+  (reify Haku
+    (hae [_ teksti]
+      (k/post! :hae-organisaatioita teksti))))
