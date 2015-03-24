@@ -1,6 +1,6 @@
 -- name: hae-urakan-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet 
-SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi,
+SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t4_yksikko,
        t3.id as t3_id, t3.koodi as t3_koodi, t3.nimi as t3_nimi,
        t2.id as t2_id, t2.koodi as t2_koodi, t2.nimi as t2_nimi,
        t1.id as t1_id, t1.koodi as t1_koodi, t1.nimi as t1_nimi

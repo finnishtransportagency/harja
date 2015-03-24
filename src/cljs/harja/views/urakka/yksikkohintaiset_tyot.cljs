@@ -34,7 +34,7 @@
         true)));;)
 
 (defn luo-tyhja-tyo [tp ur hk]
-  {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :urakka (:id ur) 
+  {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :yksikko (:yksikko tp) :urakka (:id ur)
    :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
 
 (defn ryhmittele-tehtavat
@@ -84,7 +84,6 @@
                                                   
                                                    {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) tehtavan-rivit))}))) tehtavien-rivit)
                                   tyhjat-tyot))))))
-    (log "toimenpiteet-ja-tehtävät: " @toimenpiteet-ja-tehtavat)
     [:div.yksikkohintaiset-tyot     
      [grid/grid
       {:otsikko "Yksikköhintaiset työt"
@@ -103,7 +102,7 @@
       [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "25%"}
        {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @suunnittelu/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
        {:otsikko (str "Määrä 1-9/"  (.getYear (:loppupvm @suunnittelu/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
-       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "15%"}
+       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
        {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
        {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]

@@ -12,5 +12,5 @@
                [{:id (:t1_id rivi) :nimi (:t1_nimi rivi) :koodi (:t1_koodi rivi) :taso 1}
                 {:id (:t2_id rivi) :nimi (:t2_nimi rivi) :koodi (:t2_koodi rivi) :taso 2}
                 {:id (:t3_id rivi) :nimi (:t3_nimi rivi) :koodi (:t3_koodi rivi) :taso 3}
-                {:id (:t4_id rivi) :nimi (:t4_nimi rivi) :taso 4}]))
+                {:id (:t4_id rivi) :nimi (:t4_nimi rivi) :taso 4 :yksikko (:t4_yksikko rivi)}]))
         (hae-urakan-toimenpiteet-ja-tehtavat db urakka)))
