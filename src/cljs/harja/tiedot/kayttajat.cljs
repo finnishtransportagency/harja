@@ -40,11 +40,13 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
 
 (defn tallenna-kayttajan-tiedot!
   "Tallentaa käyttäjän roolitiedot muokkausnäkymästä. Palauttaa uudet tiedot."
-  [kayttaja-id tiedot]
-  (log "TALLENNA KAYTTAJA " kayttaja-id "\nTIEDOILLA: " (pr-str tiedot))
+  [kayttaja organisaatio tiedot]
+  (log "TALLENNA KAYTTAJA " kayttaja " \nTIEDOILLA: " (pr-str tiedot))
   (let [ch (chan)]
     (go
-      (let [lahetettava {:kayttaja-id kayttaja-id
+      (let [lahetettava {:kayttaja-id (:id kayttaja)
+                         :organisaatio-id (:id organisaatio)
+                         :kayttajatunnus (:kayttajatunnus kayttaja)
                          :tiedot (-> tiedot
                                      (update-in [:urakka-roolit]
                                                 (fn [roolit]

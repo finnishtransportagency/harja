@@ -31,7 +31,8 @@
   {"jarjestelmavastuuhenkilo" "Järjestelmävastuuhenkilö"
    "tilaajan kayttaja" " Tilaajan käyttäjä"
    "urakanvalvoja" "Urakanvalvoja"
-   "vaylamuodon vastuuhenkilo" "Väylämuodon vastuuhenkilö"
+   ;;"vaylamuodon vastuuhenkilo" "Väylämuodon vastuuhenkilö"
+   "hallintayksikon vastuuhenkilo" "Hallintayksikön vastuuhenkilö"
    "liikennepäivystäjä" "Liikennepäivystäjä"
    "tilaajan asiantuntija" "Tilaajan asiantuntija"
    "tilaajan laadunvalvontakonsultti" "Tilaajan laadunvalvontakonsultti"
@@ -41,9 +42,8 @@
    "urakoitsijan laatuvastaava" "Urakoitsijan laatuvastaava"})
 
 
-(def valittu-kayttaja
-  "Tällä hetkellä muokattava käyttäjä"
-  (atom nil))
+;; Tällä hetkellä muokattava käyttäjä
+(defonce valittu-kayttaja (atom nil))
 
 (defonce haku (atom ""))
 
@@ -82,13 +82,13 @@
         (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
           [:span
            "Näytä: "
-           [:input.kaikki-tunnukset {:type "radio" :on-click #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
+           [:input.kaikki-tunnukset {:type "radio" :on-change #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
            [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} " kaikki"] " "
            
-           [:input.vain-l-tunnukset {:type "radio" :on-click #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
+           [:input.vain-l-tunnukset {:type "radio" :on-change #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
            [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} " vain L-tunnukset"] " "
            
-           [:input.vain-lx-tunnukset {:type "radio" :on-click #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
+           [:input.vain-lx-tunnukset {:type "radio" :on-change #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
            [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} " vain LX-tunnukset"]]))
         [grid/grid
         {:otsikko "Käyttäjät"
@@ -306,31 +306,39 @@
                                     ;;:hallintayksikko {:id (get-in urakkarooli [:hallintayksikko :id])}
                                     :rooli rooli))
                                 (vals muokattavat)))
-        
+
+        tallennus-menossa (atom false)
         tallenna! (fn []
+                    (reset! tallennus-menossa true)
                     (log "TALLENNETAAN KÄYTTÄJÄÄ")
                     (go 
                       (let [uudet-tiedot
                             (<! (k/tallenna-kayttajan-tiedot!
-                                              (:id k)
-                                              {:roolit @roolit
-                                               :urakka-roolit
-                                               (into []
-                                                     (concat
-                                                      (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
-                                                      (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")
-                                                      (urakat-tallennus @urakan-vastuuhenkilo-urakat "urakoitsijan urakan vastuuhenkilo")
-                                                      (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
-                                                      (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
-                                               }))]
+                                 k
+                                 @organisaatio
+                                 {:roolit @roolit
+                                  :urakka-roolit
+                                  (into []
+                                        (concat
+                                         (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
+                                         (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")
+                                         (urakat-tallennus @urakan-vastuuhenkilo-urakat "urakoitsijan urakan vastuuhenkilo")
+                                         (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
+                                         (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
+                                  }))]
                         (reset! valittu-kayttaja nil)
                         (swap! kayttajalista
                                (fn [kl]
-                                 (mapv #(if (= (:id %) (:id k))
-                                          ;; päivitetään käyttäjän roolit näkymään
-                                          (assoc % :roolit (:roolit uudet-tiedot))
-                                          %) kl)))
-                        (viesti/nayta! "Käyttäjä tallennettu." :success))))
+                                 (if (some #(= (:id %) (:id uudet-tiedot)) kl)
+                                   ;; käyttäjä on jo, päivitetään se
+                                   (mapv #(if (= (:id %) (:id k))
+                                            ;; päivitetään käyttäjän roolit näkymään
+                                            (assoc % :roolit (:roolit uudet-tiedot))
+                                            %) kl)
+                                   ;; uusi käyttäjä lisätään listaan
+                                   (conj kl uudet-tiedot))))
+                        (viesti/nayta! "Käyttäjä tallennettu." :success)
+                        (reset! tallennus-menossa false))))
 
         poista! (fn []
                   (go 
@@ -412,18 +420,13 @@
                (= tyyppi :tilaaja)
                [:span
                 [roolivalinta "jarjestelmavastuuhenkilo"]
+                (when (= :hallintayksikko (:tyyppi @organisaatio))
+                  [roolivalinta "hallintayksikon vastuuhenkilo"])
                 [roolivalinta "tilaajan kayttaja"]
                 [roolivalinta "urakanvalvoja"
                  ^{:key "urakat"}
                  [urakkalista urakanvalvoja-urakat @organisaatio]]
-                [roolivalinta "vaylamuodon vastuuhenkilo"
-                 ^{:key "vaylamuoto"}
-                 [:div
-                  "Väylämuoto:"
-                  [:div.dropdown
-                   [:button.btn.btn-default {:disabled "disabled"}
-                    "Tie " [:span.caret]]] ;;[alasvetovalinta {:valinta "Tie" :format-fn str :class "" :disabled true} ["Tie" "Foo"]]
-                  ]]
+                
                 [roolivalinta "tilaajan asiantuntija"]
                 [roolivalinta "tilaajan laadunvalvontakonsultti"
                  ^{:key "urakat"}
@@ -453,7 +456,9 @@
               [:button.btn.btn-primary {:disabled (nil? tyyppi)
                                         :on-click #(do (.preventDefault %)
                                                        (tallenna!))}
-               (ikonit/ok) " Tallenna"]
+               (if @tallennus-menossa
+                 [ajax-loader]
+                 (ikonit/ok)) " Tallenna"]
               [:span.pull-right
                [:button.btn.btn-danger {:disabled (when @poista-painettu "disabled")
                                         :on-click #(do (.preventDefault %)

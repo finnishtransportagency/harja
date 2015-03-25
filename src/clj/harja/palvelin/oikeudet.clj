@@ -18,10 +18,13 @@
 (def rooli-urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
 (defn roolissa?
-  "Tarkistaa onko käyttäjällä tietty rooli."
+  "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
+tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
+rooleista."
   [kayttaja rooli]
-  
-  (if (some #{rooli} (:roolit kayttaja))
+  (if (some (if (set? rooli)
+              rooli
+              #{rooli}) (:roolit kayttaja))
       true
       false))
 

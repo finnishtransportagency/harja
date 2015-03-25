@@ -32,7 +32,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:fim this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -71,27 +71,65 @@
     
     [lkm kayttajat]))
 
+(defn hae-kayttaja [db kayttaja-id]
+  (let [k (first (q/hae-kayttaja db kayttaja-id))]
+    (when k
+      (konv/array->set (konv/organisaatio k) :roolit))))
+
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
   [db user kayttaja-id]
-  {:roolit (into #{} (:roolit (konv/array->vec (first (q/hae-kayttajan-roolit db kayttaja-id)) :roolit)))
-   :urakka-roolit (into []
-                        (map konv/alaviiva->rakenne)
-                        (q/hae-kayttajan-urakka-roolit db kayttaja-id))})
+  (merge (hae-kayttaja db kayttaja-id)
+         {:roolit (into #{} (:roolit (konv/array->vec (first (q/hae-kayttajan-roolit db kayttaja-id)) :roolit)))
+          :urakka-roolit (into []
+                               (map konv/alaviiva->rakenne)
+                               (q/hae-kayttajan-urakka-roolit db kayttaja-id))}))
+
+(defn hae-fim-kayttaja [db fim user tunnus]
+  (if-let [kayttaja (fim/hae fim tunnus)]
+    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))]
+      (if org
+        ;; Liitetään olemassaoleva organisaatio käyttäjälle
+        (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
+        
+        ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
+        (dissoc kayttaja :organisaatio)))
+    :ei-loydy))
+
+(defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
+  (when (and (oik/roolissa? user oik/rooli-urakoitsijan-paakayttaja)
+             ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
+             (not (= organisaatio-id (:id (:organisaatio user)))))
+    (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)
+    (throw (RuntimeException. "Käyttöoikeus puuttuu")))
+  (let [k (hae-fim-kayttaja db fim user tunnus)]
+    (when-not (= :ei-loydy k)
+      (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
+      (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
+                        (:sahkoposti k) (:puhelin k) organisaatio-id))))
+
 
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
-  [db user {:keys [kayttaja-id tiedot]}]
+  [db fim user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
+  (oik/vaadi-rooli user #{oik/rooli-jarjestelmavastuuhenkilo
+                          oik/rooli-hallintayksikon-vastuuhenkilo
+                          oik/rooli-urakoitsijan-paakayttaja})
   (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
   (jdbc/with-db-transaction [c db]
 
-    (let [vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
+    (let [luotu-kayttaja (when (nil? kayttaja-id)
+                           (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
+          kayttaja-id (if luotu-kayttaja
+                        (:id luotu-kayttaja) 
+                        kayttaja-id)
+          vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
           vanhat-roolit (:roolit vanhat-tiedot)
                                  
           vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
       ;; FIXME:
       ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
-                                        ;(when (oik/roolissa? user oik/rooli:jarjestelmavastuuhenkilo)
+                                        ;(when (oik/roolissa? user oik/rooli-jarjestelmavastuuhenkilo)
       
       ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
                                         ;  )
@@ -124,11 +162,11 @@
               (do
                 (log/info "Lisätään käyttäjän " kayttaja-id " rooli " rooli " urakkaan " (:id urakka))
                 (q/lisaa-urakka-rooli<! c  (:id user) kayttaja-id (:id urakka) rooli)
-                ))))))
+                )))))
 
-    ;; Lopuksi palautetaan päivitetty käyttäjä
-    (hae-kayttajan-tiedot c user kayttaja-id)
-    ))
+      ;; Lopuksi palautetaan päivitetty käyttäjä
+      (merge (hae-kayttaja c kayttaja-id)
+             (hae-kayttajan-tiedot c user kayttaja-id)))))
 
 
 (defn poista-kayttaja [db user kayttaja-id]
@@ -140,16 +178,7 @@
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
-(defn hae-fim-kayttaja [db fim user tunnus]
-  (if-let [kayttaja (fim/hae fim tunnus)]
-    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))]
-      (if org
-        ;; Liitetään olemassaoleva organisaatio käyttäjälle
-        (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
-        
-        ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
-        (dissoc kayttaja :organisaatio)))
-    :ei-loydy))
+
 
             
 (defn hae-organisaatioita [db user teksti]

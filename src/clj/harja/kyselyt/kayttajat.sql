@@ -44,7 +44,19 @@ SELECT COUNT(k.id) as lkm
 			      ))
        -- tarkistetaan hakuehto
    AND (:haku = '' OR (k.kayttajanimi LIKE :haku OR k.etunimi LIKE :haku OR k.sukunimi LIKE :haku))
-         
+
+-- name: hae-kayttaja
+-- Hakee yhden käyttäjän id:llä
+SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi, k.sahkoposti, k.puhelin,
+       o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi,
+       array_cat((SELECT array_agg(rooli) FROM kayttaja_rooli WHERE kayttaja = k.id AND poistettu=false),
+                 (SELECT array_agg(rooli) FROM kayttaja_urakka_rooli WHERE kayttaja = k.id AND poistettu=false)) as roolit
+  FROM kayttaja k
+       LEFT JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE k.poistettu = false
+   AND k.id = :id
+
+ 
 -- name: hae-kayttajan-urakka-roolit
 -- Hakee käyttäjän urakka roolit.
 SELECT rooli, urakka as urakka_id, luotu,
@@ -102,3 +114,10 @@ SELECT o.id as id, o.nimi as nimi, o.tyyppi as tyyppi
   FROM organisaatio o
  WHERE o.nimi ILIKE :haku
 
+
+-- name: luo-kayttaja<!
+-- Luo uuden käyttäjän FIM tietojen pohjalta
+INSERT
+  INTO kayttaja
+       (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio)
+VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio)

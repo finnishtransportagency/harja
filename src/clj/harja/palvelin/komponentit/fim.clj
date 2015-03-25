@@ -50,7 +50,7 @@
                                                 :query-params {:filterproperty "AccountName"
                                                                :filter kayttajatunnus
                                                                :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"
-                                                               :ignorecache "true"}})]
+                                                               }})]
     (if error
       (throw (RuntimeException. "FIM haku epäonnistui: " error))
       (first (lue-fim-vastaus (lue-xml body))))))
