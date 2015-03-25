@@ -4,17 +4,18 @@
             [clojure.tools.logging :as log]))
 
 
-(def rooli:jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
-(def rooli:tilaajan-kayttaja                 "tilaajan kayttaja")
-(def rooli:urakanvalvoja                     "urakanvalvoja")
-(def rooli:vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
-(def rooli:liikennepaivystaja                "liikennepäivystäjä")
-(def rooli:tilaajan-asiantuntija             "tilaajan asiantuntija")
-(def rooli:tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
-(def rooli:urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")
-(def rooli:urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
-(def rooli:urakoitsijan-kayttaja             "urakoitsijan kayttaja")
-(def rooli:urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
+(def rooli-jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
+(def rooli-tilaajan-kayttaja                 "tilaajan kayttaja")
+(def rooli-urakanvalvoja                     "urakanvalvoja")
+;;(def rooli-vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
+(def rooli-hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo")
+(def rooli-liikennepaivystaja                "liikennepäivystäjä")
+(def rooli-tilaajan-asiantuntija             "tilaajan asiantuntija")
+(def rooli-tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
+(def rooli-urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")
+(def rooli-urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
+(def rooli-urakoitsijan-kayttaja             "urakoitsijan kayttaja")
+(def rooli-urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli."

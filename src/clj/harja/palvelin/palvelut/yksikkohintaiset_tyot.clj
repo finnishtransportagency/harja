@@ -45,7 +45,7 @@
 (defn tallenna-urakan-yksikkohintaiset-tyot 
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot"
   [db user {:keys [urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm tyot] :as tiedot}]
-  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli:urakanvalvoja urakka-id)
+  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
         (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
