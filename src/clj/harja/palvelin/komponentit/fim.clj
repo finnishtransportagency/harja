@@ -45,11 +45,12 @@
   "Hakee FIM palvelusta käyttäjätunnuksella."
   [fim kayttajatunnus]
   (let [{:keys [status body error]} @(http/get (:url fim)
-                                               {:timeout 5000 ; 5 sekuntia
+                                               {:timeout 15000 ; 15 sekuntia
                                                 :as :byte-array
                                                 :query-params {:filterproperty "AccountName"
                                                                :filter kayttajatunnus
-                                                               :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"}})]
+                                                               :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"
+                                                               :ignorecache "true"}})]
     (if error
       (throw (RuntimeException. "FIM haku epäonnistui: " error))
       (first (lue-fim-vastaus (lue-xml body))))))
