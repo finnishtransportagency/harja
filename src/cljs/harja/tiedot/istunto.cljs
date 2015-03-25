@@ -49,10 +49,15 @@
 
 (defn jos-rooli
   "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii. 
-  Palauttaa muutoin-komponentin jos ei kyseistä roolia."
+  Palauttaa muutoin-komponentin jos ei kyseistä roolia. Annettu rooli voi olla
+joko yksittäinen rooli tai joukko useita rooleja. Jos joukko, tarkistetaan että 
+käyttäjällä on joku annetuista rooleista."
   ([rooli sitten] (jos-rooli rooli sitten nil))
   ([rooli sitten muutoin]
-    (if (and @kayttaja (roolissa? rooli))
+     (if (and @kayttaja
+              (or (and (set? rooli)
+                       (some roolissa? rooli))
+                  (roolissa? rooli)))
      sitten
      (let [viesti (str "Käyttäjällä '" (:kayttajanimi @kayttaja) "' ei vaadittua roolia '" rooli)]
        (log viesti) 
