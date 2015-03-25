@@ -6,10 +6,10 @@
             [harja.tiedot.kayttajat :as k]
             [harja.tiedot.urakat :as u]
             [harja.tiedot.navigaatio :as nav]
-            
+            [harja.tiedot.istunto :refer [jos-rooli rooli-jarjestelmavastuuhenkilo]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.viesti :as viesti]
             [bootstrap :as bs]
@@ -49,37 +49,66 @@
 
 
 (defonce kayttajalista (atom nil))
-(defonce kayttajien-haku
-  (run! (let [haku @haku]
-          (go (let [[lkm data] (<! (k/hae-kayttajat haku 0 500))]
-                (reset! kayttajalista data))))))
+(defonce kayttajalista-haku
+  (go (let [[lkm data] (<! (k/hae-kayttajat "" 0 500))]
+        (log "KAYTTAJALISTA TULI: " data)
+        (reset! kayttajalista data))))
 
+(defonce kayttajatyyppi-rajaus (atom nil)) ;; voi olla "L" tai "LX" jos halutaa
 
-    
-
+(def kayttajalista-rajattu
+  (reaction (let [rajaus @kayttajatyyppi-rajaus
+                  kaikki-kayttajat @kayttajalista]
+              (if rajaus
+                (filterv #(let [t (:kayttajanimi %)]
+                            (or (and (= rajaus "L")
+                                     (re-matches #"^L[^X].*$" t))
+                                (and (= rajaus "LX")
+                                     (re-matches #"^LX.*$" t))))
+                         kaikki-kayttajat)
+                kaikki-kayttajat))))
+                                 
+                              
+                  
 (defn kayttajaluettelo
   "Käyttäjälistauskomponentti"
   []
-  (let [tunnus (atom "")]
+  (let [tunnus (atom "")
+        haku-menossa (atom false)]
     (fn []
       [:div.kayttajaluettelo
-       [grid/grid
+       (jos-rooli
+        #{rooli-jarjestelmavastuuhenkilo} ;; +hallintayksikön vastuuhenkilö
+        (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
+          [:span
+           "Näytä: "
+           [:input.kaikki-tunnukset {:type "radio" :on-click #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
+           [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} " kaikki"] " "
+           
+           [:input.vain-l-tunnukset {:type "radio" :on-click #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
+           [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} " vain L-tunnukset"] " "
+           
+           [:input.vain-lx-tunnukset {:type "radio" :on-click #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
+           [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} " vain LX-tunnukset"]]))
+        [grid/grid
         {:otsikko "Käyttäjät"
          :tyhja "Ei käyttäjiä."
          :rivi-klikattu #(reset! valittu-kayttaja %)
          }
         
         [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
+         {:otsikko "Livi-tunnus" :nimi :kayttajanimi :leveys "10%"}
+
          {:otsikko "Organisaatio" :nimi :org-nimi
           :hae #(:nimi (:organisaatio %))
-          :leveys "30%"}
+          :leveys "25%"}
          
          {:otsikko "Roolit" :nimi :roolit
           :fmt #(str/join ", " (map +rooli->kuvaus+ %))
-          :leveys "40%"}
+          :leveys "35%"}
          ]
         
-        @kayttajalista]
+        @kayttajalista-rajattu]
        
        [:form.form-inline
         [:div.form-group
@@ -88,8 +117,10 @@
                                            :on-change #(reset! tunnus (-> % .-target .-value))
                                            
                                            :placeholder "Livi-tunnus (LX123456)..."}]]
-        [:button.btn.btn-default {:disabled (nil? (re-matches #"^\w{1,}\d*$" @tunnus))
+        [:button.btn.btn-default {:disabled (or @haku-menossa
+                                                (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
                                   :on-click #(do (.preventDefault %)
+                                                 (reset! haku-menossa true)
                                                  (go (let [tunnus @tunnus
                                                            res (<! (k/hae-fim-kayttaja tunnus))]
                                                        (log "TULI: " res)
@@ -98,7 +129,10 @@
                                                          (if (map? res)
                                                            (reset! valittu-kayttaja res)
                                                            (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
-                                                                          :warning))))))} 
+                                                                          :warning)))
+                                                       (reset! haku-menossa false))))}
+         (when @haku-menossa
+           [ajax-loader])
          "Tuo käyttäjä"]]])))
 
 (defn valitut-urakat [urakat-map]
