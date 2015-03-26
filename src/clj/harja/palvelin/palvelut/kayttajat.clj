@@ -85,6 +85,9 @@
                                (map konv/alaviiva->rakenne)
                                (q/hae-kayttajan-urakka-roolit db kayttaja-id))}))
 
+(def organisaatio-xf
+  (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
+
 (defn hae-fim-kayttaja [db fim user tunnus]
   (if-let [kayttaja (fim/hae fim tunnus)]
     (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))]
@@ -175,8 +178,7 @@
       true
       false)))
 
-(def organisaatio-xf
-  (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
+
 
 
 
