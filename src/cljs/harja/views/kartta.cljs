@@ -8,6 +8,7 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
+            [harja.views.kartta.tasot :as tasot]
             ))
             
 
@@ -77,22 +78,24 @@
                              :hy (nav/valitse-hallintayksikko item)
                              :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))))
               :tooltip-fn :nimi 
-              :geometries (cond
-                           ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                           (nil? v-hal)
-                           hals
+              :geometries
+              (concat (cond
+                       ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                       (nil? v-hal)
+                       hals
 
-                           ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                           (nil? @nav/valittu-urakka)
-                           (vec (concat [(assoc v-hal
-                                           :valittu true
-                                           :leaflet/fit-bounds true)]
-                                        @nav/suodatettu-urakkalista))
-                           
-                           ;; Valittu urakka, mitä näytetään?
-                           :default [(assoc @nav/valittu-urakka
+                       ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                       (nil? @nav/valittu-urakka)
+                       (vec (concat [(assoc v-hal
                                        :valittu true
-                                       :leaflet/fit-bounds true)])
+                                       :leaflet/fit-bounds true)]
+                                    @nav/suodatettu-urakkalista))
+                           
+                       ;; Valittu urakka, mitä näytetään?
+                       :default [(assoc @nav/valittu-urakka
+                                   :valittu true
+                                   :leaflet/fit-bounds true)])
+                      @tasot/geometriat)
               
               :geometry-fn (fn [hy]
                              (when-let [alue (:alue hy)]
