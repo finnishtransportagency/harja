@@ -43,20 +43,23 @@
         (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot 
-  "Palvelu joka tallentaa urakan yksikkohintaiset tyot"
-  [db user {:keys [urakka-id sopimusnumero hoitokausi-alkupvm hoitokausi-loppupvm tyot] :as tiedot}]
+  "Palvelu joka tallentaa urakan yksikkohintaiset tyot.
+  Tämä funktio olettaa hoidon au:n hoitokausirakenteen, tuskin toimii suoraan ylläpidon urakoissa."
+  [db user {:keys [urakka-id sopimusnumero tyot] :as tiedot}]
   (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
         (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
-              valitun-hoitokauden-ja-sopimusnumeron-tyot (filter #(and
+              valitut-pvmt (into #{} (map (juxt :alkupvm :loppupvm) tyot))
+              valittujen-hoitokausien-ja-sopimusnumeron-tyot (filter #(and
                                                                     (= (:sopimus %) sopimusnumero) 
-                                                                    ;; olettaa hoidon au:n hoitokausirakenteen
-                                                                    ;; --> ei välttämättä toimi ylläpidon urakoissa
-                                                                    (or (= (:alkupvm %) hoitokausi-alkupvm)
-                                                                        (= (:loppupvm %) hoitokausi-loppupvm))) 
+                                                                    (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
                                                                  nykyiset-arvot)
-              tyot-kannassa (into #{}  (map :tehtava valitun-hoitokauden-ja-sopimusnumeron-tyot))]
+              ;; TODO: tyot-kannassa täytyy ryhmitellä valittujen pvm:ien mukaan jotta tiedetään onko jo kannassa?
+              tyot-kannassa (into #{}  (map :tehtava valittujen-hoitokausien-ja-sopimusnumeron-tyot))]
+          (log/info "valittujen-hoitokausien-ja-sopimusnumeron-tyot setti: " valittujen-hoitokausien-ja-sopimusnumeron-tyot)
+          (log/info "valitut-pvmt setti: " valitut-pvmt)
+          (log/info "tyot-kannassa " tyot-kannassa)
           (doseq [tyo tyot]
             (if (not (tyot-kannassa (:tehtava tyo)))
               ;; insert

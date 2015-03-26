@@ -36,25 +36,22 @@
                    (assoc tyorivi :alkupvm alkupvm :loppupvm loppupvm)) tyorivit)
             ) (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm eka-hoitokausi))) (suunnittelu/hoitokaudet ur))))
 
-(defn tallenna-tyot [ur sopimusnumero hoitokausi tyot vanhat-tyot uudet-tyot]
+(defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (log "tallenna-tyot enter, uudet työt" uudet-tyot)
   (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
-                                         (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm @suunnittelu/valittu-hoitokausi))) (suunnittelu/hoitokaudet ur))
-                                         @suunnittelu/valittu-hoitokausi)
+                                         (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm valittu-hoitokausi))) (suunnittelu/hoitokaudet ur))
+                                         valittu-hoitokausi)
             muuttuneet
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (if @tallenna-tuleville-hoitokausille?
-                    (tyorivit-tulevillekin-kausille ur uudet-tyot @suunnittelu/valittu-hoitokausi)
+                    (tyorivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-                  ;uudet-tyot)
-            ;;tulevatkin-hoitokaudet (tyorivit-tulevillekin-kausille ur uudet-tyot @suunnittelu/valittu-hoitokausi)
-            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero hoitokausi muuttuneet))]
+            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero muuttuneet))]
         (reset! tyot (map #(pvm/muunna-aika % :alkupvm :loppupvm) res))
         (log "tallennettavat-hoitokaudet" tallennettavat-hoitokaudet)
         (log "muuttuneet" muuttuneet)
-        ;;(log "tulevatkin-hoitokaudet" tulevatkin-hoitokaudet)
         true)))
 
 (defn luo-tyhja-tyo [tp ur hk]
@@ -115,7 +112,7 @@
        :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                              (:id ur)
                                              #(tallenna-tyot ur @suunnittelu/valittu-sopimusnumero @suunnittelu/valittu-hoitokausi 
-                                                             tyot @tyorivit %)
+                                                             tyot %)
                                              :ei-mahdollinen)
        :tunniste :tehtava
        :voi-lisata? false
