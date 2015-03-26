@@ -70,6 +70,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
+
+(defn raksiboksi [teksti checked toiminto]
+  [:div.raksiboksi.input-group
+   [:span.input-group-addon
+    [:input {:type "checkbox"
+             :checked (if checked "checked" "")
+             :on-change #(do (.preventDefault %) (toiminto))}]
+    ]
+   [:input.form-control {:type "text" :value teksti}]])
+
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 

@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
             [harja.tiedot.urakka.suunnittelu :as suunnittelu]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -22,16 +23,39 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
+(def tallenna-tuleville-hoitokausille? (atom true))
+
+(defn muuta-tallenna-tuleville-hoitokausille []
+  (log "muuta-tallenna-tuleville-hoitokausille" (not @tallenna-tuleville-hoitokausille?))
+  (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
+
+(defn tyorivit-tulevillekin-kausille [ur tyorivit eka-hoitokausi]
+  (log "tyorivit-tulevillekin-kausille enter" ur tyorivit eka-hoitokausi)
+  (mapcat (fn [{:keys [alkupvm loppupvm]}]
+            (map (fn [tyorivi]
+                   (assoc tyorivi :alkupvm alkupvm :loppupvm loppupvm)) tyorivit)
+            ) (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm eka-hoitokausi))) (suunnittelu/hoitokaudet ur))))
+
 (defn tallenna-tyot [ur sopimusnumero hoitokausi tyot vanhat-tyot uudet-tyot]
   (log "tallenna-tyot enter, uudet työt" uudet-tyot)
-  (go (let [muuttuneet
+  (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
+                                         (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm @suunnittelu/valittu-hoitokausi))) (suunnittelu/hoitokaudet ur))
+                                         @suunnittelu/valittu-hoitokausi)
+            muuttuneet
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  uudet-tyot)
-            
+                  (if @tallenna-tuleville-hoitokausille?
+                    (tyorivit-tulevillekin-kausille ur uudet-tyot @suunnittelu/valittu-hoitokausi)
+                    uudet-tyot
+                    ))
+                  ;uudet-tyot)
+            ;;tulevatkin-hoitokaudet (tyorivit-tulevillekin-kausille ur uudet-tyot @suunnittelu/valittu-hoitokausi)
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero hoitokausi muuttuneet))]
         (reset! tyot (map #(pvm/muunna-aika % :alkupvm :loppupvm) res))
-        true)));;)
+        (log "tallennettavat-hoitokaudet" tallennettavat-hoitokaudet)
+        (log "muuttuneet" muuttuneet)
+        ;;(log "tulevatkin-hoitokaudet" tulevatkin-hoitokaudet)
+        true)))
 
 (defn luo-tyhja-tyo [tp ur hk]
   {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :yksikko (:yksikko tp) :urakka (:id ur)
@@ -108,6 +132,9 @@
        ]
        @tyorivit
       ]
+     [raksiboksi "Tallenna tulevillekin hoitokausille" 
+      @tallenna-tuleville-hoitokausille? 
+      muuta-tallenna-tuleville-hoitokausille]
      ]))
 
 

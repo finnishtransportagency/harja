@@ -9,7 +9,8 @@ SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t
        LEFT JOIN toimenpidekoodi t2 ON t2.id=t3.emo
        LEFT JOIN toimenpidekoodi t1 ON t1.id=t2.emo
  WHERE t4.taso = 4 AND
-       t3.id in (SELECT toimenpide FROM urakka_toimenpide WHERE urakka = :urakka)
+       t3.id in (SELECT toimenpide FROM urakka_toimenpide WHERE urakka = :urakka) AND
+       t4.poistettu = false
 
 
   -- name: hae-urakan-toimenpiteet
