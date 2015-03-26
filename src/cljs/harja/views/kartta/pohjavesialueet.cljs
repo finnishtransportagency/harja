@@ -15,7 +15,10 @@
 (defn tallenna-pohjavesialueet
   "Tallentaa ladatut pohjavesialueet annetulle hallintayksikölle localStorageen."
   [hal alueet]
-  (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet)))
+  (try 
+    (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
+    (catch :default _
+      nil)))
 
 (defn lue-pohjavesialueet
   "Lukee localStoragesta muitissa olevat pohjavesialueet"
@@ -26,7 +29,11 @@
         (t/read (t/reader :json) alueet)))
     (catch :default _
       nil)))
-            
+
+(defn varita-alueet [alueet]
+  (into []
+        (map #(update-in % [:alue] assoc :color "blue" :fill "blue"))
+        alueet))
     
 (run! (let [nakyvissa? @taso-pohjavesialueet
             hal (:id @valittu-hallintayksikko)]
@@ -38,7 +45,7 @@
           ;; taso näkyvissä ja hallintayksikkö valittu, haetaan alueet
           (if-let [pa (lue-pohjavesialueet hal)]
             ;; muistissa oli aiemmin ladatut alueet, palautetaan ne
-            (reset! pohjavesialueet pa)
+            (reset! pohjavesialueet (varita-alueet pa))
             
             ;; ei muistissa, haetaan ne
             (go
@@ -46,6 +53,6 @@
                 (tallenna-pohjavesialueet hal res)
                 (when (= hal (:id @valittu-hallintayksikko))
                   ;; jos hallintayksikköä ei ole ehditty muuttaa ennen kuin vastaus tuli
-                  (reset! pohjavesialueet res)))))))) 
+                  (reset! pohjavesialueet (varita-alueet res))))))))) 
 
   

@@ -1,13 +1,19 @@
 (ns harja.ui.leaflet
   (:require [reagent.core :as reagent :refer [atom]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! timeout]]
             [harja.tiedot.navigaatio :as nav]
+            
   )
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;; Kanava, jolla voidaan komentaa karttaa
+(def komento-ch (chan))
+
+(defn fit-bounds! [geometry]
+  (go (>! komento-ch [::fit-bounds geometry])))
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the LeafletJS
@@ -32,6 +38,18 @@
         selection (:selection mapspec)
         item-geometry (or (:geometry-fn mapspec) identity)]
 
+    ;; Aloitetaan komentokanavan kuuntelu
+    (go (loop [[komento & args] (<! komento-ch)]
+          (log "TULI KOMENTO " komento) 
+          (case komento
+            ::fit-bounds (let [{:keys [leaflet geometries-map]} (reagent/state this)
+                               g (geometries-map (first args))]
+                           (log "löytyi geometrioista? " (first args) " => " g)
+                           (when g
+                             (.fitBounds leaflet g)))
+            :default (log "tuntematon kartan komento: " komento))
+          (recur (<! komento-ch))))
+    
     ;; Leaflet voi jäädä jumiin, jos kartan DOM elementtiä muuttelee eikä kerro siitä
     (add-watch nav/kartan-koko ::paivita-kartan-koko
                (fn [& _]
@@ -70,11 +88,12 @@
                           (let [c (.getCenter leaflet)]
                             (reset! zoom (.getZoom leaflet))
                             (reset! view [(.-lat c) (.-lng c)]))))
-    (add-watch view ::view-update
-               (fn [_ _ old-view new-view]
-                 ;;(.log js/console "change view: " (clj->js old-view) " => " (clj->js new-view) @zoom)
-                 (when (not= old-view new-view)
-                   (.setView leaflet (clj->js new-view) @zoom))))
+    ;; TÄMÄ WATCHERI aiheuttaa nykimistä pannatessa
+    ;;(add-watch view ::view-update
+    ;,           (fn [_ _ old-view new-view]
+    ;;             ;;(.log js/console "change view: " (clj->js old-view) " => " (clj->js new-view) @zoom)
+    ;;             (when (not= old-view new-view)
+    ;;              (.setView leaflet (clj->js new-view) @zoom))))
     (add-watch zoom ::zoom-update
                (fn [_ _ old-zoom new-zoom]
                  ;;(.log js/console "zoom päivittyi: " old-zoom " => " new-zoom)
@@ -173,7 +192,7 @@
             (let [shape (or (geometries-map item)
                             (doto (create-shape geom)
                               (.on "click" #(on-select item))
-                              (.on "mouseover" #(do (log "EVENTTI ON " %)
+                              (.on "mouseover" #(do ;;(log "EVENTTI ON " %)
                                                     (reagent/set-state component
                                                                    {:hover (assoc item
                                                                              :x (aget % "containerPoint" "x")
@@ -183,9 +202,9 @@
                               (.addTo leaflet)))]
               ;; If geometry has ::fit-bounds value true, then zoom to this
               ;; only 1 item should have this
-              (when (::fit-bounds geom)
-                (go (<! (timeout 100))
-                    (.fitBounds leaflet (.getBounds shape))))
+              ;;(when (::fit-bounds geom)
+              ;;  (go (<! (timeout 100))
+              ;;      (.fitBounds leaflet (.getBounds shape))))
               (recur (assoc new-geometries-map item shape) items))))))))
 
 

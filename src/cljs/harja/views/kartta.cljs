@@ -9,7 +9,12 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.views.kartta.tasot :as tasot]
-            ))
+
+            [cljs.core.async :refer [timeout <!]]
+            )
+
+  (:require-macros [reagent.ratom :refer [run!]]
+                   [cljs.core.async.macros :refer [go]]))
             
 
 
@@ -25,9 +30,16 @@
   (t/kuuntele! :hallintayksikkovalinta-poistettu
                #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
                     (reset! zoom-taso +koko-suomi-zoom-taso+))))
-               
+
+(defonce kartan-alueen-asetus
+  (run! (when-let [hal @nav/valittu-hallintayksikko]
+          (log "HAL vaihtui, zoomataan siihen: " (dissoc hal :alue))
+          (go (<! (timeout 500)) ;; leaflet vaatii hieman armon aikaa ennen kuin zoomataan
+              (leaflet/fit-bounds! (assoc hal :valittu true))))))
+
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
+
 
 (defn kartan-koko-kontrollit
   []
@@ -87,8 +99,7 @@
                        ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
                        (nil? @nav/valittu-urakka)
                        (vec (concat [(assoc v-hal
-                                       :valittu true
-                                       :leaflet/fit-bounds true)]
+                                       :valittu true)]
                                     @nav/suodatettu-urakkalista))
                            
                        ;; Valittu urakka, mitä näytetään?
@@ -103,7 +114,8 @@
                                  (assoc alue
                                    :fill (if (:valittu hy) false true)
                                    :harja.ui.leaflet/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
-                                   :color (nth +varit+ (mod (hash (:nimi hy)) (count +varit+)))))))
+                                   :color (or (:color alue)
+                                              (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))))
 
               ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
               :layers [ ;;{:type :wms
