@@ -34,11 +34,14 @@
 (defn luo-pvm [vuosi kk pv]
   (DateTime. vuosi kk pv))
 
+(defn luo-js-pvm [vuosi kk pv]
+  (goog->js (luo-pvm vuosi kk pv)))
+
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
-
+  
 (defn muunna-aika
   "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
   [obj & kentat]

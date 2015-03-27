@@ -1,7 +1,9 @@
-(ns harja.app-test
+(ns ^:figwheel-always harja.app-test
   (:require [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.yksikkohintaiset-tyot :as ykshint-tyot]
+            [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]])
   )
 
@@ -27,5 +29,23 @@
   (log "hae-urakan-hoitokaudet-testi" (s/hoitokaudet +testi-urakka+))
   (is (= 6 (count (s/hoitokaudet +testi-urakka+)))
       "Normaalissa urakassa on 6 hoitokautta"))  
+
+(def +pilkottavat-tyo+
+  [{:alkupvm (pvm/luo-pvm 2005 10 1), :loppupvm (pvm/luo-pvm 2006 9 30), :yksikko "km",
+      :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
+      :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}])
+
+(deftest pilko-hoitokausien-tyot []
+  (let [tyo-avain (fn [rivi]
+                          [(:alkupvm rivi) (:loppupvm rivi)])
+        pilkotut (ykshint-tyot/pilko-hoitokausien-tyot +pilkottavat-tyo+)
+        eka-rivi (first (filterv (fn [t]
+                                   (= (:alkupvm t) (pvm/luo-js-pvm 2005 9 1)))
+                                 pilkotut))
+        toka-rivi (first (filterv (fn [t]
+                                   (= (:alkupvm t) (pvm/luo-js-pvm 2006 0 1)))
+                                 pilkotut))]
+    (is (= (count pilkotut) 2) "Väärin pilkottu yksikköhintainen työ")
+    (is (= (:maara eka-rivi) 1) "Väärin pilkottu yksikköhintainen työ")
+    (is (= (:maara toka-rivi) 3) "Väärin pilkottu yksikköhintainen työ")))
   
- 

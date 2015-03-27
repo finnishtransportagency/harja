@@ -3,29 +3,10 @@
   (:require
    ;;[lively.core :as lively]
    [figwheel.client :as fw]
-
    [harja.ui.viesti :as viesti]
    ;; require kaikki testit
-   [cljs.test :as test]
-   [harja.app-test]))
+   [harja.asiakas.test-runner :as test-runner]))
 
-
-
-(defmethod test/report [:harja :fail] [event]
-  (.log js/console "FAIL: " (pr-str event))
-  (viesti/nayta! [:div.testfail
-                  [:h3 "Testi epäonnistui:"]
-                  [:div.expected "Odotettu: " (pr-str (:expected event))]
-                  [:div.actual "Saatu: " (pr-str (:actual event))]
-                  (when-let [m (:message event)]
-                    [:div.testmessage "Viesti: " m])]
-                 :danger))
-
-
-(defn ^:export aja-testit []
-  (test/run-tests (merge (test/empty-env)
-                         {:reporter :harja})
-                  'harja.app-test))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
@@ -41,7 +22,7 @@
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
                           (when-let [on-reload (:on-reload options)]
                             (on-reload)
-                            (aja-testit)
+                            (test-runner/aja-testit)
                             ))})
   
   (.log js/console "Alustetaan less.js uudelleenlataus")
