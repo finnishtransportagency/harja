@@ -28,7 +28,7 @@
 (deftest hae-urakan-hoitokaudet []
   (log "hae-urakan-hoitokaudet-testi" (s/hoitokaudet +testi-urakka+))
   (is (= 6 (count (s/hoitokaudet +testi-urakka+)))
-      "Normaalissa urakassa on 6 hoitokautta"))  
+      "hae-urakan-hoitokaudet"))  
 
 (def +pilkottavat-tyo+
   [{:alkupvm (pvm/luo-pvm 2005 10 1), :loppupvm (pvm/luo-pvm 2006 9 30), :yksikko "km",
@@ -37,15 +37,15 @@
 
 (deftest pilko-hoitokausien-tyot []
   (let [tyo-avain (fn [rivi]
-                          [(:alkupvm rivi) (:loppupvm rivi)])
+                    [(:alkupvm rivi) (:loppupvm rivi)])
         pilkotut (ykshint-tyot/pilko-hoitokausien-tyot +pilkottavat-tyo+)
         eka-rivi (first (filterv (fn [t]
                                    (= (:alkupvm t) (pvm/luo-js-pvm 2005 9 1)))
                                  pilkotut))
         toka-rivi (first (filterv (fn [t]
-                                   (= (:alkupvm t) (pvm/luo-js-pvm 2006 0 1)))
-                                 pilkotut))]
-    (is (= (count pilkotut) 2) "Väärin pilkottu yksikköhintainen työ")
-    (is (= (:maara eka-rivi) 1) "Väärin pilkottu yksikköhintainen työ")
-    (is (= (:maara toka-rivi) 3) "Väärin pilkottu yksikköhintainen työ")))
-  
+                                    (= (:alkupvm t) (pvm/luo-js-pvm 2006 0 1)))
+                                  pilkotut))
+        viesti "pilko-hoitokausien-tyot"]
+    (is (= (count pilkotut) 2) viesti)
+    (is (= (:maara eka-rivi) 1) viesti)
+    (is (= (:maara toka-rivi) 3) viesti)))
