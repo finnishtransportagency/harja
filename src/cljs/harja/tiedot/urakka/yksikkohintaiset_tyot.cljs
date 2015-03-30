@@ -12,17 +12,17 @@
   (k/post! :yksikkohintaiset-tyot urakka-id
            (map #(pvm/muunna-aika % :alkupvm :loppupvm))))
 
-;;FIXME: erityyppisten urakoiden päivämäärien luonti siistimmäksi
 
 ;; hoidon alueurakan hoitokausi on 1.10.YYYY - 30.9.YYYY+1. Käyttöliittymässä syötetään
 ;; tieto kullekin vuodelle erikseen per hoitokausi 
 ;; --> tarve pilkkoa hoitokauden määrät 10-12 ja 1-9 kk väleille, tietokannassa
 ;; yhden hoitokauden yksi työ menee siis kahdelle riville (jos molemmille vuosille syötetty tietoa)
-(defn pilko-hoitokausien-tyot [tyot]
-  ;; luodaan yhdestä rivistä kaksi riviä, hoitokauden molempien vuosien osat
+(defn pilko-hoitokausien-tyot 
+  "Luo yhdestä työrivistä kaksi riviä tietokantaa varten, hoitokauden molempien vuosien osat"
+  [tyot]
   (mapcat   (fn [rivi]
-              (let [alkupvm-10-12 (pvm/goog->js (pvm/hoitokauden-alkupvm (.getFullYear (pvm/goog->js (:alkupvm rivi))))) ;;1.10.yyyy
-                    loppupvm-10-12 (pvm/goog->js (pvm/vuoden-viim-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi))))) ;;31.12.yyyy
+              (let [alkupvm-10-12 (pvm/goog->js (pvm/hoitokauden-alkupvm (.getFullYear (pvm/goog->js (:alkupvm rivi)))))
+                    loppupvm-10-12 (pvm/goog->js (pvm/vuoden-viim-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi)))))
                     alkupvm-1-9 (pvm/goog->js (pvm/vuoden-eka-pvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
                     loppupvm-1-9 (pvm/goog->js (pvm/hoitokauden-loppupvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
                     ]
