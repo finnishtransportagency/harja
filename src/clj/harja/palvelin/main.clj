@@ -19,6 +19,7 @@
    [harja.palvelin.palvelut.yhteyshenkilot]
    [harja.palvelin.palvelut.kayttajat :as kayttajat]
    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
+   [harja.palvelin.palvelut.materiaalit :as materiaalit]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -81,6 +82,9 @@
      :pohjavesialueet (component/using
                        (pohjavesialueet/->Pohjavesialueet)
                        [:http-palvelin :db])
+     :materiaalit (component/using
+                   (materiaalit/->Materiaalit)
+                   [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)

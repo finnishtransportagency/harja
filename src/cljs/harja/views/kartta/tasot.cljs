@@ -17,5 +17,8 @@
 (defn taso-pois! [nimi]
   (reset! (taso-atom nimi) false))
 
+(defn taso-paalla? [nimi]
+  @(taso-atom nimi))
+
 
  

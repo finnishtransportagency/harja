@@ -157,5 +157,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 (defn luo-http-palvelin [portti kehitysmoodi]
   (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
 
-
+(defn poista-palvelut [http & palvelut]
+  (doseq [p palvelut]
+    (poista-palvelu http p)))
 

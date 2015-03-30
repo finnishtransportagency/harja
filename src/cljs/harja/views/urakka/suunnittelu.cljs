@@ -5,6 +5,8 @@
             
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [harja.views.urakka.materiaalit :as mat]
+             
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]])
@@ -69,8 +71,8 @@
            ;;[yht/yksikkohintaiset-tyot]
            
            "Materiaalit"
-           [:div "Materiaalit"]
-           ;;^{:key "materiaalit"}
+           ^{:key "materiaalit"}
+           [mat/materiaalit ur]
            ]])
        
        })))
