@@ -29,3 +29,12 @@
             {:alkupvm (pvm/luo-pvm vuosi +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
              :loppupvm (pvm/luo-pvm (inc vuosi) +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
           (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
+
+(defn hoitokausien-sisalto-sama? 
+  "Yleiskäyttöinen funktio, jolla vertaillaan onko eri hoitokausien sisältö sama.
+  Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
+  [hoitokausien-sisalto]
+  (log "hoitokausien-sisalto-sama?" hoitokausien-sisalto)
+  (log ("map?" (map #(dissoc (:alkupvm %) (:loppupvm %)) hoitokausien-sisalto)))
+  (apply = (map #(dissoc (:alkupvm %) (:loppupvm %)) hoitokausien-sisalto))
+  )

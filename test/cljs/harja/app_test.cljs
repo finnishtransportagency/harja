@@ -49,3 +49,24 @@
     (is (= (count pilkotut) 2) viesti)
     (is (= (:maara eka-rivi) 1) viesti)
     (is (= (:maara toka-rivi) 3) viesti)))
+
+
+(def +kannan-rivit+
+  [{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/vuoden-viim-pvm 2006), :yksikko "km",
+      :maara 1012 :urakka 1, :tehtava 1350, 
+      :yksikkohinta nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
+   {:alkupvm (pvm/vuoden-eka-pvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+      :maara 19 :urakka 1, :tehtava 1350, 
+      :yksikkohinta nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}])
+
+(deftest kannan-rivit->tyorivi []
+  (let [kasattu-rivi (ykshint-tyot/kannan-rivit->tyorivi +kannan-rivit+)
+        viesti "kannan-rivit->tyorivi"]
+    (is (= (:maara-kkt-10-12 kasattu-rivi) 1012) viesti)
+    (is (= (:maara-kkt-1-9 kasattu-rivi) 19) viesti)
+    (is (= (:urakka kasattu-rivi) 1) viesti)
+    (is (= (:sopimus kasattu-rivi) 2) viesti)
+    (is (= (:yksikko kasattu-rivi) "km") viesti)
+    (is (= (:tehtavan_nimi kasattu-rivi) "Tien auraaminen") viesti)
+    (is (pvm/sama-pvm? (:alkupvm kasattu-rivi) (pvm/hoitokauden-alkupvm 2005)) viesti)
+    (is (pvm/sama-pvm? (:loppupvm kasattu-rivi) (pvm/hoitokauden-loppupvm 2006)) viesti))) 

@@ -77,3 +77,26 @@
     (catch js/Error e
       (.log js/console "E: " e)
       nil)))
+
+
+;; hoidon alueurakoiden päivämääräapurit
+(defn vuoden-eka-pvm [vuosi]
+  "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
+  (luo-pvm vuosi 0 1)
+  )
+
+(defn vuoden-viim-pvm [vuosi]
+  "Palauttaa vuoden viimeisen päivän 31.12.vuosi"
+  (luo-pvm vuosi 11 31)
+  )
+
+(defn hoitokauden-alkupvm [vuosi]
+  "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
+  (luo-pvm vuosi 9 1)
+  )
+
+(defn hoitokauden-loppupvm [vuosi]
+  "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
+  (luo-pvm vuosi 8 30)
+  )
+
