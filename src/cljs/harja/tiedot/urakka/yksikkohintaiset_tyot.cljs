@@ -21,10 +21,10 @@
 (defn pilko-hoitokausien-tyot [tyot]
   ;; luodaan yhdestä rivistä kaksi riviä, hoitokauden molempien vuosien osat
   (mapcat   (fn [rivi]
-              (let [alkupvm-10-12 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi))) 9 1)) ;;1.10.yyyy
-                    loppupvm-10-12 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi))) 11 31)) ;;31.12.yyyy
-                    alkupvm-1-9 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:loppupvm rivi))) 0 1))
-                    loppupvm-1-9 (pvm/goog->js (pvm/luo-pvm (.getFullYear (pvm/goog->js (:loppupvm rivi))) 8 30))
+              (let [alkupvm-10-12 (pvm/goog->js (pvm/hoitokauden-alkupvm (.getFullYear (pvm/goog->js (:alkupvm rivi))))) ;;1.10.yyyy
+                    loppupvm-10-12 (pvm/goog->js (pvm/vuoden-viim-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi))))) ;;31.12.yyyy
+                    alkupvm-1-9 (pvm/goog->js (pvm/vuoden-eka-pvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
+                    loppupvm-1-9 (pvm/goog->js (pvm/hoitokauden-loppupvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
                     ]
                 
                 [(dissoc (assoc rivi :alkupvm alkupvm-10-12 :loppupvm loppupvm-10-12 :maara (:maara-kkt-10-12 rivi)) :maara-kkt-1-9 :maara-kkt-10-12)

@@ -10,28 +10,27 @@
 
 (enable-console-print!)
 
-
-(def +hoitokauden-alkukk-indeksi+ "9")
-(def +hoitokauden-alkupv-indeksi+ "1")
-(def +hoitokauden-loppukk-indeksi+ "8")
-(def +hoitokauden-loppupv-indeksi+ "30")
-(def +hoitokauden-eka-vuosi+ 
-  2015)
-(def +hoitokauden-vika-vuosi+ 
-  2020)
-
 ;; lisätään urakkaan vain testauksen kannalta tarvittavat kentät
 (def +testi-urakka+
-  {:alkupvm (pvm/luo-pvm +hoitokauden-eka-vuosi+ +hoitokauden-alkukk-indeksi+ +hoitokauden-alkupv-indeksi+)
-   :loppupvm (pvm/luo-pvm +hoitokauden-vika-vuosi+ +hoitokauden-loppukk-indeksi+ +hoitokauden-loppupv-indeksi+)})
+  {:alkupvm (pvm/hoitokauden-alkupvm 2015)
+   :loppupvm (pvm/hoitokauden-loppupvm 2020)})
 
 (deftest hae-urakan-hoitokaudet []
-  (log "hae-urakan-hoitokaudet-testi" (s/hoitokaudet +testi-urakka+))
-  (is (= 6 (count (s/hoitokaudet +testi-urakka+)))
-      "hae-urakan-hoitokaudet"))  
+  (let [hoitokaudet (s/hoitokaudet +testi-urakka+)
+        viesti "hae-urakan-hoitokaudet"]
+    (is (= 6 (count hoitokaudet)) viesti)
+    (is (= 6 (count (into #{} (map #(:alkupvm %) hoitokaudet)))) viesti)
+    (is (= 6 (count (into #{} (map #(:loppupvm %) hoitokaudet)))) viesti)
+    (doseq [hk hoitokaudet]
+      (is (< (:alkupvm hk) (:loppupvm hk)) viesti)
+      (is (= 1 (t/day (:alkupvm hk))) viesti)
+      (is (= 10 (t/month (:alkupvm hk))) viesti)
+      (is (= 30 (t/day (:loppupvm hk))) viesti)
+      (is (= 9 (t/month (:loppupvm hk))) viesti))))
+
 
 (def +pilkottavat-tyo+
-  [{:alkupvm (pvm/luo-pvm 2005 10 1), :loppupvm (pvm/luo-pvm 2006 9 30), :yksikko "km",
+  [{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
       :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
       :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}])
 
