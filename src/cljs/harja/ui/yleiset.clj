@@ -40,15 +40,17 @@
           
            :get-initial-state
            (fn [this#]
-             (let [state# (hash-map ~@(mapcat (fn [[nimi tyyppi form]]
-                                                (cond
-                                                 (= tyyppi :atom)
-                                                 `(~(keyword nimi) (reagent.core/atom nil))
-
-                                                 (= tyyppi :reaction) ;; FIXME: tämä ei näe aiempia, tee letissä
-                                                 `(~(keyword nimi) (reagent.ratom/reaction ~form))))
-                                              tilat))]
-               state#))
+             (let [~@(mapcat (fn [[nimi tyyppi form]]
+                               (cond
+                                (= tyyppi :atom)
+                                `(~nimi (reagent.core/atom nil))
+                                
+                                (= tyyppi :reaction)
+                                `(~nimi (reagent.ratom/reaction ~form))))
+                             tilat)]
+               (hash-map ~@(mapcat (fn [[nimi & _]]
+                                     `(~(keyword nimi) ~nimi)) tilat))))
+           
            
            :component-did-mount
            (fn [this#]
