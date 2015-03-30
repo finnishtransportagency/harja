@@ -8,8 +8,9 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def taso-pohjavesialueet (atom false))
-(def pohjavesialueet (atom []))
+(defonce taso-pohjavesialueet (atom false))
+(defonce pohjavesialueet (atom []))
+
 
 ;; Pohjavesialueet eivät muutu edes vuosittain, joten voimme turvallisesti cachettaa
 (defn tallenna-pohjavesialueet
