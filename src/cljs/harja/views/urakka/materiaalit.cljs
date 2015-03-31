@@ -132,7 +132,7 @@
    tuleville? true
 
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
-   varoita-ylikirjoituksesta?
+   varoita-ylikirjoituksesta? 
    :reaction (let [kopioi? @tuleville?
                    hoitokausi @suunnittelu/valittu-hoitokausi
                    hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
@@ -142,13 +142,12 @@
                                          (map #(dissoc % :alkupvm :loppupvm :id))
                                          materiaalit))
 
-                   tama-kausi (vertailumuoto (concat (vals @yleiset-materiaalit-muokattu)
-                                                     (vals @pohjavesialue-materiaalit-muokattu)))
-                   tulevat-kaudet (into []
-                                        (comp (drop-while #(>= hoitokausi-alku (ffirst %)))
-                                              (map second)
-                                              (map vertailumuoto))
-                                        (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
+                   [tama-kausi & tulevat-kaudet] (into []
+                                                       (comp (drop-while #(> hoitokausi-alku (ffirst %)))
+                                                             (map second)
+                                                             (map vertailumuoto))
+                                                       (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
+               
                ;;(doseq [tk tulevat-kaudet]
                ;;  (log "ONKO tämä kausi " tama-kausi " SAMA kuin tuleva " tk "? " (= tama-kausi tk)))
                (if-not kopioi?
