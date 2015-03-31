@@ -71,6 +71,9 @@
 Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (hae-muokkaustila [g] "Hakee tämänhetkisen muokkaustilan, joka on mäppi id:stä rivin tietoihin.")
+
+
+  (hae-virheet [g] "Hakee tämänhetkisen muokkaustilan mukaiset validointivirheet.")
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
 
@@ -89,6 +92,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       
       (hae-muokkaustila [_]
         (hae-muokkaustila @gridi))
+
+      (hae-virheet [_]
+        (hae-virheet @gridi))
 
       GridKahva
       (aseta-grid [_ grid]
@@ -135,7 +141,7 @@ Optiot on mappi optioita:
         
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                              (let [id (swap! uusi-id dec)
+                              (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
                                     vanhat-tiedot @muokatut
                                     vanhat-virheet @virheet
                                     vanha-jarjestys @jarjestys
@@ -147,7 +153,9 @@ Optiot on mappi optioita:
                                 (when muutos
                                   (muutos this))))
                  (hae-muokkaustila [_]
-                                   @muokatut))
+                   @muokatut)
+                 (hae-virheet [_]
+                   @virheet))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
@@ -392,7 +400,7 @@ Optiot on mappi optioita:
 
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                              (let [id (swap! uusi-id dec)
+                              (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
                                     vanhat-tiedot @muokatut
                                     vanhat-virheet @virheet
                                     uudet-tiedot (swap! muokatut assoc id
@@ -407,7 +415,9 @@ Optiot on mappi optioita:
                                 (when muutos
                                   (muutos this))))
                  (hae-muokkaustila [_]
-                                   @muokatut))
+                   @muokatut)
+                 (hae-virheet [_]
+                   @virheet))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]

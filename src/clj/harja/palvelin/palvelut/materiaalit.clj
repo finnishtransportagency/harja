@@ -11,7 +11,11 @@
 (defn hae-urakan-materiaalit [db user urakka-id]
   (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
   (into []
-        (map konv/alaviiva->rakenne)
+        (comp (map konv/alaviiva->rakenne)
+              (map #(if (:id (:pohjavesialue %))
+                      %
+                      (dissoc % :pohjavesialue)))
+              (map #(assoc % :maara (double (:maara %)))))
         (q/hae-urakan-materiaalit db urakka-id)))
 
 (defrecord Materiaalit []

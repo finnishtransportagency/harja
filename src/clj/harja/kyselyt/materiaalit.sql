@@ -4,7 +4,7 @@ SELECT id, nimi, yksikko FROM materiaalikoodi
 
 -- name: hae-urakan-materiaalit
 -- Hakee urakan kaikki materiaalit
-SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara,
+SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus, 
        m.id as materiaali_id, m.nimi as materiaali_nimi, m.yksikko as materiaali_yksikko,
        pa.id as pohjavesialue_id, pa.nimi as pohjavesialue_nimi, pa.tunnus as pohjavesialue_tunnus
   FROM materiaalin_kaytto mk
