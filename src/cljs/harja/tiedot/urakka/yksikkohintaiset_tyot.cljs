@@ -47,16 +47,15 @@
 (defn kannan-rivit->tyorivi 
   "Kahdesta tietokannan työrivistä tehdään yksi käyttöliittymän rivi
    :maara   --> :maara-kkt-10-12
-            --> :maara-kkt-1-9
+           --> :maara-kkt-1-9
    :alkupvm -->  hoitokauden alkupvm
    :loppupvm -->  hoitokauden loppupvm
    sen jälkeen poistetaan ylimääräiseksi jäänyt kenttä :maara"
   [kannan-rivit]
   ;; pohjaan jää alkupvm ja loppupvm jommasta kummasta hoitokauden "osasta"
-  (let [pohja (first kannan-rivit)
-        kannan-rivi-kkt-10-12 (first (sort-by :alkupvm kannan-rivit))
+  (let [kannan-rivi-kkt-10-12 (first (sort-by :alkupvm kannan-rivit))
         kannan-rivi-kkt-1-9 (second (sort-by :alkupvm kannan-rivit))]
-    (dissoc (assoc (merge pohja
+    (dissoc (assoc (merge kannan-rivi-kkt-10-12
                        (zipmap (map #(if (= (.getYear (:alkupvm kannan-rivi-kkt-10-12))
                                             (.getYear (:alkupvm %)))
                                        :maara-kkt-10-12 :maara-kkt-1-9) kannan-rivit)

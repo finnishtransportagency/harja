@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu
   "Tämä nimiavaruus hallinnoi urakan suunnittelun tietoja"
   (:require [reagent.core :refer [atom] :as r]
+            [cljs-time.core :as time]
             
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
@@ -23,13 +24,26 @@
     (mapv (fn [vuosi]
             {:alkupvm (pvm/hoitokauden-alkupvm vuosi)
              :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))})
-          (range ensimmainen-vuosi (inc viimeinen-vuosi)))))
+          (range ensimmainen-vuosi viimeinen-vuosi))))
+
+(defn tehtavan-sisalto-sama? [])
 
 (defn hoitokausien-sisalto-sama? 
-  "Yleiskäyttöinen funktio, jolla vertaillaan onko eri hoitokausien sisältö sama.
-  Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
-  [hoitokausien-sisalto]
-  (log "hoitokausien-sisalto-sama?" hoitokausien-sisalto)
-  (log ("map?" (map #(dissoc (:alkupvm %) (:loppupvm %)) hoitokausien-sisalto)))
-  (apply = (map #(dissoc (:alkupvm %) (:loppupvm %)) hoitokausien-sisalto))
-  )
+  "Kertoo onko eri hoitokausien sisältö sama päivämääriä lukuunottamatta.
+  Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa.
+  Tarkistaa onko töitä kaikilta hoitokausilta ja jos on, ovatko ne sisällöltään samat."
+  ;; uudelleennimetään muuttujia jos tästä saadaan yleiskäyttöinen esim. kok. hintaisille ja materiaaleille
+  [tyorivit-tehtavittain hoitokaudet]
+  (let [tyorivit-aikajarjestyksessa (sort-by :alkupvm tyorivit-tehtavittain)
+        alkupvmt-toista (into #{} 
+                              (first (map (fn [yhden-tehtavan-tyorivi]
+                                            (map #(:alkupvm %) yhden-tehtavan-tyorivi)) tyorivit-aikajarjestyksessa)))
+        alkupvmt-hoitokausista (into #{}
+                                         (map (fn [hk]
+                                                (:alkupvm hk)) hoitokaudet))
+        tyorivit-ilman-pvmia (into [] 
+                                   (map #(map (fn [tyorivi]
+                                                (dissoc tyorivi :alkupvm :loppupvm)) %) tyorivit-aikajarjestyksessa))]
+    (and 
+      (= (count alkupvmt-toista) (count alkupvmt-hoitokausista))
+      (every? #(apply = %) tyorivit-ilman-pvmia))))

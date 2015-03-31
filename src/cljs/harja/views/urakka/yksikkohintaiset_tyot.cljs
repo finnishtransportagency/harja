@@ -75,11 +75,16 @@
     
     [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
      toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur)))
+     tyorivit-samat-alkutilanteessa? true
      tyorivit :reaction (let [{:keys [alkupvm loppupvm] :as valittu-hoitokausi} @suunnittelu/valittu-hoitokausi
-                              tehtavien-rivit-kaikki-hoitokaudet (group-by (juxt :alkupvm :loppupvm)
-                                                        (filter (fn [t]
-                                                                  (= (:sopimus t) (first @suunnittelu/valittu-sopimusnumero))) @tyot))
-                              ;tehtavien-rivit-samat-alkutilanteessa? (suunnittelu/hoitokausien-sisalto-sama? tehtavien-rivit-kaikki-hoitokaudet)
+                              tehtavien-rivit-kaikki-hoitokaudet (into []
+                                                                       (group-by :tehtava
+                                                                                      (filter (fn [t]
+                                                                                                (= (:sopimus t) (first @suunnittelu/valittu-sopimusnumero))) @tyot)))
+                               
+                               tyorivit-kaikki-hoitokaudet-alkutilanne (mapv (fn [[_ tehtavan-rivit]]
+                                                                               (map #(yks-hint-tyot/kannan-rivit->tyorivi %) (partition 2 tehtavan-rivit))
+                                                                               ) tehtavien-rivit-kaikki-hoitokaudet)
                               tehtavien-rivit (group-by :tehtava
                                                         (filter (fn [t]
                                                                   (and (= (:sopimus t) (first @suunnittelu/valittu-sopimusnumero))
@@ -90,16 +95,21 @@
                               tyhjat-tyot  (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
                                                 (filter (fn [tp]
                                                           (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
+                          
+                          (when (not (empty? tyorivit-kaikki-hoitokaudet-alkutilanne))
+                            (reset! tyorivit-samat-alkutilanteessa? 
+                                    (suunnittelu/hoitokausien-sisalto-sama? tyorivit-kaikki-hoitokaudet-alkutilanne (suunnittelu/hoitokaudet ur))))
+                          ;(log "tyorivit-samat-alkutilanteessa?" @tyorivit-samat-alkutilanteessa?)
+                          
                           (ryhmittele-tehtavat
                             @toimenpiteet-ja-tehtavat
                             (vec (concat (mapv (fn [[_ tehtavan-rivit]]
                                                  (yks-hint-tyot/kannan-rivit->tyorivi tehtavan-rivit)
                                                  ) tehtavien-rivit)
-                                         tyhjat-tyot)))) 
+                                         tyhjat-tyot))))
      ]
   
   (do
-    (log "työrivit" tyorivit)
     [:div.yksikkohintaiset-tyot     
      [grid/grid
       {:otsikko "Yksikköhintaiset työt"

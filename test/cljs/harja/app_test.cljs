@@ -18,9 +18,9 @@
 (deftest hae-urakan-hoitokaudet []
   (let [hoitokaudet (s/hoitokaudet +testi-urakka+)
         viesti "hae-urakan-hoitokaudet"]
-    (is (= 6 (count hoitokaudet)) viesti)
-    (is (= 6 (count (into #{} (map #(:alkupvm %) hoitokaudet)))) viesti)
-    (is (= 6 (count (into #{} (map #(:loppupvm %) hoitokaudet)))) viesti)
+    (is (= 5 (count hoitokaudet)) viesti)
+    (is (= 5 (count (into #{} (map #(:alkupvm %) hoitokaudet)))) viesti)
+    (is (= 5 (count (into #{} (map #(:loppupvm %) hoitokaudet)))) viesti)
     (doseq [hk hoitokaudet]
       (is (< (:alkupvm hk) (:loppupvm hk)) viesti)
       (is (= 1 (t/day (:alkupvm hk))) viesti)
@@ -51,11 +51,11 @@
 
 
 (def +kannan-rivit+
-  [{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/vuoden-viim-pvm 2006), :yksikko "km",
-      :maara 1012 :urakka 1, :tehtava 1350, 
-      :yksikkohinta nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
-   {:alkupvm (pvm/vuoden-eka-pvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+  [{:alkupvm (pvm/vuoden-eka-pvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
       :maara 19 :urakka 1, :tehtava 1350, 
+      :yksikkohinta nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
+   {:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/vuoden-viim-pvm 2006), :yksikko "km",
+      :maara 1012 :urakka 1, :tehtava 1350, 
       :yksikkohinta nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}])
 
 (deftest kannan-rivit->tyorivi []
@@ -69,3 +69,43 @@
     (is (= (:tehtavan_nimi kasattu-rivi) "Tien auraaminen") viesti)
     (is (pvm/sama-pvm? (:alkupvm kasattu-rivi) (pvm/hoitokauden-alkupvm 2005)) viesti)
     (is (pvm/sama-pvm? (:loppupvm kasattu-rivi) (pvm/hoitokauden-loppupvm 2006)) viesti))) 
+
+(def +hoitokausien-tyorivit-samat+
+  [[{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
+     {:alkupvm (pvm/hoitokauden-alkupvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2007), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}]
+    
+    [{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1349, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Jäätien hoito", :sopimus 2}
+     {:alkupvm (pvm/hoitokauden-alkupvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2007), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1349, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Jäätien hoito", :sopimus 2}]]
+  )
+
+(def +hoitokausien-tyorivit-erit+
+    [[{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+        :maara-kkt-1-9 23 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
+     {:alkupvm (pvm/hoitokauden-alkupvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2007), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}]
+    
+    [{:alkupvm (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1349, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Jäätien hoito", :sopimus 2}
+     {:alkupvm (pvm/hoitokauden-alkupvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2007), :yksikko "km",
+        :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1349, 
+        :yksikkohinta nil, :maara nil, :tehtavan_nimi "Jäätien hoito", :sopimus 2}]]
+  )
+(def +testi-urakka-kaksi-vuotta+
+  {:alkupvm (pvm/hoitokauden-alkupvm 2005)
+   :loppupvm (pvm/hoitokauden-loppupvm 2007)})
+
+(deftest hoitokausien-sisalto-sama []
+  (is true (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-samat+ (s/hoitokaudet +testi-urakka-kaksi-vuotta+)))
+  (is (not (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-erit+ (s/hoitokaudet +testi-urakka-kaksi-vuotta+))))
+  )
