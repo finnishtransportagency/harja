@@ -8,6 +8,7 @@
             [harja.ui.grid :as grid]
 
             [harja.views.kartta.tasot :as tasot]
+            [harja.views.kartta.pohjavesialueet :refer [hallintayksikon-pohjavesialueet-haku]]
             [harja.tiedot.navigaatio :as nav]
             
             [cljs.core.async :refer [<!]])
@@ -15,7 +16,7 @@
 
 (defn pohjavesialueiden-materiaalit
   "Listaa pohjavesialueiden materiaalit ja mahdollistaa kartalta valinnan."
-  [opts materiaalit]
+  [opts materiaalikoodit materiaalit]
   
   (let [karttavalinta? (atom false)
         valitse-kartalta (fn [e]
@@ -27,15 +28,17 @@
                              (do (tasot/taso-paalle! :pohjavesialueet)
                                  (reset! karttavalinta? true)
                                  (reset! nav/kartan-koko :M))))
+        g (grid/grid-ohjaus)
         ]
     (kuuntelija
      {}
-     (fn [opts materiaalit]
+     (fn [opts materiaalikoodit materiaalit]
         (log "MATSKUJA: " (pr-str materiaalit))
         [:div.pohjavesialueet
          [grid/muokkaus-grid
           {:otsikko "Pohjavesialueiden materiaalit"
            :tyhja "Ei pohjavesialueille kirjattuja materiaaleja."
+           :ohjaus g
            :muokkaa-footer (fn [g]
                              [:button.btn.btn-default {:on-click valitse-kartalta}
                               (if @karttavalinta?
@@ -45,14 +48,21 @@
            :muutos (fn [g]
                      (log "pohjavedet muuttui: " g))
            }
-          [{:otsikko "Pohjavesialue" :nimi :pohjavesialue :fmt :nimi :leveys "40%"}
-           {:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "25%"}
-           {:otsikko "Määrä" :nimi :maara :leveys "25%"}
-           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :muokattava? (constantly false) :leveys "5%"}]
+          [{:otsikko "Pohjavesialue"
+            :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta :nimi
+            :nimi :pohjavesialue :fmt :nimi :leveys "40%"}
+           {:otsikko "Materiaali"
+            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta :nimi
+            :nimi :materiaali :fmt :nimi :leveys "35%"}
+           {:otsikko "Määrä" :nimi :maara :leveys "15%"
+            :tyyppi :numero}
+           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
+            :tyyppi :string :muokattava? (constantly false)}]
           
           materiaalit
           ]])
      :pohjavesialue-klikattu (fn [this pohjavesialue]
+                               (grid/lisaa-rivi! g {:pohjavesialue (dissoc pohjavesialue :type :aihe)})
                                (log "hei klikkasit pohjavesialuetta: " (dissoc pohjavesialue :alue))))))
       
      
@@ -75,7 +85,10 @@
 
    ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
    yleiset-materiaalit :reaction (filterv #(not (contains? % :pohjavesialue)) @materiaalit)
-   pohjavesialue-materiaalit :reaction (filterv #(contains? % :pohjavesialue) @materiaalit)
+   pohjavesialue-materiaalit :reaction (into {}
+                                             (comp (filter #(contains? % :pohjavesialue))
+                                                   (map (juxt :id identity)))
+                                             @materiaalit)
    ]
   
   (let [materiaalikoodit @(t/hae-materiaalikoodit)]
@@ -90,5 +103,5 @@
        [:div  "MATSKUT"])
 
      (when (= (:tyyppi ur) :hoito)
-       [pohjavesialueiden-materiaalit {} pohjavesialue-materiaalit])
+       [pohjavesialueiden-materiaalit {} materiaalikoodit pohjavesialue-materiaalit])
      ])) 
