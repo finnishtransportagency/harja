@@ -1,6 +1,6 @@
 (ns harja.views.urakka.materiaalit
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer-macros [deftk]]
+            [harja.ui.yleiset :refer [kuuntelija] :refer-macros [deftk]]
             [harja.tiedot.urakka.materiaalit :as t]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -16,19 +16,21 @@
 (defn pohjavesialueiden-materiaalit
   "Listaa pohjavesialueiden materiaalit ja mahdollistaa kartalta valinnan."
   [opts materiaalit]
+  
   (let [karttavalinta? (atom false)
         valitse-kartalta (fn [e]
                            (.preventDefault e)
                            (if @karttavalinta?
                              (do (tasot/taso-pois! :pohjavesialueet)
                                  (reset! karttavalinta? false)
-                                 (swap! nav/tarvitsen-karttaa conj :materiaalit-pohjavesialueet))
+                                 (reset! nav/kartan-koko :S))
                              (do (tasot/taso-paalle! :pohjavesialueet)
                                  (reset! karttavalinta? true)
-                                 (swap! nav/tarvitsen-karttaa conj :materiaalit-pohjavesialueet))))]
-    (r/create-class
-     {:reagent-render
-      (fn [opts materiaalit]
+                                 (reset! nav/kartan-koko :M))))
+        ]
+    (kuuntelija
+     {}
+     (fn [opts materiaalit]
         (log "MATSKUJA: " (pr-str materiaalit))
         [:div.pohjavesialueet
          [grid/muokkaus-grid
@@ -49,9 +51,11 @@
            {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :muokattava? (constantly false) :leveys "5%"}]
           
           materiaalit
-         ]])
+          ]])
+     :pohjavesialue-klikattu (fn [this pohjavesialue]
+                               (log "hei klikkasit pohjavesialuetta: " (dissoc pohjavesialue :alue))))))
       
-      })))
+     
        
        
   

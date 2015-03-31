@@ -31,9 +31,12 @@
     (catch :default _
       nil)))
 
-(defn varita-alueet [alueet]
+(defn alueet
+  "Lisää pohjavesialue tuloksiin frontin kannalta oleelliset kentät."
+  [alueet]
   (into []
-        (map #(update-in % [:alue] assoc :color "blue" :fill "blue"))
+        (map #(assoc (update-in % [:alue] assoc :color "blue" :fill "blue")
+                :type :pohjavesialue))
         alueet))
     
 (run! (let [nakyvissa? @taso-pohjavesialueet
@@ -46,7 +49,7 @@
           ;; taso näkyvissä ja hallintayksikkö valittu, haetaan alueet
           (if-let [pa (lue-pohjavesialueet hal)]
             ;; muistissa oli aiemmin ladatut alueet, palautetaan ne
-            (reset! pohjavesialueet (varita-alueet pa))
+            (reset! pohjavesialueet (alueet pa))
             
             ;; ei muistissa, haetaan ne
             (go
@@ -54,6 +57,6 @@
                 (tallenna-pohjavesialueet hal res)
                 (when (= hal (:id @valittu-hallintayksikko))
                   ;; jos hallintayksikköä ei ole ehditty muuttaa ennen kuin vastaus tuli
-                  (reset! pohjavesialueet (varita-alueet res))))))))) 
+                  (reset! pohjavesialueet (alueet res))))))))) 
 
   

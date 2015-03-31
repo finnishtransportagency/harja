@@ -88,8 +88,11 @@
               :on-select (fn [item]
                            (condp = (:type item)
                              :hy (nav/valitse-hallintayksikko item)
-                             :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))))
-              :tooltip-fn :nimi 
+                             :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))
+                              (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
+                             ))
+              :tooltip-fn (fn [geom]
+                            [:div {:class (name (:type geom))} (:nimi geom)])
               :geometries
               (concat (cond
                        ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
