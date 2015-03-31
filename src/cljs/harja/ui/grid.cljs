@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]
 
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -74,6 +74,28 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
 
+(defprotocol GridKahva
+  "Sisäinen protokolla, jolle grid asettaa itsensä."
+  (aseta-grid [this grid] "Asetaa gridin, jolle ohjauskutsut pitäisi välittää."))
+
+(defn grid-ohjaus
+  "Tekee grid ohjausinstanssin, jonka kutsuva puoli voi antaa gridille."
+  []
+  (let [gridi (atom nil)]
+    (reify
+      Grid
+      (lisaa-rivi! [_ rivin-tiedot]
+        (lisaa-rivi! @gridi rivin-tiedot))
+      
+      (hae-muokkaustila [_]
+        (hae-muokkaustila @gridi))
+
+      GridKahva
+      (aseta-grid [_ grid]
+        (reset! gridi grid)))))
+
+      
+  
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -84,6 +106,7 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :voi-poistaa?    voiko rivin poistaa
   :voi-lisata?     voiko rivin lisätä (boolean)
   :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :ohjaus          gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -102,7 +125,7 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko tallenna tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
            muokkaa-footer muokkaa-aina muutos
-           uusi-rivi]} skeema tiedot]
+           uusi-rivi] :as opts} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -186,6 +209,10 @@ Optiot on mappi optioita:
                                           rivit)))))
                            nil)
         ]
+
+    (when-let [ohj (:ohjaus opts)]
+      (aseta-grid ohj ohjaus))
+    
     (when muokkaa-aina
       (aloita-muokkaus! tiedot))
     
@@ -357,7 +384,7 @@ Optiot on mappi optioita:
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
-           muokkaa-footer muutos uusi-rivi]} skeema muokatut]
+           muokkaa-footer muutos uusi-rivi] :as opts} skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
@@ -412,6 +439,8 @@ Optiot on mappi optioita:
 
         
         ]
+    (when-let [ohj (:ohjaus opts)]
+      (aseta-grid ohj ohjaus))
     
     (r/create-class
      {:component-will-receive-props
