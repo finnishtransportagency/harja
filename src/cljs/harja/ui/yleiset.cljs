@@ -153,7 +153,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Lisää komponentille käsittelijät tietyille tapahtuma-aiheille.
 Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit annetulle komponentille.
 aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoja) ja käsittelyfunktio,
-jolle annetaan yksi parametri (komponentti). Alkutila on komponentin inital-state."
+jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponentin inital-state."
   [alkutila render-fn & aiheet-ja-kasittelijat]
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
     (reagent/create-class
