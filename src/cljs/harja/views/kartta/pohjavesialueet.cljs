@@ -3,14 +3,27 @@
   (:require [reagent.core :refer [atom]]
             [harja.tiedot.navigaatio :refer [valittu-hallintayksikko]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.protokollat :refer [Haku hae]]
             [cognitect.transit :as t] 
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<! chan]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+;; NÄIDEN pitäisi olla tiedot namespacessa, ei tasossa?
+
 
 (defonce taso-pohjavesialueet (atom false))
 (defonce pohjavesialueet (atom []))
 
+(def hallintayksikon-pohjavesialueet-haku
+  (reify Haku
+    (hae [_ teksti]
+      (let [ch (chan)]
+        (go (>! ch
+                (into []
+                      (filter #(not= -1 (.indexOf (:nimi %) teksti)))
+                      @pohjavesialueet)))
+        ch))))
 
 ;; Pohjavesialueet eivät muutu edes vuosittain, joten voimme turvallisesti cachettaa
 (defn tallenna-pohjavesialueet
