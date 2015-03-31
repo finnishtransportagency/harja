@@ -135,7 +135,7 @@
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (:y hover)}}
+         [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
           (t hover)]))]))
 
 ;;;;;;;;;;
