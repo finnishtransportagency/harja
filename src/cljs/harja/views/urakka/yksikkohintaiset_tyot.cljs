@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
             [harja.tiedot.urakka.suunnittelu :as suunnittelu]
@@ -99,7 +100,6 @@
                           (when (not (empty? tyorivit-kaikki-hoitokaudet-alkutilanne))
                             (reset! tyorivit-samat-alkutilanteessa? 
                                     (suunnittelu/hoitokausien-sisalto-sama? tyorivit-kaikki-hoitokaudet-alkutilanne (suunnittelu/hoitokaudet ur))))
-                          ;(log "tyorivit-samat-alkutilanteessa?" @tyorivit-samat-alkutilanteessa?)
                           
                           (ryhmittele-tehtavat
                             @toimenpiteet-ja-tehtavat
@@ -122,6 +122,13 @@
        :tunniste :tehtava
        :voi-lisata? false
        :voi-poistaa? (constantly false)
+       :muokkaa-footer (fn [g]
+                         [raksiboksi "Tallenna tulevillekin hoitokausille" 
+                              @tallenna-tuleville-hoitokausille? 
+                              muuta-tallenna-tuleville-hoitokausille
+                              [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                              (and @tallenna-tuleville-hoitokausille?
+                                (not @tyorivit-samat-alkutilanteessa?))])
        }
       
       ;; sarakkeet
@@ -133,10 +140,6 @@
        {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]
        @tyorivit
-      ]
-     [raksiboksi "Tallenna tulevillekin hoitokausille" 
-      @tallenna-tuleville-hoitokausille? 
-      muuta-tallenna-tuleville-hoitokausille]
-     ]))
+      ]]))
 
 

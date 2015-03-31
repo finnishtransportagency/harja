@@ -71,14 +71,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
 
-(defn raksiboksi [teksti checked toiminto]
+(defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
+  [:span
   [:div.raksiboksi.input-group
    [:span.input-group-addon
     [:input {:type "checkbox"
              :checked (if checked "checked" "")
              :on-change #(do (.preventDefault %) (toiminto))}]
     ]
-   [:input.form-control {:type "text" :value teksti}]])
+   [:label.form-control teksti]]
+  
+   (when nayta-infoteksti?
+     info-teksti)])
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])

@@ -28,6 +28,7 @@
 
 (defn tehtavan-sisalto-sama? [])
 
+;; FIXME: vertailu tehtävä vain tuleville hoitokausille, ei kaikille urakan hoitokausille
 (defn hoitokausien-sisalto-sama? 
   "Kertoo onko eri hoitokausien sisältö sama päivämääriä lukuunottamatta.
   Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa.
