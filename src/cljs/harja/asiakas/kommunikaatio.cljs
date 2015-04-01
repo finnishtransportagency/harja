@@ -17,7 +17,7 @@
 (deftype DateTimeHandler []
   Object
   (tag [_ v] "dt")
-  (rep [_ v] (.log js/console "TULI PVM: " v) (pvm/pvm-aika v)))
+  (rep [_ v] (pvm/pvm-aika v)))
     
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)

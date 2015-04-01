@@ -2,9 +2,22 @@
   "Yleiset päivämääräkäsittelyn asiat asiakaspuolella."
   (:require [cljs-time.format :as df]
             [cljs-time.core :as t]
-            [cljs-time.extend] ;; että saadaan vertailut ja häshäys toimimaan oikein
+            [cljs-time.coerce :as tc]
             [harja.loki :refer [log]])
   (:import (goog.date DateTime)))
+
+
+;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
+(extend-type DateTime
+  IHash
+  (-hash [o]
+    (hash (tc/to-long o)))
+
+  IEquiv
+  (-equiv [o other]
+    (and (instance? DateTime other)
+         (= (tc/to-long o) (tc/to-long other))))
+  )
 
 
 (defn js->goog
@@ -33,7 +46,7 @@
   (DateTime.))
 
 (defn luo-pvm [vuosi kk pv]
-  (DateTime. vuosi kk pv))
+  (DateTime. vuosi kk pv 0 0 0 0))
 
 (defn luo-js-pvm [vuosi kk pv]
   (goog->js (luo-pvm vuosi kk pv)))

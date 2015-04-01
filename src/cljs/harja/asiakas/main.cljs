@@ -12,7 +12,7 @@
 
             [cljsjs.react]
 
-            [cljs-time.extend]))
+            [harja.pvm]))
 
 (defn render []
   (reagent/render [main-view/main] (.getElementById js/document "app")))
