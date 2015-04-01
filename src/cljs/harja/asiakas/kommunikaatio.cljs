@@ -23,7 +23,6 @@
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
-             (.log js/console "SAATIIN: " (pr-str vastaus))
              (put! chan (if transducer (into [] transducer vastaus) vastaus))
              (close! chan))]
     
@@ -37,7 +36,7 @@
                                                               {"dt" (fn [v]
                                                                       (pvm/->pvm-aika v))}})
                    :handler cb
-                   :error-handler (fn [[_ error]]
+                   :error-handler (fn [[_ error]] 
                                     (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                     (close! chan))})
     chan))
