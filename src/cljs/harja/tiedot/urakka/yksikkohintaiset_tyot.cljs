@@ -9,7 +9,7 @@
 
 
 (defn hae-urakan-yksikkohintaiset-tyot [urakka-id]
-  (k/post! :yksikkohintaiset-tyot urakka-id)) 
+  (k/post! :yksikkohintaiset-tyot urakka-id))
 
 
 ;; hoidon alueurakan hoitokausi on 1.10.YYYY - 30.9.YYYY+1. Käyttöliittymässä syötetään
