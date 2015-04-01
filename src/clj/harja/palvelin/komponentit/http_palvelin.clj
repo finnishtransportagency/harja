@@ -31,7 +31,7 @@
 (def +fi-date-time-format+ "dd.MM.yyyy HH:mm:ss")
 (def write-optiot {:handlers {java.util.Date (t/write-handler (constantly "dt")
                                                               #(.format (SimpleDateFormat. +fi-date-time-format+) %))}})
-(def read-optiot {:handlers {"dt" #(.parse (SimpleDateFormat. +fi-date-time-format+) %)}})
+(def read-optiot {:handlers {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}})
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
