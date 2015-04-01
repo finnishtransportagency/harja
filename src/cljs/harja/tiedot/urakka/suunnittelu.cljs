@@ -26,28 +26,31 @@
              :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))})
           (range ensimmainen-vuosi viimeinen-vuosi))))
 
-(defn tehtavan-sisalto-sama? [])
 
-;; FIXME: vertailu tehtävä vain tuleville hoitokausille, ei kaikille urakan hoitokausille
+;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm
+(defn jaljella-olevien-hoitokausien-rivit
+  "Palauttaa ne rivit joiden loppupvm on joku jaljella olevien kausien pvm:stä"
+  [rivit-tehtavittain jaljella-olevat-kaudet]
+  (mapv (fn [tehtavan-rivit]
+                 (filter (fn [tehtavan-rivi]
+                           (some #(pvm/sama-pvm? (:loppupvm %) (:loppupvm tehtavan-rivi)) jaljella-olevat-kaudet))
+                         tehtavan-rivit)
+          ) rivit-tehtavittain))
+
+(defn tulevat-hoitokaudet [ur hoitokausi-josta-eteenpain]
+  (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm hoitokausi-josta-eteenpain)))
+              (hoitokaudet ur)))
+
 (defn hoitokausien-sisalto-sama?
   "Kertoo onko eri hoitokausien sisältö sama päivämääriä lukuunottamatta.
-  Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa.
-  Tarkistaa onko töitä kaikilta hoitokausilta ja jos on, ovatko ne sisällöltään samat."
+  Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
   ;; uudelleennimetään muuttujia jos tästä saadaan yleiskäyttöinen esim. kok. hintaisille ja materiaaleille
   [tyorivit-tehtavittain hoitokaudet]
-  (let [tyorivit-aikajarjestyksessa (sort-by :alkupvm tyorivit-tehtavittain)
-        alkupvmt-toista (into #{}
-                              (first (map (fn [yhden-tehtavan-tyorivi]
-                                            (map #(:alkupvm %) yhden-tehtavan-tyorivi)) tyorivit-aikajarjestyksessa)))
-        alkupvmt-hoitokausista (into #{}
-                                     (map (fn [hk]
-                                            (:alkupvm hk)) hoitokaudet))
+  (let [tyorivit-aikajarjestyksessa (map #(sort-by :alkupvm %) tyorivit-tehtavittain)
         tyorivit-ilman-pvmia (into []
                                    (map #(map (fn [tyorivi]
                                                 (dissoc tyorivi :alkupvm :loppupvm)) %) tyorivit-aikajarjestyksessa))]
-    (and
-      (= (count alkupvmt-toista) (count alkupvmt-hoitokausista))
-      (every? #(apply = %) tyorivit-ilman-pvmia))))
+      (every? #(apply = %) tyorivit-ilman-pvmia)))
 
 (defn toiden-kustannusten-summa
   "Laskee yhteen annettujen työrivien kustannusten summan"

@@ -27,21 +27,18 @@
 (def tallenna-tuleville-hoitokausille? (atom true))
 
 (defn muuta-tallenna-tuleville-hoitokausille []
-  (log "muuta-tallenna-tuleville-hoitokausille" (not @tallenna-tuleville-hoitokausille?))
   (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
 
-(defn tyorivit-tulevillekin-kausille [ur tyorivit eka-hoitokausi]
-  (log "tyorivit-tulevillekin-kausille enter" ur tyorivit eka-hoitokausi)
+(defn tyorivit-tulevillekin-kausille [ur tyorivit hoitokausi-josta-eteenpain]
   (mapcat (fn [{:keys [alkupvm loppupvm]}]
             (map (fn [tyorivi]
                    ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
                    (assoc tyorivi :alkupvm alkupvm :loppupvm loppupvm)) tyorivit)
-            ) (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm eka-hoitokausi))) (suunnittelu/hoitokaudet ur))))
+            ) (suunnittelu/tulevat-hoitokaudet ur hoitokausi-josta-eteenpain)))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
-  (log "tallenna-tyot enter, uudet työt" uudet-tyot)
   (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
-                                         (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm valittu-hoitokausi))) (suunnittelu/hoitokaudet ur))
+                                         (suunnittelu/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
             (into []
@@ -100,7 +97,9 @@
 
                              (when (not (empty? @tyorivit-kaikki-hoitokaudet-alkutilanne))
                                (reset! tyorivit-samat-alkutilanteessa?
-                                       (suunnittelu/hoitokausien-sisalto-sama? @tyorivit-kaikki-hoitokaudet-alkutilanne (suunnittelu/hoitokaudet ur))))
+                                       (suunnittelu/hoitokausien-sisalto-sama? (suunnittelu/jaljella-olevien-hoitokausien-rivit @tyorivit-kaikki-hoitokaudet-alkutilanne
+                                                                                                                                (suunnittelu/tulevat-hoitokaudet ur @suunnittelu/valittu-hoitokausi))
+                                                                               (suunnittelu/tulevat-hoitokaudet ur @suunnittelu/valittu-hoitokausi))))
 
                              (ryhmittele-tehtavat
                                @toimenpiteet-ja-tehtavat
@@ -108,6 +107,7 @@
                                                     (yks-hint-tyot/kannan-rivit->tyorivi tehtavan-rivit)
                                                     ) tehtavien-rivit)
                                             tyhjat-tyot))))
+        kaikki-tyorivit-flattina :reaction (flatten @tyorivit-kaikki-hoitokaudet-alkutilanne)
         ]
 
        (do
@@ -144,10 +144,12 @@
            ]
 
           [:div.hoitokauden-kustannukset
-           [:div "Kaikkien hoitokausien kustannukset yhteensä "
-            [:span (str (suunnittelu/toiden-kustannusten-summa (flatten @tyorivit-kaikki-hoitokaudet-alkutilanne))
-                        "\u20AC"
-                        )]
-            ]]]))
+           [:div "Hoitokausi yhteensä "            
+            [:span (str (suunnittelu/toiden-kustannusten-summa (filter 
+                                                                 #(pvm/sama-pvm?
+                                                                    (:alkupvm %) (:alkupvm @suunnittelu/valittu-hoitokausi))
+                                                                       @kaikki-tyorivit-flattina)) "\u20AC")]]
+           [:div "Kaikki hoitokaudet yhteensä "
+            [:span (str (suunnittelu/toiden-kustannusten-summa @kaikki-tyorivit-flattina) "\u20AC")]]]]))
 
 
