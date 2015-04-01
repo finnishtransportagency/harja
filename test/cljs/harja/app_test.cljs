@@ -128,6 +128,14 @@
          (is (= 150.001 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit+))) "toiden-kustannusten-summa" )
 
 
+(deftest jaljella-olevien-hoitokausien-rivit []
+  (let [kaudet (s/tulevat-hoitokaudet +testi-urakka-kaksi-vuotta+ {:alkupvm (pvm/hoitokauden-alkupvm 2006)
+            :loppupvm (pvm/hoitokauden-loppupvm 2007)})
+        jaljelle-jaavat-rivit (flatten (s/jaljella-olevien-hoitokausien-rivit
+                      +hoitokausien-tyorivit-erit+ kaudet))
+        viesti "jaljella-olevien-hoitokausien-rivit"]
+    (is (= 4 (count (flatten +hoitokausien-tyorivit-erit+))) viesti)
+    (is (= 2 (count jaljelle-jaavat-rivit)) viesti)))
 
 
 
