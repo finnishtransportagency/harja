@@ -48,7 +48,7 @@
                     uudet-tyot
                     ))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero muuttuneet))]
-        (reset! tyot (map #(pvm/muunna-aika % :alkupvm :loppupvm) res))
+        (reset! tyot res)
         true)))
 
 (defn luo-tyhja-tyo [tp ur hk]
