@@ -46,7 +46,7 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
                          :tiedot tiedot}
                          
             tiedot (<! (k/post! :tallenna-kayttajan-tiedot lahetettava))]
-        (>! ch (muunna-kayttajan-tiedot tiedot))))
+        (>! ch tiedot)))
     ch))
 
 (defn poista-kayttaja! [id]
