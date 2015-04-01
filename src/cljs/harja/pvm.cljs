@@ -20,61 +20,18 @@
   )
 
 
-(defn js->goog
-  "Muunna Javascript päivämäärä goog muotoon"
-  [js-date]
-  (DateTime. (+ 1900 (.getYear js-date))
-             (.getMonth js-date)
-             (.getDate js-date)
-             (.getHours js-date)
-             (.getMinutes js-date)
-             (.getSeconds js-date)
-             (.getMilliseconds js-date)))
-
-(defn goog->js
-  "Muunna goog päivämäärä Javascript muotoon"
-  [goog-date]
-  (js/Date. (.getYear goog-date)
-            (.getMonth goog-date)
-            (.getDate goog-date)
-            (.getHours goog-date)
-            (.getMinutes goog-date)
-            (.getSeconds goog-date)
-            (.getMilliseconds goog-date)))
-
 (defn nyt []
   (DateTime.))
 
 (defn luo-pvm [vuosi kk pv]
   (DateTime. vuosi kk pv 0 0 0 0))
 
-(defn luo-js-pvm [vuosi kk pv]
-  (goog->js (luo-pvm vuosi kk pv)))
-
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
   
-(defn muunna-aika
-  "Muuntaa annetun mäpin annetut päivämääräkentät JS muodosta goog.date.DateTime instansseiksi."
-  [obj & kentat]
-  (loop [obj obj
-         [k & kentat] kentat]
-    (if-not k
-      obj
-      (recur (assoc obj k (js->goog (get obj k)))
-             kentat))))
 
-(defn muunna-aika-js
-  "Muuntaa annetun mäpin annetut päivämääräkentät goog.date.DateTime muodosta JS date instansseiksi."
-  [obj & kentat]
-  (loop [obj obj
-         [k & kentat] kentat]
-    (if-not k
-      obj
-      (recur (assoc obj k (goog->js (get obj k)))
-             kentat))))
 (def fi-pvm
   "Päiväämäärän formatointi suomalaisessa muodossa"
   (df/formatter "dd.MM.yyyy"))
@@ -130,3 +87,8 @@
   (luo-pvm vuosi 8 30)
   )
 
+(defn vuosi
+  "Palauttaa annetun DateTimen vuoden, esim 2015."
+  [pvm]
+  (t/year pvm))
+  

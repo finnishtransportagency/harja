@@ -39,17 +39,17 @@
                            [(:alkupvm rivi) (:loppupvm rivi)])
                pilkotut (ykshint-tyot/pilko-hoitokausien-tyot +pilkottavat-tyo+)
                eka-rivi (first (filterv (fn [t]
-                                          (= (:alkupvm t) (pvm/luo-js-pvm 2005 9 1)))
+                                          (= (:alkupvm t) (pvm/luo-pvm 2005 9 1)))
                                         pilkotut))
                toka-rivi (first (filterv (fn [t]
-                                           (= (:alkupvm t) (pvm/luo-js-pvm 2006 0 1)))
+                                           (= (:alkupvm t) (pvm/luo-pvm 2006 0 1)))
                                          pilkotut))
                viesti "pilko-hoitokausien-tyot"]
            (is (= (count pilkotut) 2) viesti)
            (is (= (:maara eka-rivi) 1) viesti)
            (is (= (:maara toka-rivi) 3) viesti)))
 
-
+ 
 (def +kannan-rivit+
   [{:alkupvm      (pvm/vuoden-eka-pvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
     :maara        19 :urakka 1, :tehtava 1350,

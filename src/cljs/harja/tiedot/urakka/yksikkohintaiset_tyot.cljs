@@ -19,16 +19,15 @@
 (defn pilko-hoitokausien-tyot 
   "Luo yhdestä työrivistä kaksi riviä tietokantaa varten, hoitokauden molempien vuosien osat"
   [tyot]
-  (mapcat   (fn [rivi]
-              (let [alkupvm-10-12 (pvm/goog->js (pvm/hoitokauden-alkupvm (.getFullYear (pvm/goog->js (:alkupvm rivi)))))
-                    loppupvm-10-12 (pvm/goog->js (pvm/vuoden-viim-pvm (.getFullYear (pvm/goog->js (:alkupvm rivi)))))
-                    alkupvm-1-9 (pvm/goog->js (pvm/vuoden-eka-pvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
-                    loppupvm-1-9 (pvm/goog->js (pvm/hoitokauden-loppupvm (.getFullYear (pvm/goog->js (:loppupvm rivi)))))
-                    ]
-                
-                [(dissoc (assoc rivi :alkupvm alkupvm-10-12 :loppupvm loppupvm-10-12 :maara (:maara-kkt-10-12 rivi)) :maara-kkt-1-9 :maara-kkt-10-12)
-                 (dissoc (assoc rivi :alkupvm alkupvm-1-9 :loppupvm loppupvm-1-9 :maara (:maara-kkt-1-9 rivi)) :maara-kkt-1-9 :maara-kkt-10-12)
-                 ])) tyot))
+  (mapcat (fn [rivi]
+            (let [alkupvm-10-12 (pvm/hoitokauden-alkupvm (pvm/vuosi (:alkupvm rivi)))
+                  loppupvm-10-12 (pvm/vuoden-viim-pvm (pvm/vuosi (:alkupvm rivi)))
+                  alkupvm-1-9 (pvm/vuoden-eka-pvm (pvm/vuosi (:loppupvm rivi)))
+                  loppupvm-1-9 (pvm/hoitokauden-loppupvm (pvm/vuosi (:loppupvm rivi)))]
+              
+              [(dissoc (assoc rivi :alkupvm alkupvm-10-12 :loppupvm loppupvm-10-12 :maara (:maara-kkt-10-12 rivi)) :maara-kkt-1-9 :maara-kkt-10-12)
+               (dissoc (assoc rivi :alkupvm alkupvm-1-9 :loppupvm loppupvm-1-9 :maara (:maara-kkt-1-9 rivi)) :maara-kkt-1-9 :maara-kkt-10-12)
+               ])) tyot))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Tallentaa urakan yksikköhintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
