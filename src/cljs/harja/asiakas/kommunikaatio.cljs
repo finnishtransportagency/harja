@@ -3,8 +3,9 @@
   (:require [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [put! close! chan]]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.pvm :as pvm])
-  (:import (goog.date DateTime)))
+            [harja.pvm :as pvm]
+            [cognitect.transit :as t])
+  (:import (goog.date DateTime UtcDateTime)))
 
 
 (defn polku []
@@ -22,13 +23,16 @@
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
+             (.log js/console "SAATIIN: " (pr-str vastaus))
              (put! chan (if transducer (into [] transducer vastaus) vastaus))
              (close! chan))]
+    
     (ajax-request {:uri (str (polku) (name palvelu))
                    :method metodi
                    :params parametrit
                    :format (transit-request-format {:handlers
-                                                    {DateTime (DateTimeHandler.)}})
+                                                    {DateTime (DateTimeHandler.)
+                                                     UtcDateTime (DateTimeHandler.)}})
                    :response-format (transit-response-format {:handlers
                                                               {"dt" (fn [v]
                                                                       (pvm/->pvm-aika v))}})
@@ -37,7 +41,7 @@
                                     (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                     (close! chan))})
     chan))
-
+ 
 (defn post!
   "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
