@@ -101,14 +101,19 @@
                (log "URAKAN MATSKUI::: " @urakan-materiaalit)
                (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
                                  @urakan-materiaalit))
-               (group-by (juxt #(tc/to-long (:alkupvm %)) #(tc/to-long (:loppupvm %)))
+               (group-by (juxt :alkupvm :loppupvm)
                          (filter #(= sopimus-id (:sopimus %))
                                  @urakan-materiaalit)))
                    
    
    ;; valitaan materiaaleista vain valitun hoitokauden
    materiaalit :reaction (let [{:keys [alkupvm loppupvm] :as hk} @suunnittelu/valittu-hoitokausi]
-                           (get @sopimuksen-materiaalit-hoitokausittain [(tc/to-long alkupvm) (tc/to-long loppupvm)]))
+                           (log "valittu hk: " [alkupvm loppupvm])
+                           (log " siinä matskui  ==> " (get @sopimuksen-materiaalit-hoitokausittain [alkupvm loppupvm]))
+                           (log "hoitokausittaisia avaimia on " (pr-str (keys @sopimuksen-materiaalit-hoitokausittain)))
+                           (doseq [k (keys @sopimuksen-materiaalit-hoitokausittain)]
+                             (log " TESTAA " (pr-str k) " = " (pr-str [alkupvm loppupvm]) "? " (= [alkupvm loppupvm] k)))
+                           (get @sopimuksen-materiaalit-hoitokausittain [alkupvm loppupvm]))
    
    uusi-id (atom 0)
    
@@ -133,43 +138,26 @@
 
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 
-   :reaction
-   (do (comment (let [kopioi? @tuleville?
-                      hoitokausi @suunnittelu/valittu-hoitokausi
-                      hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
-                      vertailumuoto (fn [materiaalit]
-                                      ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
-                                      (into #{}
-                                            (map #(dissoc % :alkupvm :loppupvm :id))
-                                            materiaalit))
+   :reaction (let [kopioi? @tuleville?
+                   hoitokausi @suunnittelu/valittu-hoitokausi
+                   hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
+                   vertailumuoto (fn [materiaalit]
+                                   ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
+                                   (into #{}
+                                         (map #(dissoc % :alkupvm :loppupvm :id))
+                                         materiaalit))
 
-                      [tama-kausi & tulevat-kaudet] (into []
-                                                          (comp (drop-while #(> hoitokausi-alku (ffirst %)))
-                                                                (map second)
-                                                                (map vertailumuoto))
-                                                          (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
+                   [tama-kausi & tulevat-kaudet] (into []
+                                                       (comp (drop-while #(> hoitokausi-alku (ffirst %)))
+                                                             (map second)
+                                                             (map vertailumuoto))
+                                                       (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
                
-                  ;;(doseq [tk tulevat-kaudet]
-                  ;;  (log "ONKO tämä kausi " tama-kausi " SAMA kuin tuleva " tk "? " (= tama-kausi tk)))
-                  (if-not kopioi?
-                    false
-                    (some #(not= tama-kausi %) tulevat-kaudet))))
-
-       (let [kopioi? @tuleville?
-                      hoitokausi @suunnittelu/valittu-hoitokausi
-                      hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
-                      vertailumuoto (fn [materiaalit]
-                                      ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
-                                      (into #{}
-                                            (map #(dissoc % :alkupvm :loppupvm :id))
-                                            materiaalit))
-
-                      [tama-kausi & tulevat-kaudet] (into []
-                                                          (comp (drop-while #(> hoitokausi-alku (ffirst %)))
-                                                                (map second)
-                                                                (map vertailumuoto))
-                                                          (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
-         (suunnittelu/hoitokausien-sisalto-sama? tama-kausi tulevat-kaudet)))
+               ;;(doseq [tk tulevat-kaudet]
+               ;;  (log "ONKO tämä kausi " tama-kausi " SAMA kuin tuleva " tk "? " (= tama-kausi tk)))
+               (if-not kopioi?
+                 false
+                 (some #(not= tama-kausi %) tulevat-kaudet)))
        
    ]
   
