@@ -19,14 +19,14 @@
          (let [hoitokaudet (s/hoitokaudet +testi-urakka+)
                viesti "hae-urakan-hoitokaudet"]
            (is (= 5 (count hoitokaudet)) viesti)
-           (is (= 5 (count (into #{} (map #(:alkupvm %) hoitokaudet)))) viesti)
-           (is (= 5 (count (into #{} (map #(:loppupvm %) hoitokaudet)))) viesti)
+           (is (= 5 (count (into #{} (map #(first %) hoitokaudet)))) viesti)
+           (is (= 5 (count (into #{} (map #(second %) hoitokaudet)))) viesti)
            (doseq [hk hoitokaudet]
-             (is (< (:alkupvm hk) (:loppupvm hk)) viesti)
-             (is (= 1 (t/day (:alkupvm hk))) viesti)
-             (is (= 10 (t/month (:alkupvm hk))) viesti)
-             (is (= 30 (t/day (:loppupvm hk))) viesti)
-             (is (= 9 (t/month (:loppupvm hk))) viesti))))
+             (is (< (first hk) (second hk)) viesti)
+             (is (= 1 (t/day (first hk))) viesti)
+             (is (= 10 (t/month (first hk))) viesti)
+             (is (= 30 (t/day (second hk))) viesti)
+             (is (= 9 (t/month (second hk))) viesti))))
 
 
 (def +pilkottavat-tyo+

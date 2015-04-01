@@ -29,12 +29,12 @@
 (defn muuta-tallenna-tuleville-hoitokausille []
   (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
 
-(defn tyorivit-tulevillekin-kausille [ur tyorivit hoitokausi-josta-eteenpain]
-  (mapcat (fn [{:keys [alkupvm loppupvm]}]
+(defn tyorivit-tulevillekin-kausille [ur tyorivit hoitokausi]
+  (mapcat (fn [hk]
             (map (fn [tyorivi]
                    ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
-                   (assoc tyorivi :alkupvm alkupvm :loppupvm loppupvm)) tyorivit)
-            ) (s/tulevat-hoitokaudet ur hoitokausi-josta-eteenpain)))
+                   (assoc tyorivi :alkupvm (first hk) :loppupvm (second hk))) tyorivit)
+            ) (s/tulevat-hoitokaudet ur hoitokausi)))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
@@ -53,7 +53,7 @@
 
 (defn luo-tyhja-tyo [tp ur hk]
   {:tehtava (:id tp), :tehtavan_nimi (:nimi tp) :yksikko (:yksikko tp) :urakka (:id ur)
-   :alkupvm (:alkupvm hk) :loppupvm (:loppupvm hk)})
+   :alkupvm (first hk) :loppupvm (second hk)})
 
 (defn ryhmittele-tehtavat
   "Ryhmittelee 4. tason tehtävät. Lisää väliotsikot eri tehtävien väliin"
@@ -82,8 +82,9 @@
         tyorivit-kaikki-hoitokaudet-alkutilanne :reaction (mapv (fn [[_ tehtavan-rivit]]
                                                                   (map #(yks-hint-tyot/kannan-rivit->tyorivi %) (partition 2 tehtavan-rivit))
                                                                   ) @tehtavien-rivit-kaikki-hoitokaudet)
-        tyorivit :reaction (let [{:keys [alkupvm loppupvm] :as valittu-hoitokausi} @s/valittu-hoitokausi
-
+        tyorivit :reaction (let [valittu-hoitokausi @s/valittu-hoitokausi
+                                 alkupvm (first valittu-hoitokausi)
+                                 loppupvm (second valittu-hoitokausi)
                                  tehtavien-rivit (group-by :tehtava
                                                            (filter (fn [t]
                                                                      (and (= (:sopimus t) (first @s/valittu-sopimusnumero))
@@ -94,13 +95,14 @@
                                  tyhjat-tyot (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
                                                   (filter (fn [tp]
                                                             (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
+                             
 
                              (when (not (empty? @tyorivit-kaikki-hoitokaudet-alkutilanne))
                                (reset! tyorivit-samat-alkutilanteessa?
                                        (s/hoitokausien-sisalto-sama? 
                                          (s/jaljella-olevien-hoitokausien-rivit @tyorivit-kaikki-hoitokaudet-alkutilanne
                                                                                 (s/tulevat-hoitokaudet ur @s/valittu-hoitokausi)))))
-
+                             
                              (ryhmittele-tehtavat
                                @toimenpiteet-ja-tehtavat
                                (vec (concat (mapv (fn [[_ tehtavan-rivit]]
@@ -111,7 +113,7 @@
         kaikkien-hoitokausien-kustannukset :reaction (s/toiden-kustannusten-summa @kaikki-tyorivit-flattina)
         valitun-hoitokauden-kustannukset :reaction (s/toiden-kustannusten-summa (filter
                                                                                             #(pvm/sama-pvm?
-                                                                                              (:alkupvm %) (:alkupvm @s/valittu-hoitokausi))
+                                                                                              (:alkupvm %) (first @s/valittu-hoitokausi))
                                                                                             @kaikki-tyorivit-flattina))
         ]
 
@@ -139,8 +141,8 @@
 
            ;; sarakkeet
            [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "25%"}
-            {:otsikko (str "Määrä 10-12/" (.getYear (:alkupvm @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
-            {:otsikko (str "Määrä 1-9/" (.getYear (:loppupvm @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
+            {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
+            {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
             {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
             {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}

@@ -50,8 +50,8 @@
             [:span.alasvedon-otsikko "Hoitokausi"]
             [alasvetovalinta {:valinta @s/valittu-hoitokausi
                               ;;\u2014 on väliviivan unikoodi
-                              :format-fn #(if % (str (pvm/pvm (:alkupvm %)) 
-                                                     " \u2014 " (pvm/pvm (:loppupvm %))) "Valitse")
+                              :format-fn #(if % (str (pvm/pvm (first %)) 
+                                                     " \u2014 " (pvm/pvm (second %))) "Valitse")
                               :valitse-fn s/valitse-hoitokausi!
                               :class "alasveto"
                               }

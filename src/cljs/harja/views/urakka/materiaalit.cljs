@@ -107,13 +107,13 @@
                    
    
    ;; valitaan materiaaleista vain valitun hoitokauden
-   materiaalit :reaction (let [{:keys [alkupvm loppupvm] :as hk} @suunnittelu/valittu-hoitokausi]
-                           (log "valittu hk: " [alkupvm loppupvm])
-                           (log " siinä matskui  ==> " (get @sopimuksen-materiaalit-hoitokausittain [alkupvm loppupvm]))
+   materiaalit :reaction (let [hk @suunnittelu/valittu-hoitokausi]
+                           (log "valittu hk: " hk)
+                           (log " siinä matskui  ==> " (get @sopimuksen-materiaalit-hoitokausittain hk))
                            (log "hoitokausittaisia avaimia on " (pr-str (keys @sopimuksen-materiaalit-hoitokausittain)))
                            (doseq [k (keys @sopimuksen-materiaalit-hoitokausittain)]
-                             (log " TESTAA " (pr-str k) " = " (pr-str [alkupvm loppupvm]) "? " (= [alkupvm loppupvm] k)))
-                           (get @sopimuksen-materiaalit-hoitokausittain [alkupvm loppupvm]))
+                             (log " TESTAA " (pr-str k) " = " (pr-str hk) "? " (= hk k)))
+                           (get @sopimuksen-materiaalit-hoitokausittain hk))
    
    uusi-id (atom 0)
    
@@ -140,7 +140,7 @@
    varoita-ylikirjoituksesta? 
    :reaction (let [kopioi? @tuleville?
                    hoitokausi @suunnittelu/valittu-hoitokausi
-                   hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
+                   hoitokausi-alku (tc/to-long (first hoitokausi))
                    vertailumuoto (fn [materiaalit]
                                    ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
                                    (into #{}

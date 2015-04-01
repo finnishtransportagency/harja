@@ -22,8 +22,8 @@
   (let [ensimmainen-vuosi (.getYear (:alkupvm ur))
         viimeinen-vuosi (.getYear (:loppupvm ur))]
     (mapv (fn [vuosi]
-            {:alkupvm  (pvm/hoitokauden-alkupvm vuosi)
-             :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))})
+            [(pvm/hoitokauden-alkupvm vuosi)
+             (pvm/hoitokauden-loppupvm (inc vuosi))])
           (range ensimmainen-vuosi viimeinen-vuosi))))
 
 
@@ -33,12 +33,12 @@
   [rivit-tehtavittain jaljella-olevat-kaudet]
   (mapv (fn [tehtavan-rivit]
                  (filter (fn [tehtavan-rivi]
-                           (some #(pvm/sama-pvm? (:loppupvm %) (:loppupvm tehtavan-rivi)) jaljella-olevat-kaudet))
+                           (some #(pvm/sama-pvm? (second %) (:loppupvm tehtavan-rivi)) jaljella-olevat-kaudet))
                          tehtavan-rivit)
           ) rivit-tehtavittain))
 
-(defn tulevat-hoitokaudet [ur hoitokausi-josta-eteenpain]
-  (drop-while #(not (pvm/sama-pvm? (:loppupvm %) (:loppupvm hoitokausi-josta-eteenpain)))
+(defn tulevat-hoitokaudet [ur hoitokausi]
+  (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
               (hoitokaudet ur)))
 
 (defn hoitokausien-sisalto-sama?
