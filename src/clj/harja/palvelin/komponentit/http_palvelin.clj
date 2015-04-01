@@ -28,8 +28,10 @@
 
 ;; Tehdään write/read handlerit pvm:ien siirtämiseksi "dt" tägillä, jotta fronttipuolella
 ;; ne muunnetaan suoraan oikeaan muotoon
-(def write-optiot {:handlers {java.util.Date (t/write-handler (constantly "dt") #(.getTime %))}})
-(def read-optiot {:handlers {"dt" #(java.util.Date. %)}})
+(def +fi-date-time-format+ "dd.MM.yyyy HH:mm:ss")
+(def write-optiot {:handlers {java.util.Date (t/write-handler (constantly "dt")
+                                                              #(.format (SimpleDateFormat. +fi-date-time-format+) %))}})
+(def read-optiot {:handlers {"dt" #(.parse (SimpleDateFormat. +fi-date-time-format+) %)}})
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."

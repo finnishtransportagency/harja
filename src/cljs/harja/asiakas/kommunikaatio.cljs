@@ -3,7 +3,7 @@
   (:require [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [put! close! chan]]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [cljs-time.coerce :as tc])
+            [harja.pvm :as pvm])
   (:import (goog.date DateTime)))
 
 
@@ -17,7 +17,7 @@
 (deftype DateTimeHandler []
   Object
   (tag [_ v] "dt")
-  (rep [_ v] (tc/to-long v)))
+  (rep [_ v] (.log js/console "TULI PVM: " v) (pvm/pvm-aika v)))
     
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
@@ -30,7 +30,8 @@
                    :format (transit-request-format {:handlers
                                                     {DateTime (DateTimeHandler.)}})
                    :response-format (transit-response-format {:handlers
-                                                              {"dt" (fn [v] (tc/from-long v))}})
+                                                              {"dt" (fn [v]
+                                                                      (pvm/->pvm-aika v))}})
                    :handler cb
                    :error-handler (fn [[_ error]]
                                     (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))

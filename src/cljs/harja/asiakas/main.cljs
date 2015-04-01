@@ -10,7 +10,9 @@
             [reagent.core :as reagent]
             [harja.loki :refer [log]]
 
-            [cljsjs.react]))
+            [cljsjs.react]
+
+            [cljs-time.extend]))
 
 (defn render []
   (reagent/render [main-view/main] (.getElementById js/document "app")))
