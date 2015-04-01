@@ -113,7 +113,7 @@
 
 (def +monen-hoitokauden-tyorivit+
   [{:alkupvm       (pvm/hoitokauden-alkupvm 2005), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",
-    :maara-kkt-1-9 8 :maara-kkt-10-12 2, :urakka 1, :yhteensa 50, :tehtava 1350,
+    :maara-kkt-1-9 8 :maara-kkt-10-12 2, :urakka 1, :yhteensa 50.001, :tehtava 1350,
     :yksikkohinta  5, :tehtavan_nimi "Tien auraaminen", :sopimus 2}
    {:alkupvm       (pvm/hoitokauden-alkupvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2007), :yksikko "km",
     :maara-kkt-1-9 8 :maara-kkt-10-12 2, :urakka 1, :yhteensa 50, :tehtava 1350,
@@ -125,7 +125,7 @@
   )
 
 (deftest toiden-kustannusten-summa []
-         (is (= 150 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit+))) "toiden-kustannusten-summa" )
+         (is (= 150.001 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit+))) "toiden-kustannusten-summa" )
 
 
 

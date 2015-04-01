@@ -108,6 +108,11 @@
                                                     ) tehtavien-rivit)
                                             tyhjat-tyot))))
         kaikki-tyorivit-flattina :reaction (flatten @tyorivit-kaikki-hoitokaudet-alkutilanne)
+        kaikkien-hoitokausien-kustannukset :reaction (suunnittelu/toiden-kustannusten-summa @kaikki-tyorivit-flattina)
+        valitun-hoitokauden-kustannukset :reaction (suunnittelu/toiden-kustannusten-summa (filter
+                                                                                            #(pvm/sama-pvm?
+                                                                                              (:alkupvm %) (:alkupvm @suunnittelu/valittu-hoitokausi))
+                                                                                            @kaikki-tyorivit-flattina))
         ]
 
        (do
@@ -144,12 +149,9 @@
            ]
 
           [:div.hoitokauden-kustannukset
-           [:div "Hoitokausi yhteensä "            
-            [:span (str (suunnittelu/toiden-kustannusten-summa (filter 
-                                                                 #(pvm/sama-pvm?
-                                                                    (:alkupvm %) (:alkupvm @suunnittelu/valittu-hoitokausi))
-                                                                       @kaikki-tyorivit-flattina)) "\u20AC")]]
+           [:div "Hoitokausi yhteensä "
+            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
            [:div "Kaikki hoitokaudet yhteensä "
-            [:span (str (suunnittelu/toiden-kustannusten-summa @kaikki-tyorivit-flattina) "\u20AC")]]]]))
+            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]]))
 
 
