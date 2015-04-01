@@ -67,14 +67,16 @@ käyttäjällä on joku annetuista rooleista."
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [rooli urakka-id]
-  (if-let [urakkaroolit (some->> (:urakkaroolit @kayttaja)
-                                 (filter #(= (:id (:urakka %)) urakka-id))
-                                 (map :rooli) 
-                                 (into #{}))]
-    (if (urakkaroolit rooli)
-      true
-      false)
-    false))
+  (if (roolissa? rooli-jarjestelmavastuuhenkilo)
+    true
+    (if-let [urakkaroolit (some->> (:urakkaroolit @kayttaja)
+                                   (filter #(= (:id (:urakka %)) urakka-id))
+                                   (map :rooli) 
+                                   (into #{}))]
+      (if (urakkaroolit rooli)
+        true
+        false)
+      false)))
 
 (defn jos-rooli-urakassa
   "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii. 

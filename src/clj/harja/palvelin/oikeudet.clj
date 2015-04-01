@@ -38,14 +38,16 @@ rooleista."
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [kayttaja rooli urakka-id]
-  (if-let [urakkaroolit (some->> (:urakkaroolit kayttaja)
-                                 (filter #(= (:id (:urakka %)) urakka-id))
-                                 (map :rooli) 
-                                 (into #{}))]
-    (if (urakkaroolit rooli)
-      true
-      false)
-    false))
+  (if (roolissa? kayttaja rooli-jarjestelmavastuuhenkilo)
+    true
+    (if-let [urakkaroolit (some->> (:urakkaroolit kayttaja)
+                                   (filter #(= (:id (:urakka %)) urakka-id))
+                                   (map :rooli) 
+                                   (into #{}))]
+      (if (urakkaroolit rooli)
+        true
+        false)
+      false)))
 
 
 (defn vaadi-rooli-urakassa
