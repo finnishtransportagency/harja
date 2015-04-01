@@ -106,9 +106,8 @@
    :loppupvm (pvm/hoitokauden-loppupvm 2007)})
 
 (deftest hoitokausien-sisalto-sama []
-         (is true (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-samat+ (s/hoitokaudet +testi-urakka-kaksi-vuotta+)))
-         (is (not (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-erit+ (s/hoitokaudet +testi-urakka-kaksi-vuotta+))))
-         )
+         (is true (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-samat+))
+         (is (not (s/hoitokausien-sisalto-sama? +hoitokausien-tyorivit-erit+))))
 
 
 (def +monen-hoitokauden-tyorivit+
