@@ -2,6 +2,7 @@
   "Yleiset päivämääräkäsittelyn asiat asiakaspuolella."
   (:require [cljs-time.format :as df]
             [cljs-time.core :as t]
+            [cljs-time.extend] ;; että saadaan vertailut ja häshäys toimimaan oikein
             [harja.loki :refer [log]])
   (:import (goog.date DateTime)))
 

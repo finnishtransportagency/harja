@@ -31,8 +31,7 @@
 
    
 (defn hae-urakan-paivystajat [urakka-id]
-  (k/post! :hae-urakan-paivystajat urakka-id
-           (map #(pvm/muunna-aika % :alku :loppu))))
+  (k/post! :hae-urakan-paivystajat urakka-id))
 
 
 (defn hae-urakan-yhteyshenkilot [urakka-id]
@@ -45,7 +44,6 @@
   (k/post! :tallenna-urakan-paivystajat
            {:urakka-id urakka-id
             :paivystajat paivystajat
-            :poistettu poistettavat}
-           (map #(pvm/muunna-aika % :alku :loppu))))
+            :poistettu poistettavat}))
 
 

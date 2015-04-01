@@ -2,7 +2,9 @@
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [put! close! chan]]
-            [harja.asiakas.tapahtumat :as tapahtumat]))
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [cljs-time.coerce :as tc])
+  (:import (goog.date DateTime)))
 
 
 (defn polku []
@@ -12,20 +14,27 @@
     "/_/"))
     
 
+(deftype DateTimeHandler []
+  Object
+  (tag [_ v] "dt")
+  (rep [_ v] (tc/to-long v)))
+    
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (put! chan (if transducer (into [] transducer vastaus) vastaus))
              (close! chan))]
     (ajax-request {:uri (str (polku) (name palvelu))
-                 :method metodi
-                 :params parametrit
-                 :format (transit-request-format)
-                 :response-format (transit-response-format)
-                 :handler cb
-                 :error-handler (fn [[_ error]]
-                                  (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                  (close! chan))})
+                   :method metodi
+                   :params parametrit
+                   :format (transit-request-format {:handlers
+                                                    {DateTime (DateTimeHandler.)}})
+                   :response-format (transit-response-format {:handlers
+                                                              {"dt" (fn [v] (tc/from-long v))}})
+                   :handler cb
+                   :error-handler (fn [[_ error]]
+                                    (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                    (close! chan))})
     chan))
 
 (defn post!

@@ -18,10 +18,6 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
   [hakuehto alku maara]
   (k/post! :hae-kayttajat [hakuehto alku maara]))
 
-(defn muunna-kayttajan-tiedot
-  [tiedot]
-  (assoc tiedot :urakka-roolit
-         (mapv #(pvm/muunna-aika % :luotu) (:urakka-roolit tiedot))))
 
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
@@ -29,7 +25,7 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
   (let [ch (chan)]
     (go
       (let [tiedot (<! (k/post! :hae-kayttajan-tiedot kayttaja-id))]
-        (>! ch (muunna-kayttajan-tiedot tiedot))))
+        (>! ch tiedot)))
     ch))
 
 (defn hae-organisaation-urakat
@@ -47,10 +43,7 @@ Jos halutaan hakea kaikki käyttäjät, jotka käyttäjällä on oikeus nähdä,
       (let [lahetettava {:kayttaja-id (:id kayttaja)
                          :organisaatio-id (:id organisaatio)
                          :kayttajatunnus (:kayttajatunnus kayttaja)
-                         :tiedot (-> tiedot
-                                     (update-in [:urakka-roolit]
-                                                (fn [roolit]
-                                                  (mapv #(pvm/muunna-aika-js % :luotu) roolit))))}
+                         :tiedot tiedot}
                          
             tiedot (<! (k/post! :tallenna-kayttajan-tiedot lahetettava))]
         (>! ch (muunna-kayttajan-tiedot tiedot))))

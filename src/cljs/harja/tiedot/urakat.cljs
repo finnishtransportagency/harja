@@ -11,8 +11,7 @@
 
 (def urakka-xf
   "Backendistä tulevien urakoiden muunnos sopivaan muotoon."
-  (comp (map #(pvm/muunna-aika % :alkupvm :loppupvm))
-        (map #(assoc % :type :ur))))
+  (map #(assoc % :type :ur)))
 
 (defn hae-hallintayksikon-urakat [hallintayksikko]
   (let [ch (chan)]

@@ -20,7 +20,6 @@
 (defn hae-urakan-materiaalit [urakka-id]
   (let [ch (chan)]
     (go (>! ch (into []
-                     (map #(pvm/muunna-aika % :alkupvm :loppupvm))
                      (<! (k/post! :hae-urakan-materiaalit urakka-id)))))
     ch))
  

@@ -25,6 +25,12 @@
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
 
+
+;; Tehdään write/read handlerit pvm:ien siirtämiseksi "dt" tägillä, jotta fronttipuolella
+;; ne muunnetaan suoraan oikeaan muotoon
+(def write-optiot {:handlers {java.util.Date (t/write-handler (constantly "dt") #(.getTime %))}})
+(def read-optiot {:handlers {"dt" #(java.util.Date. %)}})
+
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
@@ -33,7 +39,7 @@
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
-              kysely (t/read (t/reader (:body req) :json))
+              kysely (t/read (t/reader (:body req) :json read-optiot))
               kysely (if-not skeema
                        kysely
                        (try
@@ -49,7 +55,7 @@
               {:status 200
                :headers {"Content-Type" "application/transit+json"}
                :body (with-open [out (java.io.ByteArrayOutputStream.)]
-                       (t/write (t/writer out :json) vastaus)
+                       (t/write (t/writer out :json write-optiot) vastaus)
                        (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")

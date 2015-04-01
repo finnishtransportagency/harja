@@ -56,9 +56,7 @@
                                   (assoc %
                                     :etunimi (str/trim etu)
                                     :sukunimi (str/trim suku)))
-                                %))
-                        ;; goog->js date
-                        (map #(pvm/muunna-aika-js % :alku :loppu)))
+                                %)))
                   uudet-paivystajat)
             poistettavat
             (into []

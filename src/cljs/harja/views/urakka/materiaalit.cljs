@@ -133,26 +133,44 @@
 
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 
-   :reaction (let [kopioi? @tuleville?
-                   hoitokausi @suunnittelu/valittu-hoitokausi
-                   hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
-                   vertailumuoto (fn [materiaalit]
-                                   ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
-                                   (into #{}
-                                         (map #(dissoc % :alkupvm :loppupvm :id))
-                                         materiaalit))
+   :reaction
+   (do (comment (let [kopioi? @tuleville?
+                      hoitokausi @suunnittelu/valittu-hoitokausi
+                      hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
+                      vertailumuoto (fn [materiaalit]
+                                      ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
+                                      (into #{}
+                                            (map #(dissoc % :alkupvm :loppupvm :id))
+                                            materiaalit))
 
-                   [tama-kausi & tulevat-kaudet] (into []
-                                                       (comp (drop-while #(> hoitokausi-alku (ffirst %)))
-                                                             (map second)
-                                                             (map vertailumuoto))
-                                                       (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
+                      [tama-kausi & tulevat-kaudet] (into []
+                                                          (comp (drop-while #(> hoitokausi-alku (ffirst %)))
+                                                                (map second)
+                                                                (map vertailumuoto))
+                                                          (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
                
-               ;;(doseq [tk tulevat-kaudet]
-               ;;  (log "ONKO tämä kausi " tama-kausi " SAMA kuin tuleva " tk "? " (= tama-kausi tk)))
-               (if-not kopioi?
-                 false
-                 (some #(not= tama-kausi %) tulevat-kaudet)))
+                  ;;(doseq [tk tulevat-kaudet]
+                  ;;  (log "ONKO tämä kausi " tama-kausi " SAMA kuin tuleva " tk "? " (= tama-kausi tk)))
+                  (if-not kopioi?
+                    false
+                    (some #(not= tama-kausi %) tulevat-kaudet))))
+
+       (let [kopioi? @tuleville?
+                      hoitokausi @suunnittelu/valittu-hoitokausi
+                      hoitokausi-alku (tc/to-long (:alkupvm hoitokausi))
+                      vertailumuoto (fn [materiaalit]
+                                      ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
+                                      (into #{}
+                                            (map #(dissoc % :alkupvm :loppupvm :id))
+                                            materiaalit))
+
+                      [tama-kausi & tulevat-kaudet] (into []
+                                                          (comp (drop-while #(> hoitokausi-alku (ffirst %)))
+                                                                (map second)
+                                                                (map vertailumuoto))
+                                                          (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain))]
+         (suunnittelu/hoitokausien-sisalto-sama? tama-kausi tulevat-kaudet)))
+       
    ]
   
   (let [materiaalikoodit @(t/hae-materiaalikoodit)
