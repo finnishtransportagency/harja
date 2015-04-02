@@ -59,7 +59,6 @@
                                                                   WHERE tpi.urakka = " oulun-alueurakan-id)))
         
         urakoitsijan-urakanvalvoja (oulun-urakan-urakoitsijan-urakkavastaava)
-        _ (log/info "yit jannu" urakoitsijan-urakanvalvoja)
         kokonaishintaiset-tyot-kutsujana-urakoitsija (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                      :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja oulun-alueurakan-id)]
     
