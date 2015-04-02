@@ -68,15 +68,13 @@ käyttäjällä on joku annetuista rooleista."
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [rooli urakka-id]
   (if (roolissa? rooli-jarjestelmavastuuhenkilo)
-    (do (log "on järjis") true)
     (if-let [urakkaroolit (some->> (:urakkaroolit @kayttaja)
                                    (filter #(= (:id (:urakka %)) urakka-id))
                                    (map :rooli) 
                                    (into #{}))]
-      (do (log "urakkarooleja on " urakkaroolit)
-          (if (urakkaroolit rooli)
-            true
-            false))
+      (if (urakkaroolit rooli)
+        true
+        false)
       false)))
 
 (defn jos-rooli-urakassa
