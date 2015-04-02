@@ -9,7 +9,7 @@ SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t
        LEFT JOIN toimenpidekoodi t2 ON t2.id=t3.emo
        LEFT JOIN toimenpidekoodi t1 ON t1.id=t2.emo
  WHERE t4.taso = 4 AND
-       t3.id in (SELECT toimenpide FROM urakka_toimenpide WHERE urakka = :urakka) AND
+       t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = :urakka) AND
        t4.poistettu = false
 
 
@@ -18,6 +18,6 @@ SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t
 SELECT 	ut.toimenpide as id, 
 		tk.nimi as nimi, tk.koodi as koodi,
 		tk.emo as emo, tk.taso as taso
-  FROM 	urakka_toimenpide ut
+  FROM 	toimenpideinstanssi ut
   LEFT JOIN  toimenpidekoodi tk ON ut.toimenpide = tk.id
   WHERE	urakka = :urakka
