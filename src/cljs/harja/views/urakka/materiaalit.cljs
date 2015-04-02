@@ -180,7 +180,7 @@
         virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                       (not (empty? @pohjavesialue-materiaalit-virheet))) 
         voi-tallentaa? (and muokattu? (not virheita?))
-        voi-muokata? false ;(istunto/kirjoitusoikeus-urakkaan? ur)
+        voi-muokata? (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur))
         ]
     
     [:div.materiaalit

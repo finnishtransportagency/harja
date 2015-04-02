@@ -11,7 +11,7 @@
   (into [] (q/hae-materiaalikoodit db)))
 
 (defn hae-urakan-materiaalit [db user urakka-id]
-  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(if (:id (:pohjavesialue %))
