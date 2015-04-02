@@ -59,9 +59,9 @@
                   (:yhteensa tyorivi))
                 tyorivit)))
 
-(defn rivit-tulevillekin-kausille [ur tyorivit hoitokausi]
-  (mapcat (fn [hk]
+(defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
+  (mapcat (fn [[alku loppu]]
             (map (fn [rivi]
                    ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
-                   (assoc tyorivi :alkupvm (first hk) :loppupvm (second hk))) tyorivit))
+                   (assoc rivi :alkupvm alku :loppupvm loppu)) rivit))
           (tulevat-hoitokaudet ur hoitokausi)))
