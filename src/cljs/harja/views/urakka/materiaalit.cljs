@@ -4,7 +4,7 @@
             [harja.tiedot.urakka.materiaalit :as t]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.suunnittelu :as suunnittelu]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             
@@ -16,6 +16,12 @@
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn aseta-hoitokausi [rivi]
+  (let [[alkupvm loppupvm] @s/valittu-hoitokausi]
+    ;; lisätään kaikkiin riveihin valittu hoitokausi
+    (assoc rivi :alkupvm alkupvm :loppupvm loppupvm)))
+
+  
 (defn pohjavesialueiden-materiaalit-grid
   "Listaa pohjavesialueiden materiaalit ja mahdollistaa kartalta valinnan."
   [opts materiaalikoodit materiaalit]
@@ -41,6 +47,7 @@
           {:otsikko "Pohjavesialueiden materiaalit"
            :tyhja "Ei pohjavesialueille kirjattuja materiaaleja."
            :ohjaus g
+           :uusi-rivi aseta-hoitokausi                                
            :muokkaa-footer (fn [g]
                              [:button.btn.btn-default {:on-click valitse-kartalta}
                               (if @karttavalinta?
@@ -74,6 +81,7 @@
   [grid/muokkaus-grid
    {:otsikko "Materiaalit"
     :tyhja "Ei kirjattuja materiaaleja."
+    :uusi-rivi aseta-hoitokausi
     :muutos (when-let [virheet (:virheet opts)]
               #(reset! virheet (grid/hae-virheet %)))
     }
@@ -89,15 +97,15 @@
    
    yleiset-materiaalit-muokattu])
 
+
   
 (deftk materiaalit [ur]
   [;; haetaan kaikki materiaalit urakalle
    urakan-materiaalit (<! (t/hae-urakan-materiaalit (:id ur)))
 
    ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
-   ;; HUOM: goog DateTime hashcodet ei toimi, muunnetaan ne longeiksi
    sopimuksen-materiaalit-hoitokausittain
-   :reaction (let [[sopimus-id _] @suunnittelu/valittu-sopimusnumero]
+   :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero]
                (log "URAKAN MATSKUI::: " @urakan-materiaalit)
                (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
                                  @urakan-materiaalit))
@@ -107,7 +115,7 @@
                    
    
    ;; valitaan materiaaleista vain valitun hoitokauden
-   materiaalit :reaction (let [hk @suunnittelu/valittu-hoitokausi]
+   materiaalit :reaction (let [hk @s/valittu-hoitokausi]
                            (log "valittu hk: " hk)
                            (log " siinä matskui  ==> " (get @sopimuksen-materiaalit-hoitokausittain hk))
                            (log "hoitokausittaisia avaimia on " (pr-str (keys @sopimuksen-materiaalit-hoitokausittain)))
@@ -139,7 +147,7 @@
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 
    :reaction (let [kopioi? @tuleville?
-                   hoitokausi @suunnittelu/valittu-hoitokausi
+                   hoitokausi @s/valittu-hoitokausi
                    hoitokausi-alku (tc/to-long (first hoitokausi))
                    vertailumuoto (fn [materiaalit]
                                    ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
@@ -167,7 +175,7 @@
         virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                       (not (empty? @pohjavesialue-materiaalit-virheet))) 
         voi-tallentaa? (and muokattu? (not virheita?))]
-    (log "matskui " @materiaalit)
+    
     [:div.materiaalit
      [yleiset-materiaalit-grid {:virheet yleiset-materiaalit-virheet}
       materiaalikoodit yleiset-materiaalit-muokattu]
@@ -183,8 +191,18 @@
       ]
 
      [:div.toiminnot
-      [:button.btn.btn-primary {:disabled (not voi-tallentaa?)
-                                :on-click #(do (.preventDefault %)
-                                               (log "tallennellaan..."))}
+      [:button.btn.btn-primary
+       {:disabled (not voi-tallentaa?)
+        :on-click #(do (.preventDefault %)
+                       (go 
+                         (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
+                                             (vals @pohjavesialue-materiaalit-muokattu))
+                               rivit (if @tuleville?
+                                       (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
+                                       rivit)
+                               uudet-materiaalit (<! (t/tallenna (:id ur)
+                                                                 (first @s/valittu-sopimusnumero)
+                                                                 rivit))]
+                           (reset! urakan-materiaalit uudet-materiaalit))))}
        "Tallenna materiaalit"]]
      ])) 

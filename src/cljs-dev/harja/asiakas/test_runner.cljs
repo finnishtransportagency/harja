@@ -5,7 +5,9 @@
    [harja.loki :refer [log]]
    ;; require kaikki testit
    [cljs.test :as test]
-   [harja.app-test]))
+   [harja.app-test]
+   [harja.tiedot.urakka.suunnittelu-test]
+   ))
 
 
 (defmethod test/report [:harja :begin-test-ns] [event]
@@ -30,6 +32,7 @@
 (defn aja-testit []
   (test/run-tests (merge (test/empty-env)
                          {:reporter :harja})
-                  'harja.app-test)) 
+                  'harja.app-test
+                  'harja.tiedot.urakka.suunnittelu-test)) 
  
  

@@ -60,8 +60,9 @@
                 tyorivit)))
 
 (defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
-  (mapcat (fn [[alku loppu]]
-            (map (fn [rivi]
-                   ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
-                   (assoc rivi :alkupvm alku :loppupvm loppu)) rivit))
-          (tulevat-hoitokaudet ur hoitokausi)))
+  (into []
+        (mapcat (fn [[alku loppu]]
+                  (map (fn [rivi]
+                         ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
+                         (assoc rivi :alkupvm alku :loppupvm loppu)) rivit)))
+        (tulevat-hoitokaudet ur hoitokausi)))
