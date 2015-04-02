@@ -1,6 +1,7 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
-  (:require [harja.palvelin.komponentit.http-palvelin :as http]))
+  (:require 
+    [harja.palvelin.komponentit.http-palvelin :as http]))
 
 
 (def testitietokanta [(if (= "harja-jenkins.solitaservices.fi"
@@ -67,7 +68,8 @@
 (def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"})
 
 ;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:id 2 :etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :kayttajanimi "jvh"})
+(def +kayttaja-jvh+ {:id 2 :etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" 
+                     :kayttajanimi "jvh" :roolit #{"jarjestelmavastuuhenkilo"}})
 
 ;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
 (def +testikayttajia+ 3)
