@@ -141,8 +141,8 @@
    pohjavesialue-materiaalit-virheet nil
    pohjavesialue-materiaalit-muokattu :reaction @pohjavesialue-materiaalit
 
-   ;; kopioidaanko myös tuleville kausille
-   tuleville? true
+   ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
+   tuleville? false
 
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 

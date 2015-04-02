@@ -16,7 +16,7 @@
     (is (= 4 (count kopioidut)))
     (is (= (->pvm "01.10.2006") (:alkupvm (first kopioidut))))
     (is (= (->pvm "30.09.2010") (:loppupvm (last kopioidut))))
-    (is (every? #(= (:maara %) 66)))
+    (is (every? #(= (:maara %) 66))) 
  
     ))
     

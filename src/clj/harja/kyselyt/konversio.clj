@@ -57,3 +57,8 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
     kentta (if-let [a (get rivi kentta)]
              (into #{} (.getArray a))
              #{})))
+
+(defn sql-date
+  "Luo java.sql.Date objektin annetusta java.util.Date objektista."
+  [^java.util.Date dt]
+  (java.sql.Date. (.getTime dt)))
