@@ -390,8 +390,10 @@ Optiot on mappi optioita:
   :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                    Parametrina Grid ohjauskahva
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
+  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
+           voi-muokata?
            muokkaa-footer muutos uusi-rivi] :as opts} skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -459,20 +461,21 @@ Optiot on mappi optioita:
         )
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
+      (fn [{:keys [otsikko tallenna voi-poistaa? voi-muokata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
         [:div.panel.panel-default.grid
          [:div.panel-heading
           [:h6.panel-title otsikko]
-          [:span.pull-right.muokkaustoiminnot
-           [:button.btn.btn-sm.btn-default
-            {:disabled  (empty? @historia)
-             :on-click #(do (.stopPropagation %)
-                            (.preventDefault %)
-                            (peru!))}
-            (ikonit/peru) " Kumoa"]
-           [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                      (lisaa-rivi! ohjaus {}))}
-            (ikonit/plus-sign) " Lisää rivi"]]]
+          (when (not= false voi-muokata?)
+            [:span.pull-right.muokkaustoiminnot
+             [:button.btn.btn-sm.btn-default
+              {:disabled  (empty? @historia)
+               :on-click #(do (.stopPropagation %)
+                              (.preventDefault %)
+                              (peru!))}
+              (ikonit/peru) " Kumoa"]
+             [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                        (lisaa-rivi! ohjaus {}))}
+              (ikonit/plus-sign) " Lisää rivi"]])]
          [:div.panel-body
           [:table.grid
            [:thead
@@ -528,7 +531,7 @@ Optiot on mappi optioita:
                                                            (muokkaa! id assoc :poistettu true))}
                                      (ikonit/trash)])]])))
                           (seq muokatut))))))]]
-          (when muokkaa-footer
+          (when (and (not= false voi-muokata?) muokkaa-footer)
             [muokkaa-footer ohjaus])
           ]])})))
 

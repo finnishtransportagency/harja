@@ -11,6 +11,7 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.views.kartta.pohjavesialueet :refer [hallintayksikon-pohjavesialueet-haku]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto]
             [cljs-time.coerce :as tc]
             
             [cljs.core.async :refer [<!]])
@@ -40,12 +41,14 @@
         ]
     (kuuntelija
      {}
-     (fn [opts materiaalikoodit materiaalit]
+     (fn [{:keys [virheet voi-muokata?]} materiaalikoodit materiaalit]
         (log "MATSKUJA: " (pr-str materiaalit))
         [:div.pohjavesialueet
          [grid/muokkaus-grid
           {:otsikko "Pohjavesialueiden materiaalit"
            :tyhja "Ei pohjavesialueille kirjattuja materiaaleja."
+           :voi-muokata? voi-muokata?
+           :voi-poistaa? (constantly voi-muokata?)
            :ohjaus g
            :uusi-rivi aseta-hoitokausi                                
            :muokkaa-footer (fn [g]
@@ -54,18 +57,21 @@
                                 "Piilota kartta"
                                 "Valitse kartalta")])
            
-           :muutos (when-let [virheet (:virheet opts)]
+           :muutos (when virheet
                      #(reset! virheet (grid/hae-virheet %)))
            }
           [{:otsikko "Pohjavesialue"
             :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta :nimi
+            :muokattava? (constantly voi-muokata?)
             :nimi :pohjavesialue :fmt :nimi :leveys "40%"
             :validoi [[:ei-tyhja "Valitse pohjavesialue"]]}
            {:otsikko "Materiaali"
             :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
+            :muokattava? (constantly voi-muokata?)
             :nimi :materiaali :fmt :nimi :leveys "35%"
             :validoi [[:ei-tyhja "Valitse materiaali"]]}
            {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
+            :muokattava? (constantly voi-muokata?)
             :validoi [[:ei-tyhja "Kirjoita määrä"]]}
            {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
             :tyyppi :string :muokattava? (constantly false)}]
@@ -77,20 +83,24 @@
                                (log "hei klikkasit pohjavesialuetta: " (dissoc pohjavesialue :alue))))))
       
      
-(defn yleiset-materiaalit-grid [opts materiaalikoodit yleiset-materiaalit-muokattu]
+(defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]} materiaalikoodit yleiset-materiaalit-muokattu]
   [grid/muokkaus-grid
    {:otsikko "Materiaalit"
+    :voi-muokata? voi-muokata?
+    :voi-poistaa? (constantly voi-muokata?)
     :tyhja "Ei kirjattuja materiaaleja."
     :uusi-rivi aseta-hoitokausi
-    :muutos (when-let [virheet (:virheet opts)]
+    :muutos (when virheet
               #(reset! virheet (grid/hae-virheet %)))
     }
    
    [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
+     :muokattava? (constantly voi-muokata?)
      :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
      :validoi [[:ei-tyhja "Valitse materiaali"]]
      }
     {:otsikko "Määrä" :nimi :maara :leveys "30%"
+     :muokattava? (constantly voi-muokata?)
      :tyyppi :numero}
     {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"
      :tyyppi :string :muokattava? (constantly false)}]
@@ -116,11 +126,6 @@
    
    ;; valitaan materiaaleista vain valitun hoitokauden
    materiaalit :reaction (let [hk @s/valittu-hoitokausi]
-                           (log "valittu hk: " hk)
-                           (log " siinä matskui  ==> " (get @sopimuksen-materiaalit-hoitokausittain hk))
-                           (log "hoitokausittaisia avaimia on " (pr-str (keys @sopimuksen-materiaalit-hoitokausittain)))
-                           (doseq [k (keys @sopimuksen-materiaalit-hoitokausittain)]
-                             (log " TESTAA " (pr-str k) " = " (pr-str hk) "? " (= hk k)))
                            (get @sopimuksen-materiaalit-hoitokausittain hk))
    
    uusi-id (atom 0)
@@ -174,35 +179,41 @@
                       (not= @pohjavesialue-materiaalit @pohjavesialue-materiaalit-muokattu))
         virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                       (not (empty? @pohjavesialue-materiaalit-virheet))) 
-        voi-tallentaa? (and muokattu? (not virheita?))]
+        voi-tallentaa? (and muokattu? (not virheita?))
+        voi-muokata? false ;(istunto/kirjoitusoikeus-urakkaan? ur)
+        ]
     
     [:div.materiaalit
-     [yleiset-materiaalit-grid {:virheet yleiset-materiaalit-virheet}
+     [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
+                                :virheet yleiset-materiaalit-virheet}
       materiaalikoodit yleiset-materiaalit-muokattu]
      
      (when (= (:tyyppi ur) :hoito)
-       [pohjavesialueiden-materiaalit-grid {:virheet pohjavesialue-materiaalit-virheet}
+       [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
+                                            :virheet pohjavesialue-materiaalit-virheet}
         materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
-     [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
-      #(swap! tuleville? not)
-      [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-      (and @tuleville? @varoita-ylikirjoituksesta?)
-      ]
+     (when voi-muokata?
+       [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
+        #(swap! tuleville? not)
+        [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+        (and @tuleville? @varoita-ylikirjoituksesta?)
+        ])
 
-     [:div.toiminnot
-      [:button.btn.btn-primary
-       {:disabled (not voi-tallentaa?)
-        :on-click #(do (.preventDefault %)
-                       (go 
-                         (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
-                                             (vals @pohjavesialue-materiaalit-muokattu))
-                               rivit (if @tuleville?
-                                       (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
-                                       rivit)
-                               uudet-materiaalit (<! (t/tallenna (:id ur)
-                                                                 (first @s/valittu-sopimusnumero)
-                                                                 rivit))]
-                           (reset! urakan-materiaalit uudet-materiaalit))))}
-       "Tallenna materiaalit"]]
+     (when voi-muokata?
+       [:div.toiminnot
+        [:button.btn.btn-primary
+         {:disabled (not voi-tallentaa?)
+          :on-click #(do (.preventDefault %)
+                         (go 
+                           (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
+                                               (vals @pohjavesialue-materiaalit-muokattu))
+                                 rivit (if @tuleville?
+                                         (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
+                                         rivit)
+                                 uudet-materiaalit (<! (t/tallenna (:id ur)
+                                                                   (first @s/valittu-sopimusnumero)
+                                                                   rivit))]
+                             (reset! urakan-materiaalit uudet-materiaalit))))}
+         "Tallenna materiaalit"]])
      ])) 
