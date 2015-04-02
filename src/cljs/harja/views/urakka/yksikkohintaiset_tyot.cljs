@@ -29,12 +29,6 @@
 (defn muuta-tallenna-tuleville-hoitokausille []
   (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
 
-(defn tyorivit-tulevillekin-kausille [ur tyorivit hoitokausi]
-  (mapcat (fn [hk]
-            (map (fn [tyorivi]
-                   ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
-                   (assoc tyorivi :alkupvm (first hk) :loppupvm (second hk))) tyorivit)
-            ) (s/tulevat-hoitokaudet ur hoitokausi)))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
@@ -44,7 +38,7 @@
             (into []
                   ;; FIXME: jossain pitää vielä suodattaa pois ne joihin ei käyttöliittymässä koskettu
                   (if @tallenna-tuleville-hoitokausille?
-                    (tyorivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
+                    (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot (:id ur) sopimusnumero muuttuneet))]
