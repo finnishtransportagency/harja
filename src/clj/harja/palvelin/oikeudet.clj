@@ -56,3 +56,28 @@ rooleista."
     (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s' urakassa jonka id on %3$s", (:kayttajanimi kayttaja) rooli urakka-id)]
     (log/warn viesti)
         (throw (RuntimeException. viesti)))))
+
+(defn tilaajan-kayttaja?
+  [kayttaja]
+  (roolissa? kayttaja 
+             #{rooli-jarjestelmavastuuhenkilo
+               rooli-tilaajan-kayttaja
+               rooli-urakanvalvoja
+               rooli-hallintayksikon-vastuuhenkilo
+               rooli-liikennepaivystaja
+               rooli-tilaajan-asiantuntija
+               rooli-tilaajan-laadunvalvontakonsultti}))
+
+(defn lukuoikeus-urakassa?
+  [kayttaja urakka-id]
+  (or (tilaajan-kayttaja? kayttaja)
+      (rooli-urakassa? kayttaja rooli-urakoitsijan-paakayttaja urakka-id)
+      (rooli-urakassa? kayttaja rooli-urakoitsijan-urakan-vastuuhenkilo urakka-id)))
+
+(defn vaadi-lukuoikeus-urakkaan
+  [kayttaja urakka-id]
+  (when-not (lukuoikeus-urakassa? kayttaja urakka-id)
+    (let [viesti (format "Käyttäjällä '%1$s' ei lukuoikeutta urakassa jonka id on %2$s", (:kayttajanimi kayttaja) urakka-id)]
+    (log/warn viesti)
+        (throw (RuntimeException. viesti))))
+  )
