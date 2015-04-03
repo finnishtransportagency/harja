@@ -32,7 +32,8 @@
 (defn aja-testit []
   (test/run-tests (merge (test/empty-env)
                          {:reporter :harja})
-                  'harja.app-test
+                  'harja.app-test  
                   'harja.tiedot.urakka.suunnittelu-test)) 
+ 
  
  

@@ -41,6 +41,23 @@
   (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
               (hoitokaudet ur)))
 
+(defn ryhmittele-hoitokausittain
+  "Ottaa rivejä, jotka sisältävät :alkupvm ja :loppupvm, ja palauttaa ne ryhmiteltynä hoitokausiin.
+  Palauttaa mäpin, jossa avaimena on hoitokauden [alku loppu] ja arvona on sen hoitokauden rivit.
+  Jos sekvenssi hoitokausia on annettu, varmistetaan että mäpissä on kaikille niille avaimet. Tällä tavalla
+  voidaan luoda tyhjät ryhmät myös hoitokausille, joilla ei ole yhtään riviä."
+  ([rivit] (ryhmittele-hoitokausittain rivit nil))
+  ([rivit hoitokaudet]
+     (loop [ryhmitelty (group-by (juxt :alkupvm :loppupvm)
+                                 rivit)
+            [kausi & hoitokaudet] hoitokaudet]
+       (if-not kausi
+         ryhmitelty
+         (if (contains? ryhmitelty kausi)
+           (recur ryhmitelty hoitokaudet)
+           (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
+
+
 (defn hoitokausien-sisalto-sama?
   "Kertoo onko eri hoitokausien sisältö sama päivämääriä lukuunottamatta.
   Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
@@ -51,6 +68,32 @@
                                    (map #(map (fn [tyorivi]
                                                 (dissoc tyorivi :alkupvm :loppupvm)) %) tyorivit-aikajarjestyksessa))]
       (every? #(apply = %) tyorivit-ilman-pvmia)))
+
+;; FIXME: hoitokausien-sisalto-sama? ja hoitokaudet-samat? pitäisi olla 1 funktio
+;; erona on nyt, että hoitokausien-sisalto-sama? ottaa tehtävittäin ryhmitellyt tiedot
+;; ja hoitokaudet-samat? ottaa hoitokausittain ryhmitellyt
+
+(defn hoitokaudet-samat? 
+  "Testaa onko eri hoitokausien tiedot samat (päivämääriä ja id numeroita lukuunottamatta).
+  Ottaa sisään hoitokausittain jaotellut rivit."
+  [hoitokausien-rivit]
+  (let [vertailumuoto (fn [rivit]
+                        ;; vertailtaessa "samuutta" eri hoitokausien välillä poistetaan pvm:t ja id:t
+                        (into #{}
+                              (map #(dissoc % :alkupvm :loppupvm :id))
+                              rivit))
+        kaudet (map vertailumuoto hoitokausien-rivit)]
+    (apply =  kaudet)))
+
+(defn varoita-ylikirjoituksesta?
+  "Ottaa sisään sekvenssin hoitokausien rivejä, ja tarkistaa että seuraavat kaudet ovat samoja
+ensimmäisen kanssa tai ovat kaikki tyhjiä."
+  [hoitokausien-rivit]
+  (if (every? empty? (rest hoitokausien-rivit))
+    false
+    (not (hoitokaudet-samat? hoitokausien-rivit))))
+
+  
 
 (defn toiden-kustannusten-summa
   "Laskee yhteen annettujen työrivien kustannusten summan"
