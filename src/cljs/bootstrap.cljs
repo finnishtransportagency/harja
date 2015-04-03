@@ -1,5 +1,5 @@
 (ns bootstrap
-;;  "Common Bootstrap components for Reagent UI."
+  "Common Bootstrap components for Reagent UI."
   (:require [reagent.core :refer [atom]]))
 
 

@@ -1,11 +1,11 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
   
-  :dependencies [[org.clojure/clojure "1.7.0-alpha5"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-3058"]
+  :dependencies [[org.clojure/clojure "1.7.0-alpha6"] ; siirrytään 1.7.0 heti kun valmis
+                 [org.clojure/clojurescript "0.0-3169"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "0.3.7"]
+                 [prismatic/schema "0.4.0"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
@@ -15,15 +15,15 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
-                 [com.stuartsierra/component "0.2.2"]
+                 [com.stuartsierra/component "0.2.3"]
                  
                  ;; Lokitus
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.2"]
+                 [ch.qos.logback/logback-classic "1.1.3"]
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.3.2"]
+                 [compojure "1.3.3"]
                  
 
                  [org.clojure/core.cache "0.6.4"]
@@ -34,7 +34,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
                  [yesql "0.4.0" :exclusions [[instaparse :classifier "*"]]]
-                 [instaparse "1.3.5"]
+                 [instaparse "1.3.6"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]
@@ -55,7 +55,7 @@
                  [figwheel "0.2.5"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "0.12.2-7"]
+                 [cljsjs/react-with-addons "0.13.1-0"]
                  
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
@@ -65,7 +65,7 @@
                  [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
                  [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "3.11"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "0.2.5"]
+                 [org.clojure/data.json "0.2.6"]
                  
                  ]
   
@@ -80,34 +80,7 @@
   :profiles {:test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
-             ;;:dev {:node-dependencies [[karma "0.12.31"]
-             ;;                          [karma-chrome-launcher "0.1.7"]
-             ;;                          [karma-phantomjs-launcher "0.1.4"]
-             ;;                          [es5-shim "4.1.0"]
-             ;;                          [console-polyfill "0.1.2"]
-             ;;                          [karma-junit-reporter "0.2.2"]]
-             ;;      
-             ;;      :plugins [[lein-npm "0.5.0"]
-             ;;                [com.jakemccrary/lein-test-refresh "0.6.0"]]
-             ;;      :test-refresh {:notify-command ["./notify.sh"]}
-             ;;      :repl-options {:init-ns user}
-             ;;      :source-paths ["dev/clj" "test/clj" "target/cljx/cljs" "target/test-cjx/clj" "src/cljs"]
-             ;;      :cljsbuild {:builds {:main {:source-paths ["dev/cljs"]
-             ;;                                  :compiler {:optimizations :none
-             ;;                                             :pretty-print true
-             ;;                                             :source-map true}
-             ;;                                  :notify-command ["./notify.sh"]}
-             ;;                           :test {:source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
-             ;;                                  :compiler {:output-to "target/cljs/test/test.js"
-             ;;                                             :output-dir "target/cljs/test"
-             ;;                                             :optimizations :none
-             ;;                                             :pretty-print true
-             ;;                                             :source-map "target/cljs/test/test.js.map"}
-             ;;                                  :notify-command ["./run-karma.sh"]
-             ;;                                  :warning-handlers [utils.cljs-warning-handler/handle]}}
-             ;;                  :test-commands {"ci" ["./node_modules/karma/bin/karma" "start" "karma.ci.conf.js"]}}}}
-  
-  
+    
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
 
   
@@ -116,7 +89,7 @@
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.2.5"]
-            [lein-marginalia "0.8.0"]
+            [codox "0.8.11"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
@@ -179,7 +152,7 @@
 
              }
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "marg"]
+  :aliases {"tuotanto" ["do" "clean," "deps," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
