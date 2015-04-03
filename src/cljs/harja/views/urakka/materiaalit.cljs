@@ -7,7 +7,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            
+            [harja.ui.komponentti :as komp]
             [harja.views.kartta.tasot :as tasot]
             [harja.views.kartta.pohjavesialueet :refer [hallintayksikon-pohjavesialueet-haku]]
             [harja.tiedot.navigaatio :as nav]
@@ -15,7 +15,8 @@
             [cljs-time.coerce :as tc]
             
             [cljs.core.async :refer [<!]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [run!]]))
 
 (defn aseta-hoitokausi [rivi]
   (let [[alkupvm loppupvm] @s/valittu-hoitokausi]
@@ -25,7 +26,7 @@
   
 (defn pohjavesialueiden-materiaalit-grid
   "Listaa pohjavesialueiden materiaalit ja mahdollistaa kartalta valinnan."
-  [opts materiaalikoodit materiaalit]
+  [opts ur valittu-hk valittu-sop materiaalikoodit materiaalit]
   
   (let [karttavalinta? (atom false)
         valitse-kartalta (fn [e]
@@ -39,75 +40,91 @@
                                  (reset! nav/kartan-koko :M))))
         g (grid/grid-ohjaus)
         ]
-    (kuuntelija
-     {}
-     (fn [{:keys [virheet voi-muokata?]} materiaalikoodit materiaalit]
-        (log "MATSKUJA: " (pr-str materiaalit))
-        [:div.pohjavesialueet
-         [grid/muokkaus-grid
-          {:otsikko "Pohjavesialueiden materiaalit"
-           :tyhja "Ei pohjavesialueille kirjattuja materiaaleja."
-           :voi-muokata? voi-muokata?
-           :voi-poistaa? (constantly voi-muokata?)
-           :ohjaus g
-           :uusi-rivi aseta-hoitokausi                                
-           :muokkaa-footer (fn [g]
-                             [:button.btn.btn-default {:on-click valitse-kartalta}
-                              (if @karttavalinta?
-                                "Piilota kartta"
-                                "Valitse kartalta")])
+    
+    (komp/luo 
+     (komp/kuuntelija
+      :pohjavesialue-klikattu (fn [this pohjavesialue]
+                                (grid/lisaa-rivi! g {:pohjavesialue (dissoc pohjavesialue :type :aihe)})
+                                (log "hei klikkasit pohjavesialuetta: " (dissoc pohjavesialue :alue))))
+     {:component-will-receive-props (fn [& _]
+                                      (grid/nollaa-historia! g))}
+
+     
+     (fn [{:keys [virheet voi-muokata?]} ur valittu-hk valittu-sop materiaalikoodit materiaalit]
+       (log "MATSKUJA: " (pr-str materiaalit))
+       [:div.pohjavesialueet
+        [grid/muokkaus-grid
+         {:otsikko "Pohjavesialueiden materiaalit"
+          :tyhja "Ei pohjavesialueille kirjattuja materiaaleja."
+          :voi-muokata? voi-muokata?
+          :voi-poistaa? (constantly voi-muokata?)
+          :ohjaus g
+          :uusi-rivi aseta-hoitokausi                                
+          :muokkaa-footer (fn [g]
+                            [:button.btn.btn-default {:on-click valitse-kartalta}
+                             (if @karttavalinta?
+                               "Piilota kartta"
+                               "Valitse kartalta")])
            
-           :muutos (when virheet
-                     #(reset! virheet (grid/hae-virheet %)))
-           }
-          [{:otsikko "Pohjavesialue"
-            :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta :nimi
-            :muokattava? (constantly voi-muokata?)
-            :nimi :pohjavesialue :fmt :nimi :leveys "40%"
-            :validoi [[:ei-tyhja "Valitse pohjavesialue"]]}
-           {:otsikko "Materiaali"
-            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
-            :muokattava? (constantly voi-muokata?)
-            :nimi :materiaali :fmt :nimi :leveys "35%"
-            :validoi [[:ei-tyhja "Valitse materiaali"]]}
-           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
-            :muokattava? (constantly voi-muokata?)
-            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
-           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
-            :tyyppi :string :muokattava? (constantly false)}]
+          :muutos (when virheet
+                    #(reset! virheet (grid/hae-virheet %)))
+          }
+         [{:otsikko "Pohjavesialue"
+           :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta :nimi
+           :muokattava? (constantly voi-muokata?)
+           :nimi :pohjavesialue :fmt :nimi :leveys "40%"
+           :validoi [[:ei-tyhja "Valitse pohjavesialue"]]}
+          {:otsikko "Materiaali"
+           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
+           :muokattava? (constantly voi-muokata?)
+           :nimi :materiaali :fmt :nimi :leveys "35%"
+           :validoi [[:ei-tyhja "Valitse materiaali"]]}
+          {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
+           :muokattava? (constantly voi-muokata?)
+           :validoi [[:ei-tyhja "Kirjoita määrä"]]}
+          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
+           :tyyppi :string :muokattava? (constantly false)}]
           
-          materiaalit
-          ]])
-     :pohjavesialue-klikattu (fn [this pohjavesialue]
-                               (grid/lisaa-rivi! g {:pohjavesialue (dissoc pohjavesialue :type :aihe)})
-                               (log "hei klikkasit pohjavesialuetta: " (dissoc pohjavesialue :alue))))))
+         materiaalit
+         ]])
+     )))
       
      
-(defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]} materiaalikoodit yleiset-materiaalit-muokattu]
-  [grid/muokkaus-grid
-   {:otsikko "Materiaalit"
-    :voi-muokata? voi-muokata?
-    :voi-poistaa? (constantly false)
-    :voi-lisata? false
-    :tyhja "Ei kirjattuja materiaaleja."
-    :uusi-rivi aseta-hoitokausi
-    :muutos (when virheet
-              #(reset! virheet (grid/hae-virheet %)))
-    :jarjesta (comp :nimi :materiaali)
-    }
+(defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
+                                ur valittu-hk valittu-sop
+                                materiaalikoodit yleiset-materiaalit-muokattu]
+  (let [g (grid/grid-ohjaus)]
+    (komp/luo
+     {:component-will-receive-props (fn [& _]
+                                      (grid/nollaa-historia! g))}
+     (fn [{:keys [virheet voi-muokata?]}
+          ur valittu-hk valittu-sop
+          materiaalikoodit yleiset-materiaalit-muokattu]
+       [grid/muokkaus-grid
+        {:otsikko "Materiaalit"
+         :voi-muokata? voi-muokata?
+         :voi-poistaa? (constantly false)
+         :voi-lisata? false
+         :ohjaus g
+         :tyhja "Ei kirjattuja materiaaleja."
+         :uusi-rivi aseta-hoitokausi
+         :muutos (when virheet
+                   #(reset! virheet (grid/hae-virheet %)))
+         :jarjesta (comp :nimi :materiaali)
+         }
    
-   [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
-     :muokattava? (constantly false)
-     :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
-     :validoi [[:ei-tyhja "Valitse materiaali"]]
-     }
-    {:otsikko "Määrä" :nimi :maara :leveys "30%"
-     :muokattava? (constantly voi-muokata?)
-     :tyyppi :numero}
-    {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
-     :tyyppi :string :muokattava? (constantly false)}]
+        [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
+          :muokattava? (constantly false)
+          :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
+          :validoi [[:ei-tyhja "Valitse materiaali"]]
+          }
+         {:otsikko "Määrä" :nimi :maara :leveys "30%"
+          :muokattava? (constantly voi-muokata?)
+          :tyyppi :numero}
+         {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
+          :tyyppi :string :muokattava? (constantly false)}]
    
-   yleiset-materiaalit-muokattu])
+        yleiset-materiaalit-muokattu]))))
 
 
   
@@ -192,11 +209,13 @@
     [:div.materiaalit
      [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                 :virheet yleiset-materiaalit-virheet}
+      ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
       @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
      
      (when (= (:tyyppi ur) :hoito)
        [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
                                             :virheet pohjavesialue-materiaalit-virheet}
+        ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
         @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
      (when voi-muokata?

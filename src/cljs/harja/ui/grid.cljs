@@ -74,6 +74,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 
   (hae-virheet [g] "Hakee tämänhetkisen muokkaustilan mukaiset validointivirheet.")
+
+  (nollaa-historia! [g] "Nollaa muokkaushistorian, tämä on lähinnä muokkaus-grid versiota varten. Tällä voi kertoa gridille, että data on täysin muuttunut eikä muokkaushistoria ole enää relevantti.")
+  ;; PENDING: oisko "jemmaa muokkaushistoria", jolla sen saisi avaimella talteen ja otettua takaisin?
+  
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
 
@@ -95,6 +99,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (hae-virheet [_]
         (hae-virheet @gridi))
+
+      (nollaa-historia! [_]
+        (nollaa-historia! @gridi))
 
       GridKahva
       (aseta-grid [_ grid]
@@ -155,7 +162,10 @@ Optiot on mappi optioita:
                  (hae-muokkaustila [_]
                    @muokatut)
                  (hae-virheet [_]
-                   @virheet))
+                   @virheet)
+                 (nollaa-historia! [_]
+                   (reset! historia []))
+                 )
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
@@ -421,7 +431,9 @@ Optiot on mappi optioita:
                  (hae-muokkaustila [_]
                    @muokatut)
                  (hae-virheet [_]
-                   @virheet))
+                   @virheet)
+                 (nollaa-historia! [_]
+                   (reset! historia [])))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
@@ -459,7 +471,8 @@ Optiot on mappi optioita:
     (r/create-class
      {:component-will-receive-props
       (fn [this new-argv]
-        (log "muokkausgridi sai propseja")
+        ;; HUOM: tätä metodia ei tietenkään tässä versiossa kutsuta, jos parametrinä olevan atomi ei vaihdu
+        ;; atomin *sisällön* muutoksista tätä ei kutsuta, siksi tarvitaan nollaa-historia!
         )
       
       :reagent-render 

@@ -85,18 +85,24 @@
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
-        (fn [kentta data]
-          (let [nykyinen-teksti @teksti]
-            [:input {:type "text"
-                     :value nykyinen-teksti
-                     :on-change #(let [v (-> % .-target .-value)]
-                                   (when (or (= v "") 
-                                             (re-matches #"\d{1,10}((\.|,)\d{0,2})?" v))
-                                     (reset! teksti v)
-                                     (let [numero (js/parseFloat (str/replace v #"," "."))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))))
+    (r/create-class
+     {:component-will-receive-props
+      (fn [_ [_ _ data]]
+        (reset! teksti (str @data)))
+      
+      :reagent-render
+      (fn [kentta data]
+        (let [nykyinen-teksti @teksti]
+          [:input {:type "text"
+                   :value nykyinen-teksti
+                   :on-change #(let [v (-> % .-target .-value)]
+                                 (when (or (= v "") 
+                                           (re-matches #"\d{1,10}((\.|,)\d{0,2})?" v))
+                                   (reset! teksti v)
+                                   (let [numero (js/parseFloat (str/replace v #"," "."))]
+                                     (reset! data
+                                             (when (not (js/isNaN numero))
+                                               numero)))))}]))})))
 
 
 
