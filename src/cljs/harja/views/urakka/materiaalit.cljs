@@ -171,11 +171,14 @@
                (if-not kopioi?
                  false
                  (some #(not= tama-kausi %) tulevat-kaudet)))
+
+   materiaalikoodit :reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit))
+   yleiset-materiaalikoodit :reaction (filter #(not (:kohdistettava %)) @materiaalikoodit)
+   kohdistettavat-materiaalikoodit :reaction (filter :kohdistettava @materiaalikoodit)
        
    ]
   
-  (let [materiaalikoodit @(t/hae-materiaalikoodit)
-        muokattu? (or (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)
+  (let [muokattu? (or (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)
                       (not= @pohjavesialue-materiaalit @pohjavesialue-materiaalit-muokattu))
         virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                       (not (empty? @pohjavesialue-materiaalit-virheet))) 
@@ -186,12 +189,12 @@
     [:div.materiaalit
      [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                 :virheet yleiset-materiaalit-virheet}
-      materiaalikoodit yleiset-materiaalit-muokattu]
+      @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
      
      (when (= (:tyyppi ur) :hoito)
        [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
                                             :virheet pohjavesialue-materiaalit-virheet}
-        materiaalikoodit pohjavesialue-materiaalit-muokattu])
+        @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
      (when voi-muokata?
        [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?

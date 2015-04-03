@@ -1,6 +1,6 @@
 -- name: hae-materiaalikoodit
--- Hakee kaikki järjestlemän materiaalikoodit
-SELECT id, nimi, yksikko FROM materiaalikoodi
+-- Hakee kaikki järjestelmän materiaalikoodit
+SELECT id, nimi, yksikko, urakkatyyppi, kohdistettava FROM materiaalikoodi
 
 -- name: hae-urakan-materiaalit
 -- Hakee urakan kaikki materiaalit

@@ -8,7 +8,9 @@
             [clojure.tools.logging :as log]))
 
 (defn hae-materiaalikoodit [db]
-  (into [] (q/hae-materiaalikoodit db)))
+  (into []
+        (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+        (q/hae-materiaalikoodit db)))
 
 (defn hae-urakan-materiaalit [db user urakka-id]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
