@@ -149,11 +149,9 @@
 
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 
-   :reaction (let [kopioi? @tuleville?
-                   
+   :reaction (let [kopioi? @tuleville?                 
                    varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
                                                           @s/valittu-hoitokausi)]
-               
                (if-not kopioi?
                  false
                  varoita?))

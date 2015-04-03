@@ -93,7 +93,8 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
         hoitokaudet (into []
                           (comp (drop-while #(> hoitokausi-alku (tc/to-long (ffirst %))))
                                 (map second))
-                          (sort-by ffirst hoitokausittain-ryhmitellyt-rivit))]
+                          (sort-by (comp tc/to-long ffirst)
+                                   hoitokausittain-ryhmitellyt-rivit))]
     (if (every? empty? (rest hoitokaudet))
       false
       (not (hoitokaudet-samat? hoitokaudet)))))
