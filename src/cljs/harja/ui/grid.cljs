@@ -391,9 +391,11 @@ Optiot on mappi optioita:
                    Parametrina Grid ohjauskahva
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
+  :voi-lisata?     jos false, uusia rivejä ei voi lisätä
+  :jarjesta         jos annettu funktio, sortataan rivit tämän mukaan
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
-           voi-muokata?
+           voi-muokata? voi-lisata? jarjesta
            muokkaa-footer muutos uusi-rivi] :as opts} skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -461,7 +463,7 @@ Optiot on mappi optioita:
         )
       
       :reagent-render 
-      (fn [{:keys [otsikko tallenna voi-poistaa? voi-muokata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
+      (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
         [:div.panel.panel-default.grid
          [:div.panel-heading
           [:h6.panel-title otsikko]
@@ -473,9 +475,10 @@ Optiot on mappi optioita:
                               (.preventDefault %)
                               (peru!))}
               (ikonit/peru) " Kumoa"]
-             [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                        (lisaa-rivi! ohjaus {}))}
-              (ikonit/plus-sign) " Lisää rivi"]])]
+             (when (not= false voi-lisata?)
+               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                          (lisaa-rivi! ohjaus {}))}
+                (ikonit/plus-sign) " Lisää rivi"])])]
          [:div.panel-body
           [:table.grid
            [:thead
@@ -530,7 +533,9 @@ Optiot on mappi optioita:
                                     [:span {:on-click #(do (.preventDefault %)
                                                            (muokkaa! id assoc :poistettu true))}
                                      (ikonit/trash)])]])))
-                          (seq muokatut))))))]]
+                          (if jarjesta
+                            (sort-by (comp jarjesta second) (seq muokatut))
+                            (seq muokatut)))))))]]
           (when (and (not= false voi-muokata?) muokkaa-footer)
             [muokkaa-footer ohjaus])
           ]])})))
