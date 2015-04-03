@@ -2,7 +2,7 @@
   "Tämä nimiavaruus hallinnoi urakan suunnittelun tietoja"
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
-
+            [cljs-time.coerce :as tc]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
@@ -86,12 +86,17 @@
     (apply =  kaudet)))
 
 (defn varoita-ylikirjoituksesta?
-  "Ottaa sisään sekvenssin hoitokausien rivejä, ja tarkistaa että seuraavat kaudet ovat samoja
-ensimmäisen kanssa tai ovat kaikki tyhjiä."
-  [hoitokausien-rivit]
-  (if (every? empty? (rest hoitokausien-rivit))
-    false
-    (not (hoitokaudet-samat? hoitokausien-rivit))))
+  "Ottaa sisään hoitokausittain ryhmitellyt rivit sekä nykyisen hoitokauden [alku loppu]. Tarkistaa, että
+kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai kaikki samoja nykyisen hoitokauden kanssa."
+  [hoitokausittain-ryhmitellyt-rivit nykyinen-hoitokausi]
+  (let [hoitokausi-alku (tc/to-long (first nykyinen-hoitokausi))
+        hoitokaudet (into []
+                          (comp (drop-while #(> hoitokausi-alku (tc/to-long (ffirst %))))
+                                (map second))
+                          (sort-by ffirst hoitokausittain-ryhmitellyt-rivit))]
+    (if (every? empty? (rest hoitokaudet))
+      false
+      (not (hoitokaudet-samat? hoitokaudet)))))
 
   
 

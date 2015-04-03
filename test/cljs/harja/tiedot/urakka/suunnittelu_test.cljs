@@ -5,6 +5,18 @@
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.pvm :refer [->pvm] :as pvm]))
 
+(defn hk-rivi
+  "Apuri hoitokausirivin tekemiseksi. Asettaa alkupvm annetulle vuodelle ja loppupvm seuraavalle."
+  [vuosi arvot]
+  (merge arvot {:alkupvm (pvm/hoitokauden-alkupvm vuosi) :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))}))
+
+(defn hk
+  "Apuri joka antaa hoitokauden, joka alkaa annetun vuoden hoitokauden alkupvm:llä ja loppuu seuraavan
+  vuoden loppupvm:llä. Palauttaa vektorin [alkupvm loppupvm]"
+  [vuosi]
+  [(pvm/hoitokauden-alkupvm vuosi) (pvm/hoitokauden-loppupvm (inc vuosi))])
+
+
 ;; lisätään urakkaan vain testauksen kannalta tarvittavat kentät
 (def +testi-urakka+
   {:alkupvm  (pvm/hoitokauden-alkupvm 2015)
@@ -189,3 +201,27 @@
     (is (= 2 (-> r (get [(pvm/hoitokauden-alkupvm 2007) (pvm/hoitokauden-loppupvm 2008)]) first :id)))
      
     ))
+
+(deftest varoita-ylikirjoituksesta-jos-muuttunut
+  (is (s/varoita-ylikirjoituksesta? (s/ryhmittele-hoitokausittain
+                                     [(hk-rivi 2007 {:maara 50})
+                                      (hk-rivi 2008 {:maara 66})])
+                                    
+                                    (hk 2007))))
+
+(deftest ala-varoita-ylikirjoituksesta-jos-vain-tyhjia
+  (is (not (s/varoita-ylikirjoituksesta?
+            (s/ryhmittele-hoitokausittain
+             [(hk-rivi 2007 {:maara 50})]
+             [(hk 2007) (hk 2008) (hk 2009)])
+            (hk 2007)))))
+
+(deftest ala-varoita-ylikirjoituksesta-jos-samoja
+  (is (not (s/varoita-ylikirjoituksesta?
+            (s/ryhmittele-hoitokausittain
+             [(hk-rivi 2007 {:maara 40})
+              (hk-rivi 2008 {:maara 50})
+              (hk-rivi 2009 {:maara 50})])
+            (hk 2008)))))
+
+                                 

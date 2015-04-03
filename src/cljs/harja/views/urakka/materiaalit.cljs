@@ -119,9 +119,7 @@
                (log "URAKAN MATSKUI::: " @urakan-materiaalit)
                (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
                                  @urakan-materiaalit))
-               (group-by (juxt :alkupvm :loppupvm)
-                         (filter #(= sopimus-id (:sopimus %))
-                                 @urakan-materiaalit)))
+               (s/ryhmittele-hoitokausittain @urakan-materiaalit (s/hoitokaudet ur)))
                    
    
    ;; valitaan materiaaleista vain valitun hoitokauden
@@ -152,14 +150,9 @@
    ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
    varoita-ylikirjoituksesta? 
    :reaction (let [kopioi? @tuleville?
-                   hoitokausi @s/valittu-hoitokausi
-                   hoitokausi-alku (tc/to-long (first hoitokausi))
-
-                   varoita? (s/varoita-ylikirjoituksesta?
-                             (into []
-                                   (comp (drop-while #(> hoitokausi-alku (ffirst %)))
-                                         (map second))
-                                   (sort-by ffirst @sopimuksen-materiaalit-hoitokausittain)))]
+                   
+                   varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
+                                                          @s/valittu-hoitokausi)]
                
                (if-not kopioi?
                  false
