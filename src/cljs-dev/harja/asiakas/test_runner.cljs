@@ -11,7 +11,7 @@
 
 
 (defmethod test/report [:harja :begin-test-ns] [event]
-  (.log js/console "Testataan: " (:ns event)))
+  (.log js/console "Testataan: " (:ns event))) 
 
 (defmethod test/report [:harja :begin-test-var] [event]
   (.log js/console "TEST: " (test/testing-vars-str (:var event))))

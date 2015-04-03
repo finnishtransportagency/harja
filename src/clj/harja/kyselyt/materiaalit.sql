@@ -28,6 +28,12 @@ UPDATE materiaalin_kaytto
    AND materiaali = :materiaali
    AND pohjavesialue IS NULL
 
+-- name: poista-materiaali-id!
+-- Poistaa materiaalin käytön id:llä.
+UPDATE materiaalin_kaytto
+   SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = true
+ WHERE id = :id
+ 
 -- name: poista-pohjavesialueen-materiaali!
 -- Poistaa materiaalin käytön pohjavesialueella
 UPDATE materiaalin_kaytto

@@ -150,8 +150,9 @@
                                        materiaalit
                                        (if (kaytetyt-materiaali-idt (:id mk))
                                          (recur materiaalit materiaalikoodit)
-                                         (let [id (- (:id mk))]
-                                           (recur (assoc materiaalit id {:id id :materiaali mk})
+                                         (let [id (- (:id mk))
+                                               [alku loppu] @s/valittu-hoitokausi]
+                                           (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
                                                   materiaalikoodit))))))
                                                   
    pohjavesialue-materiaalit :reaction (into {}
@@ -200,7 +201,7 @@
 
      (when voi-muokata?
        [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
-        #(swap! tuleville? not)
+        #(swap! tuleville? not) 
         [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
         (and @tuleville? @varoita-ylikirjoituksesta?)
         ])
