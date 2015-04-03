@@ -31,7 +31,7 @@
                             ~@(map (fn [[nimi tyyppi form]]
                                      (when (= tyyppi :atom)
                                        `(reset! ~nimi (let [res# ~form]
-                                                        (.log js/console "uusi " ~(str nimi) "= " res#)
+                                                        ;;(.log js/console "uusi " ~(str nimi) "= " res#)
                                                         res#))))
                                    tilat))))]
          ;;(.log js/console "ALKUTILA parametrit: " (pr-str ~@parametrit))
@@ -59,7 +59,7 @@
 
            :component-will-receive-props
            (fn [this#  new-argv#]
-             (.log js/console "PROPSIT TULI: this=" this# ", new-argv="   new-argv#)
+             ;;(.log js/console "PROPSIT TULI: this=" this# ", new-argv="   new-argv#)
              (apply paivita# this# (rest new-argv#)))
              
            :reagent-render
