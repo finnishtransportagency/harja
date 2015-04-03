@@ -87,22 +87,24 @@
   [grid/muokkaus-grid
    {:otsikko "Materiaalit"
     :voi-muokata? voi-muokata?
-    :voi-poistaa? (constantly voi-muokata?)
+    :voi-poistaa? (constantly false)
+    :voi-lisata? false
     :tyhja "Ei kirjattuja materiaaleja."
     :uusi-rivi aseta-hoitokausi
     :muutos (when virheet
               #(reset! virheet (grid/hae-virheet %)))
+    :jarjesta (comp :nimi :materiaali)
     }
    
    [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
-     :muokattava? (constantly voi-muokata?)
+     :muokattava? (constantly false)
      :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
      :validoi [[:ei-tyhja "Valitse materiaali"]]
      }
     {:otsikko "Määrä" :nimi :maara :leveys "30%"
      :muokattava? (constantly voi-muokata?)
      :tyyppi :numero}
-    {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"
+    {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
      :tyyppi :string :muokattava? (constantly false)}]
    
    yleiset-materiaalit-muokattu])
@@ -127,12 +129,31 @@
                            (get @sopimuksen-materiaalit-hoitokausittain hk))
    
    uusi-id (atom 0)
+
+   ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
+   materiaalikoodit :reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit))
+
+   ;; Jaetaan materiaalikoodit yleisiin ja kohdistettaviin
+   yleiset-materiaalikoodit :reaction (filter #(not (:kohdistettava %)) @materiaalikoodit)
+   kohdistettavat-materiaalikoodit :reaction (filter :kohdistettava @materiaalikoodit)
+
    
    ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
-   yleiset-materiaalit :reaction (into {}
-                                       (comp (filter #(not (contains? % :pohjavesialue)))
-                                             (map (juxt :id identity)))
-                                       @materiaalit)
+   yleiset-materiaalit :reaction (let [materiaalit (into {}
+                                                         (comp (filter #(not (contains? % :pohjavesialue)))
+                                                               (map (juxt :id identity)))
+                                                         @materiaalit)
+                                       kaytetyt-materiaali-idt (into #{} (map (comp :id :materiaali) (vals materiaalit)))]
+                                   (loop [materiaalit materiaalit
+                                          [mk & materiaalikoodit] @yleiset-materiaalikoodit]
+                                     (if-not mk
+                                       materiaalit
+                                       (if (kaytetyt-materiaali-idt (:id mk))
+                                         (recur materiaalit materiaalikoodit)
+                                         (let [id (- (:id mk))]
+                                           (recur (assoc materiaalit id {:id id :materiaali mk})
+                                                  materiaalikoodit))))))
+                                                  
    pohjavesialue-materiaalit :reaction (into {}
                                              (comp (filter #(contains? % :pohjavesialue))
                                                    (map (juxt :id identity)))
@@ -156,9 +177,6 @@
                  false
                  varoita?))
 
-   materiaalikoodit :reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit))
-   yleiset-materiaalikoodit :reaction (filter #(not (:kohdistettava %)) @materiaalikoodit)
-   kohdistettavat-materiaalikoodit :reaction (filter :kohdistettava @materiaalikoodit)
        
    ]
   
