@@ -24,7 +24,7 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
-(def tallenna-tuleville-hoitokausille? (atom true))
+(def tallenna-tuleville-hoitokausille? (atom false))
 
 (defn muuta-tallenna-tuleville-hoitokausille []
   (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
