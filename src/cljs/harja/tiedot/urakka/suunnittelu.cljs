@@ -63,7 +63,6 @@
   Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
   ;; uudelleennimetään muuttujia jos tästä saadaan yleiskäyttöinen esim. kok. hintaisille ja materiaaleille
   [tyorivit-tehtavittain]
-  (log "TYORIVITHÄN OVAT: "  tyorivit-tehtavittain)
   (let [tyorivit-aikajarjestyksessa (map #(sort-by :alkupvm %) tyorivit-tehtavittain)
         tyorivit-ilman-pvmia (into []
                                    (map #(map (fn [tyorivi]
