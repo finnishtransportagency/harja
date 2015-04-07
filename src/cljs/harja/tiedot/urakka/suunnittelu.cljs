@@ -63,10 +63,11 @@
   Suunniteltu käytettäväksi mm. yks.hint. ja kok.hint. töiden sekä materiaalien suunnittelussa."
   ;; uudelleennimetään muuttujia jos tästä saadaan yleiskäyttöinen esim. kok. hintaisille ja materiaaleille
   [tyorivit-tehtavittain]
+  (log "TYORIVITHÄN OVAT: "  tyorivit-tehtavittain)
   (let [tyorivit-aikajarjestyksessa (map #(sort-by :alkupvm %) tyorivit-tehtavittain)
         tyorivit-ilman-pvmia (into []
                                    (map #(map (fn [tyorivi]
-                                                (dissoc tyorivi :alkupvm :loppupvm)) %) tyorivit-aikajarjestyksessa))]
+                                                (dissoc tyorivi :alkupvm :loppupvm :id)) %) tyorivit-aikajarjestyksessa))]
       (every? #(apply = %) tyorivit-ilman-pvmia)))
 
 ;; FIXME: hoitokausien-sisalto-sama? ja hoitokaudet-samat? pitäisi olla 1 funktio
