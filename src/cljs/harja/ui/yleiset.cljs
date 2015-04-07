@@ -79,7 +79,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :checked (if checked "checked" "")
              :on-change #(do (.preventDefault %) (toiminto))}]
     ]
-   [:label.form-control teksti]]
+   [:label.form-control {:on-click #((toiminto))}  teksti]]
   
    (when nayta-infoteksti?
      info-teksti)])
