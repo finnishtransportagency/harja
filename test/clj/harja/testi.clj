@@ -72,7 +72,7 @@
                      :kayttajanimi "jvh" :roolit #{"jarjestelmavastuuhenkilo"}})
 
 ;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
-(def +testikayttajia+ 5)
+(def +testikayttajia+ 6)
 
 ;; Tätä käytetään testiindeksien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
 ;; Nämä ovat indeksivuosi-pareja, esim. MAKU 2005 vuonna 2014 olisi yksi entry, ja MAKU 2005 vuonna 2015 toinen.
