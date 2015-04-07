@@ -29,20 +29,21 @@
 (defn tallenna-pohjavesialueet
   "Tallentaa ladatut pohjavesialueet annetulle hallintayksikölle localStorageen."
   [hal alueet]
-  (try 
-    (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
-    (catch :default _
-      nil)))
+  (comment (try 
+             (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
+             (catch :default _
+               nil))))
 
 (defn lue-pohjavesialueet
   "Lukee localStoragesta muitissa olevat pohjavesialueet"
   [hal]
-  (try
-    (let [alueet (.getItem js/localStorage(str "pohjavesialueet-" hal))]
-      (when alueet
-        (t/read (t/reader :json) alueet)))
-    (catch :default _
-      nil)))
+  (comment
+    (try
+      (let [alueet (.getItem js/localStorage(str "pohjavesialueet-" hal))]
+        (when alueet
+          (t/read (t/reader :json) alueet)))
+      (catch :default _
+        nil))))
 
 (defn alueet
   "Lisää pohjavesialue tuloksiin frontin kannalta oleelliset kentät."
