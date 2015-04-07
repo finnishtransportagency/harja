@@ -11,7 +11,7 @@
 
 (declare hae-urakan-kokonaishintaiset-tyot)
                         
-(defrecord kokonaishintaiset-tyot []
+(defrecord Kokonaishintaiset-tyot []
   component/Lifecycle
   (start [this]
    (doto (:http-palvelin this)

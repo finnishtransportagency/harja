@@ -7,7 +7,7 @@
             
             [harja.kyselyt.urakan-toimenpiteet :as q]))
 
-(declare hae-urakan-toimenpiteet-ja-tehtavat)
+(declare hae-urakan-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet)
                         
 (defrecord Urakan-toimenpiteet []
   component/Lifecycle
@@ -15,11 +15,15 @@
    (doto (:http-palvelin this)
      (julkaise-palvelu
        :urakan-toimenpiteet-ja-tehtavat (fn [user urakka-id]
-         (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id))))
+                                          (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
+     (julkaise-palvelu
+       :urakan-toimenpiteet (fn [user urakka-id]
+                              (hae-urakan-toimenpiteet (:db this) user urakka-id))))
    this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet-ja-tehtavat)
+    (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet)
     this))
 
 

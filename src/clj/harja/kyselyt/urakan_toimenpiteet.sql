@@ -15,9 +15,14 @@ SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t
 
   -- name: hae-urakan-toimenpiteet
 -- Hakee kaikki urakan 3. tason toimenpiteet
-SELECT 	ut.toimenpide as id, 
-		tk.nimi as nimi, tk.koodi as koodi,
-		tk.emo as emo, tk.taso as taso
-  FROM 	toimenpideinstanssi ut
-  LEFT JOIN  toimenpidekoodi tk ON ut.toimenpide = tk.id
+SELECT 	tpi.toimenpide as id,
+		    t3.nimi as t3_nimi, t3.koodi as t3_koodi,
+		    t3.emo as t3_emo,
+	    	t2.nimi as t2_nimi, t2.koodi as t2_koodi,
+		    t2.emo as t2_emo,
+	     	t1.nimi as t1_nimi, t1.koodi as t1_koodi
+  FROM 	toimenpideinstanssi tpi
+        LEFT JOIN  toimenpidekoodi t3 ON tpi.toimenpide = t3.id
+        LEFT JOIN  toimenpidekoodi t2 ON t2.id=t3.emo
+        LEFT JOIN  toimenpidekoodi t1 ON t1.id=t2.emo
   WHERE	urakka = :urakka

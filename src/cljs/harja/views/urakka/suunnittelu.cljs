@@ -5,6 +5,7 @@
             
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.materiaalit :as mat]
              
             [harja.pvm :as pvm]
@@ -64,12 +65,11 @@
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot ur]
-           
+
            "Kokonaishintaiset työt"
-           [:div "Kokonaishintaiset työt"]
-           ;;^{:key "kokonaishintaiset-tyot"}
-           ;;[yht/yksikkohintaiset-tyot]
-           
+           ^{:key "kokonaishintaiset-tyot"}
+           [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur]
+
            "Materiaalit"
            ^{:key "materiaalit"}
            [mat/materiaalit ur]
