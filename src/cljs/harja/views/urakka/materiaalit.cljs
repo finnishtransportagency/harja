@@ -202,7 +202,7 @@
                       (not= @pohjavesialue-materiaalit @pohjavesialue-materiaalit-muokattu))
         virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                       (not (empty? @pohjavesialue-materiaalit-virheet))) 
-        voi-tallentaa? (and muokattu? (not virheita?))
+        voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
         voi-muokata? (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur))
         ]
     
