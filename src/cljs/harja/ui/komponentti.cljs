@@ -70,3 +70,11 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
                                     (k))))}))
+
+(defn sisaan-ulos
+  "Mixin, joka käsittelee component-will-mount ja component-will-unmount elinkaaret. Tällä voi kätevästi tehdä jotain komponentin tullessa näkyviin ja perua se komponentin poistuessa."
+  [sisaan ulos]
+  {:component-will-mount (fn [& _]
+                           (sisaan))
+   :component-will-unmount (fn [& _]
+                             (ulos))})

@@ -16,7 +16,7 @@
             
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [run!]]))
+                   [reagent.ratom :refer [run! reaction]]))
 
 (defn aseta-hoitokausi [rivi]
   (let [[alkupvm loppupvm] @s/valittu-hoitokausi]
@@ -32,11 +32,9 @@
         valitse-kartalta (fn [e]
                            (.preventDefault e)
                            (if @karttavalinta?
-                             (do (tasot/taso-pois! :pohjavesialueet)
-                                 (reset! karttavalinta? false)
+                             (do (reset! karttavalinta? false)
                                  (reset! nav/kartan-koko :S))
-                             (do (tasot/taso-paalle! :pohjavesialueet)
-                                 (reset! karttavalinta? true)
+                             (do (reset! karttavalinta? true)
                                  (reset! nav/kartan-koko :M))))
         g (grid/grid-ohjaus)
         ]
@@ -128,117 +126,129 @@
 
 
   
-(deftk materiaalit [ur]
-  [;; haetaan kaikki materiaalit urakalle
-   urakan-materiaalit (<! (t/hae-urakan-materiaalit (:id ur)))
+(defn materiaalit [ur]
+  (let [;; haetaan kaikki materiaalit urakalle
+        urakan-materiaalit (atom nil)
 
-   ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
-   sopimuksen-materiaalit-hoitokausittain
-   :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero]
-               (log "URAKAN MATSKUI::: " @urakan-materiaalit)
-               (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
-                                 @urakan-materiaalit))
-               (s/ryhmittele-hoitokausittain @urakan-materiaalit (s/hoitokaudet ur)))
-                   
-   
-   ;; valitaan materiaaleista vain valitun hoitokauden
-   materiaalit :reaction (let [hk @s/valittu-hoitokausi]
-                           (get @sopimuksen-materiaalit-hoitokausittain hk))
-   
-   uusi-id (atom 0)
-
-   ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
-   materiaalikoodit :reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit))
-
-   ;; Jaetaan materiaalikoodit yleisiin ja kohdistettaviin
-   yleiset-materiaalikoodit :reaction (filter #(not (:kohdistettava %)) @materiaalikoodit)
-   kohdistettavat-materiaalikoodit :reaction (filter :kohdistettava @materiaalikoodit)
-
-   
-   ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
-   yleiset-materiaalit :reaction (let [materiaalit (into {}
-                                                         (comp (filter #(not (contains? % :pohjavesialue)))
-                                                               (map (juxt :id identity)))
-                                                         @materiaalit)
-                                       kaytetyt-materiaali-idt (into #{} (map (comp :id :materiaali) (vals materiaalit)))]
-                                   (loop [materiaalit materiaalit
-                                          [mk & materiaalikoodit] @yleiset-materiaalikoodit]
-                                     (if-not mk
-                                       materiaalit
-                                       (if (kaytetyt-materiaali-idt (:id mk))
-                                         (recur materiaalit materiaalikoodit)
-                                         (let [id (- (:id mk))
-                                               [alku loppu] @s/valittu-hoitokausi]
-                                           (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
-                                                  materiaalikoodit))))))
-                                                  
-   pohjavesialue-materiaalit :reaction (into {}
-                                             (comp (filter #(contains? % :pohjavesialue))
-                                                   (map (juxt :id identity)))
-                                             @materiaalit)
-
-   yleiset-materiaalit-virheet nil
-   yleiset-materiaalit-muokattu :reaction @yleiset-materiaalit
-
-   pohjavesialue-materiaalit-virheet nil
-   pohjavesialue-materiaalit-muokattu :reaction @pohjavesialue-materiaalit
-
-   ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
-   tuleville? false
-
-   ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
-   varoita-ylikirjoituksesta? 
-   :reaction (let [kopioi? @tuleville?                 
-                   varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
-                                                          @s/valittu-hoitokausi)]
-               (if-not kopioi?
-                 false
-                 varoita?))
-
-       
-   ]
-  
-  (let [muokattu? (or (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)
-                      (not= @pohjavesialue-materiaalit @pohjavesialue-materiaalit-muokattu))
-        virheita? (or (not (empty? @yleiset-materiaalit-virheet))
-                      (not (empty? @pohjavesialue-materiaalit-virheet))) 
-        voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
-        voi-muokata? (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur))
+        hae-urakan-materiaalit (fn [ur]
+                                 (go (reset! urakan-materiaalit (<! (t/hae-urakan-materiaalit (:id ur))))))
+        
+        ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
+        sopimuksen-materiaalit-hoitokausittain
+        (reaction (let [[sopimus-id _] @s/valittu-sopimusnumero]
+                    (log "URAKAN MATSKUI::: " @urakan-materiaalit)
+                    (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
+                                                                      @urakan-materiaalit))
+                    (s/ryhmittele-hoitokausittain @urakan-materiaalit (s/hoitokaudet ur))))
+        
+        
+        ;; valitaan materiaaleista vain valitun hoitokauden
+        materiaalit (reaction (let [hk @s/valittu-hoitokausi]
+                                (get @sopimuksen-materiaalit-hoitokausittain hk)))
+        
+        uusi-id (atom 0)
+        
+        ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
+        materiaalikoodit (reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
+        
+        ;; Jaetaan materiaalikoodit yleisiin ja kohdistettaviin
+        yleiset-materiaalikoodit (reaction (filter #(not (:kohdistettava %)) @materiaalikoodit))
+        kohdistettavat-materiaalikoodit (reaction (filter :kohdistettava @materiaalikoodit))
+        
+        
+        ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
+        yleiset-materiaalit (reaction (let [materiaalit (into {}
+                                                              (comp (filter #(not (contains? % :pohjavesialue)))
+                                                                    (map (juxt :id identity)))
+                                                              @materiaalit)
+                                            kaytetyt-materiaali-idt (into #{} (map (comp :id :materiaali) (vals materiaalit)))]
+                                        (loop [materiaalit materiaalit
+                                               [mk & materiaalikoodit] @yleiset-materiaalikoodit]
+                                          (if-not mk
+                                            materiaalit
+                                            (if (kaytetyt-materiaali-idt (:id mk))
+                                              (recur materiaalit materiaalikoodit)
+                                              (let [id (- (:id mk))
+                                                    [alku loppu] @s/valittu-hoitokausi]
+                                                (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
+                                                       materiaalikoodit)))))))
+        
+        pohjavesialue-materiaalit (reaction (into {}
+                                                  (comp (filter #(contains? % :pohjavesialue))
+                                                        (map (juxt :id identity)))
+                                                  @materiaalit))
+        
+        yleiset-materiaalit-virheet (atom nil)
+        yleiset-materiaalit-muokattu (reaction @yleiset-materiaalit)
+        
+        pohjavesialue-materiaalit-virheet (atom nil)
+        pohjavesialue-materiaalit-muokattu (reaction @pohjavesialue-materiaalit)
+        
+        ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
+        tuleville? (atom false)
+        
+        ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
+        varoita-ylikirjoituksesta?
+        (reaction (let [kopioi? @tuleville?                 
+                        varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
+                                                               @s/valittu-hoitokausi)]
+                    (if-not kopioi?
+                      false
+                      varoita?)))
+        
+        
         ]
+
+    (hae-urakan-materiaalit ur)
+
+    (komp/luo
+     (komp/sisaan-ulos #(tasot/taso-paalle! :pohjavesialueet)
+                       #(tasot/taso-pois! :pohjavesialueet))
+     {:component-will-receive-props (fn [this & [_ ur]]
+                                      (hae-urakan-materiaalit ur))}
+  
+     (fn [ur]
+       (let [muokattu? (or (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)
+                           (not= @pohjavesialue-materiaalit @pohjavesialue-materiaalit-muokattu))
+             virheita? (or (not (empty? @yleiset-materiaalit-virheet))
+                           (not (empty? @pohjavesialue-materiaalit-virheet))) 
+             voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
+             voi-muokata? (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur))
+             ]
     
-    [:div.materiaalit
-     [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
-                                :virheet yleiset-materiaalit-virheet}
-      ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
-      @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
+         [:div.materiaalit
+          [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
+                                     :virheet yleiset-materiaalit-virheet}
+           ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
+           @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
      
-     (when (= (:tyyppi ur) :hoito)
-       [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
-                                            :virheet pohjavesialue-materiaalit-virheet}
-        ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
-        @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
+          (when (= (:tyyppi ur) :hoito)
+            [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
+                                                 :virheet pohjavesialue-materiaalit-virheet}
+             ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
+             @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
-     (when voi-muokata?
-       [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
-        #(swap! tuleville? not) 
-        [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-        (and @tuleville? @varoita-ylikirjoituksesta?)
-        ])
+          (when voi-muokata?
+            [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
+             #(swap! tuleville? not) 
+             [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+             (and @tuleville? @varoita-ylikirjoituksesta?)
+             ])
 
-     (when voi-muokata?
-       [:div.toiminnot
-        [:button.btn.btn-primary
-         {:disabled (not voi-tallentaa?)
-          :on-click #(do (.preventDefault %)
-                         (go 
-                           (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
-                                               (vals @pohjavesialue-materiaalit-muokattu))
-                                 rivit (if @tuleville?
-                                         (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
-                                         rivit)
-                                 uudet-materiaalit (<! (t/tallenna (:id ur)
-                                                                   (first @s/valittu-sopimusnumero)
-                                                                   rivit))]
-                             (reset! urakan-materiaalit uudet-materiaalit))))}
-         "Tallenna materiaalit"]])
-     ])) 
+          (when voi-muokata?
+            [:div.toiminnot
+             [:button.btn.btn-primary
+              {:disabled (not voi-tallentaa?)
+               :on-click #(do (.preventDefault %)
+                              (go 
+                                (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
+                                                    (vals @pohjavesialue-materiaalit-muokattu))
+                                      rivit (if @tuleville?
+                                              (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
+                                              rivit)
+                                      uudet-materiaalit (<! (t/tallenna (:id ur)
+                                                                        (first @s/valittu-sopimusnumero)
+                                                                        rivit))]
+                                  (reset! urakan-materiaalit uudet-materiaalit))))}
+              "Tallenna materiaalit"]])
+          ]))))) 
