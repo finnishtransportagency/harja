@@ -78,28 +78,29 @@
     9 "syyskuu"
     10 "lokakuu"
     11 "marraskuu"
-    12 "joulukuu"))
+    12 "joulukuu"
+    "kk ei välillä 1-12"))
 
 ;; hoidon alueurakoiden päivämääräapurit
-(defn vuoden-eka-pvm [vuosi]
+(defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
-  (luo-pvm vuosi 0 1)
-  )
+  [vuosi]
+  (luo-pvm vuosi 0 1))
 
-(defn vuoden-viim-pvm [vuosi]
+(defn vuoden-viim-pvm
   "Palauttaa vuoden viimeisen päivän 31.12.vuosi"
-  (luo-pvm vuosi 11 31)
-  )
+  [vuosi]
+  (luo-pvm vuosi 11 31))
 
-(defn hoitokauden-alkupvm [vuosi]
+(defn hoitokauden-alkupvm
   "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
-  (luo-pvm vuosi 9 1)
-  )
+  [vuosi]
+  (luo-pvm vuosi 9 1))
 
-(defn hoitokauden-loppupvm [vuosi]
+(defn hoitokauden-loppupvm
   "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
-  (luo-pvm vuosi 8 30)
-  )
+  [vuosi]
+  (luo-pvm vuosi 8 30))
 
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."

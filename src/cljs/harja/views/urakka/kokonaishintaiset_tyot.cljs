@@ -23,6 +23,15 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
 
+
+(defn paivita-vuosi
+  "Päivittää tulevien hoitokausien vuosi-kentän arvon."
+  [rivi]
+  (let [tyon-kalenteri-vuosi (if (<= 10 (:kuukausi rivi) 12)
+                               (pvm/vuosi (:alkupvm rivi))
+                               (pvm/vuosi (:loppupvm rivi)))]
+    (assoc rivi :vuosi tyon-kalenteri-vuosi)))
+
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [tallennettavat-hoitokaudet (if tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
@@ -30,7 +39,8 @@
             muuttuneet
             (into []
                   (if tuleville?
-                    (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
+                    (map #(paivita-vuosi %)
+                         (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi))
                     uudet-tyot
                     ))
             res (<! (kok-hint-tyot/tallenna-urakan-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))]
