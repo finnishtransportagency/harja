@@ -18,7 +18,7 @@
                       :db (apply tietokanta/luo-tietokanta testitietokanta)
                       :http-palvelin (testi-http-palvelin)
                       :kokonaishintaiset-tyot (component/using
-                                  (->kokonaishintaiset-tyot)
+                                  (->Kokonaishintaiset-tyot)
                                   [:http-palvelin :db])))))
   
   (testit)
@@ -61,20 +61,26 @@
                                                  FROM sopimus 
                                                  WHERE urakka = " oulun-alueurakan-id
                                                  " AND paasopimus IS null")))
-        kokonaishintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :kokonaishintaiset-tyot +kayttaja-jvh+ oulun-alueurakan-id)
+
+
+        kokonaishintaiset-tyot (filter #(= oulun-alueurakan-sopimus (:sopimus %))
+                                        (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :kokonaishintaiset-tyot +kayttaja-jvh+ oulun-alueurakan-id))
         talvihoidon-tyot (filter #(= "Oulu Talvihoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         sorateiden-tyot (filter #(= "Oulu Sorateiden hoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         oulun-alueurakan-toiden-lkm (ffirst (q jarjestelma (str "SELECT count(*) 
                                                                 FROM kokonaishintainen_tyo kt 
                                                                 LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
-                                                                WHERE tpi.urakka = " oulun-alueurakan-id)))
+                                                                WHERE tpi.urakka = " oulun-alueurakan-id
+                                                                " AND sopimus = " oulun-alueurakan-sopimus)))
         
         urakoitsijan-urakanvalvoja (oulun-urakan-urakoitsijan-urakkavastaava)
         ei-ole-taman-urakan-urakoitsijan-urakanvalvoja (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
-        kokonaishintaiset-tyot-kutsujana-urakoitsija (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                     :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja oulun-alueurakan-id)]
-    
+        kokonaishintaiset-tyot-kutsujana-urakoitsija (filter #(= oulun-alueurakan-sopimus (:sopimus %))
+                                                             (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                     :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja oulun-alueurakan-id))]
+
+    (log/info "tyot" kokonaishintaiset-tyot)
     (is (= (count kokonaishintaiset-tyot) oulun-alueurakan-toiden-lkm))
     (is (= (count kokonaishintaiset-tyot-kutsujana-urakoitsija) oulun-alueurakan-toiden-lkm))
     (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -88,5 +94,4 @@
     (is (= 3500.0 (:summa (last talvihoidon-tyot))))
     (is (= 1500.0 (:summa (first sorateiden-tyot))))
     (is (= 1500.0 (:summa (first sorateiden-tyot))))
-    (is (= 1500.0 (:summa (last sorateiden-tyot))))
-    ))
+    (is (= 1500.0 (:summa (last sorateiden-tyot))))))
