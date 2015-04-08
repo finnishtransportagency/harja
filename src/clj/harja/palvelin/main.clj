@@ -21,6 +21,7 @@
    [harja.palvelin.palvelut.kayttajat :as kayttajat]
    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
    [harja.palvelin.palvelut.materiaalit :as materiaalit]
+   [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -90,6 +91,9 @@
      :materiaalit (component/using
                    (materiaalit/->Materiaalit)
                    [:http-palvelin :db])
+     :selainvirhe (component/using
+                    (selainvirhe/->Selainvirhe)
+                    [:http-palvelin])
      )))
 
 (defonce harja-jarjestelma nil)
