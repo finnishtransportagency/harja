@@ -39,6 +39,7 @@
     [:div.form-group
      [:input.form-control {:type "text" :placeholder "Hae..."}]]
     [:button.btn.btn-default {:type "button"} "Hae"]]
+   [:button.btn.btn-danger {:on-click (foo.bar)}]
 
    ;; FIXME: active luokka valitulle sivulle
    [:ul#sivut.nav.nav-pills
