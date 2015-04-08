@@ -121,7 +121,7 @@
            ;; sarakkeet
            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-            {:otsikko "Summa" :nimi :summa :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "25%"}
+            {:otsikko "Summa" :nimi :summa :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea :leveys "25%"}
             {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt pvm/pvm :leveys "25%"}
             ]
            @valitun-toimenpiteen-ja-hoitokauden-tyot

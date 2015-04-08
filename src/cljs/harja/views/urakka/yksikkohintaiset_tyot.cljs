@@ -138,8 +138,8 @@
             {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
             {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
-            {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
+            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
+            {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
             ]
            @tyorivit
            ]
