@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.kokonaishintaiset-tyot
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as t]
             [clj-time.coerce :as c]

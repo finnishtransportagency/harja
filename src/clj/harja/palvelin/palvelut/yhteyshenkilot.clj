@@ -6,7 +6,7 @@
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit

@@ -5,7 +5,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (declare hallintayksikon-urakat
          urakan-tiedot

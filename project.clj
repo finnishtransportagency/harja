@@ -18,8 +18,10 @@
                  [com.stuartsierra/component "0.2.3"]
                  
                  ;; Lokitus
-                 [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.3"]
+                 ;;[org.clojure/tools.logging "0.3.1"]
+                 ;;[ch.qos.logback/logback-classic "1.1.3"]
+                 [com.taoensso/timbre "3.4.0"]
+                 [com.narkisr/gelfino-client "0.7.0"]
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]

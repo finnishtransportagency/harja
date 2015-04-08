@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.urakoitsijat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [harja.kyselyt.urakoitsijat :as q]))
 
 (declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat)

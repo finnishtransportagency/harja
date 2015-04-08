@@ -9,7 +9,7 @@
             [harja.palvelin.komponentit.fim :as fim]
             
             [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.set :as set]))
 
 (declare hae-kayttajat

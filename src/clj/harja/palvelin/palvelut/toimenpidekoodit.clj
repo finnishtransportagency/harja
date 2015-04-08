@@ -5,7 +5,7 @@
              [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]
              
              [clojure.java.jdbc :as jdbc]
-             [clojure.tools.logging :as log]))
+             [taoensso.timbre :as log]))
 
 (declare hae-toimenpidekoodit
          tallenna-tehtavat

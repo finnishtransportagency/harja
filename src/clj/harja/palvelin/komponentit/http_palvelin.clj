@@ -4,7 +4,7 @@
             [compojure.core  :as compojure]
             [compojure.route :as route]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
 
             [cognitect.transit :as t]
             [schema.core :as s]

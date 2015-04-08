@@ -6,4 +6,6 @@
               :kayttaja "harja"
               :salasana ""}
  :fim {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
+ :log {:gelf {:taso :debug
+              :palvelin "localhost"}}
  }

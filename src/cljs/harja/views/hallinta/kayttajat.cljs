@@ -235,7 +235,8 @@
                          (>! ch (into []
                                       (filter #(not (urakat (:id %))))
                                       res))))
-                   ch)))}
+                   ch)))
+      :validoi [[:ei-tyhja "Valitse urakka"]]}
      {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
      {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string
       :fmt pvm/pvm :muokattava? (constantly false) }]

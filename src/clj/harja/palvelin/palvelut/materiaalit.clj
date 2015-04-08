@@ -5,7 +5,7 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (defn hae-materiaalikoodit [db]
   (into []

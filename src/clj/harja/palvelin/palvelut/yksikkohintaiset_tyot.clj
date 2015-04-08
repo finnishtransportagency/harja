@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.yksikkohintaiset-tyot
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]

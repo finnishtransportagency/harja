@@ -1,7 +1,7 @@
 (ns harja.palvelin.oikeudet
   "Kaikki palvelinpuolen käyttöoikeustarkistukset."
    (:require
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 
 (def rooli-jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")

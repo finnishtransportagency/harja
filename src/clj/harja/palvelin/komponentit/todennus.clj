@@ -1,7 +1,7 @@
 (ns harja.palvelin.komponentit.todennus
   "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei huolehdi käyttöoikeuksista, vaan pelkästään tarkistaa käyttäjän identiteetin."
   (:require [com.stuartsierra.component :as component]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.core.cache :as cache]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kayttajat :as q]))

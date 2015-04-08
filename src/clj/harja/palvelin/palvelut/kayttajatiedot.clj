@@ -3,7 +3,7 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.kayttajat :as k]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (declare hae-kayttajatiedot)
 

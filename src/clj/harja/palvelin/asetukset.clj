@@ -1,10 +1,9 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io])
-  (:import [ch.qos.logback.classic.joran JoranConfigurator]
-           [org.slf4j LoggerFactory]))
+            [taoensso.timbre :as log]
+            [gelfino.timbre :as gt]
+            [clojure.java.io :as io]))
 
 
 (def Asetukset
@@ -18,7 +17,9 @@
                 :kayttaja s/Str
                 :salasana s/Str}
    :fim {:url s/Str}
-   :logback-konfiguraatio s/Str}) 
+   :log {:gelf {:palvelin s/Str
+                :taso s/Keyword}}
+   }) 
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
@@ -29,7 +30,8 @@
                 :portti 5432
                 :kayttaja "harja"
                 :salasana ""}
-   :logback-konfiguraatio "logback.properties"})
+   
+   :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}})
 
 (defn yhdista-asetukset [oletukset asetukset]
   (merge-with #(if (map? %1)
@@ -47,7 +49,13 @@
        (s/validate Asetukset)))
       
 
-(defn konfiguroi-lokitus 
+(defn konfiguroi-lokitus [asetukset]
+  (when-let [gelf (-> asetukset :log :gelf)]
+    (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
+    (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)})))
+ 
+
+(comment (defn konfiguroi-lokitus 
   "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
   [asetukset]
   (let [konfiguroija (JoranConfigurator.)
@@ -58,6 +66,6 @@
     (println "Lokituksen konfiguraatio: " (.getAbsolutePath konfiguraatio)) ;; käytetään println ennen lokituksen alustusta
     (.setContext konfiguroija konteksti)
     (.reset konteksti)
-    (.doConfigure konfiguroija konfiguraatio)))
+    (.doConfigure konfiguroija konfiguraatio))))
       
   

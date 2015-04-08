@@ -30,6 +30,7 @@
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta http-palvelin kehitysmoodi]} asetukset]
+    (konfiguroi-lokitus asetukset)
     (component/system-map
      :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
                                     (:portti tietokanta)
