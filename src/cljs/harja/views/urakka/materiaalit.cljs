@@ -69,9 +69,9 @@
                     #(reset! virheet (grid/hae-virheet %)))
           }
          [{:otsikko "Pohjavesialue"
-           :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta :nimi
+           :tyyppi :haku :lahde hallintayksikon-pohjavesialueet-haku :nayta #(str (:tunnus %) " " (:nimi %))
            :muokattava? (constantly voi-muokata?)
-           :nimi :pohjavesialue :fmt :nimi :leveys "40%"
+           :nimi :pohjavesialue :fmt #(str (:tunnus %) " " (:nimi %)) :leveys "40%"
            :validoi [[:ei-tyhja "Valitse pohjavesialue"]]}
           {:otsikko "Materiaali"
            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")

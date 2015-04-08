@@ -23,7 +23,8 @@
             teksti (str/lower-case teksti)]
         (go (>! ch
                 (into []
-                      (filter #(not= -1 (.indexOf (str/lower-case (:nimi %)) teksti)))
+                      (filter #(or (not= -1 (.indexOf (str/lower-case (:nimi %)) teksti))
+                                   (not= -1 (.indexOf (str/lower-case (:tunnus %)) teksti))))
                       @pohjavesialueet)))
         ch))))
 
