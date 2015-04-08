@@ -18,7 +18,6 @@
 (defn render []
   (reagent/render [main-view/main] (.getElementById js/document "app")))
 
-
 (defn ^:export harja []
   (ymparisto/alusta {:on-reload render})
   (render)
@@ -37,7 +36,8 @@
                     :viesti errorMsg
                     :rivi   lineNumber
                     :sarake column
-                    :selain (.-userAgent (.-navigator js/window))})))
+                    :selain (.-userAgent (.-navigator js/window))
+                    :stack (when errorObj (aget errorObj "stack"))})))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
