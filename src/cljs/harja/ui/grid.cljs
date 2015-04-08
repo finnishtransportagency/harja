@@ -181,7 +181,9 @@ Optiot on mappi optioita:
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
                        (swap! virheet (fn [virheet]
-                                        (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
+                                        (let [uusi-rivi (get uudet-tiedot id)
+                                              rivin-virheet (when-not (:poistettu uusi-rivi)
+                                                              (validoi-rivi uudet-tiedot uusi-rivi skeema))]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
@@ -448,7 +450,9 @@ Optiot on mappi optioita:
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
-                                        (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
+                                        (let [uusi-rivi (get uudet-tiedot id)
+                                              rivin-virheet (when-not (:poistettu uusi-rivi)
+                                                              (validoi-rivi uudet-tiedot uusi-rivi skeema))]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
