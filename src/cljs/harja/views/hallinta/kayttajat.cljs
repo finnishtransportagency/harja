@@ -214,7 +214,7 @@
                                                            (when-not (urakat (:id u))
                                                              (swap! urakat-atom assoc (:id u) {:urakka u :luotu (pvm/nyt)}))))))}
                            (str "Lisää kaikki " (case (:tyyppi organisaatio)
-                                                  :hallintayksikko "hallintayksikon"
+                                                  :hallintayksikko "hallintayksikön"
                                                   :urakoitsija "urakoitsijan") " urakat")])
                         [valitse-kartalta g]])
                                                
