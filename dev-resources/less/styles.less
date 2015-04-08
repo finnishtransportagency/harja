@@ -146,7 +146,20 @@ tr.uusitehtavakoodi td {
 		display: inline;
 		margin-left: 20px;
 		.btn {
-			width: 250px;
+			max-width: @alasvetovalikon-leveys-max;
+			min-width: @alasvetovalikon-leveys-min;
+			padding-right: 20px;
+		}
+		.caret {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+		}
+	}
+	.alasveto.open {
+		.dropdown-menu {
+			max-width: @alasvetovalikon-leveys-max;
+			min-width: @alasvetovalikon-leveys-min;
 		}
 	}
 }
