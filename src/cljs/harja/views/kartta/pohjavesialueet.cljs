@@ -5,7 +5,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.protokollat :refer [Haku hae]]
             [cognitect.transit :as t] 
-            [cljs.core.async :refer [<! chan]])
+            [cljs.core.async :refer [<! chan]]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -18,10 +19,11 @@
 (def hallintayksikon-pohjavesialueet-haku
   (reify Haku
     (hae [_ teksti]
-      (let [ch (chan)]
+      (let [ch (chan)
+            teksti (str/lower-case teksti)]
         (go (>! ch
                 (into []
-                      (filter #(not= -1 (.indexOf (:nimi %) teksti)))
+                      (filter #(not= -1 (.indexOf (str/lower-case (:nimi %)) teksti)))
                       @pohjavesialueet)))
         ch))))
 
