@@ -3,7 +3,8 @@
   (:require [schema.core :as s]
             [taoensso.timbre :as log]
             [gelfino.timbre :as gt]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [harja.palvelin.lokitus.hipchat :as hipchat]))
 
 
 (def Asetukset
@@ -17,8 +18,10 @@
                 :kayttaja s/Str
                 :salasana s/Str}
    :fim {:url s/Str}
-   :log {:gelf {:palvelin s/Str
-                :taso s/Keyword}}
+   :log {(s/optional-key :gelf) {:palvelin s/Str
+                                 :taso s/Keyword}
+         (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}}
+   
    }) 
 
 (def oletusasetukset
@@ -31,7 +34,8 @@
                 :kayttaja "harja"
                 :salasana ""}
    
-   :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}})
+   :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
+   })
 
 (defn yhdista-asetukset [oletukset asetukset]
   (merge-with #(if (map? %1)
@@ -52,7 +56,12 @@
 (defn konfiguroi-lokitus [asetukset]
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
-    (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)})))
+    (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
+
+  (when-let [hipchat (-> asetukset :log :hipchat)]
+    (log/set-config! [:appenders :hipchat]
+                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat)))))
+
  
 
 (comment (defn konfiguroi-lokitus 
