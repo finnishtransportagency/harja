@@ -198,7 +198,7 @@
             "Valitse kartalta"
             "Piilota kartta")]]))})))
 
-(defn urakkalista [urakat-atom organisaatio]
+(defn urakkalista [virheet urakat-atom organisaatio]
   [:span
    [grid/muokkaus-grid
     {:otsikko "Urakat"
@@ -220,6 +220,8 @@
                                                
      :uusi-rivi #(assoc % :luotu (pvm/nyt))
      :muutos (fn [g]
+               (log "VIRHEITÄ " (grid/hae-virheet g))
+               (reset! virheet (count (grid/hae-virheet g)))
                (log "gridi muuttui: " g))
      } 
     [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
@@ -308,6 +310,8 @@
                                     :rooli rooli))
                                 (vals muokattavat)))
 
+        virheet (atom {}) ;; urakkalistan nimi => virheiden lkm
+        
         tallennus-menossa (atom false)
         tallenna! (fn []
                     (reset! tallennus-menossa true)
@@ -426,12 +430,16 @@
                 [roolivalinta "tilaajan kayttaja"]
                 [roolivalinta "urakanvalvoja"
                  ^{:key "urakat"}
-                 [urakkalista urakanvalvoja-urakat @organisaatio]]
+                 [urakkalista (r/wrap (@virheet "urakanvalvoja")
+                                      #(swap! virheet assoc "urakanvalvoja" %))
+                  urakanvalvoja-urakat @organisaatio]]
                 
                 [roolivalinta "tilaajan asiantuntija"]
                 [roolivalinta "tilaajan laadunvalvontakonsultti"
                  ^{:key "urakat"}
-                 [urakkalista tilaajan-laadunvalvontakonsultti-urakat @organisaatio]]]
+                 [urakkalista (r/wrap (@virheet "tilaajan laadunvalvontakonsultti")
+                                      #(swap! virheet assoc "tilaajan laadunvalvontakonsultti" %))
+                  tilaajan-laadunvalvontakonsultti-urakat @organisaatio]]]
 
                (= tyyppi :urakoitsija)
                ;; urakoitsijan roolit
@@ -439,14 +447,20 @@
                 [roolivalinta "urakoitsijan paakayttaja"]
                 [roolivalinta "urakoitsijan urakan vastuuhenkilo"
                  ^{:key "urakat"}
-                 [urakkalista urakan-vastuuhenkilo-urakat @organisaatio]]
+                 [urakkalista (r/wrap (@virheet "urakoitsijan urakan vastuuhenkilo")
+                                      #(swap! virheet assoc "urakoitsijan urakan vastuuhenkilo" %))
+                  urakan-vastuuhenkilo-urakat @organisaatio]]
                
                 [roolivalinta "urakoitsijan kayttaja"
                  ^{:key "urakat"}
-                 [urakkalista urakoitsijan-kayttaja-urakat @organisaatio]]
+                 [urakkalista (r/wrap (@virheet "urakoitsijan kayttaja")
+                                      #(swap! virheet assoc "urakoitsijan kayttaja" %))
+                  urakoitsijan-kayttaja-urakat @organisaatio]]
                 [roolivalinta "urakoitsijan laatuvastaava"
                  ^{:key "urakat"}
-                 [urakkalista urakoitsijan-laatuvastaava-urakat @organisaatio]]]
+                 [urakkalista (r/wrap (@virheet "urakoitsijan laatuvastaava")
+                                      #(swap! virheet assoc "urakoitsijan laatuvastaava" %))
+                  urakoitsijan-laatuvastaava-urakat @organisaatio]]]
 
                :default "Valitse organisaatio")]]
 
@@ -454,12 +468,13 @@
              [:label.col-sm-2.control-label
               "Toiminnot:"]
              [:div.col-sm-10.toiminnot
-              [:button.btn.btn-primary {:disabled (nil? tyyppi)
-                                        :on-click #(do (.preventDefault %)
-                                                       (tallenna!))}
-               (if @tallennus-menossa
-                 [ajax-loader]
-                 (ikonit/ok)) " Tallenna"]
+              (let [virheita (some pos? (map second @virheet))]
+                [:button.btn.btn-primary {:disabled (or (nil? tyyppi) virheita)
+                                          :on-click #(do (.preventDefault %)
+                                                         (tallenna!))}
+                 (if @tallennus-menossa
+                   [ajax-loader]
+                   (ikonit/ok)) " Tallenna"])
               [:span.pull-right
                [:button.btn.btn-danger {:disabled (when @poista-painettu "disabled")
                                         :on-click #(do (.preventDefault %)
