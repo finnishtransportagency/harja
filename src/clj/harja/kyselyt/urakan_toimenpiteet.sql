@@ -15,7 +15,7 @@ SELECT t4.id as t4_id, t4.koodi as t4_koodi, t4.nimi as t4_nimi, t4.yksikko as t
 
   -- name: hae-urakan-toimenpiteet
 -- Hakee kaikki urakan 3. tason toimenpiteet
-SELECT 	tpi.toimenpide as id,
+SELECT 	tpi.toimenpide as id, tpi.nimi as tpi_nimi,
 		    t3.nimi as t3_nimi, t3.koodi as t3_koodi,
 		    t3.emo as t3_emo,
 	    	t2.nimi as t2_nimi, t2.koodi as t2_koodi,

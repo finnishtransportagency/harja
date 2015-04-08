@@ -65,6 +65,20 @@
       (.log js/console "E: " e)
       nil)))
 
+(defn kuukauden-nimi [kk]
+  (case kk
+    1 "tammikuu"
+    2 "helmikuu"
+    3 "maaliskuu"
+    4 "huhtikuu"
+    5 "toukokuu"
+    6 "kesäkuu"
+    7 "heinäkuu"
+    8 "elokuu"
+    9 "syyskuu"
+    10 "lokakuu"
+    11 "marraskuu"
+    12 "joulukuu"))
 
 ;; hoidon alueurakoiden päivämääräapurit
 (defn vuoden-eka-pvm [vuosi]

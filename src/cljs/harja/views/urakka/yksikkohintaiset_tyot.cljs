@@ -55,7 +55,7 @@
   (let [otsikko (fn [{:keys [tehtava]}]
                   (some (fn [[t1 t2 t3 t4]]
                           (when (= (:id t4) tehtava)
-                            (str (:nimi t1) " / " (:nimi t2) " / " (:nimi t3))))
+                            (str (:nimi t2) " / " (:nimi t3))))
                         toimenpiteet-tasoittain))
         otsikon-mukaan (group-by otsikko tyorivit)]
     (mapcat (fn [[otsikko rivit]]
@@ -138,7 +138,7 @@
             {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
             {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-            {:otsikko (str "\u20AC" "/yks") :nimi :yksikkohinta :tyyppi :numero :leveys "15%"}
+            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
             {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
             ]
            @tyorivit

@@ -57,19 +57,22 @@
         toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur)))
 
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
+
         sopimuksen-tyot-hoitokausittain
-        :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero]
-                    (log "URAKAN KOKTYÖT: " @urakan-kok-hint-tyot)
-                    (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
-                                                                      @urakan-kok-hint-tyot))
-                    (s/ryhmittele-hoitokausittain @urakan-kok-hint-tyot (s/hoitokaudet ur)))
+        :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero
+                        sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
+                                                @urakan-kok-hint-tyot)]
+                    (s/ryhmittele-hoitokausittain sopimuksen-tyot (s/hoitokaudet ur)))
 
 
         ;; valitaan materiaaleista vain valitun hoitokauden
         valitun-hoitokauden-tyot :reaction (let [hk @s/valittu-hoitokausi]
                                 (get @sopimuksen-tyot-hoitokausittain hk))
 
-        tyorivit nil
+        valittu-toimenpide :reaction (first @toimenpiteet)
+        valitun-toimenpiteen-ja-hoitokauden-tyot :reaction (let [valittu-tp-id (:id @valittu-toimenpide)]
+                                                             (filter #(= valittu-tp-id (:toimenpide %))
+                                                                     @valitun-hoitokauden-tyot))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? false
 
@@ -84,20 +87,27 @@
         ]
 
        (do
-         (log "urakan-kok-hint-tyot" urakan-kok-hint-tyot)
-         (log "hoitokausittain ryhmiteltynä" @sopimuksen-tyot-hoitokausittain)
-         (log "hoitokausittain ryhmiteltynä" (pr-str @sopimuksen-tyot-hoitokausittain))
-         (log "toimenpiteet" @toimenpiteet)
          [:div.kokonaishintaiset-tyot
+          [:div.alasvetovalikot
+           [:div.label-ja-alasveto
+            [:span.alasvedon-otsikko "Toimenpide"]
+            [alasvetovalinta {:valinta @valittu-toimenpide
+                              ;;\u2014 on väliviivan unikoodi
+                              :format-fn #(if % (str (:tpi_nimi %)) "Valitse")
+                              :valitse-fn #(reset! valittu-toimenpide %)
+                              :class "alasveto"
+                              }
+             @toimenpiteet
+             ]]]
           [grid/grid
-           {:otsikko        "Kokonaishintaiset työt"
+           {:otsikko        (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
             :tyhja          (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
             :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                         (:id ur)
                                                         #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
-                                                                        tyorivit % @tuleville?)
+                                                                        valitun-toimenpiteen-ja-hoitokauden-tyot % @tuleville?)
                                                         :ei-mahdollinen)
-            :tunniste       :id
+            :tunniste       #((juxt :tpi_nimi :sopimus :vuosi :kuukausi) %)
             :voi-lisata?    false
             :voi-poistaa?   (constantly false)
             :muokkaa-footer (fn [g]
@@ -109,12 +119,12 @@
             }
 
            ;; sarakkeet
-           [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :numero :leveys "7%"}
-            {:otsikko "Kuukausi" :nimi :kuukausi :tyyppi :numero :leveys "7%"}
-            {:otsikko "Summa" :nimi :summa :tyyppi :numero :leveys "7%"}
-            {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :numero :leveys "7%"}
+           [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+            {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+            {:otsikko "Summa" :nimi :summa :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "25%"}
+            {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt pvm/pvm :leveys "25%"}
             ]
-           @valitun-hoitokauden-tyot
+           @valitun-toimenpiteen-ja-hoitokauden-tyot
            ]]))
 
 
