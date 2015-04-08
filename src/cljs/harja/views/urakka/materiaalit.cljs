@@ -8,6 +8,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
+            [harja.ui.viesti :as viesti]
             [harja.views.kartta.tasot :as tasot]
             [harja.views.kartta.pohjavesialueet :refer [hallintayksikon-pohjavesialueet-haku]]
             [harja.tiedot.navigaatio :as nav]
@@ -249,6 +250,8 @@
                                       uudet-materiaalit (<! (t/tallenna (:id ur)
                                                                         (first @s/valittu-sopimusnumero)
                                                                         rivit))]
-                                  (reset! urakan-materiaalit uudet-materiaalit))))}
+                                  (when uudet-materiaalit
+                                    (viesti/nayta! "Materiaalit tallennettu." :success)
+                                    (reset! urakan-materiaalit uudet-materiaalit)))))}
               "Tallenna materiaalit"]])
           ]))))) 
