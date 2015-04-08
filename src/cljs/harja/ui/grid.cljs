@@ -200,7 +200,9 @@ Optiot on mappi optioita:
                   (reset! muokatut muok)
                   (reset! virheet virh)
                   (reset! jarjestys jarj))
-                (swap! historia pop))
+                (swap! historia pop)
+                (when muutos
+                  (muutos ohjaus)))
 
         nollaa-muokkaustiedot! (fn []
                                  (reset! virheet {})
@@ -465,7 +467,9 @@ Optiot on mappi optioita:
                 (let [[muok virh] (peek @historia)]
                   (reset! muokatut muok)
                   (reset! virheet virh))
-                (swap! historia pop))
+                (swap! historia pop)
+                (when muutos
+                  (muutos ohjaus)))
 
         
         ]
