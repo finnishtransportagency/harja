@@ -26,7 +26,7 @@
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
                  [compojure "1.3.3"]
-                 
+                 [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.6.4"]
                  
@@ -68,6 +68,7 @@
                  [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "3.11"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
+
                  
                  ]
   
