@@ -90,13 +90,20 @@
 
 (defn hae-fim-kayttaja [db fim user tunnus]
   (if-let [kayttaja (fim/hae fim tunnus)]
-    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))]
-      (if org
-        ;; Liitetään olemassaoleva organisaatio käyttäjälle
-        (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
+    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))
+          olemassaoleva (some->> tunnus
+                                 (q/hae-kirjautumistiedot db)
+                                 first :id
+                                 (hae-kayttajan-tiedot db user))]
+
+      (merge
+       olemassaoleva
+       (if org
+         ;; Liitetään olemassaoleva organisaatio käyttäjälle
+         (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
         
-        ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
-        (dissoc kayttaja :organisaatio)))
+         ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
+         (dissoc kayttaja :organisaatio))))
     :ei-loydy))
 
 (defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
