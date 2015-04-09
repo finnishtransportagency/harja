@@ -289,10 +289,10 @@
                              sisalto]]))
         tiedot (atom {})
 
-        ;; tekee urakkalistasta {<idx> <urakka>} array-mapin, muokkausgridiä varten
+        ;; tekee urakkaroolilistasta {<idx> <urakkarooli>} array-mapin, muokkausgridiä varten
         urakat-muokattava #(into {}
-                                 (map (fn [urakka]
-                                        [(:id urakka) urakka]) %))
+                                 (map (fn [urakkarooli]
+                                        [(:id (:urakka urakkarooli)) urakkarooli]) %))
         
         urakanvalvoja-urakat (atom (array-map))
         tilaajan-laadunvalvontakonsultti-urakat (atom (array-map))
@@ -363,8 +363,10 @@
     (run! (let [tiedot @tiedot]
             
             (let [urakka-roolit (group-by :rooli (:urakka-roolit tiedot))]
+              (log "URAKKA ROOLIT : " urakka-roolit)
               (reset! urakanvalvoja-urakat
                       (urakat-muokattava (or (get urakka-roolit "urakanvalvoja") [])))
+              (log "urva: " (urakat-muokattava (or (get urakka-roolit "urakanvalvoja") [])))
               (reset! tilaajan-laadunvalvontakonsultti-urakat
                       (urakat-muokattava (or (get urakka-roolit "tilaajan laadunvalvontakonsultti") [])))
               (reset! urakan-vastuuhenkilo-urakat
