@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu-test
   (:require [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as ykshint-tyot]
+            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kokhint-tyot]
             [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.pvm :refer [->pvm] :as pvm]))
@@ -225,3 +226,32 @@
             (hk 2008)))))
 
                                  
+(deftest paivita-kopioidun-tyon-vuosi-testi-2 []
+  (let [rivi {
+    :vuosi 2013
+    :kuukausi 11
+    :alkupvm (pvm/hoitokauden-alkupvm 2006)
+    :loppupvm (pvm/hoitokauden-loppupvm 2007)}]
+    (is (= (:vuosi (kokhint-tyot/paivita-kopioidun-tyon-vuosi rivi)) 2006))))
+
+(deftest paivita-kopioidun-tyon-vuosi-testi-1 []
+  (let [rivi {
+    :vuosi 2013
+    :kuukausi 6
+    :alkupvm (pvm/hoitokauden-alkupvm 2003)
+    :loppupvm (pvm/hoitokauden-loppupvm 2004)}]
+    (is (= (:vuosi (kokhint-tyot/paivita-kopioidun-tyon-vuosi rivi)) 2004))))
+
+(deftest aseta-hoitokausi-testi-1 []
+  (let [rivi {
+    :vuosi 2013
+    :kuukausi 6}]
+    (is (= (pvm/hoitokauden-alkupvm 2012) (:alkupvm (kokhint-tyot/aseta-hoitokausi rivi))))
+    (is (= (pvm/hoitokauden-loppupvm 2013) (:loppupvm (kokhint-tyot/aseta-hoitokausi rivi))))))
+    
+(deftest aseta-hoitokausi-testi-2 []
+  (let [rivi {
+    :vuosi 2013
+    :kuukausi 11}]
+    (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi rivi))))
+    (is (= (pvm/hoitokauden-loppupvm 2014) (:loppupvm (kokhint-tyot/aseta-hoitokausi rivi))))))
