@@ -15,7 +15,7 @@
 
 (defmulti tee-kentta (fn [t _] (:tyyppi t)))
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -25,6 +25,8 @@
       [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
        
        [:input {:value @teksti
+                :placeholder placeholder
+                :size pituus
                 :on-change #(when (= (.-activeElement js/document) (.-target %))
                               ;; tehdään haku vain jos elementti on fokusoitu
                               ;; IE triggeröi on-change myös ohjelmallisista muutoksista

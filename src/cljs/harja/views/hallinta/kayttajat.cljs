@@ -250,6 +250,8 @@
   [organisaatio]
   (log "ORG: " organisaatio)
   [tee-kentta {:tyyppi :haku
+               :pituus 50
+               :placeholder "Hae hallintayksikkö / urakoitsija..."
                :nayta :nimi
                :lahde k/organisaatio-haku}
               organisaatio])
