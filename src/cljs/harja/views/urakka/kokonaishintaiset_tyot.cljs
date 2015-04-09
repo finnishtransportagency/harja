@@ -24,14 +24,6 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
-(defn paivita-vuosi
-  "Päivittää tulevien hoitokausien vuosi-kentän arvon."
-  [rivi]
-  (let [tyon-kalenteri-vuosi (if (<= 10 (:kuukausi rivi) 12)
-                               (pvm/vuosi (:alkupvm rivi))
-                               (pvm/vuosi (:loppupvm rivi)))]
-    (assoc rivi :vuosi tyon-kalenteri-vuosi)))
-
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [tallennettavat-hoitokaudet (if tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
@@ -39,12 +31,13 @@
             muuttuneet
             (into []
                   (if tuleville?
-                    (map #(paivita-vuosi %)
+                    (map #(kok-hint-tyot/paivita-kopioidun-tyon-vuosi %)
                          (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi))
                     uudet-tyot
                     ))
-            res (<! (kok-hint-tyot/tallenna-urakan-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))]
-        (reset! tyot res)
+            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
+            res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi %) res)]
+        (reset! tyot res-jossa-hoitokausitieto)
         true)))
 
 (defn ryhmittele-tehtavat
@@ -115,7 +108,7 @@
             :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                         (:id ur)
                                                         #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
-                                                                        valitun-toimenpiteen-ja-hoitokauden-tyot % @tuleville?)
+                                                                        urakan-kok-hint-tyot % @tuleville?)
                                                         :ei-mahdollinen)
             :tunniste       #((juxt :tpi_nimi :sopimus :vuosi :kuukausi) %)
             :voi-lisata?    false

@@ -7,9 +7,10 @@
             [clj-time.coerce :as c]
             
             [harja.palvelin.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]))
 
-(declare hae-urakan-kokonaishintaiset-tyot)
+(declare hae-urakan-kokonaishintaiset-tyot tallenna-kokonaishintaiset-tyot)
                         
 (defrecord Kokonaishintaiset-tyot []
   component/Lifecycle
@@ -17,11 +18,15 @@
    (doto (:http-palvelin this)
      (julkaise-palvelu
        :kokonaishintaiset-tyot (fn [user urakka-id]
-         (hae-urakan-kokonaishintaiset-tyot (:db this) user urakka-id))))
+         (hae-urakan-kokonaishintaiset-tyot (:db this) user urakka-id)))
+     (julkaise-palvelu
+       :tallenna-kokonaishintaiset-tyot (fn [user tiedot]
+                                                (tallenna-kokonaishintaiset-tyot (:db this) user tiedot))))
    this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :kokonaishintaiset-tyot)
+    (poista-palvelu (:http-palvelin this) :tallenna-kokonaishintaiset-tyot)
     this))
 
 
@@ -32,4 +37,39 @@
   (into []
         (map #(assoc % 
                      :summa (if (:summa %) (double (:summa %)))))
-        (q/listaa-urakan-kokonaishintaiset-tyot db urakka-id)))
+        (q/listaa-kokonaishintaiset-tyot db urakka-id)))
+
+(defn tallenna-kokonaishintaiset-tyot
+  "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
+  [db user {:keys [urakka-id sopimusnumero tyot]}]
+  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
+  (assert (vector? tyot) "tyot tulee olla vektori")
+  (jdbc/with-db-transaction [c db]
+                            (let [nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)
+                                  valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
+                                  tyo-avain (fn [rivi]
+                                              [(:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
+                                  tyot-kannassa (into #{} (map tyo-avain
+                                                               (filter #(and
+                                                                         (= (:sopimus %) sopimusnumero)
+                                                                         (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
+                                                                       nykyiset-arvot)))]
+                              (doseq [tyo tyot]
+                                (let [params [(:summa tyo) (:maksupvm tyo) (:toimenpideinstanssi tyo)
+                                              sopimusnumero (:vuosi tyo) (:kuukausi tyo)]]
+                                  (if (not (tyot-kannassa (tyo-avain tyo)))
+                                   ;; insert
+                                   (do
+                                     (log/info "insert " tyo)
+                                     (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
+                                                                      (konv/sql-date (:maksupvm tyo))
+                                                                      (:toimenpideinstanssi tyo)
+                                                                      sopimusnumero (:vuosi tyo) (:kuukausi tyo)))
+                                   ;;update
+                                    (do
+                                      (log/info "update " tyo)
+                                      (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
+                                                                        (konv/sql-date (:maksupvm tyo))
+                                                                        (:toimenpideinstanssi tyo)
+                                                                        sopimusnumero (:vuosi tyo) (:kuukausi tyo)))))))
+                            (hae-urakan-kokonaishintaiset-tyot c user urakka-id)))

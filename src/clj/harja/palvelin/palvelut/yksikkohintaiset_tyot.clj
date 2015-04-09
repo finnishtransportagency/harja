@@ -34,7 +34,6 @@
 (defn hae-urakan-yksikkohintaiset-tyot 
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
   [db user urakka-id]
-  (log/info "hae-urakan-yksikkohintaiset-tyot" urakka-id)
   ;; FIXME: (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map #(assoc % 
