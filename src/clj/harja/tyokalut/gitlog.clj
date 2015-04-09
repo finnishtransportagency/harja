@@ -6,7 +6,6 @@
 
 
 (defn log->clj [[hash title author date body]]
-  (println "ITEMS, hash: " hash ", title: " title ", author: " author ", date: " date ", body: " body)
   {:hash hash
    :title title
    :body body
