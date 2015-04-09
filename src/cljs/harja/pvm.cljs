@@ -33,8 +33,12 @@
   
 
 (def fi-pvm
-  "Päiväämäärän formatointi suomalaisessa muodossa"
+  "Päivämäärän formatointi suomalaisessa muodossa"
   (df/formatter "dd.MM.yyyy"))
+
+(def fi-pvm-parse
+  "Parsintamuoto päivämäärästä, sekä nolla etuliite ja ilman kelpaa."
+  (df/formatter "d.M.yyyy"))
 
 (def fi-pvm-aika
   "Päivämäärän ja ajan formatointi suomalaisessa muodossa"
@@ -60,7 +64,7 @@
 (defn ->pvm [teksti]
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
   (try
-    (df/parse fi-pvm teksti)
+    (df/parse fi-pvm-parse teksti)
     (catch js/Error e
       (.log js/console "E: " e)
       nil)))
