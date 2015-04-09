@@ -24,15 +24,23 @@
       kustannusten suunnittelua ja toteutumien seurantaa."])
 
 (defn gitlog []
-  [grid/grid
+  [:span {:style {:overflow "visible"}}
+   [grid/grid
    {:otsikko "Viimeisimmät muutokset" :voi-muokata? false}
 
    [{:otsikko "Pvm ja aika" :nimi :date :hae #(tc/from-long (tc/to-long (:date %))) :fmt pvm/pvm-aika :tyyppi :string :leveys "15%"}
     {:otsikko "Tiiviste" :nimi :hash  :tyyppi :string :leveys "15%"}
     {:otsikko "Tekijä" :nimi :author :tyyppi :string :leveys "20%"}
-    {:otsikko "Otsikko" :nimi :title :tyyppi :string :leveys "50%"}]
+    {:otsikko "Otsikko ja viesti" :nimi :title :tyyppi :string :leveys "50%"
+     :fmt identity :hae (fn [rivi]
+                          [:span
+                           [:h6 (:title rivi)]
+                           (when-let [body (:body rivi)]
+                             [:pre body])])
+     }
+    ]
  
-   (lue-gitlog)])
+   (lue-gitlog)]])
 
 
 

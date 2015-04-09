@@ -5,16 +5,18 @@
             ))
 
 
-(defn log->clj [[hash title author date]]
+(defn log->clj [[hash title author date body]]
+  (println "ITEMS, hash: " hash ", title: " title ", author: " author ", date: " date ", body: " body)
   {:hash hash
    :title title
+   :body body
    :author author
    :date (.parse (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") date)})
 
 (defn -main []
-  (let [log (:out (sh/sh "git" "log" "--format=format:%h]-[%s]-[%an]-[%ai"))]
+  (let [log (:out (sh/sh "git" "log" "--format=format:%h]-[%s]-[%an]-[%ai]-[%b[:NEXT:]"))]
     (spit "resources/gitlog.edn"
           (pr-str (mapv #(log->clj (str/split % #"\]-\["))
-                        (str/split log #"\n"))))))
+                        (str/split log #"\[:NEXT:\]"))))))
     
 
