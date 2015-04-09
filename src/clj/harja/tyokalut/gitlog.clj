@@ -12,7 +12,7 @@
    :date (.parse (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") date)})
 
 (defn -main []
-  (let [log (:out (sh/sh "git" "log" "--format=format:\"%h]-[%s]-[%an]-[%ai\""))]
+  (let [log (:out (sh/sh "git" "log" "--format=format:%h]-[%s]-[%an]-[%ai"))]
     (spit "resources/gitlog.edn"
           (pr-str (mapv #(log->clj (str/split % #"\]-\["))
                         (str/split log #"\n"))))))
