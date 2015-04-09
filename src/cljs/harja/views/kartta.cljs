@@ -80,7 +80,9 @@
               :style (when (= koko :S)
                        {:position "absolute"
                         :left (- lev 160)
-                        :top 150})
+                        :top (+ (yleiset/navigaation-korkeus)
+                                (yleiset/murupolun-korkeus)
+                                20)})
               :view kartta-sijainti
               :zoom zoom-taso
               :selection nav/valittu-hallintayksikko

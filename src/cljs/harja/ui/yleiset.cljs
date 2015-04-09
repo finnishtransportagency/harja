@@ -22,6 +22,18 @@
 ;;                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
 ;;                                    true))
 
+(defn navigaation-korkeus []
+  (some-> js/document
+          (.getElementsByTagName "nav")
+          (aget 0)
+          .-clientHeight))
+
+(defn murupolun-korkeus []
+  (some-> js/document
+          (.getElementsByClassName "murupolku")
+          (aget 0)
+          .-clientHeight))
+
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
