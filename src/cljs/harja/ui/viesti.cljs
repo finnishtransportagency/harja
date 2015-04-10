@@ -9,7 +9,8 @@
 ;; Luokka on jokin bootstrapin alert-* luokista (ilman etuliitettä)
 (defonce viesti-sisalto (atom {:viesti nil
                                :luokka nil
-                               :nakyvissa? false}))
+                               :nakyvissa? false
+                               :kesto nil}))
 
 
 (def +bootstrap-alert-classes+ {:success "alert-success"
@@ -21,9 +22,9 @@
 (defn viesti-container
   "Tämä komponentti sisältää flash viestin ja laitetaan päätason sivuun"
   []
-  (let [{:keys [viesti luokka nakyvissa?]} @viesti-sisalto]
+  (let [{:keys [viesti luokka nakyvissa? kesto]} @viesti-sisalto]
     (if nakyvissa?
-      (do (go (<! (timeout 1500))
+      (do (go (<! (timeout kesto))
               (swap! viesti-sisalto assoc :nakyvissa? false))
           ^{:key "viesti"}
           [:div.modal {:style {:display "block"}}
@@ -41,10 +42,12 @@
 
 (defn nayta!
   ([viesti] (nayta! viesti :success))
-  ([viesti luokka]
-     (reset! viesti-sisalto {:viesti viesti
+  ([viesti luokka] (nayta! viesti :success 1500))
+  ([viesti luokka kesto]
+    (reset! viesti-sisalto {:viesti viesti
                              :luokka luokka
-                             :nakyvissa? true})))
+                             :nakyvissa? true
+                             :kesto kesto})))
 
 (defn ^:export kokeile []
   (nayta! "Kokeillaan viestiä!"))

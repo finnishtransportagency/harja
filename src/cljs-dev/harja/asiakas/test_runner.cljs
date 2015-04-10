@@ -11,6 +11,8 @@
    ))
 
 
+(def +virheviestin-nayttoaika+ 5000)
+
 (defmethod test/report [:harja :begin-test-ns] [event]
   (.log js/console "Testataan: " (:ns event))) 
 
@@ -25,7 +27,8 @@
                   [:div.actual "Saatu: " (pr-str (:actual event))]
                   (when-let [m (:message event)]
                     [:div.testmessage "Viesti: " m])]
-                 :danger))
+                 :danger
+                 +virheviestin-nayttoaika+))
 
 (defmethod test/report [:harja :summary] [event]
   (.log js/console "Testejä ajettu: " (:test event)))
