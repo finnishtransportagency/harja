@@ -363,8 +363,8 @@ Optiot on mappi optioita:
                                                                   (get rivi nimi)))])))
                                            [:td.toiminnot
                                             (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-                                              [:span {:on-click #(do (.preventDefault %)
-                                                                     (muokkaa! id assoc :poistettu true))}
+                                              [:span.klikattava {:on-click #(do (.preventDefault %)
+                                                                                (muokkaa! id assoc :poistettu true))}
                                                (ikonit/trash)])]]))))
                                   jarjestys)))))
 
@@ -555,8 +555,8 @@ Optiot on mappi optioita:
                                                             (get rivi nimi)))])))
                                  [:td.toiminnot
                                   (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-                                    [:span {:on-click #(do (.preventDefault %)
-                                                           (muokkaa! id assoc :poistettu true))}
+                                    [:span.klikattava {:on-click #(do (.preventDefault %)
+                                                                      (muokkaa! id assoc :poistettu true))}
                                      (ikonit/trash)])]])))
                           (if jarjesta
                             (sort-by (comp jarjesta second) (seq muokatut))

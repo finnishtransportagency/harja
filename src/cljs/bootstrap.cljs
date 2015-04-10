@@ -26,9 +26,9 @@ The following keys are supported in the configuration:
              [:li {:role "presentation" 
                    :class (when (= active-tab-title title)
                             "active")}
-              [:a {:on-click #(do 
-                                          (.preventDefault %)
-                                          (reset! active i))}
+              [:a.klikattava {:on-click #(do 
+                                           (.preventDefault %)
+                                           (reset! active i))}
                title]])
            tabs)]
          [:div.valilehti active-component]]))))
