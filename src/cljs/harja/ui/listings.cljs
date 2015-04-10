@@ -74,7 +74,7 @@
                  (map-indexed
                   (fn [i item]
                     ^{:key (:id item)}
-                    [:li.haku-lista-item
+                    [:li.haku-lista-item.klikattava
                      {:on-click #(on-select item)
                       :class (str (when (= item selected) "selected ")
                                   (when (= i korostus) "korostettu "))}  
