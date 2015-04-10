@@ -65,89 +65,93 @@
 
 (deftk yksikkohintaiset-tyot [ur]
 
-       [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
-        toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur)))
-        tyorivit-samat-alkutilanteessa? true
-        tehtavien-rivit-kaikki-hoitokaudet :reaction (into []
-                                                           (group-by :tehtava
-                                                                     (filter (fn [t]
-                                                                               (= (:sopimus t) (first @s/valittu-sopimusnumero))) @tyot)))
+  [tyot (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))
+   toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur)))
+   tyorivit-samat-alkutilanteessa? true
+   tehtavien-rivit-kaikki-hoitokaudet
+   :reaction (into []
+                   (group-by :tehtava
+                             (filter (fn [t]
+                                       (= (:sopimus t) (first @s/valittu-sopimusnumero))) @tyot)))
 
-        tyorivit-kaikki-hoitokaudet-alkutilanne :reaction (mapv (fn [[_ tehtavan-rivit]]
-                                                                  (map #(yks-hint-tyot/kannan-rivit->tyorivi %) (partition 2 tehtavan-rivit))
-                                                                  ) @tehtavien-rivit-kaikki-hoitokaudet)
-        tyorivit :reaction (let [valittu-hoitokausi @s/valittu-hoitokausi
-                                 alkupvm (first valittu-hoitokausi)
-                                 loppupvm (second valittu-hoitokausi)
-                                 tehtavien-rivit (group-by :tehtava
-                                                           (filter (fn [t]
-                                                                     (and (= (:sopimus t) (first @s/valittu-sopimusnumero))
-                                                                          (or (pvm/sama-pvm? (:alkupvm t) alkupvm)
-                                                                              (pvm/sama-pvm? (:loppupvm t) loppupvm)))) @tyot))
-                                 nelostason-tpt (map #(nth % 3) @toimenpiteet-ja-tehtavat)
-                                 kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
-                                 tyhjat-tyot (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
-                                                  (filter (fn [tp]
-                                                            (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
+   tyorivit-kaikki-hoitokaudet-alkutilanne
+   :reaction (mapv (fn [[_ tehtavan-rivit]]
+                     (map #(yks-hint-tyot/kannan-rivit->tyorivi %) (partition 2 tehtavan-rivit))
+                     ) @tehtavien-rivit-kaikki-hoitokaudet)
+   tyorivit
+   :reaction (let [valittu-hoitokausi @s/valittu-hoitokausi
+                   alkupvm (first valittu-hoitokausi)
+                   loppupvm (second valittu-hoitokausi)
+                   tehtavien-rivit (group-by :tehtava
+                                             (filter (fn [t]
+                                                       (and (= (:sopimus t) (first @s/valittu-sopimusnumero))
+                                                            (or (pvm/sama-pvm? (:alkupvm t) alkupvm)
+                                                                (pvm/sama-pvm? (:loppupvm t) loppupvm)))) @tyot))
+                   nelostason-tpt (map #(nth % 3) @toimenpiteet-ja-tehtavat)
+                   kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
+                   tyhjat-tyot (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
+                                    (filter (fn [tp]
+                                              (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
                              
 
-                             (when (not (empty? @tyorivit-kaikki-hoitokaudet-alkutilanne))
-                               (reset! tyorivit-samat-alkutilanteessa?
-                                       (s/hoitokausien-sisalto-sama? 
-                                         (s/jaljella-olevien-hoitokausien-rivit @tyorivit-kaikki-hoitokaudet-alkutilanne
-                                                                                (s/tulevat-hoitokaudet ur @s/valittu-hoitokausi)))))
+               (when (not (empty? @tyorivit-kaikki-hoitokaudet-alkutilanne))
+                 (reset! tyorivit-samat-alkutilanteessa?
+                         (s/hoitokausien-sisalto-sama? 
+                          (s/jaljella-olevien-hoitokausien-rivit @tyorivit-kaikki-hoitokaudet-alkutilanne
+                                                                 (s/tulevat-hoitokaudet ur @s/valittu-hoitokausi)))))
                              
-                             (ryhmittele-tehtavat
-                               @toimenpiteet-ja-tehtavat
-                               (vec (concat (mapv (fn [[_ tehtavan-rivit]]
-                                                    (yks-hint-tyot/kannan-rivit->tyorivi tehtavan-rivit)
-                                                    ) tehtavien-rivit)
-                                            tyhjat-tyot))))
-        kaikki-tyorivit-flattina :reaction (flatten @tyorivit-kaikki-hoitokaudet-alkutilanne)
-        kaikkien-hoitokausien-kustannukset :reaction (s/toiden-kustannusten-summa @kaikki-tyorivit-flattina)
-        valitun-hoitokauden-kustannukset :reaction (s/toiden-kustannusten-summa (filter
-                                                                                            #(pvm/sama-pvm?
-                                                                                              (:alkupvm %) (first @s/valittu-hoitokausi))
-                                                                                            @kaikki-tyorivit-flattina))
-        ]
+               (ryhmittele-tehtavat
+                @toimenpiteet-ja-tehtavat
+                (vec (concat (mapv (fn [[_ tehtavan-rivit]]
+                                     (yks-hint-tyot/kannan-rivit->tyorivi tehtavan-rivit)
+                                     ) tehtavien-rivit)
+                             tyhjat-tyot))))
+   kaikki-tyorivit-flattina :reaction (flatten @tyorivit-kaikki-hoitokaudet-alkutilanne)
+   kaikkien-hoitokausien-kustannukset :reaction (s/toiden-kustannusten-summa @kaikki-tyorivit-flattina)
+   valitun-hoitokauden-kustannukset
+   :reaction (s/toiden-kustannusten-summa (filter
+                                           #(pvm/sama-pvm?
+                                             (:alkupvm %) (first @s/valittu-hoitokausi))
+                                           @kaikki-tyorivit-flattina))
+   ]
 
-       (do
-         [:div.yksikkohintaiset-tyot
-          [grid/grid
-           {:otsikko        "Yksikköhintaiset työt"
-            :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-            :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                        (:id ur)
-                                                        #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
-                                                                        tyot %)
-                                                        :ei-mahdollinen)
-            :tunniste       :tehtava
-            :voi-lisata?    false
-            :voi-poistaa?   (constantly false)
-            :muokkaa-footer (fn [g]
-                              [raksiboksi "Tallenna tulevillekin hoitokausille"
-                               @tallenna-tuleville-hoitokausille?
-                               muuta-tallenna-tuleville-hoitokausille
-                               [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                               (and @tallenna-tuleville-hoitokausille?
-                                    (not @tyorivit-samat-alkutilanteessa?))])
-            }
+  (do
+    [:div.yksikkohintaiset-tyot
+     [grid/grid
+      {:otsikko        "Yksikköhintaiset työt"
+       :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+       :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
+                                                   (:id ur)
+                                                   #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
+                                                                   tyot %)
+                                                   :ei-mahdollinen)
+       :tunniste       :tehtava
+       :voi-lisata?    false
+       :voi-poistaa?   (constantly false)
+       :muokkaa-footer (fn [g]
+                         [raksiboksi "Tallenna tulevillekin hoitokausille"
+                          @tallenna-tuleville-hoitokausille?
+                          muuta-tallenna-tuleville-hoitokausille
+                          [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                          (and @tallenna-tuleville-hoitokausille?
+                               (not @tyorivit-samat-alkutilanteessa?))])
+       }
 
-           ;; sarakkeet
-           [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "25%"}
-            {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
-            {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
-            {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
-            {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
-            ]
-           @tyorivit
-           ]
+      ;; sarakkeet
+      [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "25%"}
+       {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
+       {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
+       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
+       {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
+       {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
+       ]
+      @tyorivit
+      ]
 
-          [:div.hoitokauden-kustannukset
-           [:div "Hoitokausi yhteensä "
-            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
-           [:div "Kaikki hoitokaudet yhteensä "
-            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]]))
+     [:div.hoitokauden-kustannukset
+      [:div "Hoitokausi yhteensä "
+       [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
+      [:div "Kaikki hoitokaudet yhteensä "
+       [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]]))
 
 
