@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
   
   :dependencies [[org.clojure/clojure "1.7.0-alpha6"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-3169"]
+                 [org.clojure/clojurescript "0.0-3191"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.4.0"]
