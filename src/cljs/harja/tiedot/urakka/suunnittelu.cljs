@@ -103,10 +103,10 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
 
 (defn toiden-kustannusten-summa
   "Laskee yhteen annettujen työrivien kustannusten summan"
-  [tyorivit]
-  (apply + (map (fn [tyorivi]
-                  (:yhteensa tyorivi))
-                tyorivit)))
+  ([tyorivit] (toiden-kustannusten-summa tyorivit :yhteensa))
+  ([tyorivit kentta]
+  (apply + (map kentta
+                tyorivit))))
 
 (defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
   (into []

@@ -71,7 +71,6 @@
         toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur)))
 
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
-
         sopimuksen-tyot-hoitokausittain
         :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero
                         sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
@@ -108,6 +107,24 @@
                     (if-not kopioi?
                       false
                       varoita?))
+        kaikki-sopimuksen-ja-tpin-rivit :reaction (let [sopimus-id (first @s/valittu-sopimusnumero)
+                                                 tpi-id (:tpi_id @valittu-toimenpide)]
+                                             (filter #(and
+                                                       (= sopimus-id (:sopimus %))
+                                                      (= tpi-id (:toimenpideinstanssi %)))
+                                                     @urakan-kok-hint-tyot))
+        kaikkien-hoitokausien-kustannukset
+        :reaction (s/toiden-kustannusten-summa
+                    @kaikki-sopimuksen-ja-tpin-rivit
+                    :summa)
+        valitun-hoitokauden-kustannukset
+        :reaction (s/toiden-kustannusten-summa (let [hk (first @s/valittu-hoitokausi)]
+                                                 (filter
+                                                   #(pvm/sama-pvm?
+                                                     (:alkupvm %) hk)
+                                                   @kaikki-sopimuksen-ja-tpin-rivit))
+                                               :summa)
+
         ]
 
        (do
@@ -121,8 +138,7 @@
                                  :valitse-fn #(reset! valittu-toimenpide %)
                                  :class      "alasveto"
                                  }
-                @toimenpiteet
-                ]]]
+                @toimenpiteet]]]
           [grid/grid
            {:otsikko        (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
             :tyhja          (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
@@ -149,6 +165,14 @@
             {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
             ]
            @tyorivit
-           ]]))
+           ]
+
+          [:div.hoitokauden-kustannukset
+           [:div "Toimenpiteen hoitokausi yhteensä "
+            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]
+            ]
+           [:div "Toimenpiteen kaikki hoitokaudet yhteensä "
+            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]
+            ]]]))
 
 
