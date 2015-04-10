@@ -31,7 +31,7 @@
            ;; PENDING: viestilläkin backdrop, ehkä joku drop shadow olisi riittävä?
            [:div.modal-backdrop.in {:style {:height @yleiset/korkeus}
                                     :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}]
-           [:div.viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
+           [:div.flash-viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
             [:div.alert {:class (when luokka
                                   (+bootstrap-alert-classes+ luokka))}
             viesti]]])
