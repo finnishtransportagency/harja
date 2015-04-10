@@ -4,6 +4,7 @@
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kokhint-tyot]
             [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]]
+            [harja.loki :refer [log]]
             [harja.pvm :refer [->pvm] :as pvm]))
 
 (defn hk-rivi
@@ -159,7 +160,24 @@
     (is (= (->pvm "30.09.2010") (:loppupvm (last kopioidut))))
     (is (every? #(= (:maara %) 66))) 
     ))
-    
+
+(deftest tietojen-kopiointi-tuleville-hoitokausille-kok-hint-tyot []
+         (let [urakka {:alkupvm  (pvm/hoitokauden-alkupvm 2005)
+                       :loppupvm (pvm/hoitokauden-loppupvm 2010)}
+               alkupvm (pvm/hoitokauden-alkupvm 2006)
+               loppupvm (pvm/hoitokauden-loppupvm 2007)
+               rivit [{:maksupvm (->pvm "15.02.2006")
+                       :alkupvm  alkupvm :loppupvm loppupvm ;;hoitokauden
+                       :kuukausi 2 :vuosi 2006
+                       :summa    62015.50}]
+               kopioidut (s/rivit-tulevillekin-kausille-kok-hint-tyot urakka
+                                                                      rivit
+                                                                      [alkupvm loppupvm])]
+           (is (= 4 (count kopioidut)))
+           (is (= (->pvm "15.02.2007") (:maksupvm (first kopioidut))))
+           (is (= (->pvm "15.02.2010") (:maksupvm (last kopioidut))))
+           (is (every? #(= (:kuukausi %) 2) kopioidut))
+           (is (every? #(= (:summa %) 62015.50) kopioidut))))
 
 (def +ryhmiteltava+ [{:alkupvm (pvm/hoitokauden-alkupvm 2005) :loppupvm (pvm/hoitokauden-loppupvm 2006) :id 1}
                      ;; 2006-2007 jätetään välistä
@@ -225,22 +243,6 @@
               (hk-rivi 2009 {:maara 50})])
             (hk 2008)))))
 
-                                 
-(deftest paivita-kopioidun-tyon-vuosi-testi-2 []
-  (let [rivi {
-    :vuosi 2013
-    :kuukausi 11
-    :alkupvm (pvm/hoitokauden-alkupvm 2006)
-    :loppupvm (pvm/hoitokauden-loppupvm 2007)}]
-    (is (= (:vuosi (kokhint-tyot/paivita-kopioidun-tyon-vuosi rivi)) 2006))))
-
-(deftest paivita-kopioidun-tyon-vuosi-testi-1 []
-  (let [rivi {
-    :vuosi 2013
-    :kuukausi 6
-    :alkupvm (pvm/hoitokauden-alkupvm 2003)
-    :loppupvm (pvm/hoitokauden-loppupvm 2004)}]
-    (is (= (:vuosi (kokhint-tyot/paivita-kopioidun-tyon-vuosi rivi)) 2004))))
 
 (deftest aseta-hoitokausi-testi-1 []
   (let [rivi {

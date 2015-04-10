@@ -8,14 +8,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn paivita-kopioidun-tyon-vuosi
-  "Päivittää tulevien hoitokausien vuosi-kentän arvon."
-  [rivi]
-  (let [tyon-kalenteri-vuosi (if (<= 10 (:kuukausi rivi) 12)
-                               (pvm/vuosi (:alkupvm rivi))
-                               (pvm/vuosi (:loppupvm rivi)))]
-    (assoc rivi :vuosi tyon-kalenteri-vuosi)))
-
 (defn aseta-hoitokausi [rivi]
   (let [alkupvm (if (<= 10 (:kuukausi rivi) 12)
                   (pvm/hoitokauden-alkupvm (:vuosi rivi))

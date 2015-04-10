@@ -115,3 +115,29 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
                          ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
                          (assoc rivi :alkupvm alku :loppupvm loppu)) rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
+
+
+;; fixme if you can, man. En saanut kohtuullisessa ajassa tätä generalisoitua
+;; siistiksi osaksi rivit-tulevillekin-kausille-funktiota
+(defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
+  (into []
+        (mapcat (fn [[alku loppu]]
+                  (map (fn [rivi]
+                         ;; maksupvm:n vuotta täytyy päivittää eikä se välttämättä ole sama kuin työn :vuosi
+                         (let [tyon-kalenteri-vuosi (if (<= 10 (:kuukausi rivi) 12)
+                                                      (pvm/vuosi alku)
+                                                      (pvm/vuosi loppu))
+                               maksupvmn-vuoden-erotus (if (:maksupvm rivi)
+                                                         (- (time/year (:maksupvm rivi)) (:vuosi rivi))
+                                                         0)
+                               uusi-maksupvm (if (:maksupvm rivi)
+                                               (pvm/luo-pvm (+ tyon-kalenteri-vuosi maksupvmn-vuoden-erotus)
+                                                            (- (time/month (:maksupvm rivi)) 1)
+                                                            (time/day (:maksupvm rivi)))
+                                               nil)]
+                           (assoc rivi :alkupvm alku
+                                       :loppupvm loppu
+                                       :vuosi tyon-kalenteri-vuosi
+                                       :maksupvm uusi-maksupvm)))
+                       rivit)))
+        (tulevat-hoitokaudet ur hoitokausi)))

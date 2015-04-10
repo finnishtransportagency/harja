@@ -14,6 +14,7 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
 
+            [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [cljs-time.core :as t]
@@ -24,6 +25,17 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
+(defn luo-tyhja-tyo [tpi hk kk sn]
+  (let [
+        alkupvm (first hk)
+        loppupvm (second hk)
+        tyon-kalenteri-vuosi (if (<= 10 kk 12)
+                               (pvm/vuosi alkupvm)
+                               (pvm/vuosi loppupvm))
+        rivi {:toimenpideinstanssi tpi, :summa nil :kuukausi kk :vuosi tyon-kalenteri-vuosi
+              :maksupvm nil :alkupvm alkupvm :loppupvm loppupvm :sopimus sn}]
+    rivi))
+
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [tallennettavat-hoitokaudet (if tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
@@ -31,8 +43,7 @@
             muuttuneet
             (into []
                   (if tuleville?
-                    (map #(kok-hint-tyot/paivita-kopioidun-tyon-vuosi %)
-                         (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi))
+                    (s/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
             res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
@@ -76,6 +87,16 @@
         valitun-toimenpiteen-ja-hoitokauden-tyot :reaction (let [valittu-tp-id (:id @valittu-toimenpide)]
                                                              (filter #(= valittu-tp-id (:toimenpide %))
                                                                      @valitun-hoitokauden-tyot))
+        tyorivit :reaction (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
+                                                             @valitun-toimenpiteen-ja-hoitokauden-tyot))
+                       tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
+                       tyhjat-tyot (map #(luo-tyhja-tyo (:tpi_id @valittu-toimenpide)
+                                                        @s/valittu-hoitokausi
+                                                        %
+                                                        (first @s/valittu-sopimusnumero))
+                                        tyhjat-kkt)]
+                             (vec (sort-by (juxt :vuosi :kuukausi)
+                                           (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot))))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? false
 
@@ -91,17 +112,17 @@
 
        (do
          [:div.kokonaishintaiset-tyot
-          [:div.alasvetovalikot
-           [:div.label-ja-alasveto
-            [:span.alasvedon-otsikko "Toimenpide"]
-            [alasvetovalinta {:valinta @valittu-toimenpide
-                              ;;\u2014 on väliviivan unikoodi
-                              :format-fn #(if % (str (:tpi_nimi %)) "Valitse")
-                              :valitse-fn #(reset! valittu-toimenpide %)
-                              :class "alasveto"
-                              }
-             @toimenpiteet
-             ]]]
+         [:div.alasvetovalikot
+              [:div.label-ja-alasveto
+               [:span.alasvedon-otsikko "Toimenpide"]
+               [alasvetovalinta {:valinta    @valittu-toimenpide
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn  #(if % (str (:tpi_nimi %)) "Valitse")
+                                 :valitse-fn #(reset! valittu-toimenpide %)
+                                 :class      "alasveto"
+                                 }
+                @toimenpiteet
+                ]]]
           [grid/grid
            {:otsikko        (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
             :tyhja          (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
@@ -125,9 +146,9 @@
            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
             {:otsikko "Summa" :nimi :summa :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea :leveys "25%"}
-            {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt pvm/pvm :leveys "25%"}
+            {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
             ]
-           @valitun-toimenpiteen-ja-hoitokauden-tyot
+           @tyorivit
            ]]))
 
 

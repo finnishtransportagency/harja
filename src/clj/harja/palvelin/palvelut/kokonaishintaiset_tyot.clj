@@ -58,18 +58,14 @@
                                 (let [params [(:summa tyo) (:maksupvm tyo) (:toimenpideinstanssi tyo)
                                               sopimusnumero (:vuosi tyo) (:kuukausi tyo)]]
                                   (if (not (tyot-kannassa (tyo-avain tyo)))
-                                   ;; insert
-                                   (do
-                                     (log/info "insert " tyo)
-                                     (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
-                                                                      (konv/sql-date (:maksupvm tyo))
+                                    ;; insert
+                                    (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
+                                                                     (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
+                                                                     (:toimenpideinstanssi tyo)
+                                                                     sopimusnumero (:vuosi tyo) (:kuukausi tyo))
+                                    ;;update
+                                    (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
+                                                                      (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
                                                                       (:toimenpideinstanssi tyo)
-                                                                      sopimusnumero (:vuosi tyo) (:kuukausi tyo)))
-                                   ;;update
-                                    (do
-                                      (log/info "update " tyo)
-                                      (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
-                                                                        (konv/sql-date (:maksupvm tyo))
-                                                                        (:toimenpideinstanssi tyo)
-                                                                        sopimusnumero (:vuosi tyo) (:kuukausi tyo)))))))
+                                                                      sopimusnumero (:vuosi tyo) (:kuukausi tyo))))))
                             (hae-urakan-kokonaishintaiset-tyot c user urakka-id)))
