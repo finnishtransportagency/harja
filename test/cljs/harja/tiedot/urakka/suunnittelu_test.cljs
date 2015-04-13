@@ -133,9 +133,18 @@
    ]
   )
 
-(deftest toiden-kustannusten-summa []
-         (is (= 150.001 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit+))) "toiden-kustannusten-summa" )
+(deftest toiden-kustannusten-summa-yks-hint-tyot []
+         (is (= 150.001 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit+)) "toiden-kustannusten-summa-yks-hint-tyot"))
 
+(def +monen-hoitokauden-tyorivit-kok-hint-tyot+
+  [{:vuosi 2015 :kuukausi 3 :summa 1000}
+   {:vuosi 2015 :kuukausi 4 :summa 200}
+   {:vuosi 2015 :kuukausi 5 :summa 30}
+   {:vuosi 2015 :kuukausi 6 :summa 5}])
+
+(deftest toiden-kustannusten-summa-kok-hint-tyot []
+         (is (= 1235 (s/toiden-kustannusten-summa +monen-hoitokauden-tyorivit-kok-hint-tyot+
+                                                  :summa)) "toiden-kustannusten-summa-kok-hint-tyot"))
 
 (deftest jaljella-olevien-hoitokausien-rivit []
   (let [kaudet (s/tulevat-hoitokaudet +testi-urakka-kaksi-vuotta+ {:alkupvm (pvm/hoitokauden-alkupvm 2006)
@@ -177,7 +186,9 @@
            (is (= (->pvm "15.02.2007") (:maksupvm (first kopioidut))))
            (is (= (->pvm "15.02.2010") (:maksupvm (last kopioidut))))
            (is (every? #(= (:kuukausi %) 2) kopioidut))
-           (is (every? #(= (:summa %) 62015.50) kopioidut))))
+           (is (every? #(= (:summa %) 62015.50) kopioidut))
+           (is (= 248062 (s/toiden-kustannusten-summa kopioidut
+                                                 :summa)))))
 
 (def +ryhmiteltava+ [{:alkupvm (pvm/hoitokauden-alkupvm 2005) :loppupvm (pvm/hoitokauden-loppupvm 2006) :id 1}
                      ;; 2006-2007 jätetään välistä
