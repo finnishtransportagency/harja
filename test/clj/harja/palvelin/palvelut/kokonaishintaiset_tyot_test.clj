@@ -80,7 +80,6 @@
                                                              (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                      :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja oulun-alueurakan-id))]
 
-    (log/info "tyot" kokonaishintaiset-tyot)
     (is (= (count kokonaishintaiset-tyot) oulun-alueurakan-toiden-lkm))
     (is (= (count kokonaishintaiset-tyot-kutsujana-urakoitsija) oulun-alueurakan-toiden-lkm))
     (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
