@@ -109,7 +109,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         [:button.btn.btn-default
          {:type "button"
           :disabled (if disabled "disabled" "")
-          :on-click #(do 
+          :on-click #(do
                        (swap! auki not)
                        nil)
           :on-key-down #(let [kc (.-keyCode %)]
@@ -139,14 +139,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                
                                   13 ;; enter
                                   (reset! auki false))))))}
-         [:span.valittu (format-fn valinta)] 
+         [:span.valittu (format-fn valinta)]
          " " [:span.caret]]
         [:ul.dropdown-menu
          (for [vaihtoehto vaihtoehdot]
            ^{:key (hash vaihtoehto)}
            [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                     (reset! auki false)
-                                                    ))])
+                                                    nil))])
          ]]))
 
    :body-klikkaus
