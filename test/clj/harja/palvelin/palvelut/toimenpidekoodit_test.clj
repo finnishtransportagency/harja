@@ -10,4 +10,6 @@
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
         user "harja"
         urakka-id 1]
-    (not (nil? (urakan-toimenpiteet/hae-urakan-toimenpiteet db user urakka-id)))))
+    (is (not (nil? (urakan-toimenpiteet/hae-urakan-toimenpiteet db user urakka-id))))
+	(is (= (:t3_nimi (first (urakan-toimenpiteet/hae-urakan-toimenpiteet db user urakka-id))) "Laaja toimenpide"))
+	(is (= (:tpi_nimi (first (urakan-toimenpiteet/hae-urakan-toimenpiteet db user urakka-id))) "Oulu Talvihoito TP"))))
