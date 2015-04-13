@@ -8,8 +8,6 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]))
 
-(def jarjestelma nil)
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -26,31 +24,8 @@
 
 
 
-  
 (use-fixtures :once jarjestelma-fixture)
 
-(defn oulun-urakan-urakoitsijan-urakkavastaava []
-  (let [oulun-alueurakan-id (ffirst (q jarjestelma (str "SELECT id 
-                                                        FROM urakka 
-                                                       WHERE nimi = 'Oulun alueurakka 2005-2010'")))]
-    {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava", 
-     :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin", 
-     :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"}, 
-     :urakkaroolit [{:urakka {:id oulun-alueurakan-id,
-                                   :nimi "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10}, 
-                                   :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}}, 
-                          :luotu nil, 
-                          :rooli "urakoitsijan urakan vastuuhenkilo"}]}))
-
-(defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
-    {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava", 
-     :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin", 
-     :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"}, 
-     :urakkaroolit [{:urakka {:id 234234324234, ;;eli ei ole oulun urakan ID
-                                   :nimi "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10}, 
-                                   :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}}, 
-                          :luotu nil, 
-                          :rooli "urakoitsijan urakan vastuuhenkilo"}]})
 
 
 ;; käyttää testidata.sql:stä tietoa
