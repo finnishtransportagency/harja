@@ -22,11 +22,14 @@
 tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
 rooleista."
   [kayttaja rooli]
-  (if (some (if (set? rooli)
-              rooli
-              #{rooli}) (:roolit kayttaja))
+  ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
+  (if (contains? (:roolit kayttaja) rooli-jarjestelmavastuuhenkilo)
+    true
+    (if (some (if (set? rooli)
+                rooli
+                #{rooli}) (:roolit kayttaja))
       true
-      false))
+      false)))
 
 (defn vaadi-rooli
     [kayttaja rooli]
