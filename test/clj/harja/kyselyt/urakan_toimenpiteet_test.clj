@@ -9,9 +9,10 @@
 
 (deftest hae-urakan-1-toimenpiteet-ja-tehtavat-tasot []
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
-         urakka-id 1]
-    (log/info (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-    (is (not (nil? (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))))
-    (is (= (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)) 4))
-    (is (= (:id (first (first (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))) 906)))
-    (is (= (:taso (first (first (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))) 1)))))
+         urakka-id 1
+         response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
+    (log/info response)
+    (is (not (nil? response)))
+    (is (= (count response) 4))
+    (is (= (:id (first (first response)) 906)))
+    (is (= (:taso (first (first response)) 1)))))
