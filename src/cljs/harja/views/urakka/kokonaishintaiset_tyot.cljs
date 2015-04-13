@@ -160,9 +160,12 @@
 
            ;; sarakkeet
            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-            {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-            {:otsikko "Summa" :nimi :summa :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea :leveys "25%"}
-            {:otsikko "Maksupvm" :nimi :maksupvm :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
+            {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
+             :tyyppi :numero :leveys "25%"}
+            {:otsikko "Summa" :nimi :summa :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea
+             :tyyppi :numero :leveys "25%"}
+            {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
+             :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
             ]
            @tyorivit
            ]

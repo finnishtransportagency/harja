@@ -156,8 +156,10 @@
 
 
 
-  
-(defmethod tee-kentta :pvm [_ data]
+
+;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
+;; halutaan näyttää ensin
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         teksti (atom (if-let [p @data]
@@ -169,26 +171,29 @@
         muuta! (fn [t]
                  (let [d (pvm/->pvm t)]
                    (reset! teksti t)
-                   (reset! data d)))
-        ]
+                   (reset! data d)))]
     (r/create-class
-     {:component-will-receive-props
-      (fn [this [_ _ data]]
-        (swap! teksti #(if-let [p @data]
+      {:component-will-receive-props
+       (fn [this [_ _ data]]
+         (swap! teksti #(if-let [p @data]
                          (pvm/pvm p)
                          %)))
-      
-      :reagent-render
-      (fn [_ data]
-        (let [nykyinen-pvm @data
-              nykyinen-teksti @teksti]
-          [:span {:on-click #(do (reset! auki true) nil)}
-           [:input.pvm {:value nykyinen-teksti
-                        :on-change #(muuta! (-> % .-target .-value))}]
-           (when @auki
-             [:div.aikavalinta
-              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                              (reset! data %)
-                                              (reset! teksti (pvm/pvm %)))
-                                :pvm nykyinen-pvm}]])]))})))
+
+       :reagent-render
+       (fn [_ data]
+         (let [nykyinen-pvm @data
+               nykyinen-teksti @teksti
+               pvm-tyhjana (or pvm-tyhjana (constantly nil))
+               naytettava-pvm (if (nil? nykyinen-pvm)
+                                (pvm-tyhjana rivi)
+                                nykyinen-pvm)]
+           [:span {:on-click #(do (reset! auki true) nil)}
+            [:input.pvm {:value     nykyinen-teksti
+                         :on-change #(muuta! (-> % .-target .-value))}]
+            (when @auki
+              [:div.aikavalinta
+               [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                               (reset! data %)
+                                               (reset! teksti (pvm/pvm %)))
+                                 :pvm     naytettava-pvm}]])]))})))
  

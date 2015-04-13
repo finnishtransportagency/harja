@@ -19,6 +19,8 @@
          (= (tc/to-long o) (tc/to-long other))))
   )
 
+(defn millisekunteina [pvm]
+  (tc/to-long pvm))
 
 (defn nyt []
   (DateTime.))

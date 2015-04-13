@@ -334,7 +334,8 @@ Optiot on mappi optioita:
                                                                         "parillinen"
                                                                         "pariton"))}
                                            (for [{:keys [nimi hae aseta fmt muokattava? tasaa] :as s} skeema]
-                                             (let [arvo (if hae
+                                             (let [s (assoc s :rivi rivi)
+                                                   arvo (if hae
                                                           (hae rivi)
                                                           (get rivi nimi))
                                                    kentan-virheet (get rivin-virheet nimi)
@@ -528,7 +529,8 @@ Optiot on mappi optioita:
                                                               "parillinen"
                                                               "pariton"))}
                                  (for [{:keys [nimi hae aseta fmt muokattava?] :as s} skeema]
-                                   (let [arvo (if hae
+                                   (let [s (assoc s :rivi rivi)
+                                         arvo (if hae
                                                 (hae rivi)
                                                 (get rivi nimi))
                                          kentan-virheet (get rivin-virheet nimi)]
