@@ -9,8 +9,8 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.205"]
-                 [com.cognitect/transit-clj "0.8.269"]
+                 [com.cognitect/transit-cljs "0.8.207"]
+                 [com.cognitect/transit-clj "0.8.271"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -50,11 +50,11 @@
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
-                 [binaryage/devtools "0.1.1"] ;; cljs data chrome inspectoriin
+                 [binaryage/devtools "0.2.0"] ;; cljs data chrome inspectoriin
                  
-                 [cljs-ajax "0.3.10"]
+                 [cljs-ajax "0.3.11"]
                  ;;[lively "0.2.0"]
-                 [figwheel "0.2.5"]
+                 [figwheel "0.2.6"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.1-0"]
@@ -91,7 +91,7 @@
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.2.5"]
+            [lein-figwheel "0.2.6"]
             [codox "0.8.11"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
