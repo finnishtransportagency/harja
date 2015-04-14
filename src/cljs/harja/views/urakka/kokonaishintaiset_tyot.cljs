@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta teksti-ja-nappi]]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -124,7 +124,8 @@
                                                      (:alkupvm %) hk)
                                                    @kaikki-sopimuksen-ja-tpin-rivit))
                                                :summa)
-
+        tarjoa-summien-kopiointia false
+        viimeisin-muokattu-rivi nil
         ]
 
        (do
@@ -147,15 +148,40 @@
                                                         #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
                                                                         urakan-kok-hint-tyot % @tuleville?)
                                                         :ei-mahdollinen)
-            :tunniste       #((juxt :tpi_nimi :sopimus :vuosi :kuukausi) %)
+            :tunniste       #((juxt :vuosi :kuukausi) %)
             :voi-lisata?    false
             :voi-poistaa?   (constantly false)
+            :muutos         (fn [g]
+                              (let [muuttunut-vuosi-kk (grid/hae-viimeisin-muokattu-id g)
+                                    rivit (grid/hae-muokkaustila g)
+                                    rivien-arvot (vals rivit)
+                                    muutettu-rivi (get rivit muuttunut-vuosi-kk)
+                                    muutettua-ed-vuosi-kk (pvm/hoitokauden-edellinen-vuosi-kk muuttunut-vuosi-kk)
+                                    muutettua-edeltava-rivi (get rivit muutettua-ed-vuosi-kk)]
+                                (reset! viimeisin-muokattu-rivi muutettu-rivi)
+                                (if (and
+                                      (= (:summa muutettu-rivi)
+                                         (:summa muutettua-edeltava-rivi))
+                                      (every? #(or
+                                                (= (:summa %) (:summa muutettu-rivi))
+                                                (= nil (:summa %)))
+                                              rivien-arvot)
+                                      (not (every? #(= (:summa %) (:summa muutettu-rivi)) rivien-arvot)))
+                                  (reset! tarjoa-summien-kopiointia true)
+                                  (reset! tarjoa-summien-kopiointia false))))
             :muokkaa-footer (fn [g]
-                              [raksiboksi "Tallenna tulevillekin hoitokausille"
-                               @tuleville?
-                               #(swap! tuleville? not)
-                               [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                               (and @tuleville? @varoita-ylikirjoituksesta?)])
+                              [:div.kok-hint-muokkaa-footer
+                               [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                @tuleville?
+                                #(swap! tuleville? not)
+                                [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                (and @tuleville? @varoita-ylikirjoituksesta?)]
+
+                               (when @tarjoa-summien-kopiointia
+                                 [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
+                                                                                                                (fn [rivi]
+                                                                                                                  (assoc rivi :summa (:summa @viimeisin-muokattu-rivi)))
+                                                                                                                                    [])])])
             }
 
            ;; sarakkeet
@@ -167,8 +193,7 @@
             {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
              :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
             ]
-           @tyorivit
-           ]
+           @tyorivit]
 
           [:div.hoitokauden-kustannukset
            [:div "Toimenpiteen hoitokausi yhteensä "

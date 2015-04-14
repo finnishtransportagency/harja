@@ -82,17 +82,27 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
+(defn teksti-ja-nappi [teksti napin-teksti toiminto]
+  [:span.teksti-ja-nappi
+   [:div.form-control.input-group
+   [:label.teksti-ja-nappi-label teksti]
+   [:button.btn.btn-sm.btn-primary
+    {:on-click  #(do
+                  (.stopPropagation %)
+                  (.preventDefault %)
+                  (toiminto)
+                  nil)
+     :type "button"}
+    napin-teksti]]])
 
 (defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
   [:span
-  [:div.raksiboksi.input-group
-   [:span.input-group-addon
-    [:input {:type "checkbox"
-             :checked (if checked "checked" "")
-             :on-change #(do (.preventDefault %) (toiminto))}]
-    ]
-   [:label.form-control {:on-click #(toiminto)}  teksti]]
-  
+   [:div.raksiboksi.input-group
+    [:span.input-group-addon
+     [:input {:type "checkbox"
+              :checked (if checked "checked" "")
+              :on-change #(do (.preventDefault %) (toiminto))}]]
+    [:label.form-control {:on-click #(toiminto)}  teksti]]
    (when nayta-infoteksti?
      info-teksti)])
 

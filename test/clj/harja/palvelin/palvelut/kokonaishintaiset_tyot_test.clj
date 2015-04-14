@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.kokonaishintaiset-tyot-test
   (:require [clojure.test :refer :all]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             
             [harja.kyselyt.urakat :as urk-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]

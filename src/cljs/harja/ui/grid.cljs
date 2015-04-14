@@ -77,7 +77,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (nollaa-historia! [g] "Nollaa muokkaushistorian, tämä on lähinnä muokkaus-grid versiota varten. Tällä voi kertoa gridille, että data on täysin muuttunut eikä muokkaushistoria ole enää relevantti.")
   ;; PENDING: oisko "jemmaa muokkaushistoria", jolla sen saisi avaimella talteen ja otettua takaisin?
-  
+  (hae-viimeisin-muokattu-id [g] "Hakee viimeisimmän muokatun id:n")
+  (muokkaa-rivit! [this funktio args] "Muokkaa kaikki taulukon rivit funktion avulla.")
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
 
@@ -102,6 +103,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (nollaa-historia! [_]
         (nollaa-historia! @gridi))
+
+      (hae-viimeisin-muokattu-id [_]
+        (hae-viimeisin-muokattu-id @gridi))
+
+      (muokkaa-rivit! [this funktio args]
+        (apply muokkaa-rivit! @gridi funktio args))
 
       GridKahva
       (aseta-grid [_ grid]
@@ -145,7 +152,8 @@ Optiot on mappi optioita:
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
         viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
-        
+        viimeisin-muokattu-id (atom nil)
+
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
                               (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
@@ -165,7 +173,16 @@ Optiot on mappi optioita:
                    @virheet)
                  (nollaa-historia! [_]
                    (reset! historia []))
-                 )
+                 (hae-viimeisin-muokattu-id [_]
+                   @viimeisin-muokattu-id)
+                 ;; todo: tämä ei ole oikein undo-pinossa
+                 (muokkaa-rivit! [this funktio args]
+                   (swap! muokatut (fn [muokatut]
+                                     (into {}
+                                           (map (fn [[id rivi]]
+                                                  [id (funktio rivi)])) muokatut)))
+                   (when muutos
+                     (muutos this))))
         
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
@@ -179,6 +196,7 @@ Optiot on mappi optioita:
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
+                       (reset! viimeisin-muokattu-id id)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)

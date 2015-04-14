@@ -112,4 +112,15 @@
   "Palauttaa annetun DateTimen vuoden, esim 2015."
   [pvm]
   (t/year pvm))
-  
+
+(defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
+  (let [vuosi (first vuosi-kk)
+        kk (second vuosi-kk)
+        ed-vuosi (if (= 1 kk)
+                   (dec vuosi)
+                   vuosi)
+        ed-kk (if (= 1 kk)
+                12
+                (dec kk))
+        ]
+    [ed-vuosi ed-kk]))
