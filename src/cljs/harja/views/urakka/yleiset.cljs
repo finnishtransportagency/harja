@@ -11,7 +11,7 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [cljs-time.core :as t]
-        
+            [harja.domain.roolit :as roolit]
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
@@ -70,11 +70,12 @@
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
+   kayttajat (<! (yht/hae-urakan-kayttajat (:id ur)))
    paivystajat (<! (yht/hae-urakan-paivystajat (:id ur)))
    yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))] 
 
   (do
-    (log "paivystajat: " (pr-str paivystajat))
+    (log "kayttajat: " @kayttajat)
     [:div
      [bs/panel {}
       "Yleiset tiedot" 
@@ -85,7 +86,19 @@
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
        "Tilaaja:" (:nimi (:hallintayksikko ur))
        "Urakoitsija:" (:nimi (:urakoitsija ur))]]
-        
+
+     [grid/grid
+      {:otsikko "Urakkaan liitetyt käyttäjät"
+       :tyhja "Ei urakkaan liitettyjä käyttäjiä."}
+      
+      [{:otsikko "Rooli" :nimi :rooli :fmt roolit/rooli->kuvaus :tyyppi :string :leveys "15%"}
+       {:otsikko "Organisaatio" :nimi :org :hae (comp :nimi :organisaatio) :tyyppi :string :leveys "15%"}
+       {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "25%"}
+       {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
+
+      @kayttajat]
+       
      [grid/grid 
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."

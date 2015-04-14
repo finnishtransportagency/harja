@@ -1,7 +1,7 @@
 (ns harja.palvelin.oikeudet
   "Kaikki palvelinpuolen käyttöoikeustarkistukset."
-   (:require
-            [taoensso.timbre :as log]))
+  (:require [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 
 (def rooli-jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")

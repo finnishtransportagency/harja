@@ -21,25 +21,13 @@
             [harja.loki :refer [log]]
             [harja.asiakas.tapahtumat :as t]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.roolit :refer [+rooli->kuvaus+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
 
-;; Tietokannan rooli enumin selvempi kuvaus
-(def +rooli->kuvaus+
-  {"jarjestelmavastuuhenkilo" "Järjestelmävastuuhenkilö"
-   "tilaajan kayttaja" " Tilaajan käyttäjä"
-   "urakanvalvoja" "Urakanvalvoja"
-   ;;"vaylamuodon vastuuhenkilo" "Väylämuodon vastuuhenkilö"
-   "hallintayksikon vastuuhenkilo" "Hallintayksikön vastuuhenkilö"
-   "liikennepäivystäjä" "Liikennepäivystäjä"
-   "tilaajan asiantuntija" "Tilaajan asiantuntija"
-   "tilaajan laadunvalvontakonsultti" "Tilaajan laadunvalvontakonsultti"
-   "urakoitsijan paakayttaja" "Urakoitsijan pääkäyttäjä"
-   "urakoitsijan urakan vastuuhenkilo" "Urakoitsijan urakan vastuuhenkilö"
-   "urakoitsijan kayttaja" "Urakoitsijan käyttäjä"
-   "urakoitsijan laatuvastaava" "Urakoitsijan laatuvastaava"})
+
 
 
 ;; Tällä hetkellä muokattava käyttäjä

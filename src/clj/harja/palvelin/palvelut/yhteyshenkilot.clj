@@ -6,14 +6,19 @@
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [clojure.java.jdbc :as jdbc]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+
+            [harja.palvelin.oikeudet :as oik]
+            [harja.kyselyt.konversio :as konv]))
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit
          tallenna-urakan-yhteyshenkilot
 
          hae-urakan-paivystajat
-         tallenna-urakan-paivystajat)
+         tallenna-urakan-paivystajat
+
+         hae-urakan-kayttajat)
 
 (defrecord Yhteyshenkilot []
   component/Lifecycle
@@ -33,7 +38,11 @@
                           (tallenna-urakan-yhteyshenkilot (:db this) user tiedot)))
       (julkaise-palvelu :tallenna-urakan-paivystajat
                         (fn [user tiedot]
-                          (tallenna-urakan-paivystajat (:db this) user tiedot))))
+                          (tallenna-urakan-paivystajat (:db this) user tiedot)))
+      (julkaise-palvelu :hae-urakan-kayttajat
+                        (fn [user urakka-id]
+                          (hae-urakan-kayttajat (:db this) user urakka-id))))
+
     
     this)
 
@@ -42,9 +51,17 @@
                :hae-yhteyshenkilotyypit
                :tallenna-urakan-yhteyshenkilot
                :hae-urakan-paivystajat
-               :tallenna-urakan-paivystajat]]
+               :tallenna-urakan-paivystajat
+               :hae-urakan-kayttajat]]
       (poista-palvelu (:http-palvelin this) p))
     this))
+
+(defn hae-urakan-kayttajat [db user urakka-id]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (map konv/alaviiva->rakenne)
+        (q/hae-urakan-kayttajat db urakka-id)))
+
 
 (defn hae-yhteyshenkilotyypit [db user]
   (into #{}

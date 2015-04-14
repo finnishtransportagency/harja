@@ -97,14 +97,14 @@
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id "dev"
-                        :source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
+                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
                         :compiler {:optimizations :none
                                    :source-map true
                                    ;;:preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"}}
                        {:id "test"
-                        :source-paths ["src/cljs" "src/cljs-dev" "test/cljs"]
+                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
                         :compiler {:output-to "target/cljs/test/test.js"
                                    :output-dir "target/cljs/test"
                                    :optimizations :none
@@ -115,7 +115,7 @@
                        
                        
                        {:id "prod"
-                        :source-paths ["src/cljs" "src/cljs-prod"]
+                        :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                         :compiler {:optimizations :advanced
                                    
                                    ;;:preamble ["reagent/react.min.js"]
@@ -139,7 +139,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "src/cljc"]
   :test-paths ["test/clj"]
   :aot :all
   :main harja.palvelin.main

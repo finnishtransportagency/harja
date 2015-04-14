@@ -18,6 +18,18 @@ SELECT p.id, p.vastuuhenkilo, p.varahenkilo, p.alku, p.loppu,
        LEFT JOIN organisaatio org ON y.organisaatio = org.id
  WHERE p.urakka = :urakka
 
+-- name: hae-urakan-kayttajat
+-- Hakee urakkaan linkitetyt oikeat käyttäjät
+SELECT kur.rooli, k.etunimi, k.sukunimi, k.puhelin, k.sahkoposti,
+       o.nimi as organisaatio_nimi   
+  FROM kayttaja_urakka_rooli kur
+       JOIN kayttaja k ON kur.kayttaja = k.id
+       JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE kur.urakka = :urakka
+   AND kur.poistettu = false AND k.poistettu = false;
+       
+       
+
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT(rooli) FROM yhteyshenkilo_urakka

@@ -28,7 +28,9 @@
                 "Sillanvalvoja" "Kelikeskus" "Tieliikennekeskus"]))
     ch))
 
-
+(defn hae-urakan-kayttajat [urakka-id]
+  (k/post! :hae-urakan-kayttajat urakka-id))
+                            
    
 (defn hae-urakan-paivystajat [urakka-id]
   (k/post! :hae-urakan-paivystajat urakka-id))
