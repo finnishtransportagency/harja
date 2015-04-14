@@ -67,22 +67,24 @@ Seuraavat optiot ovat mahdollisia:
            [:table.pvm-valinta
             [:tbody.pvm-kontrollit
              [:tr
-              [:td.pvm-edellinen-kuukausi {:on-click #(do (.preventDefault %)
-                                                          (swap! nayta
-                                                                 (fn [[vuosi kk]]
-                                                                   (if (= kk 0)
-                                                                     [(dec vuosi) 11]
-                                                                     [vuosi (dec kk)])))
-                                                          nil)}
+              [:td.pvm-edellinen-kuukausi.klikattava
+               {:on-click #(do (.preventDefault %)
+                               (swap! nayta
+                                      (fn [[vuosi kk]]
+                                        (if (= kk 0)
+                                          [(dec vuosi) 11]
+                                          [vuosi (dec kk)])))
+                               nil)}
                (ikonit/chevron-left)]
               [:td {:col-span 5} [:span.pvm-kuukausi (nth +kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
-              [:td.pvm-seuraava-kuukausi {:on-click #(do (.preventDefault %)
-                                                         (swap! nayta
-                                                                (fn [[vuosi kk]]
-                                                                  (if (= kk 11)
-                                                                    [(inc vuosi) 0]
-                                                                    [vuosi (inc kk)])))
-                                                         nil)}
+              [:td.pvm-seuraava-kuukausi.klikattava
+               {:on-click #(do (.preventDefault %)
+                               (swap! nayta
+                                      (fn [[vuosi kk]]
+                                        (if (= kk 11)
+                                          [(inc vuosi) 0]
+                                          [vuosi (inc kk)])))
+                               nil)}
                (ikonit/chevron-right)]]
              [:tr.pvm-viikonpaivat
               (for [paiva +paivat+]
@@ -95,11 +97,11 @@ Seuraavat optiot ovat mahdollisia:
                [:tr
                 (for [paiva paivat]
                   ^{:key (pvm/millisekunteina paiva)}
-                  [:td.pvm-paiva {:class    (when (and pvm
-                                                       (= (t/day paiva) (t/day pvm))
-                                                       (= (t/month paiva) (t/month pvm))
-                                                       (= (t/year paiva) (t/year pvm)))
-                                              "pvm-valittu")
+                  [:td.pvm-paiva.klikattava {:class (when (and pvm
+                                                               (= (t/day paiva) (t/day pvm))
+                                                               (= (t/month paiva) (t/month pvm))
+                                                               (= (t/year paiva) (t/year pvm)))
+                                                      "pvm-valittu")
 
                                   :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
                    (t/day paiva)])])]]))})))
