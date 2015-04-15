@@ -179,6 +179,9 @@
                                 (if (and
                                       (= (pvm/edellisen-kkn-vastaava-pvm (:maksupvm muutettu-rivi))
                                          (:maksupvm muutettua-edeltava-rivi))
+                                      ;; FIXME: tässä on bugi. Täytyy vielä varmistaa että
+                                      ;; 1) joka riville pätee rivin maksupvm = nil TAI maksupvm = oikein kopoitu maksupvm
+                                      ;; 2) lisäksi varmistettava ettei jokaisella rivillä ole jo oikein kopioitu maksupvm, tällöinkään ei saa tarjoa kopiointia
                                       (not (every? #(= (:maksupvm %) nil) rivien-arvot)))
                                   (reset! tarjoa-maksupaivien-kopiointia true)
                                   (reset! tarjoa-maksupaivien-kopiointia false))))
