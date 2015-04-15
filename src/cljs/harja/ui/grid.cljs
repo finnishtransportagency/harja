@@ -179,8 +179,9 @@ Optiot on mappi optioita:
                  (muokkaa-rivit! [this funktio args]
                    (swap! muokatut (fn [muokatut]
                                      (into {}
-                                           (map (fn [[id rivi]]
-                                                  [id (funktio rivi)])) muokatut)))
+                                           (map (juxt (or tunniste :id) identity))
+                                           (apply funktio (vals muokatut) args))))
+
                    (when muutos
                      (muutos this))))
         

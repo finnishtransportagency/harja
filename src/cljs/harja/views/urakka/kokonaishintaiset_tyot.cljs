@@ -25,6 +25,9 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
+(defn indeksi [kokoelma itemi]
+  (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
+
 (defn luo-tyhja-tyo [tpi hk kk sn]
   (let [
         alkupvm (first hk)
@@ -160,6 +163,7 @@
                                     muutettua-ed-vuosi-kk (pvm/hoitokauden-edellinen-vuosi-kk muuttunut-vuosi-kk)
                                     muutettua-edeltava-rivi (get rivit muutettua-ed-vuosi-kk)]
                                 (reset! viimeisin-muokattu-rivi muutettu-rivi)
+                                ;; summan kopiointi
                                 (if (and
                                       (= (:summa muutettu-rivi)
                                          (:summa muutettua-edeltava-rivi))
@@ -170,12 +174,14 @@
                                       (not (every? #(= (:summa %) (:summa muutettu-rivi)) rivien-arvot)))
                                   (reset! tarjoa-summien-kopiointia true)
                                   (reset! tarjoa-summien-kopiointia false))
+
+                                ;; maksupvm:n kopiointi
                                 (if (and
-                                        (pvm/kuukautta-myohempi? (:maksupvm muutettua-edeltava-rivi) (:maksupvm muutettu-rivi))
-                                        (not (every? #(= (:maksupvm %) nil) rivien-arvot)))
-                                        ; TODO Tarkista etteivät ole jo järjestyksessä
-                                    (reset! tarjoa-maksupaivien-kopiointia true)
-                                    (reset! tarjoa-maksupaivien-kopiointia false))))
+                                      (= (pvm/edellisen-kkn-vastaava-pvm (:maksupvm muutettu-rivi))
+                                         (:maksupvm muutettua-edeltava-rivi))
+                                      (not (every? #(= (:maksupvm %) nil) rivien-arvot)))
+                                  (reset! tarjoa-maksupaivien-kopiointia true)
+                                  (reset! tarjoa-maksupaivien-kopiointia false))))
             :muokkaa-footer (fn [g]
                               [:div.kok-hint-muokkaa-footer
                                [raksiboksi "Tallenna tulevillekin hoitokausille"
@@ -185,16 +191,27 @@
                                 (and @tuleville? @varoita-ylikirjoituksesta?)]
 
                                (when @tarjoa-summien-kopiointia
-                                   [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
-                                                                                                                (fn [rivi]
-                                                                                                                  (assoc rivi :summa (:summa @viimeisin-muokattu-rivi)))
-                                                                                                                                    [])])
+                                 [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?"
+                                  "Kopioi"
+                                  #(grid/muokkaa-rivit! g
+                                                        (fn [rivit]
+                                                          (map (fn [rivi]
+                                                                 (assoc rivi :summa (:summa @viimeisin-muokattu-rivi)))
+                                                               rivit))
+                                                        [])])
                                (when @tarjoa-maksupaivien-kopiointia
-                                   [teksti-ja-nappi "Haluatko kopioida saman maksupäivän joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
-                                                                                                                       (fn [rivi]
-                                                                                                                           ; TODO Incrementoi kuukautta jotenkin täällä (ja aloita vasta muokatulta riviltä)?
-                                                                                                                           (assoc rivi :maksupvm (:maksupvm @viimeisin-muokattu-rivi)))
-                                                                                                                       [])])])
+                                 [teksti-ja-nappi "Haluatko kopioida saman maksupäivän joka kuukaudelle?"
+                                  "Kopioi"
+                                  #(grid/muokkaa-rivit! g
+                                                        (fn [rivit]
+                                                          (let [rivit-aikajarjestyksessa (sort-by (juxt :vuosi :kuukausi) rivit)
+                                                                valitun-indeksi (indeksi rivit-aikajarjestyksessa @viimeisin-muokattu-rivi)]
+                                                            (map-indexed (fn [idx rivi]
+                                                                           (assoc rivi
+                                                                             :maksupvm (t/plus (:maksupvm @viimeisin-muokattu-rivi)
+                                                                                               (t/months (- idx valitun-indeksi)))))
+                                                                         rivit-aikajarjestyksessa)))
+                                                        [])])])
             }
 
            ;; sarakkeet

@@ -83,10 +83,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
 (defn teksti-ja-nappi [teksti napin-teksti toiminto]
-  [:span.teksti-ja-nappi
+  [:div.teksti-ja-nappi
    [:div.form-control.input-group
    [:label.teksti-ja-nappi-label teksti]
-   [:button.btn.btn-sm.btn-primary
+   [:button.btn.btn-sm.btn-primary.pull-right
     {:on-click  #(do
                   (.stopPropagation %)
                   (.preventDefault %)
