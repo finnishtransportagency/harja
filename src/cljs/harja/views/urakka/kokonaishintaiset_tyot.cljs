@@ -125,6 +125,7 @@
                                                    @kaikki-sopimuksen-ja-tpin-rivit))
                                                :summa)
         tarjoa-summien-kopiointia false
+        tarjoa-maksupaivien-kopiointia false
         viimeisin-muokattu-rivi nil
         ]
 
@@ -168,7 +169,13 @@
                                               rivien-arvot)
                                       (not (every? #(= (:summa %) (:summa muutettu-rivi)) rivien-arvot)))
                                   (reset! tarjoa-summien-kopiointia true)
-                                  (reset! tarjoa-summien-kopiointia false))))
+                                  (reset! tarjoa-summien-kopiointia false))
+                                (if (and
+                                        (pvm/kuukautta-myohempi? (:maksupvm muutettua-edeltava-rivi) (:maksupvm muutettu-rivi))
+                                        (not (every? #(= (:maksupvm %) nil) rivien-arvot)))
+                                        ; TODO Tarkista etteivät ole jo järjestyksessä
+                                    (reset! tarjoa-maksupaivien-kopiointia true)
+                                    (reset! tarjoa-maksupaivien-kopiointia false))))
             :muokkaa-footer (fn [g]
                               [:div.kok-hint-muokkaa-footer
                                [raksiboksi "Tallenna tulevillekin hoitokausille"
@@ -178,10 +185,16 @@
                                 (and @tuleville? @varoita-ylikirjoituksesta?)]
 
                                (when @tarjoa-summien-kopiointia
-                                 [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
+                                   [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
                                                                                                                 (fn [rivi]
                                                                                                                   (assoc rivi :summa (:summa @viimeisin-muokattu-rivi)))
-                                                                                                                                    [])])])
+                                                                                                                                    [])])
+                               (when @tarjoa-maksupaivien-kopiointia
+                                   [teksti-ja-nappi "Haluatko kopioida saman maksupäivän joka kuukaudelle?" "Kopioi" #(grid/muokkaa-rivit! g
+                                                                                                                       (fn [rivi]
+                                                                                                                           ; TODO Incrementoi kuukautta jotenkin täällä (ja aloita vasta muokatulta riviltä)?
+                                                                                                                           (assoc rivi :maksupvm (:maksupvm @viimeisin-muokattu-rivi)))
+                                                                                                                       [])])])
             }
 
            ;; sarakkeet

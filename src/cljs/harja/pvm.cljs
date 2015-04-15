@@ -113,6 +113,18 @@
   [pvm]
   (t/year pvm))
 
+(defn kuukautta-myohempi? [eka toka]
+  "Palauttaa true jos toisen argumentin pvm on kuukautta myöhempi"
+  (and (or
+         (and (< (t/month eka) 12) (= (t/month toka) (+ (t/month eka) 1)))
+         (and (= (t/month eka) 12) (= (t/month toka) 1)))
+       (= (t/day eka) (t/day toka))))
+
+(defn lisaa-kuukausi [pvm]
+  (if (< (t/month pvm) 12)
+    (luo-pvm (t/year pvm) (+ (t/month pvm) 1) (t/day pvm))
+    (luo-pvm (+ (t/year pvm) 1) 0 (t/day pvm))))
+
 (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
   (let [vuosi (first vuosi-kk)
         kk (second vuosi-kk)
