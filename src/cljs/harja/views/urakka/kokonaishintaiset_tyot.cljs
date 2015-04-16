@@ -178,8 +178,8 @@
 
                                   ;; maksupvm:n kopiointi
                                   (if (and
-                                         (= (pvm/edellisen-kkn-vastaava-pvm (:maksupvm muutettu-rivi))
-                                            (:maksupvm muutettua-edeltava-rivi))
+                                        (= (:maksupvm muutettu-rivi)
+                                           (t/plus (:maksupvm muutettua-edeltava-rivi) (t/months 1)))
                                          (every? #(= true %)
                                                  (map-indexed (fn [idx rivi]
                                                                   (or

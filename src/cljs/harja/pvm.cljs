@@ -113,13 +113,6 @@
   [pvm]
   (t/year pvm))
 
-
-;; fixme: käytä jotain (cljs-time?) -kirjastoa joka osaa hanskata kunkin kk:n viim. päivän
-(defn edellisen-kkn-vastaava-pvm [pvm]
-  (if (= (t/month pvm) 1)
-    (luo-pvm (- (t/year pvm) 1) 11 (t/day pvm))
-    (luo-pvm (t/year pvm) (- (t/month pvm) 2) (t/day pvm))))
-
 (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
   (let [vuosi (first vuosi-kk)
         kk (second vuosi-kk)
