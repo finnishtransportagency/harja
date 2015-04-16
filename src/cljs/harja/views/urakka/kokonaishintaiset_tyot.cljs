@@ -186,15 +186,13 @@
                                                                       (nil? (:maksupvm rivi))
                                                                       (=
                                                                           (:maksupvm rivi)
-                                                                          (t/plus (:maksupvm muutettu-rivi)
-                                                                                             (t/months (- idx valitun-indeksi))))))
+                                                                          (t/plus (:maksupvm muutettu-rivi) (t/months (- idx valitun-indeksi))))))
                                                               rivien-arvot))
                                          (not (every? #(= true %)
                                               (map-indexed (fn [idx rivi]
                                                                (=
                                                                    (:maksupvm rivi)
-                                                                   (t/plus (:maksupvm muutettu-rivi)
-                                                                                      (t/months (- idx valitun-indeksi)))))
+                                                                   (t/plus (:maksupvm muutettu-rivi) (t/months (- idx valitun-indeksi)))))
                                                             rivien-arvot))))
                                           (reset! tarjoa-maksupaivien-kopiointia true)
                                           (reset! tarjoa-maksupaivien-kopiointia false))))
@@ -242,10 +240,10 @@
            @tyorivit]
 
           [:div.hoitokauden-kustannukset
-           [:div "Toimenpiteen hoitokausi yhteensä "
+           [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
             [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]
             ]
-           [:div "Toimenpiteen kaikki hoitokaudet yhteensä "
+           [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
             [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]
             ]]]))
 

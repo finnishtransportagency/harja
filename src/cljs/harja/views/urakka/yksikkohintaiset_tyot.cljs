@@ -149,9 +149,9 @@
       ]
 
      [:div.hoitokauden-kustannukset
-      [:div "Hoitokausi yhteensä "
+      [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
        [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
-      [:div "Kaikki hoitokaudet yhteensä "
+      [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
        [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]]))
 
 
