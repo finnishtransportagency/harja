@@ -163,10 +163,6 @@
                                     muutettua-ed-vuosi-kk (pvm/hoitokauden-edellinen-vuosi-kk muuttunut-vuosi-kk)
                                     muutettua-edeltava-rivi (get rivit muutettua-ed-vuosi-kk)
                                     valitun-indeksi (indeksi rivien-arvot muutettu-rivi)]
-                                  (log "valitun indeksi" (pr-str valitun-indeksi))
-                                  (log "rivien arvot" (pr-str rivien-arvot))
-                                  (log "muutetettu rivi" (pr-str muutettu-rivi))
-                                  (log "työrivit" (pr-str @tyorivit))
                                   (reset! viimeisin-muokattu-rivi muutettu-rivi)
                                   ;; summan kopiointi
                                   (if (and
@@ -174,7 +170,7 @@
                                              (:summa muutettua-edeltava-rivi))
                                           (every? #(or
                                                       (= (:summa %) (:summa muutettu-rivi))
-                                                      (= nil (:summa %)))
+                                                      (nil? (:summa %)))
                                                   rivien-arvot)
                                           (not (every? #(= (:summa %) (:summa muutettu-rivi)) rivien-arvot)))
                                       (reset! tarjoa-summien-kopiointia true)
@@ -182,24 +178,24 @@
 
                                   ;; maksupvm:n kopiointi
                                   (if (and
-                                          (= (pvm/edellisen-kkn-vastaava-pvm (:maksupvm muutettu-rivi))
-                                             (:maksupvm muutettua-edeltava-rivi))
-                                          (or
-                                              (every? #(= true %)
-                                                      (map-indexed (fn [idx rivi]
-                                                                       (or
-                                                                           (= nil  (:maksupvm (t/plus (:maksupvm muutettu-rivi)
-                                                                                                      (t/months (- idx valitun-indeksi)))))
-                                                                           (=
-                                                                               (:maksupvm muutettu-rivi)
-                                                                               (:maksupvm (t/plus (:maksupvm muutettu-rivi)
-                                                                                                  (t/months (- idx valitun-indeksi)))))
-                                                                           ))
-                                                                       rivien-arvot)
-                                                      ))
-                                          ;;FIXME: tähän vielä onko kaikkien sisältö jo oikea
-                                           )
-                                              ;; 2) lisäksi varmistettava ettei jokaisella rivillä ole jo oikein kopioitu maksupvm, tällöinkään ei saa tarjoa kopiointi
+                                         (= (pvm/edellisen-kkn-vastaava-pvm (:maksupvm muutettu-rivi))
+                                            (:maksupvm muutettua-edeltava-rivi))
+                                         (every? #(= true %)
+                                                 (map-indexed (fn [idx rivi]
+                                                                  (or
+                                                                      (nil? (:maksupvm rivi))
+                                                                      (=
+                                                                          (:maksupvm rivi)
+                                                                          (t/plus (:maksupvm muutettu-rivi)
+                                                                                             (t/months (- idx valitun-indeksi))))))
+                                                              rivien-arvot))
+                                         (not (every? #(= true %)
+                                              (map-indexed (fn [idx rivi]
+                                                               (=
+                                                                   (:maksupvm rivi)
+                                                                   (t/plus (:maksupvm muutettu-rivi)
+                                                                                      (t/months (- idx valitun-indeksi)))))
+                                                            rivien-arvot))))
                                           (reset! tarjoa-maksupaivien-kopiointia true)
                                           (reset! tarjoa-maksupaivien-kopiointia false))))
                               :muokkaa-footer (fn [g]
