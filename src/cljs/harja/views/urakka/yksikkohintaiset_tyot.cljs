@@ -36,7 +36,6 @@
                                          valittu-hoitokausi)
             muuttuneet
             (into []
-                  ;; FIXME: jossain pitää vielä suodattaa pois ne joihin ei käyttöliittymässä koskettu
                   (if @tallenna-tuleville-hoitokausille?
                     (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
@@ -53,10 +52,12 @@
   "Ryhmittelee 4. tason tehtävät. Lisää väliotsikot eri tehtävien väliin"
   [toimenpiteet-tasoittain tyorivit]
   (let [otsikko (fn [{:keys [tehtava]}]
-                  (some (fn [[t1 t2 t3 t4]]
-                          (when (= (:id t4) tehtava)
-                            (str (:nimi t2) " / " (:nimi t3))))
-                        toimenpiteet-tasoittain))
+                  (or
+                    (some (fn [[t1 t2 t3 t4]]
+                           (when (= (:id t4) tehtava)
+                             (str (:nimi t2) " / " (:nimi t3))))
+                         toimenpiteet-tasoittain)
+                    "Muut tehtävät"))
         otsikon-mukaan (group-by otsikko tyorivit)]
     (mapcat (fn [[otsikko rivit]]
               (concat [(grid/otsikko otsikko)] rivit))
