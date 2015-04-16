@@ -179,11 +179,11 @@
             {:otsikko "Summa" :nimi :summa :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea
              :tyyppi :numero :leveys "25%"
              :tayta-alas? #(not (nil? %))
-             :tayta-tooltip "Haluatko kopioida saman summan tuleville kuukausille?"}
+             :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
             {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
              :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"
              :tayta-alas? #(not (nil? %))
-             :tayta-tooltip "Haluatko kopioida saman maksupäivän tuleville kuukausille?"
+             :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
              :tayta-fn (fn [lahtorivi tama-rivi]
                          ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
                          ;; ja tehdään vastaavalla erotuksella oleva muutos
@@ -205,8 +205,9 @@
                            
                            (let [maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
                                                   (t/months kk-ero))
-                                 maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) p)]
-                             (log "ALKU " (pvm/pvm maksupvm) ", kk-ero: " kk-ero, ", tämän maksu-kk: " (pvm/pvm maksu-kk) ",  tämän maksu pvm: " (pvm/pvm maksu-pvm)) 
+                                 paivia (t/number-of-days-in-the-month maksu-kk)
+                                 maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
+                             
                              (assoc tama-rivi :maksupvm maksu-pvm))))
                               
                          }

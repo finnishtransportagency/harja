@@ -168,24 +168,24 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 
           ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
-          
           (when-let [tayta-alas (:tayta-alas? s)]
             (when (and (= fokus [id (:nimi s)])
                        (tayta-alas arvo)
-
+                       
                        ;; Sallitaan täyttö, vain jos kaikki tulevien arvot ovat tyhjiä
                        (every? str/blank? (map hae tulevat-rivit)))
               
               [:div {:class (if (= :oikea (:tasaa s))
-                                      "pull-left"
-                                      "pull-right")}
+                              "pull-left"
+                              "pull-right")}
                [:div {:style {:position "absolute" :display "inline-block"}}
                 
-                [:button.btn.btn-sm.btn-primary {:style {:position "absolute" :top -2
+                [:button.btn.btn-sm.btn-primary {:title (:tayta-tooltip s)
+                                                 :style {:position "absolute" :top -2
                                                          :left (when (= :oikea (:tasaa s))
                                                                  0)
                                                          :right (when-not (= :oikea (:tasaa s))
-                                                                 "100%")}
+                                                                  "100%")}
                                                  
                                                  :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
                  "Täytä " (ikonit/arrow-down)]]]))
@@ -281,7 +281,7 @@ Optiot on mappi optioita:
                    (reset! historia []))
                  (hae-viimeisin-muokattu-id [_]
                    @viimeisin-muokattu-id)
-                 ;; todo: tämä ei ole oikein undo-pinossa
+
                  (muokkaa-rivit! [this funktio args]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
