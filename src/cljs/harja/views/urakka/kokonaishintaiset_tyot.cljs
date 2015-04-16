@@ -73,7 +73,7 @@
        [urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot (:id ur)))
         toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur)))
 
-        ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
+        ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
         sopimuksen-tyot-hoitokausittain
         :reaction (let [[sopimus-id _] @s/valittu-sopimusnumero
                         sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
@@ -133,6 +133,7 @@
         ]
 
        (do
+         (reset! tuleville? false)
          [:div.kokonaishintaiset-tyot
          [:div.alasvetovalikot
               [:div.label-ja-alasveto

@@ -24,19 +24,15 @@
                    [harja.ui.yleiset :refer [deftk]]))
 
 
-(def tallenna-tuleville-hoitokausille? (atom false))
-
-(defn muuta-tallenna-tuleville-hoitokausille []
-  (reset! tallenna-tuleville-hoitokausille? (not @tallenna-tuleville-hoitokausille?)))
-
+(def tuleville? (atom false))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
-  (go (let [tallennettavat-hoitokaudet (if @tallenna-tuleville-hoitokausille?
+  (go (let [tallennettavat-hoitokaudet (if @tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
             (into []
-                  (if @tallenna-tuleville-hoitokausille?
+                  (if @tuleville?
                     (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
@@ -117,6 +113,7 @@
    ]
 
   (do
+    (reset! tuleville? false)
     [:div.yksikkohintaiset-tyot
      [:div.hoitokauden-kustannukset
       [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
@@ -137,10 +134,10 @@
        :voi-poistaa?   (constantly false)
        :muokkaa-footer (fn [g]
                          [raksiboksi "Tallenna tulevillekin hoitokausille"
-                          @tallenna-tuleville-hoitokausille?
-                          muuta-tallenna-tuleville-hoitokausille
+                          @tuleville?
+                          #(swap! tuleville? not)
                           [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                          (and @tallenna-tuleville-hoitokausille?
+                          (and @tuleville?
                                (not @tyorivit-samat-alkutilanteessa?))])
        }
 
