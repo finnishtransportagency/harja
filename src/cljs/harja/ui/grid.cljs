@@ -9,8 +9,11 @@
             [harja.ui.kentat :refer [tee-kentta]]
 
             [cljs.core.async :refer [<! put! chan]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [schema.core :as s :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
 
 (defrecord Otsikko [teksti])
 
@@ -114,8 +117,62 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (aseta-grid [_ grid]
         (reset! gridi grid)))))
 
-      
-  
+
+(defn- muokkaus-rivi [{:keys [id muokkaa! luokka rivin-virheet voi-poistaa?]} skeema rivi]
+  [:tr.muokataan {:class luokka}
+   (for [{:keys [nimi hae aseta fmt muokattava? tasaa] :as s} skeema]
+     (let [s (assoc s :rivi rivi)
+           arvo (if hae
+                  (hae rivi)
+                  (get rivi nimi))
+           kentan-virheet (get rivin-virheet nimi)
+           tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")]
+       (if (or (nil? muokattava?) (muokattava? rivi))
+         ^{:key (str nimi)}
+         [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
+                                           "has-error"))}
+          (when-not (empty? kentan-virheet)
+            [:div.virheet
+             [:div.virhe
+              (for [v kentan-virheet]
+                ^{:key (hash v)}
+                [:span v])]])
+
+          ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
+          ;;[:button.btn.btn-sm.pull-left {:style {:position "relative" :left -40}
+          ;;                               :on-click #(js/alert "kopsitaan")}
+          ;; (ikonit/pencil) (ikonit/arrow-down)]
+                                                  
+          [tee-kentta s (r/wrap
+                         arvo
+                         (fn [uusi]
+                           (if aseta
+                             (muokkaa! id (fn [rivi]
+                                            (aseta rivi uusi)))
+                             (muokkaa! id assoc nimi uusi))))]]
+         ^{:key (str nimi)}
+         [:td {:class tasaus-luokka}
+          ((or fmt str) (if hae
+                          (hae rivi)
+                          (get rivi nimi)))])))
+   [:td.toiminnot
+    (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
+      [:span.klikattava {:on-click #(do (.preventDefault %)
+                                        (muokkaa! id assoc :poistettu true))}
+       (ikonit/trash)])]])
+
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu]} skeema rivi]
+  [:tr {:class luokka
+        :on-click (when rivi-klikattu
+                    #(rivi-klikattu rivi))}
+   (for [{:keys [nimi hae fmt tasaa]} skeema]
+     ^{:key (str nimi)}
+     [:td {:class
+           (if (= tasaa :oikea) "tasaa-oikealle" "")}
+      ((or fmt str) (if hae
+                      (hae rivi)
+                      (get rivi nimi)))])])
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -349,43 +406,14 @@ Optiot on mappi optioita:
                                             rivin-virheet (get kaikki-virheet id)]
                                         (when-not (:poistettu rivi)
                                           ^{:key id}
-                                          [:tr.muokataan {:class (str (if (even? i)
-                                                                        "parillinen"
-                                                                        "pariton"))}
-                                           (for [{:keys [nimi hae aseta fmt muokattava? tasaa] :as s} skeema]
-                                             (let [s (assoc s :rivi rivi)
-                                                   arvo (if hae
-                                                          (hae rivi)
-                                                          (get rivi nimi))
-                                                   kentan-virheet (get rivin-virheet nimi)
-                                                   tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")]
-                                               (if (or (nil? muokattava?) (muokattava? rivi))
-                                                 ^{:key (str nimi)}
-                                                 [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
-                                                                                   "has-error"))}
-                                                  (when-not (empty? kentan-virheet)
-                                                    [:div.virheet
-                                                     [:div.virhe
-                                                      (for [v kentan-virheet]
-                                                        ^{:key (hash v)}
-                                                        [:span v])]])
-                                                  [tee-kentta s (r/wrap
-                                                                  arvo
-                                                                  (fn [uusi]
-                                                                    (if aseta
-                                                                      (muokkaa! id (fn [rivi]
-                                                                                     (aseta rivi uusi)))
-                                                                      (muokkaa! id assoc nimi uusi))))]]
-                                                 ^{:key (str nimi)}
-                                                 [:td {:class tasaus-luokka}
-                                                  ((or fmt str) (if hae
-                                                                  (hae rivi)
-                                                                  (get rivi nimi)))])))
-                                           [:td.toiminnot
-                                            (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-                                              [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                                (muokkaa! id assoc :poistettu true))}
-                                               (ikonit/trash)])]]))))
+                                          [muokkaus-rivi {:muokkaa! muokkaa!
+                                                          :luokka (str (if (even? i)
+                                                                         "parillinen"
+                                                                         "pariton"))
+                                                          :id id
+                                                          :rivin-virheet rivin-virheet
+                                                          :voi-poistaa? voi-poistaa?}
+                                           skeema rivi]))))
                                   jarjestys)))))
 
                    ;; Näyttömuoto
@@ -401,18 +429,11 @@ Optiot on mappi optioita:
                                       [:h5 (:teksti rivi)]]]
 
                                     ^{:key ((or tunniste :id) rivi)}
-                                    [:tr {:class    (str (if (even? i) "parillinen" "pariton")
-                                                         (when rivi-klikattu
-                                                           " klikattava"))
-                                          :on-click (when rivi-klikattu
-                                                      #(rivi-klikattu rivi))}
-                                     (for [{:keys [nimi hae fmt tasaa]} skeema]
-                                       ^{:key (str nimi)}
-                                       [:td {:class
-                                             (if (= tasaa :oikea) "tasaa-oikealle" "")}
-                                        ((or fmt str) (if hae
-                                                            (hae rivi)
-                                                            (get rivi nimi)))])]))
+                                    [naytto-rivi {:luokka (str (if (even? i) "parillinen" "pariton")
+                                                               (when rivi-klikattu
+                                                                 " klikattava"))
+                                                  :rivi-klikattu rivi-klikattu}
+                                     skeema rivi]))
                                 rivit)))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])
