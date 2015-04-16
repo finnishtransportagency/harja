@@ -144,6 +144,13 @@
                                  :class      "alasveto"
                                  }
                 @toimenpiteet]]]
+          [:div.hoitokauden-kustannukset
+           [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
+            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]
+            ]
+           [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
+            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]
+            ]]
           [grid/grid
            {:otsikko      (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
             :tyhja        (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
@@ -237,14 +244,6 @@
             {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
              :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
             ]
-           @tyorivit]
-
-          [:div.hoitokauden-kustannukset
-           [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
-            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]
-            ]
-           [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
-            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]
-            ]]]))
+           @tyorivit]]))
 
 

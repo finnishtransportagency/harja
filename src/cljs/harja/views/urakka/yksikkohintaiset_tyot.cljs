@@ -117,6 +117,12 @@
 
   (do
     [:div.yksikkohintaiset-tyot
+     [:div.hoitokauden-kustannukset
+      [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
+       [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
+      [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+       [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]
+
      [grid/grid
       {:otsikko        "Yksikköhintaiset työt"
        :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
@@ -146,12 +152,6 @@
        {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
        ]
       @tyorivit
-      ]
-
-     [:div.hoitokauden-kustannukset
-      [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
-       [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
-      [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-       [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]]))
+      ]]))
 
 
