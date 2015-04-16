@@ -81,8 +81,9 @@
 
                 
                              
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex]} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus]} data]
   [:input {:on-change #(reset! data (-> % .-target .-value))
+           :on-focus on-focus
            :value @data}])
 
 (defmethod tee-kentta :numero [kentta data]
@@ -96,6 +97,7 @@
       (fn [kentta data]
         (let [nykyinen-teksti @teksti]
           [:input {:type "text"
+                   :on-focus (:on-focus kentta)
                    :value nykyinen-teksti
                    :on-change #(let [v (-> % .-target .-value)]
                                  (when (or (= v "") 
@@ -111,6 +113,7 @@
 (defmethod tee-kentta :email [kentta data]
   [:input {:type "email"
            :value @data
+           :on-focus (:on-focus kentta)
            :on-change #(reset! data (-> % .-target .-value))}])
 
 
@@ -119,6 +122,7 @@
   [:input {:type "tel"
            :value @data
            :max-length (:pituus kentta)
+           :on-focus (:on-focus kentta)
            :on-change #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"(\s|\d)*" uusi)
                            (reset! data uusi)))}])
@@ -129,6 +133,7 @@
   (let [arvo (or valinta-arvo :id)
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
+    ;; FIXME: on-focus alasvetovalintaan?
     [alasvetovalinta {:valinta @data
                       :valitse-fn #(do (log "valinta: " %)
                                        (reset! data %))
@@ -138,12 +143,13 @@
 
 
 
-(defmethod tee-kentta :kombo [{:keys [valinnat]} data]
+(defmethod tee-kentta :kombo [{:keys [valinnat on-focus]} data]
   (let [auki (atom false)]
     (fn [{:keys [valinnat]} data]
       (let [nykyinen-arvo (or @data "")]
         [:div.dropdown {:class (when @auki "open")}
          [:input.kombo {:type "text" :value nykyinen-arvo
+                        :on-focus on-focus
                         :on-change #(reset! data (-> % .-target .-value))}]
          [:button {:on-click #(do (swap! auki not) nil)}
           [:span.caret ""]]
@@ -159,7 +165,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         teksti (atom (if-let [p @data]
@@ -189,6 +195,7 @@
                                 nykyinen-pvm)]
            [:span {:on-click #(do (reset! auki true) nil)}
             [:input.pvm {:value     nykyinen-teksti
+                         :on-focus on-focus
                          :on-change #(muuta! (-> % .-target .-value))}]
             (when @auki
               [:div.aikavalinta

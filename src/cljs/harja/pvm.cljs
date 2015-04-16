@@ -32,7 +32,13 @@
   (and (= (t/year eka) (t/year toka))
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
-  
+
+(defn sama-kuukausi?
+  "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
+  [eka toka]
+  (and (= (t/year eka) (t/year toka))
+       (= (t/month eka) (t/month toka))))
+
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"

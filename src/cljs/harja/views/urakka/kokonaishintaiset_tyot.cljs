@@ -163,77 +163,13 @@
             :tunniste     #((juxt :vuosi :kuukausi) %)
             :voi-lisata?  false
             :voi-poistaa? (constantly false)
-            :muutos       (fn [g]
-                              (let [muuttunut-vuosi-kk (grid/hae-viimeisin-muokattu-id g)
-                                    rivit (grid/hae-muokkaustila g)
-                                    rivien-arvot (sort-by (juxt :vuosi :kuukausi) (vals rivit))
-                                    muutettu-rivi (get rivit muuttunut-vuosi-kk)
-                                    muutettua-ed-vuosi-kk (pvm/hoitokauden-edellinen-vuosi-kk muuttunut-vuosi-kk)
-                                    muutettua-edeltava-rivi (get rivit muutettua-ed-vuosi-kk)
-                                    valitun-indeksi (indeksi rivien-arvot muutettu-rivi)]
-                                  (reset! viimeisin-muokattu-rivi muutettu-rivi)
-                                  ;; summan kopiointi
-                                  (if (and
-                                          (= (:summa muutettu-rivi)
-                                             (:summa muutettua-edeltava-rivi))
-                                          (every? #(or
-                                                      (= (:summa %) (:summa muutettu-rivi))
-                                                      (nil? (:summa %)))
-                                                  rivien-arvot)
-                                          (not (every? #(= (:summa %) (:summa muutettu-rivi)) rivien-arvot)))
-                                      (reset! tarjoa-summien-kopiointia true)
-                                      (reset! tarjoa-summien-kopiointia false))
-
-                                  ;; maksupvm:n kopiointi
-                                  (if (and
-                                        (= (:maksupvm muutettu-rivi)
-                                           (t/plus (:maksupvm muutettua-edeltava-rivi) (t/months 1)))
-                                         (every? #(= true %)
-                                                 (map-indexed (fn [idx rivi]
-                                                                  (or
-                                                                      (nil? (:maksupvm rivi))
-                                                                      (=
-                                                                          (:maksupvm rivi)
-                                                                          (t/plus (:maksupvm muutettu-rivi) (t/months (- idx valitun-indeksi))))))
-                                                              rivien-arvot))
-                                         (not (every? #(= true %)
-                                              (map-indexed (fn [idx rivi]
-                                                               (=
-                                                                   (:maksupvm rivi)
-                                                                   (t/plus (:maksupvm muutettu-rivi) (t/months (- idx valitun-indeksi)))))
-                                                            rivien-arvot))))
-                                          (reset! tarjoa-maksupaivien-kopiointia true)
-                                          (reset! tarjoa-maksupaivien-kopiointia false))))
-                              :muokkaa-footer (fn [g]
-                                                  [:div.kok-hint-muokkaa-footer
-                                                   [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                                    @tuleville?
-                                                    #(swap! tuleville? not)
-                                                    [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                                    (and @tuleville? @varoita-ylikirjoituksesta?)]
-
-                                                   (when @tarjoa-summien-kopiointia
-                                                       [teksti-ja-nappi "Haluatko kopioida saman summan joka kuukaudelle?"
-                                                        "Kopioi"
-                                                        #(grid/muokkaa-rivit! g
-                                                                              (fn [rivit]
-                                                                                  (map (fn [rivi]
-                                                                                           (assoc rivi :summa (:summa @viimeisin-muokattu-rivi)))
-                                                                                       rivit))
-                                                                              [])])
-                                                   (when @tarjoa-maksupaivien-kopiointia
-                                                       [teksti-ja-nappi "Haluatko kopioida saman maksupäivän joka kuukaudelle?"
-                                                        "Kopioi"
-                                                        #(grid/muokkaa-rivit! g
-                                                                              (fn [rivit]
-                                                                                  (let [rivit-aikajarjestyksessa (sort-by (juxt :vuosi :kuukausi) rivit)
-                                                                                        valitun-indeksi (indeksi rivit-aikajarjestyksessa @viimeisin-muokattu-rivi)]
-                                                                                      (map-indexed (fn [idx rivi]
-                                                                                                       (assoc rivi
-                                                                                                           :maksupvm (t/plus (:maksupvm @viimeisin-muokattu-rivi)
-                                                                                                                             (t/months (- idx valitun-indeksi)))))
-                                                                                                   rivit-aikajarjestyksessa)))
-                                                                              [])])])
+            :muokkaa-footer (fn [g]
+                              [:div.kok-hint-muokkaa-footer
+                               [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                @tuleville?
+                                #(swap! tuleville? not)
+                                [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                (and @tuleville? @varoita-ylikirjoituksesta?)]])
             }
 
            ;; sarakkeet
@@ -241,9 +177,39 @@
             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
              :tyyppi :numero :leveys "25%"}
             {:otsikko "Summa" :nimi :summa :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea
-             :tyyppi :numero :leveys "25%"}
+             :tyyppi :numero :leveys "25%"
+             :tayta-alas? #(not (nil? %))
+             :tayta-tooltip "Haluatko kopioida saman summan tuleville kuukausille?"}
             {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
-             :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"}
+             :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"
+             :tayta-alas? #(not (nil? %))
+             :tayta-tooltip "Haluatko kopioida saman maksupäivän tuleville kuukausille?"
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
+                         ;; ja tehdään vastaavalla erotuksella oleva muutos
+                         (let [maksupvm (:maksupvm lahtorivi)
+                               p (t/day maksupvm)
+                               kk-alku (pvm/luo-pvm (:vuosi lahtorivi) (dec (:kuukausi lahtorivi)) 1)
+                               suunta (if (pvm/sama-kuukausi? maksupvm kk-alku)
+                                        0
+                                        (if (t/before? kk-alku maksupvm) 1 -1))
+                               kk-ero ;; lasketaan kuinka monta kuukautta eroa on maksupäivällä ja rivin kuukaudella
+                               (loop [ero 0
+                                      kk kk-alku]
+                                 (if (pvm/sama-kuukausi? kk maksupvm)
+                                   ero
+                                   (recur (+ ero suunta)
+                                          (t/plus kk (t/months suunta)))))
+                               ]
+
+                           
+                           (let [maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
+                                                  (t/months kk-ero))
+                                 maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) p)]
+                             (log "ALKU " (pvm/pvm maksupvm) ", kk-ero: " kk-ero, ", tämän maksu-kk: " (pvm/pvm maksu-kk) ",  tämän maksu pvm: " (pvm/pvm maksu-pvm)) 
+                             (assoc tama-rivi :maksupvm maksu-pvm))))
+                              
+                         }
             ]
            @tyorivit]]))
 
