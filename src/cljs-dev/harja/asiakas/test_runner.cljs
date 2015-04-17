@@ -30,6 +30,17 @@
                  :danger
                  +virheviestin-nayttoaika+))
 
+(defmethod test/report [:harja :error] [event]
+  (.log js/console "ERROR:" (pr-str event))
+  (viesti/nayta! [:div.testfail
+                  [:h3 "Virhe testin suorituksessa"
+                   [:div.expected "Odotettu: " (pr-str (:expected event))]
+                   [:div.actual "Saatu: " (pr-str (:actual event))]
+                   (when-let [m (:message event)]
+                     [:div.testmessage "Viesti: " m])]]
+                 :danger
+                 +virheviestin-nayttoaika+))
+
 (defmethod test/report [:harja :summary] [event]
   (.log js/console "Testejä ajettu: " (:test event)))
 
