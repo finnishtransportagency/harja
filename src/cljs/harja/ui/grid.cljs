@@ -247,13 +247,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 "pull-left"
                                 "pull-right")}
                  [:div {:style {:position "absolute" :display "inline-block"}}
-                
-                  [:button.btn.btn-sm.btn-primary {:title (:tayta-tooltip s)
-                                                   :style {:position "absolute" :top -2
-                                                           :left (when (= :oikea (:tasaa s))
-                                                                   0)
-                                                           :right (when-not (= :oikea (:tasaa s))
-                                                                    "100%")}
+                [:button.nappi-ensisijainen {:title (:tayta-tooltip s)
+                                                 :style {:position "absolute" :top -2
+                                                         :left (when (= :oikea (:tasaa s))
+                                                                 0)
+                                                         :right (when-not (= :oikea (:tasaa s))
+                                                                  "100%")}
                                                  
                                                    :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
                    "Täytä " (ikonit/arrow-down)]]]))
@@ -493,13 +492,13 @@ Optiot on mappi optioita:
              (if-not muokataan
                [:span.pull-right
                 (when tallenna
-                  [:button.btn.btn-primary.btn-sm (if (= :ei-mahdollinen tallenna)
+                  [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
                                                     {:disabled (= :ei-mahdollinen tallenna)}
                                                     {:on-click #(do (.preventDefault %)
                                                                     (aloita-muokkaus! tiedot))})
                    (ikonit/pencil) " Muokkaa"])]
                [:span.pull-right.muokkaustoiminnot
-                [:button.btn.btn-sm.btn-default
+                [:button.nappi-toissijainen
                  {:disabled (empty? @historia)
                   :on-click #(do (.stopPropagation %)
                                  (.preventDefault %)
@@ -507,7 +506,7 @@ Optiot on mappi optioita:
                  (ikonit/peru) " Kumoa"]
 
                 (when-not (= false voi-lisata?)
-                  [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+                  [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                              (lisaa-rivi! ohjaus {}))}
                    (ikonit/plus-sign) " Lisää rivi"])
 
@@ -519,7 +518,7 @@ Optiot on mappi optioita:
                                     "Korjaa virhe ennen tallennusta ")]
                  (ikonit/warning-sign)]
                 (when-not muokkaa-aina
-                  [:button.btn.btn-primary.btn-sm.grid-tallenna
+                  [:button.nappi-myonteinen.grid-tallenna
                    {:disabled (not (empty? @virheet))
                     :on-click #(do (.preventDefault %)
                                    (go (if (<! (tallenna (filter (fn [rivi] (not (:koskematon rivi))) (mapv second @muokatut))))
@@ -527,7 +526,7 @@ Optiot on mappi optioita:
                    (ikonit/ok) " Tallenna"])
 
                 (when-not muokkaa-aina
-                  [:button.btn.btn-default.btn-sm.grid-peru
+                  [:button.nappi-kielteinen.grid-peru
                    {:on-click #(do (.preventDefault %) (nollaa-muokkaustiedot!) nil)}
                    (ikonit/ban-circle) " Peruuta"])
                 ])

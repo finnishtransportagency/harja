@@ -1,5 +1,8 @@
 @import "common";
 
+.alasveto-gridin-kentta {
+
+}
 .alasveto-urakkatyyppi {
 	.harja-alasveto(150px);
 }
@@ -30,10 +33,15 @@ div.valilehti {
 }
 
 // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
-button.btn-sm span {
-  font-size: 12px;
+// tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
+.panel-heading {
+	.nappi-ensisijainen span,
+	.nappi-toissijainen span,
+	.nappi-myonteinen span,
+	.nappi-kielteinen span, {
+		font-size: @fontin-koko-leipateksti;
+	}
 }
-  
 .haku-container {
 	margin-top: @margin-double;
 	max-width: 450px;
@@ -134,7 +142,7 @@ tr.uusitehtavakoodi td {
 	.alasveto {
 		display: inline;
 		margin-left: 20px;
-		.btn {
+		.nappi-alasveto {
 			max-width: @alasvetovalikon-leveys-max;
 			min-width: @alasvetovalikon-leveys-min;
 			padding-right: 20px;
