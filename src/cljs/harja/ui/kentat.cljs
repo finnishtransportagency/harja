@@ -165,7 +165,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         teksti (atom (if-let [p @data]
@@ -180,7 +180,10 @@
                    (reset! data d)))]
     (r/create-class
       {:component-will-receive-props
-       (fn [this [_ _ data]]
+       (fn [this [_ {:keys [focus] :as s} data]]
+         (log "FOKUS? " (:focus s))
+         (when-not focus
+           (reset! auki false))
          (swap! teksti #(if-let [p @data]
                          (pvm/pvm p)
                          %)))

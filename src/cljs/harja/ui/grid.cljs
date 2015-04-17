@@ -154,7 +154,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                    #(get % nimi))
            arvo (hae rivi)
            kentan-virheet (get rivin-virheet nimi)
-           tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")]
+           tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")
+           fokus-id [id nimi]]
        (if (or (nil? muokattava?) (muokattava? rivi))
          ^{:key (str nimi)}
          [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
@@ -169,7 +170,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
           ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
           (when-let [tayta-alas (:tayta-alas? s)]
-            (when (and (= fokus [id (:nimi s)])
+            (when (and (= fokus fokus-id)
                        (tayta-alas arvo)
                        
                        ;; Sallitaan täyttö, vain jos kaikki tulevien arvot ovat tyhjiä
@@ -190,8 +191,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                  :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
                  "Täytä " (ikonit/arrow-down)]]]))
           
-          
-          [tee-kentta (assoc s :on-focus #(aseta-fokus! [id (:nimi s)]))
+          ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))
+          [tee-kentta (assoc s
+                        :focus (= fokus fokus-id)
+                        :on-focus #(aseta-fokus! fokus-id))
            (r/wrap
             arvo
             (fn [uusi]
@@ -460,12 +463,13 @@ Optiot on mappi optioita:
                    (let [muokatut @muokatut
                          jarjestys @jarjestys
                          tulevat-rivit (fn [aloitus-idx]
-                                         (log "TULEVAT RIVIT, alk: " (pr-str aloitus-idx))
-                                         (log "jarjestys: " (pr-str (drop (inc aloitus-idx) jarjestys)))
+                                         ;;(log "TULEVAT RIVIT, alk: " (pr-str aloitus-idx))
+                                         ;;(log "jarjestys: " (pr-str (drop (inc aloitus-idx) jarjestys)))
                                          (map #(get muokatut %) (drop (inc aloitus-idx) jarjestys)))]
                      (if (empty? muokatut)
                        [:tr.tyhja [:td {:colSpan (inc (count skeema))} tyhja]]
-                       (let [kaikki-virheet @virheet]
+                       (let [kaikki-virheet @virheet
+                             nykyinen-fokus @fokus]
                          (doall (map-indexed
                                   (fn [i id]
                                     (if (otsikko? id)
@@ -486,7 +490,7 @@ Optiot on mappi optioita:
                                                           :id id
                                                           :rivin-virheet rivin-virheet
                                                           :voi-poistaa? voi-poistaa?
-                                                          :fokus @fokus
+                                                          :fokus nykyinen-fokus
                                                           :aseta-fokus! #(reset! fokus %)
                                                           :tulevat-rivit (tulevat-rivit i)}
                                            skeema rivi]))))
