@@ -147,8 +147,7 @@
                                                   :summa)) "toiden-kustannusten-summa-kok-hint-tyot"))
 
 (deftest jaljella-olevien-hoitokausien-rivit []
-  (let [kaudet (s/tulevat-hoitokaudet +testi-urakka-kaksi-vuotta+ {:alkupvm (pvm/hoitokauden-alkupvm 2006)
-            :loppupvm (pvm/hoitokauden-loppupvm 2007)})
+  (let [kaudet (s/tulevat-hoitokaudet +testi-urakka-kaksi-vuotta+ [(pvm/hoitokauden-alkupvm 2006) (pvm/hoitokauden-loppupvm 2007)])
         jaljelle-jaavat-rivit (flatten (s/jaljella-olevien-hoitokausien-rivit
                       +hoitokausien-tyorivit-erit+ kaudet))
         viesti "jaljella-olevien-hoitokausien-rivit"]
