@@ -181,7 +181,6 @@
     (r/create-class
       {:component-will-receive-props
        (fn [this [_ {:keys [focus] :as s} data]]
-         (log "UUSI PVM ARVO: " @data)
          (when-not focus
            (reset! auki false))
          (swap! teksti #(if-let [p @data]
