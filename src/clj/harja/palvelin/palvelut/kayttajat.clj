@@ -7,6 +7,7 @@
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.komponentit.tapahtumat :refer [julkaise!]]
             
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
@@ -32,7 +33,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) (:fim this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -121,62 +122,65 @@
 
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
-  [db fim user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
+  [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
   (oik/vaadi-rooli user #{oik/rooli-jarjestelmavastuuhenkilo
                           oik/rooli-hallintayksikon-vastuuhenkilo
                           oik/rooli-urakoitsijan-paakayttaja})
   (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
-  (jdbc/with-db-transaction [c db]
+  (let [kayttajan-tiedot
+        (jdbc/with-db-transaction [c db]
 
-    (let [luotu-kayttaja (when (nil? kayttaja-id)
-                           (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
-          kayttaja-id (if luotu-kayttaja
-                        (:id luotu-kayttaja) 
-                        kayttaja-id)
-          vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
-          vanhat-roolit (:roolit vanhat-tiedot)
+          (let [luotu-kayttaja (when (nil? kayttaja-id)
+                                 (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
+                kayttaja-id (if luotu-kayttaja
+                              (:id luotu-kayttaja) 
+                              kayttaja-id)
+                vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
+                vanhat-roolit (:roolit vanhat-tiedot)
                                  
-          vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
-      ;; FIXME:
-      ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
+                vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
+            ;; FIXME:
+            ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
                                         ;(when (oik/roolissa? user oik/rooli-jarjestelmavastuuhenkilo)
       
-      ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
+            ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
                                         ;  )
 
-      (log/info "VANHAT-ROOLIT " vanhat-roolit)
-      (log/info "VANHAT-URAKKA-ROOLIT " vanhat-urakka-roolit)
+            (log/info "VANHAT-ROOLIT " vanhat-roolit)
+            (log/info "VANHAT-URAKKA-ROOLIT " vanhat-urakka-roolit)
       
-      (doseq [rooli (:roolit tiedot)]
-        (if (vanhat-roolit rooli)
-          (log/info "Käyttäjällä on rooli " rooli " ja se jatkuu.")
-          (do (log/info "Lisätään käyttäjälle rooli: " rooli)
-              (q/lisaa-rooli<! c (:id user) kayttaja-id rooli))))
+            (doseq [rooli (:roolit tiedot)]
+              (if (vanhat-roolit rooli)
+                (log/info "Käyttäjällä on rooli " rooli " ja se jatkuu.")
+                (do (log/info "Lisätään käyttäjälle rooli: " rooli)
+                    (q/lisaa-rooli<! c (:id user) kayttaja-id rooli))))
 
-      (doseq [poistettava-rooli (set/difference vanhat-roolit (:roolit tiedot))]
-        (log/info "Poistetaan käyttäjältä rooli " poistettava-rooli)
-        (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli)
-        (q/poista-urakka-roolit! c (:id user) kayttaja-id poistettava-rooli)
-        )
+            (doseq [poistettava-rooli (set/difference vanhat-roolit (:roolit tiedot))]
+              (log/info "Poistetaan käyttäjältä rooli " poistettava-rooli)
+              (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli)
+              (q/poista-urakka-roolit! c (:id user) kayttaja-id poistettava-rooli)
+              )
           
       
-      (doseq [{:keys [rooli urakka] :as urakka-rooli} (:urakka-roolit tiedot)]
+            (doseq [{:keys [rooli urakka] :as urakka-rooli} (:urakka-roolit tiedot)]
       
-        (if (:poistettu urakka-rooli)
-          (do (log/info "Poistetaan käyttäjän " kayttaja-id " rooli " rooli " urakasta " (:id urakka))
-              (q/poista-urakka-rooli! c (:id user) kayttaja-id (:id urakka) rooli))
+              (if (:poistettu urakka-rooli)
+                (do (log/info "Poistetaan käyttäjän " kayttaja-id " rooli " rooli " urakasta " (:id urakka))
+                    (q/poista-urakka-rooli! c (:id user) kayttaja-id (:id urakka) rooli))
         
-          (let [roolit-urakassa (into #{} (map :rooli (get vanhat-urakka-roolit (:id urakka) [])))]
-            (if (roolit-urakassa rooli)
-              (log/info "Käyttäjällä on rooli " rooli " urakassa " (:id urakka) " ja se jatkuu...")
-              (do
-                (log/info "Lisätään käyttäjän " kayttaja-id " rooli " rooli " urakkaan " (:id urakka))
-                (q/lisaa-urakka-rooli<! c  (:id user) kayttaja-id (:id urakka) rooli)
-                )))))
+                (let [roolit-urakassa (into #{} (map :rooli (get vanhat-urakka-roolit (:id urakka) [])))]
+                  (if (roolit-urakassa rooli)
+                    (log/info "Käyttäjällä on rooli " rooli " urakassa " (:id urakka) " ja se jatkuu...")
+                    (do
+                      (log/info "Lisätään käyttäjän " kayttaja-id " rooli " rooli " urakkaan " (:id urakka))
+                      (q/lisaa-urakka-rooli<! c  (:id user) kayttaja-id (:id urakka) rooli)
+                      )))))
 
-      ;; Lopuksi palautetaan päivitetty käyttäjä
-      (merge (hae-kayttaja c kayttaja-id)
-             (hae-kayttajan-tiedot c user kayttaja-id)))))
+            ;; Lopuksi palautetaan päivitetty käyttäjä
+            (merge (hae-kayttaja c kayttaja-id)
+                   (hae-kayttajan-tiedot c user kayttaja-id))))]
+    (julkaise! tapahtumat :kayttaja-muokattu (:kayttajanimi kayttajan-tiedot))  
+    kayttajan-tiedot))
 
 
 (defn poista-kayttaja [db user kayttaja-id]

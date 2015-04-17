@@ -6,6 +6,7 @@
    [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
    [harja.palvelin.komponentit.todennus :as todennus]
    [harja.palvelin.komponentit.fim :as fim]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -38,16 +39,20 @@
                                    (:tietokanta tietokanta)
                                    (:kayttaja tietokanta)
                                     (:salasana tietokanta))
+     :klusterin-tapahtumat (component/using
+                            (tapahtumat/luo-tapahtumat)
+                            [:db])
+     
      :todennus (component/using
                 (if false ;; kehitysmoodi
                   (todennus/feikki-http-todennus {:etunimi "Tero" :sukunimi "Toripolliisi" :id 1 :kayttajanimi "LX123456789"})
                   (todennus/http-todennus))
-                [:db])
+                [:db :klusterin-tapahtumat])
      :http-palvelin (component/using
                      (http-palvelin/luo-http-palvelin (:portti http-palvelin)
                                                       kehitysmoodi)
                      [:todennus])
-
+     
      ;; FIM REST rajapinta
      :fim (fim/->FIM (:url (:fim asetukset)))
      
@@ -84,7 +89,7 @@
                         [:http-palvelin :db])
      :kayttajat (component/using
                  (kayttajat/->Kayttajat)
-                 [:http-palvelin :db :fim])
+                 [:http-palvelin :db :fim :klusterin-tapahtumat])
      :pohjavesialueet (component/using
                        (pohjavesialueet/->Pohjavesialueet)
                        [:http-palvelin :db])

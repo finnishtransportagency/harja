@@ -4,7 +4,9 @@
             [taoensso.timbre :as log]
             [clojure.core.cache :as cache]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.kayttajat :as q]))
+            [harja.kyselyt.kayttajat :as q]
+            [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
+            ))
 
 
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta uudestaan.
@@ -37,6 +39,8 @@
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
+    (kuuntele! (:klusterin-tapahtumat this)
+               :kayttaja-muokattu #(swap! kayttajatiedot cache/evict %))
     this)
   (stop [this]
     this)
