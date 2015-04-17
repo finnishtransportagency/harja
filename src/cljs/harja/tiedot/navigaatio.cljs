@@ -38,8 +38,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; I-vaiheessa aina :tie
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 
-;; I-vaiheessa aina :hoito tai :yllapito (mieti myöhemmin jaetaanko ylläpidon urakat tarkemmin)
-(def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi" (atom :hoito))
+(def +urakkatyypit+
+  [{:nimi "Hoito" :arvo :hoito }
+   {:nimi "Tiemerkintä" :arvo :tiemerkinta }
+   {:nimi "Päällystys" :arvo :paallystys }
+   {:nimi "Valaistus" :arvo :valaistus }])
+
+(def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi"
+  (atom (first +urakkatyypit+)))
 
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
@@ -96,17 +102,22 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
   
-(defn vaihda-urakkatyyppi! [ut]
+(defn vaihda-urakkatyyppi!
+  "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
+   löydy valitun tyyppisten urakoitsijain listasta."
+  [ut]
   (when (= @valittu-vaylamuoto :tie)
     (reset! valittu-urakkatyyppi ut)
-    (swap! valittu-urakoitsija #(let [nykyisen-urakkatyypin-urakoitsijat (case ut
-                                                                        :hoito @urk/urakoitsijat-hoito
-                                                                         @urk/urakoitsijat-yllapito
-                                                                        )]
-                                  (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-                                    %
-                                    nil)))))
-  
+    (swap! valittu-urakoitsija
+           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+                                                       :hoito @urk/urakoitsijat-hoito
+                                                       :paallystys @urk/urakoitsijat-paallystys
+                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                                                       :valaistus @urk/urakoitsijat-valaistus)]
+             (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+               %
+               nil)))))
+
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
   ;;(js* "debugger;")
@@ -172,12 +183,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
-   (let [v-ur-tyyppi @valittu-urakkatyyppi
+   (let [v-ur-tyyppi (:arvo @valittu-urakkatyyppi)
          v-urk @valittu-urakoitsija
          urakkalista @urakkalista]
      (into []
-           (comp (filter #(or (= v-ur-tyyppi (:tyyppi %) :hoito)
-                              (and (= v-ur-tyyppi :yllapito) (not= (:tyyppi %) :hoito))))
+           (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
            urakkalista))))
 

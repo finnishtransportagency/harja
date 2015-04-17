@@ -1,0 +1,231 @@
+/**
+ * Liikenneviraston yhteiset, yleiset tyylimääritykset
+ * TREX-hankkeesta
+ */
+
+/** VÄRIT */
+
+@musta:     #000000;
+@valkoinen: #ffffff;
+
+/** Harmaat */
+@harmaa1:  #191919;
+@harmaa2:  #323232;
+@harmaa3:  #4b4b4b;
+@harmaa4:  #646464;
+@harmaa5:  #7d7d7d;
+@harmaa6:  #969696;
+@harmaa7:  #afafaf;
+@harmaa8:  #c8c8c8;
+@harmaa9:  #e1e1e1;
+@harmaa10: #fafafa;
+
+/** Harmaat gradientit */
+.harmaa-gradientti1() { #gradient > .vertical(@start-color:  @harmaa3; @end-color: @harmaa1); }
+.harmaa-gradientti2() { #gradient > .vertical(@start-color:  @harmaa4; @end-color: @harmaa2); }
+.harmaa-gradientti3() { #gradient > .vertical(@start-color:  @harmaa5; @end-color: @harmaa3); }
+.harmaa-gradientti4() { #gradient > .vertical(@start-color:  @harmaa6; @end-color: @harmaa4); }
+.harmaa-gradientti5() { #gradient > .vertical(@start-color:  @harmaa7; @end-color: @harmaa5); }
+.harmaa-gradientti6() { #gradient > .vertical(@start-color:  @harmaa8; @end-color: @harmaa6); }
+.harmaa-gradientti7() { #gradient > .vertical(@start-color:  @harmaa9; @end-color: @harmaa7); }
+.harmaa-gradientti8() { #gradient > .vertical(@start-color: @harmaa10; @end-color: @harmaa8); }
+
+/** Siniset */
+@sininen1: #0000cc;
+@sininen2: #0022cc;
+@sininen3: #0044cc;
+@sininen4: #0066cc;
+@sininen5: #0088cc;
+@sininen6: #00aacc;
+
+/** Siniset gradientit */
+.sininen-gradientti1() { #gradient > .vertical(@start-color:  @sininen4; @end-color: @sininen2); }
+.sininen-gradientti2() { #gradient > .vertical(@start-color:  @sininen5; @end-color: @sininen3); }
+
+/** Vihreät */
+@vihrea1: #003300;
+@vihrea2: #005500;
+@vihrea3: #007700;
+@vihrea4: #009900;
+@vihrea5: #00bb00;
+@vihrea6: #00dd00;
+
+/** Vihreät gradientit */
+.vihrea-gradientti1() { #gradient > .vertical(@start-color:  @vihrea4; @end-color: @vihrea2); }
+.vihrea-gradientti2() { #gradient > .vertical(@start-color:  @vihrea5; @end-color: @vihrea3); }
+
+/** Punaiset */
+@punainen1: #770000;
+@punainen2: #990000;
+@punainen3: #bb0000;
+@punainen4: #dd0000;
+@punainen5: #ff0000;
+@punainen6: #ff2200;
+@punainen7: #ff4400;
+
+/** Punaiset gradientit */
+.punainen-gradientti1() { #gradient > .vertical(@start-color:  @punainen4; @end-color: @punainen2); }
+.punainen-gradientti2() { #gradient > .vertical(@start-color:  @punainen5; @end-color: @punainen3); }
+
+/** Huomiovärit */
+@onnistuminen: @vihrea4;
+@varoitus:     #ff9900;
+@vaara:        @punainen4;
+@muu:          #660099;
+
+/** TEKSTIT */
+
+@fontin-pohjakoko: 16px;
+@fontin-yksikko: 0rem;
+
+@fontin-kirjasin-h1: 'Open Sans', Arial, sans-serif;
+@fontin-paino-h1:     700;
+@fontin-koko-h1:      1.375 + @fontin-yksikko;
+@fontin-vari-h1:      @harmaa2;
+
+@fontin-kirjasin-h2: 'Open Sans', Arial, sans-serif;
+@fontin-paino-h2:    400;
+@fontin-koko-h2:     1.125 + @fontin-yksikko;
+@fontin-vari-h2:     @harmaa2;
+@fontin-tyyli-h2:    uppercase;
+
+@fontin-kirjasin-h3: 'Open Sans', Arial, sans-serif;
+@fontin-paino-h3:    700;
+@fontin-koko-h3:     1 + @fontin-yksikko;
+@fontin-vari-h3:     @harmaa2;
+
+@fontin-kirjasin-leipateksti: 'Open Sans', Arial, sans-serif;
+@fontin-paino-leipateksti:     400;
+@fontin-koko-leipateksti:      0.875 + @fontin-yksikko;
+@fontin-vari-leipateksti:      @harmaa2;
+
+@fontin-kirjasin-linkki: 'Open Sans', Arial, sans-serif;
+@fontin-paino-linkki:     400;
+@fontin-koko-linkki:      0.875 + @fontin-yksikko;
+@fontin-vari-linkki:      @sininen4;
+
+@fontin-kirjasin-osoitettu-linkki: 'Open Sans', Arial, sans-serif;
+@fontin-paino-osoitettu-linkki:     400;
+@fontin-koko-osoitettu-linkki:      0.875 + @fontin-yksikko;
+@fontin-vari-osoitettu-linkki:      @sininen4;
+@fontin-korostus-osoitettu-linkki:  underline;
+
+/** PALKIT */
+
+@palkin-korkeus: 40px;
+
+#palkit {
+    .navigaatio {
+        .harmaa-gradientti1();
+        color: @valkoinen;
+        border-left:  1px solid @harmaa4;
+        border-right: 1px solid @musta;
+
+        &:hover {
+            .harmaa-gradientti2();
+            border-left:  1px solid @harmaa5;
+            border-right: 1px solid @harmaa1;
+        }
+        a {
+            color: @valkoinen;
+        }
+    }
+
+    .haitari1 {
+        .harmaa-gradientti2();
+        color: @valkoinen;
+        border-left:  1px solid @harmaa5;
+        border-right: 1px solid @harmaa1;
+
+        .panel-title,
+        .panel-title h2,
+        .panel-title h3 {
+            text-transform: uppercase;
+            font-size: @fontin-koko-h2;
+            font-weight: 400;
+        }
+
+        &:hover {
+            .harmaa-gradientti3();
+            border-left:  1px solid @harmaa6;
+            border-right: 1px solid @harmaa2;
+        }
+        a {
+            color: @valkoinen;
+        }
+    }
+    .haitari2 {
+        .harmaa-gradientti3();
+        color: @valkoinen;
+        border-left:  1px solid @harmaa6;
+        border-right: 1px solid @harmaa2;
+
+        .panel-title,
+        .panel-title h3 {
+            font-size: @fontin-koko-leipateksti;
+        }
+
+        &:hover {
+            .harmaa-gradientti4();
+            border-left:  1px solid @harmaa7;
+            border-right: 1px solid @harmaa3;
+        }
+        a {
+            color: @valkoinen;
+        }
+    }
+    .haitari3 {
+        .harmaa-gradientti4();
+        color: @valkoinen;
+        border-left:  1px solid @harmaa7;
+        border-right: 1px solid @harmaa8;
+
+        .panel-title,
+        .panel-title h3 {
+            font-size: @fontin-koko-leipateksti;
+        }
+
+        &:hover {
+            .harmaa-gradientti4();
+            border-left:  1px solid @harmaa8;
+            border-right: 1px solid @harmaa4;
+        }
+        a {
+            color: @valkoinen;
+        }
+    }
+    .header-toiminto {
+        .sininen-gradientti1();
+        color: @valkoinen;
+        border-left:  1px solid @sininen5;
+        border-right: 1px solid @sininen1;
+
+        &:hover, &:focus
+        & > a:hover, & > a:focus {
+            .sininen-gradientti2();
+            border-left:  1px solid @sininen6;
+            border-right: 1px solid @sininen2;
+        }
+        &.open > a {
+            .sininen-gradientti2();
+        }
+        a {
+            color: @valkoinen;
+        }
+    }
+}
+
+/** TAULUKOT */
+table.table-striped {
+    background-color: @harmaa9;
+    border: solid 1px @harmaa7;
+
+    > tbody > tr:nth-of-type(odd) {
+        background-color: @harmaa10;
+    }
+
+    &.table-bordered th {
+        background: @harmaa8;
+        color: @harmaa1;
+    }
+}

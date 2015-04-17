@@ -4,7 +4,7 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta]]
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
@@ -22,10 +22,7 @@
    (fn []
      (let [valinta-auki (:valinta-auki (reagent/state (reagent/current-component)))
            urakkatyyppi @nav/valittu-urakkatyyppi
-           urakoitsija @nav/valittu-urakoitsija
-           urakoitsijat @urakoitsijat/urakoitsijat
-           urakoitsijat-hoito @urakoitsijat/urakoitsijat-hoito
-           urakoitsijat-yllapito @urakoitsijat/urakoitsijat-yllapito]
+           urakoitsija @nav/valittu-urakoitsija]
        [:span {:class (when (empty? @nav/tarvitsen-karttaa)
                         (cond 
                          (= @nav/sivu :hallinta) "hide"
@@ -86,15 +83,23 @@
                              :valitse-fn nav/valitse-urakoitsija!
                              :class "alasveto-urakoitsija"
                              :disabled (boolean @nav/valittu-urakka)}
-            (vec (conj (filter (if (= urakkatyyppi :hoito)
-                                 #(urakoitsijat-hoito (:id %))
-                                 #(urakoitsijat-yllapito (:id %)))
-                               urakoitsijat) nil))
+            (vec (conj (into [] (case (:arvo urakkatyyppi)
+                                 :hoito @urakoitsijat/urakoitsijat-hoito
+                                 :paallystys @urakoitsijat/urakoitsijat-paallystys
+                                 :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
+                                 :valaistus @urakoitsijat/urakoitsijat-valaistus
+
+                                 @urakoitsijat/urakoitsijat-hoito) ;;defaulttina hoito
+                               ) nil))
             ]]
-       
-          [radiovalinta "Urakkatyyppi" urakkatyyppi nav/vaihda-urakkatyyppi! (boolean @nav/valittu-urakka)
-           "Hoito" :hoito "Ylläpito" :yllapito]]]
-        ]))
+          [:div [:span.urakoitsija-otsikko "Urakkatyyppi"]
+           [alasvetovalinta {:valinta urakkatyyppi
+                             :format-fn #(if % (:nimi %) "Kaikki")
+                             :valitse-fn nav/vaihda-urakkatyyppi!
+                             :class "alasveto-urakkatyyppi"
+                             :disabled (boolean @nav/valittu-urakka)}
+            nav/+urakkatyypit+
+            ]]]]]))
 
    ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown
    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]

@@ -115,7 +115,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
      (let [auki (:auki (reagent/state (reagent/current-component)))]
-       [:div.dropdown {:class (str class " " (when @auki "open"))}
+       [:div.dropdown.harja-alasveto {:class (str class " " (when @auki "open"))}
         [:button.btn.btn-default
          {:type "button"
           :disabled (if disabled "disabled" "")
@@ -149,7 +149,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                
                                   13 ;; enter
                                   (reset! auki false))))))}
-         [:span.valittu (format-fn valinta)]
+         [:div.valittu (format-fn valinta)]
          " " [:span.caret]]
         [:ul.dropdown-menu
          (for [vaihtoehto vaihtoehdot]

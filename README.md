@@ -46,9 +46,15 @@ Integraatiot MULEeen ja niiden implementaatioprojekti on omanaan.
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat omassa repossaan: harja-tietokanta 
 
 
-## Testipalvelimen tietokannan päivitys
+## Staging tietokannan päivitys, uusi ja hyvä tapa
+ssh -L7777:localhost:5432 harja-db1-stg
+ * Luo yhteys esim. käyttämäsi IDE:n avulla,
+    * tietokanta: harja, username: flyway salasana: kysy tutuilta
+
+## Testipalvelimen tietokannan päivitys, vanha ja huono tapa
  * Avaa VPN putki <br/>
  <code>
+    ssh harja-jenkins.solitaservices.fi
     [jarnova@harja-jenkins ~]$ sudo bash <br/>
     [root@harja-jenkins jarnova]# su jenkins <br/>
     bash-4.2$ ssh harja-db1-test <br/>

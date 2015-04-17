@@ -14,8 +14,25 @@
 .border-style-thin {
 	border: thin ridge @color-dark-gray;
 }
+.harja-alasveto (@leveys: 200px) {
+		width: @leveys;
+		button {
+			height: 32px;
+			width: @leveys - 20px;
+		}
+		.valittu {
+			display: inline-block;
+			overflow-x: hidden;
+			text-align: left;
+			width: @leveys - 50px;
+		}
+		.caret {
+			position: relative;
+			top: -5px;
+		}
+	}
 .rounded(@radius: 4px) {
 	border-radius: @radius;
-	-webkit-border-radius: radius;
-	-moz-border-radius: radius;
+	-webkit-border-radius: @radius;
+	-moz-border-radius: @radius;
 }

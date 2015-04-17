@@ -6,16 +6,21 @@
             [harja.loki :refer [tarkkaile!]]
             
             [cljs.core.async :refer [chan <! >! close!]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (def urakoitsijat "Urakoitsijat" (atom #{}))
 
-(def urakoitsijat-hoito "Hoidon urakoitsijat" (atom #{}))
+(def urakoitsijat-hoito
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "hoito") @urakoitsijat))))
+(def urakoitsijat-paallystys
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "paallystys") @urakoitsijat))))
+(def urakoitsijat-tiemerkinta
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "tiemerkinta") @urakoitsijat))))
+(def urakoitsijat-valaistus
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "valaistus") @urakoitsijat))))
 
-(def urakoitsijat-yllapito "Ylläpidon urakoitsijat" (atom #{}))
-
-(tarkkaile! "urakoitsijat-hoito" urakoitsijat-hoito)
-(tarkkaile! "urakoitsijat-yllapito" urakoitsijat-yllapito)
+(tarkkaile! "urakoitsijat" urakoitsijat)
 
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]
@@ -28,30 +33,3 @@
 (t/kuuntele! :harja-ladattu (fn [_]
                               (go (reset! urakoitsijat (<! (k/post! :hae-urakoitsijat
                                                                      nil))))))
-
-(defn hae-urakkatyypin-urakoitsijat [urakkatyyppi]
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/post! :urakkatyypin-urakoitsijat urakkatyyppi))]
-        (>! ch res))
-      (close! ch))
-    ch))
-
-(defn hae-yllapidon-urakoitsijat []
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/get! :yllapidon-urakoitsijat))]
-        (>! ch res))
-      (close! ch))
-    ch))
-
-(t/kuuntele! :harja-ladattu (fn [_]
-                              (go (reset! urakoitsijat (<! (k/post! :hae-urakoitsijat
-                                                                     nil))))))
-
-(t/kuuntele! :harja-ladattu (fn [_]
-                              (go (reset! urakoitsijat-hoito (<! (k/post! :urakkatyypin-urakoitsijat
-                                                                     :hoito))))))
-
-(t/kuuntele! :harja-ladattu (fn [_]
-                              (go (reset! urakoitsijat-yllapito (<! (k/get! :yllapidon-urakoitsijat))))))

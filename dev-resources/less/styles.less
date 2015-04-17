@@ -1,21 +1,10 @@
 @import "common";
 
+.alasveto-urakkatyyppi {
+	.harja-alasveto(150px);
+}
 .alasveto-urakoitsija {
-	width: 200px;
-	button {
-		height: 32px;
-		width: 180px;
-	}
- 	.valittu {
- 		display: inline-block;
- 		overflow-x: hidden;
-		text-align: left;
- 		width: 150px;
- 	}
- 	.caret {
- 		position: relative;
- 		top: -5px;
- 	}
+	.harja-alasveto(200px);
 }
 #footer {
 	clear: both;
@@ -149,6 +138,9 @@ tr.uusitehtavakoodi td {
 			max-width: @alasvetovalikon-leveys-max;
 			min-width: @alasvetovalikon-leveys-min;
 			padding-right: 20px;
+		}
+		.valittu {
+			text-align: left;
 		}
 		.caret {
 			position: absolute;
