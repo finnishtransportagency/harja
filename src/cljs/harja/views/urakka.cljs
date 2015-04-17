@@ -13,31 +13,37 @@
   [ur]
   
   [bs/tabs {}
-   "Yleiset"
-   ^{:key "yleiset"}
-   [urakka-yleiset/yleiset ur]
    
-   
-   "Suunnittelu"
-   ^{:key "suunnittelu"}
-   [suunnittelu/suunnittelu ur]
-   
-   "Toteumat"
-   ^{:key "toteumat"}
-   [:div
-    [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
-    [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]]
-
-   "Laadunseuranta"
-   ^{:key "laadunseuranta"}
-   [:div
-    "laatua vois toki seurata"]
-
+    "Yleiset"
+    ^{:key "yleiset"}
+    [urakka-yleiset/yleiset ur]
+    
+    
+    "Suunnittelu"
+    ^{:key "suunnittelu"}
+    [suunnittelu/suunnittelu ur]
+    
+    "Toteumat"
+    ^{:key "toteumat"}
+    [:div
+     [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
+     [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]]
+    
+    "Laadunseuranta"
+    ^{:key "laadunseuranta"}
+    [:div
+     "laatua vois toki seurata"]
+    
    "Siltatarkastukset"
-   ^{:key "siltatarkastukset"}
-   [:div
-    "siltojakin voisi tarkastella"]
-   
+   (when (= :hoito (:tyyppi ur))
+     ^{:key "siltatarkastukset"}
+     [:div
+      "siltojakin voisi tarkastella"])
+
+   "Välitavoitteet"
+   (when-not (= :hoito (:tyyppi ur))
+     ^{:key "valitavoitteet"}
+     [:div "tavoitteitahan meillä kaikilla on"])
    ])
   
  
