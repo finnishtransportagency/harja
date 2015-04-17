@@ -34,7 +34,8 @@
          [{:otsikko "Nimi" :leveys "25%" :nimi :nimi :tyyppi :string}
           {:otsikko "Takaraja" :leveys "15%" :nimi :takaraja :fmt pvm/pvm :tyyppi :pvm}
           {:otsikko "Valmistunut" :leveys "15%"
-           :hae (comp :pvm :valmis)
+           :hae (comp :pvm :valmis) :aseta (fn [rivi arvo]
+                                             (assoc-in rivi [:valmis :pvm] arvo))
            :nimi :valmis :fmt #(if-not % "Ei valmis" (pvm/pvm %)) :tyyppi :pvm}
                                    
                                           
