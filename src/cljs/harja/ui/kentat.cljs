@@ -181,13 +181,13 @@
     (r/create-class
       {:component-will-receive-props
        (fn [this [_ {:keys [focus] :as s} data]]
-         (log "FOKUS? " (:focus s))
+         (log "UUSI PVM ARVO: " @data)
          (when-not focus
            (reset! auki false))
          (swap! teksti #(if-let [p @data]
-                         (pvm/pvm p)
-                         %)))
-
+                          (pvm/pvm p)
+                          "")))
+       
        :reagent-render
        (fn [_ data]
          (let [nykyinen-pvm @data
