@@ -6,7 +6,8 @@
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
-            [harja.tiedot.urakka.yhteystiedot :as yht]))
+            [harja.tiedot.urakka.yhteystiedot :as yht]
+            [harja.views.urakka.valitavoitteet :as valitavoitteet]))
 
 (defn urakka
   "Urakkanäkymä"
@@ -43,7 +44,7 @@
    "Välitavoitteet"
    (when-not (= :hoito (:tyyppi ur))
      ^{:key "valitavoitteet"}
-     [:div "tavoitteitahan meillä kaikilla on"])
+     [valitavoitteet/valitavoitteet ur])
    ])
   
  
