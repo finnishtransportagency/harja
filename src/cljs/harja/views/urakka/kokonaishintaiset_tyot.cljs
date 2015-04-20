@@ -171,7 +171,7 @@
             [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
                 [vis/pie
                     {:width 300 :height 190 :radius 70 :show-text false}
-                    {"Valittu toimenpide" @valitun-hoitokauden-ja-tpin-kustannukset "Muut hoitokaudet" (- @kaikkien-hoitokausien-taman-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]
+                    {"Valittu hoitokausi" @valitun-hoitokauden-ja-tpin-kustannukset "Muut hoitokaudet" (- @kaikkien-hoitokausien-taman-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]
             [:span.piirakka-wrapper
              [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
              [:div.col-xs-6

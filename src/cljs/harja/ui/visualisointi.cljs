@@ -63,7 +63,12 @@
                                                                                "% (" count ")")))
                                               :on-mouse-out #(do (reset! hover nil)
                                                                  (reset! tooltip nil))}
-                                          [:path {:d (str "M" cx " " cy " "
+                                          (if (= 360 slice-angle)
+                                            [:circle {:cx cx :cy cy :r radius
+                                                      :fill (first colors)
+                                                      :stroke "black"
+                                                      :stroke-width (if (= hovered label) 3 1)}]
+                                            [:path {:d (str "M" cx " " cy " "
                                                           "L" sx " " sy " "
                                                           "A" radius " " radius " 0 " large? " 1 " ex " " ey
                                                           "L" cx " " cy)
@@ -72,7 +77,7 @@
                                                   :stroke "black"
                                                   :stroke-width (if (= hovered label) 3 1)
 
-                                                  }]
+                                                  }])
                                           (when show-text
                                               [:text {:x tx :y ty :text-anchor "middle"
                                                   :transform (str "rotate( " (let [a (+ start-angle (/ slice-angle 2))]
