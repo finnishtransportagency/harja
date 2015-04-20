@@ -108,7 +108,8 @@
     :ei-loydy))
 
 (defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
-  (when (and (oik/roolissa? user oik/rooli-urakoitsijan-paakayttaja)
+  (when (and (not (oik/roolissa? user oik/rooli-jarjestelmavastuuhenkilo))
+             (oik/roolissa? user oik/rooli-urakoitsijan-paakayttaja)
              ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
              (not (= organisaatio-id (:id (:organisaatio user)))))
     (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)
