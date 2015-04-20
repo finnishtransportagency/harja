@@ -8,7 +8,6 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]))
 
-(def jarjestelma nil)
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma

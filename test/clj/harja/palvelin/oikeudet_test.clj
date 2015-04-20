@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.oikeudet-test
+(ns harja.palvelin.oikeudet-test
     (:require [clojure.test :refer :all]
               [taoensso.timbre :as log]
               [harja.palvelin.oikeudet :as oikeudet]
