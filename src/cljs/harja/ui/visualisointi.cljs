@@ -26,68 +26,88 @@
 
 (def +colors+ ["#468966" "#FFF0A5" "#FFB03B" "#B64926" "#8E2800"])
 
-(defn pie [{:keys [width height radius show-text]} items]
+(defn pie [{:keys [width height radius show-text show-legend]} items]
     (let [hover (atom nil)
           tooltip (atom nil)] ;; tooltip text
         (add-watch tooltip ::debug (fn [_ _ old new] (.log js/console "NEW: " (pr-str new))))
-        (fn [{:keys [width height radius show-text]} items]
+        (fn [{:keys [width height radius show-text show-legend]} items]
             (let [cx (/ width 2)
                   cy (/ height 2)
                   radius (or radius (- (/ width 2) 6))
                   total (reduce + 0 (vals items))
-                  hovered @hover]
-                (loop [slices (list)
-                       angle 0
-                       [[label count] & items] (seq items)
-                       colors (cycle +colors+)]
-                    (if-not label
-                        [:svg {:width width
-                               :height height}
-                         slices
-                         (when-let [tip @tooltip]
-                             [:text {:x (/ width 2) :y (- height 10) :text-anchor "middle"}
-                              tip])]
+                  hovered @hover
+                  all-items (seq items)]
+              (loop [slices (list)
+                     angle 0
+                     [[label count] & items] all-items
+                     colors (cycle +colors+)]
+                (if-not label
+                  [:span.pie
+                   (when show-legend
+                     (println "legenda labeleista: " (pr-str (map first all-items)))
+                     [:div.pie-legend
+                      (map (fn [l c]
+                             ^{:key l}
+                             [:div.pie-legend-item
+                              [:div.pie-legend-color {:style {:background-color c}}]
+                              l])
+                           (map first all-items)
+                           (cycle +colors+))])
+                   [:svg {:width width
+                          :height height}
+                    slices
+                    (when-let [tip @tooltip]
+                      [:text {:x (/ width 2) :y (- height 10) :text-anchor "middle"}
+                       tip])]]
+                  
+                  (let [slice-angle (* 360 (/ count total))
+                        start-angle angle
+                        end-angle (+ angle slice-angle)
+                        large? (if (< (- end-angle start-angle) 180) 0 1)
+                        [sx sy] (polar->cartesian cx cy radius start-angle)
+                        [ex ey] (polar->cartesian cx cy radius end-angle)
+                        [tx ty] (polar->cartesian cx cy (* 0.65 radius) (+ start-angle (/ slice-angle 2)))]
+                    (recur (conj slices
+                                 ^{:key label}
+                                 [:g {:on-mouse-over #(do (reset! hover label)
+                                                          (reset! tooltip
+                                                                  (str label ": " (.toFixed (* 100 (/ count total)) 1)
+                                                                       "% (" count ")")))
+                                      :on-mouse-out #(do (reset! hover nil)
+                                                         (reset! tooltip nil))}
+                                  (if (= 360 slice-angle)
+                                    [:circle {:cx cx :cy cy :r radius
+                                              :fill (first colors)
+                                              :stroke "black"
+                                              :stroke-width (if (= hovered label) 3 1)}]
+                                    [:path {:d (str "M" cx " " cy " "
+                                                    "L" sx " " sy " "
+                                                    "A" radius " " radius " 0 " large? " 1 " ex " " ey
+                                                    "L" cx " " cy)
 
-                        (let [slice-angle (* 360 (/ count total))
-                              start-angle angle
-                              end-angle (+ angle slice-angle)
-                              large? (if (< (- end-angle start-angle) 180) 0 1)
-                              [sx sy] (polar->cartesian cx cy radius start-angle)
-                              [ex ey] (polar->cartesian cx cy radius end-angle)
-                              [tx ty] (polar->cartesian cx cy (* 0.8 radius) (+ start-angle (/ slice-angle 2)))]
-                            (recur (conj slices
-                                         ^{:key label}
-                                         [:g {:on-mouse-over #(do (reset! hover label)
-                                                                  (reset! tooltip
-                                                                          (str label ": " (.toFixed (* 100 (/ count total)) 1)
-                                                                               "% (" count ")")))
-                                              :on-mouse-out #(do (reset! hover nil)
-                                                                 (reset! tooltip nil))}
-                                          (if (= 360 slice-angle)
-                                            [:circle {:cx cx :cy cy :r radius
-                                                      :fill (first colors)
-                                                      :stroke "black"
-                                                      :stroke-width (if (= hovered label) 3 1)}]
-                                            [:path {:d (str "M" cx " " cy " "
-                                                          "L" sx " " sy " "
-                                                          "A" radius " " radius " 0 " large? " 1 " ex " " ey
-                                                          "L" cx " " cy)
+                                            :fill (first colors)
+                                            :stroke "black"
+                                            :stroke-width (if (= hovered label) 3 1)
 
-                                                  :fill (first colors)
-                                                  :stroke "black"
-                                                  :stroke-width (if (= hovered label) 3 1)
+                                            }])
+                                  (cond
+                                   (= show-text :percent)
+                                   [:text {:x tx :y ty :text-anchor "middle"}
+                                    (str (.toFixed (* 100 (/ count total)) 1) "%")]
+                                                   
 
-                                                  }])
-                                          (when show-text
-                                              [:text {:x tx :y ty :text-anchor "middle"
-                                                  :transform (str "rotate( " (let [a (+ start-angle (/ slice-angle 2))]
-                                                                                 (if (and (> a 90) (< a 270))
-                                                                                     (- a 180) a))
-                                                                  " " tx "," ty ")")}
-                                           label])])
-                                   (+ angle slice-angle)
-                                   items
-                                   (rest colors)))))))))
+                                   show-text
+                                   [:text {:x tx :y ty :text-anchor "middle"
+                                           :transform (str "rotate( " (let [a (+ start-angle (/ slice-angle 2))]
+                                                                        (if (and (> a 90) (< a 270))
+                                                                          (- a 180) a))
+                                                           " " tx "," ty ")")}
+                                    label]
+
+                                   :default nil)])
+                           (+ angle slice-angle)
+                           items
+                           (rest colors)))))))))
 
 
 (defn bars [_ data]

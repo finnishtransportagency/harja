@@ -170,13 +170,13 @@
            [:span.piirakka-wrapper
             [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
                 [vis/pie
-                    {:width 300 :height 190 :radius 70 :show-text false}
+                    {:width 300 :height 190 :radius 70 :show-text :percent :show-legend true}
                     {"Valittu hoitokausi" @valitun-hoitokauden-ja-tpin-kustannukset "Muut hoitokaudet" (- @kaikkien-hoitokausien-taman-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]
             [:span.piirakka-wrapper
              [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
              [:div.col-xs-6
                 [vis/pie
-                    {:width 300 :height 190 :radius 70 :show-text false}
+                    {:width 300 :height 190 :radius 70 :show-text :percent :show-legend true}
                     {"Valittu toimenpide" @valitun-hoitokauden-ja-tpin-kustannukset "Muut toimenpiteet" (- @valitun-hoitokauden-kaikkien-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]]
            [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
             [:span (str (.toFixed @valitun-hoitokauden-ja-tpin-kustannukset 2) "\u20AC")]
