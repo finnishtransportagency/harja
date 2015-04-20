@@ -23,6 +23,7 @@
    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
    [harja.palvelin.palvelut.materiaalit :as materiaalit]
    [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
+   [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -99,6 +100,9 @@
      :selainvirhe (component/using
                     (selainvirhe/->Selainvirhe)
                     [:http-palvelin])
+     :valitavoitteet (component/using
+                      (valitavoitteet/->Valitavoitteet)
+                      [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)
