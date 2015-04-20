@@ -61,14 +61,14 @@
           
           ;; suunnittelun välilehdet
           [bs/tabs {:style :pills :active valittu-valilehti}
-           
-           "Yksikköhintaiset työt"
-           ^{:key "yksikkohintaiset-tyot"}
-           [yksikkohintaiset-tyot/yksikkohintaiset-tyot ur]
 
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur]
+
+           "Yksikköhintaiset työt"
+           ^{:key "yksikkohintaiset-tyot"}
+           [yksikkohintaiset-tyot/yksikkohintaiset-tyot ur]
 
            "Materiaalit"
            ^{:key "materiaalit"}
