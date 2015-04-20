@@ -99,8 +99,6 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
       false
       (not (hoitokaudet-samat? hoitokaudet)))))
 
-  
-
 (defn toiden-kustannusten-summa
   "Laskee yhteen annettujen työrivien kustannusten summan"
   ([tyorivit] (toiden-kustannusten-summa tyorivit :yhteensa))

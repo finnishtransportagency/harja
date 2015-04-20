@@ -6,6 +6,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia alasvetovalinta radiovalinta teksti-ja-nappi]]
+            [harja.ui.visualisointi :as vis]
+
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -110,23 +112,39 @@
                     (if-not kopioi?
                       false
                       varoita?))
-        kaikki-sopimuksen-ja-tpin-rivit :reaction (let [sopimus-id (first @s/valittu-sopimusnumero)
-                                                 tpi-id (:tpi_id @valittu-toimenpide)]
-                                             (filter #(and
-                                                       (= sopimus-id (:sopimus %))
-                                                      (= tpi-id (:toimenpideinstanssi %)))
-                                                     @urakan-kok-hint-tyot))
-        kaikkien-hoitokausien-kustannukset
+
+        kaikki-sopimuksen-rivit :reaction (let [sopimus-id (first @s/valittu-sopimusnumero)]
+                                              (filter #(= sopimus-id (:sopimus %))
+                                                      @urakan-kok-hint-tyot))
+
+        kaikki-sopimuksen-ja-hoitokauden-rivit :reaction (let [hk-alku (first @s/valittu-hoitokausi)]
+                                                             (filter
+                                                                 #(pvm/sama-pvm?
+                                                                     (:alkupvm %) hk-alku)
+                                                                  @kaikki-sopimuksen-rivit))
+        
+        kaikki-sopimuksen-ja-tpin-rivit :reaction (let [tpi-id (:tpi_id @valittu-toimenpide)]
+                                             (filter #(= tpi-id (:toimenpideinstanssi %))
+                                                     @kaikki-sopimuksen-rivit))
+
+        kaikkien-hoitokausien-taman-tpin-kustannukset
         :reaction (s/toiden-kustannusten-summa
                     @kaikki-sopimuksen-ja-tpin-rivit
                     :summa)
-        valitun-hoitokauden-kustannukset
-        :reaction (s/toiden-kustannusten-summa (let [hk (first @s/valittu-hoitokausi)]
+
+        valitun-hoitokauden-ja-tpin-kustannukset
+        :reaction (s/toiden-kustannusten-summa (let [hk-alku (first @s/valittu-hoitokausi)]
                                                  (filter
                                                    #(pvm/sama-pvm?
-                                                     (:alkupvm %) hk)
+                                                     (:alkupvm %) hk-alku)
                                                    @kaikki-sopimuksen-ja-tpin-rivit))
                                                :summa)
+
+        valitun-hoitokauden-kaikkien-tpin-kustannukset
+        :reaction (s/toiden-kustannusten-summa
+                      @kaikki-sopimuksen-ja-hoitokauden-rivit
+                      :summa)
+
         tarjoa-summien-kopiointia false
         tarjoa-maksupaivien-kopiointia false
         viimeisin-muokattu-rivi nil
@@ -134,6 +152,7 @@
 
        (do
          (reset! tuleville? false)
+         (log "asd" (pr-str @kaikki-sopimuksen-rivit))
          [:div.kokonaishintaiset-tyot
          [:div.alasvetovalikot
               [:div.label-ja-alasveto
@@ -146,11 +165,24 @@
                                  }
                 @toimenpiteet]]]
           [:div.hoitokauden-kustannukset
+           [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
+            [:div.col-xs-6
+           [:span.piirakka-wrapper
+            [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
+                [vis/pie
+                    {:width 300 :height 190 :radius 70 :show-text false}
+                    {"Valittu toimenpide" @valitun-hoitokauden-ja-tpin-kustannukset "Muut hoitokaudet" (- @kaikkien-hoitokausien-taman-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]
+            [:span.piirakka-wrapper
+             [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
+             [:div.col-xs-6
+                [vis/pie
+                    {:width 300 :height 190 :radius 70 :show-text false}
+                    {"Valittu toimenpide" @valitun-hoitokauden-ja-tpin-kustannukset "Muut toimenpiteet" (- @valitun-hoitokauden-kaikkien-tpin-kustannukset @valitun-hoitokauden-ja-tpin-kustannukset)}]]]]
            [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
-            [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]
+            [:span (str (.toFixed @valitun-hoitokauden-ja-tpin-kustannukset 2) "\u20AC")]
             ]
            [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
-            [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]
+            [:span (str (.toFixed @kaikkien-hoitokausien-taman-tpin-kustannukset 2) "\u20AC")]
             ]]
           [grid/grid
            {:otsikko      (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
@@ -213,5 +245,3 @@
                          }
             ]
            @tyorivit]]))
-
-
