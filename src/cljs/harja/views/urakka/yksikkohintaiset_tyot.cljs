@@ -13,7 +13,7 @@
 
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-
+            [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [cljs-time.core :as t]
@@ -117,9 +117,9 @@
     [:div.yksikkohintaiset-tyot
      [:div.hoitokauden-kustannukset
       [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
-       [:span (str (.toFixed @valitun-hoitokauden-kustannukset 2) "\u20AC")]]
+       [:span (fmt/euro @valitun-hoitokauden-kustannukset)]]
       [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-       [:span (str (.toFixed @kaikkien-hoitokausien-kustannukset 2) "\u20AC")]]]
+       [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
 
      [grid/grid
       {:otsikko        "Yksikköhintaiset työt"
@@ -146,8 +146,8 @@
        {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
        {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-       {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt #(if % (str (.toFixed % 2) " \u20AC")) :leveys "15%"}
-       {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt #(if % (str (.toFixed % 2) " \u20AC"))}
+       {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
+       {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}
        ]
       @tyorivit
       ]]))

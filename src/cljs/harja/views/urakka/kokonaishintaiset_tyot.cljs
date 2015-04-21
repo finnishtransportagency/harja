@@ -15,7 +15,8 @@
 
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-
+            [harja.fmt :as fmt]
+            
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
@@ -186,10 +187,10 @@
                    {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]))]]]
            
            [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
-            [:span (str (.toFixed @valitun-hoitokauden-ja-tpin-kustannukset 2) "\u20AC")]
+            [:span (fmt/euro @valitun-hoitokauden-ja-tpin-kustannukset)]
             ]
            [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
-            [:span (str (.toFixed @kaikkien-hoitokausien-taman-tpin-kustannukset 2) "\u20AC")]
+            [:span (fmt/euro @kaikkien-hoitokausien-taman-tpin-kustannukset)]
             ]]
           [grid/grid
            {:otsikko      (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
@@ -215,7 +216,7 @@
            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
              :tyyppi :numero :leveys "25%"}
-            {:otsikko "Summa" :nimi :summa :fmt #(if % (str (.toFixed % 2) " \u20AC")) :tasaa :oikea
+            {:otsikko "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
              :tyyppi :numero :leveys "25%"
              :tayta-alas? #(not (nil? %))
              :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
