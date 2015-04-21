@@ -14,6 +14,11 @@
 (def urakoitsijan-kayttaja             "urakoitsijan kayttaja")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
+;; Esimääriteltyjä settejä rooleista
+(def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
+                                           urakoitsijan-laatuvastaa})
+
+
 ;; Tietokannan rooli enumin selvempi kuvaus
 (def +rooli->kuvaus+
   {"jarjestelmavastuuhenkilo" "Järjestelmävastuuhenkilö"
