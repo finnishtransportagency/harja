@@ -60,6 +60,10 @@ div.grid {
     table.grid tr:even {
 	background-color: #e1e1e1;
     }
+
+    table.grid tr.vetolaatikko-auki { display: table-row; }
+    table.grid tr.vetolaatikko-kiinni { display: none; }
+    table.grid td.vetolaatikon-tila { text-align: center; }
     
     table.grid tr, table.grid td, table.grid th {
 	border: 1px solid #afafaf;    
@@ -124,7 +128,9 @@ div.grid {
     tr.klikattava:hover {
 	cursor: pointer;
     	background-color: #D2CFCE;
-    }   
+    }
+
+
 }
 .muokkaustoiminnot .taulukossa-virheita {
 	font-size: 12px;
