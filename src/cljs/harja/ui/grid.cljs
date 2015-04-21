@@ -96,7 +96,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   ;; PENDING: oisko "jemmaa muokkaushistoria", jolla sen saisi avaimella talteen ja otettua takaisin?
   (hae-viimeisin-muokattu-id [g] "Hakee viimeisimmän muokatun id:n")
   (muokkaa-rivit! [this funktio args] "Muokkaa kaikki taulukon rivit funktion avulla.")
-
+  
   (vetolaatikko-auki? [this id] "Tarkista onko vetolaatikko auki annetulla rivin id:llä.")
 
   (avaa-vetolaatikko! [this id] "Avaa vetolaatikko rivin id:llä.")
@@ -134,7 +134,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (muokkaa-rivit! [this funktio args]
         (apply muokkaa-rivit! @gridi funktio args))
-
+      
       (vetolaatikko-auki? [_ id]
         (vetolaatikko-auki? @gridi id))
 
@@ -187,11 +187,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 ;; UI-komponentit
 ;; Itse gridin UI-komponentit
 
-(defn- vetolaatikon-tila [ohjaus id]
-  [:td.vetolaatikon-tila {:on-click #(avaa-tai-sulje-vetolaatikko! ohjaus id)}
-   (if (vetolaatikko-auki? ohjaus id)
-     (ikonit/chevron-down)
-     (ikonit/chevron-right))])
+(defn- vetolaatikon-tila [ohjaus vetolaatikot id]
+  (let [vetolaatikko? (contains? vetolaatikot id)]
+    [:td.vetolaatikon-tila {:on-click (when vetolaatikko? #(avaa-tai-sulje-vetolaatikko! ohjaus id))}
+     (when vetolaatikko?
+       (if (vetolaatikko-auki? ohjaus id)
+         (ikonit/chevron-down)
+         (ikonit/chevron-right)))]))
 
 (defn- vetolaatikko-rivi
   "Funktio, joka palauttaa vetolaatikkorivin tai nil. Huom: kutsu tätä funktiona, koska voi palauttaa nil."
@@ -206,12 +208,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet voi-poistaa?
-                              fokus aseta-fokus! tulevat-rivit]} skeema rivi]
+                              fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
   [:tr.muokataan {:class luokka}
    (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi] :as s} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
-       [vetolaatikon-tila ohjaus id]
+       [vetolaatikon-tila ohjaus vetolaatikot id]
 
        (let [s (assoc s :rivi rivi)
              hae (or hae
@@ -276,14 +278,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         (muokkaa! id assoc :poistettu true))}
        (ikonit/trash)])]])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id]} skeema rivi]
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot]} skeema rivi]
   [:tr {:class luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
    (for [{:keys [nimi hae fmt tasaa tyyppi]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
-       [vetolaatikon-tila ohjaus id]
+       [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
        [:td {:class
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
@@ -386,7 +388,7 @@ Optiot on mappi optioita:
                      
                      (when muutos
                        (muutos this))))
-
+                 
                  (vetolaatikko-auki? [_ id]
                    (@vetolaatikot-auki id))
 
@@ -570,6 +572,7 @@ Optiot on mappi optioita:
                                         (when-not (:poistettu rivi)
                                           [^{:key id}
                                            [muokkaus-rivi {:ohjaus ohjaus
+                                                           :vetolaatikot vetolaatikot
                                                            :muokkaa! muokkaa!
                                                            :luokka (str (if (even? i)
                                                                           "parillinen"
@@ -600,6 +603,7 @@ Optiot on mappi optioita:
                                     (let [id ((or tunniste :id) rivi)]
                                       [^{:key id}
                                        [naytto-rivi {:ohjaus ohjaus
+                                                     :vetolaatikot vetolaatikot
                                                      :id id
                                                      :luokka (str (if (even? i) "parillinen" "pariton")
                                                                   (when rivi-klikattu
