@@ -15,7 +15,7 @@
   [ur]
   (let [tavoitteet (atom nil)
         vaihda-urakka! (fn [ur]
-                         (go (reset! tavoitteet (<! (vt/hae-urakan-valitavoitteet ur)))))]
+                         (go (reset! tavoitteet (<! (vt/hae-urakan-valitavoitteet (:id ur))))))]
     (vaihda-urakka! ur)
     (komp/luo
      
@@ -29,9 +29,11 @@
         [grid/grid
          {:otsikko "Välitavoitteet"
           :tallenna #(logt %)
+          :vetolaatikot {1 [:span "foo"]}
           }
 
-         [{:otsikko "Nimi" :leveys "25%" :nimi :nimi :tyyppi :string}
+         [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+          {:otsikko "Nimi" :leveys "25%" :nimi :nimi :tyyppi :string}
           {:otsikko "Takaraja" :leveys "15%" :nimi :takaraja :fmt pvm/pvm :tyyppi :pvm}
           {:otsikko "Valmistunut" :leveys "15%"
            :hae (comp :pvm :valmis) :aseta (fn [rivi arvo]
