@@ -5,10 +5,32 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.valitavoitteet :as vt]
             [harja.ui.grid :as grid]
+            [harja.ui.yleiset :as y]
             [harja.pvm :as pvm]
+            [harja.tiedot.istunto :refer [rooli-urakassa?]]
+            [harja.domain.roolit :as roolit]
             [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+
+(defn valitavoite-lomake [ur vt]
+  [:div.valitavoite
+   [:div.valmis
+    (let [{:keys [pvm merkitsija merkitty kommentti]} (:valmis vt)]
+      [y/rivi
+       y/tietopaneelin-elementtikoko
+       
+       [y/otsikolla "Valmistunut" "ei vielä valmis"]
+       [y/otsikolla "Merkitty valmiiksi" "joskus jolloin"]
+       [y/otsikolla "Valmiiksi merkitsijä" "jokumis jokufirma"]
+       ])]])
+     
+;,     (when (and (nil? pvm)
+;;                (rooli-urakassa? r/urakoitsijan-urakkaroolit-kirjoitus ur))
+;;       ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
+;;       [:div "MERKITSE VALMIIKSI" [:button "just do it"]])
+       
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
@@ -29,7 +51,11 @@
         [grid/grid
          {:otsikko "Välitavoitteet"
           :tallenna #(logt %)
-          :vetolaatikot {1 [:span "foo"]}
+          :vetolaatikot (let [vets (into {}
+                                         (map (juxt :id valitavoite-lomake))
+                                         @tavoitteet)]
+                          (log "vetolaatikoita on : " (pr-str vets))
+                          vets)
           }
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
