@@ -16,7 +16,7 @@
 
 ;; Esimääriteltyjä settejä rooleista
 (def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
-                                           urakoitsijan-laatuvastaa})
+                                           urakoitsijan-laatuvastaava})
 
 
 ;; Tietokannan rooli enumin selvempi kuvaus
