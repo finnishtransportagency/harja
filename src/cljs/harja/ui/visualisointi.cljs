@@ -31,7 +31,7 @@
         tooltip (atom nil)] ;; tooltip text
     (fn [{:keys [width height radius show-text show-legend]} items]
       (let [cx (/ width 2)
-            cy (/ height 2)
+            cy (+ radius 5) ;;(/ height 2)
             radius (or radius (- (/ width 2) 6))
             total (reduce + 0 (vals items))
             hover! (fn [label]
@@ -71,7 +71,7 @@
                   large? (if (< (- end-angle start-angle) 180) 0 1)
                   [sx sy] (polar->cartesian cx cy radius start-angle)
                   [ex ey] (polar->cartesian cx cy radius end-angle)
-                  [tx ty] (polar->cartesian cx cy (* 0.65 radius) (+ start-angle (/ slice-angle 2)))]
+                  [tx ty] (polar->cartesian cx cy (* 0.55 radius) (+ start-angle (/ slice-angle 2)))]
               (recur (conj slices
                            ^{:key label}
                            [:g.klikattava

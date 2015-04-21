@@ -167,29 +167,29 @@
                 @toimenpiteet]]]
           [:div.hoitokauden-kustannukset
            [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-            [:div.col-xs-6
+            [:div.col-xs-6.piirakka
              (let [valittu-kust @valitun-hoitokauden-ja-tpin-kustannukset
                    kaikki-kust @kaikkien-hoitokausien-taman-tpin-kustannukset]
                (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
                  [:span.piirakka-wrapper
                   [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
                   [vis/pie
-                   {:width 300 :height 190 :radius 70 :show-text :percent :show-legend true}
+                   {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                    {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-            [:span.piirakka-wrapper
-             [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
-             [:div.col-xs-6
-              (let [valittu-kust @valitun-hoitokauden-ja-tpin-kustannukset
-                    kaikki-kust @valitun-hoitokauden-kaikkien-tpin-kustannukset]
-                (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+            [:div.col-xs-6.piirakka
+             (let [valittu-kust @valitun-hoitokauden-ja-tpin-kustannukset
+                   kaikki-kust @valitun-hoitokauden-kaikkien-tpin-kustannukset]
+               (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+                 [:span.piirakka-wrapper
+                  [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
                   [vis/pie
-                   {:width 300 :height 190 :radius 70 :show-text :percent :show-legend true}
-                   {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]))]]]
-           
-           [:div "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
+                   {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                   {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]]))]]
+          
+           [:div.summa "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
             [:span (fmt/euro @valitun-hoitokauden-ja-tpin-kustannukset)]
             ]
-           [:div "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
+           [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
             [:span (fmt/euro @kaikkien-hoitokausien-taman-tpin-kustannukset)]
             ]]
           [grid/grid
