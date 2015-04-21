@@ -211,3 +211,31 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
      [:div.tietorivi
       [:span.tietokentta otsikko]
       [:span.tietoarvo arvo]])])
+
+;; Yleinen tietopaneeleissa käytettävä tietueen koko.
+;; Suurella näytöllä, 4 elementtiä vierekkäin, pienimmällä vain 1 per rivi.
+(def tietopaneelin-elementtikoko {:lg 3 :md 4 :sm 6 :xs 12})
+
+(defn rivi
+  "Tekee bootstrap .row divin, jossa jokaisella komponentilla on sama koko.
+Jos annettu koko on numero, tulee luokaksi col-lg-<koko>, jos koko on mäppi {:lg <iso koko> :md <medium koko> ...}
+lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
+  [koko & komponentit]
+  (let [cls (if-not (map? koko)
+              koko
+              (apply str (map (fn [[koko-luokka koko]]
+                                (str "col-" (name koko-luokka) "-" koko " "))
+                              (seq koko))))]
+    [:div.row
+     (map-indexed
+      (fn [i komponentti]
+        ^{:key i}
+        [:div {:class cls}
+         komponentti])
+      (keep identity komponentit))]))
+
+(defn otsikolla
+  "Käärii annetun komponentin <span> elementiin, ja lisää <h4> otsikon ennen sitä."
+  [otsikko komp]
+  [:span [:h4 otsikko]
+   komp])
