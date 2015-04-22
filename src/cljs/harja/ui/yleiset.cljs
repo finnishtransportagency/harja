@@ -239,3 +239,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [otsikko komp]
   [:span [:h4 otsikko]
    komp])
+
+;; Lasipaneelin tyyli, huom: parentin on oltava position: relative 
+(def lasipaneeli-tyyli {:display "block"
+                        :position "absolute"
+                        :top 0
+                        :bottom 0
+                        :opacity 0.5
+                        :background-color "black"
+                        :height "expression(parentElement.scrollHeight+'px')"
+                        :width "100%"})
+
+(defn lasipaneeli [& sisalto]
+  [:div {:style lasipaneeli-tyyli}
+   sisalto])
+
