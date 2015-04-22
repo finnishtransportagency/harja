@@ -134,7 +134,7 @@
                                      "resource/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
-  :less {:source-paths ["dev-resources/less"]
+  :less {:source-paths ["dev-resources/less/application"]
          :target-path "resources/public/css"}
 
 
