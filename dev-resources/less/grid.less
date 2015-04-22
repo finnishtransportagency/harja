@@ -61,10 +61,19 @@ div.grid {
 	background-color: #e1e1e1;
     }
 
-    table.grid tr.vetolaatikko-auki { display: table-row; }
-    table.grid tr.vetolaatikko-kiinni { display: none; }
+    table.grid tr.vetolaatikko-auki {
+       display: table-row;
+       td {
+         padding-bottom: 30px;
+       }
+    }
+
+    // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
+    table.grid tr.vetolaatikko-kiinni {
+      display: none;
+    }
     table.grid td.vetolaatikon-tila { text-align: center; }
-    
+      
     table.grid tr, table.grid td, table.grid th {
 	border: 1px solid #afafaf;    
     }
