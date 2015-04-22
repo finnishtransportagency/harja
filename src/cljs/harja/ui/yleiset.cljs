@@ -254,3 +254,9 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [:div {:style lasipaneeli-tyyli}
    sisalto])
 
+(defn keskita
+  "Div-elementti, joka on absoluuttisesti positioitu top 50% left 50%"
+  [& sisalto]
+  [:div {:style {:position "absolute" :top "50%" :left "50%"}}
+   sisalto])
+
