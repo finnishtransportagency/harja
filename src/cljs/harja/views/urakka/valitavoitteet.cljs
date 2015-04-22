@@ -27,29 +27,38 @@
 
 (defn valitavoite-valmis-lomake [_ ur vt]
   (let [valmis-pvm (atom nil)
-        kommentti (atom "")]
+        kommentti (atom "")
+        tallennus-kaynnissa (atom false)]
     (fn [{aseta-tavoitteet :aseta-tavoitteet} ur vt]
-      [:form
-       [:div.form-group
-        [:label {:for "valmispvm"} "Valmistumispäivä"]
-        [tee-kentta {:tyyppi :pvm}
-         valmis-pvm]]
+      [:div {:style {:position "relative" }}
+       (when @tallennus-kaynnissa
+         [y/lasipaneeli [:div {:style {:position "absolute"
+                                       :top "50%"
+                                       :left "50%"}}
+                         [y/ajax-loader]]])
+       [:form
+        [:div.form-group
+         [:label {:for "valmispvm"} "Valmistumispäivä"]
+         [tee-kentta {:tyyppi :pvm}
+          valmis-pvm]]
 
-       [:div.form-group
-        [:label {:for "kommentti"} "Kommentti"]
-        [:textarea#kommentti.form-control {:on-change #(reset! kommentti (-> % .-target .-value))
-                                           :rows 3
-                                           :value @kommentti}]]
+        [:div.form-group
+         [:label {:for "kommentti"} "Kommentti"]
+         [:textarea#kommentti.form-control {:on-change #(reset! kommentti (-> % .-target .-value))
+                                            :rows 3
+                                            :value @kommentti}]]
 
-       [:div.toiminnot
-        [:button.btn.btn-default {:disabled (nil? @valmis-pvm)
-                                  :on-click #(do (.preventDefault %)
-                                                 (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
-                                                                                                @valmis-pvm @kommentti))]
-                                                       (aseta-tavoitteet res)))
-                                                 (log "merkitään " (pr-str vt) " valmiiksi"))}
-         "Merkitse valmiiksi"]]
-       ])))
+        [:div.toiminnot
+         [:button.btn.btn-default {:disabled (nil? @valmis-pvm)
+                                   :on-click #(do (.preventDefault %)
+                                                  (reset! tallennus-kaynnissa true)
+                                                  (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
+                                                                                                 @valmis-pvm @kommentti))]
+                                                        (aseta-tavoitteet res)
+                                                        (reset! tallennus-kaynnissa false)))
+                                                  (log "merkitään " (pr-str vt) " valmiiksi"))}
+          "Merkitse valmiiksi"]]
+        ]])))
 
 
             
