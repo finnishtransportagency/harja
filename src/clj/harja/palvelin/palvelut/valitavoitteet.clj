@@ -24,7 +24,24 @@
     (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
                                      (:id user) urakka-id valitavoite-id))
          (hae-valitavoitteet db user urakka-id))))
-  
+
+(defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (jdbc/with-db-transaction [c db]
+    ;; Poistetaan tietokannasta :poistettu merkityt
+    (doseq [poistettava (filter :poistettu valitavoitteet)]
+      (q/poista-valitavoite! c (:id user) urakka-id (:id poistettava)))
+
+    ;; Luodaan uudet (FIXME: lisää kentät kun speksi valmis)
+    (doseq [{:keys [takaraja nimi]} (filter #(< (:id %) 0) valitavoitteet)]
+      (q/lisaa-valitavoite<! c urakka-id (konv/sql-date takaraja) nimi (:id user)))
+
+    ;; Päivitetään olemassaolevat (FIXME: lisää kentät kun speksi valmis)
+    (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
+      (q/paivita-valitavoite! c nimi (konv/sql-date takaraja) (:id user) urakka-id id))
+
+    ;; Lopuksi haetaan uudet tavoitteet
+    (hae-valitavoitteet c user urakka-id)))
 
 (defrecord Valitavoitteet []
   component/Lifecycle
@@ -35,8 +52,13 @@
     (julkaise-palvelu (:http-palvelin this) :merkitse-valitavoite-valmiiksi
                       (fn [user tiedot]
                         (merkitse-valmiiksi! (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this) :tallenna-valitavoitteet
+                      (fn [user tiedot]
+                        (tallenna! (:db this) user tiedot)))
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae-urakan-valitavoitteet :merkitse-valitavoite-valmiiksi)
+    (poista-palvelut (:http-palvelin this)
+                     :hae-urakan-valitavoitteet :merkitse-valitavoite-valmiiksi
+                     :tallenna-valitavoitteet)
     this))

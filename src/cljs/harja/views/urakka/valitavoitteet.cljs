@@ -18,12 +18,14 @@
 
 
 (defn valmiustilan-kuvaus [{:keys [valmis takaraja]}]
-  (let [valmis-pvm (:pvm valmis)]
-    (if valmis-pvm
-      (str "Valmistunut " (pvm/pvm valmis-pvm)) 
-      (if (t/after? (pvm/nyt) takaraja)
-        "Myöhässä"
-        "Ei valmis"))))
+  (if-not takaraja
+    "Uusi"
+    (let [valmis-pvm (:pvm valmis)]
+      (if valmis-pvm
+        (str "Valmistunut " (pvm/pvm valmis-pvm))
+        (if (t/after? (pvm/nyt) takaraja)
+          "Myöhässä"
+          "Ei valmis")))))
 
 (defn valitavoite-valmis-lomake [_ ur vt]
   (let [valmis-pvm (atom nil)
@@ -32,10 +34,7 @@
     (fn [{aseta-tavoitteet :aseta-tavoitteet} ur vt]
       [:div {:style {:position "relative" }}
        (when @tallennus-kaynnissa
-         [y/lasipaneeli [:div {:style {:position "absolute"
-                                       :top "50%"
-                                       :left "50%"}}
-                         [y/ajax-loader]]])
+         (y/lasipaneeli (y/keskita (y/ajax-loader))))
        [:form
         [:div.form-group
          [:label {:for "valmispvm"} "Valmistumispäivä"]
@@ -97,7 +96,8 @@
   [ur]
   (let [tavoitteet (atom nil)
         vaihda-urakka! (fn [ur]
-                         (go (reset! tavoitteet (<! (vt/hae-urakan-valitavoitteet (:id ur))))))]
+                         (go (reset! tavoitteet (<! (vt/hae-urakan-valitavoitteet (:id ur))))))
+        tallennus-kaynnissa (atom false)]
     (vaihda-urakka! ur)
     (komp/luo
      
@@ -106,16 +106,19 @@
                                       (vaihda-urakka! ur))}
      
      (fn [ur]
-       [:div.valitavoitteet
-        [:br][:br][:br] ;; FIXME: mieti mitä pienelle kartalle pitäisi tehdä, jää "muokkaa" napin alle
+       [:div.valitavoitteet {:style {:position "relative"}}
+        
+        (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
         [grid/grid
          {:otsikko "Välitavoitteet"
-          :tallenna #(logt %)
-          :vetolaatikot (let [vets (into {}
-                                         (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
-                                         @tavoitteet)]
-                          (log "vetolaatikoita on : " (pr-str vets))
-                          vets)
+          :tallenna #(go (reset! tallennus-kaynnissa true)
+                         (go
+                           (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
+                           (reset! tallennus-kaynnissa false)))
+                         
+          :vetolaatikot (into {}
+                              (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
+                              @tavoitteet)
           }
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}

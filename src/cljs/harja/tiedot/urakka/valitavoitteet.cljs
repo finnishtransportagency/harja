@@ -33,3 +33,11 @@
                               :kommentti kommentti}))]
         (>! ch res)))
     ch))
+
+(defn tallenna! [urakka-id valitavoitteet]
+  (let [ch (chan)]
+    (go (let [res (<! (k/post! :tallenna-valitavoitteet
+                               {:urakka-id urakka-id
+                                :valitavoitteet valitavoitteet}))]
+          (>! ch res)))
+    ch))
