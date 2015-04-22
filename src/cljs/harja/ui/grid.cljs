@@ -712,14 +712,14 @@ Optiot on mappi optioita:
           [:h6.panel-title otsikko]
           (when (not= false voi-muokata?)
             [:span.pull-right.muokkaustoiminnot
-             [:button.btn.btn-sm.btn-default
+             [:button.nappi-toissijainen
               {:disabled  (empty? @historia)
                :on-click #(do (.stopPropagation %)
                               (.preventDefault %)
                               (peru!))}
               (ikonit/peru) " Kumoa"]
              (when (not= false voi-lisata?)
-               [:button.btn.btn-default.btn-sm.grid-lisaa {:on-click #(do (.preventDefault %)
+               [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                           (lisaa-rivi! ohjaus {}))}
                 (ikonit/plus-sign) " Lisää rivi"])])]
          [:div.panel-body
