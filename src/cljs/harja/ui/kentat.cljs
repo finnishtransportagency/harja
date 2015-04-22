@@ -134,7 +134,8 @@
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
     ;; FIXME: on-focus alasvetovalintaan?
-    [alasvetovalinta {:valinta @data
+    [alasvetovalinta {:class "alasveto-gridin-kentta"
+                      :valinta @data
                       :valitse-fn #(do (log "valinta: " %)
                                        (reset! data %))
                       :format-fn valinta-nayta}

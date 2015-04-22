@@ -1,0 +1,254 @@
+/*
+* pikock http://www.pikock.com/ , autreplanete http://www.autreplanete.com/
+*
+**/
+
+
+// Grays
+@gray-darker: @harmaa1;
+@gray-dark: @harmaa3;
+@gray: @harmaa5;
+@gray-light: @harmaa7;
+@gray-lighter: @harmaa9;
+
+
+// Brand Colors
+@brand-primary: @sininen4;
+@brand-info: @sininen5;
+@brand-success: @onnistuminen;
+@brand-warning: @varoitus;
+@brand-danger: @vaara;
+
+
+// Scaffolding
+@body-bg: @valkoinen;
+@text-color: @harmaa1;
+@link-color: @fontin-vari-linkki;
+@link-hover-color: @fontin-vari-osoitettu-linkki;
+@padding-base-vertical: 6px;
+@padding-base-horizontal: 12px;
+@padding-large-vertical: 10px;
+@padding-large-horizontal: 16px;
+@padding-small-vertical: 5px;
+@padding-small-horizontal: 10px;
+@border-radius-base: 0px;
+@border-radius-large: 0px;
+@border-radius-small: 0px;
+@line-height-large: 1.33;
+@line-height-small: 1.5;
+@component-active-bg: @sininen5;
+
+
+// Typography
+@font-family-sans-serif: @fontin-kirjasin-leipateksti;
+@font-family-serif: serif;
+@font-family-monospace: Monaco;
+@font-family-base: @font-family-sans-serif;
+@font-size-base: @fontin-koko-leipateksti;
+@font-size-large: ceil(@font-size-base * 1.25);
+@font-size-small: ceil(@font-size-base * 0.85);
+@font-size-h1: floor((@font-size-base * @fontin-koko-h1));
+@font-size-h2: floor((@font-size-base * @fontin-koko-h2));
+@font-size-h3: floor((@font-size-base * @fontin-koko-h3));
+@font-size-h4: floor((@font-size-base * @fontin-koko-leipateksti));
+@font-size-h5: floor((@font-size-base * @fontin-koko-leipateksti));
+@font-size-h6: floor((@font-size-base * @fontin-koko-leipateksti));
+@line-height-base: 1.428571429;
+@line-height-computed: floor(@font-size-base * @line-height-base);
+@headings-font-family: @fontin-kirjasin-h1;
+@headings-font-weight: @fontin-paino-h1;
+@headings-line-height: 1.1;
+@headings-color: inherit;
+
+
+// Buttons
+@btn-font-weight: normal;
+@btn-default-color: #333;
+@btn-default-bg: #ddd;
+@btn-default-border: #ccc;
+@btn-primary-color: #fff;
+@btn-primary-bg:     @brand-primary;
+@btn-primary-border: @sininen3;
+@btn-success-color:  @body-bg;
+@btn-success-bg:     @brand-success;
+@btn-success-border: @brand-success;
+@btn-warning-color:  @body-bg;
+@btn-warning-bg:     @brand-warning;
+@btn-warning-border: @brand-warning;
+@btn-danger-color:  @body-bg;
+@btn-danger-bg:     @brand-danger;
+@btn-danger-border: @brand-danger;
+@btn-info-color:  @body-bg;
+@btn-info-bg:     @brand-info;
+@btn-info-border: @brand-primary;
+@btn-link-disabled-color: @gray-light;
+
+
+// Dropdowns
+@dropdown-bg: #fff;
+@dropdown-border: rgba(0,0,0,.15);
+@dropdown-divider-bg: @harmaa8;
+@dropdown-link-active-color: @brand-info;
+@dropdown-link-active-bg: @component-active-bg;
+@dropdown-link-color: @gray-dark;
+@dropdown-link-hover-color: @valkoinen;
+@dropdown-link-hover-bg: @dropdown-link-active-bg;
+@dropdown-link-disabled-color: @gray-light;
+@dropdown-header-color: @gray-light;
+@dropdown-caret-color: #000;
+
+
+// Forms
+@input-bg: #fff;
+@input-bg-disabled: @gray-lighter;
+@input-color: @gray;
+@input-border: #ccc;
+@input-border-radius: @border-radius-base;
+@input-color-placeholder: @gray-light;
+@input-height-base: (@line-height-computed + (@padding-base-vertical * 2) + 2);
+@input-height-large: (floor(@font-size-large * @line-height-large) + (@padding-large-vertical * 2) + 2);
+@input-height-small: (floor(@font-size-small * @line-height-small) + (@padding-small-vertical * 2) + 2);
+@legend-color: @gray-dark;
+@legend-border-color: #e5e5e5;
+@input-group-addon-bg: @gray-lighter;
+@input-group-addon-border-color: @input-border;
+
+
+// Table
+@table-cell-padding: 8px;
+@table-condensed-cell-padding: 5px;
+@table-cell-padding: 8px;
+@table-condensed-cell-padding: 5px;
+@table-bg: transparent;
+@table-bg-accent: #f9f9f9;
+@table-bg-hover: #f5f5f5;
+@table-bg-active: @table-bg-hover;
+@table-border-color: #ddd;
+
+
+// Navbar
+@navbar-height: @palkin-korkeus;
+@navbar-default-color: @valkoinen;
+@navbar-default-brand-color: @valkoinen;
+@navbar-margin-bottom: 0px; // @line-height-computed;
+@navbar-default-bg: @harmaa3;
+@navbar-default-border: @navbar-default-bg;
+@navbar-border-radius: @border-radius-base;
+@navbar-padding-horizontal: floor(@grid-gutter-width / 2);
+
+@navbar-padding-vertical: 10px; // ((@navbar-height - @line-height-computed) / 2);
+
+@navbar-default-link-color: @harmaa1;
+@navbar-default-link-hover-color: @harmaa1;
+@navbar-default-link-hover-bg: none;
+@navbar-default-link-active-color: @valkoinen;
+@navbar-default-link-active-bg: @harmaa9;
+@navbar-default-link-disabled-color: @harmaa4;
+@navbar-default-link-disabled-bg: transparent;
+@navbar-default-brand-color: @valkoinen;
+@navbar-default-brand-hover-color: @navbar-default-brand-color;
+@navbar-default-brand-hover-bg: transparent;
+@navbar-default-toggle-hover-bg: transparent;
+@navbar-default-toggle-icon-bar-bg: #fff;
+@navbar-default-toggle-border-color: #fff;
+
+
+// Navs Tabs
+@nav-link-padding: 10px;
+@nav-link-hover-bg: transparent;
+@nav-disabled-link-color:       @body-bg;
+@nav-disabled-link-hover-color: @gray-light;
+@nav-tabs-border-color:            @gray-light;
+@nav-tabs-link-hover-border-color: @brand-info;
+@nav-tabs-active-link-hover-bg:           @body-bg;
+@nav-tabs-active-link-hover-color:        @text-color;
+@nav-tabs-active-link-hover-border-color: @gray-light;
+@nav-tabs-justified-link-border-color: @brand-primary;
+@nav-tabs-justified-active-link-border-color: @body-bg;
+@nav-pills-border-radius: @border-radius-base;
+@nav-pills-active-link-hover-bg: @component-active-bg;
+@nav-pills-active-link-hover-color: #fff;
+
+
+// Jumbotron
+@jumbotron-padding: 30px;
+@jumbotron-color: inherit;
+@jumbotron-bg: @gray-lighter;
+@jumbotron-font-size: ceil((@font-size-base * 1.5));
+
+
+// Pagination
+@pagination-bg: #fff;
+@pagination-border: #ddd;
+@pagination-hover-bg: @gray-lighter;
+@pagination-hover-color: @link-hover-color;
+@pagination-hover-border: #ddd;
+@pagination-active-bg: @brand-primary;
+@pagination-active-color: #fff;
+@pagination-active-border: @brand-primary;
+@pagination-disabled-color: @gray-light;
+@pagination-disabled-bg: #fff;
+@pagination-disabled-border: #ddd;
+@pager-bg: @pagination-bg;
+@pager-border: @pagination-border;
+@pager-border-radius: 15px;
+@pager-hover-bg: @pagination-hover-bg;
+@pager-active-bg: @pagination-active-bg;
+@pager-active-color: @pagination-active-color;
+@pager-bg: @pagination-bg;
+@pager-disabled-color: @gray-light;
+
+
+// Form States
+@state-warning-text: #c09853;
+@state-warning-bg: #fcf8e3;
+@state-warning-border: darken(spin(@state-warning-bg, -10), 3%);
+@state-danger-text: #b94a48;
+@state-danger-bg: #f2dede;
+@state-danger-border: darken(spin(@state-danger-bg, -10), 3%);
+@state-success-text: #468847;
+@state-success-bg: #dff0d8;
+@state-success-border: darken(spin(@state-success-bg, -10), 5%);
+@state-info-text: #3a87ad;
+@state-info-bg: #d9edf7;
+@state-info-border: darken(spin(@state-info-bg, -10), 7%);
+
+
+// ToolTip
+@tooltip-max-width: 200px;
+@tooltip-color: #fff;
+@tooltip-bg: #000;
+@tooltip-arrow-width: 5px;
+@tooltip-arrow-color: @tooltip-bg;
+@tooltip-opacity: .9;
+
+
+// Popover
+@popover-bg: #fff;
+@popover-max-width: 276px;
+@popover-border-color: rgba(0,0,0,.2);
+@popover-fallback-border-color: #ccc;
+@popover-title-bg: darken(@popover-bg, 3%);
+@popover-arrow-width: 10px;
+@popover-arrow-color: #fff;
+@popover-arrow-outer-width: (@popover-arrow-width + 1);
+@popover-arrow-outer-color: rgba(0,0,0,.25);
+@popover-arrow-outer-fallback-color: #999;
+
+
+// List Group
+@list-group-bg: #fff;
+@list-group-border: #ddd;
+@list-group-border-radius: @border-radius-base;
+@list-group-hover-bg: #f5f5f5;
+@list-group-active-color: #fff;
+@list-group-active-bg: @component-active-bg;
+@list-group-active-border: @list-group-active-bg;
+@list-group-active-text-color: lighten(@list-group-active-bg, 40%);
+@list-group-link-color: #555;
+@list-group-link-heading-color: #333;
+
+
+// Sprites
+@icon-font-path: 'fonts/';
+@icon-font-name: glyphicons-halflings-regular;

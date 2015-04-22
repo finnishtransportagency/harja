@@ -14,12 +14,16 @@
 .border-style-thin {
 	border: thin ridge @color-dark-gray;
 }
+.harja-alasveto.open {
+	.nappi-alasveto {
+		border: 1px solid @sininen4;
+	}
+}
 .harja-alasveto (@leveys: 200px) {
-		width: @leveys;
-		button {
-			height: 32px;
-			width: @leveys - 20px;
-		}
+	width: @leveys;
+	.nappi-alasveto {
+		height: 32px;
+		width: @leveys - 20px;
 		.valittu {
 			display: inline-block;
 			overflow-x: hidden;
@@ -31,6 +35,23 @@
 			top: -5px;
 		}
 	}
+}
+.harja-alasvetolista {
+	border: 1px solid @sininen4;
+}
+.dropdown-menu .harja-alasvetolistaitemi > a {
+	background-color: @valkoinen;
+	border-color: @harmaa7;
+	&:hover,
+	&:focus,
+	&.focus,
+	&:active {
+		background-color: @harmaa9;
+		color:            @harmaa1;
+	}
+
+}
+
 .rounded(@radius: 4px) {
 	border-radius: @radius;
 	-webkit-border-radius: @radius;

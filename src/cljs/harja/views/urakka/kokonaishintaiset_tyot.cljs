@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta teksti-ja-nappi]]
+                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
             [harja.ui.visualisointi :as vis]
 
             [harja.tiedot.urakka.suunnittelu :as s]

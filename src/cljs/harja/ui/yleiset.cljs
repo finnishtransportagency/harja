@@ -82,19 +82,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
-(defn teksti-ja-nappi [teksti napin-teksti toiminto]
-  [:div.teksti-ja-nappi
-   [:div.form-control.input-group
-   [:label.teksti-ja-nappi-label teksti]
-   [:button.btn.btn-sm.btn-primary.pull-right
-    {:on-click  #(do
-                  (.stopPropagation %)
-                  (.preventDefault %)
-                  (toiminto)
-                  nil)
-     :type "button"}
-    napin-teksti]]])
-
 (defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
   [:span
    [:div.raksiboksi.input-group
@@ -116,7 +103,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
      (let [auki (:auki (reagent/state (reagent/current-component)))]
        [:div.dropdown.harja-alasveto {:class (str class " " (when @auki "open"))}
-        [:button.btn.btn-default
+        [:button.nappi-alasveto
          {:type "button"
           :disabled (if disabled "disabled" "")
           :on-click #(do
@@ -151,10 +138,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (reset! auki false))))))}
          [:div.valittu (format-fn valinta)]
          " " [:span.caret]]
-        [:ul.dropdown-menu
+        [:ul.dropdown-menu.harja-alasvetolista
          (for [vaihtoehto vaihtoehdot]
            ^{:key (hash vaihtoehto)}
-           [:li (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+           [:li.harja-alasvetolistaitemi (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                     (reset! auki false)
                                                     nil))])
          ]]))
