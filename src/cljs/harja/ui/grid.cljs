@@ -202,7 +202,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     ^{:key (str "vetolaatikko" id)}
     [:tr.vetolaatikko {:class (if (@vetolaatikot-auki id) "vetolaatikko-auki" "vetolaatikko-kiinni")} 
      [:td {:colSpan colspan}
-      vetolaatikko]]))
+      [:div.vetolaatikko-sisalto vetolaatikko]]]))
   
   
 

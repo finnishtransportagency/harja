@@ -5,4 +5,12 @@ SELECT id, nimi, takaraja, viikkosakko, sakko,
        luotu, muokattu, luoja, muokkaaja
   FROM valitavoite
  WHERE poistettu = false AND urakka = :urakka
+ORDER BY takaraja ASC
+
+-- name: merkitse-valmiiksi!
+-- Merkitsee välitavoitteen valmiiksi
+UPDATE valitavoite
+   SET valmis_pvm=:valmis, valmis_kommentti=:kommentti, valmis_merkitsija=:user, valmis_merkitty=NOW()
+ WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false
+ 
  
