@@ -4,7 +4,7 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia livi-pudotusvalikko]]
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
@@ -31,7 +31,7 @@
         [:ol.breadcrumb.murupolku
          [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
          (when-let [valittu @nav/valittu-hallintayksikko]
-           [:li.dropdown {:class (when (= :hallintayksikko @valinta-auki) "open")}
+           [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko @valinta-auki) "open")}
          
             (let [vu @nav/valittu-urakka
                   va @valinta-auki]
@@ -41,7 +41,7 @@
                  ]
                 [:span.valittu-hallintayksikko (:nimi valittu) " "]))
          
-            [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
+            [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                                (fn [v]
                                                                                  (if (= v :hallintayksikko)
                                                                                    nil
@@ -49,16 +49,16 @@
              [:span.caret]]
          
             ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
-            [:ul.dropdown-menu {:role "menu"}
+            [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
              (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
                ^{:key (str "hy-" (:id muu-yksikko))}
-               [:li [linkki (:nimi muu-yksikko) #(do (reset! valinta-auki nil)
+               [:li.harja-alasvetolistaitemi [linkki (:nimi muu-yksikko) #(do (reset! valinta-auki nil)
                                                      (nav/valitse-hallintayksikko muu-yksikko)) ]])]])
          (when-let [valittu @nav/valittu-urakka]
-           [:li.dropdown {:class (when (= :urakka @valinta-auki) "open")}
+           [:li.dropdown.livi-alasveto {:class (when (= :urakka @valinta-auki) "open")}
             [:span.valittu-urakka (:nimi valittu) " "]
          
-            [:button.btn.btn-default.btn-xs.dropdown-toggle {:on-click #(swap! valinta-auki
+            [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                                (fn [v]
                                                                                  (if (= v :urakka)
                                                                                    nil
@@ -66,7 +66,7 @@
              [:span.caret]]
          
             ;; Alasvetovalikko urakan nopeaa vaihtamista varten
-            [:ul.dropdown-menu {:role "menu"}
+            [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
           
              (let [muut-urakat (filter #(not= % valittu) @nav/suodatettu-urakkalista)]
             
@@ -74,11 +74,11 @@
                  [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
                  (for [muu-urakka muut-urakat]
                    ^{:key (str "ur-" (:id muu-urakka))}
-                   [:li [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])
+                   [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])
       
          [:span.pull-right.murupolku-suotimet
           [:div [:span.urakoitsija-otsikko "Urakoitsija"]
-           [alasvetovalinta {:valinta urakoitsija
+           [livi-pudotusvalikko {:valinta urakoitsija
                              :format-fn #(if % (:nimi %) "Kaikki")
                              :valitse-fn nav/valitse-urakoitsija!
                              :class "alasveto-urakoitsija"
@@ -93,7 +93,7 @@
                                ) nil))
             ]]
           [:div [:span.urakoitsija-otsikko "Urakkatyyppi"]
-           [alasvetovalinta {:valinta urakkatyyppi
+           [livi-pudotusvalikko {:valinta urakkatyyppi
                              :format-fn #(if % (:nimi %) "Kaikki")
                              :valitse-fn nav/vaihda-urakkatyyppi!
                              :class "alasveto-urakkatyyppi"

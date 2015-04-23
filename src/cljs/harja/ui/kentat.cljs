@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.ui.yleiset :refer [alasvetovalinta linkki ajax-loader nuolivalinta]]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta]]
             [harja.ui.protokollat :refer [hae]]
             [harja.loki :refer [log]]
             [clojure.string :as str]
@@ -134,11 +134,10 @@
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
     ;; FIXME: on-focus alasvetovalintaan?
-    [alasvetovalinta {:class "alasveto-gridin-kentta"
-                      :valinta @data
-                      :valitse-fn #(do (log "valinta: " %)
-                                       (reset! data %))
-                      :format-fn valinta-nayta}
+    [livi-pudotusvalikko {:valinta @data
+                          :valitse-fn #(do (log "valinta: " %)
+                                           (reset! data %))
+                          :format-fn valinta-nayta}
      valinnat]))
 
 

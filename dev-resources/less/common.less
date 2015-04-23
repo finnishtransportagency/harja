@@ -14,30 +14,34 @@
 .border-style-thin {
 	border: thin ridge @color-dark-gray;
 }
-.harja-alasveto.open {
+.livi-alasveto.open {
 	.nappi-alasveto {
 		border: 1px solid @sininen4;
 	}
 }
-.harja-alasveto (@leveys: 200px) {
+.livi-alasveto (@leveys: 200px, @min-leveys: 160px) {
+	min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
 	width: @leveys;
 	.nappi-alasveto {
 		height: 32px;
-		width: @leveys - 20px;
 		.valittu {
 			display: inline-block;
 			overflow-x: hidden;
+			padding-right: 30px;
 			text-align: left;
-			width: @leveys - 50px;
+			vertical-align: middle;
+			width: 100%;
 		}
 		.caret {
+			float: right;
 			position: relative;
-			top: -5px;
+			top: -10px;
 		}
 	}
-}
-.harja-alasvetolista {
-	border: 1px solid @sininen4;
+	.livi-alasvetolista {
+		border: 1px solid @sininen4;
+		width: @leveys;
+	}
 }
 .dropdown-menu .harja-alasvetolistaitemi > a {
 	background-color: @valkoinen;

@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [schema.core :as s]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [ajax-loader linkki alasvetovalinta]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]

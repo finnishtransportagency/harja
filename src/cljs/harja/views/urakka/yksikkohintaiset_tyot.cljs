@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]

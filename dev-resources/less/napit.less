@@ -90,7 +90,7 @@
 .nappi-alasveto {
     color:                 @harmaa1;
     background-color:      @valkoinen;
-    border-color:          @harmaa7;
+    border:                1px solid @harmaa7;
     font-weight:           normal;
     width:                 100%;
     &:active,
@@ -101,4 +101,8 @@
     &[disabled] {
         color: @harmaa7;
     }
+}
+.nappi-murupolkualasveto {
+    .nappi-alasveto;
+    width: 26px;
 }

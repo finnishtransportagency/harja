@@ -10,7 +10,7 @@
              
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia alasvetovalinta radiovalinta]])
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -40,7 +40,7 @@
           [:div.alasvetovalikot
            [:div.label-ja-alasveto 
             [:span.alasvedon-otsikko "Sopimusnumero"]
-            [alasvetovalinta {:valinta @s/valittu-sopimusnumero
+            [livi-pudotusvalikko {:valinta @s/valittu-sopimusnumero
                               :format-fn second
                               :valitse-fn s/valitse-sopimusnumero!
                               :class "alasveto"
@@ -49,7 +49,7 @@
              ]]
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Hoitokausi"]
-            [alasvetovalinta {:valinta @s/valittu-hoitokausi
+            [livi-pudotusvalikko {:valinta @s/valittu-hoitokausi
                               ;;\u2014 on väliviivan unikoodi
                               :format-fn #(if % (str (pvm/pvm (first %)) 
                                                      " \u2014 " (pvm/pvm (second %))) "Valitse")

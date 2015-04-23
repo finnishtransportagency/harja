@@ -96,13 +96,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
-(defn alasvetovalinta [_ vaihtoehdot]
+(defn livi-pudotusvalikko [_ vaihtoehdot]
   (kuuntelija
    {:auki (atom false)}
 
    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
      (let [auki (:auki (reagent/state (reagent/current-component)))]
-       [:div.dropdown.harja-alasveto {:class (str class " " (when @auki "open"))}
+       [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
         [:button.nappi-alasveto
          {:type "button"
           :disabled (if disabled "disabled" "")
@@ -137,8 +137,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   13 ;; enter
                                   (reset! auki false))))))}
          [:div.valittu (format-fn valinta)]
-         " " [:span.caret]]
-        [:ul.dropdown-menu.harja-alasvetolista
+         [:span.caret]]
+        [:ul.dropdown-menu.livi-alasvetolista
          (for [vaihtoehto vaihtoehdot]
            ^{:key (hash vaihtoehto)}
            [:li.harja-alasvetolistaitemi (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)

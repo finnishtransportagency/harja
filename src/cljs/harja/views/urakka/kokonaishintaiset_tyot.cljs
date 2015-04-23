@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia alasvetovalinta radiovalinta]]
+                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
             [harja.ui.visualisointi :as vis]
 
             [harja.tiedot.urakka.suunnittelu :as s]
@@ -158,7 +158,7 @@
          [:div.alasvetovalikot
               [:div.label-ja-alasveto
                [:span.alasvedon-otsikko "Toimenpide"]
-               [alasvetovalinta {:valinta    @valittu-toimenpide
+               [livi-pudotusvalikko {:valinta    @valittu-toimenpide
                                  ;;\u2014 on väliviivan unikoodi
                                  :format-fn  #(if % (str (:tpi_nimi %)) "Valitse")
                                  :valitse-fn #(reset! valittu-toimenpide %)
