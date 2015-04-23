@@ -59,7 +59,9 @@
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
-        (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+        (map #(assoc %
+                :tyyppi (keyword (:tyyppi %))
+                :sopimustyyppi (and (:tyyppi %) (keyword (:tyyppi %)))))
         
         (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))

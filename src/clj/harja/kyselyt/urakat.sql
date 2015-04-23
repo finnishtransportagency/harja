@@ -2,7 +2,7 @@
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
 -- PENDING: joinataan mukaan ylläpidon urakat eri taulusta?
 SELECT u.id, u.nimi, u.sampoid, u.alue,
-       u.alkupvm, u.loppupvm, u.tyyppi,
+       u.alkupvm, u.loppupvm, u.tyyppi, u.sopimustyyppi, 
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
        (SELECT array_agg(concat(id, '=', sampoid)) FROM sopimus s WHERE urakka = u.id)  as sopimukset,
@@ -17,7 +17,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue,
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
-       u.alkupvm, u.loppupvm, u.tyyppi,
+       u.alkupvm, u.loppupvm, u.tyyppi, u.sopimustyyppi,
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
        (SELECT array_agg(concat(id, '=', sampoid)) FROM sopimus s WHERE urakka = u.id)  as sopimukset,
@@ -35,7 +35,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
 -- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
 -- tai urakat joissa annettu urakoitsija on urakoitsijana.
 SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
-       u.alkupvm, u.loppupvm, u.tyyppi,
+       u.alkupvm, u.loppupvm, u.tyyppi, u.sopimustyyppi, 
        hal.id as hallintayksikko_id, hal.nimi as hallintayksikko_nimi, hal.lyhenne as hallintayksikko_lyhenne, 
        urk.id as urakoitsija_id, urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus,
        (SELECT array_agg(concat(id, '=', sampoid)) FROM sopimus s WHERE urakka = u.id)  as sopimukset,
