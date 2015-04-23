@@ -18,13 +18,31 @@
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 
-(defn hoitokaudet [ur]
-  (let [ensimmainen-vuosi (.getYear (:alkupvm ur))
-        viimeinen-vuosi (.getYear (:loppupvm ur))]
-    (mapv (fn [vuosi]
-            [(pvm/hoitokauden-alkupvm vuosi)
-             (pvm/hoitokauden-loppupvm (inc vuosi))])
-          (range ensimmainen-vuosi viimeinen-vuosi))))
+
+(defn hoitokaudet
+  "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
+urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
+ja viimeinen voivat olla vajaat)."
+  [ur]
+  (let [ensimmainen-vuosi (pvm/vuosi (:alkupvm ur))
+        viimeinen-vuosi (pvm/vuosi (:loppupvm ur))]
+    (if (= :hoito (:tyyppi ur))
+      ;; Hoidon alueurakan hoitokaudet
+      (mapv (fn [vuosi]
+              [(pvm/hoitokauden-alkupvm vuosi)
+               (pvm/hoitokauden-loppupvm (inc vuosi))])
+            (range ensimmainen-vuosi viimeinen-vuosi))
+      ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
+      (if (= ensimmainen-vuosi viimeinen-vuosi)
+        ;; Jos alku- ja loppuvuosi on sama, palautetaan vain 1 kausi
+        [[(:alkupvm ur) (:loppupvm ur)]]
+
+        ;; Muutoin palautetaan [ensimmäisen vuoden osa] .. [täydet vuodet] .. [viimeisen vuoden osa]
+        (vec (concat [[(:alkupvm ur) (pvm/vuoden-viim-pvm ensimmainen-vuosi)]]
+                     (mapv (fn [vuosi]
+                             [(pvm/vuoden-eka-pvm vuosi) (pvm/vuoden-viim-pvm vuosi)])
+                           (range (inc ensimmainen-vuosi) viimeinen-vuosi))
+                     [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
 
 ;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm

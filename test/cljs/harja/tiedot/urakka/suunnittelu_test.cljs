@@ -22,7 +22,8 @@
 ;; lisätään urakkaan vain testauksen kannalta tarvittavat kentät
 (def +testi-urakka+
   {:alkupvm  (pvm/hoitokauden-alkupvm 2015)
-   :loppupvm (pvm/hoitokauden-loppupvm 2020)})
+   :loppupvm (pvm/hoitokauden-loppupvm 2020)
+   :tyyppi :hoito})
 
 (deftest hae-urakan-hoitokaudet []
          (let [hoitokaudet (s/hoitokaudet +testi-urakka+)
@@ -110,7 +111,8 @@
   )
 (def +testi-urakka-kaksi-vuotta+
   {:alkupvm  (pvm/hoitokauden-alkupvm 2005)
-   :loppupvm (pvm/hoitokauden-loppupvm 2007)})
+   :loppupvm (pvm/hoitokauden-loppupvm 2007)
+   :tyyppi :hoito})
 
 (deftest hoitokausien-sisalto-sama []
   ;; PENDING: miten tämä toimii? jos muuta +hoitokausien-tyorivit-samat+ jotain kohtaa, en saa failaamaan
@@ -160,7 +162,8 @@
         rivit [{:maara 66 :alkupvm alkupvm :loppupvm loppupvm}]
         
         kopioidut (s/rivit-tulevillekin-kausille {:alkupvm (->pvm "01.10.2005")
-                                                  :loppupvm (->pvm "30.09.2010")}
+                                                  :loppupvm (->pvm "30.09.2010")
+                                                  :tyyppi :hoito}
                                                  rivit
                                                  [alkupvm loppupvm])]
     (is (= 4 (count kopioidut)))
@@ -171,7 +174,8 @@
 
 (deftest tietojen-kopiointi-tuleville-hoitokausille-kok-hint-tyot []
          (let [urakka {:alkupvm  (pvm/hoitokauden-alkupvm 2005)
-                       :loppupvm (pvm/hoitokauden-loppupvm 2010)}
+                       :loppupvm (pvm/hoitokauden-loppupvm 2010)
+                       :tyyppi :hoito}
                alkupvm (pvm/hoitokauden-alkupvm 2006)
                loppupvm (pvm/hoitokauden-loppupvm 2007)
                rivit [{:maksupvm (->pvm "15.02.2006")
@@ -212,7 +216,8 @@
 
 (deftest hoitokausittain-ryhmittely-tyhjat-mukana
   (let [hoitokaudet (s/hoitokaudet {:alkupvm (pvm/hoitokauden-alkupvm 2005)
-                                    :loppupvm (pvm/hoitokauden-loppupvm 2008)})
+                                    :loppupvm (pvm/hoitokauden-loppupvm 2008)
+                                    :tyyppi :hoito})
         r (s/ryhmittele-hoitokausittain +ryhmiteltava+ hoitokaudet)
         kaudet (sort-by first (keys r))]
     (is (= 3 (count kaudet)))
@@ -267,3 +272,32 @@
     :kuukausi 11}]
     (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi rivi))))
     (is (= (pvm/hoitokauden-loppupvm 2014) (:loppupvm (kokhint-tyot/aseta-hoitokausi rivi))))))
+
+(deftest yllapitourakan-sopimuskaudet-monta-vuotta
+  (let [kaudet (s/hoitokaudet {:tyyppi :tiemerkinta
+                               :alkupvm (pvm/->pvm "1.10.2007")
+                               :loppupvm (pvm/->pvm "30.9.2012")})]
+    (is (= 6 (count kaudet)) "kuusi sopimuskautta")))
+
+(deftest yllapitourakan-sopimuskaudet-yksi-vuosi
+  (let [kaudet (s/hoitokaudet {:tyyppi :valaistus
+                               :alkupvm (pvm/->pvm "7.7.2012")
+                               :loppupvm (pvm/->pvm "1.8.2012")})]
+    (is (= 1 (count kaudet)) "1 sopimuskausi")
+    (let [[alku loppu] (first kaudet)]
+      (is (= alku (pvm/->pvm "7.7.2012")))
+      (is (= loppu (pvm/->pvm "1.8.2012"))))))
+
+(deftest yllapitourakan-sopimuskaudet-kaksi-vuotta
+  (let [kaudet (s/hoitokaudet {:tyyppi :paallystys
+                               :alkupvm (pvm/->pvm "1.11.2014")
+                               :loppupvm (pvm/->pvm "8.4.2015")})]
+    (is (= 2 (count kaudet)))
+    (let [[alku loppu] (first kaudet)]
+      (is (= alku (pvm/->pvm "1.11.2014")))
+      (is (= loppu (pvm/->pvm "31.12.2014"))))
+    (let [[alku loppu] (second kaudet)]
+      (is (= alku (pvm/->pvm "1.1.2015")))
+      (is (= loppu (pvm/->pvm "8.4.2015"))))))
+
+      
