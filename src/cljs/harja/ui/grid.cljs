@@ -240,7 +240,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               (when (and (= fokus fokus-id)
                          (tayta-alas arvo)
                        
-                         ;; Sallitaan täyttö, vain jos kaikki tulevien arvot ovat tyhjiä
+                         ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
+                         (not (empty? tulevat-rivit))
                          (every? str/blank? (map hae tulevat-rivit)))
               
                 [:div {:class (if (= :oikea (:tasaa s))
