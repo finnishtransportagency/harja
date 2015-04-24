@@ -10,7 +10,7 @@
              
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]])
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -36,28 +36,26 @@
        
        :reagent-render 
        (fn [ur]
-         [:span
-          [:div.alasvetovalikot
-           [:div.label-ja-alasveto 
-            [:span.alasvedon-otsikko "Sopimusnumero"]
-            [livi-pudotusvalikko {:valinta @s/valittu-sopimusnumero
-                              :format-fn second
-                              :valitse-fn s/valitse-sopimusnumero!
-                              :class "alasveto"
-                              }
-             (:sopimukset ur)
-             ]]
-           [:div.label-ja-alasveto
-            [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
-            [livi-pudotusvalikko {:valinta @s/valittu-hoitokausi
-                                  ;;\u2014 on väliviivan unikoodi
-                                  :format-fn #(if % (str (pvm/pvm (first %)) 
-                                                         " \u2014 " (pvm/pvm (second %))) "Valitse")
-                                  :valitse-fn s/valitse-hoitokausi!
-                                  :class "alasveto"
-                                  }
-             @urakan-hoitokaudet
-             ]]]
+         [:span.suunnittelu
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Sopimusnumero"]
+           [livi-pudotusvalikko {:valinta @s/valittu-sopimusnumero
+                                 :format-fn second
+                                 :valitse-fn s/valitse-sopimusnumero!
+                                 :class "suunnittelu-alasveto"
+                                 }
+            (:sopimukset ur)
+            ]]
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
+           [livi-pudotusvalikko {:valinta @s/valittu-hoitokausi
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn #(if % (str (pvm/pvm (first %))
+                                                        " \u2014 " (pvm/pvm (second %))) "Valitse")
+                                 :valitse-fn s/valitse-hoitokausi!
+                                 :class "suunnittelu-alasveto"
+                                 }
+            @urakan-hoitokaudet]]
           
           ;; suunnittelun välilehdet
           [bs/tabs {:style :pills :active valittu-valilehti}

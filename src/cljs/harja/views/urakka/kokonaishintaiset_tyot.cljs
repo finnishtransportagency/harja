@@ -155,16 +155,15 @@
          (reset! tuleville? false)
          (log "asd" (pr-str @kaikki-sopimuksen-rivit))
          [:div.kokonaishintaiset-tyot
-         [:div.alasvetovalikot
-              [:div.label-ja-alasveto
-               [:span.alasvedon-otsikko "Toimenpide"]
-               [livi-pudotusvalikko {:valinta    @valittu-toimenpide
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Toimenpide"]
+           [livi-pudotusvalikko {:valinta    @valittu-toimenpide
                                  ;;\u2014 on väliviivan unikoodi
                                  :format-fn  #(if % (str (:tpi_nimi %)) "Valitse")
                                  :valitse-fn #(reset! valittu-toimenpide %)
                                  :class      "alasveto"
                                  }
-                @toimenpiteet]]]
+            @toimenpiteet]]
           [:div.hoitokauden-kustannukset
            [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
             [:div.col-xs-6.piirakka

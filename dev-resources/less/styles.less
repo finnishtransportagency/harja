@@ -144,37 +144,14 @@ tr.uusitehtavakoodi td {
 }
 
 .label-ja-alasveto {
-	margin-bottom: 5px;
-}
-.alasvetovalikot {
-	margin: 10px;
+	display: inline-block;
+	margin: 10px 5px 20px;
 	.alasvedon-otsikko {
 		display: inline-block;
+		font-weight: bold;
 		min-width: 150px;
 	}
-	.alasveto {
-		display: inline;
-		margin-left: 20px;
-		.nappi-alasveto {
-			max-width: @alasvetovalikon-leveys-max;
-			min-width: @alasvetovalikon-leveys-min;
-			padding-right: 20px;
-		}
-		.valittu {
-			text-align: left;
-		}
-		.caret {
-			position: absolute;
-			top: 8px;
-			right: 8px;
-		}
-	}
-	.alasveto.open {
-		.dropdown-menu {
-			max-width: @alasvetovalikon-leveys-max;
-			min-width: @alasvetovalikon-leveys-min;
-		}
-	}
+	.livi-alasveto(300px);
 }
 
 .flash-viesti {

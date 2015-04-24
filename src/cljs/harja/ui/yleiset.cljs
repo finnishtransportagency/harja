@@ -207,7 +207,7 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
   "Tekee bootstrap .row divin, jossa jokaisella komponentilla on sama koko.
 Jos annettu koko on numero, tulee luokaksi col-lg-<koko>, jos koko on mäppi {:lg <iso koko> :md <medium koko> ...}
 lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
-  [koko & komponentit]
+  [{:keys [koko luokka]} & komponentit]
   (let [cls (if-not (map? koko)
               koko
               (apply str (map (fn [[koko-luokka koko]]
@@ -217,7 +217,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (map-indexed
       (fn [i komponentti]
         ^{:key i}
-        [:div {:class cls}
+        [:div {:class (str cls luokka)}
          komponentti])
       (keep identity komponentit))]))
 

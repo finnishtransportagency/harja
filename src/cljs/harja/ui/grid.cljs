@@ -256,7 +256,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                   "100%")}
                                                  
                                                    :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
-                   "Täytä " (ikonit/arrow-down)]]]))
+                 (ikonit/arrow-down) " Täytä"]]]))
           
             ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))
             [tee-kentta (assoc s

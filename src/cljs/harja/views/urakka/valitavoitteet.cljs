@@ -67,7 +67,7 @@
      [:div.valmis
       (when pvm
         [y/rivi
-         y/tietopaneelin-elementtikoko
+         {:koko y/tietopaneelin-elementtikoko}
        
        
          [y/otsikolla "Valmistunut" (fmt/pvm pvm)]
