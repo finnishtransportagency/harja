@@ -248,8 +248,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 "pull-left"
                                 "pull-right")}
                  [:div {:style {:position "absolute" :display "inline-block"}}
-                [:button.nappi-ensisijainen {:title (:tayta-tooltip s)
-                                                 :style {:position "absolute" :top -2
+                [:button.nappi-toissijainen.nappi-gridin-sisalla {:title (:tayta-tooltip s)
+                                                 :style {:position "absolute"
                                                          :left (when (= :oikea (:tasaa s))
                                                                  0)
                                                          :right (when-not (= :oikea (:tasaa s))
