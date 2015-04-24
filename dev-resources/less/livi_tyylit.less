@@ -231,3 +231,59 @@ table.table-striped {
         color: @harmaa1;
     }
 }
+
+@alasvetovalikon-leveys-max: 350px;
+@alasvetovalikon-leveys-min: 210px;
+
+// Livi-tyyliteltyjä UI-komponentteja
+.livi-valikkonimio {
+    font-weight: bold //tämä ehkä hyvä tehdä suoraan bold web fontilla
+}
+
+.livi-alasveto.open {
+    .nappi-alasveto {
+        border: 1px solid @sininen4;
+    }
+}
+.livi-alasveto (@leveys: 200px, @min-leveys: 160px) {
+    min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
+    width: @leveys;
+    .nappi-alasveto {
+        height: 32px;
+        .valittu {
+            display: inline-block;
+            overflow-x: hidden;
+            padding-right: 15px;
+            text-align: left;
+            vertical-align: middle;
+            width: 100%;
+        }
+        .caret {
+            color: @sininen5;
+            float: right;
+            position: relative;
+            top: -10px;
+        }
+    }
+    .livi-alasvetolista {
+        width: @leveys;
+    }
+}
+.livi-alasvetolista {
+    border: 1px solid @sininen5;
+    padding: 0;
+}
+.dropdown-menu .harja-alasvetolistaitemi > a {
+    background-color: @valkoinen;
+    border-color: @harmaa7;
+    color: @sininen4;
+    overflow-x: auto;
+    padding: 3px 6px;
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active {
+        background-color: @sininen5;
+        color:            @valkoinen;
+    }
+}

@@ -77,7 +77,7 @@
                    [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])
       
          [:span.pull-right.murupolku-suotimet
-          [:div [:span.urakoitsija-otsikko "Urakoitsija"]
+          [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
            [livi-pudotusvalikko {:valinta urakoitsija
                              :format-fn #(if % (:nimi %) "Kaikki")
                              :valitse-fn nav/valitse-urakoitsija!
@@ -92,7 +92,7 @@
                                  @urakoitsijat/urakoitsijat-hoito) ;;defaulttina hoito
                                ) nil))
             ]]
-          [:div [:span.urakoitsija-otsikko "Urakkatyyppi"]
+          [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakkatyyppi"]
            [livi-pudotusvalikko {:valinta urakkatyyppi
                              :format-fn #(if % (:nimi %) "Kaikki")
                              :valitse-fn nav/vaihda-urakkatyyppi!

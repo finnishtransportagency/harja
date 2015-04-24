@@ -134,7 +134,8 @@
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
     ;; FIXME: on-focus alasvetovalintaan?
-    [livi-pudotusvalikko {:valinta @data
+    [livi-pudotusvalikko {:class "alasveto-gridin-kentta"
+                          :valinta @data
                           :valitse-fn #(do (log "valinta: " %)
                                            (reset! data %))
                           :format-fn valinta-nayta}

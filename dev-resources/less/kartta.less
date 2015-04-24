@@ -2,6 +2,9 @@
 #kartta {
   // tämä tarvitaan ettei leaflet sekoa kartan kokovaihteluissa
   position: absolute;
+	.leaflet-top.leaflet-left {
+		z-index: 1; //ettei zoominapit peitä urakoitsija-pudotusvalikkoa
+	}
 }
 
 .ikoni-kartta-ctrl {

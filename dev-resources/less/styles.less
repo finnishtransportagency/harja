@@ -1,4 +1,11 @@
-@import "common";
+@import "livi_tyylit";
+
+.alasveto-gridin-kentta {
+	.livi-alasveto(100%, auto);
+	.valittu {
+		max-height: 100%; //vähän häkki
+	}
+}
 
 .alasveto-urakkatyyppi,
 .alasveto-urakoitsija {
@@ -15,7 +22,7 @@
 	padding: 20px 0 10px;
 	width: 90%;
 	a {
-		color: @color-dark-gray;
+		color: @harmaa2;
 	}
 }
 
@@ -41,25 +48,31 @@ div.valilehti {
 	}
 }
 .haku-container {
-	margin-top: @margin-double;
+	> input {
+		color: @harmaa1;
+		padding: 3px 6px;
+	}
+	margin-top: 10px;
 	max-width: 450px;
 }
 .haku-lista{
-	.border-style-thin;
-	.rounded;
-	//max-height: 300px;
+	border: 1px solid @sininen5;
 	overflow-y: auto;
 	padding: 0;
 }
-.haku-lista-item {
-	list-style: none;
-	:hover, :focus {
-		background-color: @color-dark-gray;
-		color: white;
-	}
-}
+
 .haku-lista-item-nimi {
-	padding: @margin-one;
+	background-color: @valkoinen;
+	border-color: @harmaa7;
+	color: @sininen4;
+	padding: 3px 6px;
+	&:hover,
+	&:focus,
+		&.focus,
+	&:active {
+		background-color: @sininen5;
+		color:            @valkoinen;
+	}
 }
 
 #harja-brand-icon {
