@@ -48,14 +48,14 @@
              (:sopimukset ur)
              ]]
            [:div.label-ja-alasveto
-            [:span.alasvedon-otsikko "Hoitokausi"]
+            [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
             [livi-pudotusvalikko {:valinta @s/valittu-hoitokausi
-                              ;;\u2014 on väliviivan unikoodi
-                              :format-fn #(if % (str (pvm/pvm (first %)) 
-                                                     " \u2014 " (pvm/pvm (second %))) "Valitse")
-                              :valitse-fn s/valitse-hoitokausi!
-                              :class "alasveto"
-                              }
+                                  ;;\u2014 on väliviivan unikoodi
+                                  :format-fn #(if % (str (pvm/pvm (first %)) 
+                                                         " \u2014 " (pvm/pvm (second %))) "Valitse")
+                                  :valitse-fn s/valitse-hoitokausi!
+                                  :class "alasveto"
+                                  }
              @urakan-hoitokaudet
              ]]]
           
