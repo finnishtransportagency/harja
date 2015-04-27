@@ -27,9 +27,6 @@
       (julkaise-palvelu http :hae-organisaation-urakat
                         (fn [user organisaatio-id]
                           (hae-organisaation-urakat (:db this) user organisaatio-id)))
-      (julkaise-palvelu http :hae-urakan-sopimustyyppi
-                        (fn [user urakka-id]
-                          (hae-urakan-sopimustyyppi (:db this) user urakka-id)))
       (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
                         (fn [user tiedot]
                           (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
@@ -39,7 +36,6 @@
     (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
     (poista-palvelu (:http-palvelin this) :hae-urakoita)
     (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
-    (poista-palvelu (:http-palvelin this) :hae-urakan-sopimustyyppi)
     (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
     this))
 
