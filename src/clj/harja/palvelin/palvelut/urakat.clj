@@ -11,7 +11,8 @@
 (declare hallintayksikon-urakat
          urakan-tiedot
          hae-urakoita
-         hae-organisaation-urakat)
+         hae-organisaation-urakat
+         tallenna-urakan-sopimustyyppi)
 
 
 (defrecord Urakat []
