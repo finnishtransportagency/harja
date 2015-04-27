@@ -2,23 +2,25 @@
   "Pohjavesialueiden geometriatietojen tallennus."
   (:require [harja.shp :as shp]))
 
+;; Luetaan tr_syke_pvalue shapesta.
+;; TR:n mukaan kentän PVSUOJA arvo on "1" jos alueella on suojoaus.
+
 (defn lue-pohjavesialueet [tiedosto]
   "Lukee pohjavesialueet .shp tiedostosta."
   [tiedosto]
 
   (let [s (shp/lue-shapefile tiedosto)]
-    (.setCharset s (java.nio.charset.Charset/forName "UTF-8"))
+    ;;(.setCharset s (java.nio.charset.Charset/forName "UTF-8"))
     (->> s
          shp/featuret
          (map shp/feature-propertyt)
          
-         ;; tässä voidaan ottaa joko "Varsinainen muodostumisalue" tai "Pohjavesialue"
-         ;; jokaisesta alueesta on sekä suurempi muodostumisalue ja pohjavesialue samalla tunnuksella
-         (filter #(= (:subtype %) "Pohjavesialue")))) )
+         (filter #(= (:pvsuola %) 1))
+         )) )
        
 (defn pohjavesialue->sql [{:keys [pvaluetunn pvaluenimi muutospvm the_geom]}]
   (str "\nINSERT INTO pohjavesialue (tunnus, nimi, alue, muokattu) VALUES ('" pvaluetunn "', '" pvaluenimi "', "
-       (shp/geom->pg the_geom) ", '"
+       "ST_GeomFromText('" the_geom "')::GEOMETRY, '"
        (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm") muutospvm)
        "');\n"))
 

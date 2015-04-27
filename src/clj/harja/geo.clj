@@ -1,7 +1,7 @@
 (ns harja.geo
   "Yleiskäyttöisiä paikkatietoon ja koordinaatteihin liittyviä apureita."
   (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point)))
+           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString)))
 
 (declare euref->osm)
 
@@ -47,6 +47,15 @@
   (pg->clj [^PGpolygon poly]
     (mapv pg->clj (seq (.points poly))))
 
+  LineString
+  (pg->clj [^LineString line]
+    {:type :line
+     :points (mapv pg->clj (.getPoints line))})
+  
+  MultiLineString
+  (pg->clj [^MultiLineString mls]
+    {:type :multiline
+     :lines (mapv pg->clj (.getLines mls))})
   ;; NULL geometriaoli on myös nil Clojure puolella
   nil
   (pg->clj [_] nil))
