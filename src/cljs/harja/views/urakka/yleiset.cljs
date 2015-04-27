@@ -4,7 +4,10 @@
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yhteystiedot :as yht]
+            [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             
@@ -68,14 +71,20 @@
         (reset! paivystajat res)
         true)))
 
+(defn tallenna-sopimustyyppi [ur sopimustyyppi uusi-sopimustyyppi]
+  (go (let [res
+            (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
+        (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
+        true)))
+
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    kayttajat (<! (yht/hae-urakan-kayttajat (:id ur)))
    paivystajat (<! (yht/hae-urakan-paivystajat (:id ur)))
-   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))] 
+   yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
+   sopimustyyppi (:sopimustyyppi ur)]
 
   (do
-    (log "kayttajat: " @kayttajat)
     [:div
      [bs/panel {}
       "Yleiset tiedot" 
@@ -85,11 +94,22 @@
        "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
        "Tilaaja:" (:nimi (:hallintayksikko ur))
-       "Urakoitsija:" (:nimi (:urakoitsija ur))]]
+       "Urakoitsija:" (:nimi (:urakoitsija ur))
+       ;; valaistus, tiemerkintä --> palvelusopimus
+       ;; päällystys --> kokonaisurakka
+       "Sopimustyyppi: "
+       (when-not (= :hoito (:tyyppi ur))
+         [yleiset/livi-pudotusvalikko {:class      "alasveto-sopimustyyppi"
+                                       :valinta    @sopimustyyppi
+                                       :format-fn  #(if % (str/capitalize (name %)) "Ei sopimustyyppiä")
+                                       :valitse-fn #(tallenna-sopimustyyppi ur sopimustyyppi %)
+                                       :disabled   (not (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur)))}
+          sopimus/+sopimustyypit+])]]
 
      [grid/grid
       {:otsikko "Urakkaan liitetyt käyttäjät"
-       :tyhja "Ei urakkaan liitettyjä käyttäjiä."}
+       :tyhja "Ei urakkaan liitettyjä käyttäjiä."
+       :tunniste (or :sahkoposti #((juxt :etunimi :sukunimi) %))}
       
       [{:otsikko "Rooli" :nimi :rooli :fmt roolit/rooli->kuvaus :tyyppi :string :leveys "15%"}
        {:otsikko "Organisaatio" :nimi :org :hae (comp :nimi :organisaatio) :tyyppi :string :leveys "15%"}

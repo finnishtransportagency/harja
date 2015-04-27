@@ -193,7 +193,8 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
   "Tekee geneerisen tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
   [optiot & otsikot-ja-arvot]
   [:div.tietoja
-   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)]
+   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
+         :when arvo]
      ^{:key otsikko}
      [:div.tietorivi
       [:span.tietokentta otsikko]

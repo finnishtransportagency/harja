@@ -49,3 +49,14 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
     OR hal.id = :organisaatio
  
 
+-- name: tallenna-urakan-sopimustyyppi!
+-- Tallentaa urakalle sopimustyypin
+UPDATE urakka
+SET    sopimustyyppi = :sopimustyyppi::sopimustyyppi
+WHERE  id = :urakka
+
+-- name: hae-urakan-sopimustyyppi
+-- Hakee urakan sopimustyypin
+SELECT sopimustyyppi
+FROM   urakka
+WHERE  id = :urakka

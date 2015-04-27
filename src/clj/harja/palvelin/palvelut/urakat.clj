@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
+            [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
@@ -26,12 +27,20 @@
       (julkaise-palvelu http :hae-organisaation-urakat
                         (fn [user organisaatio-id]
                           (hae-organisaation-urakat (:db this) user organisaatio-id)))
+      (julkaise-palvelu http :hae-urakan-sopimustyyppi
+                        (fn [user urakka-id]
+                          (hae-urakan-sopimustyyppi (:db this) user urakka-id)))
+      (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
+                        (fn [user tiedot]
+                          (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
       this))
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
     (poista-palvelu (:http-palvelin this) :hae-urakoita)
     (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
+    (poista-palvelu (:http-palvelin this) :hae-urakan-sopimustyyppi)
+    (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
     this))
 
 (def urakka-xf
@@ -61,7 +70,7 @@
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
         (map #(assoc %
                 :tyyppi (keyword (:tyyppi %))
-                :sopimustyyppi (and (:tyyppi %) (keyword (:tyyppi %)))))
+                :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
         
         (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
@@ -86,3 +95,11 @@
   (into []
         urakka-xf
         (q/hae-organisaation-urakat db organisaatio-id)))
+
+(defn hae-urakan-sopimustyyppi [db user urakka-id]
+  (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
+
+(defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
+  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
+  (hae-urakan-sopimustyyppi db user urakka-id))

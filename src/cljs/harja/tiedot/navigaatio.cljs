@@ -61,7 +61,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (def urakkalista "Hallintayksikon urakat" (atom nil))
 
-
+(defn paivita-urakka [urakka-id funktio & argumentit]
+  (swap! urakkalista (fn [urakat]
+                       (mapv #(if (= urakka-id (:id %))
+                               (apply funktio % argumentit)
+                               % ) urakat)))
+  (swap! valittu-urakka #(if (= urakka-id (:id %))
+                          (apply funktio % argumentit)
+                          % )))
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
