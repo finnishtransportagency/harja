@@ -36,8 +36,16 @@
                                       
                                       ;; Määrä on kausien yhteenlaskettu, jotta yhteensä tiedot näkyvät
                                       :maara (+ (or (:maara eka) 0)
-                                                (or (:maara toka) 0)))))
-    rivit))
+                                                (or (:maara toka) 0))
+                                      :yhteensa (when-let [hinta (:yksikkohinta eka)]
+                                                  (* (+ (or (:maara eka) 0)
+                                                        (or (:maara toka) 0))
+                                                     hinta))
+                                      )))
+    (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
+                                (* (or (:maara %) 0) hinta)))
+          rivit)))
+
 
   
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
@@ -52,6 +60,7 @@
                     ))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))]
         (reset! tyot (prosessoi-tyorivit ur res))
+        (reset! tuleville? false)
         true)))
 
 (defn luo-tyhja-tyo [tp ur hk]
