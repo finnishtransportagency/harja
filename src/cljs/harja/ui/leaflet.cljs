@@ -165,6 +165,14 @@
     (js/L.MultiPolygon. ps #js {:color (or color "green")
                                 :fill fill})))
 
+(defmethod create-shape :multiline [{:keys [lines color]}]
+  (js/L.MultiPolyline. (clj->js (mapv :points lines))
+                       #js {:color (or color "blue")}))
+
+(defmethod create-shape :line [{:keys [points color]}]
+  (js/L.Polyline. (clj->js points)
+                  #js {:color (or color "blue")}))
+                                    
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
   ;;(.log js/console "geometries: " (pr-str items))
