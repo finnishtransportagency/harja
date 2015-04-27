@@ -43,20 +43,6 @@
     :maara-kkt-1-9 3 :maara-kkt-10-12 1, :urakka 1, :yhteensa 0, :tehtava 1350,
     :yksikkohinta  nil, :maara nil, :tehtavan_nimi "Tien auraaminen", :sopimus 2}])
 
-(deftest pilko-hoitokausien-tyot []
-         (let [tyo-avain (fn [rivi]
-                           [(:alkupvm rivi) (:loppupvm rivi)])
-               pilkotut (ykshint-tyot/pilko-hoitokausien-tyot +pilkottavat-tyo+)
-               eka-rivi (first (filterv (fn [t]
-                                          (= (:alkupvm t) (pvm/luo-pvm 2005 9 1)))
-                                        pilkotut))
-               toka-rivi (first (filterv (fn [t]
-                                           (= (:alkupvm t) (pvm/luo-pvm 2006 0 1)))
-                                         pilkotut))
-               viesti "pilko-hoitokausien-tyot"]
-           (is (= (count pilkotut) 2) viesti)
-           (is (= (:maara eka-rivi) 1) viesti)
-           (is (= (:maara toka-rivi) 3) viesti)))
 
 (def +kannan-rivit+
   [{:alkupvm      (pvm/vuoden-eka-pvm 2006), :loppupvm (pvm/hoitokauden-loppupvm 2006), :yksikko "km",

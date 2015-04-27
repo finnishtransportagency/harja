@@ -57,15 +57,19 @@
                                                       (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
                                                    nykyiset-arvot)))]
           (doseq [tyo tyot]
+            (log/info "TALLENNA TYÖ: " (pr-str tyo))
             (if (not (tyot-kannassa (tyo-avain tyo)))
               ;; insert
-              (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+              (do
+                (log/info "--> LISÄTÄÄN UUSI!")
+                (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
                                                      urakka-id sopimusnumero (:tehtava tyo)
                                                      (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                     (java.sql.Date. (.getTime (:loppupvm tyo))))
+                                                     (java.sql.Date. (.getTime (:loppupvm tyo)))))
               ;;update
-              (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                      urakka-id sopimusnumero (:tehtava tyo)
-                                                      (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                      (java.sql.Date. (.getTime (:loppupvm tyo)))))))
+              (do (log/info " --> päivitetään vanha")
+                  (log/info "  päivittyi: " (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                                                                                    urakka-id sopimusnumero (:tehtava tyo)
+                                                                                    (java.sql.Date. (.getTime (:alkupvm tyo)))
+                                                                                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))

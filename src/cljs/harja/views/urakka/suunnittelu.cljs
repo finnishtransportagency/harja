@@ -13,8 +13,7 @@
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.ui.yleiset :refer [deftk]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 
 (def valittu-valilehti "Valittu välilehti" (atom 0))
@@ -36,6 +35,7 @@
        
        :reagent-render 
        (fn [ur]
+
          [:span.suunnittelu
           [:div.label-ja-alasveto
            [:span.alasvedon-otsikko "Sopimusnumero"]
@@ -59,15 +59,15 @@
           
           ;; suunnittelun välilehdet
           [bs/tabs {:style :pills :active valittu-valilehti}
-
+           
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur]
-
+           
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
-           [yksikkohintaiset-tyot/yksikkohintaiset-tyot ur]
-
+           [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur]
+           
            "Materiaalit"
            ^{:key "materiaalit"}
            [mat/materiaalit ur]

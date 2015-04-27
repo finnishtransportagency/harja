@@ -50,14 +50,41 @@ ja viimeinen voivat olla vajaat)."
   "Palauttaa ne rivit joiden loppupvm on joku jaljella olevien kausien pvm:stä"
   [rivit-tehtavittain jaljella-olevat-kaudet]
   (mapv (fn [tehtavan-rivit]
-                 (filter (fn [tehtavan-rivi]
-                           (some #(pvm/sama-pvm? (second %) (:loppupvm tehtavan-rivi)) jaljella-olevat-kaudet))
-                         tehtavan-rivit)
-          ) rivit-tehtavittain))
+          (filter (fn [tehtavan-rivi]
+                    (some #(pvm/sama-pvm? (second %) (:loppupvm tehtavan-rivi)) jaljella-olevat-kaudet))
+                  tehtavan-rivit)) rivit-tehtavittain))
 
 (defn tulevat-hoitokaudet [ur hoitokausi]
   (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
               (hoitokaudet ur)))
+
+(defn yhdista-rivien-hoitokaudet
+  "Yhdistää rivejä, jotka sisältävät :alkupvm :loppupvm, siten että kaksi peräkäistä kautta
+  yhdistetään samaksi (10-12 ja 1-9 kk:t). Ottaa kaksi funktiota: ryhmittely ja yhdista.
+Ryhmittelyfunktion mukaan riveille tehdään group-by. Yhdista funktiolle annetaan 2 riviä 
+  aikajärjestyksessä."
+  [rivit ryhmittely yhdista]
+  (map (fn [[eka toka]]
+         (assoc (yhdista eka toka)
+           :alkupvm (:alkupvm eka)
+           :loppupvm (:loppupvm toka)))
+       (mapcat #(partition 2 (sort-by :alkupvm %)) (vals (group-by ryhmittely rivit)))))
+
+(defn jaa-rivien-hoitokaudet
+  "Jakaa rivejä, joiden :alkupvm/:loppupvm ovat hoidon alueurakan hoitokausia, vuosiriveiksi.
+Yhdestä rivistä tulee kaksi riviä: ensimmäisen vuoden osa (10-12 kk:t) ja jälkimmäisen vuoden
+osa (1-9 kk:t). Ottaa 2 funktiota, joille koko rivi annetaan ja jonka tulee palauttaa
+  1. ja 2. osa."
+  [rivit ensimmainen-osa toinen-osa]
+  (mapcat (fn [{:keys [alkupvm loppupvm] :as rivi}]
+            [(assoc (ensimmainen-osa rivi)
+               :alkupvm alkupvm
+               :loppupvm (pvm/vuoden-viim-pvm (pvm/vuosi alkupvm)))
+             (assoc (toinen-osa rivi)
+               :alkupvm (pvm/vuoden-eka-pvm (pvm/vuosi loppupvm))
+               :loppupvm loppupvm)])
+          rivit))
+          
 
 (defn ryhmittele-hoitokausittain
   "Ottaa rivejä, jotka sisältävät :alkupvm ja :loppupvm, ja palauttaa ne ryhmiteltynä hoitokausiin.
