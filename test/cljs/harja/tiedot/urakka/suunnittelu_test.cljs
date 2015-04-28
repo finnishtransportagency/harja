@@ -246,18 +246,18 @@
 
 
 (deftest aseta-hoitokausi-testi-1 []
-  (let [rivi {
-    :vuosi 2013
-    :kuukausi 6}]
-    (is (= (pvm/hoitokauden-alkupvm 2012) (:alkupvm (kokhint-tyot/aseta-hoitokausi rivi))))
-    (is (= (pvm/hoitokauden-loppupvm 2013) (:loppupvm (kokhint-tyot/aseta-hoitokausi rivi))))))
+  (let [hoitokaudet (s/hoitokaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)}) 
+        rivi {:vuosi 2013
+              :kuukausi 6}]
+    (is (= (pvm/hoitokauden-alkupvm 2012) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
+    (is (= (pvm/hoitokauden-loppupvm 2013) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
     
 (deftest aseta-hoitokausi-testi-2 []
-  (let [rivi {
-    :vuosi 2013
-    :kuukausi 11}]
-    (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi rivi))))
-    (is (= (pvm/hoitokauden-loppupvm 2014) (:loppupvm (kokhint-tyot/aseta-hoitokausi rivi))))))
+  (let [hoitokaudet (s/hoitokaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)}) 
+        rivi {:vuosi 2013
+              :kuukausi 11}]
+    (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
+    (is (= (pvm/hoitokauden-loppupvm 2014) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
 
 (deftest yllapitourakan-sopimuskaudet-monta-vuotta
   (let [kaudet (s/hoitokaudet {:tyyppi :tiemerkinta

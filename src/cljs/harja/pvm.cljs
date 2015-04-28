@@ -33,6 +33,12 @@
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
 
+(defn ennen? [eka toka]
+  (t/before? eka toka))
+
+(defn jalkeen? [eka toka]
+  (t/after? eka toka))
+
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
   [eka toka]

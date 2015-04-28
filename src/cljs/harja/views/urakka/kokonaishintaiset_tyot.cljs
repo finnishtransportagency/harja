@@ -13,7 +13,7 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.istunto :as istunto]
 
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             
@@ -43,7 +43,8 @@
     rivi))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
-  (go (let [tallennettavat-hoitokaudet (if tuleville?
+  (go (let [hoitokaudet (s/hoitokaudet ur)
+            tallennettavat-hoitokaudet (if tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
@@ -53,7 +54,7 @@
                     uudet-tyot
                     ))
             res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
-            res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi %) res)]
+            res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi hoitokaudet %) res)]
         (reset! tyot res-jossa-hoitokausitieto)
         (reset! tuleville? false)
         true)))
@@ -104,8 +105,10 @@
 (defn kokonaishintaiset-tyot [ur]
   (let [urakan-kok-hint-tyot (atom nil)
         toimenpiteet (atom nil)
+        urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
-                            (go (reset! urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot (:id ur)))))
+                            (reset! urakka ur)
+                            (go (reset! urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                             (go (reset! toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
         
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
@@ -113,7 +116,7 @@
         (reaction (let [[sopimus-id _] @s/valittu-sopimusnumero
                         sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
                                                 @urakan-kok-hint-tyot)]
-                    (s/ryhmittele-hoitokausittain sopimuksen-tyot (s/hoitokaudet ur))))
+                    (s/ryhmittele-hoitokausittain sopimuksen-tyot (s/hoitokaudet @urakka))))
 
         
         ;; valitaan materiaaleista vain valitun hoitokauden
@@ -122,9 +125,11 @@
                     (get @sopimuksen-tyot-hoitokausittain hk)))
 
         valittu-toimenpide (reaction (first @toimenpiteet))
-        valitun-toimenpiteen-ja-hoitokauden-tyot (reaction (let [valittu-tp-id (:id @valittu-toimenpide)]
-                                                             (filter #(= valittu-tp-id (:toimenpide %))
-                                                                     @valitun-hoitokauden-tyot)))
+        valitun-toimenpiteen-ja-hoitokauden-tyot
+        (reaction (let [valittu-tp-id (:id @valittu-toimenpide)]
+                    (filter #(= valittu-tp-id (:toimenpide %))
+                            @valitun-hoitokauden-tyot)))
+        
         tyorivit (reaction (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
                                                              @valitun-toimenpiteen-ja-hoitokauden-tyot))
                                  tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
@@ -133,6 +138,8 @@
                                                                   %
                                                                   (first @s/valittu-sopimusnumero))
                                                   tyhjat-kkt)]
+                             (log "---- valitun-toimenpiteen-ja-hoitokauden-tyot ----")
+                             (logt @valitun-toimenpiteen-ja-hoitokauden-tyot)
                              (vec (sort-by (juxt :vuosi :kuukausi)
                                            (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot)))))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)

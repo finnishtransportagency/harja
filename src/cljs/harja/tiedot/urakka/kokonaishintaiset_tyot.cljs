@@ -2,27 +2,41 @@
   "Tämä nimiavaruus hallinnoi urakan yksikköhintaisia töitä."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn aseta-hoitokausi [rivi]
-  (let [alkupvm (if (<= 10 (:kuukausi rivi) 12)
-                  (pvm/hoitokauden-alkupvm (:vuosi rivi))
-                  (pvm/hoitokauden-alkupvm (dec (:vuosi rivi))))
-        loppupvm (if (<= 10 (:kuukausi rivi) 12)
-                   (pvm/hoitokauden-loppupvm (inc (:vuosi rivi)))
-                   (pvm/hoitokauden-loppupvm (:vuosi rivi)))
-        ]
-    ;; lisätään kaikkiin riveihin valittu hoitokausi
-    (assoc rivi :alkupvm alkupvm :loppupvm loppupvm)))
+(defn aseta-hoitokausi [hoitokaudet rivi]
+  (let [p (pvm/luo-pvm (:vuosi rivi) (dec (:kuukausi rivi)) 1)]
+    (loop [[hk & hoitokaudet] hoitokaudet]
+      (if (nil? hk)
+        ;; Ei löytynyt hoitokautta, palautetaan rivi
+        (do (log "kokonaishintaiselle työlle ei löytynyt hoitokautta: " (pr-str rivi))
+            rivi)
+        
+        (let [[alkupvm loppupvm] hk]
+          ;;(log "TESTAA ONKO " (pr-str p) " HOITOKAUDESSA " (pr-str hk) "? " (and (or (pvm/sama-pvm? alkupvm p)
+          ;;                                                                           (pvm/jalkeen? p alkupvm))
+          ;;                                                                       (or (pvm/sama-pvm? loppupvm p)
+          ;;                                                                           (pvm/ennen? p loppupvm))))
+          (if (and (or (pvm/sama-pvm? alkupvm p)
+                       (pvm/jalkeen? p alkupvm))
+                   (or (pvm/sama-pvm? loppupvm p)
+                       (pvm/ennen? p loppupvm)))
+            (assoc rivi
+              :alkupvm alkupvm
+              :loppupvm loppupvm)
+
+            (recur hoitokaudet)))))))
 
 
-(defn hae-urakan-kokonaishintaiset-tyot [urakka-id]
-  (go (let [res (<! (k/post! :kokonaishintaiset-tyot urakka-id))]
-     (map #(aseta-hoitokausi %) res))))
+(defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]
+  (go (let [res (<! (k/post! :kokonaishintaiset-tyot id))
+            hoitokaudet (s/hoitokaudet ur)]
+        (map #(aseta-hoitokausi hoitokaudet %) res))))
 
 
 (defn tallenna-kokonaishintaiset-tyot
