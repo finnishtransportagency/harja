@@ -6,6 +6,7 @@
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
+            [harja.views.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]))
 
@@ -26,9 +27,7 @@
     
     "Toteumat"
     ^{:key "toteumat"}
-    [:div
-     [bs/dropdown-panel {} "Toteutuneet työt" "ei vielä"]
-     [bs/dropdown-panel {} "Toteutuneet materiaalit" "ei vielä"]]
+    [toteumat/toteumat ur]
     
     "Laadunseuranta"
     ^{:key "laadunseuranta"}
