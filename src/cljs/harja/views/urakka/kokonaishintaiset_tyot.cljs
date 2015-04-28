@@ -214,12 +214,13 @@
          @valitun-hoitokauden-kaikkien-tpin-kustannukset
          @kaikkien-hoitokausien-taman-tpin-kustannukset]
         
-        (if (nil? @valittu-toimenpide)
-          [:span
-           [:h5 "Töitä ei voi suunnitella"]
-           [:p "Toimenpide pitää olla valittuna, jotta voidaan suunnitella urakalle kokonaishintaisia töitä.
+        (if (empty? @toimenpiteet)
+          (when @toimenpiteet
+            [:span
+             [:h5 "Töitä ei voi suunnitella"]
+             [:p "Toimenpide pitää olla valittuna, jotta voidaan suunnitella urakalle kokonaishintaisia töitä.
             Varmista että urakalla on ainakin yksi Samposta tullut toimenpideinstanssi. Varsinkin kehitysvaiheessa
-            puutteet tietosisällössä ovat mahdollisia."]]
+            puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
            {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
