@@ -15,7 +15,7 @@
       (if (nil? hk)
         ;; Ei löytynyt hoitokautta, palautetaan rivi
         (do (log "kokonaishintaiselle työlle ei löytynyt hoitokautta: " (pr-str rivi))
-            rivi)
+            nil)
         
         (let [[alkupvm loppupvm] hk]
           ;;(log "TESTAA ONKO " (pr-str p) " HOITOKAUDESSA " (pr-str hk) "? " (and (or (pvm/sama-pvm? alkupvm p)
@@ -36,7 +36,7 @@
 (defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]
   (go (let [res (<! (k/post! :kokonaishintaiset-tyot id))
             hoitokaudet (s/hoitokaudet ur)]
-        (map #(aseta-hoitokausi hoitokaudet %) res))))
+        (keep #(aseta-hoitokausi hoitokaudet %) res))))
 
 
 (defn tallenna-kokonaishintaiset-tyot

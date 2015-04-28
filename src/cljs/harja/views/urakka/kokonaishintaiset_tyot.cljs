@@ -31,16 +31,18 @@
 (defn indeksi [kokoelma itemi]
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
-(defn luo-tyhja-tyo [tpi hk kk sn]
-  (let [
-        alkupvm (first hk)
-        loppupvm (second hk)
-        tyon-kalenteri-vuosi (if (<= 10 kk 12)
+(defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
+  (let [tyon-kalenteri-vuosi (if-not (= :hoito urakkatyyppi)
                                (pvm/vuosi alkupvm)
-                               (pvm/vuosi loppupvm))
-        rivi {:toimenpideinstanssi tpi, :summa nil :kuukausi kk :vuosi tyon-kalenteri-vuosi
-              :maksupvm nil :alkupvm alkupvm :loppupvm loppupvm :sopimus sn}]
-    rivi))
+                               (if (<= 10 kk 12)
+                                 (pvm/vuosi alkupvm)
+                                 (pvm/vuosi loppupvm)))
+        kk-alku (pvm/luo-pvm tyon-kalenteri-vuosi (dec kk) 1)]
+    (if-not (or (pvm/sama-kuukausi? alkupvm kk-alku)
+                (pvm/ennen? alkupvm kk-alku))
+      nil
+      {:toimenpideinstanssi tpi, :summa nil :kuukausi kk :vuosi tyon-kalenteri-vuosi
+       :maksupvm nil :alkupvm alkupvm :loppupvm loppupvm :sopimus sn})))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [hoitokaudet (s/hoitokaudet ur)
@@ -48,8 +50,8 @@
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
-            (into []
-                  (if tuleville?
+            (into [] 
+                  (if @tuleville?
                     (s/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
@@ -133,10 +135,11 @@
         tyorivit (reaction (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
                                                              @valitun-toimenpiteen-ja-hoitokauden-tyot))
                                  tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
-                                 tyhjat-tyot (map #(luo-tyhja-tyo (:tpi_id @valittu-toimenpide)
-                                                                  @s/valittu-hoitokausi
-                                                                  %
-                                                                  (first @s/valittu-sopimusnumero))
+                                 tyhjat-tyot (keep #(luo-tyhja-tyo (:tyyppi @urakka)
+                                                                   (:tpi_id @valittu-toimenpide)
+                                                                   @s/valittu-hoitokausi
+                                                                   %
+                                                                   (first @s/valittu-sopimusnumero))
                                                   tyhjat-kkt)]
                              (vec (sort-by (juxt :vuosi :kuukausi)
                                            (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot)))))
