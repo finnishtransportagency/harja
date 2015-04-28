@@ -44,7 +44,7 @@
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [hoitokaudet (s/hoitokaudet ur)
-            tallennettavat-hoitokaudet (if tuleville?
+            tallennettavat-hoitokaudet (if @tuleville?
                                          (s/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
@@ -138,8 +138,6 @@
                                                                   %
                                                                   (first @s/valittu-sopimusnumero))
                                                   tyhjat-kkt)]
-                             (log "---- valitun-toimenpiteen-ja-hoitokauden-tyot ----")
-                             (logt @valitun-toimenpiteen-ja-hoitokauden-tyot)
                              (vec (sort-by (juxt :vuosi :kuukausi)
                                            (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot)))))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
@@ -226,7 +224,7 @@
             :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                   (:id ur)
                                                   #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
-                                                                  urakan-kok-hint-tyot % @tuleville?)
+                                                                  urakan-kok-hint-tyot % tuleville?)
                                                   :ei-mahdollinen)
              :tunniste #((juxt :vuosi :kuukausi) %)
              :voi-lisata? false
