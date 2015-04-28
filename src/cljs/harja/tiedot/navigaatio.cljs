@@ -47,7 +47,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi"
   (atom (first +urakkatyypit+)))
 
-
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden 
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
@@ -92,19 +91,21 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                       (= sivu :tilannekuva) :L
                       :default valittu-koko)))))
 
-                  
+(defn aseta-urakka-ja-urakkatyyppi [urakkalista, urakka-id]
+  (let [ur (first (filter #(= urakka-id (:id %)) urakkalista))]
+    (valitse-urakka ur)
+    (reset! valittu-urakkatyyppi (first (filter #(= (:tyyppi ur) (:arvo %))
+                                                +urakkatyypit+)))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
   (if-not (= hy-id (:id @valittu-hallintayksikko))
     (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
-      (reset! valittu-hallintayksikko yks)
-      (reset! urakkalista nil)
-      (reset! valittu-urakka nil)
-      (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
-      (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
-      ;; else
-      (valitse-urakka (first (filter #(= u-id (:id %)) @urakkalista)))))
+          (reset! valittu-hallintayksikko yks)
+          (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
+          (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
+    ;; else
+    (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
