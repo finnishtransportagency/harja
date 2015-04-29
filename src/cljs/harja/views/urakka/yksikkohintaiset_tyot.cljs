@@ -99,13 +99,12 @@
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn yksikkohintaiset-tyot-view [ur]
-  (let [urakan-yks-hint-tyot (atom nil)
+  (let [urakan-yks-hint-tyot s/urakan-kok-hint-tyot
         toimenpiteet-ja-tehtavat (atom nil)
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
                             (reset! urakka ur)
                             ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen  urakalle
-                            (go (reset! urakan-yks-hint-tyot (prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))
                             (go (reset! toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
         
         tyorivit-samat-alkutilanteessa? (atom true)

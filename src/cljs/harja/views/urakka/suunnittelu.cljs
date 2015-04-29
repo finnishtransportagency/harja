@@ -26,11 +26,12 @@
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [urakan-hoitokaudet (atom (s/hoitokaudet ur))
-        hae-urakan-tiedot (fn [ur]
-                               (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))]
+        hae-urakan-tyot (fn [ur]
+                               (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
+                               (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
     (s/valitse-sopimusnumero! (first (:sopimukset ur)))
     (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
-    (hae-urakan-tiedot ur)
+    (hae-urakan-tyot ur)
     
     (r/create-class
       {:component-will-receive-props
