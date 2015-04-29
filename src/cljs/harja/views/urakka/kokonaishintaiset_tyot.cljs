@@ -76,10 +76,11 @@
 
 (defn kustannukset [valitun-hoitokauden-ja-tpin-kustannukset
                     valitun-hoitokauden-kaikkien-tpin-kustannukset
-                    kaikkien-hoitokausien-taman-tpin-kustannukset]
+                    kaikkien-hoitokausien-taman-tpin-kustannukset
+                    yks-kustannukset]
   [:div.hoitokauden-kustannukset
    [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-    [:div.col-xs-6.piirakka
+    [:div.col-xs-4.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust kaikkien-hoitokausien-taman-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -88,7 +89,7 @@
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
            {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-    [:div.col-xs-6.piirakka
+    [:div.col-xs-4.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust valitun-hoitokauden-kaikkien-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -96,7 +97,16 @@
           [:h5.piirakka-label "Tämän toimenpiteen osuus kaikista toimenpiteistä"]
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-           {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]]))]]
+           {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]]))]
+    [:div.col-xs-4.piirakka
+     (let [kok-hint-yhteensa valitun-hoitokauden-kaikkien-tpin-kustannukset
+           yks-hint-yhteensa yks-kustannukset]
+         (when (or (not= 0 kok-hint-yhteensa) (not= 0 yks-hint-yhteensa))
+             [:span.piirakka-wrapper
+              [:h5.piirakka-label "Hoitokauden kokonaishintaisten töiden osuus kaikista töistä"]
+              [vis/pie
+               {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+               {"Kokonaishintaiset" kok-hint-yhteensa "Yksikkohintaiset" yks-hint-yhteensa}]]))]]
    
    [:div.summa "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
     [:span (fmt/euro valitun-hoitokauden-ja-tpin-kustannukset)]]
@@ -187,9 +197,29 @@
         valitun-hoitokauden-kaikkien-tpin-kustannukset
         (reaction (s/toiden-kustannusten-summa
                    @kaikki-sopimuksen-ja-hoitokauden-rivit
-                   :summa))]
+                   :summa))
 
-    (hae-urakan-tiedot ur)
+
+        sopimuksen-yks-hint-tyot
+        (reaction
+            (into []
+                  (filter (fn [t]
+                              (= (:sopimus t) (first @s/valittu-sopimusnumero))))
+                  @s/urakan-yks-hint-tyot))
+
+        sopimuksen-yks-hint-tyot-hoitokausittain
+        (reaction (let [tyyppi (:tyyppi @urakka)
+                        [sopimud-id _] @s/valittu-sopimusnumero]
+                      (s/ryhmittele-hoitokausittain @sopimuksen-yks-hint-tyot
+                                                    (s/hoitokaudet @urakka))))
+
+        valitun-hoitokauden-yks-hint-kustannukset
+        (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
+                             + 0
+                             (get @sopimuksen-yks-hint-tyot-hoitokausittain @s/valittu-hoitokausi)))] ; TODO Määritelty jo kertaalleen yksikköhintaisissa töissä, duplikaattina täällä
+
+
+      (hae-urakan-tiedot ur)
 
     (komp/luo
      {:component-will-receive-props
@@ -214,7 +244,8 @@
         [kustannukset
          @valitun-hoitokauden-ja-tpin-kustannukset
          @valitun-hoitokauden-kaikkien-tpin-kustannukset
-         @kaikkien-hoitokausien-taman-tpin-kustannukset]
+         @kaikkien-hoitokausien-taman-tpin-kustannukset
+         @valitun-hoitokauden-yks-hint-kustannukset]
         
         (if (empty? @toimenpiteet)
           (when @toimenpiteet
