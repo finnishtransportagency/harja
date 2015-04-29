@@ -24,7 +24,6 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-
 (deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot []
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
          urakka-id @oulun-alueurakan-id
@@ -34,7 +33,7 @@
 
     (mapv (fn [rivi]
               (is (= (:taso (first rivi)) 1))
-              (is (= (:id (first rivi)) 906)))
+              (is (= (:koodi (first rivi)) "23000")))
               response)
 
     (mapv (fn [rivi] (is (= (:taso (nth rivi 1)) 2))) response)

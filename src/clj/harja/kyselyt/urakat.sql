@@ -52,11 +52,11 @@ SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,
 -- name: tallenna-urakan-sopimustyyppi!
 -- Tallentaa urakalle sopimustyypin
 UPDATE urakka
-SET    sopimustyyppi = :sopimustyyppi::sopimustyyppi
-WHERE  id = :urakka
+   SET sopimustyyppi = :sopimustyyppi::sopimustyyppi
+ WHERE id = :urakka
 
 -- name: hae-urakan-sopimustyyppi
 -- Hakee urakan sopimustyypin
 SELECT sopimustyyppi
-FROM   urakka
-WHERE  id = :urakka
+  FROM urakka
+ WHERE id = :urakka
