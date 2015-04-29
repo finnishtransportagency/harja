@@ -19,7 +19,7 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 
-; TODO Refactor?
+; TODO Siirrä tietoihin
 (defn valitun-hoitokauden-yks-hint-kustannukset [urakka]
 (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
                      + 0

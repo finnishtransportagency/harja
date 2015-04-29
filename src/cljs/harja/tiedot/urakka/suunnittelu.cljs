@@ -5,8 +5,12 @@
             [cljs-time.coerce :as tc]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log]]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm])
+
+(:require-macros
+    [reagent.ratom :refer [reaction]]))
 
 (def valittu-sopimusnumero "Sopimusnumero" (atom nil))
 
@@ -46,6 +50,9 @@ ja viimeinen voivat olla vajaat)."
                            (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
+(def valitun-urakan-hoitokaudet
+    "Valitun urakan hoitokaudet"
+    (reaction (hoitokaudet @nav/valittu-urakka)))
 
 ;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm
 (defn jaljella-olevien-hoitokausien-rivit

@@ -121,7 +121,7 @@
         (reaction (let [tyyppi (:tyyppi @urakka)
                         [sopimud-id _] @s/valittu-sopimusnumero]
                     (s/ryhmittele-hoitokausittain @sopimuksen-tyot
-                                                  (s/hoitokaudet @urakka))))
+                                                  @s/valitun-urakan-hoitokaudet)))
         
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?
