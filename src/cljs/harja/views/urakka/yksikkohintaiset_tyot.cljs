@@ -163,7 +163,11 @@
      {:component-will-receive-props
       (fn [_ & [_ ur]]
         (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
-        (hae-urakan-tiedot ur))}
+        (hae-urakan-tiedot ur))
+
+      :component-will-unmount
+      (fn [this]
+        (reset! tuleville? false))}
 
      (fn [ur]
        [:div.yksikkohintaiset-tyot

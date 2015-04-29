@@ -195,8 +195,12 @@
     (komp/luo
      {:component-will-receive-props
       (fn [this & [_ ur]]
-        (hae-urakan-tiedot ur))}
-     
+        (hae-urakan-tiedot ur))
+
+      :component-will-unmount
+      (fn [this]
+        (reset! tuleville? false))}
+
      (fn [ur]
        
        [:div.kokonaishintaiset-tyot
