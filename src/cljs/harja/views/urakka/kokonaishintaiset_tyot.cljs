@@ -114,7 +114,7 @@
    [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
-(defn kokonaishintaiset-tyot [ur]
+(defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot s/urakan-kok-hint-tyot
         toimenpiteet (atom nil)
         urakka (atom nil)
@@ -197,27 +197,7 @@
         valitun-hoitokauden-kaikkien-tpin-kustannukset
         (reaction (s/toiden-kustannusten-summa
                    @kaikki-sopimuksen-ja-hoitokauden-rivit
-                   :summa))
-
-
-        sopimuksen-yks-hint-tyot
-        (reaction
-            (into []
-                  (filter (fn [t]
-                              (= (:sopimus t) (first @s/valittu-sopimusnumero))))
-                  @s/urakan-yks-hint-tyot))
-
-        sopimuksen-yks-hint-tyot-hoitokausittain
-        (reaction (let [tyyppi (:tyyppi @urakka)
-                        [sopimud-id _] @s/valittu-sopimusnumero]
-                      (s/ryhmittele-hoitokausittain @sopimuksen-yks-hint-tyot
-                                                    (s/hoitokaudet @urakka))))
-
-        valitun-hoitokauden-yks-hint-kustannukset
-        (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
-                             + 0
-                             (get @sopimuksen-yks-hint-tyot-hoitokausittain @s/valittu-hoitokausi)))] ; TODO Määritelty jo kertaalleen yksikköhintaisissa töissä, duplikaattina täällä
-
+                   :summa))]
 
       (hae-urakan-tiedot ur)
 

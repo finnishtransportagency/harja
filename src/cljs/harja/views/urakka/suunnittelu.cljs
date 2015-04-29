@@ -19,16 +19,25 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 
+; TODO Refactor?
+(defn valitun-hoitokauden-yks-hint-kustannukset [urakka]
+(reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
+                     + 0
+                     (get (s/ryhmittele-hoitokausittain (into []
+                                                              (filter (fn [t]
+                                                                          (= (:sopimus t) (first @s/valittu-sopimusnumero))))
+                                                              @s/urakan-yks-hint-tyot)
+                                                        (s/hoitokaudet urakka)) @s/valittu-hoitokausi))))
 
 (def valittu-valilehti "Valittu välilehti" (atom 0))
-
 
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [urakan-hoitokaudet (atom (s/hoitokaudet ur))
         hae-urakan-tyot (fn [ur]
                                (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                               (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+                               (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))
+        valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
     (s/valitse-sopimusnumero! (first (:sopimukset ur)))
     (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
     (hae-urakan-tyot ur)
@@ -70,7 +79,7 @@
            
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
-           [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur]
+           [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
            
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
