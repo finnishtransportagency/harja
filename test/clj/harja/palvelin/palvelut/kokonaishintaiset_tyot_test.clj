@@ -24,8 +24,9 @@
 
 
 
-(use-fixtures :once jarjestelma-fixture)
-
+(use-fixtures :once (compose-fixtures
+                      jarjestelma-fixture
+                      urakkatieto-fixture))
 
 
 ;; käyttää testidata.sql:stä tietoa

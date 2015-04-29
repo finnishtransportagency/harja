@@ -1,6 +1,9 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
-  (:require 
+  (:require
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
     [harja.palvelin.komponentit.http-palvelin :as http]))
 
 
@@ -31,6 +34,12 @@
                                row)))
                  (.next rs)))))))
 
+(defn u
+  "Päivitä Harjan kantaa yksikkötestauksen yhteydessä"
+  [jarjestelma & sql]
+  (with-open [c (.getConnection (:datasource (:db jarjestelma)))
+              ps (.prepareStatement c (reduce str sql))]
+    (.executeUpdate ps)))
 
 (defprotocol FeikkiHttpPalveluKutsu
   (kutsu-palvelua
@@ -80,18 +89,46 @@
 
 (def jarjestelma nil)
 
+(def oulun-alueurakan-id (atom nil))
+(def pudasjarven-alueurakan-id (atom nil))
+
+(defn hae-oulun-alueurakan-id []
+  (ffirst (q jarjestelma (str "SELECT id
+                               FROM   urakka
+                               WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+
+(defn hae-pudasjarven-alueurakan-id []
+  (ffirst (q jarjestelma (str "SELECT id
+                               FROM   urakka
+                               WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
+
+(defn urakkatieto-fixture [testit]
+  (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
+  (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
+  (testit)
+  (reset! oulun-alueurakan-id nil)
+  (reset! pudasjarven-alueurakan-id nil))
+
+(use-fixtures :once urakkatieto-fixture)
+
+(defn oulun-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
+   :roolit #{"urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
+   :urakkaroolit [{:urakka {:id @oulun-alueurakan-id,
+                            :nimi "Oulun alueurakka 2005-2010",
+                            :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
+                   :rooli "urakanvalvoja"}]})
+
 (defn oulun-urakan-urakoitsijan-urakkavastaava []
-    (let [oulun-alueurakan-id (ffirst (q jarjestelma (str "SELECT id
-                                                        FROM urakka
-                                                       WHERE nimi = 'Oulun alueurakka 2005-2010'")))]
-        {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-         :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
-         :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-         :urakkaroolit [{:urakka {:id oulun-alueurakan-id,
-                                  :nimi "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
-                                  :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                         :luotu nil,
-                         :rooli "urakoitsijan urakan vastuuhenkilo"}]}))
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :urakkaroolit [{:urakka {:id @oulun-alueurakan-id,
+                            :nimi "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
+                            :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
+                   :luotu nil,
+                   :rooli "urakoitsijan urakan vastuuhenkilo"}]})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
     {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
