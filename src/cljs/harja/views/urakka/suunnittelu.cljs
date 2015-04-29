@@ -83,7 +83,7 @@
            
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
-           [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur]
+           [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
            
            "Materiaalit"
            ^{:key "materiaalit"}

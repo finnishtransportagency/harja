@@ -98,7 +98,7 @@
    {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
-(defn yksikkohintaiset-tyot-view [ur]
+(defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot s/urakan-yks-hint-tyot
         toimenpiteet-ja-tehtavat (atom nil)
         urakka (atom nil)
@@ -152,12 +152,8 @@
         (reaction (transduce (comp (mapcat second)
                                    (map #(* (:maara %) (:yksikkohinta %))))
                              + 0
-                             (seq @sopimuksen-tyot-hoitokausittain)))
-        
-        valitun-hoitokauden-kustannukset
-        (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
-                             + 0
-                             (get @sopimuksen-tyot-hoitokausittain @s/valittu-hoitokausi)))]
+                             (seq @sopimuksen-tyot-hoitokausittain)))]
+
     (hae-urakan-tiedot ur)
     (komp/luo
      {:component-will-receive-props
@@ -173,7 +169,7 @@
        [:div.yksikkohintaiset-tyot
         [:div.hoitokauden-kustannukset
          [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
-          [:span (fmt/euro @valitun-hoitokauden-kustannukset)]]
+          [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
          [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
         
