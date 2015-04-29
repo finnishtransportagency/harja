@@ -88,7 +88,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:span.input-group-addon
      [:input {:type "checkbox"
               :checked (if checked "checked" "")
-              :on-change #(do (.preventDefault %) (toiminto))}]]
+              :on-change #(do (.preventDefault %) (toiminto) nil)}]]
     [:span.raksiboksi-teksti.form-control {:on-click #(toiminto)}  teksti]]
    (when nayta-infoteksti?
      info-teksti)])

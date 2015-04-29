@@ -181,6 +181,7 @@
                                                       #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
                                                                       tyot %)
                                                       :ei-mahdollinen)
+          :peruuta #(reset! tuleville? false)
           :tunniste       :tehtava
           :voi-lisata?    false
           :voi-poistaa?   (constantly false)

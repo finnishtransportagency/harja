@@ -230,6 +230,7 @@
                                                   #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
                                                                   urakan-kok-hint-tyot % tuleville?)
                                                   :ei-mahdollinen)
+            :peruuta #(reset! tuleville? false)
              :tunniste #((juxt :vuosi :kuukausi) %)
              :voi-lisata? false
              :voi-poistaa? (constantly false)
