@@ -4,6 +4,9 @@
             [bootstrap :as bs]
             
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
+
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.materiaalit :as mat]
@@ -16,14 +19,18 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 
+
 (def valittu-valilehti "Valittu välilehti" (atom 0))
 
 
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
-  (let [urakan-hoitokaudet (atom (s/hoitokaudet ur))]
+  (let [urakan-hoitokaudet (atom (s/hoitokaudet ur))
+        hae-urakan-tiedot (fn [ur]
+                               (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))]
     (s/valitse-sopimusnumero! (first (:sopimukset ur)))
     (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
+    (hae-urakan-tiedot ur)
     
     (r/create-class
       {:component-will-receive-props

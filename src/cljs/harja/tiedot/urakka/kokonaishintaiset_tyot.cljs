@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.kokonaishintaiset-tyot
-  "Tämä nimiavaruus hallinnoi urakan yksikköhintaisia töitä."
+  "Tämä nimiavaruus hallinnoi urakan kokonaishintaisia töitä."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.urakka.suunnittelu :as s]

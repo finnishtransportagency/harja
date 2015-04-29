@@ -105,12 +105,11 @@
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
 (defn kokonaishintaiset-tyot [ur]
-  (let [urakan-kok-hint-tyot (atom nil)
+  (let [urakan-kok-hint-tyot s/urakan-kok-hint-tyot
         toimenpiteet (atom nil)
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
                             (reset! urakka ur)
-                            (go (reset! urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                             (go (reset! toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
         
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
@@ -202,7 +201,6 @@
         (reset! tuleville? false))}
 
      (fn [ur]
-       
        [:div.kokonaishintaiset-tyot
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Toimenpide"]

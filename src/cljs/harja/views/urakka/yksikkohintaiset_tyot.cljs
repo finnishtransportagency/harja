@@ -6,6 +6,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
+            [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -98,13 +99,13 @@
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn yksikkohintaiset-tyot-view [ur]
-  (let [tyot (atom nil)
+  (let [urakan-yks-hint-tyot (atom nil)
         toimenpiteet-ja-tehtavat (atom nil)
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
                             (reset! urakka ur)
                             ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen  urakalle
-                            (go (reset! tyot (prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))
+                            (go (reset! urakan-yks-hint-tyot (prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))
                             (go (reset! toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
         
         tyorivit-samat-alkutilanteessa? (atom true)
@@ -114,7 +115,7 @@
          (into []
                (filter (fn [t]
                          (= (:sopimus t) (first @s/valittu-sopimusnumero))))
-               @tyot))
+               @urakan-yks-hint-tyot))
         
 
         sopimuksen-tyot-hoitokausittain
@@ -183,7 +184,7 @@
           :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                       (:id ur)
                                                       #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
-                                                                      tyot %)
+                                                                      urakan-yks-hint-tyot %)
                                                       :ei-mahdollinen)
           :peruuta #(reset! tuleville? false)
           :tunniste       :tehtava

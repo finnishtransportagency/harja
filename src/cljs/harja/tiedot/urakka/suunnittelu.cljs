@@ -18,6 +18,8 @@
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 
+(def urakan-yks-hint-tyot (atom nil))
+(def urakan-kok-hint-tyot (atom nil))
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
