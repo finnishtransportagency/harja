@@ -46,7 +46,12 @@
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"]
-                                 
+
+                 ;; Sonja-väylän JMS riippuvuudet
+                 [progress/sonic-client "7.6.2"]
+                 [progress/sonic-crypto "7.6.2"]
+                 [progress/sonic-xmessage "7.6.2"]
+                 
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
@@ -84,7 +89,9 @@
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
     
-  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]  ;; FIXME: move artifacts to mvn.solita.fi
+                 ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
+                 ]
 
   
   :plugins [[lein-cljsbuild "1.0.5"]
