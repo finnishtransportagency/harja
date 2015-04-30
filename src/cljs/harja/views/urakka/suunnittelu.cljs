@@ -37,7 +37,8 @@
         hae-urakan-tyot (fn [ur]
                                (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                                (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))
-        valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
+        valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)
+        valitun-hoitokauden-kok-hint-kustannukset s/valitun-hoitokauden-kok-hint-kustannukset]
     (s/valitse-sopimusnumero! (first (:sopimukset ur)))
     (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
     (hae-urakan-tyot ur)

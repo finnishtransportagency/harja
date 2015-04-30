@@ -193,3 +193,21 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
                                        :maksupvm uusi-maksupvm)))
                        rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
+
+
+(def kaikki-sopimuksen-kok-hint-rivit
+    (reaction (let [sopimus-id (first @valittu-sopimusnumero)]
+                  (filter #(= sopimus-id (:sopimus %))
+                          @urakan-kok-hint-tyot))))
+
+(def kaikki-sopimuksen-ja-hoitokauden-kok-hint-rivit
+    (reaction (let [hk-alku (first @valittu-hoitokausi)]
+                  (filter
+                      #(pvm/sama-pvm?
+                          (:alkupvm %) hk-alku)
+                      @kaikki-sopimuksen-kok-hint-rivit))))
+
+(def valitun-hoitokauden-kok-hint-kustannukset
+    (reaction (toiden-kustannusten-summa
+                  @kaikki-sopimuksen-ja-hoitokauden-kok-hint-rivit
+                  :summa)))

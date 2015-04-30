@@ -163,23 +163,11 @@
                     (if-not kopioi?
                       false
                       varoita?)))
-
-        kaikki-sopimuksen-rivit
-        (reaction (let [sopimus-id (first @s/valittu-sopimusnumero)]
-                    (filter #(= sopimus-id (:sopimus %))
-                            @urakan-kok-hint-tyot)))
-
-        kaikki-sopimuksen-ja-hoitokauden-rivit
-        (reaction (let [hk-alku (first @s/valittu-hoitokausi)]
-                    (filter
-                     #(pvm/sama-pvm?
-                       (:alkupvm %) hk-alku)
-                     @kaikki-sopimuksen-rivit)))
         
         kaikki-sopimuksen-ja-tpin-rivit
         (reaction (let [tpi-id (:tpi_id @valittu-toimenpide)]
                     (filter #(= tpi-id (:toimenpideinstanssi %))
-                            @kaikki-sopimuksen-rivit)))
+                            @s/kaikki-sopimuksen-kok-hint-rivit)))
 
         kaikkien-hoitokausien-taman-tpin-kustannukset
         (reaction (s/toiden-kustannusten-summa
@@ -192,12 +180,7 @@
                                                   #(pvm/sama-pvm?
                                                     (:alkupvm %) hk-alku)
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
-                                               :summa))
-
-        valitun-hoitokauden-kaikkien-tpin-kustannukset
-        (reaction (s/toiden-kustannusten-summa
-                   @kaikki-sopimuksen-ja-hoitokauden-rivit
-                   :summa))]
+                                               :summa))]
 
       (hae-urakan-tiedot ur)
 
@@ -223,7 +206,7 @@
         ;; Näytetään kustannusten summat ja piirakkadiagrammit
         [kustannukset
          @valitun-hoitokauden-ja-tpin-kustannukset
-         @valitun-hoitokauden-kaikkien-tpin-kustannukset
+         @s/valitun-hoitokauden-kok-hint-kustannukset
          @kaikkien-hoitokausien-taman-tpin-kustannukset
          @valitun-hoitokauden-yks-hint-kustannukset]
         
