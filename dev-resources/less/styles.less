@@ -37,19 +37,6 @@ div.valilehti {
   margin-top: 1em;
 }
 
-// pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
-// tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
-.panel-heading {
-	button {
-		padding: 4px 12px;
-	}
-	.nappi-ensisijainen span,
-	.nappi-toissijainen span,
-	.nappi-myonteinen span,
-	.nappi-kielteinen span, {
-		font-size: @fontin-koko-leipateksti;
-	}
-}
 .haku-container {
 	> input {
 		color: @harmaa1;
@@ -119,11 +106,6 @@ div.valilehti {
 	> label {
 		padding: 5px;
 	}
-}
-// Näytetään panel-headerin span samalla rivillä itse otsikon h3 kanssa (ks. dropdown panel kontrollit)
-.panel-heading span {
-  margin-top: -28px;
-  font-size: 200%;
 }
 
 div.toimenpidekoodit select {

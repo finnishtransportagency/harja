@@ -105,7 +105,7 @@
                                            :on-change #(reset! tunnus (-> % .-target .-value))
                                            
                                            :placeholder "Livi-tunnus (LX123456)..."}]]
-        [:button.btn.btn-default {:disabled (or @haku-menossa
+        [:button.nappi-toissijainen {:disabled (or @haku-menossa
                                                 (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
                                   :on-click #(do (.preventDefault %)
                                                  (reset! haku-menossa true)
@@ -194,7 +194,7 @@
      :muokkaa-footer (fn [g]
                        [:div.urakkalista-napit
                         (when (#{:hallintayksikko :urakoitsija} (:tyyppi organisaatio))
-                          [:button.btn.btn-default {:on-click #(do (.preventDefault %)
+                          [:button.nappi-toissijainen {:on-click #(do (.preventDefault %)
                                                    (go (let [res (<! (k/hae-organisaation-urakat (:id organisaatio)))
                                                              urakat (valitut-urakat @urakat-atom)]
                                                          (log "TULI URAKOITA: " res)
@@ -373,7 +373,7 @@
       :reagent-render
       (fn [k]
         [:div.kayttajatiedot
-         [:button.btn.btn-default {:on-click #(reset! valittu-kayttaja nil)}
+         [:button.nappi-toissijainen {:on-click #(reset! valittu-kayttaja nil)}
           (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
      
          [:h3 "Muokkaa käyttäjää " (:etunimi k) " " (:sukunimi k)]
@@ -461,14 +461,14 @@
               "Toiminnot:"]
              [:div.col-sm-10.toiminnot
               (let [virheita (some pos? (map second @virheet))]
-                [:button.btn.btn-primary {:disabled (or (nil? tyyppi) virheita)
+                [:button.nappi-ensisijainen {:disabled (or (nil? tyyppi) virheita)
                                           :on-click #(do (.preventDefault %)
                                                          (tallenna!))}
                  (if @tallennus-menossa
                    [ajax-loader]
                    (ikonit/ok)) " Tallenna"])
               [:span.pull-right
-               [:button.btn.btn-danger {:disabled (when @poista-painettu "disabled")
+               [:button.nappi-kielteinen {:disabled (when @poista-painettu "disabled")
                                         :on-click #(do (.preventDefault %)
                                                        (if (nil? (:id k))
                                                          (reset! valittu-kayttaja nil)
@@ -477,11 +477,11 @@
                (when @poista-painettu
                  [modal {:otsikko "Poistetaanko käyttöoikeus?"
                          :footer [:span
-                                  [:button.btn.btn-default {:type "button"
+                                  [:button.nappi-toissijainen {:type "button"
                                                             :on-click #(do (.preventDefault %)
                                                                            (modal/piilota!))}
                                    "Peruuta"]
-                                  [:button.btn.btn-danger {:type "button"
+                                  [:button.nappi-kielteinen {:type "button"
                                                            :on-click #(do (.preventDefault %)
                                                                           (modal/piilota!)
                                                                           (poista!))}

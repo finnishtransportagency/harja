@@ -60,7 +60,7 @@
           :ohjaus g
           :uusi-rivi aseta-hoitokausi                                
           :muokkaa-footer (fn [g]
-                            [:button.btn.btn-default {:on-click valitse-kartalta}
+                            [:button.nappi-toissijainen {:on-click valitse-kartalta}
                              (if @karttavalinta?
                                "Piilota kartta"
                                "Valitse kartalta")])

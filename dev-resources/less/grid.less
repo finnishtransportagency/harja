@@ -1,7 +1,37 @@
 /* Geneerinen editoitava gridi */
 
-div.grid {
+/*
+font: #191919
+border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa background-even: #e1e1e1
+*/
 
+@livi-taulukon-padding: 5px;
+.livi-taulukon-reunat {
+	border: 1px solid @harmaa7;
+}
+.livi-grid {
+	color: @harmaa1;
+	// pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
+	// tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
+	.panel-heading {
+		// anna padding top ja bottom tulla BS:stä
+		padding-left: 5px;
+		padding-right: 5px;
+		// Näytetään panel-headerin span samalla rivillä itse otsikon h3 kanssa (ks. dropdown panel kontrollit)
+		span {
+			margin-top: -30px;
+			font-size: 200%;
+		}
+		button {
+			padding: 4px 12px;
+		}
+		.nappi-ensisijainen span,
+		.nappi-toissijainen span,
+		.nappi-myonteinen span,
+		.nappi-kielteinen span, {
+			font-size: @fontin-koko-leipateksti;
+		}
+	}
     div.panel-body {
 	padding: 0px;
     }
@@ -47,14 +77,14 @@ div.grid {
 	border-collapse: collapse;
 	table-layout: fixed;
     }
-    table.grid thead {
-	background-color: #c8c8c8;
+	thead {
+		background-color: @harmaa8;
     }
-    table.grid tr:odd {
-	background-color: #fafafa;
+    tr:odd {
+		background-color: @harmaa10;
     }
-    table.grid tr:even {
-	background-color: #e1e1e1;
+    tr:even {
+		background-color: @harmaa9;
     }
 
     table.grid tr.vetolaatikko-auki {
@@ -65,13 +95,13 @@ div.grid {
     }
 
     // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
-    table.grid tr.vetolaatikko-kiinni {
+    tr.vetolaatikko-kiinni {
       display: none;
     }
-    table.grid td.vetolaatikon-tila { text-align: center; }
-      
-    table.grid tr, table.grid td, table.grid th {
-	border: 1px solid #afafaf;    
+    td.vetolaatikon-tila { text-align: center; }
+    tr, td, th {
+		padding: @livi-taulukon-padding;
+		.livi-taulukon-reunat;
     }
 
     th.muokataan {
@@ -96,12 +126,8 @@ div.grid {
     }
 
     .panel-title {
-      font-size: 12px;
-    }
-
-    .peru {
-	font-size: 12px;
-	margin-left: 2em;
+		color: @harmaa1;
+		font-size: @fontin-koko-leipateksti;
     }
 
     button.grid-lisaa {
@@ -126,9 +152,11 @@ div.grid {
 	min-width: 160px;
     }
 
-
+	tr.parillinen {
+		background-color: @harmaa9;
+	}
     tr.pariton {
-	background-color: #F2EEED;
+		background-color: @harmaa10;
     }
     tr.klikattava:hover {
 	cursor: pointer;
