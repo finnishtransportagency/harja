@@ -116,11 +116,10 @@
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot s/urakan-kok-hint-tyot
-        toimenpiteet (atom nil)
+        toimenpiteet s/urakan-toimenpideinstanssit
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
-                            (reset! urakka ur)
-                            (go (reset! toimenpiteet (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
+                            (reset! urakka ur))
         
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
         sopimuksen-tyot-hoitokausittain
@@ -135,9 +134,8 @@
         (reaction (let [hk @s/valittu-hoitokausi]
                     (get @sopimuksen-tyot-hoitokausittain hk)))
 
-        valittu-toimenpide (reaction (first @toimenpiteet))
         valitun-toimenpiteen-ja-hoitokauden-tyot
-        (reaction (let [valittu-tp-id (:id @valittu-toimenpide)]
+        (reaction (let [valittu-tp-id (:id @s/valittu-toimenpideinstanssi)]
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
         
@@ -145,7 +143,7 @@
                                                              @valitun-toimenpiteen-ja-hoitokauden-tyot))
                                  tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
                                  tyhjat-tyot (keep #(luo-tyhja-tyo (:tyyppi @urakka)
-                                                                   (:tpi_id @valittu-toimenpide)
+                                                                   (:tpi_id @s/valittu-toimenpideinstanssi)
                                                                    @s/valittu-hoitokausi
                                                                    %
                                                                    (first @s/valittu-sopimusnumero))
@@ -165,7 +163,7 @@
                       varoita?)))
         
         kaikki-sopimuksen-ja-tpin-rivit
-        (reaction (let [tpi-id (:tpi_id @valittu-toimenpide)]
+        (reaction (let [tpi-id (:tpi_id @s/valittu-toimenpideinstanssi)]
                     (filter #(= tpi-id (:toimenpideinstanssi %))
                             @s/kaikki-sopimuksen-kok-hint-rivit)))
 
@@ -195,13 +193,6 @@
 
      (fn [ur]
        [:div.kokonaishintaiset-tyot
-        [:div.label-ja-alasveto
-         [:span.alasvedon-otsikko "Toimenpide"]
-         [livi-pudotusvalikko {:valinta    @valittu-toimenpide
-                               ;;\u2014 on väliviivan unikoodi
-                               :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
-                               :valitse-fn #(reset! valittu-toimenpide %)}
-          @toimenpiteet]]
 
         ;; Näytetään kustannusten summat ja piirakkadiagrammit
         [kustannukset
@@ -219,7 +210,7 @@
             puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
-           {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @valittu-toimenpide) " / " (:t3_nimi @valittu-toimenpide) " / " (:tpi_nimi @valittu-toimenpide))
+           {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @s/valittu-toimenpideinstanssi) " / " (:t3_nimi @s/valittu-toimenpideinstanssi) " / " (:tpi_nimi @s/valittu-toimenpideinstanssi))
             :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
             :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                   (:id ur)

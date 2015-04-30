@@ -32,3 +32,15 @@
                             :class "suunnittelu-alasveto"
                             }
        hoitokaudet]]]))
+
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
+  [:span
+  (urakan-sopimus-ja-hoitokausi ur)
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Toimenpide"]
+   [livi-pudotusvalikko {:valinta    @s/valittu-toimenpideinstanssi
+                         ;;\u2014 on väliviivan unikoodi
+                         :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
+                         :valitse-fn #(reset! s/valittu-toimenpideinstanssi %)}
+    @s/urakan-toimenpideinstanssit]]]
+  )

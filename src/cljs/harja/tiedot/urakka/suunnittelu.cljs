@@ -24,6 +24,13 @@
 
 (def urakan-yks-hint-tyot (atom nil))
 (def urakan-kok-hint-tyot (atom nil))
+(def urakan-toimenpideinstanssit (atom nil))
+
+(def valittu-toimenpideinstanssi "Valittu toimenpideinstanssi"
+  (reaction (first @urakan-toimenpideinstanssit)))
+
+(defn valitse-toimenpideinstanssi! [tpi]
+  (reset! valittu-toimenpideinstanssi tpi))
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa

@@ -8,7 +8,8 @@
             [harja.ui.yleiset :refer [linkki] :as yleiset]
             [harja.ui.modal :refer [modal-container]]
             [harja.ui.viesti :refer [viesti-container]]
-            
+            [harja.ui.ikonit :as ikonit]
+
             [harja.tiedot.navigaatio :as nav]
             
             [harja.views.murupolku :as murupolku]
@@ -102,7 +103,7 @@
            ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
            [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
             [:div.row
-             [:div#sidebar-left {:class sisallon-luokka}
+             [:div {:class sisallon-luokka}
               (case sivu
                 :urakat [urakat/urakat]
                 :raportit [raportit/raportit]
@@ -112,7 +113,10 @@
                 :about [about/about]
                 )]
              [:div#kartta-container {:class kartan-luokka}
-              [kartta/kartta]]]])
+              (if (= :S kartan-koko)
+                [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
+                 [:span "Avaa kartta" (ikonit/resize-full)]]
+                [kartta/kartta])]]])
          [footer]
          [modal-container]
          [viesti-container]

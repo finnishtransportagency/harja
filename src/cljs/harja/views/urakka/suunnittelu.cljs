@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
@@ -35,8 +36,10 @@
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [urakan-hoitokaudet (atom (s/hoitokaudet ur))
         hae-urakan-tyot (fn [ur]
-                               (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                               (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))
+
+                          (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
+                          (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))
+                          (go (reset! s/urakan-toimenpideinstanssit (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
         valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
     (s/valitse-sopimusnumero! (first (:sopimukset ur)))
     (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
@@ -47,30 +50,33 @@
        (fn [this [_ ur]]
          (reset! urakan-hoitokaudet (s/hoitokaudet ur))
          (s/valitse-sopimusnumero! (first (:sopimukset ur)))
-         (s/valitse-hoitokausi! (first @urakan-hoitokaudet)))
-       
-       :reagent-render 
+         (s/valitse-hoitokausi! (first @urakan-hoitokaudet))
+         (hae-urakan-tyot ur))
+
+
+       :reagent-render
        (fn [ur]
 
          [:span.suunnittelu
-          [valinnat/urakan-sopimus-ja-hoitokausi ur]
-          
+          (if (= 0 @valittu-valilehti)
+            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+            [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
           [bs/tabs {:style :pills :active valittu-valilehti}
-           
+
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
-           
+
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
-           
+
            "Materiaalit"
            ^{:key "materiaalit"}
            [mat/materiaalit ur]
            ]])
-       
+
        })))
 
 

@@ -22,7 +22,10 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 
-(defn toteumat [ur]
+;; Tällä hetkellä valittu toteuma
+(defonce valittu-toteuma (atom nil))
+
+(defn toteumat-paasivu [ur]
   (let [toteumat (atom nil)
         urakka (atom nil)
         toteuma-paivat (atom nil)
@@ -56,9 +59,9 @@
 
       (fn [ur]
           [:div.toteumat
-           [valinnat/urakan-sopimus-ja-hoitokausi ur]
-           [:button.nappi-ensisijainen
-            "Lisää toteuma"]
+           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {:olio "on"})}
+            (ikonit/plus-sign) " Lisää toteuma"]
 
            [:div.aikajana
             (when @s/valittu-hoitokausi
@@ -107,3 +110,27 @@
 
 
          ]))))
+
+(defn toteuman-tiedot
+  "Valitun toteuman tietojen näkymä"
+  [ur vt]
+  (komp/luo
+    {:component-will-receive-props
+     (fn [_ & [_ ur vt]]
+       (log "Toteuma valittu: " (pr-str @valittu-toteuma))
+       )}
+
+    (fn [ur]
+      [:div.toteuman-tiedot
+       [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
+        (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
+       (if-not (:id @valittu-toteuma)
+         [:h3 "Luo uusi toteuma"])
+       ])))
+
+(defn toteumat
+  "Toteumien pääkomponentti"
+  [ur]
+  (if-let [vt @valittu-toteuma]
+    [toteuman-tiedot ur]
+    [toteumat-paasivu ur]))
