@@ -168,6 +168,17 @@
      (fn [ur]
        [:div.yksikkohintaiset-tyot
         [:div.hoitokauden-kustannukset
+         [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
+          [:div.col-xs-12.piirakka
+           (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
+                 kaikki-kust @kaikkien-hoitokausien-kustannukset]
+               (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+                   [:span.piirakka-wrapper
+                    [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
+                    [vis/pie
+                     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                     {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]]
+
          [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
          [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
