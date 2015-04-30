@@ -99,6 +99,22 @@
     12 "joulukuu"
     "kk ei välillä 1-12"))
 
+(defn kuukauden-lyhyt-nimi [kk]
+  (case kk
+    1 "tammi"
+    2 "helmi"
+    3 "maalis"
+    4 "huhti"
+    5 "touko"
+    6 "kesä"
+    7 "heinä"
+    8 "elo"
+    9 "syys"
+    10 "loka"
+    11 "marras"
+    12 "joulu"
+    "tuntematon"))
+    
 ;; hoidon alueurakoiden päivämääräapurit
 (defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"

@@ -1,6 +1,11 @@
 (ns harja.ui.visualisointi
     "Data visualization components."
-    (:require [reagent.core :refer [atom]]))
+    (:require [reagent.core :refer [atom] :as r]
+              [cljs-time.core :as t]
+              [cljs-time.coerce :as tc]
+              [harja.loki :refer [log]]
+              [harja.ui.komponentti :as komp]
+              [harja.pvm :as pvm]))
 
 (defn polar->cartesian [cx cy radius angle-deg]
     (let [rad (/ (* js/Math.PI (- angle-deg 90)) 180.0)]
@@ -121,8 +126,8 @@
                   value-fn (or value-fn second)
                   key-fn (or key-fn hash)
                   color-fn (or color-fn (constantly (or color "blue")))
-                  mx 40 ;; margin-x
-                  my 20 ;; margin-y
+                  mx 20 ;; margin-x
+                  my 10 ;; margin-y
                   bar-width (/ (- width mx) (count data))
                   hovered @hover
                   max-value (reduce max (map value-fn data))
@@ -164,3 +169,127 @@
                               :style {:stroke "black" :stroke-dasharray "5, 5"}}]
                       [:text {:x (- mx 5) :y (+ y 5) :text-anchor "end"} label]])
                  ]))))
+
+(defn timeline [opts times]
+  (let [component (r/current-component)
+        svg->screen (fn [[x y]]
+                      (let [svg (r/dom-node component)
+                            point (.createSVGPoint svg)
+                            matrix (.getScreenCTM svg)]
+                        (set! (.-x point) x)
+                        (set! (.-y point) y)
+                        (let [p (.matrixTransform point matrix)]
+                          [(.-x p) (.-y p)])))
+        screen->svg (fn [[x y]]
+                      (let [svg (r/dom-node component)
+                            point (.createSVGPoint svg)
+                            matrix (.inverse (.getScreenCTM svg))]
+                        (set! (.-x point) x)
+                        (set! (.-y point) y)
+                        (let [p (.matrixTransform point matrix)]
+                          [(.-x p) (.-y p)])))
+                      
+        evt->pos (fn [event]
+                   (screen->svg [(.-clientX event) (.-clientY event)]))]
+    (komp/luo
+     {:component-did-mount (fn [this]
+                             (let [dom-node (r/dom-node this)]
+                               (log "SVG node: " dom-node)
+                               (log "point: " (.createSVGPoint dom-node))
+                               (log "screen ctm: " (.getScreenCTM dom-node))))}
+   
+     (fn [{:keys [width height range slice hover on-hover on-click] :as opts} times]
+       (let [[start end] range
+             margin-x 20
+             margin-y 10
+             day-range (t/in-days (t/interval start end))
+             x-scale (/ (- width margin-x margin-x) day-range)
+             day-width (* 0.8 x-scale)
+             day-height 20 ;; (- height margin-y margin-y)
+             empty-height (/ day-height 4)
+             empty-y (- day-height  (/ empty-height 2))
+             text-y (+ 5 margin-y margin-y day-height)
+             date-to-x (fn [date]
+                         (+ margin-x 
+                            (* x-scale (t/in-days (t/interval start date)))))
+             next-day #(t/plus % (t/days 1))]
+         [:svg.timeline {:width width :height height
+                         :on-click (fn [e]
+                                     (let [[x _] (evt->pos e)
+                                           day (/ (- x margin-x) x-scale)]
+                                       (log "X: " x ", DAY: " day)
+                                       (when on-click
+                                         (on-click (t/plus start (t/days (int day)))))))}
+          [:g.timeline-dates 
+           (loop [acc (list)
+                  now start
+                  empty-day nil]
+             (if (t/after? now end)
+               ;; Aikajana loppui, palautetaan lapset
+               (doall (map-indexed (fn [i children] ^{:key i} [:g children])
+                                   (partition 50 1 []
+                                              (if empty-day
+                                                (conj acc empty-day)
+                                                acc))))
+
+               
+               (let [active? (times now) 
+                     x (date-to-x now)]
+                 (if-not active?
+                   ;; Niputetaan monta ei-aktiivista päivä
+                   (if empty-day
+                     ;; Jo olemassa oleva ei-aktiivisten päivien juoksu menossa, yhdistetään siihen
+                     (recur acc (next-day now) (assoc-in empty-day [1 :x2] (+ x day-width)))
+
+                     ;; Ei ole ei-aktiivisten päivien juoksua menossa, luodaan sellainen
+                     (recur acc (next-day now) [:line.ei-aktiiviset-paivat
+                                                {:x1 x :x2 (+ x day-width) :y1 empty-y :y2 empty-y
+                                                 :style {:stroke-width 3}}]))
+
+                   ;; Tämä päivä on aktiivinen, piirretään rect
+                   (let [acc (conj acc
+                                   (with-meta
+                                     [:rect {:x x :y margin-y
+                                             :width day-width :height day-height
+                                             :style {:fill "blue"}}]
+                                     
+                                     {:key (tc/to-long now)}))]
+                     (recur (if empty-day
+                              (conj acc empty-day)
+                              acc)
+                            (next-day now) nil))))))]
+
+          [:g.timeline-months
+           (loop [acc (list)
+                  now start]
+             (if (t/after? now end)
+               acc
+               (if (= (t/day now) 1)
+                 (recur (conj acc
+                              (let [x (date-to-x now)]
+                                ^{:key (tc/to-long now)}
+                                [:g
+                                 [:line {:x1 x :y1 (+ 5 day-height) :x2 x :y2 text-y
+                                         :style {:stroke "black"}}]
+                                 [:text {:x (+ 2 x) :y text-y}
+                                  (pvm/kuukauden-lyhyt-nimi (t/month now))]]))
+                        (next-day now))
+                 (recur acc (next-day now)))))]
+          
+          (when slice
+            (let [[slice-start slice-end] slice
+                  start-x (date-to-x slice-start)
+                  end-x (date-to-x slice-end)]
+              [:rect.livi-valittu {:x start-x :y (- margin-y 5)
+                                   :width (- end-x start-x)
+                                   :height (+ day-height 10)}]))
+          (comment (when hover
+                     (let [[hover-start hover-end] hover
+                           start-x (date-to-x hover-start)
+                           end-x (date-to-x hover-end)]
+                       [:rect {:x start-x :y (- margin-y 5)
+                               :width (- end-x start-x)
+                               :height (+ day-height 10)
+                               :style {:fill "blue" :fill-opacity 0.4}}])))
+          ])))))
+     

@@ -8,6 +8,18 @@
             [harja.tiedot.urakka.suunnittelu :as s])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn hae-urakan-toteumat [urakka-id]
-  (k/post! :urakan-toteumat urakka-id))
+(defn hae-urakan-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+  (k/post! :urakan-toteumat
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
 
+(defn hae-urakan-toteuma-paivat [urakka-id sopimus-id [alkupvm loppupvm]]
+  (k/post! :urakan-toteuma-paivat
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
+
+           
