@@ -57,6 +57,10 @@
       (fn [ur]
           [:div.toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi ur]
+           (when (ist/rooli-urakassa? roolit/ (:id ur)
+           [:button.btn.btn-primary {:on-click (reset!}
+            "Lisää toteuma"]
+            
            [:div.aikajana
             (when @s/valittu-hoitokausi
               [vis/timeline {:width 1000 :height 60
