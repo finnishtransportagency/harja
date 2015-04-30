@@ -46,8 +46,6 @@
     (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
                                 (* (or (:maara %) 0) hinta)))
           rivit)))
-
-
   
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (go (let [tallennettavat-hoitokaudet (if @tuleville?
@@ -129,7 +127,6 @@
                     (if-not kopioi?
                       false
                       varoita?)))
-                    
         
         tyorivit
         (reaction (let [valittu-hoitokausi @s/valittu-hoitokausi

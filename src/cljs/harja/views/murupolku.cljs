@@ -101,7 +101,7 @@
             nav/+urakkatyypit+
             ]]]]]))
 
-   ;; Jos hallintayksikkö tai urakka valitaan, piilota  dropdown
+   ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
    #(reset! (-> % reagent/state :valinta-auki) nil)
 

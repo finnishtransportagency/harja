@@ -194,7 +194,6 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
                        rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
 
-
 (def kaikki-sopimuksen-kok-hint-rivit
     (reaction (let [sopimus-id (first @valittu-sopimusnumero)]
                   (filter #(= sopimus-id (:sopimus %))
