@@ -7,6 +7,7 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
+            [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]))
 
 (def toteuma-xf
@@ -36,10 +37,11 @@
                           
 (defn tallenna-toteuma [db user toteuma]
   (validoi Toteuma toteuma)
-  (oik/vaadi-kirjoitusoikeus-urakkaan user (:urakka-id toteuma))
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
+                            (:urakka-id toteuma))
   
-  (jdbc/with-transaction [c db]
-    (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id sopimus)
+  (jdbc/with-db-transaction [c db]
+    (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
                                 (konv/sql-date (:alkanut toteuma))
                                 (konv/sql-date (:paattynyt toteuma))
                                 (name (:tyyppi toteuma)))]
