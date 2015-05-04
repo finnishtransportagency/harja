@@ -475,6 +475,23 @@
                                                          (reset! poista-painettu true)))}
                 (ikonit/ban-circle) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]
                (when @poista-painettu
+
+                 (modal/nayta! {:otsikko "Poistetaanko käyttöoikeus?"
+                                :footer [:span
+                                         [:button.nappi-toissijainen {:type "button"
+                                                                      :on-click #(do (.preventDefault %)
+                                                                                     (modal/piilota!))}
+                                          "Peruuta"]
+                                         [:button.nappi-kielteinen {:type "button"
+                                                                    :on-click #(do (.preventDefault %)
+                                                                                   (modal/piilota!)
+                                                                                   (poista!))}
+                                          "Poista käyttöoikeus"]
+                                         ]
+                                :sulje #(reset! poista-painettu false)}
+                               [:div "Haluatko varmasti poistaa käyttäjän "
+                                [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"])
+                 #_
                  [modal {:otsikko "Poistetaanko käyttöoikeus?"
                          :footer [:span
                                   [:button.nappi-toissijainen {:type "button"
