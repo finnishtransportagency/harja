@@ -25,7 +25,7 @@
      (if nakyvissa?
        ^{:key "modaali"}
        [:div.modal.fade.in {:style {:display "block"}}
-        [:div.modal-backdrop.fade.in {:style {:height @yleiset/korkeus}}]
+        [:div.modal-backdrop.fade.in {:style {:height @yleiset/korkeus :z-index -1}}]
         [:div.modal-dialog.modal-sm
          [:div.modal-content
           (when otsikko
