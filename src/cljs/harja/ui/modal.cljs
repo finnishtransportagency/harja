@@ -54,7 +54,9 @@
       (do (sulje)
           [:span.modaali-ei-nakyvissa])
       [:span.modaali-nakyvissa])))
-      
-      
-                           
-  
+
+(defn nayta! [{:keys [sulje otsikko footer]} sisalto]
+  (reset! modal-sisalto {:otsikko otsikko
+                         :footer footer
+                         :sisalto sisalto
+                         :nakyvissa? true}))
