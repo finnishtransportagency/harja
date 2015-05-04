@@ -30,4 +30,7 @@
             :alkupvm alkupvm
             :loppupvm loppupvm}))
 
+(defn tallenna-toteuma [toteuma]
+  (k/post! :tallenna-urakan-toteuma toteuma))
+           
            

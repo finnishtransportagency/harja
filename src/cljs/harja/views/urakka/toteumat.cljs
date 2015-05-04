@@ -6,6 +6,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
+            [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
@@ -173,7 +174,8 @@
    materiaalit-atom])
 
 
-
+(defn tallenna-toteuma [toteuma]
+  (toteumat/tallenna-toteuma toteuma))
   
   
 (defn tyot-ja-materiaalit-tiedot
@@ -181,7 +183,8 @@
   [ur vt]
   (let [muokattu (atom @valittu-toteuma)
         tehtavat (atom {})
-        materiaalit (atom {})]
+        materiaalit (atom {})
+        tallennus-kaynnissa (atom false)]
                            
     (komp/luo
      {:component-will-receive-props
@@ -201,7 +204,20 @@
                  :muokkaa! (fn [uusi]
                              (log "MUOKATAAN " (pr-str uusi))
                              (reset! muokattu uusi))
-                 :footer [:button.nappi-ensisijainen {:on-click #(log "tallentaa voisin")}
+                 :footer [:button.nappi-ensisijainen
+                          {:class (when @tallennus-kaynnissa "disabled")
+                           :on-click
+                           #(do (reset! tallennus-kaynnissa true)
+                                (go (let [res (<! (tallenna-toteuma (assoc @muokattu
+                                                                      :tehtavat (vals @tehtavat)
+                                                                      :materiaalit (vals @materiaalit))))]
+                                      (if res
+                                        ;; Tallennus ok
+                                        (do (viesti/nayta! "Toteuma tallennettu")
+                                            (reset! valittu-toteuma nil))
+                                        
+                                        ;; Epäonnistui jostain syystä
+                                        (reset! tallennus-kaynnissa false)))))}
                           "Tallenna toteuma"]
                  }
          [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @s/valittu-sopimusnumero)) :muokattava? (constantly false)}
@@ -221,11 +237,7 @@
           {:otsikko "Materiaalit" :nimi :materiaalit
            :komponentti [materiaalit-ja-maarat materiaalit]}]
 
-         @muokattu
-
-
-         
-         ]]))))
+         @muokattu]]))))
        
 
 (defn tyot-ja-materiaalit [ur]
