@@ -17,8 +17,6 @@
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
 
-(def valittu-hoitokausi "Hoitokausi" (atom nil))
-
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 
@@ -60,6 +58,8 @@ ja viimeinen voivat olla vajaat)."
 (def valitun-urakan-hoitokaudet
     "Valitun urakan hoitokaudet"
     (reaction (hoitokaudet @nav/valittu-urakka)))
+
+(def valittu-hoitokausi "Hoitokausi" (reaction (first @valitun-urakan-hoitokaudet)))
 
 ;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm
 (defn jaljella-olevien-hoitokausien-rivit
