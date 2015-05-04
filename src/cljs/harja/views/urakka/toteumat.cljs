@@ -23,7 +23,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [cljs-time.core :as t]
-            [harja.ui.protokollat :refer [Haku hae]])
+            [harja.ui.protokollat :refer [Haku hae]]
+            [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -177,7 +178,16 @@
 (defn tallenna-toteuma [toteuma]
   (toteumat/tallenna-toteuma toteuma))
   
-  
+(defn tyotyyppi->nimi [t]
+  (if (nil? t)
+    "- valitse työn tyyppi -"
+    (case t
+      :yksikkohintainen "Yksikköhintainen työ"
+      :kokonaishintainen "Kokonaishintainen työ"
+      :lisatyo "Lisätyö"
+      :muutostyo "Muutostyö"
+      :akillinen-hoitotyo "Äkillinen hoitotyö")))
+
 (defn tyot-ja-materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur vt]
@@ -229,7 +239,13 @@
            :muokattava? (constantly false)}
           
           {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @s/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
-          
+
+          {:otsikko "Tyyppi" :nimi :tyyppi
+           :tyyppi :valinta
+           :valinnat +tyotyypit+
+           :valinta-nayta tyotyyppi->nimi
+           :validoi [[:ei-tyhja "Valitse työn tyyppi"]]}
+           
           {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
           {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}
           {:otsikko "Tehtävät" :nimi :tehtavat

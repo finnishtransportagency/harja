@@ -6,12 +6,15 @@
 
 (def pvm-tyyppi #?(:clj Date :cljs DateTime))
 
+(def +tyotyypit+ [:yksikkohintainen :kokonaishintainen :akillinen-hoitotyo :lisatyo :muutostyo])
+
 (def Toteuma
   "Määrittelee yhden toteuman skeeman. Ei sisällä reittipisteitä."
   {:urakka-id s/Int
    :sopimus-id s/Int
    :alkanut pvm-tyyppi
    :paattynyt pvm-tyyppi
+   :tyyppi (apply s/enum +tyotyypit+)
    :tehtavat [{:toimenpidekoodi s/Int
                :maara s/Num}]
    :materiaalit [{:materiaalikoodi s/Int

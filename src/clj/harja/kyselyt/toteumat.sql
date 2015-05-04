@@ -24,3 +24,10 @@ SELECT id,nimi,yksikko FROM toimenpidekoodi
  WHERE taso = 4
    AND poistettu = false
    AND emo IN (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = :urakka);
+
+-- name: luo-toteuma<!
+-- Luo uuden toteuman.
+INSERT
+  INTO toteuma
+       (urakka, sopimus, alkanut, paattynyt, tyyppi)
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi)

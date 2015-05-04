@@ -6,7 +6,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [harja.domain.skeema :refer [Toteuma validoi]]))
+            [harja.domain.skeema :refer [Toteuma validoi]]
+            [clojure.java.jdbc :as jdbc]))
 
 (def toteuma-xf
   (comp (map #(-> %
@@ -35,8 +36,16 @@
                           
 (defn tallenna-toteuma [db user toteuma]
   (validoi Toteuma toteuma)
-
-  true)
+  (oik/vaadi-kirjoitusoikeus-urakkaan user (:urakka-id toteuma))
+  
+  (jdbc/with-transaction [c db]
+    (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id sopimus)
+                                (konv/sql-date (:alkanut toteuma))
+                                (konv/sql-date (:paattynyt toteuma))
+                                (name (:tyyppi toteuma)))]
+      ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
+      
+      true)))
   
                                         
 (defrecord Toteumat []

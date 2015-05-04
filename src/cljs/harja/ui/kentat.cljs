@@ -18,6 +18,7 @@
     (r/wrap
      (hae data)
      (fn [uusi]
+       (log "DATA: " (pr-str data) "; UUSI ARVO KENTÄLLE " nimi ": " (pr-str uusi))
        (if aseta
          (vaihda! (aseta data uusi))
          (vaihda! (assoc data nimi uusi)))))))
@@ -238,29 +239,11 @@
                             (pvm/aika p)
                             ""))
         ;; picker auki?
-        auki (atom false)
-
-        aseta! (fn []
-                 (let [pvm @teksti
-                       aika @aika-teksti
-                       p (pvm/->pvm-aika (str pvm " " aika))]
-                   (log "pvm: " pvm ", aika: " aika ", p: " p)
-                   (when p (reset! data p))))
-        
-        muuta! (fn [t]
-                 (reset! teksti t)
-                 (aseta!))
-        
-        muuta-aika! (fn [t]
-                      (when (or (str/blank? t)
-                                (re-matches #"\d{1,2}(:\d*)?" t))
-                        (reset! aika-teksti t)
-                        (aseta!)))
-
-        ]
+        auki (atom false)]
     (r/create-class
       {:component-will-receive-props
        (fn [this [_ {:keys [focus] :as s} data]]
+         (log "PVM-AIKA sai propsit: " (pr-str data))
          (when-not focus
            (reset! auki false))
          (swap! teksti #(if-let [p @data]
@@ -269,7 +252,24 @@
        
        :reagent-render
        (fn [_ data]
-         (let [nykyinen-pvm @data
+         (let [aseta! (fn []
+                        (let [pvm @teksti
+                              aika @aika-teksti
+                              p (pvm/->pvm-aika (str pvm " " aika))]
+                          (log "pvm: " pvm ", aika: " aika ", p: " p)
+                          (when p (reset! data p))))
+               
+               muuta! (fn [t]
+                        (reset! teksti t)
+                        (aseta!))
+               
+               muuta-aika! (fn [t]
+                             (when (or (str/blank? t)
+                                       (re-matches #"\d{1,2}(:\d*)?" t))
+                               (reset! aika-teksti t)
+                               (aseta!)))
+               
+               nykyinen-pvm @data
                nykyinen-teksti @teksti
                nykyinen-aika-teksti @aika-teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
