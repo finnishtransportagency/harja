@@ -12,10 +12,21 @@
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
+;; r/wrap skeeman arvolle
+(defn atomina [{:keys [nimi hae aseta]} data vaihda!]
+  (let [hae (or hae #(get % nimi))]
+    (r/wrap
+     (hae data)
+     (fn [uusi]
+       (if aseta
+         (vaihda! (aseta data uusi))
+         (vaihda! assoc nimi uusi))))))
+
+   
 
 (defmulti tee-kentta (fn [t _] (:tyyppi t)))
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -24,7 +35,8 @@
     (fn [_ data]
       [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
        
-       [:input {:value @teksti
+       [:input {:class (when lomake? "form-control")
+                :value @teksti
                 :placeholder placeholder
                 :size pituus
                 :on-change #(when (= (.-activeElement js/document) (.-target %))
@@ -81,8 +93,9 @@
 
                 
                              
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus]} data]
-  [:input {:on-change #(reset! data (-> % .-target .-value))
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus lomake?]} data]
+  [:input {:class (when lomake? "form-control")
+           :on-change #(reset! data (-> % .-target .-value))
            :on-focus on-focus
            :value @data}])
 
@@ -94,9 +107,10 @@
         (reset! teksti (str @data)))
       
       :reagent-render
-      (fn [kentta data]
+      (fn [{:keys [lomake?] :as kentta} data]
         (let [nykyinen-teksti @teksti]
-          [:input {:type "text"
+          [:input {:class (when lomake? "form-control")
+                   :type "text"
                    :on-focus (:on-focus kentta)
                    :value nykyinen-teksti
                    :on-change #(let [v (-> % .-target .-value)]
@@ -110,19 +124,21 @@
 
 
 
-(defmethod tee-kentta :email [kentta data]
-  [:input {:type "email"
+(defmethod tee-kentta :email [{:keys [on-focus lomake?] :as kentta} data]
+  [:input {:class (when lomake? "form-control")
+           :type "email"
            :value @data
-           :on-focus (:on-focus kentta)
+           :on-focus on-focus
            :on-change #(reset! data (-> % .-target .-value))}])
 
 
 
-(defmethod tee-kentta :puhelin [kentta data]
-  [:input {:type "tel"
+(defmethod tee-kentta :puhelin [{:keys [on-focus pituus lomake?] :as kentta} data]
+  [:input {:class (when lomake? "form-control")
+           :type "tel"
            :value @data
-           :max-length (:pituus kentta)
-           :on-focus (:on-focus kentta)
+           :max-length pituus
+           :on-focus on-focus
            :on-change #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"(\s|\d)*" uusi)
                            (reset! data uusi)))}])
@@ -144,12 +160,13 @@
 
 
 
-(defmethod tee-kentta :kombo [{:keys [valinnat on-focus]} data]
+(defmethod tee-kentta :kombo [{:keys [valinnat on-focus lomake?]} data]
   (let [auki (atom false)]
     (fn [{:keys [valinnat]} data]
       (let [nykyinen-arvo (or @data "")]
         [:div.dropdown {:class (when @auki "open")}
-         [:input.kombo {:type "text" :value nykyinen-arvo
+         [:input.kombo {:class (when lomake? "form-control")
+                        :type "text" :value nykyinen-arvo
                         :on-focus on-focus
                         :on-change #(reset! data (-> % .-target .-value))}]
          [:button {:on-click #(do (swap! auki not) nil)}
@@ -166,7 +183,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         teksti (atom (if-let [p @data]
@@ -197,7 +214,8 @@
                                 (pvm-tyhjana rivi)
                                 nykyinen-pvm)]
            [:span {:on-click #(do (reset! auki true) nil)}
-            [:input.pvm {:value     nykyinen-teksti
+            [:input.pvm {:class (when lomake? "form-control")
+                         :value     nykyinen-teksti
                          :on-focus on-focus
                          :on-change #(muuta! (-> % .-target .-value))}]
             (when @auki
