@@ -37,26 +37,25 @@
                      :inline "form-inline"
                      :horizontal "form-horizontal"
                      :default "")}
-     (for [{:keys [muokattava? fmt hae nimi] :as kentta} kentat]
-       ^{:key (:nimi kentta)}
-       [:div.form-group
-        [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
+     (doall
+      (for [{:keys [muokattava? fmt hae nimi] :as kentta} kentat]
+        ^{:key (:nimi kentta)}
+        [:div.form-group
+         [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
 
-        [kentan-komponentti luokka
-         (if-let [komponentti (:komponentti kentta)]
-           komponentti
-           (if (or (nil? muokattava?)
-                   (muokattava? data))
-             ;; Muokattava tieto, tehdään sille kenttä
-             [tee-kentta (assoc kentta :lomake? true)
-              (atomina kentta data muokkaa!)]
+         [kentan-komponentti luokka
+          (if-let [komponentti (:komponentti kentta)]
+            komponentti
+            (if (or (nil? muokattava?)
+                    (muokattava? data))
+              ;; Muokattava tieto, tehdään sille kenttä
+              [tee-kentta (assoc kentta :lomake? true)
+               (atomina kentta data muokkaa!)]
 
-             ;; Ei muokattava, näytetään
-             [:div.form-control-static
-              ((or fmt str) ((or hae #(get % nimi)) data))]))]])
-
-     (when footer
-       (lomake-footer luokka footer))
+              ;; Ei muokattava, näytetään
+              [:div.form-control-static
+               ((or fmt str) ((or hae #(get % nimi)) data))]))]]))
      
-     ]))
+     (when footer
+       [lomake-footer luokka footer])]))
   
