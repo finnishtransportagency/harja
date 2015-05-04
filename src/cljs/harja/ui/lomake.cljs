@@ -6,9 +6,12 @@
 (defn lomake [{:keys [muokkaa! inline?] :as opts} kentat data]
   [:form {:class (when (:inline? opts) "form-inline")}
    (for [kentta kentat]
+     ^{:key (:nimi kentta)}
      [:div.form-group
       [:label {:for (name (:nimi kentta))}
        (:otsikko kentta)]
-      [tee-kentta (assoc kentta :lomake? true)
-       (atomina kentta data muokkaa!)]])])
+      (if-let [komponentti (:komponentti kentta)]
+        komponentti
+        [tee-kentta (assoc kentta :lomake? true)
+         (atomina kentta data muokkaa!)])])])
   

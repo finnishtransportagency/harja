@@ -27,24 +27,36 @@
         (map :paiva)
         (q/hae-urakan-toteuma-paivat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
-                             
+
+(defn hae-urakan-tehtavat [db user urakka-id]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (q/hae-urakan-tehtavat db urakka-id)))
                           
-;;(defn tallenna-toteuma [db user toteuma]
-;;  (validoi Toteuma toteuma)
+(defn tallenna-toteuma [db user toteuma]
+  (validoi Toteuma toteuma)
+
+  true)
   
                                         
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
-    (let [http (:http-palvelin this)]
+    (let [http (:http-palvelin this)
+          db (:db this)]
       (julkaise-palvelu http :urakan-toteumat
                         (fn [user tiedot]
-                          (urakan-toteumat (:db this) user tiedot)))
+                          (urakan-toteumat db user tiedot)))
       (julkaise-palvelu http :urakan-toteuma-paivat
                         (fn [user tiedot]
-                          (urakan-toteuma-paivat (:db this) user tiedot)))
+                          (urakan-toteuma-paivat db user tiedot)))
+      (julkaise-palvelu http :hae-urakan-tehtavat
+                        (fn [user urakka-id]
+                          (hae-urakan-tehtavat db user urakka-id)))
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :urakan-toteumat :urakan-toteuma-paivat)
+    (poista-palvelut (:http-palvelin this)
+                     :urakan-toteumat :urakan-toteuma-paivat
+                     :hae-urakan-tehtavat)
     this))

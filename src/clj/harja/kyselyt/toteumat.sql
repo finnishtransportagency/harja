@@ -16,4 +16,11 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 SELECT DISTINCT date_trunc('day', alkanut) as paiva
   FROM toteuma
  WHERE urakka = :urakka AND sopimus = :sopimus
-   AND alkanut >= :alkupvm AND paattynyt <= :loppupvm
+   AND alkanut >= :alkupvm AND paattynyt <= :loppupvm;
+
+-- name: hae-urakan-tehtavat
+-- Hakee tehtävät, joita annetulle urakalle voi kirjata.
+SELECT id,nimi,yksikko FROM toimenpidekoodi
+ WHERE taso = 4
+   AND poistettu = false
+   AND emo IN (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = :urakka);

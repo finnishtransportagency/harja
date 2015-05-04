@@ -1,12 +1,13 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as r]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.istunto :as istunto]
@@ -14,12 +15,14 @@
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             
             [harja.ui.visualisointi :as vis]
+            [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -62,7 +65,7 @@
       (fn [ur]
           [:div.toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
-           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {:olio "on"})}
+           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]
 
            [:div.aikajana
@@ -114,22 +117,97 @@
 
          ]))))
 
+(defonce tehtavat
+  (let [koodit (atom nil)]
+    (run! (let [ur @nav/valittu-urakka]
+            (if ur
+              (go ;; varo ettei muutu uudestaan!
+                (let [teht (<! (toteumat/hae-tehtavat (:id ur)))]
+                  (when (= ur @nav/valittu-urakka)
+                    (reset! koodit teht))))
+              (reset! koodit nil))
+            (log "haetaan toimenpidekoodit, urakka: " (:id ur))
+            ))
+    koodit))
+
+(defonce materiaalit
+  (let [koodit (atom nil)]
+    (run! (let [ur @nav/valittu-urakka]
+            (if ur
+              (go
+                (let [mat (<! (toteumat/hae-materiaalit (:id ur)))]
+                  (when (= ur @nav/valittu-urakka)
+                    (reset! koodit (sort-by :nimi
+                                            (distinct (map :materiaali mat)))))))
+              (reset! koodit nil))
+            (log "haetaan materiaalikoodit, urakka: " (:id ur))))
+    koodit))
+
+
+(defn tehtavat-ja-maarat [tehtavat-atom]
+  [grid/muokkaus-grid
+   {:tyhja "Ei tehtäviä."}
+   [{:otsikko "Tehtävä" :nimi :toimenpidekoodi :tyyppi :valinta
+     :valinnat @tehtavat
+     :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
+     :validoi [[:ei-tyhja "Valitse tehtävä."]]
+     :leveys "50%"}
+
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+    {:otsikko "Yks." :muokattava? (constantly false) :nimi :tp-yks :hae (comp :yksikko :toimenpidekoodi) :leveys "5%"}
+    ]
+   tehtavat-atom])
+
+(defn materiaalit-ja-maarat [materiaalit-atom]
+  [grid/muokkaus-grid
+   {:tyhja "Ei materiaaleja."}
+   [{:otsikko "Materiaali" :nimi :materiaalikoodi :tyyppi :valinta
+     :valinnat @materiaalit
+     :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
+     :validoi [[:ei-tyhja "Valitse materiaali."]]
+     :leveys "50%"}
+
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+    {:otsikko "Yks." :muokattava? (constantly false) :nimi :tp-yks :hae (comp :yksikko :materiaalikoodi) :leveys "5%"}
+    ]
+   materiaalit-atom])
+
+
+
+  
+  
 (defn tyot-ja-materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur vt]
-  (komp/luo
-    {:component-will-receive-props
-     (fn [_ & [_ ur vt]]
-       (log "Toteuma valittu: " (pr-str @valittu-toteuma))
-       )}
+  (let [muokattu (atom @valittu-toteuma)
+        tehtavat (atom {})
+        materiaalit (atom {})]
+                           
+    (komp/luo
+     {:component-will-receive-props
+      (fn [_ & [_ ur vt]]
+        (log "Toteuma valittu: " (pr-str @valittu-toteuma))
+        )}
+    
+     (fn [ur]
+       [:div.toteuman-tiedot
+        [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
+         (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
+        (if (:id @valittu-toteuma)
+          [:h3 "Muokkaa toteumaa"]
+          [:h3 "Luo uusi toteuma"])
 
-    (fn [ur]
-      [:div.toteuman-tiedot
-       [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
-        (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
-       (if-not (:id @valittu-toteuma)
-         [:h3 "Luo uusi toteuma"])
-       ])))
+        [lomake {:muokkaa! (fn [uusi]
+                             (log "MUOKATAAN " (pr-str uusi))
+                             (reset! muokattu uusi))}
+         [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+          {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}
+          {:otsikko "Tehtävät" :nimi :tehtavat
+           :komponentti [tehtavat-ja-maarat tehtavat]}
+          {:otsikko "Materiaalit" :nimi :materiaalit
+           :komponentti [materiaalit-ja-maarat materiaalit]}]
+         @muokattu]]))))
+       
 
 (defn tyot-ja-materiaalit [ur]
   (if-let [vt @valittu-toteuma]

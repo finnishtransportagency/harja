@@ -5,8 +5,16 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.suunnittelu :as s])
+            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
+(defn hae-tehtavat [urakka-id]
+  (k/post! :hae-urakan-tehtavat urakka-id))
+
+(defn hae-materiaalit [urakka-id]
+  (k/post! :hae-urakan-materiaalit urakka-id))
 
 (defn hae-urakan-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteumat
