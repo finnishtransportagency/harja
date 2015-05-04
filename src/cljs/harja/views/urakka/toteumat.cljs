@@ -197,16 +197,35 @@
           [:h3 "Muokkaa toteumaa"]
           [:h3 "Luo uusi toteuma"])
 
-        [lomake {:muokkaa! (fn [uusi]
+        [lomake {:luokka :horizontal
+                 :muokkaa! (fn [uusi]
                              (log "MUOKATAAN " (pr-str uusi))
-                             (reset! muokattu uusi))}
-         [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+                             (reset! muokattu uusi))
+                 :footer [:button.nappi-ensisijainen {:on-click #(log "tallentaa voisin")}
+                          "Tallenna toteuma"]
+                 }
+         [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @s/valittu-sopimusnumero)) :muokattava? (constantly false)}
+          
+          {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
+                                                          (let [[alku loppu] @s/valittu-hoitokausi]
+                                                            [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
+           :fmt identity
+           :muokattava? (constantly false)}
+          
+          {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @s/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
+          
+          {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
           {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}
           {:otsikko "Tehtävät" :nimi :tehtavat
            :komponentti [tehtavat-ja-maarat tehtavat]}
           {:otsikko "Materiaalit" :nimi :materiaalit
            :komponentti [materiaalit-ja-maarat materiaalit]}]
-         @muokattu]]))))
+
+         @muokattu
+
+
+         
+         ]]))))
        
 
 (defn tyot-ja-materiaalit [ur]

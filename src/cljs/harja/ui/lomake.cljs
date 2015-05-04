@@ -21,8 +21,17 @@
 (defmethod kentan-komponentti :default [_ komponentti]
   komponentti)
 
+(defmulti lomake-footer (fn [luokka footer] luokka))
 
-(defn lomake [{:keys [muokkaa! luokka] :as opts} kentat data]
+(defmethod lomake-footer :horizontal [_ footer]
+  [:div.form-group
+   [:div.col-sm-offset-2.col-sm-10
+    footer]])
+
+(defmethod lomake-footer :default [_ footer]
+  footer)
+
+(defn lomake [{:keys [muokkaa! luokka footer] :as opts} kentat data]
   (let [luokka (or luokka :default)]
     [:form {:class (case luokka
                      :inline "form-inline"
@@ -44,5 +53,10 @@
 
              ;; Ei muokattava, näytetään
              [:div.form-control-static
-              ((or fmt str) ((or hae #(get % nimi)) data))]))]])]))
+              ((or fmt str) ((or hae #(get % nimi)) data))]))]])
+
+     (when footer
+       (lomake-footer luokka footer))
+     
+     ]))
   
