@@ -5,7 +5,8 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.skeema :refer [Toteuma validoi]]))
 
 (def toteuma-xf
   (comp (map #(konv/array->vec % :tehtavat))))
@@ -24,7 +25,12 @@
         (map :paiva)
         (q/hae-urakan-toteuma-paivat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
+                             
+                          
+(defn tallenna-toteuma [db user toteuma]
+  (validoi Toteuma toteuma)
   
+                                        
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]

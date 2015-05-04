@@ -11,6 +11,8 @@
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
+            
             [harja.ui.visualisointi :as vis]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
@@ -25,7 +27,7 @@
 ;; Tällä hetkellä valittu toteuma
 (defonce valittu-toteuma (atom nil))
 
-(defn toteumat-paasivu [ur]
+(defn tyot-ja-materiaalit-paasivu [ur]
   (let [toteumat (atom nil)
         urakka (atom nil)
         toteuma-paivat (atom nil)
@@ -111,7 +113,7 @@
 
          ]))))
 
-(defn toteuman-tiedot
+(defn tyot-ja-materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur vt]
   (komp/luo
@@ -128,9 +130,28 @@
          [:h3 "Luo uusi toteuma"])
        ])))
 
+(defn tyot-ja-materiaalit [ur]
+  (if-let [vt @valittu-toteuma]
+    [tyot-ja-materiaalit-tiedot ur]
+    [tyot-ja-materiaalit-paasivu ur]))
+
+
+
+
+(defonce toteumat-valilehti (atom 0))
+
+
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (if-let [vt @valittu-toteuma]
-    [toteuman-tiedot ur]
-    [toteumat-paasivu ur]))
+  [bs/tabs {:active toteumat-valilehti}
+
+   "Työt ja materiaalit"
+   [tyot-ja-materiaalit ur] ;; FIXME: siirrä työt ja materiaalit omaan namespaceen
+
+   "Hinnantarkistukset"
+   [:div "hinnantarkistukset tänne"]
+   
+   "Lämpötilat"
+   [lampotilat ur]])
+
