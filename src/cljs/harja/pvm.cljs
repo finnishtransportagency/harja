@@ -54,7 +54,15 @@
   "Parsintamuoto päivämäärästä, sekä nolla etuliite ja ilman kelpaa."
   (df/formatter "d.M.yyyy"))
 
+(def fi-aika
+  "Ajan formatointi suomalaisessa muodossa"
+  (df/formatter "HH:mm:ss"))
+
 (def fi-pvm-aika
+  "Päivämäärän ja ajan formatointi suomalaisessa muodossa"
+  (df/formatter "d.M.yyyy H:mm"))
+
+(def fi-pvm-aika-sek
   "Päivämäärän ja ajan formatointi suomalaisessa muodossa"
   (df/formatter "dd.MM.yyyy HH:mm:ss"))
 
@@ -63,18 +71,32 @@
   [pvm]
   (df/unparse fi-pvm-aika pvm))
 
+(defn pvm-aika-sek
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa sekuntitarkkuudella"
+  [pvm]
+  (df/unparse fi-pvm-aika-sek pvm))
+
 (defn pvm
   "Formatoi päivämäärän suomalaisessa muodossa"
   [pvm]
   (df/unparse fi-pvm pvm))
 
+(defn aika
+  "Formatoi ajan suomalaisessa muodossa"
+  [pvm]
+  (df/unparse fi-aika pvm))
+
 (defn ->pvm-aika [teksti]
-  "Jäsentää tekstistä dd.MM.yyyy HH:mm:ss muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."
+  "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."
   (try
     (df/parse fi-pvm-aika teksti)
     (catch js/Error e
       nil)))
-                 
+
+(defn ->pvm-aika-sek [teksti]
+  "Jäsentää tekstistä dd.MM.yyyy HH:mm:ss muodossa olevan päivämäärän ja ajan. Tämä on koneellisesti formatoitua päivämäärää varten, älä käytä ihmisen syöttämän tekstin jäsentämiseen!"
+  (df/parse fi-pvm-aika-sek teksti))
+
 (defn ->pvm [teksti]
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
   (try

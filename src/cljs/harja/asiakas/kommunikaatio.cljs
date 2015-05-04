@@ -18,7 +18,7 @@
 (deftype DateTimeHandler []
   Object
   (tag [_ v] "dt")
-  (rep [_ v] (pvm/pvm-aika v)))
+  (rep [_ v] (pvm/pvm-aika-sek v)))
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
@@ -35,7 +35,7 @@
                                                               UtcDateTime (DateTimeHandler.)}})
                    :response-format (transit-response-format {:handlers
                                                               {"dt" (fn [v]
-                                                                      (pvm/->pvm-aika v))}})
+                                                                      (pvm/->pvm-aika-sek v))}})
                    :handler         cb
                    :error-handler   (fn [[_ error]]
                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
