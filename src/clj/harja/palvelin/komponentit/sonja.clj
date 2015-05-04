@@ -24,7 +24,7 @@
 
 
 (defn sonja-connection-factory [url]
-  (QueueConnectionFactory. host port user password))
+  (QueueConnectionFactory. url))
 
 (defn connection [factory username password]
   (.createConnection factory username password))
