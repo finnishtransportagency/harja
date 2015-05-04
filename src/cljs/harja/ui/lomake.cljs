@@ -12,13 +12,13 @@
 (defmethod kentan-otsikko :default [_ kentan-nimi teksti]
   [:label {:for kentan-nimi} teksti])
 
-(defmulti kentan-komponentti (fn [luokka komponentti] luokka))
+(defmulti kentan-komponentti (fn [luokka skeema komponentti] luokka))
 
-(defmethod kentan-komponentti :horizontal [_ komponentti]
-  [:div.col-sm-10
+(defmethod kentan-komponentti :horizontal [_ skeema komponentti]
+  [:div {:class (str "col-sm-" (or (:leveys-col skeema) 10))}
    komponentti])
 
-(defmethod kentan-komponentti :default [_ komponentti]
+(defmethod kentan-komponentti :default [_ skeema komponentti]
   komponentti)
 
 (defmulti lomake-footer (fn [luokka footer] luokka))
@@ -43,7 +43,7 @@
         [:div.form-group
          [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
 
-         [kentan-komponentti luokka
+         [kentan-komponentti luokka kentta
           (if-let [komponentti (:komponentti kentta)]
             komponentti
             (if (or (nil? muokattava?)

@@ -244,7 +244,8 @@
            :tyyppi :valinta
            :valinnat +tyotyypit+
            :valinta-nayta tyotyyppi->nimi
-           :validoi [[:ei-tyhja "Valitse työn tyyppi"]]}
+           :validoi [[:ei-tyhja "Valitse työn tyyppi"]]
+           :leveys-col 4}
            
           {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
           {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}
