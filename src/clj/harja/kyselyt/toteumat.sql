@@ -1,9 +1,11 @@
 -- name: listaa-urakan-toteumat
 -- Listaa kaikki urakan toteumat
-SELECT t.id, t.alkanut, t.paattynyt, t.tyyppi, array_agg(tpk.nimi) as tehtavat
+SELECT t.id, t.alkanut, t.paattynyt, t.tyyppi,
+       (SELECT array_agg(tpk.nimi) FROM toimenpidekoodi tpk
+         WHERE tpk.id IN (SELECT toimenpidekoodi FROM toteuma_tehtava tt WHERE tt.toteuma=t.id)) as tehtavat,
+       (SELECT array_agg(mk.nimi) FROM materiaalikoodi mk
+         WHERE mk.id in (SELECT materiaalikoodi FROM toteuma_materiaali tm WHERE tm.toteuma=t.id)) as materiaalit
   FROM toteuma t
-       LEFT JOIN toteuma_tehtava teht ON teht.toteuma=t.id
-       LEFT JOIN toimenpidekoodi tpk ON teht.toimenpidekoodi=tpk.id
  WHERE urakka = :urakka AND sopimus = :sopimus
    AND alkanut >= :alkupvm AND paattynyt <= :loppupvm
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;

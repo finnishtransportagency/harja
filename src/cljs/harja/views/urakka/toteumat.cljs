@@ -105,8 +105,9 @@
                            "Ei toteumatietoja aikavälille")}
                  [{:otsikko "Alkanut" :fmt pvm/pvm-aika :nimi :alkanut :leveys "15%"}
                   {:otsikko "Päättynyt" :fmt pvm/pvm-aika :nimi :paattynyt :leveys "15%"}
-                  {:otsikko "Tehtävä" :fmt #(str/join ", " %) :nimi :tehtavat :leveys "20%"}
-                  {:otsikko "Tyyppi" :nimi :tyyppi :leveys "10%"}]
+                  {:otsikko "Tehtävä" :fmt #(str/join ", " %) :nimi :tehtavat :leveys "25%"}
+                  {:otsikko "Materiaali" :fmt #(str/join ", " %) :nimi :materiaalit :leveys "25%"}
+                  {:otsikko "Tyyppi" :nimi :tyyppi :leveys "20%"}]
 
                  @toteumat]]))
 
