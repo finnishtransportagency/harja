@@ -9,7 +9,9 @@
             [harja.domain.skeema :refer [Toteuma validoi]]))
 
 (def toteuma-xf
-  (comp (map #(konv/array->vec % :tehtavat))))
+  (comp (map #(-> %
+                  (konv/array->vec :tehtavat)
+                  (konv/array->vec :materiaalit)))))
 
 (defn urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumat: " urakka-id)
@@ -27,8 +29,8 @@
 
                              
                           
-(defn tallenna-toteuma [db user toteuma]
-  (validoi Toteuma toteuma)
+;;(defn tallenna-toteuma [db user toteuma]
+;;  (validoi Toteuma toteuma)
   
                                         
 (defrecord Toteumat []
