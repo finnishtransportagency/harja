@@ -72,7 +72,8 @@
                      (make-postal-appender
                       {:enabled? true
                        :rate-limit [1 30000] ; 1 viesti / 30 sekuntia rajoitus
-                       :async? true}
+                       :async? true
+                       :min-level (:taso email)}
                       {:postal-config
                        ^{:host (:palvelin email)}
                        {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
