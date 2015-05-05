@@ -51,6 +51,9 @@
                  [progress/sonic-client "7.6.2"]
                  [progress/sonic-crypto "7.6.2"]
                  [progress/sonic-xmessage "7.6.2"]
+
+                 ;; Sähköpostin lähetys
+                 [com.draines/postal "1.11.3"]
                  
                  ;; Asiakas
                  [spyscope "0.1.5"]

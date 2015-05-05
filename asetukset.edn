@@ -10,5 +10,15 @@
               :palvelin "localhost"}
        :hipchat {:taso :warn
                  :huone-id 1396730
-                 :token "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}}
+                 :token "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
+
+       :email {:taso :error
+               :palvelin "solita-service-1.solita.fi"
+
+               ;; Lisää nimesi vektoriin, jos haluat spämmiä
+               :vastaanottaja ["tatu.tarvainen@solita.fi"
+                               ;;"jarno.vayrynen@solita.fi"
+                               ;;"mikko.ronkkomaki@solita.fi"
+                               ]}
+       }
  }

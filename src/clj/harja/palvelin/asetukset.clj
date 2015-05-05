@@ -4,7 +4,8 @@
             [taoensso.timbre :as log]
             [gelfino.timbre :as gt]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.hipchat :as hipchat]))
+            [harja.palvelin.lokitus.hipchat :as hipchat]
+            [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
 
 
 (def Asetukset
@@ -20,7 +21,11 @@
    :fim {:url s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
-         (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}}
+         (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+
+         (s/optional-key :email) {:taso s/Keyword
+                                  :palvelin s/Str
+                                  :vastaanottaja [s/Str]}}
    
    }) 
 
@@ -60,7 +65,18 @@
 
   (when-let [hipchat (-> asetukset :log :hipchat)]
     (log/set-config! [:appenders :hipchat]
-                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat)))))
+                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat))))
+
+  (when-let [email (-> asetukset :log :email)]
+    (log/set-config! [:appenders :postal]
+                     (make-postal-appender
+                      {:enabled? true
+                       :rate-limit [1 30000] ; 1 viesti / 30 sekuntia rajoitus
+                       :async? true}
+                      {:postal-config
+                       ^{:host (:palvelin email)}
+                       {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
+                        :to (:vastaanottaja email)}}))))
 
  
 
