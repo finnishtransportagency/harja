@@ -27,7 +27,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction<!]]))
 
 
 ;; Tällä hetkellä valittu toteuma
@@ -120,7 +121,7 @@
 
          ]))))
 
-(defonce tehtavat
+(comment (defonce tehtavat
   (let [koodit (atom nil)]
     (run! (let [ur @nav/valittu-urakka]
             (if ur
@@ -131,20 +132,19 @@
               (reset! koodit nil))
             (log "haetaan toimenpidekoodit, urakka: " (:id ur))
             ))
-    koodit))
+    koodit)))
 
-(defonce materiaalit
-  (let [koodit (atom nil)]
-    (run! (let [ur @nav/valittu-urakka]
-            (if ur
-              (go
-                (let [mat (<! (toteumat/hae-materiaalit (:id ur)))]
-                  (when (= ur @nav/valittu-urakka)
-                    (reset! koodit (sort-by :nimi
-                                            (distinct (map :materiaali mat)))))))
-              (reset! koodit nil))
-            (log "haetaan materiaalikoodit, urakka: " (:id ur))))
-    koodit))
+(def tehtavat 
+  (reaction<! (when-let [ur @nav/valittu-urakka]
+                (toteumat/hae-tehtavat (:id ur)))))
+
+
+(def materiaalit
+  (reaction<! (when-let [ur @nav/valittu-urakka]
+                (toteumat/hae-materiaalit (:id ur)))
+              (fn [mat]
+                (sort-by :nimi
+                         (distinct (map :materiaali mat))))))
 
 
 (defn tehtavat-ja-maarat [tehtavat-atom]
