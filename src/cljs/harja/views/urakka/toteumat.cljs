@@ -175,8 +175,21 @@
    materiaalit-atom])
 
 
-(defn tallenna-toteuma [toteuma]
-  (toteumat/tallenna-toteuma toteuma))
+(defn tallenna-toteuma [toteuma tehtavat materiaalit]
+  (let [toteuma (assoc toteuma
+                  :urakka-id (:id @nav/valittu-urakka)
+                  :sopimus-id (first @s/valittu-sopimusnumero)
+                  :tehtavat (mapv (fn [tehtava]
+                                    (log "TEHTAVA: " (pr-str tehtava))
+                                    {:toimenpidekoodi (:id (:toimenpidekoodi tehtava))
+                                     :maara (js/parseFloat (:maara tehtava))})
+                                  tehtavat)
+                  :materiaalit (mapv (fn [materiaali]
+                                       (log "MATERIAALI: " (pr-str materiaali))
+                                       {:materiaalikoodi (:id (:materiaalikoodi materiaali))
+                                        :maara (js/parseFloat (:maara materiaali))})
+                                     materiaalit))]
+    (toteumat/tallenna-toteuma toteuma)))
   
 (defn tyotyyppi->nimi [t]
   (if (nil? t)
@@ -217,10 +230,9 @@
                  :footer [:button.nappi-ensisijainen
                           {:class (when @tallennus-kaynnissa "disabled")
                            :on-click
-                           #(do (reset! tallennus-kaynnissa true)
-                                (go (let [res (<! (tallenna-toteuma (assoc @muokattu
-                                                                      :tehtavat (vals @tehtavat)
-                                                                      :materiaalit (vals @materiaalit))))]
+                           #(do (.preventDefault %)
+                                (reset! tallennus-kaynnissa true)
+                                (go (let [res (<! (tallenna-toteuma @muokattu (vals @tehtavat) (vals @materiaalit)))]
                                       (if res
                                         ;; Tallennus ok
                                         (do (viesti/nayta! "Toteuma tallennettu")

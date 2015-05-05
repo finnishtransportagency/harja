@@ -36,6 +36,7 @@
         (q/hae-urakan-tehtavat db urakka-id)))
                           
 (defn tallenna-toteuma [db user toteuma]
+  (println "SAATIIN TOTEUMA: " toteuma)
   (validoi Toteuma toteuma)
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id toteuma))
@@ -64,10 +65,13 @@
       (julkaise-palvelu http :hae-urakan-tehtavat
                         (fn [user urakka-id]
                           (hae-urakan-tehtavat db user urakka-id)))
+      (julkaise-palvelu http :tallenna-urakan-toteuma
+                        (fn [user toteuma]
+                          (tallenna-toteuma db user toteuma)))
       this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :urakan-toteumat :urakan-toteuma-paivat
-                     :hae-urakan-tehtavat)
+                     :hae-urakan-tehtavat :tallenna-urakan-toteuma)
     this))
