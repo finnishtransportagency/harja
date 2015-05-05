@@ -62,7 +62,7 @@
                  
                  [cljs-ajax "0.3.11"]
                  ;;[lively "0.2.0"]
-                 [figwheel "0.2.6"]
+                 [figwheel "0.2.7"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.1-0"]
@@ -101,7 +101,7 @@
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.2.6"]
+            [lein-figwheel "0.2.7"]
             [codox "0.8.11"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
