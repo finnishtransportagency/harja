@@ -2,13 +2,12 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as r]
             [bootstrap :as bs]
-
-            [harja.views.urakka.valinnat :as valinnat]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
 
+            [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.materiaalit :as mat]

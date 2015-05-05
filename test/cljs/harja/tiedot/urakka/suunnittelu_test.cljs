@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu-test
-  (:require [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka :as u]
+  (:require [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as ykshint-tyot]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kokhint-tyot]
             [cljs-time.core :as t]
