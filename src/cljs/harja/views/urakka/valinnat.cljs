@@ -4,10 +4,9 @@
             [bootstrap :as bs]
             
             [harja.tiedot.urakka :as u]
-            
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]]))
+            [harja.ui.yleiset :refer [livi-pudotusvalikko]]))
 
 (defn urakan-hoitokausi [ur]
   (let [hoitokaudet (u/hoitokaudet ur)]
