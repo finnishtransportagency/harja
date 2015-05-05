@@ -62,7 +62,7 @@
             [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
             [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :pills :active valittu-valilehti}
+          [bs/tabs {:style :tabs :active valittu-valilehti}
 
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
