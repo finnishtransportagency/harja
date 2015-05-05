@@ -9,6 +9,7 @@
             [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.istunto :as istunto]
@@ -49,12 +50,12 @@
   
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (go (let [tallennettavat-hoitokaudet (if @tuleville?
-                                         (s/tulevat-hoitokaudet ur valittu-hoitokausi)
+                                         (u/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
             (into []
                   (if @tuleville?
-                    (s/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
+                    (u/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))]
@@ -83,8 +84,8 @@
 
 (defn hoidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "25%"}
-   {:otsikko (str "Määrä 10-12/" (.getYear (first @s/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
-   {:otsikko (str "Määrä 1-9/" (.getYear (second @s/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
+   {:otsikko (str "Määrä 10-12/" (.getYear (first @u/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "15%"}
+   {:otsikko (str "Määrä 1-9/" (.getYear (second @u/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "15%"}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
    {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
@@ -111,25 +112,25 @@
         (reaction 
          (into []
                (filter (fn [t]
-                         (= (:sopimus t) (first @s/valittu-sopimusnumero))))
+                         (= (:sopimus t) (first @u/valittu-sopimusnumero))))
                @urakan-yks-hint-tyot))
         
 
         sopimuksen-tyot-hoitokausittain
         (reaction (let [tyyppi (:tyyppi @urakka)
-                        [sopimud-id _] @s/valittu-sopimusnumero]
-                    (s/ryhmittele-hoitokausittain @sopimuksen-tyot
-                                                  @s/valitun-urakan-hoitokaudet)))
+                        [sopimud-id _] @u/valittu-sopimusnumero]
+                    (u/ryhmittele-hoitokausittain @sopimuksen-tyot
+                                                  @u/valitun-urakan-hoitokaudet)))
         
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?
-                        varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-tyot-hoitokausittain @s/valittu-hoitokausi)]
+                        varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-tyot-hoitokausittain @u/valittu-hoitokausi)]
                     (if-not kopioi?
                       false
                       varoita?)))
         
         tyorivit
-        (reaction (let [valittu-hoitokausi @s/valittu-hoitokausi
+        (reaction (let [valittu-hoitokausi @u/valittu-hoitokausi
                         alkupvm (first valittu-hoitokausi)
                         loppupvm (second valittu-hoitokausi)
                         tehtavien-rivit (group-by :tehtava
@@ -195,7 +196,7 @@
           :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
           :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                       (:id ur)
-                                                      #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
+                                                      #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
                                                                       urakan-yks-hint-tyot %)
                                                       :ei-mahdollinen)
           :peruuta #(reset! tuleville? false)

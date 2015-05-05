@@ -10,6 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
@@ -46,14 +47,14 @@
 
     ;; Haetaan sopimuksen/hoitokauden päivät, joille on toteumia, aikajanaa varten
     (run! (let [urakka-id (:id @urakka)
-                [sopimus-id _] @s/valittu-sopimusnumero
-                hk @s/valittu-hoitokausi]
+                [sopimus-id _] @u/valittu-sopimusnumero
+                hk @u/valittu-hoitokausi]
             (when (and urakka-id sopimus-id hk)
               (go (reset! toteuma-paivat (<! (toteumat/hae-urakan-toteuma-paivat urakka-id sopimus-id hk)))))))
 
     ;; Kun aikajanasta valitaan aika, haetaan sille välille toteumat
     (run! (let [urakka-id (:id @urakka)
-                [sopimus-id _] @s/valittu-sopimusnumero
+                [sopimus-id _] @u/valittu-sopimusnumero
                 aikavali @valittu-aikavali]
             (when (and urakka-id sopimus-id aikavali)
               (go (reset! toteumat (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))))
@@ -71,11 +72,11 @@
             (ikonit/plus-sign) " Lisää toteuma"]
 
            [:div.aikajana
-            (when @s/valittu-hoitokausi
+            (when @u/valittu-hoitokausi
               [vis/timeline {:width 1000 :height 60
                              :slice @valittu-aikavali
                              :hover @hover-aikavali
-                             :range @s/valittu-hoitokausi
+                             :range @u/valittu-hoitokausi
                              :on-hover (fn [date]
                                          (reset! hover-aikavali
                                                  (when date
@@ -84,7 +85,7 @@
                                          (log "klikattiin: " date)
                                          (let [plus-minus (/ (- paivia 1) 2)
                                                alku (t/minus date (t/days plus-minus))
-                                               [hk-alku hk-loppu] @s/valittu-hoitokausi
+                                               [hk-alku hk-loppu] @u/valittu-hoitokausi
 
                                                ;; Tarkista ettei alku mene hoitokauden alkua ennen
                                                alku (if (t/before? alku hk-alku)
@@ -178,7 +179,7 @@
 (defn tallenna-toteuma [toteuma tehtavat materiaalit]
   (let [toteuma (assoc toteuma
                   :urakka-id (:id @nav/valittu-urakka)
-                  :sopimus-id (first @s/valittu-sopimusnumero)
+                  :sopimus-id (first @u/valittu-sopimusnumero)
                   :tehtavat (mapv (fn [tehtava]
                                     (log "TEHTAVA: " (pr-str tehtava))
                                     {:toimenpidekoodi (:id (:toimenpidekoodi tehtava))
@@ -242,15 +243,15 @@
                                         (reset! tallennus-kaynnissa false)))))}
                           "Tallenna toteuma"]
                  }
-         [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @s/valittu-sopimusnumero)) :muokattava? (constantly false)}
+         [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
           
           {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
-                                                          (let [[alku loppu] @s/valittu-hoitokausi]
+                                                          (let [[alku loppu] @u/valittu-hoitokausi]
                                                             [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
            :fmt identity
            :muokattava? (constantly false)}
           
-          {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @s/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
+          {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
 
           {:otsikko "Tyyppi" :nimi :tyyppi
            :tyyppi :valinta

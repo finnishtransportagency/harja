@@ -3,6 +3,7 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
@@ -35,7 +36,7 @@
 
 (defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]
   (go (let [res (<! (k/post! :kokonaishintaiset-tyot id))
-            hoitokaudet (s/hoitokaudet ur)]
+            hoitokaudet (u/hoitokaudet ur)]
         (keep #(aseta-hoitokausi hoitokaudet %) res))))
 
 

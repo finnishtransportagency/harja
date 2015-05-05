@@ -5,6 +5,7 @@
 
             [harja.views.urakka.valinnat :as valinnat]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
 
@@ -23,11 +24,11 @@
 (defn valitun-hoitokauden-yks-hint-kustannukset [urakka]
   (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
                        + 0
-                       (get (s/ryhmittele-hoitokausittain (into []
+                       (get (u/ryhmittele-hoitokausittain (into []
                                                                 (filter (fn [t]
-                                                                          (= (:sopimus t) (first @s/valittu-sopimusnumero))))
+                                                                          (= (:sopimus t) (first @u/valittu-sopimusnumero))))
                                                                 @s/urakan-yks-hint-tyot)
-                                                          (s/hoitokaudet urakka)) @s/valittu-hoitokausi))))
+                                                          (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
 (def valittu-valilehti "Valittu välilehti" (atom 0))
 

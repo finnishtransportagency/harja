@@ -3,21 +3,21 @@
   (:require [reagent.core :refer [atom] :as r]
             [bootstrap :as bs]
             
-            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]]))
 
 (defn urakan-hoitokausi [ur]
-  (let [hoitokaudet (s/hoitokaudet ur)]
+  (let [hoitokaudet (u/hoitokaudet ur)]
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
-     [livi-pudotusvalikko {:valinta @s/valittu-hoitokausi
+     [livi-pudotusvalikko {:valinta @u/valittu-hoitokausi
                            ;;\u2014 on väliviivan unikoodi
                            :format-fn #(if % (str (pvm/pvm (first %))
                                                   " \u2014 " (pvm/pvm (second %))) "Valitse")
-                           :valitse-fn s/valitse-hoitokausi!
+                           :valitse-fn u/valitse-hoitokausi!
                            :class "suunnittelu-alasveto"
                            }
       hoitokaudet]]))
@@ -26,9 +26,9 @@
   [:span
    [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Sopimusnumero"]
-    [livi-pudotusvalikko {:valinta @s/valittu-sopimusnumero
+    [livi-pudotusvalikko {:valinta @u/valittu-sopimusnumero
                           :format-fn second
-                          :valitse-fn s/valitse-sopimusnumero!
+                          :valitse-fn u/valitse-sopimusnumero!
                           :class "suunnittelu-alasveto"
                           }
      (:sopimukset ur)]]
@@ -39,9 +39,9 @@
   (urakan-sopimus-ja-hoitokausi ur)
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Toimenpide"]
-   [livi-pudotusvalikko {:valinta    @s/valittu-toimenpideinstanssi
+   [livi-pudotusvalikko {:valinta    @u/valittu-toimenpideinstanssi
                          ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
-                         :valitse-fn s/valitse-toimenpideinstanssi!}
-    @s/urakan-toimenpideinstanssit]]]
+                         :valitse-fn u/valitse-toimenpideinstanssi!}
+    @u/urakan-toimenpideinstanssit]]]
   )

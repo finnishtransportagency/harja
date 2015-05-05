@@ -9,6 +9,7 @@
             [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.istunto :as istunto]
@@ -45,14 +46,14 @@
        :maksupvm nil :alkupvm alkupvm :loppupvm loppupvm :sopimus sn})))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
-  (go (let [hoitokaudet (s/hoitokaudet ur)
+  (go (let [hoitokaudet (u/hoitokaudet ur)
             tallennettavat-hoitokaudet (if @tuleville?
-                                         (s/tulevat-hoitokaudet ur valittu-hoitokausi)
+                                         (u/tulevat-hoitokaudet ur valittu-hoitokausi)
                                          valittu-hoitokausi)
             muuttuneet
             (into [] 
                   (if @tuleville?
-                    (s/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
+                    (u/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
             res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
@@ -116,26 +117,26 @@
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot s/urakan-kok-hint-tyot
-        toimenpiteet s/urakan-toimenpideinstanssit
+        toimenpiteet u/urakan-toimenpideinstanssit
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
                             (reset! urakka ur))
         
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
         sopimuksen-tyot-hoitokausittain
-        (reaction (let [[sopimus-id _] @s/valittu-sopimusnumero
+        (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
                         sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
                                                 @urakan-kok-hint-tyot)]
-                    (s/ryhmittele-hoitokausittain sopimuksen-tyot (s/hoitokaudet @urakka))))
+                    (u/ryhmittele-hoitokausittain sopimuksen-tyot (u/hoitokaudet @urakka))))
 
         
         ;; valitaan materiaaleista vain valitun hoitokauden
         valitun-hoitokauden-tyot
-        (reaction (let [hk @s/valittu-hoitokausi]
+        (reaction (let [hk @u/valittu-hoitokausi]
                     (get @sopimuksen-tyot-hoitokausittain hk)))
 
         valitun-toimenpiteen-ja-hoitokauden-tyot
-        (reaction (let [valittu-tp-id (:id @s/valittu-toimenpideinstanssi)]
+        (reaction (let [valittu-tp-id (:id @u/valittu-toimenpideinstanssi)]
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
         
@@ -143,10 +144,10 @@
                                                              @valitun-toimenpiteen-ja-hoitokauden-tyot))
                                  tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
                                  tyhjat-tyot (keep #(luo-tyhja-tyo (:tyyppi @urakka)
-                                                                   (:tpi_id @s/valittu-toimenpideinstanssi)
-                                                                   @s/valittu-hoitokausi
+                                                                   (:tpi_id @u/valittu-toimenpideinstanssi)
+                                                                   @u/valittu-hoitokausi
                                                                    %
-                                                                   (first @s/valittu-sopimusnumero))
+                                                                   (first @u/valittu-sopimusnumero))
                                                   tyhjat-kkt)]
                              (vec (sort-by (juxt :vuosi :kuukausi)
                                            (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot)))))
@@ -157,13 +158,13 @@
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?
                         varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-tyot-hoitokausittain
-                                                               @s/valittu-hoitokausi)]
+                                                               @u/valittu-hoitokausi)]
                     (if-not kopioi?
                       false
                       varoita?)))
         
         kaikki-sopimuksen-ja-tpin-rivit
-        (reaction (let [tpi-id (:tpi_id @s/valittu-toimenpideinstanssi)]
+        (reaction (let [tpi-id (:tpi_id @u/valittu-toimenpideinstanssi)]
                     (filter #(= tpi-id (:toimenpideinstanssi %))
                             @s/kaikki-sopimuksen-kok-hint-rivit)))
 
@@ -173,7 +174,7 @@
                    :summa))
 
         valitun-hoitokauden-ja-tpin-kustannukset
-        (reaction (s/toiden-kustannusten-summa (let [hk-alku (first @s/valittu-hoitokausi)]
+        (reaction (s/toiden-kustannusten-summa (let [hk-alku (first @u/valittu-hoitokausi)]
                                                  (filter
                                                   #(pvm/sama-pvm?
                                                     (:alkupvm %) hk-alku)
@@ -210,11 +211,11 @@
             puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
-           {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @s/valittu-toimenpideinstanssi) " / " (:t3_nimi @s/valittu-toimenpideinstanssi) " / " (:tpi_nimi @s/valittu-toimenpideinstanssi))
+           {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
             :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
             :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                   (:id ur)
-                                                  #(tallenna-tyot ur @s/valittu-sopimusnumero @s/valittu-hoitokausi
+                                                  #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
                                                                   urakan-kok-hint-tyot % tuleville?)
                                                   :ei-mahdollinen)
             :peruuta #(reset! tuleville? false)

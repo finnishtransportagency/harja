@@ -5,6 +5,7 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka :as u]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
@@ -20,7 +21,7 @@
                    [reagent.ratom :refer [run! reaction]]))
 
 (defn aseta-hoitokausi [rivi]
-  (let [[alkupvm loppupvm] @s/valittu-hoitokausi]
+  (let [[alkupvm loppupvm] @u/valittu-hoitokausi]
     ;; lisätään kaikkiin riveihin valittu hoitokausi
     (assoc rivi :alkupvm alkupvm :loppupvm loppupvm)))
 
@@ -136,15 +137,15 @@
         
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
         sopimuksen-materiaalit-hoitokausittain
-        (reaction (let [[sopimus-id _] @s/valittu-sopimusnumero]
+        (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero]
                     (log "URAKAN MATSKUI::: " @urakan-materiaalit)
                     (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
                                                                       @urakan-materiaalit))
-                    (s/ryhmittele-hoitokausittain @urakan-materiaalit (s/hoitokaudet ur))))
+                    (u/ryhmittele-hoitokausittain @urakan-materiaalit (u/hoitokaudet ur))))
         
         
         ;; valitaan materiaaleista vain valitun hoitokauden
-        materiaalit (reaction (let [hk @s/valittu-hoitokausi]
+        materiaalit (reaction (let [hk @u/valittu-hoitokausi]
                                 (get @sopimuksen-materiaalit-hoitokausittain hk)))
         
         uusi-id (atom 0)
@@ -170,7 +171,7 @@
                                             (if (kaytetyt-materiaali-idt (:id mk))
                                               (recur materiaalit materiaalikoodit)
                                               (let [id (- (:id mk))
-                                                    [alku loppu] @s/valittu-hoitokausi]
+                                                    [alku loppu] @u/valittu-hoitokausi]
                                                 (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
                                                        materiaalikoodit)))))))
         
@@ -192,7 +193,7 @@
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?                 
                         varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
-                                                               @s/valittu-hoitokausi)]
+                                                               @u/valittu-hoitokausi)]
                     (if-not kopioi?
                       false
                       varoita?)))
@@ -220,13 +221,13 @@
          [:div.materiaalit
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}
-           ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
+           ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
            @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
      
           (when (= (:tyyppi ur) :hoito)
             [pohjavesialueiden-materiaalit-grid {:voi-muokata? voi-muokata?
                                                  :virheet pohjavesialue-materiaalit-virheet}
-             ur @s/valittu-hoitokausi @s/valittu-sopimusnumero
+             ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
              @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
           (when voi-muokata?
@@ -245,10 +246,10 @@
                                 (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
                                                     (vals @pohjavesialue-materiaalit-muokattu))
                                       rivit (if @tuleville?
-                                              (s/rivit-tulevillekin-kausille ur rivit @s/valittu-hoitokausi)
+                                              (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
                                               rivit)
                                       uudet-materiaalit (<! (t/tallenna (:id ur)
-                                                                        (first @s/valittu-sopimusnumero)
+                                                                        (first @u/valittu-sopimusnumero)
                                                                         rivit))]
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
