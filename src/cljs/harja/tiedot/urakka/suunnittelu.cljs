@@ -6,26 +6,36 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
 
-(:require-macros
-    [reagent.ratom :refer [reaction]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction run!]]))
 
-(def valittu-sopimusnumero "Sopimusnumero" (atom nil))
+(defonce valittu-sopimusnumero (reaction
+                                 (first (:sopimukset @nav/valittu-urakka))))
 
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
 
-(defn valitse-hoitokausi! [hk]
-  (reset! valittu-hoitokausi hk))
+(defonce urakan-yks-hint-tyot (atom nil))
+(defonce urakan-kok-hint-tyot (atom nil))
 
-(def urakan-yks-hint-tyot (atom nil))
-(def urakan-kok-hint-tyot (atom nil))
-(def urakan-toimenpideinstanssit (atom nil))
+(defonce urakan-toimenpideinstanssit
+         (let [toimenpideinstanssit (atom nil)]
+           (run! (let [ur @nav/valittu-urakka]
+                   (if ur
+                     (go ;; varo ettei muutu uudestaan!
+                       (when (= ur @nav/valittu-urakka)
+                         (reset! toimenpideinstanssit (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
+                     (reset! toimenpideinstanssit nil))))
+           toimenpideinstanssit))
 
-(def valittu-toimenpideinstanssi "Valittu toimenpideinstanssi"
-  (reaction (first @urakan-toimenpideinstanssit)))
+(defonce valittu-toimenpideinstanssi
+         (let [val (atom nil)]
+           (run! (reset! val (first @urakan-toimenpideinstanssit)))
+           val))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))
@@ -55,11 +65,14 @@ ja viimeinen voivat olla vajaat)."
                            (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
-(def valitun-urakan-hoitokaudet
-    "Valitun urakan hoitokaudet"
-    (reaction (hoitokaudet @nav/valittu-urakka)))
+(defonce valitun-urakan-hoitokaudet
+         (reaction (hoitokaudet @nav/valittu-urakka)))
 
-(def valittu-hoitokausi "Hoitokausi" (reaction (first @valitun-urakan-hoitokaudet)))
+(defonce valittu-hoitokausi
+         (reaction (first @valitun-urakan-hoitokaudet)))
+
+(defn valitse-hoitokausi! [hk]
+  (reset! valittu-hoitokausi hk))
 
 ;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm
 (defn jaljella-olevien-hoitokausien-rivit

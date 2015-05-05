@@ -42,6 +42,6 @@
    [livi-pudotusvalikko {:valinta    @s/valittu-toimenpideinstanssi
                          ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
-                         :valitse-fn #(reset! s/valittu-toimenpideinstanssi %)}
+                         :valitse-fn s/valitse-toimenpideinstanssi!}
     @s/urakan-toimenpideinstanssit]]]
   )
