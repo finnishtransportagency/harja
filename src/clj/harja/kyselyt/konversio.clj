@@ -62,3 +62,8 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   "Luo java.sql.Date objektin annetusta java.util.Date objektista."
   [^java.util.Date dt]
   (java.sql.Date. (.getTime dt)))
+
+(defn sql-timestamp
+  "Luo java.sql.Timestamp objektin annetusta java.util.Date objektista."
+  [^java.util.Date dt]
+  (java.sql.Timestamp. (.getTime dt)))

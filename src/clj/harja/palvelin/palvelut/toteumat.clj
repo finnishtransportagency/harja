@@ -36,17 +36,22 @@
         (q/hae-urakan-tehtavat db urakka-id)))
                           
 (defn tallenna-toteuma [db user toteuma]
-  (println "SAATIIN TOTEUMA: " toteuma)
   (validoi Toteuma toteuma)
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id toteuma))
   
   (jdbc/with-db-transaction [c db]
     (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
-                                (konv/sql-date (:alkanut toteuma))
-                                (konv/sql-date (:paattynyt toteuma))
-                                (name (:tyyppi toteuma)))]
+                                (konv/sql-timestamp (:alkanut toteuma))
+                                (konv/sql-timestamp (:paattynyt toteuma))
+                                (name (:tyyppi toteuma)))
+          id (:id uusi)]
       ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
+      (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
+        (q/luo-tehtava<! c id toimenpidekoodi maara))
+
+      (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
+        (q/luo-materiaali<! c id materiaalikoodi maara))
       
       true)))
   
