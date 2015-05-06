@@ -44,7 +44,7 @@
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
-        sivu @nav/sivu]
+        sivu (first @nav/sivu)]
     [:span.kartan-koko-kontrollit {:class (when (or (not (empty? @nav/tarvitsen-karttaa))
                                                     (= sivu :tilannekuva)) "hide")}
      [:div.ikoni-pienenna {:class (when (= koko :S) "hide")

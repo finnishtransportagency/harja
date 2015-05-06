@@ -26,12 +26,13 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (declare kasittele-url! paivita-url valitse-urakka)
 
-;; Atomi, joka sisältää valitun sivun
-(defonce sivu (atom :urakat))
+;; Atomi, joka sisältää valitun sivun vectorina. Elementit ovat järjestyksessä olevat sivut keywordeina.
+;; Esim URL urakat/suunnittelu = [:urakat :suunnittelu]
+(defonce sivu (atom [:urakat]))
 
 ;; Atomit eri välilehdille
 (def urakka-valilehti "Urakka-välilehti" (atom 0))
-(def urakka-suunnittelu-valilehti "Suunnittelu-välilehti" (atom 0))
+(def urakka-suunnittelu-valilehti "Urakan suunnittelu-välilehti" (atom 0))
 
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
@@ -148,8 +149,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
-  (paivita-url)
   (reset! kartan-kokovalinta :S)
+  ;(paivita-url) ; TODO Päivitä pelkät parametrit?
   (if ur
     (t/julkaise! (assoc ur :aihe :urakka-valittu))
     (t/julkaise! {:aihe :urakkavalinta-poistettu})))
@@ -177,22 +178,22 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
 (defn paivita-url []
-  (let [url (str (name @sivu)
+  (let [url (str (apply #(str %1 "/" %2) (map name @sivu))
                  "?"
                  (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
                  (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
     (when (not= url (.-token historia))
+        (log "asd " (pr-str @sivu))
       (log "URL != token :: " url " != " (.getToken historia))
       (.setToken historia url))
   ))
 
 (defn vaihda-sivu!
-  "Vaihda nykyinen sivu haluttuun."
+  "Vaihda nykyinen sivu haluttuun. uusi-sivu on vector, joka sisältää valitun sivun keywordeina,
+  esim [:urakka :suunnittelu: kokonaishintaiset]. Ensimmäinen elementti on pakollinen päätason sivu."
   [uusi-sivu]
-    (when-not (= @sivu uusi-sivu)
       (reset! sivu uusi-sivu)
       (paivita-url))
-    )
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
@@ -212,25 +213,24 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
           polku-split (str/split polku #"/")
           parametrit (.getQueryData uri)]
         (case (first polku-split)
-            "urakat" (do (vaihda-sivu! :urakat)
-                         (case (second polku-split)
-                         "yleiset" (reset! urakka-valilehti 0)
+            "urakat" (case (second polku-split)
+                         "yleiset" (do (reset! urakka-valilehti 0) (vaihda-sivu! [:urakat :yleiset]))
                          "suunnittelu" (do (reset! urakka-valilehti 1)
                                    (case (get polku-split 2)
-                                   "kokonaishintaiset" (reset! urakka-suunnittelu-valilehti 0)
-                                   "yksikkohintaiset" (reset! urakka-suunnittelu-valilehti 1)
-                                   "materiaalit" (reset! urakka-suunnittelu-valilehti 2)
-                                   "default"))
-                         "toteumat" (reset! urakka-valilehti 2)
-                         "laadunseuranta" (reset! urakka-valilehti 3)
-                         "siltatarkastukset" (reset! urakka-valilehti 4)
-                         "default"))
-             "raportit" (vaihda-sivu! :raportit)
-             "tilannekuva" (vaihda-sivu! :tilannekuva)
-             "ilmoitukset" (vaihda-sivu! :ilmoitukset)
-             "hallinta" (vaihda-sivu! :hallinta)
-             "about" (vaihda-sivu! :about)
-             (vaihda-sivu! :urakat))
+                                       "kokonaishintaiset" (do (reset! urakka-suunnittelu-valilehti 0) (vaihda-sivu! [:urakat :suunnittelu :kokonaishintaiset]))
+                                       "yksikkohintaiset" (do (reset! urakka-suunnittelu-valilehti 1) (vaihda-sivu! [:urakat :suunnittelu :yksikkohintaiset]))
+                                       "materiaalit" (do (reset! urakka-suunnittelu-valilehti 2) (vaihda-sivu! [:urakat :suunnittelu :materiaalit]))
+                                       "default"))
+                         "toteumat" (do (reset! urakka-valilehti 2) (vaihda-sivu! [:urakat :toteumat]))
+                         "laadunseuranta" (do (reset! urakka-valilehti 3) (vaihda-sivu! [:urakat :laadunseuranta]))
+                         "siltatarkastukset" (do (reset! urakka-valilehti 4) (vaihda-sivu! [:urakat :siltatarkastukset]))
+                         "default")
+             "raportit" (vaihda-sivu! [:raportit])
+             "tilannekuva" (vaihda-sivu! [:tilannekuva])
+             "ilmoitukset" (vaihda-sivu! [:ilmoitukset])
+             "hallinta" (vaihda-sivu! [:hallinta])
+             "about" (vaihda-sivu! [:about])
+            (vaihda-sivu! [:urakat]))
     (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
       (if-let [u (some-> parametrit (.get "u") js/parseInt)] 
         (do (log "ASETA HALLINTAYKSIKKO JA URAKKA")

@@ -25,8 +25,8 @@
            urakoitsija @nav/valittu-urakoitsija]
        [:span {:class (when (empty? @nav/tarvitsen-karttaa)
                         (cond 
-                         (= @nav/sivu :hallinta) "hide"
-                         (= @nav/sivu :about) "hide"
+                         (= (first @nav/sivu) :hallinta) "hide"
+                         (= (first @nav/sivu) :about) "hide"
                          :default ""))}
         [:ol.breadcrumb.murupolku
          [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
