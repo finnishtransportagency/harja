@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.navigaatio :as nav]
 
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -29,8 +30,6 @@
                                                                 @s/urakan-yks-hint-tyot)
                                                           (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
-(def valittu-valilehti "Valittu välilehti" (atom 0))
-
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [hae-urakan-tyot (fn [ur]
@@ -48,11 +47,11 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (if (= 0 @valittu-valilehti)
+          (if (= 0 @nav/urakka-suunnittelu-valilehti)
             [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
             [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :active valittu-valilehti}
+          [bs/tabs {:style :tabs :active nav/urakka-suunnittelu-valilehti}
 
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}

@@ -31,6 +31,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Atomit eri välilehdille
 (def urakka-valilehti "Urakka-välilehti" (atom 0))
+(def urakka-suunnittelu-valilehti "Suunnittelu-välilehti" (atom 0))
 
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
@@ -213,7 +214,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
     (case (first polku-split)
       "urakat" (case (second polku-split)
                    "yleiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 0))
-                   "suunnittelu" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1))
+                   "suunnittelu" (case (or (get polku-split 2) "kokonaishintaiset")
+                                     "kokonaishintaiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 0))
+                                     "yksikkohintaiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 1))
+                                     "materiaalit" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 2))
+                                     (vaihda-sivu! :urakat))
                    "toteumat" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 2))
                    "laadunseuranta" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 3))
                    "siltatarkastukset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 4))
