@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.navigaatio :as nav]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
@@ -14,7 +15,7 @@
   "Urakkanäkymä"
   [ur]
   
-  [bs/tabs {}
+  [bs/tabs {:active nav/urakka-valilehti}
    
     "Yleiset"
     ^{:key "yleiset"}

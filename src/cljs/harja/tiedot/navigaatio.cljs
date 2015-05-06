@@ -2,20 +2,21 @@
   "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua 
 sovelluksessa ohjataan sekä kytkeytyy selaimen osoitepalkin #-polkuun ja historiaan. Tämä nimiavaruus
 ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
- 
-  (:require
-   ;; Reititykset
-   [goog.events :as events]
-   [goog.Uri :as Uri]
-   [goog.history.EventType :as EventType]
-   [reagent.core :refer [atom]]
-   [cljs.core.async :refer [<! >! chan close!]]
-   
-   [harja.loki :refer [log tarkkaile!]]
-   [harja.asiakas.tapahtumat :as t]
-   [harja.tiedot.urakoitsijat :as urk]
-   [harja.tiedot.hallintayksikot :as hy]
-   [harja.tiedot.urakat :as ur])
+
+    (:require
+        ;; Reititykset
+        [goog.events :as events]
+        [goog.Uri :as Uri]
+        [goog.history.EventType :as EventType]
+        [reagent.core :refer [atom]]
+        [cljs.core.async :refer [<! >! chan close!]]
+
+        [harja.loki :refer [log tarkkaile!]]
+        [harja.asiakas.tapahtumat :as t]
+        [harja.tiedot.urakoitsijat :as urk]
+        [harja.tiedot.hallintayksikot :as hy]
+        [harja.tiedot.urakat :as ur]
+        [clojure.string :as str])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
@@ -27,6 +28,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
+
+;; Atomit eri välilehdille
+(def urakka-valilehti "Urakka-välilehti" (atom 0))
 
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
@@ -204,9 +208,16 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   [url]
   (let [uri (goog.Uri/parse url)
         polku (.getPath uri)
+        polku-split (str/split polku #"/")
         parametrit (.getQueryData uri)]
-    (case polku
-      "urakat" (vaihda-sivu! :urakat)
+    (case (first polku-split)
+      "urakat" (case (second polku-split)
+                   "yleiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 0))
+                   "suunnittelu" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1))
+                   "toteumat" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 2))
+                   "laadunseuranta" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 3))
+                   "siltatarkastukset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 4))
+                   (vaihda-sivu! :urakat))
       "raportit" (vaihda-sivu! :raportit)
       "tilannekuva" (vaihda-sivu! :tilannekuva)
       "ilmoitukset" (vaihda-sivu! :ilmoitukset)
