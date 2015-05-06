@@ -183,7 +183,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                  (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
                  (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
     (when (not= url (.-token historia))
-        (log "asd " (pr-str @sivu))
+      (log "url-vector: " (pr-str @sivu))
       (log "URL != token :: " url " != " (.getToken historia))
       (.setToken historia url))
   ))
