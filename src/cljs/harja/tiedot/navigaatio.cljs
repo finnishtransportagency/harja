@@ -205,30 +205,32 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
            urakkalista))))
 
 (defn kasittele-url!
-  "Käsittelee urlin (route) muutokset."
-  [url]
-  (let [uri (goog.Uri/parse url)
-        polku (.getPath uri)
-        polku-split (str/split polku #"/")
-        parametrit (.getQueryData uri)]
-    (case (first polku-split)
-      "urakat" (case (second polku-split)
-                   "yleiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 0))
-                   "suunnittelu" (case (or (get polku-split 2) "kokonaishintaiset")
-                                     "kokonaishintaiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 0))
-                                     "yksikkohintaiset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 1))
-                                     "materiaalit" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 1) (reset! urakka-suunnittelu-valilehti 2))
-                                     (vaihda-sivu! :urakat))
-                   "toteumat" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 2))
-                   "laadunseuranta" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 3))
-                   "siltatarkastukset" (do (vaihda-sivu! :urakat) (reset! urakka-valilehti 4))
-                   (vaihda-sivu! :urakat))
-      "raportit" (vaihda-sivu! :raportit)
-      "tilannekuva" (vaihda-sivu! :tilannekuva)
-      "ilmoitukset" (vaihda-sivu! :ilmoitukset)
-      "hallinta" (vaihda-sivu! :hallinta)
-      "about" (vaihda-sivu! :about)
-      (vaihda-sivu! :urakat))
+    "Käsittelee urlin (route) muutokset."
+    [url]
+    (let [uri (goog.Uri/parse url)
+          polku (.getPath uri)
+          polku-split (str/split polku #"/")
+          parametrit (.getQueryData uri)]
+        (case (first polku-split)
+            "urakat" (do (vaihda-sivu! :urakat)
+                         (case (second polku-split)
+                         "yleiset" (reset! urakka-valilehti 0)
+                         "suunnittelu" (do (reset! urakka-valilehti 1)
+                                   (case (get polku-split 2)
+                                   "kokonaishintaiset" (reset! urakka-suunnittelu-valilehti 0)
+                                   "yksikkohintaiset" (reset! urakka-suunnittelu-valilehti 1)
+                                   "materiaalit" (reset! urakka-suunnittelu-valilehti 2))
+                                   "default")
+                         "toteumat" (reset! urakka-valilehti 2)
+                         "laadunseuranta" (reset! urakka-valilehti 3)
+                         "siltatarkastukset" (reset! urakka-valilehti 4))
+                         "default")
+             "raportit" (vaihda-sivu! :raportit)
+             "tilannekuva" (vaihda-sivu! :tilannekuva)
+             "ilmoitukset" (vaihda-sivu! :ilmoitukset)
+             "hallinta" (vaihda-sivu! :hallinta)
+             "about" (vaihda-sivu! :about)
+             (vaihda-sivu! :urakat))
     (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
       (if-let [u (some-> parametrit (.get "u") js/parseInt)] 
         (do (log "ASETA HALLINTAYKSIKKO JA URAKKA")
