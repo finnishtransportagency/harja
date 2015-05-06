@@ -64,7 +64,8 @@ ja viimeinen voivat olla vajaat)."
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
 (defonce valitun-urakan-hoitokaudet
-         (reaction (hoitokaudet @nav/valittu-urakka)))
+  (reaction (when-let [ur @nav/valittu-urakka]
+              (hoitokaudet ur))))
 
 (defonce valittu-hoitokausi
          (reaction (first @valitun-urakan-hoitokaudet)))
