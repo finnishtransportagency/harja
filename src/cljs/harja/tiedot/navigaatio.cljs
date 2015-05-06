@@ -150,7 +150,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (reset! kartan-kokovalinta :S)
-  ;(paivita-url) ; TODO Päivitä pelkät parametrit?
+  (paivita-url)
   (if ur
     (t/julkaise! (assoc ur :aihe :urakka-valittu))
     (t/julkaise! {:aihe :urakkavalinta-poistettu})))
