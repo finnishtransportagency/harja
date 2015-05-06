@@ -178,7 +178,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
 (defn paivita-url []
-  (let [url (str (apply #(str %1 "/" %2) (map name @sivu))
+  (let [url (str (clojure.string/join "/" (map name @sivu))
                  "?"
                  (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
                  (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
