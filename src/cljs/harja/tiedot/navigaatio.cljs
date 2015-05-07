@@ -30,10 +30,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Esim URL urakat/suunnittelu = [:urakat :suunnittelu]
 (defonce sivu (atom [:urakat]))
 
-;; Atomit eri välilehdille
-(def urakka-valilehti "Urakka-välilehti" (atom :yleiset))
-(def urakka-suunnittelu-valilehti "Urakan suunnittelu-välilehti" (atom :kokonaishintaiset))
-
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
 
@@ -224,16 +220,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
         (log "polku " polku)
         (case (first polku-split)
             "urakat" (case (second polku-split)
-                         "yleiset" (do (reset! urakka-valilehti :yleiset) (vaihda-sivu! :yleiset))
-                         "suunnittelu" (do (reset! urakka-valilehti :suunnittelu)
-                                   (case (get polku-split 2)
-                                       "kokonaishintaiset" (do (reset! urakka-suunnittelu-valilehti :kokonaishintaiset) (vaihda-sivu! :kokonaishintaiset))
-                                       "yksikkohintaiset" (do (reset! urakka-suunnittelu-valilehti :yksikkohintaiset) (vaihda-sivu! :yksikkohintaiset))
-                                       "materiaalit" (do (reset! urakka-suunnittelu-valilehti :materiaalit) (vaihda-sivu! :materiaalit))
-                                       (vaihda-sivu! :suunnittelu)))
-                         "toteumat" (do (reset! urakka-valilehti :toteumat) (vaihda-sivu! :toteumat))
-                         "laadunseuranta" (do (reset! urakka-valilehti :laadunseuranta) (vaihda-sivu! :laadunseuranta))
-                         "siltatarkastukset" (do (reset! urakka-valilehti :siltatarkastukset) (vaihda-sivu! :siltatarkastukset))
+                         "yleiset" (vaihda-sivu! :yleiset)
+                         "suunnittelu" (case (get polku-split 2)
+                                       "kokonaishintaiset" (vaihda-sivu! :kokonaishintaiset)
+                                       "yksikkohintaiset" (vaihda-sivu! :yksikkohintaiset)
+                                       "materiaalit" (vaihda-sivu! :materiaalit)
+                                       (vaihda-sivu! :suunnittelu))
+                         "toteumat" (vaihda-sivu! :toteumat)
+                         "laadunseuranta" (vaihda-sivu! :laadunseuranta)
+                         "siltatarkastukset" (vaihda-sivu! :siltatarkastukset)
                          (vaihda-sivu! :urakat))
              "raportit" (vaihda-sivu! :raportit)
              "tilannekuva" (vaihda-sivu! :tilannekuva)

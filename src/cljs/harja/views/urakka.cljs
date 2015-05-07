@@ -4,6 +4,7 @@
             [bootstrap :as bs]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.navigaatio :as nav]
+            [harja.loki :refer [log tarkkaile!]]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
@@ -14,8 +15,7 @@
 (defn urakka
   "Urakkanäkymä"
   [ur]
-  
-  [bs/tabs {:active nav/urakka-valilehti}
+  [bs/tabs {:active (atom (or (get @nav/sivu 1) :yleiset)) }
    
     "Yleiset"
     :yleiset

@@ -47,11 +47,11 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (if (= 0 @nav/urakka-suunnittelu-valilehti)
+          (if (= :yleiset (get @nav/sivu 2))
             [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
             [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :active nav/urakka-suunnittelu-valilehti}
+          [bs/tabs {:style :tabs :active (atom (or (get @nav/sivu 2) :kokonaishintaiset)) }
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset
