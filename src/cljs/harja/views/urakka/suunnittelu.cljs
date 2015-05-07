@@ -54,19 +54,19 @@
           [bs/tabs {:style :tabs :active nav/urakka-suunnittelu-valilehti}
 
            "Kokonaishintaiset työt"
+           :kokonaishintaiset
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
-           [:urakat :suunnittelu :kokonaishintaiset]
 
            "Yksikköhintaiset työt"
+           :yksikkohintaiset
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
-           [:urakat :suunnittelu :yksikkohintaiset]
 
            "Materiaalit"
+           :materiaalit
            ^{:key "materiaalit"}
            [mat/materiaalit ur]
-           [:urakat :suunnittelu :materiaalit]
            ]])
 
        })))

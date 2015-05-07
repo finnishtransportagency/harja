@@ -13,25 +13,25 @@ The following keys are supported in the configuration:
   :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
   
   [config & alternating-title-and-component]
-  (let [active (or (:active config) (atom 0))
+  (let [active (or (:active config) (atom nil))
         style-class (case (or (:style config) :tabs)
                       :pills "nav-pills"
                       :tabs "nav-tabs")]
     (fn [config & alternating-title-and-component]
       (let [tabs (filter #(not (nil? (second %))) (partition 3 alternating-title-and-component))
-            [active-tab-title active-component] (nth tabs @active)]
-        [:span 
+            [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]
+        [:span
          [:ul.nav {:class style-class}
-          (map-indexed 
-           (fn [i [title _ new-url]]
+          (map-indexed
+           (fn [i [title keyword]]
              ^{:key title}
-             [:li {:role "presentation" 
-                   :class (when (= active-tab-title title)
+             [:li {:role "presentation"
+                   :class (when (= keyword active-tab-keyword)
                             "active")}
-              [:a.klikattava {:on-click #(do 
+              [:a.klikattava {:on-click #(do
                                            (.preventDefault %)
-                                           (nav/vaihda-sivu! new-url)
-                                           (reset! active i))}
+                                           (nav/vaihda-sivu! keyword)
+                                           (reset! active keyword))}
                title]])
            tabs)]
          [:div.valilehti active-component]]))))

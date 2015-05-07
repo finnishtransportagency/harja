@@ -18,38 +18,38 @@
   [bs/tabs {:active nav/urakka-valilehti}
    
     "Yleiset"
+    :yleiset
     ^{:key "yleiset"}
     [urakka-yleiset/yleiset ur]
-    [:urakat :yleiset]
     
     "Suunnittelu"
+    :suunnittelu
     ^{:key "suunnittelu"}
     [suunnittelu/suunnittelu ur]
-    [:urakat :suunnittelu]
 
     "Toteumat"
+    :toteumat
     ^{:key "toteumat"}
     [toteumat/toteumat ur]
-    [:urakat :toteumat]
 
     "Laadunseuranta"
+    :laadunseuranta
     ^{:key "laadunseuranta"}
     [:div
      "laatua vois toki seurata"]
-    [:urakat :laadunseuranta]
 
    "Siltatarkastukset"
+   :siltatarkastukset
    (when (= :hoito (:tyyppi ur))
      ^{:key "siltatarkastukset"}
      [:div
-      "siltojakin voisi tarkastella"]
-     [:urakat :siltatarkastukset])
+      "siltojakin voisi tarkastella"])
 
    "Välitavoitteet"
+   :valitavoitteet
    (when-not (= :hoito (:tyyppi ur))
      ^{:key "valitavoitteet"}
-     [valitavoitteet/valitavoitteet ur]
-     [:urakat :siltatarkastukset])
+     [valitavoitteet/valitavoitteet ur])
    ])
   
  

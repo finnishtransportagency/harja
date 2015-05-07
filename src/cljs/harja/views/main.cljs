@@ -10,6 +10,8 @@
             [harja.ui.viesti :refer [viesti-container]]
             [harja.ui.ikonit :as ikonit]
 
+            [harja.loki :refer [log tarkkaile!]]
+
             [harja.tiedot.navigaatio :as nav]
             
             [harja.views.murupolku :as murupolku]
@@ -45,19 +47,19 @@
    [:ul#sivut.nav.nav-pills
 
     [:li {:role "presentation" :class (when (= s :urakat) "active")}
-     [linkki "Urakat" #(nav/vaihda-sivu! [:urakat])]]
+     [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]]
 
     [:li {:role "presentation" :class (when (= s :raportit) "active")}
-     [linkki "Raportit" #(nav/vaihda-sivu! [:raportit])]]
+     [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]]
 
     [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
-     [linkki "Tilannekuva" #(nav/vaihda-sivu! [:tilannekuva])]]
+     [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]]
 
     [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
-     [linkki "Ilmoitukset" #(nav/vaihda-sivu! [:ilmoitukset])]]
+     [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
 
     [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-     [linkki "Hallinta" #(nav/vaihda-sivu! [:hallinta])]]]
+     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
      :right
      [kayttajatiedot istunto/kayttaja]])
 
