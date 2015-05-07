@@ -25,6 +25,7 @@
    [harja.palvelin.palvelut.materiaalit :as materiaalit]
    [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
    [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
+   [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -107,6 +108,9 @@
      :valitavoitteet (component/using
                       (valitavoitteet/->Valitavoitteet)
                       [:http-palvelin :db])
+     :siltatarkastukset (component/using
+                         (siltatarkastukset/->Siltatarkastukset)
+                         [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)
