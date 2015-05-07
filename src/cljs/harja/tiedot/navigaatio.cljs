@@ -26,9 +26,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (declare kasittele-url! paivita-url valitse-urakka)
 
-;; Atomi, joka sisältää valitun sivun vectorina. Elementit ovat järjestyksessä olevat sivut keywordeina.
-;; Esim URL urakat/suunnittelu = [:urakat :suunnittelu]
-(defonce sivu (atom [:urakat]))
+(def sivu
+        "Atomi, joka sisältää valitun sivun vectorina. Jokainen elementti on sivua kuvaava keyword ja ne esiintyvät
+         järjestyksessä. Esim URL urakat/suunnittelu/yksikkohintaiset = [:urakat :suunnittelu :yksikkohintaiset]"
+         (atom [:urakat]))
 
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
@@ -187,7 +188,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn vaihda-sivu!
   "Vaihda nykyinen sivu haluttuun."
   [uusi-sivu]
-    (let [uusi-sivu-vector (case uusi-sivu ; "Jos pyydetty sivu on alasivu, rakenna vector
+    (let [uusi-sivu-vector (case uusi-sivu ; Jos pyydetty sivu on alasivu, rakenna vector
                               :yleiset [:urakat :yleiset]
                               :suunnittelu [:urakat :suunnittelu]
                                   :kokonaishintaiset [:urakat :suunnittelu :kokonaishintaiset]

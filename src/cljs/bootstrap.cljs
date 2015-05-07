@@ -9,7 +9,7 @@
   "A tabbed panel. Takes a map of configuration parameters and alternating tab titles and tab components.
 The following keys are supported in the configuration:
 
-  :active    An atom containing the selected tab number. Defaults to (atom 0).
+  :active    An atom containing the selected tab as keyword.
   :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
   
   [config & alternating-title-and-component]
@@ -30,7 +30,8 @@ The following keys are supported in the configuration:
                             "active")}
               [:a.klikattava {:on-click #(do
                                            (.preventDefault %)
-                                           (nav/vaihda-sivu! keyword)
+                                           ; TODO Entä jos tabin klikkaaminen ei saa aiheuttaa sivun vaihtoa?
+                                           (if (not (nil? keyword)) (nav/vaihda-sivu! keyword))
                                            (reset! active keyword))}
                title]])
            tabs)]
