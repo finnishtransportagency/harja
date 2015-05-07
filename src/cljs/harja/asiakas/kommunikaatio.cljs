@@ -58,3 +58,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   ([service transducer]
    (kysely service :get nil transducer)))
 
+(defn virhe?
+  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, ja tai statuksen 500"
+  [vastaus]
+  (and (map? vastaus) (not (nil? (get vastaus :failure)))))
+
