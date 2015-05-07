@@ -56,14 +56,17 @@
            "Kokonaishintaiset työt"
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
+           [:urakat :suunnittelu :kokonaishintaiset]
 
            "Yksikköhintaiset työt"
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
+           [:urakat :suunnittelu :yksikkohintaiset]
 
            "Materiaalit"
            ^{:key "materiaalit"}
            [mat/materiaalit ur]
+           [:urakat :suunnittelu :materiaalit]
            ]])
 
        })))

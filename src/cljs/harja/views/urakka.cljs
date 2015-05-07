@@ -20,31 +20,36 @@
     "Yleiset"
     ^{:key "yleiset"}
     [urakka-yleiset/yleiset ur]
-    
+    [:urakat :yleiset]
     
     "Suunnittelu"
     ^{:key "suunnittelu"}
     [suunnittelu/suunnittelu ur]
-    
+    [:urakat :suunnittelu]
+
     "Toteumat"
     ^{:key "toteumat"}
     [toteumat/toteumat ur]
-    
+    [:urakat :toteumat]
+
     "Laadunseuranta"
     ^{:key "laadunseuranta"}
     [:div
      "laatua vois toki seurata"]
-    
+    [:urakat :laadunseuranta]
+
    "Siltatarkastukset"
    (when (= :hoito (:tyyppi ur))
      ^{:key "siltatarkastukset"}
      [:div
-      "siltojakin voisi tarkastella"])
+      "siltojakin voisi tarkastella"]
+     [:urakat :siltatarkastukset])
 
    "Välitavoitteet"
    (when-not (= :hoito (:tyyppi ur))
      ^{:key "valitavoitteet"}
-     [valitavoitteet/valitavoitteet ur])
+     [valitavoitteet/valitavoitteet ur]
+     [:urakat :siltatarkastukset])
    ])
   
  

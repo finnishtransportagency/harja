@@ -1,6 +1,8 @@
 (ns bootstrap
   "Common Bootstrap components for Reagent UI."
-  (:require [reagent.core :refer [atom]]))
+  (:require [reagent.core :refer [atom]]
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.tiedot.navigaatio :as nav]))
 
 
 (defn tabs
@@ -16,18 +18,19 @@ The following keys are supported in the configuration:
                       :pills "nav-pills"
                       :tabs "nav-tabs")]
     (fn [config & alternating-title-and-component]
-      (let [tabs (filter #(not (nil? (second %))) (partition 2 alternating-title-and-component))
+      (let [tabs (filter #(not (nil? (second %))) (partition 3 alternating-title-and-component))
             [active-tab-title active-component] (nth tabs @active)]
         [:span 
          [:ul.nav {:class style-class}
           (map-indexed 
-           (fn [i [title]]
+           (fn [i [title _ new-url]]
              ^{:key title}
              [:li {:role "presentation" 
                    :class (when (= active-tab-title title)
                             "active")}
               [:a.klikattava {:on-click #(do 
                                            (.preventDefault %)
+                                           (nav/vaihda-sivu! new-url)
                                            (reset! active i))}
                title]])
            tabs)]
