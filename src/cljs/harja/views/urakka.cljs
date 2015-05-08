@@ -7,6 +7,7 @@
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
+            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]))
 
@@ -37,8 +38,7 @@
    "Siltatarkastukset"
    (when (= :hoito (:tyyppi ur))
      ^{:key "siltatarkastukset"}
-     [:div
-      "siltojakin voisi tarkastella"])
+     [siltatarkastukset/siltatarkastukset ur])
 
    "Välitavoitteet"
    (when-not (= :hoito (:tyyppi ur))
