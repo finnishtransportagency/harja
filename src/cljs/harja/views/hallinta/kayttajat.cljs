@@ -68,16 +68,16 @@
        (jos-rooli
         #{rooli-jarjestelmavastuuhenkilo} ;; +hallintayksikön vastuuhenkilö
         (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
-          [:span
+          [:span.nayta-kayttajat-valinta
            "Näytä: "
            [:input.kaikki-tunnukset {:type "radio" :on-change #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
-           [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} " kaikki"] " "
+           [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} "kaikki"]
            
            [:input.vain-l-tunnukset {:type "radio" :on-change #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
-           [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} " vain L-tunnukset"] " "
+           [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} "vain L-tunnukset"]
            
            [:input.vain-lx-tunnukset {:type "radio" :on-change #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
-           [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} " vain LX-tunnukset"]]))
+           [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} "vain LX-tunnukset"]]))
         [grid/grid
         {:otsikko "Käyttäjät"
          :tyhja "Ei käyttäjiä."
