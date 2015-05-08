@@ -18,7 +18,7 @@
   component/Lifecycle
   (start [this]
     (let [db (:db this)
-          http (:http this)]
+          http (:http-palvelin this)]
       (julkaise-palvelu http :hae-urakan-sillat
                         (fn [user urakka-id]
                           (hae-urakan-sillat db user urakka-id)))
