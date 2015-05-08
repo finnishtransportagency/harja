@@ -2,7 +2,8 @@
   "Yleisiä UI komponentteja ja apureita"
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.ikonit :as ikonit]))
 
 (declare kuuntelija)
 
@@ -95,6 +96,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
+
+(defn palvelinkutsu-nappi [teksti toiminto asetukset]
+  (let [kysely-kaynnissa? (atom true)
+        luokka (if(nil? (:luokka asetukset)) :nappi-toissijainen (:luokka asetukset))]
+    [:button {:class (if @kysely-kaynnissa? :nappi-ensisijainen.disabled luokka)} (ikonit/envelope) (str " " teksti)]))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (kuuntelija

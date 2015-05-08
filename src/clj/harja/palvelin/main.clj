@@ -26,6 +26,7 @@
    [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
    [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
    [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
+   [harja.palvelin.palvelut.lampotilat :as lampotilat]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -111,6 +112,9 @@
      :siltatarkastukset (component/using
                          (siltatarkastukset/->Siltatarkastukset)
                          [:http-palvelin :db])
+     :lampotilat (component/using
+                   (lampotilat/->Lampotilat)
+                   [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)
