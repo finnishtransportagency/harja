@@ -10,6 +10,7 @@
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as oikeudet]
             [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.napit :refer [palvelinkutsu-nappi]]
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.ikonit :as ikonit]
             [harja.asiakas.kommunikaatio :as k])

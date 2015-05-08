@@ -97,10 +97,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
-(defn palvelinkutsu-nappi [teksti toiminto asetukset]
-  (let [kysely-kaynnissa? (atom true)
-        luokka (if(nil? (:luokka asetukset)) :nappi-toissijainen (:luokka asetukset))]
-    [:button {:class (if @kysely-kaynnissa? :nappi-ensisijainen.disabled luokka)} (ikonit/envelope) (str " " teksti)]))
+;fixme tyylit on ihan miten sattuu
+(defn virheviesti-sailio
+  "Luo virheviestin 'sivun sisään'. Jos toinen parametri on jotain muuta kuin nil tai false,
+  säiliön display asetetaan inline-blockiksi."
+  ([viesti] (virheviesti-sailio viesti nil false))
+  ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
+  ([viesti rasti-funktio inline-block?]
+   (let [sulkemisnappi [:span.inlinenappi {:on-click #(rasti-funktio)} [ikonit/remove]]]
+     (if inline-block?
+       [:div {:style {:display :inline-block :background-color "#fffff"}} viesti
+        (when rasti-funktio sulkemisnappi)]
+       [:div {:style {:background-color "#fffff"}} viesti
+        (when rasti-funktio sulkemisnappi)]))))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (kuuntelija
