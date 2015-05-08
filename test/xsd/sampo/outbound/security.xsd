@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:complexType name="SecurityType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          The Security assignments for an object.  
+          
+          complete - If this is set then this is the complete security and all other security will be deleted 
+          
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OBSSecurity" type="OBSSecurityType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="GroupSecurity" type="GroupSecurityType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="UserSecurity" type="UserSecurityType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="complete" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="OBSSecurityType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          The Organizational Breakdown Structures that have Right assignments.
+
+          name      - The name of the OBS
+          typeCode  - The unique name identifier for the OBS type
+          unitPath  - The slash delimited path of the obs unit (e.g. /USA/California/RWC)
+          rightCode - The code for the right
+          rightMode - The mode for the right assignment (UNIT_ONLY, UNIT_AND_CHILDREN etc).
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="typeCode" type="xs:string" use="required"/>
+    <xs:attribute name="unitPath" type="xs:string" use="required"/>
+    <xs:attribute name="rightCode" type="xs:string" use="required"/>
+    <xs:attribute name="rightMode" type="OBSRightMode" use="required"/>
+    <xs:attribute name="classCode" type="xs:string" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="GroupSecurityType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          The Groups that have Right assignments.
+
+          code - The code of the group
+          rightCode - The code for the right
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="groupCode" type="xs:string" use="required"/>
+    <xs:attribute name="rightCode" type="xs:string" use="required"/>
+    <xs:attribute name="rightMode" type="OBSRightMode" use="optional"/>
+    <xs:attribute name="classCode" type="xs:string" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="UserSecurityType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          The Users that have Right assignments.
+
+          userName - The userName of the user
+          rightCode - The code for the right
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="userName" type="xs:string" use="required"/>
+    <xs:attribute name="rightCode" type="xs:string" use="required"/>
+    <xs:attribute name="rightMode" type="OBSRightMode" use="optional"/>
+    <xs:attribute name="classCode" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="EntityRightsType">
+    <xs:annotation>
+      <xs:documentation>Defines group rights.  A group may have 0 or more right assignments.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="GlobalRights" type="RightsType" minOccurs="0"/>
+      <xs:element name="InstanceRights" type="RightsType" minOccurs="0"/>
+      <xs:element name="InstanceOBSRights" type="RightsType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="complete" type="xs:boolean" default="false">
+      <xs:annotation>
+        <xs:documentation>Whether this is the complete set of rights, or updates.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  
+</xs:schema>

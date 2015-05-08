@@ -1,0 +1,52 @@
+<NikuDataBus>
+    <Header action="write" externalSource="NIKU" objectType="Product" version="8.0"></Header>
+    <Products>
+        <Product financiAllocation="Kpito" financialDepartment="KP911303" financialProjectClass="INVCLASS"
+                 financialWipClass="WIPCLASS" finish="2015-12-31T01:01:00.000" managerUserName="A009717"
+                 name="Kokonaishintaiset työt 2015/11 (LA205081)" objectID="LA205081" start="2015-01-01T00:00:00.000">
+            <InvestmentAssociations>
+                <Allocations>
+                    <ParentInvestment InvestmentID="PR00020606" InvestmentType="project"
+                                      defaultAllocationPercent="1.0"></ParentInvestment>
+                </Allocations>
+            </InvestmentAssociations>
+            <InvestmentResources>
+                <Resource resourceID="kulu2015"></Resource>
+            </InvestmentResources>
+            <InvestmentTasks>
+                <Task name="Kokonaishintaiset työt 2015/11 (LA205081)" outlineLevel="1" taskID="~rmw">
+                    <Assignments>
+                        <TaskLabor resourceID="kulu2015"></TaskLabor>
+                    </Assignments>
+                </Task>
+            </InvestmentTasks>
+            <OBSAssocs completed="false">
+                <OBSAssoc id="LiiviKP" name="Kustannuspaikat" unitPath="/Päivittäinen kunnossapito/Hoito">
+                    <OBSAssoc id="LiiviSIJ" name="Sijainti" unitPath="/Kirjanpito">
+                        <OBSAssoc id="tuote2013" name="Tuoteryhma/Tuote"
+                                  unitPath="/Päivittäinen kunnossapito/Hoito"></OBSAssoc>
+                    </OBSAssoc>
+                </OBSAssoc>
+            </OBSAssocs>
+            <CustomInformation>
+                <ColumnValue name="vv_tilaus">00LZM-0033600</ColumnValue>
+                <ColumnValue name="vv_inst_no">205081</ColumnValue>
+                <ColumnValue name="vv_code">LA205081</ColumnValue>
+                <ColumnValue name="vv_me_type">2</ColumnValue>
+                <ColumnValue name="vv_type">me</ColumnValue>
+                <ColumnValue name="vv_status">2</ColumnValue>
+                <ColumnValue name="travel_cost_ok">false</ColumnValue>
+                <instance instanceCode="AL205081" objectCode="vv_invoice_receipt" parentInstanceCode="LA205081"
+                          parentObjectCode="Product">
+                    <CustomInformation>
+                        <ColumnValue name="code">AL205081</ColumnValue>
+                        <ColumnValue name="vv_payment_date">FOO</ColumnValue>
+                        <ColumnValue name="vv_paym_sum">123</ColumnValue>
+                        <ColumnValue name="vv_paym_sum_currency">EUR</ColumnValue>
+                        <ColumnValue name="name">Laskutus- ja maksutiedot</ColumnValue>
+                    </CustomInformation>
+                </instance>
+            </CustomInformation>
+        </Product>
+    </Products>
+</NikuDataBus>

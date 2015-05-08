@@ -1,0 +1,20 @@
+<jxb:bindings xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb" version="2.1">
+    <jxb:bindings schemaLocation="common-2003-09.xsd">
+        <jxb:bindings
+            node="//xs:complexType[@name='tsvSegment']/xs:attribute[@name='value']">
+            <jxb:property>
+                <jxb:baseType>
+                    <jxb:javaType name="java.lang.Float"
+                        parseMethod="fi.tiehallinto.AURA.xml.aura2Sampo.adapters.CostPlanSumFloatAdapter.parseFloat"
+                        printMethod="fi.tiehallinto.AURA.xml.aura2Sampo.adapters.CostPlanSumFloatAdapter.printFloat" />
+                </jxb:baseType>
+            </jxb:property>
+        </jxb:bindings>
+    </jxb:bindings>
+</jxb:bindings>
+<!-- Tällä tuotettiin AURA-546:tta varten Adapteri. Adapteria ei kuitenkaan 
+    toistaiseksi käytetä koska javan Floatissa itsessään ei riitä tarkkuus maksuerien 
+    summien käsittelyyn. Jätetty esimerkiksi/vastaisuuden varalle. Käyttö esim: 
+    C:\development\aura\workspace\AURA\src\java\fi\tiehallinto\AURA\resources\schema\aura2Sampo>xjc 
+    -d out -p fi.tiehallinto.AURA.xml.aura2Sampo.costPlan -b bindings.xml nikuxog_costPlan.xsd -->

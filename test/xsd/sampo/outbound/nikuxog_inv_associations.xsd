@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XML Spy v4.4 U (http://www.xmlspy.com) by Hisham Ghazouli (Niku Corporation) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:include schemaLocation="./nikuxog_inv_data_types.xsd"/>
+  <xs:element name="InvestmentAssociations">
+    <xs:annotation>
+      <xs:documentation>
+        Associations that the current investment has with other investments,
+        i.e. the immediate parent investments and immediate child investments of the current investment when looked
+        from the entire investment hierarchy perspective.
+        While importing data into the clarity system (i.e. to the database), allocation data/fields are required only on
+        the 'Allocations' element and are NOT required on 'Hierarchies' element.
+        If allocation data is present on both the elements, the investment is updated with the data that appears later.
+        If your intention is to update the allocation data, make sure that the correct/modified allocation data is
+        specified at the right place in your input.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+	  <!-- Digia/ollindgr xcj complained, moved annotation before sequence -->
+	  <xs:annotation>
+        <xs:documentation>
+          isComplete=true implies - do not do any updates to the existing hierarchy (if any) but delete the
+          hierarchy/relationship for this investment and create a new hierarchy/relation with the specified content.
+          The default value is false, which means always update the existing hierarchy/relationship with the updated content passed in.
+          Not applicable while the data is being 'insert'ed into the database for the first time.
+
+          complete - This flag has been introduced to remove the inconsistency in naming the complete flag across all files.
+                     Eventually this flag will replace the usage of completed/isComplete flags that are currently being used for the deletion purpose.
+        </xs:documentation>
+      </xs:annotation>
+      <xs:sequence>
+        <xs:element name="Allocations" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>All immediate parent investments that current investment is contributing to</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ParentInvestment" type="InvAllocType" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Hierarchies" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>All immediate child investments that are contributing to this investment</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ChildInvestment" type="InvChildType" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="isComplete" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="complete" type="xs:boolean" use="optional" default="false"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="InvAllocType">
+    <xs:sequence>
+      <!-- xs:element name="AllocationCurve" type="tsvType" minOccurs="0"/ -->
+      <xs:element ref="CustomInformation" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="InvestmentID" type="investmentIDType" use="required"/>
+    <xs:attribute name="InvestmentType" type="investmentObjectCodeType" use="required"/>
+    <!-- xs:attribute name="allocationStartDate" type="investmentDateTimeType" use="optional"/>
+    <xs:attribute name="allocationEndDate" type="investmentDateTimeType" use="optional"/ -->
+    <xs:attribute name="defaultAllocationPercent" type="xs:float" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="InvChildType">
+    <xs:sequence>
+      <!-- xs:element name="AllocationCurve" type="tsvType" minOccurs="0"/ -->
+      <xs:element ref="CustomInformation" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="InvestmentID" type="investmentIDType" use="required"/>
+    <xs:attribute name="InvestmentType" type="investmentObjectCodeType" use="required"/>
+    <!-- xs:attribute name="allocationStartDate" type="investmentDateTimeType" use="optional"/>
+    <xs:attribute name="allocationEndDate" type="investmentDateTimeType" use="optional"/ -->
+    <xs:attribute name="defaultAllocationPercent" type="xs:float" use="optional"/>
+  </xs:complexType>
+
+  <!-- xs:complexType name="InvAllocCurveType">
+    <xs:sequence>
+      <xs:element ref="AllocationSegment" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType -->
+  <xs:element name="AllocationSegment">
+    <xs:complexType>
+      <xs:attribute name="start" type="investmentDateTimeType" use="required"/>
+      <xs:attribute name="finish" type="investmentDateTimeType" use="required"/>
+      <xs:attribute name="percentage" type="xs:float" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

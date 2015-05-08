@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:include schemaLocation="./common-2003-09.xsd"/>
+  <xs:include schemaLocation="./security.xsd"/>
+  <xs:element name="Header">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="args" type="args" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+      <xs:attribute name="externalSource" type="xs:string" use="required"/>
+      <xs:attribute name="action">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="read"/>
+            <xs:enumeration value="write"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="objectType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="resource"/>
+            <xs:enumeration value="user"/>
+            <xs:enumeration value="company"/>
+            <xs:enumeration value="glallocation"/>
+            <xs:enumeration value="gltransaction"/>
+            <xs:enumeration value="glperiod"/>
+            <xs:enumeration value="glaccount"/>
+            <xs:enumeration value="entity"/>
+            <xs:enumeration value="artransaction"/>
+            <xs:enumeration value="project"/>
+            <xs:enumeration value="timeperiod"/>
+            <xs:enumeration value="chargecode"/>
+            <xs:enumeration value="typecode"/>
+            <xs:enumeration value="olts_timeperiod"/>
+            <xs:enumeration value="location"/>
+            <xs:enumeration value="department"/>
+            <xs:enumeration value="role"/>
+            <xs:enumeration value="gg_query"/>
+            <xs:enumeration value="contentPack"/>
+            <xs:enumeration value="financial_planning"/>
+            <xs:enumeration value="job_definition"/>
+            <xs:enumeration value="capplanScenario"/>
+            <xs:enumeration value="menu"/>
+            <xs:enumeration value="form"/>
+            <xs:enumeration value="bpm_process"/>
+            <xs:enumeration value="customView"/>
+            <xs:enumeration value="asset"/>
+            <xs:enumeration value="application"/>
+            <xs:enumeration value="product"/>
+            <xs:enumeration value="service"/>
+            <xs:enumeration value="otherInvestment"/>
+            <xs:enumeration value="idea"/>
+            <xs:enumeration value="document"/>
+            <xs:enumeration value="requisition"/>
+            <xs:enumeration value="issue"/>
+            <xs:enumeration value="risk"/>
+            <xs:enumeration value="change"/>
+            <xs:enumeration value="incident"/>
+            <xs:enumeration value="category"/>
+            <xs:enumeration value="customObjectInstance"/>
+            <xs:enumeration value="group"/>
+            <xs:enumeration value="portfolio"/>
+            <xs:enumeration value="obs"/>
+            <xs:enumeration value="skill"/>
+            <xs:enumeration value="objectMapping"/>
+            <xs:enumeration value="matrix"/>
+            <xs:enumeration value="costPlusCode"/>
+            <xs:enumeration value="perfSession"/>
+            <xs:enumeration value="subscription"/>
+            <xs:enumeration value="invoice"/>
+            <xs:enumeration value="costPlan"/>
+            <xs:enumeration value="budgetPlan"/>
+            <xs:enumeration value="benefitPlan"/>
+            <xs:enumeration value="planDefaults"/>
+            <xs:enumeration value="requirement"/>
+            <xs:enumeration value="release"/>
+            <xs:enumeration value="releaseplan"/>
+            <xs:enumeration value="security"/>
+            <xs:enumeration value="acl"/>
+            <xs:enumeration value="notification"/>
+            <xs:enumeration value="processnotification"/>
+            <xs:enumeration value="notificationdefobject"/>
+            <xs:enumeration value="perioddef"/>
+            <xs:enumeration value="transaction"/>
+            <xs:enumeration value="transactionclass"/>
+            <xs:enumeration value="burdeningclass"/>
+            <xs:enumeration value="burdeningmatrix"/>
+            <xs:enumeration value="evcontract"/>
+            <xs:enumeration value="evagency"/>
+            <xs:enumeration value="resourceclass"/>
+            <xs:enumeration value="wipclass"/>
+            <xs:enumeration value="companyclass"/>
+            <xs:enumeration value="vendor"/>
+            <xs:enumeration value="reportLabel"/>
+            <xs:enumeration value="forecastPlan"/>
+            <xs:enumeration value="pageViewMapping"/>
+            <xs:enumeration value="uitheme"/>
+            <xs:enumeration value="timesheetApproval"/>
+            <xs:enumeration value="actionItemApproval"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="processCode" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Optional Clarity Process code used when invoking the Clarity StartProcess web service
+            for a given XOG object type.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="args">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="contentType" type="contentType" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="OBSAssocsType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          The Organizational Breakdown Structures Association section.  List of OBS Associations.
+
+          completed - If the flag is true, then if there is any associations missing they are deleted.
+                      Otherwise, we only insert and/or update
+          complete - This flag has been introduced to remove the inconsistency in naming the complete flag across all files.
+                     Eventually this flag will replace the usage of completed/isComplete flags that are currently being used for the deletion purpose.
+
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OBSAssoc" type="OBSAssocType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="completed" type="xs:boolean" default="false"/>
+    <xs:attribute name="complete" type="xs:boolean" default="false"/>
+  </xs:complexType>
+
+  <xs:complexType name="OBSAssocType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+      The Organizational Breakdown Structures that the Resources is part of.  The Resource can be part of many OBSs.
+
+      name - The name of the OBS
+      id - unique identifier for the OBS
+      unitPath - The slash delimited path of the obs unit (e.g. /USA/California/RWC)
+      mode - Used for rights to determine if the unit, or the unit and relatives are included.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="unitPath" type="xs:string" use="required"/>
+    <xs:attribute name="mode" type="OBSRightMode"/>
+  </xs:complexType>
+  <xs:element name="CustomInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="ColumnValue" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType mixed="true">
+            <xs:sequence>
+               <xs:element name="Value" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:element name="Documents" type="DocumentsType" minOccurs="0"/>
+              <xs:element name="tsvData" type="tsvType" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:element name="fiscalPeriod" type="PeriodType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="instance" type="InstanceType" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="General">
+    <xs:complexType>
+      <xs:attribute name="addedBy" type="xs:string"/>
+      <xs:attribute name="addedDate" type="xs:date"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="contentType">
+    <xs:annotation>
+      <xs:documentation>Identifies a type of content in a content page.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="job_definition"/>
+      <xs:enumeration value="menu"/>
+      <xs:enumeration value="page"/>
+      <xs:enumeration value="lookup"/>
+      <xs:enumeration value="query"/>
+      <xs:enumeration value="view"/>
+      <xs:enumeration value="process"/>
+      <xs:enumeration value="object"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="objectInstanceType">
+    <xs:annotation>
+      <xs:documentation>Identifies the object type of an object specific page or portlet.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SYSTEM"/>
+      <xs:enumeration value="PMA_PORTFOLIO"/>
+      <xs:enumeration value="SRM_PROJECTS"/>
+      <xs:enumeration value="SRM_RESOURCES"/>
+      <xs:enumeration value="INV_ASSET"/>
+      <xs:enumeration value="INV_APPLICATION"/>
+      <xs:enumeration value="INV_PRODUCT"/>
+      <xs:enumeration value="INV_SERVICE"/>
+      <xs:enumeration value="INV_OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="investmentTypeCodeType">
+    <xs:annotation>
+      <xs:documentation>Identifies the investment type.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SRM_PROJECTS"/>
+      <xs:enumeration value="INV_ASSET"/>
+      <xs:enumeration value="INV_APPLICATION"/>
+      <xs:enumeration value="INV_PRODUCT"/>
+      <xs:enumeration value="INV_SERVICE"/>
+      <xs:enumeration value="INV_OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="criteriaType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="OR"/>
+      <xs:enumeration value="EQUALS"/>
+      <xs:enumeration value="BETWEEN"/>
+      <xs:enumeration value="BEFORE"/>
+      <xs:enumeration value="AFTER"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="systemLimitsDateType">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base="xs:date">
+          <xs:minExclusive value="1970-01-01"/>
+          <xs:maxExclusive value="2079-06-03"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="null"/>
+          <xs:enumeration value="NULL"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+  <xs:simpleType name="projectDateTimeType">
+    <xs:restriction base="xs:dateTime">
+      <xs:minInclusive value="1900-01-01T00:00:00"/>
+      <xs:maxInclusive value="2079-06-03T00:00:00"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="projectRiskType">
+    <xs:restriction base="xs:integer">
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="50"/>
+      <xs:enumeration value="100"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PeriodType">
+    <xs:annotation>
+      <xs:documentation>
+        Representation of a custom attribute that is the start or end date for a fiscal tsv. This data
+        defines the fiscal time period that must exist on the target system during an import.
+        The attributes in this type represent the non-nullable columns from BIZ_COM_PERIODS plus the
+        entity code this period applies to.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="startDate" type="xs:dateTime"/>
+    <xs:attribute name="endDate" type="xs:dateTime"/>
+    <xs:attribute name="entityCode" type="xs:string"/>
+    <xs:attribute name="period" type="xs:long"/>
+    <xs:attribute name="periodType" type="xs:string"/>
+    <xs:attribute name="periodName" type="xs:string"/>
+    <xs:attribute name="periodYear" type="xs:long"/>
+  </xs:complexType>
+  <xs:complexType name="DocumentsType">
+    <xs:sequence>
+      <xs:element name="Parent" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="General" minOccurs="0"/>
+            <xs:element name="Folder" type="FolderType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Document" type="DocumentTypeXOG" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+          <xs:attribute name="parentObjectType" type="xs:string"/>
+          <xs:attribute name="parentObjectId" type="xs:long"/>
+          <xs:attribute name="documentLocation" type="xs:string" use="required"/>
+          <xs:attribute name="hasAllParticipants" type="xs:boolean" default="true"/>
+          <xs:attribute name="allowNonParticipants" type="xs:boolean"/>
+          <xs:attribute name="versioningEnabled" type="xs:boolean" default="true"/>
+          <xs:attribute name="numCheckoutDays" type="xs:int" default="1"/>
+          <xs:attribute name="status" type="xs:string" default="0"/>
+          <xs:attribute name="language" type="xs:string" default="en"/>
+          <xs:attribute name="documentPath" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FolderType">
+    <xs:sequence>
+      <xs:element name="Folder" type="FolderType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Document" type="DocumentTypeXOG" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="hasAllParticipants" type="xs:boolean" default="true"/>
+    <xs:attribute name="allowNonParticipants" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="DocumentTypeXOG">
+    <xs:complexContent>
+      <xs:extension base="DocumentBaseType">
+        <xs:sequence>
+          <xs:element name="Version" type="DocumentVersionType" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="mimeType" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="RiskIssueNotesType">
+    <xs:sequence>
+      <xs:element name="note" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="subject" use="required">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="80"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:attribute>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RiskIssueTasksType">
+    <xs:sequence>
+      <xs:element name="task" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="code" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="48"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CustomObjectInstancesType">
+    <xs:sequence>
+      <xs:element name="instance" type="InstanceType" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="objectCode" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="InstanceType">
+    <xs:sequence>
+      <xs:element ref="CustomInformation"/>
+      <xs:element name="OBSAssocs" type="OBSAssocsType" minOccurs="0"/>
+      <xs:element name="Security" type="SecurityType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="instanceCode" type="xs:string" use="required"/>
+    <xs:attribute name="objectCode" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+    objectCode for instance is present only for sub object instances.
+      </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="parentObjectCode" type="xs:string" use="optional"/>
+    <xs:attribute name="parentInstanceCode" type="xs:string" use="optional"/>
+    <xs:attribute name="grandparentInstanceCode" type="xs:string" use="optional"/>
+    <xs:attribute name="grandparentObjectCode" type="xs:string" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="CustomObjectInstanceQueryType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          Query definition for custom object instances
+  </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="Filter" type="CustomObjectInstanceFilterType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="CustomObjectInstanceFilterType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="objectCode"/>
+              <xs:enumeration value="instanceCode"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="criteria" type="criteriaType"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ResourceMemberType">
+    <xs:annotation>
+      <xs:documentation>Defines partition resource member. </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="userName" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="RightsType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+          An Access Rights section.  List of Access Rights that the user has. Can be list of global, instance, or obs instance.
+
+          completed - If the flag is true, then if there is any rights missing they are deleted.
+                      Otherwise, we only insert and/or update
+          complete - This flag has been introduced to remove the inconsistency in naming the complete flag across all files.
+                     Eventually this flag will replace the usage of completed/isComplete flags that are currently being used for the deletion purpose.
+
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Right" type="RightType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="completed" type="xs:boolean" default="false"/>
+    <xs:attribute name="complete" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="RightType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+      An Access Right that the user/group/OBS Units has.  The entity can have many access rights.  The access right
+      can have 1 InstanceObject, 1 OBSAssoc, or no sub elements.
+
+      id - The unique identifier of the right
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="nls" type="NlsType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="InstanceObject" type="InstanceObjectType" minOccurs="0"/>
+      <xs:element name="OBSAssoc" type="OBSAssocType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="classCode" type="xs:string" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="InstanceObjectType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+        The instance object that the user has access to.  There can only be one instance object per right.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          The type of the right.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:simpleType name="OBSRightMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="OBS_UNIT_ONLY"/>
+      <xs:enumeration value="OBS_UNIT_AND_CHILDREN"/>
+      <xs:enumeration value="OBS_UNIT_CHILD_AND_ANCESTORS"/>
+      <xs:enumeration value="OBS_UNIT_AND_ANCESTORS"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

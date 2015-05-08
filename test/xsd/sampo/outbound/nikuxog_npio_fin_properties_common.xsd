@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:include schemaLocation="./status.xsd"/>
+  <xs:include schemaLocation="./common.xsd"/>
+  <xs:complexType name="FinancialPropertiesType">
+    <xs:attribute name="financialLocation" type="xs:string"/>
+    <xs:attribute name="financialDepartment" type="xs:string"/>
+    <xs:attribute name="financialProjectClass" type="xs:string"/>
+    <xs:attribute name="financialWipClass" type="xs:string"/>
+    <xs:attribute name="laborRateSource" type="xs:string"/>
+    <xs:attribute name="laborCostSource" type="xs:string"/>
+    <xs:attribute name="laborExchangeRateType">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="AVERAGE"/>
+          <xs:enumeration value="FIXED"/>
+          <xs:enumeration value="SPOT"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="materialRateSource" type="xs:string"/>
+    <xs:attribute name="materialCostSource" type="xs:string"/>
+    <xs:attribute name="materialExchangeRateType">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="AVERAGE"/>
+          <xs:enumeration value="FIXED"/>
+          <xs:enumeration value="SPOT"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="equipmentRateSource" type="xs:string"/>
+    <xs:attribute name="equipmentCostSource" type="xs:string"/>
+    <xs:attribute name="equipmentExchangeRateType">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="AVERAGE"/>
+          <xs:enumeration value="FIXED"/>
+          <xs:enumeration value="SPOT"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="expenseRateSource" type="xs:string"/>
+    <xs:attribute name="expenseCostSource" type="xs:string"/>
+    <xs:attribute name="expenseExchangeRateType">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="AVERAGE"/>
+          <xs:enumeration value="FIXED"/>
+          <xs:enumeration value="SPOT"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+</xs:schema>

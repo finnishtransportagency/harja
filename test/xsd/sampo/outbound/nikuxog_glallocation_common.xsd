@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:include schemaLocation="./status.xsd"/>
+  <xs:include schemaLocation="./common.xsd"/>
+  <xs:complexType name="AllocationType">
+    <xs:sequence>
+      <xs:element ref="Details" minOccurs="0"/>
+      <xs:element ref="CustomInformation" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="allocationCode" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:maxLength value="60"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="entityCode" type="xs:string" use="optional"/>
+    <xs:attribute name="locationCode" type="xs:string" use="optional"/>
+    <xs:attribute name="departmentCode" type="xs:string" use="optional"/>
+    <xs:attribute name="resourceClassCode" type="xs:string" use="optional"/>
+    <xs:attribute name="chargeCode" type="xs:string" use="optional"/>
+    <xs:attribute name="investmentCode" type="xs:string" use="optional"/>
+    <xs:attribute name="tableName" type="xs:string" use="optional"/>
+    <xs:attribute name="utilityCode1" type="xs:string" use="optional"/>
+    <xs:attribute name="utilityCode2" type="xs:string" use="optional"/>
+    <xs:attribute name="transactionClassCode" type="xs:string" use="optional"/>
+    <xs:attribute name="typeCode" type="xs:string" use="optional"/>
+    <xs:attribute name="statusCode" type="xs:string" use="required"/>
+    <xs:attribute name="chgRemtoOverhead" type="xs:boolean"/>
+  <xs:attribute name="cbkType" use="required">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="DEBIT"/>
+        <xs:enumeration value="CREDIT"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>
+  <xs:attribute name="cbkSubtype" use="required">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="STANDARD"/>
+        <xs:enumeration value="INVESTMENT"/>
+        <xs:enumeration value="OVERHEAD"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>
+  <xs:attribute name="pageLayoutCode">
+    <xs:simpleType>
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="32"/>
+    </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>    
+  </xs:complexType>
+  <xs:element name="Details">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Detail" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Detail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="percentage" type="tsvType" minOccurs="0"/>
+        <xs:element ref="CustomInformation" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="glAccountMain" type="xs:string" use="required"/>
+      <xs:attribute name="glAccountSub" type="xs:string" use="required"/>
+      <xs:attribute name="department" type="xs:string" use="required"/>
+      <xs:attribute name="flatAmount" type="xs:long" use="optional"/>
+      <xs:attribute name="weightable" type="xs:long" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Allocations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Allocation" type="AllocationType" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

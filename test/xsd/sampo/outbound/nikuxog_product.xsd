@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:include schemaLocation="./status.xsd"/>
+	<xs:include schemaLocation="./common.xsd"/>
+	<xs:include schemaLocation="./nikuxog_inv_common.xsd"/>
+
+	<xs:element name="NikuDataBus">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="Header"/>
+				<xs:element ref="Products" minOccurs="0"/>
+				<xs:element ref="XOGOutput" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- ############################################################### -->
+	<xs:element name="Products">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Product" type="ProductType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+		<!-- ObjectRecords:  Contains data from SRM_PROJECTS / PRJ_PROJECTS  -->
+	</xs:element>
+
+	<xs:complexType name="ProductType">
+		<xs:complexContent>
+			<xs:extension base="InvestmentObjectType">
+				<xs:attribute name="investmentVersion">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:maxLength value="32"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+
+</xs:schema>
