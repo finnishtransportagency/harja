@@ -137,12 +137,15 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn)))
   
   (laheta [{:keys [istunto jonot]} jonon-nimi viesti]
-    (let [producer (varmista-producer istunto jonot jonon-nimi)
-          msg (luo-viesti viesti istunto)]
-      ;; FIXME: palauta message id
-      (log/info "MEssage id ennen lähetystä: " (.getJMSMessageID msg))
-      (.send producer msg)
-      (log/info "MEssage id lähetyksen jälkeen: " (.getJMSMessageID msg)))))
+    (try 
+      (let [producer (varmista-producer istunto jonot jonon-nimi)
+            msg (luo-viesti viesti istunto)]
+        (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
+        (.send producer msg)
+        (.getJMSMessageID msg))
+
+      (catch Exception e
+        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
     
     
 (defn luo-sonja [asetukset]
