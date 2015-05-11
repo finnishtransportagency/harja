@@ -9,29 +9,29 @@ The following keys are supported in the configuration:
 
   :active    An atom containing the selected tab number. Defaults to (atom 0).
   :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
-  
-  [config & alternating-title-and-component]
-  (let [active (or (:active config) (atom 0))
-        style-class (case (or (:style config) :tabs)
-                      :pills "nav-pills"
-                      :tabs "nav-tabs")]
-    (fn [config & alternating-title-and-component]
-      (let [tabs (filter #(not (nil? (second %))) (partition 2 alternating-title-and-component))
-            [active-tab-title active-component] (nth tabs @active)]
-        [:span 
-         [:ul.nav {:class style-class}
-          (map-indexed 
-           (fn [i [title]]
-             ^{:key title}
-             [:li {:role "presentation" 
-                   :class (when (= active-tab-title title)
-                            "active")}
-              [:a.klikattava {:on-click #(do 
-                                           (.preventDefault %)
-                                           (reset! active i))}
-               title]])
-           tabs)]
-         [:div.valilehti active-component]]))))
+
+    [config & alternating-title-and-component]
+    (let [active (or (:active config) (atom nil))
+          style-class (case (or (:style config) :tabs)
+                          :pills "nav-pills"
+                          :tabs "nav-tabs")]
+        (fn [config & alternating-title-and-component]
+            (let [tabs (filter #(not (nil? (second %))) (partition 3 alternating-title-and-component))
+                  [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]
+                [:span
+                 [:ul.nav {:class style-class}
+                  (map
+                      (fn [[title keyword]]
+                          ^{:key title}
+                          [:li {:role "presentation"
+                                :class (when (= keyword active-tab-keyword)
+                                           "active")}
+                           [:a.klikattava {:on-click #(do
+                                                         (.preventDefault %)
+                                                         (reset! active keyword))}
+                            title]])
+                      tabs)]
+                 [:div.valilehti active-component]]))))
   
 (defn navbar
   "A Bootstrap navbar component"

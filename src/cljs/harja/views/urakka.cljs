@@ -11,39 +11,46 @@
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]))
 
+(def valittu-valilehti "Valittu välilehti" (atom :yleiset))
+
 (defn urakka
   "Urakkanäkymä"
   [ur]
   
-  [bs/tabs {}
-   
-    "Yleiset"
-    ^{:key "yleiset"}
-    [urakka-yleiset/yleiset ur]
-    
-    
-    "Suunnittelu"
-    ^{:key "suunnittelu"}
-    [suunnittelu/suunnittelu ur]
-    
-    "Toteumat"
-    ^{:key "toteumat"}
-    [toteumat/toteumat ur]
-    
-    "Laadunseuranta"
-    ^{:key "laadunseuranta"}
-    [:div
-     "laatua vois toki seurata"]
-    
+  [bs/tabs {:style :tabs :active valittu-valilehti}
+
+   "Yleiset"
+   :yleiset
+   ^{:key "yleiset"}
+   [urakka-yleiset/yleiset ur]
+
+   "Suunnittelu"
+   :suunnittelu
+   ^{:key "suunnittelu"}
+   [suunnittelu/suunnittelu ur]
+
+   "Toteumat"
+   :toteumat
+   ^{:key "toteumat"}
+   [toteumat/toteumat ur]
+
+   "Laadunseuranta"
+   :laadunseuranta
+   ^{:key "laadunseuranta"}
+   [:div
+    "laatua vois toki seurata"]
+
    "Siltatarkastukset"
+   :siltatarkastukset
    (when (= :hoito (:tyyppi ur))
      ^{:key "siltatarkastukset"}
      [siltatarkastukset/siltatarkastukset ur])
 
    "Välitavoitteet"
+   :valitavoitteet
    (when-not (= :hoito (:tyyppi ur))
-     ^{:key "valitavoitteet"}
-     [valitavoitteet/valitavoitteet ur])
+       ^{:key "valitavoitteet"}
+       [valitavoitteet/valitavoitteet ur])
    ])
   
  

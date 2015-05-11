@@ -29,7 +29,7 @@
                                                                 @s/urakan-yks-hint-tyot)
                                                           (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
-(def valittu-valilehti "Valittu välilehti" (atom 0))
+(def valittu-valilehti "Valittu välilehti" (atom :kokonaishintaiset))
 
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
@@ -48,21 +48,24 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (if (= 0 @valittu-valilehti)
+          (if (= :kokonaishintaiset @valittu-valilehti)
             [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
             [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
           [bs/tabs {:style :tabs :active valittu-valilehti}
 
            "Kokonaishintaiset työt"
+           :kokonaishintaiset
            ^{:key "kokonaishintaiset-tyot"}
            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
 
            "Yksikköhintaiset työt"
+           :yksikkohintaiset
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
 
            "Materiaalit"
+           :materiaalit
            ^{:key "materiaalit"}
            [mat/materiaalit ur]
            ]])
