@@ -7,6 +7,7 @@
    [harja.palvelin.komponentit.todennus :as todennus]
    [harja.palvelin.komponentit.fim :as fim]
    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.sonja :as sonja]
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -56,6 +57,9 @@
                      (http-palvelin/luo-http-palvelin (:portti http-palvelin)
                                                       kehitysmoodi)
                      [:todennus])
+
+     ;; Sonja (Sonic ESB) JMS yhteyskomponentti
+     :sonja (sonja/luo-sonja (:sonja asetukset))
      
      ;; FIM REST rajapinta
      :fim (fim/->FIM (:url (:fim asetukset)))

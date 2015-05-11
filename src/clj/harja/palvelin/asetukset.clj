@@ -26,7 +26,10 @@
          (s/optional-key :email) {:taso s/Keyword
                                   :palvelin s/Str
                                   :vastaanottaja [s/Str]}}
-   
+   (s/optional-key :sonja) {:url s/Str
+                            :kayttaja s/Str
+                            :salasana s/Str}
+                                                        
    }) 
 
 (def oletusasetukset
