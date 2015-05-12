@@ -7,6 +7,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
+
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.siltatarkastukset :as siltatarkastukset]
@@ -61,45 +62,122 @@
           @urakan-sillat
           ]]))))
 
+(defn ryhmittele-sillantarkastuskohteet
+  "Ryhmittelee sillantarkastuskohteet"
+  [kohderivit]
+  (let [otsikko (fn [{:keys [kohdenro]}]
+                  (case kohdenro
+                    (1 2 3) "Alusrakenne"
+                    (4 5 6 7 8 9 10) "Päällysrakenne"
+                    (11 12 13 14 15 16 17 18 19) "Varusteet ja laitteet"
+                    (20 21 22 23) "Siltapaikan rakenteet"
+                    "Tuntematon kohdenumero."))
+        otsikon-mukaan (group-by otsikko kohderivit)]
+    (mapcat (fn [[otsikko rivit]]
+              (concat [(grid/otsikko otsikko)] rivit))
+            (seq otsikon-mukaan))))
+
+(defn siltatarkastuksen-sarakkeet [valittu-tarkastus muut-tarkastukset]
+  ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
+  (into []
+        (concat
+          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
+           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
+           {:otsikko (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "10%"
+            :tyyppi :valinta :valinta-arvo identity
+            :valinta-nayta #(if (nil? %) "-" %)
+            :valinnat ["A" "B" "C" "D"]}  
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
+          (mapv (fn [tarkastus]
+                  {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
+                   :nimi    (pvm/pvm (:tarkastusaika tarkastus))
+                   :leveys "5%"
+                   :tyyppi :string :muokattava? (constantly false)})
+                muut-tarkastukset))))
+
+(defn tallenna-tarkastukset [ur atomi uudet]
+  (log "tallenna-tarkastukset uudet" (pr-str uudet)))
+
+(defn siltatarkastusten-rivit
+  [valittu-tarkastus muut-tarkastukset kohteet]
+  (ryhmittele-sillantarkastuskohteet
+    (mapv (fn [kohdenro]
+            (merge
+              {:kohdenro  kohdenro
+               :kohde     (siltatarkastukset/siltatarkastuskohteen-nimi kohdenro)
+               :tulos     (:tulos (first (filter #(and
+                                                       (= kohdenro (:kohde %))
+                                                       (= (:siltatarkastus %) (:id valittu-tarkastus))) kohteet)))
+               :lisatieto (:lisatieto (first (filter #(and
+                                            (= kohdenro (:kohde %))
+                                            (= (:siltatarkastus %) (:id valittu-tarkastus))) kohteet)))}
+              (into {}
+                    (map (fn [tarkastus]
+                          [(pvm/pvm (:tarkastusaika tarkastus))
+                           (:tulos (first (filter #(and
+                                                    (= kohdenro (:kohde %))
+                                                    (= (:siltatarkastus %) (:id tarkastus))) kohteet)))])
+                         muut-tarkastukset))))
+          (range 1 24))))
+
 (defn sillan-tarkastukset [ur]
   (let [sillan-tarkastukset (atom nil)
+        valittu-tarkastus (atom nil)
         tarkastuskohteet (atom nil)
-        tallennus-kaynnissa (atom false)
         urakka (atom nil)
-        aseta-urakka (fn [ur]
-                       (reset! urakka ur))]
-    (aseta-urakka ur)
-    (run! (let [urakka-id (:id @urakka)]
-            (when urakka-id
-              (go (reset! sillan-tarkastukset (<! (siltatarkastukset/hae-sillan-tarkastukset (:id @valittu-silta)))))
-              ;; FIXME: iteroi läpi kaikki sillan-tarkastukset ja hae niille tarkastuskohteet talteen
-              (go (reset! tarkastuskohteet (<! (siltatarkastukset/hae-siltatarkastuksen-kohteet (:id (first @sillan-tarkastukset)))))))))
+        hae-tarkastustiedot (fn [ur]
+                              (reset! urakka ur)
+                              (go (let [tarkastukset (<! (siltatarkastukset/hae-sillan-tarkastukset (:id @valittu-silta)))
+                                        val-tarkastus (first tarkastukset)
+                                        kohteet (<! (siltatarkastukset/hae-siltatarkastusten-kohteet (mapv #(:id %) tarkastukset)))]
+                                    (reset! sillan-tarkastukset tarkastukset)
+                                    (reset! valittu-tarkastus val-tarkastus)
+                                    (reset! tarkastuskohteet kohteet))))
+        muut-tarkastukset (reaction (when @valittu-tarkastus (filter #(not (= (:tarkastusaika %) (:tarkastusaika @valittu-tarkastus))) @sillan-tarkastukset)))
+        siltatarkastussarakkeet (reaction (when @valittu-tarkastus (siltatarkastuksen-sarakkeet @valittu-tarkastus @muut-tarkastukset)))
+        siltatarkastusrivit (reaction (when @valittu-tarkastus (siltatarkastusten-rivit @valittu-tarkastus @muut-tarkastukset @tarkastuskohteet)))
+        tallennus-kaynnissa (atom false)]
 
-    (log "sillan-tarkastukset" (pr-str @sillan-tarkastukset))
-    (log "sillan tarkastuskohteet" (pr-str @tarkastuskohteet))
+    (hae-tarkastustiedot ur)
+
     (komp/luo
       {:component-will-receive-props
        (fn [_ & [_ ur]]
+         (hae-tarkastustiedot ur)
          (log "sillan-tarkastukset sai propertyjä, urakka: " (pr-str (dissoc ur :alue))))}
 
       (fn [ur]
         [:div.sillat
-         [:div
-          [:span "Silta: "]
-          [:span (:siltanimi @valittu-silta)]]
+         [:button.nappi-toissijainen {:on-click #(reset! valittu-silta nil)
+                                      :style {:display "block"}}
+          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
+         [:h3 (:siltanimi @valittu-silta)]
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Tarkastus"]
+          [livi-pudotusvalikko {:valinta    @valittu-tarkastus
+                                ;;\u2014 on väliviivan unikoodi
+                                :format-fn  #(if % (str (pvm/pvm (:tarkastusaika %))) "Valitse")
+                                :valitse-fn #(reset! valittu-tarkastus %)
+                                :class      "suunnittelu-alasveto"
+                                }
+           @sillan-tarkastukset]]
+
          ;; FIXME: gridi ei läheskään valmis vielä. Käsiteltävä sillan-tarkastukset ja niiden kaikki tarkastuskohteet...
          [grid/grid
           {:otsikko        "Sillan tarkastukset"
            :tyhja          (if (nil? @sillan-tarkastukset) [ajax-loader "Urakan alueella olevia siltoja haetaan..."] "Sillasta ei ole vielä tarkastuksia Harjassa.")
-           :tunniste       :id
+           :tunniste       :kohdenro
+           :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
+                                                       (:id ur)
+                                                       #(tallenna-tarkastukset ur
+                                                                       sillan-tarkastukset %)
+                                                       :ei-mahdollinen)
            }
 
           ;; sarakkeet
-          [{:otsikko "Kohde" :nimi :siltanimi :leveys "40%"}
-           {:otsikko "Tulos" :nimi :siltanro :leveys "10%"}
-           {:otsikko "Lisätietoa" :nimi :uusin_aika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}]
+          @siltatarkastussarakkeet
 
-          @sillan-tarkastukset
+          @siltatarkastusrivit
           ]]))))
 
 (defn siltatarkastukset [ur]

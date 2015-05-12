@@ -20,11 +20,12 @@
   (into []
         (q/hae-sillan-tarkastukset db silta-id)))
 
-(defn hae-siltatarkastuksen-kohteet
-  "Hakee annetun siltatarkustauksn kohteet ja niiden tulokset"
-  [db user siltatarkastus-id]
+(defn hae-siltatarkastusten-kohteet
+  "Hakee siltatarkastusten kohteet ID:iden perusteella"
+  [db user siltatarkastus-idt]
+  (log/debug  "kutsun kohta kohteita, " (pr-str siltatarkastus-idt))
   (into []
-        (q/hae-siltatarkastuksen-kohteet db siltatarkastus-id)))
+        (q/hae-siltatarkastusten-kohteet db siltatarkastus-idt)))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -37,13 +38,13 @@
       (julkaise-palvelu http :hae-sillan-tarkastukset
                         (fn [user silta-id]
                           (hae-sillan-tarkastukset db user silta-id)))
-      (julkaise-palvelu http :hae-siltatarkastuksen-kohteet
-                        (fn [user siltatarkastus-id]
-                          (hae-siltatarkastuksen-kohteet db user siltatarkastus-id)))
+      (julkaise-palvelu http :hae-siltatarkastusten-kohteet
+                        (fn [user siltatarkastus-idt]
+                          (hae-siltatarkastusten-kohteet db user siltatarkastus-idt)))
 
       this))
 
   (stop [this]
-    (poista-palvelut (:http this) :hae-urakan-sillat)
-    (poista-palvelut (:http this) :hae-sillan-tarkastukset)
-    (poista-palvelut (:http this) :hae-siltatarkastuksen-kohteet)))
+    (poista-palvelut (:http-palvelin this) :hae-urakan-sillat)
+    (poista-palvelut (:http-palvelin this) :hae-sillan-tarkastukset)
+    (poista-palvelut (:http-palvelin this) :hae-siltatarkastusten-kohteet)))

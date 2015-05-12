@@ -23,6 +23,7 @@
 (defn otsikko
   "Luo otsikon annetulla tekstillä."
   [teksti]
+  (assert (not (nil? teksti)) "Anna otsikolle teksti.")
   (->Otsikko teksti))
 
     

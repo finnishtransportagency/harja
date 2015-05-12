@@ -9,15 +9,15 @@ SELECT s.id, s.siltanimi, s.siltanro, st.uusin_aika, st.tarkastaja
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
-SELECT st.id, st.silta, st.urakka,
-       st.tarkastusaika, st.tarkastaja,
-       st.luotu, st.luoja, st.muokattu, st.muokkaaja, st.poistettu
-  FROM siltatarkastus st
- WHERE silta = :silta
+SELECT id, silta, urakka,
+       tarkastusaika, tarkastaja,
+       luotu, luoja, muokattu, muokkaaja, poistettu
+  FROM siltatarkastus
+ WHERE silta = :silta ORDER BY tarkastusaika DESC
 
--- name: hae-siltatarkastuksen-kohteet
--- Hakee yhden siltatarkastuksen kohteet
-SELECT kohde, tulos, lisatieto
+-- name: hae-siltatarkastusten-kohteet
+-- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
+SELECT siltatarkastus, kohde, tulos, lisatieto
   FROM siltatarkastuskohde
- WHERE siltatarkastus = :siltatarkastus
+ WHERE siltatarkastus IN (:siltatarkastus_idt)
 
