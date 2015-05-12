@@ -81,14 +81,15 @@
                  ]
   
   :dev-dependencies [;; Selain REPL
-
+                     
                      ;; Testaus
-
+                     
 
                      ]
   
   
-  :profiles {:test {:dependencies [[clj-webdriver "0.6.0"]
+  :profiles {:dev {:dependencies []}
+             :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
     
