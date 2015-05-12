@@ -98,7 +98,7 @@
                                WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
 
 (defn hae-pudasjarven-alueurakan-id []
-  (ffirst (q jarjestelma (str "SELECT id
+  (ffirst (q jarjestelma (str "SELECT id        x
                                FROM   urakka
                                WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
 

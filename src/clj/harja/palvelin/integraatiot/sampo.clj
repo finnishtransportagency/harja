@@ -1,9 +1,14 @@
 (ns harja.palvelin.integraatiot.sampo
   (:require [hiccup.core :refer [html]]
             [harja.kyselyt.sampo :as q]
-            [harja.kyselyt.konversio :as konversio])
+            [harja.kyselyt.konversio :as konversio]
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.sonja :as sonja])
   (:import (java.text SimpleDateFormat)
            (java.util Date Calendar)))
+
+(defprotocol Maksueralahetys
+  (laheta-maksuera-sampoon [this numero]))
 
 (defn muodosta-kulu-id []
   (clojure.string/join "" ["kulu"
@@ -17,7 +22,7 @@
 (defn muodosta-instance-code [numero]
   (clojure.string/join "" ["AL" numero]))
 
-(defn custom-information [values & content]
+(defn luo-custom-information [values & content]
   [:CustomInformation
    (for [[key value] values]
      [:ColumnValue {:name key} value])
@@ -39,9 +44,8 @@
     "akillinen_hoitotyo" 10
     99))
 
-(defn muodosta-maksuera [maksuera]
+(defn muodosta-maksuera-xml [maksuera]
   (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto tuotepolku]} (:toimenpideinstanssi maksuera)
-        {:keys [sampoid]} (:urakka maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
         instance-code (muodosta-instance-code (:numero maksuera))]
@@ -49,7 +53,7 @@
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
-      [:Product {:name                  (:nimi maksuera)
+      [:Product {:name                  (:nimi maksuera)    ;; todo: generoi nimi urakasta yms.
                  :financialProjectClass "INVCLASS"
                  :start                 (formatoi-paivamaara alkupvm)
                  :finish                (formatoi-paivamaara loppupvm)
@@ -60,7 +64,7 @@
                  :financialLocation     "Kpito"}
        [:InvestmentAssociations
         [:Allocations
-         [:ParentInvestment {:defaultAllocationPercent "1.0" :InvestmentType "project" :InvestmentID sampoid}]]]
+         [:ParentInvestment {:defaultAllocationPercent "1.0" :InvestmentType "project" :InvestmentID (:sampoid (:urakka maksuera))}]]]
        [:InvestmentResources
         [:Resource {:resourceID kulu-id}]]
        [:InvestmentTasks
@@ -76,33 +80,60 @@
                              :name     "Sijainti"}]
         [:OBSAssoc#tuote2013 {:unitPath tuotepolku
                               :name     "Tuoteryhma/Tuote"}]]
-       (custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
-                            "vv_inst_no"     (:numero maksuera)
-                            "vv_code"        maksueranumero
-                            "vv_me_type"     (paattele-tyyppi (:tyyppi maksuera))
-                            "vv_type"        "me"
-                            "vv_status"      "2"
-                            "travel_cost_ok" "false"
-                            }
-                           [:instance {:parentInstanceCode maksueranumero :parentObjectCode "Product" :objectCode "vv_invoice_receipt" :instanceCode instance-code}
-                            (custom-information {"code"                 instance-code
-                                                 "vv_payment_date"      "FOO" ; todo: Mistä saadaan maksupäivä?(date-format me-paiva)
-                                                 "vv_paym_sum"          (laske-summa maksuera)
-                                                 "vv_paym_sum_currency" "EUR"
-                                                 "name"                 "Laskutus- ja maksutiedot"})])]]]))
+       (luo-custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
+                                "vv_inst_no"     (:numero maksuera)
+                                "vv_code"        maksueranumero
+                                "vv_me_type"     (paattele-tyyppi (:tyyppi maksuera))
+                                "vv_type"        "me"
+                                "vv_status"      "2"
+                                "travel_cost_ok" "false"}
+                               [:instance {:parentInstanceCode maksueranumero
+                                           :parentObjectCode   "Product"
+                                           :objectCode         "vv_invoice_receipt"
+                                           :instanceCode       instance-code}
+                                (luo-custom-information {"code"                 instance-code
+                                                         "vv_payment_date"      "FOO" ; todo: Mistä saadaan maksupäivä? (date-format me-paiva)
+                                                         "vv_paym_sum"          (laske-summa maksuera)
+                                                         "vv_paym_sum_currency" "EUR"
+                                                         "name"                 "Laskutus- ja maksutiedot"})])]]]))
+
+(defn lukitse-maksuera [db numero]
+  (let [lukko (str (java.util.UUID/randomUUID))]
+    (log/debug "Lukitaan maksuera: " numero ", lukolla:" lukko)
+    (let [onnistuiko? (= 1 (q/lukitse-maksuera! db lukko numero))]
+      (log/debug "Onnistuiko: " onnistuiko?)
+      onnistuiko?)))
+
+(defn hae-maksuera [db numero]
+  (konversio/alaviiva->rakenne (first (q/hae-maksuera db numero))))
+
+(defn merkitse-maksuera-lahetetyksi [db numero lahetetty lahetysid]
+  (log/debug "Merkitään maksuerä: " numero " lähetetyksi ja avataan lukko ")
+  (= 1 (q/merkitse-maksuera-lahetetyksi! db lahetetty lahetysid numero)))
 
 
+(defn laheta-maksuera [db sonja numero]
+  (if (lukitse-maksuera db numero)
+    (let [maksueran-tiedot (hae-maksuera db numero)
+          maksuera-xml (muodosta-maksuera-xml maksueran-tiedot)]
+      true)
+    false))
 
 
-(defn laheta-maksuera [db numero]
-  ;; lukitse maksuera
-  ;; hae maksueran tiedot
-  (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (q/hae-maksuera db numero)))
-        maksuera-xml (muodosta-maksuera maksueran-tiedot)])
-  ;; muodosta maksueran xml-viesti
-  ;; (muodosta-maksuera)
+(defrecord Sampo [lahetysjono kuittausjono]
+  com.stuartsierra.component/Lifecycle
+  (start [this]
+    this)
+  (stop [this]
+    this)
 
-  ;; lähetä jms jonoon xml
-  ;; merkitse lähetetyksi, kirjaa lähetys id, vapauta lukko
-  )
+  Maksueralahetys
+  (laheta-maksuera-sampoon [this numero]
+    (laheta-maksuera (:db this) (:sonja this) numero)))
+
+;; (muodosta-maksuera)
+
+;; lähetä jms jonoon xml
+;; merkitse lähetetyksi, kirjaa lähetys id, vapauta lukko
+
 
