@@ -1,10 +1,11 @@
 -- name: hae-urakan-sillat
 -- Hakee hoidon alueurakalle sillat sekä niiden viimeiset tarkastuspvm:t.
-SELECT s.id, s.siltanimi, s.siltanro, st.uusin_aika, st.tarkastaja
+SELECT s.id, s.siltanimi, s.siltanro, s1.tarkastusaika, s1.tarkastaja
   FROM silta s
-       LEFT JOIN (SELECT silta as uusin_silta, tarkastaja, MAX(tarkastusaika) as uusin_aika
-                  FROM siltatarkastus GROUP BY silta,tarkastaja) AS st ON st.uusin_silta = s.id
- WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
+       LEFT JOIN siltatarkastus s1 ON s1.silta = s.id
+       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika)
+  WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
+    AND s2.id IS NULL;
 
 
 -- name: hae-sillan-tarkastukset
