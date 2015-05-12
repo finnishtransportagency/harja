@@ -70,7 +70,7 @@
                     (1 2 3) "Alusrakenne"
                     (4 5 6 7 8 9 10) "Päällysrakenne"
                     (11 12 13 14 15 16 17 18 19) "Varusteet ja laitteet"
-                    (20 21 22 23) "Siltapaikan rakenteet"
+                    (20 21 22 23 24) "Siltapaikan rakenteet"
                     "Tuntematon kohdenumero."))
         otsikon-mukaan (group-by otsikko kohderivit)]
     (mapcat (fn [[otsikko rivit]]
@@ -118,7 +118,7 @@
                                                     (= kohdenro (:kohde %))
                                                     (= (:siltatarkastus %) (:id tarkastus))) kohteet)))])
                          muut-tarkastukset))))
-          (range 1 24))))
+          (range 1 25))))
 
 (defn sillan-tarkastukset [ur]
   (let [sillan-tarkastukset (atom nil)
