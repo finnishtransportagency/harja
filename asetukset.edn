@@ -21,4 +21,8 @@
                                ;;"mikko.ronkkomaki@solita.fi"
                                ]}
        }
+ 
+ :sonja {:url "localhost:2511"
+         :kayttaja "harja"
+         :salasana "harjaxx"}
  }
