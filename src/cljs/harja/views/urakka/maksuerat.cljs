@@ -37,6 +37,9 @@
                                {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
                                {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}]))
 
+(defn laheta-kaikki-maksuerat []
+    (log "Implemet me"))
+
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
@@ -55,6 +58,6 @@
           @maksuerarivit-test
          ]
 
-          [:button.nappi-ensisijainen "Lähetä kaikki"]]
+          [:button.nappi-ensisijainen {:on-click laheta-kaikki-maksuerat} "Lähetä kaikki" ]]
         ))
 
