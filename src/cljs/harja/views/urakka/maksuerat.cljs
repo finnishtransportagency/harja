@@ -52,9 +52,9 @@
              {:otsikko "Maksuerät"
               :tyhja "Ei maksueriä."
               :tallenna nil}
-             [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "14%" :pituus 16}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
-              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
+             [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
+              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "17%" :pituus 16}
+              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}

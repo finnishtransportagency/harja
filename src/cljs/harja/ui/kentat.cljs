@@ -101,9 +101,8 @@
            :value @data}])
 
 (defmethod tee-kentta :nappi [{:keys [nimi pituus-max pituus-min regex on-focus lomake?]} data]
-    [:button {:class (when lomake? "form-control")
-             :type "button"
-             :value @data}])
+    [:button {:class (str (when lomake? "form-control") "nappi-ensisijainen")
+             :type "button"} "Lähetä"]) ; TODO Hardcoodattu teksti, miten saadaan gridistä välitettyä teksti? Ja toimintofunktio?
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
