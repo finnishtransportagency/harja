@@ -37,7 +37,8 @@
     (let [maksuerarivit (atom nil)
          hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
-          laheta-kaikki-maksuerat (fn [] (log "Implementoi lähetä kaikki: " (pr-str maksuerarivit)))] ; TODO Implementoi lähetä kaikki
+          laheta-kaikki-maksuerat #(maksuerat/laheta-maksuerat maksuerarivit)
+          lahetys-kaynnissa (atom false)]
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -60,6 +61,7 @@
               @maksuerarivit
              ]
 
-          [:button.nappi-ensisijainen {:on-click laheta-kaikki-maksuerat} "Lähetä kaikki" ]]
-        ))))
+          [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                      (reset! lahetys-kaynnissa true)
+                                                      (laheta-kaikki-maksuerat))} "Lähetä kaikki" ]]))))
 
