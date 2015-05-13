@@ -57,8 +57,8 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}
-              {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implement me") :leveys "14%"}]
+              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if (nil? %) "Ei koskaan" %) :leveys "14%"}
+              {:otsikko "Lähetys" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implement me") :leveys "14%"}]
               @maksuerarivit
              ]
 

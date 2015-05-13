@@ -291,6 +291,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        [:td {:class
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
         (if (= tyyppi :nappi)
+            ; TODO Voidaanko nappi luoda kentat-namespacen funktiolla joka luo napin? Ei tulisi duplikaattikoodia tänne.
             [:button {:class "nappi-ensisijainen"
                       :type "button"
                       :on-click nappi-toiminto} nappi-nimi]
