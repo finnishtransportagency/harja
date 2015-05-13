@@ -8,6 +8,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
+            [harja.views.urakka.maksuerat :as maksuerat]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]))
 
@@ -51,6 +52,11 @@
    (when-not (= :hoito (:tyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
+
+   "Maksuerät"
+   :maksuerat
+   ^{:key "maksuerat"}
+    [maksuerat/maksuerat ur]
    ])
   
  
