@@ -69,7 +69,8 @@
      :fim (fim/->FIM (:url (:fim asetukset)))
 
      ;; Sampo rajapinta
-     :sampo (sampo/->Sampo (:lahetysjono-ulos (:sampo asetukset)) (:kuittausjono-ulos (:sampo asetukset)))
+     :sampo (component/using (sampo/->Sampo (:lahetysjono-ulos (:sampo asetukset)) (:kuittausjono-ulos (:sampo asetukset)))
+                             [:sonja :db])
      
      ;; Frontille tarjottavat palvelut 
      :kayttajatiedot (component/using

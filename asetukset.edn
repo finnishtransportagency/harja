@@ -1,28 +1,31 @@
 {
  :kehitysmoodi true
- :tietokanta {:palvelin "localhost"
-              :tietokanta "harja"
-              :portti 5432
-              :kayttaja "harja"
-              :salasana ""}
- :fim {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
- :log {:gelf {:taso :debug
-              :palvelin "localhost"}
-       :hipchat {:taso :warn
-                 :huone-id 1396730
-                 :token "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
+ :tietokanta   {:palvelin   "localhost"
+                :tietokanta "harja"
+                :portti     5432
+                :kayttaja   "harja"
+                :salasana   ""}
+ :fim          {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
+ :log          {:gelf    {:taso     :debug
+                          :palvelin "localhost"}
+                :hipchat {:taso     :warn
+                          :huone-id 1396730
+                          :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
 
-       :email {:taso :error
-               :palvelin "solita-service-1.solita.fi"
+                :email   {:taso          :error
+                          :palvelin      "solita-service-1.solita.fi"
 
-               ;; Lisää nimesi vektoriin, jos haluat spämmiä
-               :vastaanottaja ["tatu.tarvainen@solita.fi"
-                               ;;"jarno.vayrynen@solita.fi"
-                               ;;"mikko.ronkkomaki@solita.fi"
-                               ]}
-       }
- 
- ;:sonja {:url "localhost:2511"
- ;        :kayttaja "harja"
- ;        :salasana "harjaxx"}
+                          ;; Lisää nimesi vektoriin, jos haluat spämmiä
+                          :vastaanottaja ["tatu.tarvainen@solita.fi"
+                                          ;;"jarno.vayrynen@solita.fi"
+                                          ;;"mikko.ronkkomaki@solita.fi"
+                                          ]}
+                }
+
+ :sonja        {:url      "localhost:12511"
+                :kayttaja "harja"
+                :salasana "harjaxx"}
+ :sampo        {
+                :lahetysjono-ulos  "Harja17.HarjaToSampo.Msg"
+                :kuittausjono-ulos "Harja17.SampoToHarja.Ack"}
  }

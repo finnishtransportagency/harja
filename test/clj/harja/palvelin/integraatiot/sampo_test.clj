@@ -56,7 +56,7 @@
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-maksueran-sisalto
-  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (muodosta-maksuera-xml +maksuera+)) "UTF-8"))))]
+  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera/muodosta-maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-12-12T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-01-01T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
     (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))

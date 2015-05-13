@@ -31,7 +31,7 @@
     nil))
 
 (defn laheta-maksuera [sonja lahetysjono maksuera-xml]
-  (sonja/laheta sonja lahetysjono "hephep"))
+  (sonja/laheta sonja lahetysjono maksuera-xml))
 
 (defrecord Sampo [lahetysjono-ulos kuittausjono-ulos]
   com.stuartsierra.component/Lifecycle
