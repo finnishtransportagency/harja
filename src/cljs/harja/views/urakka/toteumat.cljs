@@ -278,7 +278,7 @@
 
 
 
-(defonce toteumat-valilehti (atom 0))
+(defonce toteumat-valilehti (atom :tyot-ja-materiaalit))
 
 
 (defn toteumat
@@ -286,12 +286,12 @@
   [ur]
   [bs/tabs {:active toteumat-valilehti}
 
-   "Työt ja materiaalit"
+   "Työt ja materiaalit" :tyot-ja-materiaalit
    [tyot-ja-materiaalit ur] ;; FIXME: siirrä työt ja materiaalit omaan namespaceen
 
-   "Hinnantarkistukset"
+   "Hinnantarkistukset" :hinnantarkistukset
    [:div "hinnantarkistukset tänne"]
    
-   "Lämpötilat"
+   "Lämpötilat" :lampotilat
    [lampotilat ur]])
 
