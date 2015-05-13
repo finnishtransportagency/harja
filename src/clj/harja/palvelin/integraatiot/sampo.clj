@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.sampo
   (:require [hiccup.core :refer [html]]
-            [harja.kyselyt.sampo :as q]
+            [harja.kyselyt.maksuerat :as q]
             [harja.kyselyt.konversio :as konversio]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.sonja :as sonja])
@@ -31,7 +31,7 @@
 (defn formatoi-paivamaara [date]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
 
-(defn laske-summa [maksuera] 100)                           ;; todo: Miten lasketaan eri maksuerätyyppien summat?
+(defn laske-summa [maksuera] 100)                           ;; FIXME: Miten lasketaan eri maksuerätyyppien summat?
 
 (defn paattele-tyyppi [tyyppi]
   (case tyyppi
@@ -53,7 +53,7 @@
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
-      [:Product {:name                  (:nimi maksuera)    ;; todo: generoi nimi urakasta yms.
+      [:Product {:name                  (:nimi maksuera)    ;; FIXME: generoi nimi urakasta yms.
                  :financialProjectClass "INVCLASS"
                  :start                 (formatoi-paivamaara alkupvm)
                  :finish                (formatoi-paivamaara loppupvm)
@@ -92,7 +92,7 @@
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
                                 (luo-custom-information {"code"                 instance-code
-                                                         "vv_payment_date"      "FOO" ; todo: Mistä saadaan maksupäivä? (date-format me-paiva)
+                                                         "vv_payment_date"      "FOO" ; FIXME: Mistä saadaan maksupäivä? (date-format me-paiva)
                                                          "vv_paym_sum"          (laske-summa maksuera)
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))
@@ -105,7 +105,7 @@
       onnistuiko?)))
 
 (defn hae-maksuera [db numero]
-  (konversio/alaviiva->rakenne (first (q/hae-maksuera db numero))))
+  (konversio/alaviiva->rakenne (first (q/hae-lahetettava-maksuera db numero))))
 
 (defn merkitse-maksuera-lahetetyksi [db numero lahetetty lahetysid]
   (log/debug "Merkitään maksuerä: " numero " lähetetyksi ja avataan lukko ")
