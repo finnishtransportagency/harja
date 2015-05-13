@@ -37,23 +37,31 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let
-        [maksuerarivit (maksuerat/hae-urakan-maksuerat (:id ur))]
-    (do [:div
-        [grid/grid
-         {:otsikko "Maksuerät"
-          :tyhja "Ei maksueriä."
-          :tallenna nil}
-         [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "14%" :pituus 16}
-          {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
-          {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
-          {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
-          {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-          {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}
-          {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :leveys "14%"}]
-          @maksuerarivit
-         ]
+    (let [maksuerarivit (atom nil)
+         hae-urakan-maksuerat (fn [ur]
+                                  (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))]
+        (hae-urakan-maksuerat ur)
+        (komp/luo
+            {:component-will-receive-props
+             (fn [_ & [_ ur]]
+                 (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
+                 (hae-urakan-maksuerat ur))}
+        (fn [ur]
+            [:div
+            [grid/grid
+             {:otsikko "Maksuerät"
+              :tyhja "Ei maksueriä."
+              :tallenna nil}
+             [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "14%" :pituus 16}
+              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
+              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
+              {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
+              {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
+              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}
+              {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :leveys "14%"}]
+              @maksuerarivit
+             ]
 
           [:button.nappi-ensisijainen {:on-click laheta-kaikki-maksuerat} "Lähetä kaikki" ]]
-        )))
+        ))))
 

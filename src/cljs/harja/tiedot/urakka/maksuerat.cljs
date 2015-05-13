@@ -9,9 +9,4 @@
 
 
 (defn hae-urakan-maksuerat [urakka-id]
-    ;(k/post! :hae-urakan-maksuerat urakka-id)) TODO
-    (atom [{:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "11052015"}
-           {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "11052015"}
-           {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "11052015"}
-           {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "11052015"}]))
-
+    (k/post! :hae-urakan-maksuerat urakka-id))

@@ -30,7 +30,7 @@
   [db user urakka-id]
   (into []
         ;; FIXME: Oikeustarkistukset?
-        (map (fn [maksuera] (konversio/alaviiva->rakenne maksuera)) (q/hae-urakan-maksuerat db urakka-id))))
+        (q/hae-urakan-maksuerat db urakka-id)))
 
 (defn laheta-maksuera-sampoon
   "Palvelu, joka lähettää annetun maksuerän Sampoon."
