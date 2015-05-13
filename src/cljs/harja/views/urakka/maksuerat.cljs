@@ -12,6 +12,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.maksuerat :as maksuerat]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
@@ -30,34 +31,29 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(def maksuerarivit (atom nil))
-
-(def maksuerarivit-test (atom [{:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
-                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
-                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
-                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}]))
-
 (defn laheta-kaikki-maksuerat []
-    (log "Implemet me"))
+    (log "Implement me"))
 
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
+    (let
+        [maksuerarivit (maksuerat/hae-urakan-maksuerat (:id ur))]
     (do [:div
         [grid/grid
          {:otsikko "Maksuerät"
           :tyhja "Ei maksueriä."
           :tallenna nil}
-         [{:otsikko "Numero" :nimi :numero :tyyppi :string :leveys "14%" :pituus 16}
+         [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "14%" :pituus 16}
           {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
           {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
-          {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :string :leveys "14%" :pituus 16}
-          {:otsikko "Kustannussuunnitelmasumma" :nimi :kustannussuunnitelma-summa :tyyppi :string :leveys "14%"}
-          {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :leveys "14%"}
-          {:otsikko "Lähetä" :nimi :laheta :tyyppi :button.nappi-toissijainen :leveys "14%"}]
-          @maksuerarivit-test
+          {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
+          {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
+          {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}
+          {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :leveys "14%"}]
+          @maksuerarivit
          ]
 
           [:button.nappi-ensisijainen {:on-click laheta-kaikki-maksuerat} "Lähetä kaikki" ]]
-        ))
+        )))
 

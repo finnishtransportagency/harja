@@ -100,6 +100,11 @@
            :on-focus on-focus
            :value @data}])
 
+(defmethod tee-kentta :nappi [{:keys [nimi pituus-max pituus-min regex on-focus lomake?]} data]
+    [:button {:class (when lomake? "form-control")
+             :type "button"
+             :value @data}])
+
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
     (r/create-class
