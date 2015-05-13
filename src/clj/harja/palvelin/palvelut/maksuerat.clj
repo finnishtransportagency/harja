@@ -29,11 +29,7 @@
   [db user urakka-id]
   (into []
         ;; FIXME: Oikeustarkistukset?
-<<<<<<< HEAD
-        (q/hae-urakan-maksuerat db urakka-id)))
-=======
         (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
->>>>>>> Refaktoroi Sampo- ja maksueräkomponentteja
 
 (defn laheta-maksuera-sampoon
   "Palvelu, joka lähettää annetun maksuerän Sampoon."
