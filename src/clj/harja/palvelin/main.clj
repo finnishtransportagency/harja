@@ -8,6 +8,9 @@
    [harja.palvelin.komponentit.fim :as fim]
    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
    [harja.palvelin.komponentit.sonja :as sonja]
+
+   ;; Integraatiokomponentit
+   [harja.palvelin.integraatiot.sampo :as sampo]
    
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -64,6 +67,9 @@
      
      ;; FIM REST rajapinta
      :fim (fim/->FIM (:url (:fim asetukset)))
+
+     ;; Sampo rajapinta
+     :sampo (sampo/->Sampo (:lahetysjono-ulos (:sampo asetukset)) (:kuittausjono-ulos (:sampo asetukset)))
      
      ;; Frontille tarjottavat palvelut 
      :kayttajatiedot (component/using
@@ -122,7 +128,7 @@
                    [:http-palvelin :db])
      :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :db])
+                   [:http-palvelin :sampo :db])
      )))
 
 (defonce harja-jarjestelma nil)

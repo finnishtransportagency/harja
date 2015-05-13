@@ -45,5 +45,5 @@ WHERE numero = :numero AND (lukko IS NULL OR
 -- name: merkitse-maksuera-lahetetyksi!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE maksuera
-SET lahetetty = :lahetetty, lahetysid = :lahetysid, lukko = NULL
+SET lahetetty = current_timestamp, lahetysid = :lahetysid, lukko = NULL
 WHERE numero = :numero;

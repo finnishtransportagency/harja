@@ -28,7 +28,6 @@
                                        (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                        :hae-urakan-maksuerat +kayttaja-tero+ 1)
                                              maksuera (first maksuerat)]
-                                         (println "Maksuerat on: " maksuerat)
                                          (is (= 1 (count maksuerat)))
                                          (is (= 1 (:numero maksuera)))
                                          (is (= "kokonaishintainen" (:tyyppi maksuera)))

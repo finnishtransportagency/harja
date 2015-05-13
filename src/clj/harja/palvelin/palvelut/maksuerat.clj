@@ -16,7 +16,6 @@
                                               (hae-urakan-maksuerat (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
                       :laheta-maksuera-sampooon (fn [user maksueranumero]
-                                                  ;; FIXME: Onko viite sampoon?
                                                   (laheta-maksuera-sampoon (:sampo this) user maksueranumero)))
     this)
 
@@ -30,7 +29,11 @@
   [db user urakka-id]
   (into []
         ;; FIXME: Oikeustarkistukset?
+<<<<<<< HEAD
         (q/hae-urakan-maksuerat db urakka-id)))
+=======
+        (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
+>>>>>>> Refaktoroi Sampo- ja maksueräkomponentteja
 
 (defn laheta-maksuera-sampoon
   "Palvelu, joka lähettää annetun maksuerän Sampoon."
