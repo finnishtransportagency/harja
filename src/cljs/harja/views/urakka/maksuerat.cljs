@@ -51,7 +51,7 @@
             [grid/grid
              {:otsikko "Maksuerät"
               :tyhja "Ei maksueriä."
-              :tallenna #()}
+              :tallenna nil}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
