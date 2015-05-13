@@ -15,7 +15,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
-            
+
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -32,21 +32,29 @@
 
 (def maksuerarivit (atom nil))
 
+(def maksuerarivit-test (atom [{:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
+                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
+                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}
+                               {:nimi "asd" :numero "4" :tyyppi "asd" :maksueran-summa "4" :kustannussuunnitelma-summa "5" :lahetetty "joo"}]))
+
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    [:p "Testi"]
-    [grid/grid
-     {:otsikko "Maksuerät"
-      :tyhja "Ei maksueriä."
-      :tallenna nil}
-     [{:otsikko "Numero" :nimi :numero :tyyppi :string :leveys "14%" :pituus 16}
-      {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
-      {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
-      {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :string :leveys "14%" :pituus 16}
-      {:otsikko "Kustannussuunnitelmasumma" :nimi :kustannussuunnitelma-summa :tyyppi :string :leveys "14%"}
-      {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :leveys "14%"}]
-     @maksuerarivit
-     ]
-    )
+    (do [:div
+        [grid/grid
+         {:otsikko "Maksuerät"
+          :tyhja "Ei maksueriä."
+          :tallenna nil}
+         [{:otsikko "Numero" :nimi :numero :tyyppi :string :leveys "14%" :pituus 16}
+          {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "14%" :pituus 16}
+          {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "14%" :pituus 16}
+          {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :string :leveys "14%" :pituus 16}
+          {:otsikko "Kustannussuunnitelmasumma" :nimi :kustannussuunnitelma-summa :tyyppi :string :leveys "14%"}
+          {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :leveys "14%"}
+          {:otsikko "Lähetä" :nimi :laheta :tyyppi :button.nappi-toissijainen :leveys "14%"}]
+          @maksuerarivit-test
+         ]
+
+          [:button.nappi-ensisijainen "Lähetä kaikki"]]
+        ))
 
