@@ -22,7 +22,7 @@
                                ]}
        }
  
- :sonja {:url "localhost:2511"
-         :kayttaja "harja"
-         :salasana "harjaxx"}
+ ;:sonja {:url "localhost:2511"
+ ;        :kayttaja "harja"
+ ;        :salasana "harjaxx"}
  }

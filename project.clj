@@ -159,7 +159,9 @@
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)
-                 :port 4005}
+                 :port 4005
+                 :timeout 120000}
+
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
