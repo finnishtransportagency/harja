@@ -51,14 +51,14 @@
             [grid/grid
              {:otsikko "Maksuerät"
               :tyhja "Ei maksueriä."
-              :tallenna nil}
+              :tallenna #()}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(str %) :leveys "14%"}
-              {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :leveys "14%"}]
+              {:otsikko "Lähetä" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implement me") :leveys "14%"}]
               @maksuerarivit
              ]
 
