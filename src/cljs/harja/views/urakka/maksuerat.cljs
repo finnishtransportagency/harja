@@ -31,15 +31,13 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn laheta-kaikki-maksuerat []
-    (log "Implement me"))
-
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
     (let [maksuerarivit (atom nil)
          hae-urakan-maksuerat (fn [ur]
-                                  (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))]
+                                  (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+          laheta-kaikki-maksuerat (fn [] (log "Implementoi lähetä kaikki: " (pr-str maksuerarivit)))] ; TODO Implementoi lähetä kaikki
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -53,12 +51,12 @@
               :tyhja "Ei maksueriä."
               :tallenna nil}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "17%" :pituus 16}
+              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :pituus 16}
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if (nil? %) "Ei koskaan" %) :leveys "14%"}
-              {:otsikko "Lähetys" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implement me") :leveys "14%"}]
+              {:otsikko "Lähetys" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implementoi lähetä tämä rivi: " %) :leveys "10%"}] ; TODO Implementoi lähetä tämä rivi
               @maksuerarivit
              ]
 
