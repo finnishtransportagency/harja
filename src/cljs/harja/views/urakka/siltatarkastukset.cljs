@@ -7,6 +7,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :as yleiset]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
@@ -140,6 +141,7 @@
 
     (hae-tarkastustiedot ur)
 
+    (log "SILTA" (pr-str @valittu-silta))
     (komp/luo
       {:component-will-receive-props
        (fn [_ & [_ ur]]
@@ -151,7 +153,11 @@
          [:button.nappi-toissijainen {:on-click #(reset! valittu-silta nil)
                                       :style {:display "block"}}
           (ikonit/chevron-left) " Takaisin siltaluetteloon"]
-         [:h3 (:siltanimi @valittu-silta)]
+         [:div [:h3 (:siltanimi @valittu-silta)]
+          [yleiset/tietoja {}
+           "Sillan numero:" (:siltanro @valittu-silta)
+           "Edellinen tarkastus" (pvm/pvm (:uusin_aika @valittu-silta))
+           "Tarkastaja" (:tarkastaja @valittu-silta)]]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Tarkastus"]
           [livi-pudotusvalikko {:valinta    @valittu-tarkastus
