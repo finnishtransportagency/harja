@@ -283,16 +283,20 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [:tr {:class luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi]} skeema]
+   (for [{:keys [nimi hae fmt tasaa tyyppi nappi-nimi nappi-toiminto]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
        [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
        [:td {:class
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
-        ((or fmt str) (if hae
-                        (hae rivi)
-                        (get rivi nimi)))]))])
+        (if (= tyyppi :nappi)
+            [:button {:class "nappi-ensisijainen"
+                      :type "button"
+                      :on-click nappi-toiminto} nappi-nimi]
+            ((or fmt str) (if hae
+                           (hae rivi)
+                           (get rivi nimi))))]))])
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
