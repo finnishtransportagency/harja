@@ -28,6 +28,7 @@
    [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
    [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
    [harja.palvelin.palvelut.lampotilat :as lampotilat]
+   [harja.palvelin.palvelut.maksuerat :as maksuerat]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -118,6 +119,9 @@
                          [:http-palvelin :db])
      :lampotilat (component/using
                    (lampotilat/->Lampotilat)
+                   [:http-palvelin :db])
+     :maksuerat (component/using
+                   (maksuerat/->Maksuerat)
                    [:http-palvelin :db])
      )))
 
