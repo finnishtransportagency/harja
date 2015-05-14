@@ -1,6 +1,6 @@
 (ns harja.xml
   (:require [clojure.java.io :as io])
-  (:import (javax.xml.validation SchemaFactory Schema Validator)
+  (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
            (java.io ByteArrayInputStream)

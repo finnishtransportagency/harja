@@ -12,7 +12,6 @@
   (let [lukko (str (java.util.UUID/randomUUID))]
     (log/debug "Lukitaan maksuera: " numero ", lukolla:" lukko)
     (let [onnistuiko? (= 1 (q/lukitse-maksuera! db lukko numero))]
-      (log/debug "Onnistuiko: " onnistuiko?)
       onnistuiko?)))
 
 (defn hae-maksuera [db numero]
