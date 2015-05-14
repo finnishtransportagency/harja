@@ -47,7 +47,7 @@
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
-      [:Product {:name                  (:nimi maksuera)    ;; FIXME: generoi nimi urakasta yms.
+      [:Product {:name                  "TESTI"    ;; FIXME: generoi nimi urakasta yms.
                  :financialProjectClass "INVCLASS"
                  :start                 (formatoi-paivamaara alkupvm)
                  :finish                (formatoi-paivamaara loppupvm)

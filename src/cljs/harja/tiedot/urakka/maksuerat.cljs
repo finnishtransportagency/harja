@@ -12,4 +12,4 @@
     (k/post! :hae-urakan-maksuerat urakka-id))
 
 (defn laheta-maksuerat []
-    (k/post! :laheta-maksuera-sampooon 1)); FIXME Lähetetään testiksi yksi, tarkoitus lähettää kaikki
+    (k/post! :laheta-maksuera-sampoon 1)); FIXME Lähetetään testiksi yksi, tarkoitus lähettää kaikki

@@ -15,13 +15,13 @@
                       :hae-urakan-maksuerat (fn [user urakka-id]
                                               (hae-urakan-maksuerat (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
-                      :laheta-maksuera-sampooon (fn [user maksueranumero]
+                      :laheta-maksuera-sampoon (fn [user maksueranumero]
                                                   (laheta-maksuera-sampoon (:sampo this) user maksueranumero)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-urakan-maksuerat)
-    (poista-palvelu (:http-palvelin this) :laheta-maksuera-sampooon)
+    (poista-palvelu (:http-palvelin this) :laheta-maksuera-sampoon)
     this))
 
 (defn hae-urakan-maksuerat
