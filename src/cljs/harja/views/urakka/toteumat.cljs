@@ -237,6 +237,7 @@
                                       (if res
                                         ;; Tallennus ok
                                         (do (viesti/nayta! "Toteuma tallennettu")
+                                            ; FIXME Pitäisikö asettaa tallennus-kaynnissa false? -Jari
                                             (reset! valittu-toteuma nil))
                                         
                                         ;; Epäonnistui jostain syystä

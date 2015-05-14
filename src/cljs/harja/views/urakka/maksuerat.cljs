@@ -34,11 +34,20 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let [maksuerarivit (atom nil)
-         hae-urakan-maksuerat (fn [ur]
+    (let [lahetys-kaynnissa (atom false)
+          maksuerarivit (atom nil)
+          hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
-          laheta-kaikki-maksuerat #(maksuerat/laheta-maksuerat maksuerarivit)
-          lahetys-kaynnissa (atom false)]
+          laheta-kaikki-maksuerat (fn []
+                                      (go (let [res (<! (maksuerat/laheta-maksuerat))]
+                                          (reset! lahetys-kaynnissa true)
+                                          (if res
+                                              ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
+                                              (do (reset! lahetys-kaynnissa false)
+                                                  (viesti/nayta! "Maksuerät lähetetty"))
+                                              ;; Epäonnistui jostain syystä
+                                              (do (reset! lahetys-kaynnissa false)
+                                                  (viesti/nayta! "Maksuerien lähetys epäonnistui"))))))]
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -62,6 +71,5 @@
              ]
 
           [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                      (reset! lahetys-kaynnissa true)
                                                       (laheta-kaikki-maksuerat))} "Lähetä kaikki" ]]))))
 
