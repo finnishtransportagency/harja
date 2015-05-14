@@ -11,5 +11,8 @@
 (defn hae-urakan-maksuerat [urakka-id]
     (k/post! :hae-urakan-maksuerat urakka-id))
 
-(defn laheta-maksuerat []
-    (k/post! :laheta-maksuera-sampoon 1)); FIXME Lähetetään testiksi yksi, tarkoitus lähettää kaikki
+(defn laheta-maksuera [maksuera-numero]
+    (k/post! :laheta-maksuera-sampoon maksuera-numero))
+
+(defn laheta-maksuerat [maksuerarivit]
+    (k/post! :laheta-maksuera-sampoon (:numero (first maksuerarivit)))); FIXME Lähetetään testiksi ensimmäinen, tarkoitus lähettää kaikki
