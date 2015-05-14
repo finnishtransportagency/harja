@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<XOGOutput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xsd/status.xsd">
+    <Object messageId="ID:6c321b59:1460814e3:14AE0F721A5" type="product"/>
+    <Status elapsedTime="0.8 seconds" state="ERROR"/>
+    <Statistics failureRecords="0" insertedRecords="0" totalNumberOfRecords="1" updatedRecords="1"/>
+    <Records>
+        <Record>
+            <KeyInformation>
+                <column name="ID">6006296</column>
+                <column name="name">Indeksit 2014 (LA203736)</column>
+                <column name="UNIQUE_NAME">LA203736</column>
+            </KeyInformation>
+            <ErrorInformation>
+                <Severity>FATAL</Severity>
+                <Description>OBS unit (Päivittäinen kunnossapito) is invalid.
+                    OBS unit path (/Päivittäinen kunnossapito/Hoito) is invalid.  So, the OBS Association was not made.
+                    OBS association has been updated according to financial information.</Description>
+            </ErrorInformation>
+        </Record>
+        <Record>
+            <KeyInformation>
+                <column name="task"/>
+            </KeyInformation>
+            <ErrorInformation>
+                <Severity>WARNING</Severity>
+                <Description>Object: task Attribute: vv_linked_op is required in partition NIKU.ROOT but has no value</Description>
+            </ErrorInformation>
+        </Record>
+    </Records>
+</XOGOutput>

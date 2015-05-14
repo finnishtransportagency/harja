@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<NikuDataBus>
+    <Header action="write" externalSource="NIKU" objectType="costPlan" version="13.3.0.286"/>
+    <XOGOutput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xsd/status.xsd">
+        <Object messageId="ID:6c321b59:1460814e5:14AE0F721BF" type="costPlan"/>
+        <Status elapsedTime="0.575 seconds" state="SUCCESS"/>
+        <Statistics failureRecords="0" insertedRecords="0" totalNumberOfRecords="1" updatedRecords="1"/>
+        <Records/>
+    </XOGOutput>
+</NikuDataBus>
