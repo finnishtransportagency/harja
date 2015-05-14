@@ -57,7 +57,7 @@
           ;; sarakkeet
           [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
            {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
-           {:otsikko "Edellinen tarkastus" :nimi :uusin_aika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
+           {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}]
 
           @urakan-sillat
@@ -84,10 +84,16 @@
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
-           {:otsikko (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "10%"
+           {:otsikko (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "15%"
             :tyyppi :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) "-" %)
-            :valinnat ["A" "B" "C" "D"]}  
+            :valinnat ["A" "B" "C" "D"]
+            :fmt #(case %
+                   "A" "A - ei toimenpiteitä"
+                   "B" "B - puhdistettava"
+                   "C" "D - urakan kunnostettava"
+                   "D" "D - korjaus ohjelmoitava"
+                   "-")}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
@@ -96,8 +102,15 @@
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
-(defn tallenna-tarkastukset [ur atomi uudet]
-  (log "tallenna-tarkastukset uudet" (pr-str uudet)))
+(defn paivita-siltatarkastuksen-kohteet! [ur siltatarkastus-id tarkastuskohteet tallennettava]
+  (go (let [muuttuneet-kohteet (<! (siltatarkastukset/paivita-siltatarkastuksen-kohteet! ur siltatarkastus-id tallennettava))
+            kohteet-jotka-eivat-muuttuneet (filter #(not (= (:siltatarkastus %) siltatarkastus-id))
+                                                   @tarkastuskohteet)
+            uudet-tarkastuskohteet (into []
+                                         (apply merge
+                                                kohteet-jotka-eivat-muuttuneet
+                                                muuttuneet-kohteet))]
+        (reset! tarkastuskohteet uudet-tarkastuskohteet) true)))
 
 (defn siltatarkastusten-rivit
   [valittu-tarkastus muut-tarkastukset kohteet]
@@ -156,8 +169,12 @@
          [:div [:h3 (:siltanimi @valittu-silta)]
           [yleiset/tietoja {}
            "Sillan numero:" (:siltanro @valittu-silta)
-           "Edellinen tarkastus" (pvm/pvm (:uusin_aika @valittu-silta))
-           "Tarkastaja" (:tarkastaja @valittu-silta)]]
+           "Edellinen tarkastus" (if (:tarkastusaika @valittu-silta)
+                                   (pvm/pvm (:tarkastusaika @valittu-silta))
+                                   "Ei tietoa")
+           "Tarkastaja" (if (:tarkastaja @valittu-silta)
+                          (:tarkastaja @valittu-silta)
+                          "Ei tietoa")]]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Tarkastus"]
           [livi-pudotusvalikko {:valinta    @valittu-tarkastus
@@ -168,15 +185,15 @@
                                 }
            @sillan-tarkastukset]]
 
-         ;; FIXME: gridi ei läheskään valmis vielä. Käsiteltävä sillan-tarkastukset ja niiden kaikki tarkastuskohteet...
          [grid/grid
           {:otsikko        "Sillan tarkastukset"
            :tyhja          (if (nil? @sillan-tarkastukset) [ajax-loader "Urakan alueella olevia siltoja haetaan..."] "Sillasta ei ole vielä tarkastuksia Harjassa.")
            :tunniste       :kohdenro
            :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                        (:id ur)
-                                                       #(tallenna-tarkastukset ur
-                                                                       sillan-tarkastukset %)
+                                                       #(paivita-siltatarkastuksen-kohteet! ur
+                                                                                            (:id @valittu-tarkastus)
+                                                                                            tarkastuskohteet %)
                                                        :ei-mahdollinen)
            }
 

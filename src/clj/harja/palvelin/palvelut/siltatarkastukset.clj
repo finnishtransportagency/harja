@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.siltatarkastukset
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as q]
             [harja.palvelin.oikeudet :as oik]
             [harja.domain.roolit :as roolit]
@@ -10,7 +11,7 @@
 (defn hae-urakan-sillat
   "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan."
   [db user urakka-id]
-  ;(oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (q/hae-urakan-sillat db urakka-id)))
 
@@ -27,6 +28,19 @@
   (into []
         (q/hae-siltatarkastusten-kohteet db siltatarkastus-idt)))
 
+(defn paivita-siltatarkastuksen-kohteet!
+  "Päivittää siltatarkastuksen kohteet"
+  [db user {:keys [urakka-id siltatarkastus-id kohderivit]}]
+  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (jdbc/with-db-transaction [c db]
+                            (doseq [rivi kohderivit]
+                              (do
+                                  (log/info "  päivittyi: " (q/paivita-siltatarkastuksen-kohteet! c (:tulos rivi) (:lisatieto rivi) siltatarkastus-id
+                                                                                                  (:kohdenro rivi))))
+                              )
+                            (hae-siltatarkastusten-kohteet c user [siltatarkastus-id])))
+
+
 (defrecord Siltatarkastukset []
   component/Lifecycle
   (start [this]
@@ -41,10 +55,13 @@
       (julkaise-palvelu http :hae-siltatarkastusten-kohteet
                         (fn [user siltatarkastus-idt]
                           (hae-siltatarkastusten-kohteet db user siltatarkastus-idt)))
-
+      (julkaise-palvelu http :paivita-siltatarkastuksen-kohteet
+                        (fn [user tiedot]
+                          (paivita-siltatarkastuksen-kohteet! db user tiedot)))
       this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this) :hae-urakan-sillat)
     (poista-palvelut (:http-palvelin this) :hae-sillan-tarkastukset)
-    (poista-palvelut (:http-palvelin this) :hae-siltatarkastusten-kohteet)))
+    (poista-palvelut (:http-palvelin this) :hae-siltatarkastusten-kohteet)
+    (poista-palvelut (:http-palvelin this) :paivita-siltatarkastuksen-kohteet)))

@@ -17,6 +17,11 @@
 (defn hae-siltatarkastusten-kohteet [siltatarkastus-idt]
   (k/post! :hae-siltatarkastusten-kohteet siltatarkastus-idt))
 
+(defn paivita-siltatarkastuksen-kohteet!
+  [urakka-id siltatarkastus-id kohderivit]
+  (k/post! :paivita-siltatarkastuksen-kohteet {:urakka-id urakka-id
+                                               :siltatarkastus-id siltatarkastus-id
+                                               :kohderivit kohderivit}))
 
 (defn siltatarkastuskohteen-nimi
   "Siltatarkastuksessa käytettyjen kohteiden nimet mäpättynä järjestysnumeroon"

@@ -22,3 +22,9 @@ SELECT siltatarkastus, kohde, tulos, lisatieto
   FROM siltatarkastuskohde
  WHERE siltatarkastus IN (:siltatarkastus_idt)
 
+
+-- name: paivita-siltatarkastuksen-kohteet!
+-- Päivittää olemassaolevan siltatarkastuksen kohteet
+UPDATE siltatarkastuskohde
+   SET tulos = :tulos, lisatieto = :lisatieto
+ WHERE siltatarkastus = :siltatarkastus AND kohde = :kohde
