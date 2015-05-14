@@ -39,7 +39,7 @@
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
           laheta-kaikki-maksuerat (fn []
-                                      (go (let [res (<! (maksuerat/laheta-maksuerat maksuerarivit))]
+                                      (go (let [res (<! (maksuerat/laheta-maksuerat @maksuerarivit))]
                                           (reset! lahetys-kaynnissa true)
                                           (if res
                                               ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?

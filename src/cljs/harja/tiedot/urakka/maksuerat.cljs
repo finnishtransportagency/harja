@@ -12,7 +12,7 @@
     (k/post! :hae-urakan-maksuerat urakka-id))
 
 (defn laheta-maksuera [maksuera-numero]
-    (k/post! :laheta-maksuera-sampoon maksuera-numero))
+    (k/post! :laheta-maksuera-sampoon [maksuera-numero]))
 
 (defn laheta-maksuerat [maksuerarivit]
-    (k/post! :laheta-maksuera-sampoon (:numero (first maksuerarivit)))); FIXME Lähetetään testiksi ensimmäinen, tarkoitus lähettää kaikki
+    (k/post! :laheta-maksuera-sampoon (mapv #(:numero %) maksuerarivit)));
