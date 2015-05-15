@@ -15,12 +15,17 @@
                           :hae-urakan-maksuerat (fn [user urakka-id]
                                                     (hae-urakan-maksuerat (:db this) user urakka-id)))
         (julkaise-palvelu (:http-palvelin this)
+                          :laheta-maksuera-sampoon (fn [user maksueranumero]
+                                                        (laheta-maksuera-sampoon (:sampo this) user maksueranumero)))
+
+        (julkaise-palvelu (:http-palvelin this)
                           :laheta-maksuerat-sampoon (fn [user maksueranumerot]
                                                         (laheta-maksuerat-sampoon (:sampo this) user maksueranumerot)))
         this)
 
     (stop [this]
         (poista-palvelu (:http-palvelin this) :hae-urakan-maksuerat)
+        (poista-palvelu (:http-palvelin this) :laheta-maksuera-sampoon)
         (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
         this))
 
@@ -39,7 +44,7 @@
           (sampo/laheta-maksuera-sampoon sampo maksueranumero)))
 
 (defn laheta-maksuerat-sampoon
-    "Palvelu, joka lähettää annetun maksuerän Sampoon."
+    "Palvelu, joka lähettää annetut maksuerät Sampoon."
     [sampo user maksueranumerot]
     (into []
           ;; FIXME: Oikeustarkistukset?
