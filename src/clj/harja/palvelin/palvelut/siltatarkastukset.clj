@@ -5,7 +5,7 @@
             [harja.kyselyt.siltatarkastukset :as q]
             [harja.palvelin.oikeudet :as oik]
             [harja.domain.roolit :as roolit]
-
+            [harja.geo :as geo]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn hae-urakan-sillat
@@ -13,6 +13,7 @@
   [db user urakka-id]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
+        (geo/muunna-pg-tulokset :alue)
         (q/hae-urakan-sillat db urakka-id)))
 
 (defn hae-sillan-tarkastukset

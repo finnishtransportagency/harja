@@ -13,6 +13,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.siltatarkastukset :as siltatarkastukset]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.sillat :as sillat]
+            [harja.views.kartta.tasot :as kartta-tasot]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -30,22 +32,13 @@
 (defonce valittu-silta (atom nil))
 
 (defn sillat [ur]
-  (let [urakan-sillat (atom nil)
-        urakka (atom nil)
-        aseta-urakka (fn [ur]
-                       (reset! urakka ur))]
-    (aseta-urakka ur)
-    (run! (let [urakka-id (:id @urakka)]
-            (when urakka-id
-              (go (reset! urakan-sillat (<! (siltatarkastukset/hae-urakan-sillat urakka-id)))))))
-
-    (log "URAKAN SILLAT: " (pr-str (dissoc ur :alue)))
+  (let [urakan-sillat sillat/sillat]
     (komp/luo
-      {:component-will-receive-props
-       (fn [_ & [_ ur]]
-         (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
-         (aseta-urakka ur))}
-
+     {:component-will-mount (fn [_]
+                              (kartta-tasot/taso-paalle! :sillat))
+      :component-will-unmount (fn [_]
+                                (kartta-tasot/taso-pois! :sillat))}
+      
       (fn [ur]
         [:div.sillat
          [grid/grid

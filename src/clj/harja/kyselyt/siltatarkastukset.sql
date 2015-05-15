@@ -1,6 +1,6 @@
 -- name: hae-urakan-sillat
 -- Hakee hoidon alueurakalle sillat sekä niiden viimeiset tarkastuspvm:t.
-SELECT s.id, s.siltanimi, s.siltanro, s1.tarkastusaika, s1.tarkastaja
+SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja
   FROM silta s
        LEFT JOIN siltatarkastus s1 ON s1.silta = s.id
        LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = false)
