@@ -38,6 +38,16 @@
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+          laheta-maksuera (fn [maksueranumero]
+                              (go (let [res (<! (maksuerat/laheta-maksuera maksueranumero))]
+                                      (reset! lahetys-kaynnissa true)
+                                      (if res
+                                          ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
+                                          (do (reset! lahetys-kaynnissa true)
+                                              (viesti/nayta! "Maksuerä lähetetty"))
+                                          ;; Epäonnistui jostain syystä
+                                          (do (reset! lahetys-kaynnissa true)
+                                              (viesti/nayta! "Maksuerän lähetys epäonnistui"))))))
           laheta-kaikki-maksuerat (fn []
                                       (go (let [res (<! (maksuerat/laheta-maksuerat @maksuerarivit))]
                                           (reset! lahetys-kaynnissa true)
@@ -66,7 +76,7 @@
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if (nil? %) "Ei koskaan" %) :leveys "14%"}
-              {:otsikko "Lähetys" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto #(log "Implementoi lähetä tämä rivi: " %) :leveys "10%"}] ; TODO Implementoi lähetä tämä rivi
+              {:otsikko "Lähetys" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuera (:numero rivi))) :leveys "10%"}] ; TODO Implementoi lähetä tämä rivi
               @maksuerarivit
              ]
 
