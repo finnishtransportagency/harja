@@ -37,7 +37,8 @@
     (let [lahetys-kaynnissa (atom false)
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur]
-                                  (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+                                  (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))
+                                      (log "noni" (pr-str @maksuerarivit))))
           laheta-maksuera (fn [maksueranumero]
                               (go (let [res (<! (maksuerat/laheta-maksuera maksueranumero))]
                                       (reset! lahetys-kaynnissa true)
@@ -75,8 +76,8 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if (nil? %) "Ei koskaan" %) :leveys "14%"}
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuera (:numero rivi))) :leveys "10%"}] ; TODO Implementoi lähetä tämä rivi
+              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if (nil? %) "Ei koskaan" (pr-str %)) :leveys "14%"}; FIXME Käytä pvm/pvm-aika, mutta se ei toimi?
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuera (:numero rivi))) :leveys "10%"}] ;
               @maksuerarivit
              ]
 
