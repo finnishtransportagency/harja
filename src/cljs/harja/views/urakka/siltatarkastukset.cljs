@@ -78,22 +78,25 @@
               (concat [(grid/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
+(defn kohdetuloksen-teksti [kirjain]
+  (case kirjain
+    "A" "A - ei toimenpiteitä"
+    "B" "B - puhdistettava"
+    "C" "C - urakan kunnostettava"
+    "D" "D - korjaus ohjelmoitava"
+    "-"))
+
 (defn siltatarkastuksen-sarakkeet [valittu-tarkastus muut-tarkastukset]
   ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
   (into []
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
-           {:otsikko (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "15%"
-            :tyyppi :valinta :valinta-arvo identity
-            :valinta-nayta #(if (nil? %) "-" %)
-            :valinnat ["A" "B" "C" "D"]
-            :fmt #(case %
-                   "A" "A - ei toimenpiteitä"
-                   "B" "B - puhdistettava"
-                   "C" "D - urakan kunnostettava"
-                   "D" "D - korjaus ohjelmoitava"
-                   "-")}
+           {:otsikko       (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "15%"
+            :tyyppi        :valinta :valinta-arvo identity
+            :valinta-nayta #(if (nil? %) "-" (kohdetuloksen-teksti %))
+            :valinnat      ["A" "B" "C" "D"]
+            :fmt           #(kohdetuloksen-teksti %)}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))

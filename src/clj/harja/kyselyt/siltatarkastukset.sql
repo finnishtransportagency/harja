@@ -3,7 +3,7 @@
 SELECT s.id, s.siltanimi, s.siltanro, s1.tarkastusaika, s1.tarkastaja
   FROM silta s
        LEFT JOIN siltatarkastus s1 ON s1.silta = s.id
-       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika)
+       LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = false)
   WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
     AND s2.id IS NULL;
 
@@ -14,7 +14,8 @@ SELECT id, silta, urakka,
        tarkastusaika, tarkastaja,
        luotu, luoja, muokattu, muokkaaja, poistettu
   FROM siltatarkastus
- WHERE silta = :silta ORDER BY tarkastusaika DESC
+ WHERE silta = :silta AND poistettu = false ORDER BY tarkastusaika DESC
+
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
