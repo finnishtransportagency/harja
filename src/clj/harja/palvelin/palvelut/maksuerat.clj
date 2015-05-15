@@ -7,7 +7,6 @@
 
 (declare hae-urakan-maksuerat)
 (declare laheta-maksuerat-sampoon)
-(declare laheta-maksuera-sampoon)
 
 (defrecord Maksuerat []
     component/Lifecycle
@@ -15,9 +14,6 @@
         (julkaise-palvelu (:http-palvelin this)
                           :hae-urakan-maksuerat (fn [user urakka-id]
                                                     (hae-urakan-maksuerat (:db this) user urakka-id)))
-        (julkaise-palvelu (:http-palvelin this)
-                          :laheta-maksuera-sampoon (fn [user maksueranumero]
-                                                        (laheta-maksuera-sampoon (:sampo this) user maksueranumero)))
 
         (julkaise-palvelu (:http-palvelin this)
                           :laheta-maksuerat-sampoon (fn [user maksueranumerot]
@@ -26,7 +22,6 @@
 
     (stop [this]
         (poista-palvelu (:http-palvelin this) :hae-urakan-maksuerat)
-        (poista-palvelu (:http-palvelin this) :laheta-maksuera-sampoon)
         (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
         this))
 
@@ -37,13 +32,6 @@
           ;; FIXME: Oikeustarkistukset?
           (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id)))]
         (map #(assoc % :nimi (:nimi (:toimenpideinstanssi %))) maksuerat)))
-
-(defn laheta-maksuera-sampoon
-    "Palvelu, joka lähettää annetun maksuerän Sampoon."
-    [sampo user maksueranumero]
-    (into []
-          ;; FIXME: Oikeustarkistukset?
-          (sampo/laheta-maksuera-sampoon sampo maksueranumero)))
 
 (defn laheta-maksuerat-sampoon
     "Palvelu, joka lähettää annetut maksuerät Sampoon."

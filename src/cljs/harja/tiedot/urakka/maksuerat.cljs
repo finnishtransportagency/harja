@@ -11,8 +11,5 @@
 (defn hae-urakan-maksuerat [urakka-id]
     (k/post! :hae-urakan-maksuerat urakka-id))
 
-(defn laheta-maksuera [maksuera-numero]
-    (k/post! :laheta-maksuera-sampoon [maksuera-numero]))
-
-(defn laheta-maksuerat [maksuerarivit]
-    (k/post! :laheta-maksuera-sampoon (mapv #(:numero %) maksuerarivit)));
+(defn laheta-maksuerat [maksueranumerot]
+    (k/post! :laheta-maksuerat-sampoon maksueranumerot))

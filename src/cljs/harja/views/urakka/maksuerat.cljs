@@ -40,7 +40,7 @@
                                   (go (reset! maksuerarivit (<! (maksuerat/hae-urakan-maksuerat (:id ur))))
                                       (log "noni" (pr-str @maksuerarivit))))
           laheta-maksuera (fn [maksueranumero]
-                              (go (let [res (<! (maksuerat/laheta-maksuera maksueranumero))]
+                              (go (let [res (<! (maksuerat/laheta-maksuerat [maksueranumero]))]
                                       (reset! lahetys-kaynnissa true)
                                       (if res
                                           ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
@@ -50,7 +50,7 @@
                                           (do (reset! lahetys-kaynnissa true)
                                               (viesti/nayta! "Maksuerän lähetys epäonnistui"))))))
           laheta-kaikki-maksuerat (fn []
-                                      (go (let [res (<! (maksuerat/laheta-maksuerat @maksuerarivit))]
+                                      (go (let [res (<! (maksuerat/laheta-maksuerat (mapv #(:numero %) @maksuerarivit)))]
                                           (reset! lahetys-kaynnissa true)
                                           (if res
                                               ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
