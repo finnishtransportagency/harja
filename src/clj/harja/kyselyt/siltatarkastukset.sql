@@ -29,3 +29,9 @@ SELECT siltatarkastus, kohde, tulos, lisatieto
 UPDATE siltatarkastuskohde
    SET tulos = :tulos, lisatieto = :lisatieto
  WHERE siltatarkastus = :siltatarkastus AND kohde = :kohde
+
+-- name: poista-siltatarkastus!
+-- Merkitsee annetun siltatarkastuksen poistetuksi
+UPDATE siltatarkastus
+   SET poistettu = TRUE
+ WHERE id = :id

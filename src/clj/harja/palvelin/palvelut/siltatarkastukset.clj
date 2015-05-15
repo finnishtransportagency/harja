@@ -41,6 +41,14 @@
                               )
                             (hae-siltatarkastusten-kohteet c user [siltatarkastus-id])))
 
+(defn poista-siltatarkastus!
+  "Merkitsee siltatarkastuksen poistetuksi"
+  [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
+  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (jdbc/with-db-transaction [c db]
+                              (do
+                                (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
+                            (hae-sillan-tarkastukset c user silta-id)))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -59,10 +67,14 @@
       (julkaise-palvelu http :paivita-siltatarkastuksen-kohteet
                         (fn [user tiedot]
                           (paivita-siltatarkastuksen-kohteet! db user tiedot)))
+      (julkaise-palvelu http :poista-siltatarkastus
+                        (fn [user tiedot]
+                          (poista-siltatarkastus! db user tiedot)))
       this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this) :hae-urakan-sillat)
     (poista-palvelut (:http-palvelin this) :hae-sillan-tarkastukset)
     (poista-palvelut (:http-palvelin this) :hae-siltatarkastusten-kohteet)
-    (poista-palvelut (:http-palvelin this) :paivita-siltatarkastuksen-kohteet)))
+    (poista-palvelut (:http-palvelin this) :paivita-siltatarkastuksen-kohteet)
+    (poista-palvelut (:http-palvelin this) :poista-siltatarkastus)))

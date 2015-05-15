@@ -10,25 +10,29 @@
             [harja.ui.grid :as g]
             ))
 
+(def valittu-valilehti "Valittu välilehti" (atom :kayttajat))
 
 (defn hallinta []
   ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
 
-   [bs/tabs {}
+   [bs/tabs {:style :tabs :active valittu-valilehti}
 
     "Käyttäjät"
+    :kayttajat
     ^{:key "kayttajat"}
     (if (istunto/saa-hallita-kayttajia?)
                             [kayttajat/kayttajat]
                         "Ei käyttöoikeutta tähän osioon.")
 
     "Indeksit"
+    :indeksit
     (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo
                        ^{:key "indeksit"}
                        [i/indeksit-elementti]
     "Tämä osio on vain järjestelmän vastuuhenkilön käytössä.")
     
     "Tehtävät"
+    :tehtavat
     (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo
     ^{:key "tehtävät"}
     [tp/toimenpidekoodit]

@@ -31,6 +31,7 @@
 
 ;; Tällä hetkellä valittu toteuma
 (defonce valittu-silta (atom nil))
+(defonce uusi-tarkastus (atom false))
 
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
@@ -153,6 +154,12 @@
                          muut-tarkastukset))))
           (range 1 25))))
 
+(defn poista-siltatarkastus! [ur silta tarkastus tarkastukset-atomi]
+  (log "poista-tarkastus")
+  (go (let [res (<! (siltatarkastukset/poista-siltatarkastus! ur silta tarkastus))]
+                 (log "res" (pr-str res))
+                 (reset! tarkastukset-atomi res))))
+
 (defn sillan-tarkastukset [ur]
   (let [sillan-tarkastukset (atom nil)
         valittu-tarkastus (atom nil)
@@ -185,16 +192,25 @@
          [:button.nappi-toissijainen {:on-click #(reset! valittu-silta nil)
                                       :style {:display "block"}}
           (ikonit/chevron-left) " Takaisin siltaluetteloon"]
+
          [sillan-perustiedot @valittu-silta]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Tarkastus"]
-          [livi-pudotusvalikko {:valinta    @valittu-tarkastus
-                                ;;\u2014 on väliviivan unikoodi
-                                :format-fn  #(if % (str (pvm/pvm (:tarkastusaika %))) "Valitse")
-                                :valitse-fn #(reset! valittu-tarkastus %)
-                                :class      "suunnittelu-alasveto"
-                                }
-           @sillan-tarkastukset]]
+
+         [:div.siltatarkastus-kontrollit
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Tarkastus"]
+           [livi-pudotusvalikko {:valinta    @valittu-tarkastus
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn  #(if % (str (pvm/pvm (:tarkastusaika %))) "Valitse")
+                                 :valitse-fn #(reset! valittu-tarkastus %)
+                                 :class      "suunnittelu-alasveto"
+                                 }
+            @sillan-tarkastukset]]
+
+          [:button.nappi-kielteinen {:on-click #(poista-siltatarkastus! (:id ur) (:id @valittu-silta)
+                                                                        (:id @valittu-tarkastus) sillan-tarkastukset)}
+           (ikonit/trash) " Poista tarkastus"]
+          [:button.nappi-toissijainen {:on-click #(swap! uusi-tarkastus not)}
+           (ikonit/plus) " Uusi tarkastus"]]
 
          [grid/grid
           {:otsikko        "Sillan tarkastukset"
@@ -214,7 +230,13 @@
           @siltatarkastusrivit
           ]]))))
 
+(defn uuden-tarkastuksen-syottaminen [ur]
+  [:div.uusi-siltatarkastus
+   "Uusi siltatarkastus"] )
+
 (defn siltatarkastukset [ur]
-  (if-let [vs @valittu-silta]
+ (if @uusi-tarkastus
+   [uuden-tarkastuksen-syottaminen ur]
+   (if-let [vs @valittu-silta]
     [sillan-tarkastukset ur]
-    [sillat ur]))
+    [sillat ur])))

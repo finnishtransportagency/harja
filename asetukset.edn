@@ -22,10 +22,14 @@
                                           ]}
                 }
 
- :sonja        {:url      "localhost:2511"
-                :kayttaja "harja"
-                :salasana "harjaxx"}
- :sampo        {
-                :lahetysjono-ulos  "Harja17.HarjaToSampo.Msg"
-                :kuittausjono-ulos "Harja17.SampoToHarja.Ack"}
+ ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
+ ;; tarvii SSH-tunnelin testi-Sonjaan
+ ;; :sonja
+ ;;       {:url      "localhost:2511"
+ ;;        :kayttaja "harja"
+ ;;        :salasana "harjaxx"}
+
+:sampo {
+                       :lahetysjono-ulos  "Harja17.HarjaToSampo.Msg"
+                       :kuittausjono-ulos "Harja17.SampoToHarja.Ack"}
  }

@@ -23,6 +23,13 @@
                                                :siltatarkastus-id siltatarkastus-id
                                                :kohderivit kohderivit}))
 
+(defn poista-siltatarkastus! [ur silta tarkastus]
+  "Merkitsee annetun sillantarkastuksen poistetuksi"
+  (log "tiedot poista-st!" ur silta tarkastus)
+  (k/post! :poista-siltatarkastus {:urakka-id ur
+                                   :silta-id silta
+                                   :siltatarkastus-id tarkastus}))
+
 (defn siltatarkastuskohteen-nimi
   "Siltatarkastuksessa käytettyjen kohteiden nimet mäpättynä järjestysnumeroon"
   [kohdenro]
