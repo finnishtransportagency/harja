@@ -15,14 +15,15 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]
-
+            [harja.views.kartta :as kartta]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -31,6 +32,26 @@
 ;; Tällä hetkellä valittu toteuma
 (defonce valittu-silta (atom nil))
 
+(defn sillan-perustiedot [silta]
+  [:div [:h3 (:siltanimi silta)]
+   [yleiset/tietoja {}
+    "Sillan numero:" (:siltanro silta)
+    "Edellinen tarkastus" (if (:tarkastusaika silta)
+                            (pvm/pvm (:tarkastusaika silta))
+                            "Ei tietoa")
+    "Tarkastaja" (if (:tarkastaja silta)
+                   (:tarkastaja silta)
+                   "Ei tietoa")]])
+  
+(defonce klikatun-sillan-popup
+  (tapahtumat/kuuntele! :silta-klikattu
+                        (fn [{:keys [klikkaus-koordinaatit] :as silta}]
+                          (kartta/nayta-popup! klikkaus-koordinaatit
+                                               [:span
+                                                [sillan-perustiedot silta]
+                                                [:div.keskita
+                                                 [:a {:href "#" :on-click #(reset! valittu-silta (dissoc silta :aihe :klikkaus-koordinaatit))}
+                                                  "Avaa valittu silta"]]]))))
 (defn sillat [ur]
   (let [urakan-sillat sillat/sillat]
     (komp/luo
@@ -55,6 +76,8 @@
 
           @urakan-sillat
           ]]))))
+
+
 
 (defn ryhmittele-sillantarkastuskohteet
   "Ryhmittelee sillantarkastuskohteet"
@@ -162,15 +185,7 @@
          [:button.nappi-toissijainen {:on-click #(reset! valittu-silta nil)
                                       :style {:display "block"}}
           (ikonit/chevron-left) " Takaisin siltaluetteloon"]
-         [:div [:h3 (:siltanimi @valittu-silta)]
-          [yleiset/tietoja {}
-           "Sillan numero:" (:siltanro @valittu-silta)
-           "Edellinen tarkastus" (if (:tarkastusaika @valittu-silta)
-                                   (pvm/pvm (:tarkastusaika @valittu-silta))
-                                   "Ei tietoa")
-           "Tarkastaja" (if (:tarkastaja @valittu-silta)
-                          (:tarkastaja @valittu-silta)
-                          "Ei tietoa")]]
+         [sillan-perustiedot @valittu-silta]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Tarkastus"]
           [livi-pudotusvalikko {:valinta    @valittu-tarkastus

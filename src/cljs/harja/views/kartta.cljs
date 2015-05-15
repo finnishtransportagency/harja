@@ -64,6 +64,14 @@
                                          :M :L
                                          :L :L))}]]))
 
+(defn nayta-popup!
+  "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
+joka kertoo karttakoordinaatit. Sisältö annetaan sisalto-hiccup muodossa ja se renderöidään
+HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiverinen komponentti)"
+  [sijainti sisalto-hiccup]
+  (leaflet/show-popup! sijainti sisalto-hiccup))
+
+  
 (defn kartta-leaflet []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko
@@ -87,12 +95,15 @@
               :zoom zoom-taso
               :selection nav/valittu-hallintayksikko
               :on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
-              :on-select (fn [item]
-                           (condp = (:type item)
-                             :hy (nav/valitse-hallintayksikko item)
-                             :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))
-                              (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
-                             ))
+              :on-select (fn [item event]
+                           (.log js/console "kartan valinta event: " event)
+                           (let [latlng (.-latlng event)
+                                 item (assoc item :klikkaus-koordinaatit [(.-lat latlng) (.-lng latlng)])]
+                             (condp = (:type item)
+                               :hy (nav/valitse-hallintayksikko item)
+                               :ur (t/julkaise! (assoc item :aihe :urakka-klikattu))
+                               (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
+                               )))
               :tooltip-fn (fn [geom]
                             [:div {:class (name (:type geom))} (:nimi geom)])
               :geometries

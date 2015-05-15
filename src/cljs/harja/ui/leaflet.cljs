@@ -15,6 +15,9 @@
 (defn fit-bounds! [geometry]
   (go (>! komento-ch [::fit-bounds geometry])))
 
+(defn show-popup! [lat-lng content]
+  (go (>! komento-ch [::popup lat-lng content])))
+
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the LeafletJS
 ;; Javascript objects.
@@ -47,6 +50,15 @@
                            (log "löytyi geometrioista? " (first args) " => " g)
                            (when g
                              (.fitBounds leaflet g)))
+            ::popup (let [[[lat lng] content] args
+                          elt (js/document.createElement "div")
+                          comp (reagent/render content elt)]
+                      (log "ELEMENTTI: " elt " , COMP: " comp)
+                      (log "NÄYTÄ POPUP " lat ", " lng "  :: " content)
+                      (.openPopup leaflet
+                                  (doto (js/L.popup)
+                                    (.setLatLng (js/L.LatLng. lat lng))
+                                    (.setContent  elt #_(reagent/render-to-string content)))))
             :default (log "tuntematon kartan komento: " komento))
           (recur (<! komento-ch))))
     
@@ -86,7 +98,8 @@
     ;; watcher for pos/zoom atoms
     (.on leaflet "move" (fn [e]
                           (let [c (.getCenter leaflet)]
-                            (reset! zoom (.getZoom leaflet))
+                            (log "MOVE callback ja zoom on: " (.getZoom leaflet))
+                            ;;(reset! zoom (.getZoom leaflet)) ;; FIXME: tämä heittelee zoomia miten sattuu (move eventissä zoom ei ole oikein)
                             (reset! view [(.-lat c) (.-lng c)]))))
     ;; TÄMÄ WATCHERI aiheuttaa nykimistä pannatessa
     ;;(add-watch view ::view-update
@@ -96,7 +109,7 @@
     ;;              (.setView leaflet (clj->js new-view) @zoom))))
     (add-watch zoom ::zoom-update
                (fn [_ _ old-zoom new-zoom]
-                 ;;(.log js/console "zoom päivittyi: " old-zoom " => " new-zoom)
+                 (.log js/console "zoom päivittyi: " old-zoom " => " new-zoom)
                  (when (not= old-zoom new-zoom)
                    (.setZoom leaflet new-zoom))))
 
@@ -199,7 +212,7 @@
             (recur new-geometries-map items)
             (let [shape (or (geometries-map item)
                             (doto (create-shape geom)
-                              (.on "click" #(on-select item))
+                              (.on "click" #(on-select item %))
                               (.on "mouseover" #(do ;;(log "EVENTTI ON " %)
                                                     (reagent/set-state component
                                                                    {:hover (assoc item
