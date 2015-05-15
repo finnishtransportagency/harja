@@ -7,6 +7,7 @@
 
 (declare hae-urakan-maksuerat)
 (declare laheta-maksuerat-sampoon)
+(declare laheta-maksuera-sampoon)
 
 (defrecord Maksuerat []
     component/Lifecycle
