@@ -17,7 +17,7 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.kartta :as kartta]
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
@@ -130,7 +130,7 @@
                                          (apply merge
                                                 kohteet-jotka-eivat-muuttuneet
                                                 muuttuneet-kohteet))]
-        (reset! tarkastuskohteet uudet-tarkastuskohteet) true)))
+        (reset! tarkastuskohteet uudet-tarkastuskohteet))))
 
 (defn siltatarkastusten-rivit
   [valittu-tarkastus muut-tarkastukset kohteet]
@@ -157,8 +157,10 @@
 (defn poista-siltatarkastus! [ur silta tarkastus tarkastukset-atomi]
   (log "poista-tarkastus")
   (go (let [res (<! (siltatarkastukset/poista-siltatarkastus! ur silta tarkastus))]
-                 (log "res" (pr-str res))
-                 (reset! tarkastukset-atomi res))))
+        (log "tarkastukset-atomi before" (pr-str @tarkastukset-atomi))
+        (reset! tarkastukset-atomi res)
+        (log "tarkastukset-atomi after" (pr-str @tarkastukset-atomi))
+        (log "res" (pr-str res)))))
 
 (defn sillan-tarkastukset [ur]
   (let [sillan-tarkastukset (atom nil)
@@ -173,12 +175,17 @@
                                     (reset! sillan-tarkastukset tarkastukset)
                                     (reset! valittu-tarkastus val-tarkastus)
                                     (reset! tarkastuskohteet kohteet))))
-        muut-tarkastukset (reaction (when @valittu-tarkastus (filter #(not (= (:tarkastusaika %) (:tarkastusaika @valittu-tarkastus))) @sillan-tarkastukset)))
+        muut-tarkastukset (reaction (let [kaikki @sillan-tarkastukset]
+                                      (when @valittu-tarkastus (filter #(not (= (:tarkastusaika %) (:tarkastusaika @valittu-tarkastus))) kaikki))))
         siltatarkastussarakkeet (reaction (when @valittu-tarkastus (siltatarkastuksen-sarakkeet @valittu-tarkastus @muut-tarkastukset)))
-        siltatarkastusrivit (reaction (when @valittu-tarkastus (siltatarkastusten-rivit @valittu-tarkastus @muut-tarkastukset @tarkastuskohteet)))
+        siltatarkastusrivit (reaction (let [tark @valittu-tarkastus
+                                            muut @muut-tarkastukset
+                                            kohteet @tarkastuskohteet]
+                                        (when tark (siltatarkastusten-rivit tark muut kohteet))))
         tallennus-kaynnissa (atom false)]
 
     (hae-tarkastustiedot ur)
+    (tarkkaile! "rivit "siltatarkastusrivit)
 
     (log "SILTA" (pr-str @valittu-silta))
     (komp/luo
