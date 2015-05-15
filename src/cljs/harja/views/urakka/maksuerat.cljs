@@ -76,7 +76,7 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm %) "Ei koskaan") :leveys "14%"};
+              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"};
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuera (:numero rivi))) :leveys "10%"}] ;
               @maksuerarivit
              ]
