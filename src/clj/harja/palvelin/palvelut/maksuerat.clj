@@ -33,9 +33,10 @@
 (defn hae-urakan-maksuerat
     "Palvelu, joka palauttaa urakan maksuerät."
     [db user urakka-id]
-    (into []
+    (let [maksuerat (into []
           ;; FIXME: Oikeustarkistukset?
-          (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
+          (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id)))]
+        (map #(assoc % :nimi (:nimi (:toimenpideinstanssi %))) maksuerat)))
 
 (defn laheta-maksuera-sampoon
     "Palvelu, joka lähettää annetun maksuerän Sampoon."
