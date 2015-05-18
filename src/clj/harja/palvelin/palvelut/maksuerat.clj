@@ -30,9 +30,9 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
-        ;; FIXME: Oikeustarkistukset?
         (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
 
 (defn laheta-maksuera-sampoon
