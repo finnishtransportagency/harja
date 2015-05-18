@@ -13,7 +13,7 @@
                   (fn [_]
                     (component/start 
                      (component/system-map
-                      :db (apply tietokanta/luo-tietokanta testitietokanta)
+                      :db (luo-testitietokanta)
                       :http-palvelin (testi-http-palvelin)
                       :kokonaishintaiset-tyot (component/using
                                   (->Kokonaishintaiset-tyot)
