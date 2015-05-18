@@ -41,8 +41,8 @@
                                    (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))))
           laheta-maksuerat (fn [maksueranumerot]; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
                                (let [lahetettavat-maksueranumerot (filter #(not (contains? @lahetyksessa %)) maksueranumerot)]
-                                      (go (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
-                                          (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
+                                      (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
+                                          (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
                                           (if res
                                               ;; Lähetys ok
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
