@@ -33,6 +33,13 @@
           (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id)))]
         (map #(assoc % :nimi (:nimi (:toimenpideinstanssi %))) maksuerat)))
 
+(defn laheta-maksuera-sampoon
+    "Palvelu, joka lähettää annetun maksuerän Sampoon."
+    [sampo user maksueranumero]
+    (into []
+          ;; FIXME: Oikeustarkistukset?
+          (sampo/laheta-maksuera-sampoon sampo maksueranumero)))
+
 (defn laheta-maksuerat-sampoon
     "Palvelu, joka lähettää annetut maksuerät Sampoon."
     [sampo user maksueranumerot]

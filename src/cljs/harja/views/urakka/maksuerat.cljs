@@ -44,6 +44,7 @@
                                       (if res
                                           ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
                                           (do (reset! lahetys-kaynnissa true)
+                                              (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
                                               (viesti/nayta! "Maksuerä lähetetty"))
                                           ;; Epäonnistui jostain syystä
                                           (do (reset! lahetys-kaynnissa true)
