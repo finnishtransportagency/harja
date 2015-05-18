@@ -7,6 +7,8 @@
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
+(def jarjestelma nil)
+
 
 (def testitietokanta [(if (= "harja-jenkins.solitaservices.fi"
                              (.getHostName (java.net.InetAddress/getLocalHost)))
@@ -97,7 +99,6 @@
 ;; Nämä ovat indeksivuosi-pareja, esim. MAKU 2005 vuonna 2014 olisi yksi entry, ja MAKU 2005 vuonna 2015 toinen.
 (def +testiindekseja+ 4)
 
-(def jarjestelma nil)
 
 (def oulun-alueurakan-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
