@@ -34,21 +34,22 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let [lahetys-kaynnissa (atom #{})
+    (let [lahetyksessa (atom #{}) ; Setti maksueränumeroita, jotka ovat lähetyksessä
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
                                    (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))))
-          laheta-maksuerat (fn [maksueranumerot]
-                                      (go (let [res (<! (maksuerat/laheta-maksuerat maksueranumerot))]
-                                          (reset! lahetys-kaynnissa (clojure.set/union @lahetys-kaynnissa maksueranumerot))
+          laheta-maksuerat (fn [maksueranumerot]; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
+                               (let [lahetettavat-maksueranumerot (filter #(not (contains? @lahetyksessa %)) maksueranumerot)]
+                                      (go (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
+                                          (reset! lahetyksessa (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot))
                                           (if res
                                               ;; Lähetys ok
-                                              (do (reset! lahetys-kaynnissa #{})
+                                              (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
                                                   (viesti/nayta! "Lähetys onnistui"))
                                               ;; Epäonnistui jostain syystä
-                                              (do (reset! lahetys-kaynnissa #{})
-                                                  (viesti/nayta! "Lähetys epäonnistui"))))))]
+                                              (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
+                                                  (viesti/nayta! "Lähetys epäonnistui")))))))]
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -66,12 +67,13 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"}
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetys-kaynnissa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
+              {:otsikko "Tila" :nimi :tila :tyyppi :string :fmt #(if % % "Ei lähetetty") :leveys "14%"}
+              {:otsikko "Kuitattu" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"}
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetyksessa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
               @maksuerarivit
              ]
 
-          [:button.nappi-ensisijainen {:class (if (not (empty? @lahetys-kaynnissa)) "disabled" "")
+          [:button.nappi-ensisijainen {:class (if (= (count @lahetyksessa) (count @maksuerarivit)) "disabled" "")
                                        :on-click #(do (.preventDefault %)
                                                       (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki" ]]))))
 
