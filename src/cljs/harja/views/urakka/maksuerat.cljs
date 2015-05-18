@@ -38,24 +38,37 @@
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur] (go
                                       (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
-                                      (reset! lahetyksessa (into #{} (mapv
+                                      (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                                                          (fn [rivi] (:numero rivi))
                                                                          (filter
                                                                              (fn [rivi] (and
                                                                                  (not (= (:tila rivi) nil))
                                                                                  (not (= (:tila rivi) "virhe"))))
                                                                              @maksuerarivit))))))
-          laheta-maksuerat (fn [maksueranumerot]; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
-                               (let [lahetettavat-maksueranumerot (filter #(not (contains? @lahetyksessa %)) maksueranumerot)]
+          laheta-maksuerat (fn [maksueranumerot] ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
+                               (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @lahetyksessa %)) maksueranumerot))]
                                       (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
+                                          (reset! maksuerarivit (mapv (fn [rivi]
+                                                                          (if (contains? lahetettavat-maksueranumerot (:numero rivi))
+                                                                              (assoc rivi :tila "odottaa_vastausta")
+                                                                              rivi))
+                                                                                @maksuerarivit))
                                           (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
-                                          (if res
+                                          (if res ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
                                               ;; Lähetys ok
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
-                                                  (viesti/nayta! "Lähetys onnistui"))
+                                                  (reset! maksuerarivit (mapv (fn [rivi]
+                                                                                  (if (contains? lahetettavat-maksueranumerot (:numero rivi))
+                                                                                      (assoc rivi :tila "lahetetty")
+                                                                                      rivi))
+                                                                              @maksuerarivit)))
                                               ;; Epäonnistui jostain syystä
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
-                                                  (viesti/nayta! "Lähetys epäonnistui")))))))]
+                                                  (reset! maksuerarivit (mapv (fn [rivi]
+                                                                                  (if (contains? lahetettavat-maksueranumerot (:numero rivi))
+                                                                                      (assoc rivi :tila "virhe")
+                                                                                      rivi))
+                                                                              @maksuerarivit))))))))]
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -74,9 +87,9 @@
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Tila" :nimi :tila :tyyppi :string :fmt #(case %
-                                                                    "odottaa_vastausta" "Lähetetty, odottaa vastausta"
-                                                                    "lahetetty" "Lähetetty, kuittaus saatu"
-                                                                    "virhe" "Lähetys epäonnistui!"
+                                                                    "odottaa_vastausta" "Lähetetty, odottaa vastausta" ; TODO Keltainen väri
+                                                                    "lahetetty" "Lähetetty, kuittaus saatu" ; TODO Vihreä väri
+                                                                    "virhe" "Lähetys epäonnistui!"; TODO Punainen väri
                                                                     "Ei lähetetty") :leveys "14%"}
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetyksessa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
               @maksuerarivit
