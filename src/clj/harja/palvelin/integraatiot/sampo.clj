@@ -44,7 +44,11 @@
     (if-let [maksuera-xml (muodosta-maksuera (:db this) numero)]
       (if-let [lahetys-id (laheta-maksuera (:sonja this) lahetysjono-ulos maksuera-xml)]
         (merkitse-maksuera-lahetetyksi (:db this) numero lahetys-id)
-        {:virhe :sonja-lahetys-epaonnistui})
-      {:virhe :maksueran-lukitseminen-epaonnistui})))
+        (do
+          (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui." )
+          {:virhe :sonja-lahetys-epaonnistui}))
+      (do
+        (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
+        {:virhe :maksueran-lukitseminen-epaonnistui}))))
 
 

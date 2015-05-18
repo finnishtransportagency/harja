@@ -4,6 +4,7 @@
 SELECT
   m.numero,
   m.tyyppi,
+  m.nimi,
   m.lahetetty,
   tpi.id       AS toimenpideinstanssi_id,
   tpi.nimi     AS toimenpideinstanssi_nimi,
