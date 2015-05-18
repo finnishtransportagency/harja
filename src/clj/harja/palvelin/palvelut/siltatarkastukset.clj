@@ -9,27 +9,43 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
+;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi 
+(def kohteet-xf (map (fn [rivi]
+                       (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
+                         (assoc rivi
+                           :kohteet (into {}
+                                          (map (fn [kohde]
+                                                 (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$" kohde)]
+                                                   [(Integer/parseInt nro) [tulos lisatieto]]))
+                                               kohteet)))
+                         rivi))))
+
 (defn hae-urakan-sillat
-  "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan."
-  [db user urakka-id]
+  "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan.
+Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
+
+ :kaikki    hakee kaikki sillat (ei kohteita mukana)
+ :puutteet  hakee sillat, joilla on viimeisimmässä tarkastuksessa puutteuta
+            mukana :kohteet avaimella kohteet, joissa puutteuta
+  :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
+  
+  [db user urakka-id listaus]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
-        (geo/muunna-pg-tulokset :alue)
-        (q/hae-urakan-sillat db urakka-id)))
-
-(def silta-xf
-  (comp (map (fn [silta]
-               (assoc silta
-                 :kohteet (into {}
-                                (map (fn [kohde]
-                                       (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$" kohde)]
-                                         [(Integer/parseInt nro) [tulos lisatieto]]))
-                                     (:kohteet (konv/array->vec silta :kohteet)))))))))
+        (comp (geo/muunna-pg-tulokset :alue)
+              kohteet-xf
+              (filter (if (not= :kaikki listaus)
+                        #(not (empty? (:kohteet %)))
+                        (constantly true))))
+        (case listaus
+          :kaikki (q/hae-urakan-sillat db urakka-id)
+          :puutteet (q/hae-urakan-sillat-puutteet db urakka-id)
+          :korjatut (throw (RuntimeException. "FIXME: implementoi")))))
 
                   
 (defn hae-siltatarkastus [db id]
   (first (into []
-               silta-xf
+               kohteet-xf
                (q/hae-siltatarkastus db id))))
 
 (defn hae-sillan-tarkastukset
@@ -37,7 +53,7 @@
   [db user silta-id]
   ;; FIXME: tarkista oikeudet
   (into []
-        silta-xf
+        kohteet-xf
         (q/hae-sillan-tarkastukset db silta-id)))
 
 
@@ -82,8 +98,8 @@
     (let [db (:db this)
           http (:http-palvelin this)]
       (julkaise-palvelu http :hae-urakan-sillat
-                        (fn [user urakka-id]
-                          (hae-urakan-sillat db user urakka-id)))
+                        (fn [user {:keys [urakka-id listaus]}]
+                          (hae-urakan-sillat db user urakka-id listaus)))
       (julkaise-palvelu http :hae-sillan-tarkastukset
                         (fn [user silta-id]
                           (hae-sillan-tarkastukset db user silta-id)))
