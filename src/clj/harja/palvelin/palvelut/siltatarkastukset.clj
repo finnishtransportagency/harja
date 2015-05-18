@@ -19,15 +19,34 @@
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user silta-id]
-  (into []
-        (q/hae-sillan-tarkastukset db silta-id)))
+  ;; FIXME: tarkista oikeudet
+  (jdbc/with-db-transaction [c db]
+    (let [tarkastukset (into []
+                             (q/hae-sillan-tarkastukset c silta-id))
+          kohteet (if (empty? tarkastukset)
+                    []
+                    (group-by :siltatarkastus
+                              (q/hae-siltatarkastusten-kohteet c (map :id tarkastukset))))]
+
+      ;; Palauta tarkastukset ja linkitä avaimella :kohteet mäppiin {kohde [tulos lisätieto] ...}
+      (mapv (fn [tarkastus]
+              (assoc tarkastus
+                :kohteet (into {}
+                               (map (juxt :kohde (fn [{:keys [tulos lisatieto]}]
+                                                   [tulos lisatieto])))
+                               (get kohteet (:id tarkastus)))))
+            tarkastukset))))
+
+       
 
 (defn hae-siltatarkastusten-kohteet
   "Hakee siltatarkastusten kohteet ID:iden perusteella"
   [db user siltatarkastus-idt]
   (log/debug  "kutsun kohta kohteita, " (pr-str siltatarkastus-idt))
-  (into []
-        (q/hae-siltatarkastusten-kohteet db siltatarkastus-idt)))
+  (if (empty? siltatarkastus-idt)
+    []
+    (into []
+          (q/hae-siltatarkastusten-kohteet db siltatarkastus-idt))))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
