@@ -26,13 +26,13 @@
              {:vakavuus (z/xml1-> error-information :Severity z/text)
               :kuvaus   (z/xml1-> error-information :Description z/text)})))
 
-;; Todo: lisää kutsuvaan päähän logitus
 (defn lue-kuittaus [kuittaus-xml]
   (if-let [xml (lue-xml kuittaus-xml)]
     ;; Huom. root-elementti voi vaihtua!
     (let [xml (or (z/xml1-> xml :XOGOutput) xml)]
       (if (onnistunut? xml)
         {:viesti-id (viesti-id xml)}
-        {:virhe   :sampo-raportoi-virheita
+        {:viesti-id (viesti-id xml)
+         :virhe   :sampo-raportoi-virheita
          :virheet (hae-virheet xml)}))
     {:virhe :kuittaus-xml-ei-validi}))

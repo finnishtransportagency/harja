@@ -5,6 +5,7 @@ SELECT
   m.numero,
   m.tyyppi,
   m.nimi,
+  m.tila,
   m.lahetetty,
   tpi.id       AS toimenpideinstanssi_id,
   tpi.nimi     AS toimenpideinstanssi_nimi,
@@ -43,8 +44,27 @@ SET lukko = :lukko, lukittu = current_timestamp
 WHERE numero = :numero AND (lukko IS NULL OR
                             (EXTRACT(EPOCH FROM (current_timestamp - lukittu)) > 300));
 
+-- name: hae-maksueranumero-lahetys-idlla
+-- Hakee maksueranumeron lahetys-id:llä
+SELECT numero
+FROM maksuera
+WHERE lahetysid = :lahetysid;
+
+
+-- name: merkitse-maksuera-odottamaan-vastausta!
+-- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
+UPDATE maksuera
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta'
+WHERE numero = :numero;
+
 -- name: merkitse-maksuera-lahetetyksi!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE maksuera
-SET lahetetty = current_timestamp, lahetysid = :lahetysid, lukko = NULL
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE numero = :numero;
+
+-- name: merkitse-maksueralle-lahetysvirhe!
+-- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
+UPDATE maksuera
+SET tila = 'virhe'
 WHERE numero = :numero;
