@@ -66,11 +66,12 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"};
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :leveys "10%"}] ;
+              {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"}
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetys-kaynnissa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
               @maksuerarivit
              ]
 
-          [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+          [:button.nappi-ensisijainen {:class (if (not (empty? @lahetys-kaynnissa)) "disabled" "")
+                                       :on-click #(do (.preventDefault %)
                                                       (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki" ]]))))
 
