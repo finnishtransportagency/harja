@@ -34,11 +34,17 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let [lahetyksessa (atom #{}) ; Setti maksueränumeroita, jotka ovat lähetyksessä
+    (let [lahetyksessa (atom #{})
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
-                                   (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))))
+                                   (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
+                                      (reset! lahetyksessa (into #{} (mapv
+                                                                         (fn [rivi] (if (and
+                                                                             (not (= (:tila rivi) nil))
+                                                                             (not (= (:tila rivi) "virhe"))) (:numero rivi)))
+                                                                         @maksuerarivit)))
+                                      (log "sösöö" (pr-str @lahetyksessa))))
           laheta-maksuerat (fn [maksueranumerot]; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
                                (let [lahetettavat-maksueranumerot (filter #(not (contains? @lahetyksessa %)) maksueranumerot)]
                                       (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
