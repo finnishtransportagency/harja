@@ -34,20 +34,20 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let [lahetys-kaynnissa (atom false)
+    (let [lahetys-kaynnissa (atom #{})
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
                                    (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))))
           laheta-maksuerat (fn [maksueranumerot]
                                       (go (let [res (<! (maksuerat/laheta-maksuerat maksueranumerot))]
-                                          (reset! lahetys-kaynnissa true)
+                                          (reset! lahetys-kaynnissa (clojure.set/union @lahetys-kaynnissa maksueranumerot))
                                           (if res
-                                              ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
-                                              (do (reset! lahetys-kaynnissa false)
+                                              ;; Lähetys ok
+                                              (do (reset! lahetys-kaynnissa #{})
                                                   (viesti/nayta! "Lähetys onnistui"))
                                               ;; Epäonnistui jostain syystä
-                                              (do (reset! lahetys-kaynnissa false)
+                                              (do (reset! lahetys-kaynnissa #{})
                                                   (viesti/nayta! "Lähetys epäonnistui"))))))]
         (hae-urakan-maksuerat ur)
         (komp/luo
@@ -67,10 +67,10 @@
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"};
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat (:numero rivi))) :leveys "10%"}] ;
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :leveys "10%"}] ;
               @maksuerarivit
              ]
 
           [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                      (laheta-maksuerat (mapv (fn [rivi] (:numero rivi)) @maksuerarivit)))} "Lähetä kaikki" ]]))))
+                                                      (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki" ]]))))
 
