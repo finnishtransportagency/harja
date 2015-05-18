@@ -38,7 +38,6 @@
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur] (go
                                       (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
-                                      (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
                                       (reset! lahetyksessa (into #{} (mapv
                                                                          (fn [rivi] (:numero rivi))
                                                                          (filter
