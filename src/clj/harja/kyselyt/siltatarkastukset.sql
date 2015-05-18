@@ -16,6 +16,21 @@ SELECT id, silta, urakka,
   FROM siltatarkastus
  WHERE silta = :silta AND poistettu = false ORDER BY tarkastusaika DESC
 
+-- name: hae-siltatarkastus
+-- Hakee yhden siltatarkastuksen id:n mukaan
+SELECT id, silta, urakka,
+       tarkastusaika, tarkastaja,
+       luotu, luoja, muokattu, muokkaaja, poistettu
+  FROM siltatarkastus
+ WHERE id = :id AND poistettu = false
+
+-- name: luo-siltatarkastus<!
+-- Luo uuden siltatarkastuksen annetulla sillalle.
+INSERT
+  INTO siltatarkastus
+       (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu)
+VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false)
+
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella

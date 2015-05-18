@@ -18,6 +18,12 @@
 (def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
                                            urakoitsijan-laatuvastaava})
 
+(def toteumien-kirjaus
+  "Roolit, joilla on oikeus kirjoittaa urakkaan toteumatietoja."
+  #{urakanvalvoja
+    urakoitsijan-paakayttaja
+    urakoitsijan-urakan-vastuuhenkilo
+    urakoitsijan-laatuvastaava})
 
 ;; Tietokannan rooli enumin selvempi kuvaus
 (def +rooli->kuvaus+

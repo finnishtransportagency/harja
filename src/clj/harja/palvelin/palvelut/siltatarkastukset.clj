@@ -6,6 +6,7 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn hae-urakan-sillat
@@ -16,49 +17,58 @@
         (geo/muunna-pg-tulokset :alue)
         (q/hae-urakan-sillat db urakka-id)))
 
+(defn- liita-kohteet [db tarkastukset]
+  (let [kohteet (if (empty? tarkastukset)
+                  []
+                  (group-by :siltatarkastus
+                            (q/hae-siltatarkastusten-kohteet db (map :id tarkastukset))))]
+    ;; Palauta tarkastukset ja linkitä avaimella :kohteet mäppiin {kohde [tulos lisätieto] ...}
+    (mapv (fn [tarkastus]
+            (assoc tarkastus
+              :kohteet (into {}
+                             (map (juxt :kohde (fn [{:keys [tulos lisatieto]}]
+                                                 [tulos lisatieto])))
+                             (get kohteet (:id tarkastus)))))
+          tarkastukset)))
+
+(defn hae-siltatarkastus [db id]
+  (liita-kohteet db
+                 (q/hae-siltatarkastus db id)))
+
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user silta-id]
   ;; FIXME: tarkista oikeudet
   (jdbc/with-db-transaction [c db]
-    (let [tarkastukset (into []
-                             (q/hae-sillan-tarkastukset c silta-id))
-          kohteet (if (empty? tarkastukset)
-                    []
-                    (group-by :siltatarkastus
-                              (q/hae-siltatarkastusten-kohteet c (map :id tarkastukset))))]
+    (liita-kohteet c
+                   (q/hae-sillan-tarkastukset c silta-id))))
 
-      ;; Palauta tarkastukset ja linkitä avaimella :kohteet mäppiin {kohde [tulos lisätieto] ...}
-      (mapv (fn [tarkastus]
-              (assoc tarkastus
-                :kohteet (into {}
-                               (map (juxt :kohde (fn [{:keys [tulos lisatieto]}]
-                                                   [tulos lisatieto])))
-                               (get kohteet (:id tarkastus)))))
-            tarkastukset))))
-
-       
-
-(defn hae-siltatarkastusten-kohteet
-  "Hakee siltatarkastusten kohteet ID:iden perusteella"
-  [db user siltatarkastus-idt]
-  (log/debug  "kutsun kohta kohteita, " (pr-str siltatarkastus-idt))
-  (if (empty? siltatarkastus-idt)
-    []
-    (into []
-          (q/hae-siltatarkastusten-kohteet db siltatarkastus-idt))))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
-  [db user {:keys [urakka-id siltatarkastus-id kohderivit]}]
-  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  [db {:keys [id kohteet]}]
+  (doseq [[kohde [tulos lisatieto]] kohteet]
+    (do
+      (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))))
+
+(defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
+  (q/luo-siltatarkastus<! silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user)))
+              
+(defn tallenna-siltatarkastus!
+  "Tallentaa tai päivittäää siltatarkastuksen tiedot."
+  [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
+  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
-                            (doseq [rivi kohderivit]
-                              (do
-                                  (log/info "  päivittyi: " (q/paivita-siltatarkastuksen-kohteet! c (:tulos rivi) (:lisatieto rivi) siltatarkastus-id
-                                                                                                  (:kohdenro rivi))))
-                              )
-                            (hae-siltatarkastusten-kohteet c user [siltatarkastus-id])))
+    (let [tarkastus (if id
+                      siltatarkastus
+                      
+                      ;; Ei id:tä, kyseessä on uusi siltatarkastus
+                      (assoc (luo-siltatarkastus c user siltatarkastus)
+                        :kohteet kohteet))]
+      (paivita-siltatarkastuksen-kohteet! c tarkastus)
+      (hae-siltatarkastus c (:id tarkastus)))))
+
+      
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
@@ -80,12 +90,9 @@
       (julkaise-palvelu http :hae-sillan-tarkastukset
                         (fn [user silta-id]
                           (hae-sillan-tarkastukset db user silta-id)))
-      (julkaise-palvelu http :hae-siltatarkastusten-kohteet
-                        (fn [user siltatarkastus-idt]
-                          (hae-siltatarkastusten-kohteet db user siltatarkastus-idt)))
-      (julkaise-palvelu http :paivita-siltatarkastuksen-kohteet
+      (julkaise-palvelu http :tallenna-siltatarkastus
                         (fn [user tiedot]
-                          (paivita-siltatarkastuksen-kohteet! db user tiedot)))
+                          (tallenna-siltatarkastus! db user tiedot)))
       (julkaise-palvelu http :poista-siltatarkastus
                         (fn [user tiedot]
                           (poista-siltatarkastus! db user tiedot)))
@@ -94,6 +101,5 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this) :hae-urakan-sillat)
     (poista-palvelut (:http-palvelin this) :hae-sillan-tarkastukset)
-    (poista-palvelut (:http-palvelin this) :hae-siltatarkastusten-kohteet)
-    (poista-palvelut (:http-palvelin this) :paivita-siltatarkastuksen-kohteet)
+    (poista-palvelut (:http-palvelin this) :tallenna-siltatarkastus)
     (poista-palvelut (:http-palvelin this) :poista-siltatarkastus)))
