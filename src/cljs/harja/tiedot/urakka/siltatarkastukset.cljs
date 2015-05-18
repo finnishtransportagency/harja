@@ -1,11 +1,15 @@
 (ns harja.tiedot.urakka.siltatarkastukset
   "Tämä nimiavaruus hallinnoi urakan siltatarkastuksien tietoja."
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [reagent.core :refer [atom] :as r]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.navigaatio :as nav]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction<!]]))
 
 
 (defn hae-urakan-sillat [urakka-id]
@@ -18,15 +22,15 @@
   (k/post! :hae-siltatarkastusten-kohteet siltatarkastus-idt))
 
 (defn paivita-siltatarkastuksen-kohteet!
-  [urakka-id siltatarkastus-id kohderivit]
-  (k/post! :paivita-siltatarkastuksen-kohteet {:urakka-id urakka-id
+  [siltatarkastus-id kohderivit]
+  (k/post! :paivita-siltatarkastuksen-kohteet {:urakka-id @nav/valittu-urakka
                                                :siltatarkastus-id siltatarkastus-id
                                                :kohderivit kohderivit}))
 
-(defn poista-siltatarkastus! [ur silta tarkastus]
+(defn poista-siltatarkastus! [silta tarkastus]
   "Merkitsee annetun sillantarkastuksen poistetuksi"
-  (log "tiedot poista-st!" ur silta tarkastus)
-  (k/post! :poista-siltatarkastus {:urakka-id ur
+  (log "tiedot poista-st!" silta tarkastus)
+  (k/post! :poista-siltatarkastus {:urakka-id (:id @nav/valittu-urakka)
                                    :silta-id silta
                                    :siltatarkastus-id tarkastus}))
 
@@ -64,3 +68,12 @@
     24 "Portaiden siisteys ja kunto"
     "Tuntematon tarkastuskohde"))
 
+(defonce valittu-silta (atom nil))
+
+(defonce valitun-sillan-tarkastukset (reaction<! (when-let [vs @valittu-silta]
+                                                   (hae-sillan-tarkastukset (:id @valittu-silta)))))
+
+(defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
+
+(tarkkaile! "valittu-silta" valittu-silta)
+(tarkkaile! "valitun-sillan-tarkastukset" valitun-sillan-tarkastukset)

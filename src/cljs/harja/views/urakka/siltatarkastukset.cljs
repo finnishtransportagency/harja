@@ -11,7 +11,7 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.siltatarkastukset :as siltatarkastukset]
+            [harja.tiedot.urakka.siltatarkastukset :as st]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -29,8 +29,6 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-;; Tällä hetkellä valittu toteuma
-(defonce valittu-silta (atom nil))
 (defonce uusi-tarkastus (atom false))
 
 (defn sillan-perustiedot [silta]
@@ -51,22 +49,17 @@
                                                [:span
                                                 [sillan-perustiedot silta]
                                                 [:div.keskita
-                                                 [:a {:href "#" :on-click #(reset! valittu-silta (dissoc silta :aihe :klikkaus-koordinaatit))}
+                                                 [:a {:href "#" :on-click #(reset! st/valittu-silta (dissoc silta :aihe :klikkaus-koordinaatit))}
                                                   "Avaa valittu silta"]]]))))
 (defn sillat [ur]
   (let [urakan-sillat sillat/sillat]
     (komp/luo
-     {:component-will-mount (fn [_]
-                              (kartta-tasot/taso-paalle! :sillat))
-      :component-will-unmount (fn [_]
-                                (kartta-tasot/taso-pois! :sillat))}
-      
       (fn [ur]
         [:div.sillat
          [grid/grid
           {:otsikko        "Sillat"
            :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Urakan alueella olevia siltoja haetaan..."] "Urakan alueella ei ole siltoja.")
-           :rivi-klikattu #(reset! valittu-silta %)
+           :rivi-klikattu #(reset! st/valittu-silta %)
            }
 
           ;; sarakkeet
@@ -122,8 +115,8 @@
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
-(defn paivita-siltatarkastuksen-kohteet! [ur siltatarkastus-id tarkastuskohteet tallennettava]
-  (go (let [muuttuneet-kohteet (<! (siltatarkastukset/paivita-siltatarkastuksen-kohteet! ur siltatarkastus-id tallennettava))
+(defn paivita-siltatarkastuksen-kohteet! [siltatarkastus-id tarkastuskohteet tallennettava]
+  (go (let [muuttuneet-kohteet (<! (st/paivita-siltatarkastuksen-kohteet! siltatarkastus-id tallennettava))
             kohteet-jotka-eivat-muuttuneet (filter #(not (= (:siltatarkastus %) siltatarkastus-id))
                                                    @tarkastuskohteet)
             uudet-tarkastuskohteet (into []
@@ -133,96 +126,81 @@
         (reset! tarkastuskohteet uudet-tarkastuskohteet))))
 
 (defn siltatarkastusten-rivit
-  [valittu-tarkastus muut-tarkastukset kohteet]
+  [valittu-tarkastus muut-tarkastukset]
   (ryhmittele-sillantarkastuskohteet
     (mapv (fn [kohdenro]
             (merge
               {:kohdenro  kohdenro
-               :kohde     (siltatarkastukset/siltatarkastuskohteen-nimi kohdenro)
-               :tulos     (:tulos (first (filter #(and
-                                                       (= kohdenro (:kohde %))
-                                                       (= (:siltatarkastus %) (:id valittu-tarkastus))) kohteet)))
-               :lisatieto (:lisatieto (first (filter #(and
-                                            (= kohdenro (:kohde %))
-                                            (= (:siltatarkastus %) (:id valittu-tarkastus))) kohteet)))}
+               :kohde     (st/siltatarkastuskohteen-nimi kohdenro)
+               :tulos     (first (get (:kohteet valittu-tarkastus) kohdenro))
+               :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))}
               (into {}
                     (map (fn [tarkastus]
                           [(pvm/pvm (:tarkastusaika tarkastus))
-                           (:tulos (first (filter #(and
-                                                    (= kohdenro (:kohde %))
-                                                    (= (:siltatarkastus %) (:id tarkastus))) kohteet)))])
+                           (first (get (:kohteet tarkastus) kohdenro))])
                          muut-tarkastukset))))
           (range 1 25))))
 
-(defn poista-siltatarkastus! [ur silta tarkastus tarkastukset-atomi]
+(defn poista-siltatarkastus! [silta tarkastus tarkastukset-atomi]
   (log "poista-tarkastus")
-  (go (let [res (<! (siltatarkastukset/poista-siltatarkastus! ur silta tarkastus))]
-        (log "tarkastukset-atomi before" (pr-str @tarkastukset-atomi))
-        (reset! tarkastukset-atomi res)
-        (log "tarkastukset-atomi after" (pr-str @tarkastukset-atomi))
-        (log "res" (pr-str res)))))
+  (go (let [res (<! (st/poista-siltatarkastus! silta tarkastus))]
+        (reset! tarkastukset-atomi res))))
+
 
 (defn sillan-tarkastukset []
-  (let [sillan-tarkastukset (reaction<! (when-let [vs @valittu-silta]
-                                          (siltatarkastukset/hae-sillan-tarkastukset (:id @valittu-silta))))
-        
-        tarkastuskohteet (reaction (:kohteet @sillan-tarkastukset))
-        
-        valittu-tarkastus (reaction (first @sillan-tarkastukset))
-
-        muut-tarkastukset (reaction (let [kaikki @sillan-tarkastukset
-                                          aika (:tarkastusaika @valittu-tarkastus)]
+  (let [
+        tarkastuskohteet (reaction (let [val-tark @st/valittu-tarkastus]
+                                     (:kohteet val-tark)))
+        muut-tarkastukset (reaction (let [kaikki @st/valitun-sillan-tarkastukset
+                                          aika (:tarkastusaika @st/valittu-tarkastus)]
                                       (when aika
                                         (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
         
-        siltatarkastussarakkeet (reaction (let [vt @valittu-tarkastus
+        siltatarkastussarakkeet (reaction (let [vt @st/valittu-tarkastus
                                                 muut @muut-tarkastukset]
                                             (when vt
                                               (siltatarkastuksen-sarakkeet vt muut))))
-        siltatarkastusrivit (reaction (let [tark @valittu-tarkastus
-                                            muut @muut-tarkastukset
-                                            kohteet @tarkastuskohteet]
-                                        (when tark (siltatarkastusten-rivit tark muut kohteet))))
+        siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
+                                            muut @muut-tarkastukset]
+                                        (when tark (siltatarkastusten-rivit tark muut))))
         tallennus-kaynnissa (atom false)]
 
-    (tarkkaile! "valittu-tarkastus" valittu-tarkastus)
     (komp/luo
      
-     (fn [ur]
+     (fn []
        [:div.sillat
-        [:button.nappi-toissijainen {:on-click #(reset! valittu-silta nil)
+        [:button.nappi-toissijainen {:on-click #(reset! st/valittu-silta nil)
                                      :style {:display "block"}}
          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
 
-        [sillan-perustiedot @valittu-silta]
+        [sillan-perustiedot @st/valittu-silta]
 
         [:div.siltatarkastus-kontrollit
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Tarkastus"]
-          [livi-pudotusvalikko {:valinta    @valittu-tarkastus
+          [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
                                 ;;\u2014 on väliviivan unikoodi
                                 :format-fn  #(if % (str (pvm/pvm (:tarkastusaika %))) "Valitse")
-                                :valitse-fn #(reset! valittu-tarkastus %)
+                                :valitse-fn #(reset! st/valittu-tarkastus %)
                                 :class      "suunnittelu-alasveto"
                                 }
-           @sillan-tarkastukset]]
+           @st/valitun-sillan-tarkastukset]]
 
-         [:button.nappi-kielteinen {:on-click #(poista-siltatarkastus! (:id ur) (:id @valittu-silta)
-                                                                       (:id @valittu-tarkastus) sillan-tarkastukset)}
+         [:button.nappi-kielteinen {:on-click #(poista-siltatarkastus! (:id @st/valittu-silta)
+                                                                       (:id @st/valittu-tarkastus) st/valitun-sillan-tarkastukset)}
           (ikonit/trash) " Poista tarkastus"]
          [:button.nappi-toissijainen {:on-click #(swap! uusi-tarkastus not)}
           (ikonit/plus) " Uusi tarkastus"]]
 
         [grid/grid
          {:otsikko        "Sillan tarkastukset"
-          :tyhja          (if (nil? @sillan-tarkastukset)
+          :tyhja          (if (nil? @st/valitun-sillan-tarkastukset)
                             [ajax-loader "Sillan tarkastuksia haetaan..."]
                             "Sillasta ei ole vielä tarkastuksia Harjassa.")
           :tunniste       :kohdenro
           :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                      (:id ur)
-                                                      #(paivita-siltatarkastuksen-kohteet! ur
-                                                                                           (:id @valittu-tarkastus)
+                                                      (:id @nav/valittu-urakka)
+                                                      #(paivita-siltatarkastuksen-kohteet! (:id @st/valittu-tarkastus)
                                                                                            tarkastuskohteet %)
                                                       :ei-mahdollinen)
           }
@@ -238,8 +216,16 @@
    "Uusi siltatarkastus"] )
 
 (defn siltatarkastukset [ur]
- (if @uusi-tarkastus
-   [uuden-tarkastuksen-syottaminen ur]
-   (if-let [vs @valittu-silta]
-     [sillan-tarkastukset vs]
-    [sillat ur])))
+
+  (komp/luo
+    {:component-will-mount (fn [_]
+                             (kartta-tasot/taso-paalle! :sillat))
+     :component-will-unmount (fn [_]
+                               (kartta-tasot/taso-pois! :sillat))}
+
+    (fn [ur]
+      (if @uusi-tarkastus
+        [uuden-tarkastuksen-syottaminen ur]
+        (if-let [vs @st/valittu-silta]
+          [sillan-tarkastukset vs]
+          [sillat ur])))))
