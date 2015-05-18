@@ -39,26 +39,16 @@
           hae-urakan-maksuerat (fn [ur]
                                   (go (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
                                    (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))))
-          laheta-maksuera (fn [maksueranumero]
-                              (go (let [res (<! (maksuerat/laheta-maksuerat [maksueranumero]))]
-                                      (reset! lahetys-kaynnissa true)
-                                      (if res
-                                          ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
-                                          (do (reset! lahetys-kaynnissa true)
-                                              (viesti/nayta! "Maksuerä lähetetty"))
-                                          ;; Epäonnistui jostain syystä
-                                          (do (reset! lahetys-kaynnissa true)
-                                              (viesti/nayta! "Maksuerän lähetys epäonnistui"))))))
-          laheta-kaikki-maksuerat (fn []
-                                      (go (let [res (<! (maksuerat/laheta-maksuerat (mapv #(:numero %) @maksuerarivit)))]
+          laheta-maksuerat (fn [maksueranumerot]
+                                      (go (let [res (<! (maksuerat/laheta-maksuerat maksueranumerot))]
                                           (reset! lahetys-kaynnissa true)
                                           (if res
                                               ;; Lähetys ok FIXME Viesti pitää näyttää vasta kun saadaan kuittaus?
                                               (do (reset! lahetys-kaynnissa false)
-                                                  (viesti/nayta! "Maksuerät lähetetty"))
+                                                  (viesti/nayta! "Lähetys onnistui"))
                                               ;; Epäonnistui jostain syystä
                                               (do (reset! lahetys-kaynnissa false)
-                                                  (viesti/nayta! "Maksuerien lähetys epäonnistui"))))))]
+                                                  (viesti/nayta! "Lähetys epäonnistui"))))))]
         (hae-urakan-maksuerat ur)
         (komp/luo
             {:component-will-receive-props
@@ -77,10 +67,10 @@
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Lähetetty" :nimi :lahetetty :tyyppi :string :fmt #(if % (pvm/pvm-aika %) "Ei koskaan") :leveys "14%"};
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuera (:numero rivi))) :leveys "10%"}] ;
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat (:numero rivi))) :leveys "10%"}] ;
               @maksuerarivit
              ]
 
           [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                      (laheta-kaikki-maksuerat))} "Lähetä kaikki" ]]))))
+                                                      (laheta-maksuerat (mapv (fn [rivi] (:numero rivi)) @maksuerarivit)))} "Lähetä kaikki" ]]))))
 
