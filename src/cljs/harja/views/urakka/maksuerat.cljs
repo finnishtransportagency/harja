@@ -67,7 +67,11 @@
               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
-              {:otsikko "Tila" :nimi :tila :tyyppi :string :fmt #(if % % "Ei lähetetty") :leveys "14%"}
+              {:otsikko "Tila" :nimi :tila :tyyppi :string :fmt #(case %
+                                                                    "odottaa_vastausta" "Lähetetty, odottaa vastausta"
+                                                                    "lahetetty" "Lähetetty, kuittaus saatu"
+                                                                    "virhe" "Lähetys epäonnistui!"
+                                                                    "Ei lähetetty") :leveys "14%"}
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetyksessa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
               @maksuerarivit
              ]
