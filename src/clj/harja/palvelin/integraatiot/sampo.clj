@@ -48,7 +48,7 @@
   (sonja/laheta sonja lahetysjono maksuera-xml))
 
 (defn kasittele-kuittaus [db viesti]
-  (jdb/with-db-transaction [c db]
+  (jdbc/with-db-transaction [c db]
      (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
      (let [kuittaus (kuittaus/lue-kuittaus (.getText viesti))]
        (log/debug "Luettiin kuittaus: " kuittaus)
