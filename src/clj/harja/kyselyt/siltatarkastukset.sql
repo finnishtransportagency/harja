@@ -2,7 +2,7 @@
 -- Hakee hoidon alueurakalle sillat sekä niiden viimeiset tarkastuspvm:t.
 SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja
   FROM silta s
-       LEFT JOIN siltatarkastus s1 ON s1.silta = s.id
+       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = false)
        LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = false)
   WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
     AND s2.id IS NULL;
@@ -15,7 +15,7 @@ SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
 	 WHERE k.siltatarkastus=s1.id
 	   AND k.tulos != 'A') as kohteet
   FROM silta s
-       LEFT JOIN siltatarkastus s1 ON s1.silta = s.id
+       LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = false)
        LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = false)
   WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
     AND s2.id IS NULL
@@ -28,9 +28,10 @@ SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkast
        (SELECT COUNT(k2.kohde) FROM siltatarkastuskohde k2 WHERE k2.siltatarkastus=st2.id AND (tulos='B' OR tulos='C')) as rikki_nyt,
        s.id, s.siltanimi, s.siltanro, s.alue, st2.tarkastusaika, st2.tarkastaja
   FROM siltatarkastus st1
-       JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika)
+       JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
+       AND st2.poistettu)
        JOIN silta s ON st1.silta=s.id
- WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
+ WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka) AND st1.poistettu = false
 
        
        
