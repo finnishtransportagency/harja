@@ -39,14 +39,16 @@
   "Palvelu, joka lähettää annetun maksuerän Sampoon."
   [sampo user maksueranumero]
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
-  (into []
-        ;; FIXME: Palauta future
-        ;; FIXME: Palauta true/false sen mukaan palautuiko virhettä
-        (sampo/laheta-maksuera-sampoon sampo maksueranumero)))
+  ;; FIXME: Palauta future
+  ;; FIXME: Palauta true/false sen mukaan palautuiko virhettä
+  (sampo/laheta-maksuera-sampoon sampo maksueranumero))
 
 (defn laheta-maksuerat-sampoon
-  "Palvelu, joka lähettää annetut maksuerät Sampoon."
+  "Palvelu, joka lähettää annetut maksuerät Sampoon. Ei vaadi erillisoikeuksia."
   [sampo user maksueranumerot]
-  ;; Maksuerän lähettäminen ei vaadi erillisoikeuksia
-  (mapv (fn [maksueranumero] (laheta-maksuera-sampoon sampo user maksueranumero)) maksueranumerot))
+  (into {}
+        (mapv (fn [maksueranumero]
+                [maksueranumero
+                 (laheta-maksuera-sampoon sampo user maksueranumero)])
+              maksueranumerot)))
 
