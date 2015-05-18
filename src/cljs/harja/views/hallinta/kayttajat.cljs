@@ -287,8 +287,6 @@
         urakan-vastuuhenkilo-urakat (atom (array-map))
         urakoitsijan-kayttaja-urakat (atom (array-map))
         urakoitsijan-laatuvastaava-urakat (atom (array-map))
-        
-        poista-painettu (atom nil)
 
         ;; tekee muokattavasta urakkalistasta tallenusmuotoisen
         urakat-tallennus (fn [muokattavat rooli]
@@ -368,148 +366,126 @@
     
                                    
     (r/create-class
-     {
-      
-      :reagent-render
-      (fn [k]
-        [:div.kayttajatiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-kayttaja nil)}
-          (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
-     
-         [:h3 "Muokkaa käyttäjää " (:etunimi k) " " (:sukunimi k)]
-     
-         [bs/panel
-          {} "Perustiedot"
-          [yleiset/tietoja
-           {}
-           "Nimi:" [:span.nimi (:etunimi k) " " (:sukunimi k)]
-           "Sähköposti:" [:span.sahkoposti (:sahkoposti k)]
-           "Puhelinnumero:" [:span.puhelin (:puhelin k)]
-           (case (:tyyppi @organisaatio)
-             :liikennevirasto ""
-             :hallintayksikko "Hallintayksikkö:"
-             :urakoitsija "Urakoitsija:"
-             nil "Valitse organisaatio:") (if-let [org @organisaatio]
-                                            (:nimi @organisaatio)
-                                            [organisaatiovalinta organisaatio])
-           ]]
+      {
 
-         (let [tyyppi @tyyppi]
-           [:form.form-horizontal
+       :reagent-render
+       (fn [k]
+         [:div.kayttajatiedot
+          [:button.nappi-toissijainen {:on-click #(reset! valittu-kayttaja nil)}
+           (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
 
-            ;; Valitaan käyttäjän tyyppi
-            [:div.form-group
-             [:label.col-sm-2.control-label {:for "kayttajatyyppi"}
-              "Käyttäjätyyppi"]
-             [:div.col-sm-10
-              (if tyyppi
-                [:span (case tyyppi
-                         :tilaaja "Tilaaja"
-                         :urakoitsija "Urakoitsija")]
-                "Valitse organisaatio")]]
+          [:h3 "Muokkaa käyttäjää " (:etunimi k) " " (:sukunimi k)]
 
-            ;; Käyttäjän roolit
-            [:div.form-group
-             [:label.col-sm-2.control-label
-              "Roolit:"]
-             [:div.col-sm-10.roolit
-              (cond
-               (= tyyppi :tilaaja)
-               [:span
-                [roolivalinta "jarjestelmavastuuhenkilo"]
-                (when (= :hallintayksikko (:tyyppi @organisaatio))
-                  [roolivalinta "hallintayksikon vastuuhenkilo"])
-                [roolivalinta "tilaajan kayttaja"]
-                [roolivalinta "urakanvalvoja"
-                 ^{:key "urakat"}
-                 [urakkalista (r/wrap (@virheet "urakanvalvoja")
-                                      #(swap! virheet assoc "urakanvalvoja" %))
-                  urakanvalvoja-urakat @organisaatio]]
-                
-                [roolivalinta "tilaajan asiantuntija"]
-                [roolivalinta "tilaajan laadunvalvontakonsultti"
-                 ^{:key "urakat"}
-                 [urakkalista (r/wrap (@virheet "tilaajan laadunvalvontakonsultti")
-                                      #(swap! virheet assoc "tilaajan laadunvalvontakonsultti" %))
-                  tilaajan-laadunvalvontakonsultti-urakat @organisaatio]]]
+          [bs/panel
+           {} "Perustiedot"
+           [yleiset/tietoja
+            {}
+            "Nimi:" [:span.nimi (:etunimi k) " " (:sukunimi k)]
+            "Sähköposti:" [:span.sahkoposti (:sahkoposti k)]
+            "Puhelinnumero:" [:span.puhelin (:puhelin k)]
+            (case (:tyyppi @organisaatio)
+              :liikennevirasto ""
+              :hallintayksikko "Hallintayksikkö:"
+              :urakoitsija "Urakoitsija:"
+              nil "Valitse organisaatio:") (if-let [org @organisaatio]
+                                             (:nimi @organisaatio)
+                                             [organisaatiovalinta organisaatio])
+            ]]
 
-               (= tyyppi :urakoitsija)
-               ;; urakoitsijan roolit
-               [:span
-                [roolivalinta "urakoitsijan paakayttaja"]
-                [roolivalinta "urakoitsijan urakan vastuuhenkilo"
-                 ^{:key "urakat"}
-                 [urakkalista (r/wrap (@virheet "urakoitsijan urakan vastuuhenkilo")
-                                      #(swap! virheet assoc "urakoitsijan urakan vastuuhenkilo" %))
-                  urakan-vastuuhenkilo-urakat @organisaatio]]
-               
-                [roolivalinta "urakoitsijan kayttaja"
-                 ^{:key "urakat"}
-                 [urakkalista (r/wrap (@virheet "urakoitsijan kayttaja")
-                                      #(swap! virheet assoc "urakoitsijan kayttaja" %))
-                  urakoitsijan-kayttaja-urakat @organisaatio]]
-                [roolivalinta "urakoitsijan laatuvastaava"
-                 ^{:key "urakat"}
-                 [urakkalista (r/wrap (@virheet "urakoitsijan laatuvastaava")
-                                      #(swap! virheet assoc "urakoitsijan laatuvastaava" %))
-                  urakoitsijan-laatuvastaava-urakat @organisaatio]]]
+          (let [tyyppi @tyyppi]
+            [:form.form-horizontal
 
-               :default "Valitse organisaatio")]]
+             ;; Valitaan käyttäjän tyyppi
+             [:div.form-group
+              [:label.col-sm-2.control-label {:for "kayttajatyyppi"}
+               "Käyttäjätyyppi"]
+              [:div.col-sm-10
+               (if tyyppi
+                 [:span (case tyyppi
+                          :tilaaja "Tilaaja"
+                          :urakoitsija "Urakoitsija")]
+                 "Valitse organisaatio")]]
 
-            [:div.form-group
-             [:label.col-sm-2.control-label
-              "Toiminnot:"]
-             [:div.col-sm-10.toiminnot
-              (let [virheita (some pos? (map second @virheet))]
-                [:button.nappi-ensisijainen {:disabled (or (nil? tyyppi) virheita)
-                                          :on-click #(do (.preventDefault %)
-                                                         (tallenna!))}
-                 (if @tallennus-menossa
-                   [ajax-loader]
-                   (ikonit/ok)) " Tallenna"])
-              [:span.pull-right
-               [:button.nappi-kielteinen {:disabled (when @poista-painettu "disabled")
-                                        :on-click #(do (.preventDefault %)
-                                                       (if (nil? (:id k))
-                                                         (reset! valittu-kayttaja nil)
-                                                         (reset! poista-painettu true)))}
-                (ikonit/ban-circle) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]
-               (when @poista-painettu
+             ;; Käyttäjän roolit
+             [:div.form-group
+              [:label.col-sm-2.control-label
+               "Roolit:"]
+              [:div.col-sm-10.roolit
+               (cond
+                 (= tyyppi :tilaaja)
+                 [:span
+                  [roolivalinta "jarjestelmavastuuhenkilo"]
+                  (when (= :hallintayksikko (:tyyppi @organisaatio))
+                    [roolivalinta "hallintayksikon vastuuhenkilo"])
+                  [roolivalinta "tilaajan kayttaja"]
+                  [roolivalinta "urakanvalvoja"
+                   ^{:key "urakat"}
+                   [urakkalista (r/wrap (@virheet "urakanvalvoja")
+                                        #(swap! virheet assoc "urakanvalvoja" %))
+                    urakanvalvoja-urakat @organisaatio]]
 
-                 (modal/nayta! {:otsikko "Poistetaanko käyttöoikeus?"
-                                :footer [:span
-                                         [:button.nappi-toissijainen {:type "button"
-                                                                      :on-click #(do (.preventDefault %)
-                                                                                     (modal/piilota!))}
-                                          "Peruuta"]
-                                         [:button.nappi-kielteinen {:type "button"
-                                                                    :on-click #(do (.preventDefault %)
-                                                                                   (modal/piilota!)
-                                                                                   (poista!))}
-                                          "Poista käyttöoikeus"]
-                                         ]
-                                :sulje #(reset! poista-painettu false)}
-                               [:div "Haluatko varmasti poistaa käyttäjän "
-                                [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"])
-                 #_
-                 [modal {:otsikko "Poistetaanko käyttöoikeus?"
-                         :footer [:span
-                                  [:button.nappi-toissijainen {:type "button"
-                                                            :on-click #(do (.preventDefault %)
-                                                                           (modal/piilota!))}
-                                   "Peruuta"]
-                                  [:button.nappi-kielteinen {:type "button"
-                                                           :on-click #(do (.preventDefault %)
-                                                                          (modal/piilota!)
-                                                                          (poista!))}
-                                   "Poista käyttöoikeus"]
-                                  ]
-                         :sulje #(reset! poista-painettu false)}
-                  [:div "Haluatko varmasti poistaa käyttäjän " 
-                   [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]])]
-              ]]
-          
-            ])])})))
+                  [roolivalinta "tilaajan asiantuntija"]
+                  [roolivalinta "tilaajan laadunvalvontakonsultti"
+                   ^{:key "urakat"}
+                   [urakkalista (r/wrap (@virheet "tilaajan laadunvalvontakonsultti")
+                                        #(swap! virheet assoc "tilaajan laadunvalvontakonsultti" %))
+                    tilaajan-laadunvalvontakonsultti-urakat @organisaatio]]]
+
+                 (= tyyppi :urakoitsija)
+                 ;; urakoitsijan roolit
+                 [:span
+                  [roolivalinta "urakoitsijan paakayttaja"]
+                  [roolivalinta "urakoitsijan urakan vastuuhenkilo"
+                   ^{:key "urakat"}
+                   [urakkalista (r/wrap (@virheet "urakoitsijan urakan vastuuhenkilo")
+                                        #(swap! virheet assoc "urakoitsijan urakan vastuuhenkilo" %))
+                    urakan-vastuuhenkilo-urakat @organisaatio]]
+
+                  [roolivalinta "urakoitsijan kayttaja"
+                   ^{:key "urakat"}
+                   [urakkalista (r/wrap (@virheet "urakoitsijan kayttaja")
+                                        #(swap! virheet assoc "urakoitsijan kayttaja" %))
+                    urakoitsijan-kayttaja-urakat @organisaatio]]
+                  [roolivalinta "urakoitsijan laatuvastaava"
+                   ^{:key "urakat"}
+                   [urakkalista (r/wrap (@virheet "urakoitsijan laatuvastaava")
+                                        #(swap! virheet assoc "urakoitsijan laatuvastaava" %))
+                    urakoitsijan-laatuvastaava-urakat @organisaatio]]]
+
+                 :default "Valitse organisaatio")]]
+
+             [:div.form-group
+              [:label.col-sm-2.control-label
+               "Toiminnot:"]
+              [:div.col-sm-10.toiminnot
+               (let [virheita (some pos? (map second @virheet))]
+                 [:button.nappi-ensisijainen {:disabled (or (nil? tyyppi) virheita)
+                                              :on-click #(do (.preventDefault %)
+                                                             (tallenna!))}
+                  (if @tallennus-menossa
+                    [ajax-loader]
+                    (ikonit/ok)) " Tallenna"])
+               [:span.pull-right
+                [:button.nappi-kielteinen {:on-click
+                                           (fn [e]
+                                             (do (.preventDefault e)
+                                                 (if (nil? (:id k))
+                                                   (reset! valittu-kayttaja nil)
+                                                   (modal/nayta! {:otsikko "Poistetaanko käyttöoikeus?"
+                                                                  :footer  [:span
+                                                                            [:button.nappi-toissijainen {:type     "button"
+                                                                                                         :on-click #(do (.preventDefault %)
+                                                                                                                        (modal/piilota!))}
+                                                                             "Peruuta"]
+                                                                            [:button.nappi-kielteinen {:type     "button"
+                                                                                                       :on-click #(do (.preventDefault %)
+                                                                                                                      (modal/piilota!)
+                                                                                                                      (poista!))}
+                                                                             "Poista käyttöoikeus"]
+                                                                            ]}
+                                                                 [:div "Haluatko varmasti poistaa käyttäjän "
+                                                                  [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]))))}
+                 (ikonit/ban-circle) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
               
 (defn kayttajat
   "Käyttäjähallinnan pääkomponentti"

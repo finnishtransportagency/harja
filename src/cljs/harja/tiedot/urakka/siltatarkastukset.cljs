@@ -12,14 +12,16 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn hae-urakan-sillat [urakka-id]
-  (k/post! :hae-urakan-sillat urakka-id))
-
 (defn hae-sillan-tarkastukset [silta-id]
   (k/post! :hae-sillan-tarkastukset silta-id))
 
 (defn hae-siltatarkastusten-kohteet [siltatarkastus-idt]
   (k/post! :hae-siltatarkastusten-kohteet siltatarkastus-idt))
+
+(defn tallenna-siltatarkastus!
+  [siltatarkastus]
+  (log "tiedot, tallenna-siltatarkastus" (pr-str siltatarkastus))
+  (k/post! :tallenna-siltatarkastus siltatarkastus))
 
 (defn paivita-siltatarkastuksen-kohteet!
   [siltatarkastus-id kohderivit]
@@ -76,4 +78,4 @@
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 
 (tarkkaile! "valittu-silta" valittu-silta)
-(tarkkaile! "valitun-sillan-tarkastukset" valitun-sillan-tarkastukset)
+(tarkkaile! "valitun-sillan-tarkastuksetko" valitun-sillan-tarkastukset)

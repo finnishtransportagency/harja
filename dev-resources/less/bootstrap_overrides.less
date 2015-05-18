@@ -38,3 +38,17 @@ li.active > a {
 .nav-tabs > li.active > a:focus {
 	background-color: @harjan-taustavari;
 }
+
+// BS itse yliratsastaa nappityylit modaalissa käyttäen btn-luokkaa
+// meillä käytössä button-elementti, jolla oma luokka, esim. nappi-ensisijainen
+// Properly space out buttons
+.modal-footer {
+	button + button {
+		margin-left: @harja-nappien-valinen-etaisyys;
+		margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
+	}
+	// but override that for button groups
+	.btn-group button + button {
+		margin-left: -1px;
+	}
+}
