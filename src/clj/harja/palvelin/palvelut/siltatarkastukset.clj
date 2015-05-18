@@ -17,31 +17,28 @@
         (geo/muunna-pg-tulokset :alue)
         (q/hae-urakan-sillat db urakka-id)))
 
-(defn- liita-kohteet [db tarkastukset]
-  (let [kohteet (if (empty? tarkastukset)
-                  []
-                  (group-by :siltatarkastus
-                            (q/hae-siltatarkastusten-kohteet db (map :id tarkastukset))))]
-    ;; Palauta tarkastukset ja linkitä avaimella :kohteet mäppiin {kohde [tulos lisätieto] ...}
-    (mapv (fn [tarkastus]
-            (assoc tarkastus
-              :kohteet (into {}
-                             (map (juxt :kohde (fn [{:keys [tulos lisatieto]}]
-                                                 [tulos lisatieto])))
-                             (get kohteet (:id tarkastus)))))
-          tarkastukset)))
+(def silta-xf
+  (comp (map (fn [silta]
+               (assoc silta
+                 :kohteet (into {}
+                                (map (fn [kohde]
+                                       (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$" kohde)]
+                                         [(Integer/parseInt nro) [tulos lisatieto]]))
+                                     (:kohteet (konv/array->vec silta :kohteet)))))))))
 
+                  
 (defn hae-siltatarkastus [db id]
-  (liita-kohteet db
-                 (q/hae-siltatarkastus db id)))
+  (first (into []
+               silta-xf
+               (q/hae-siltatarkastus db id))))
 
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user silta-id]
   ;; FIXME: tarkista oikeudet
-  (jdbc/with-db-transaction [c db]
-    (liita-kohteet c
-                   (q/hae-sillan-tarkastukset c silta-id))))
+  (into []
+        silta-xf
+        (q/hae-sillan-tarkastukset db silta-id)))
 
 
 (defn paivita-siltatarkastuksen-kohteet!
