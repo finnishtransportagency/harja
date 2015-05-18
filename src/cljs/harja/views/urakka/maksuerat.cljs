@@ -42,7 +42,7 @@
           laheta-maksuerat (fn [maksueranumerot]; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
                                (let [lahetettavat-maksueranumerot (filter #(not (contains? @lahetyksessa %)) maksueranumerot)]
                                       (go (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
-                                          (reset! lahetyksessa (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot))
+                                          (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
                                           (if res
                                               ;; Lähetys ok
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
