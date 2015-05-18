@@ -20,8 +20,20 @@ SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
   WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
     AND s2.id IS NULL
 
+-- name: hae-urakan-sillat-korjatut
+-- Hakee sillat, joille on aiemmassa tarkastuksessa on ollut virheitä. Palauttaa aimmin rikki olleet kohteet sekä nyt rikki olevien lukumäärän. 
+SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkastus=st1.id AND (tulos='B' OR tulos='C')) as rikki_ennen,
+       (SELECT array_agg(concat(k1.kohde, '=', k1.tulos, ':')) FROM siltatarkastuskohde k1 WHERE k1.siltatarkastus=st1.id AND (tulos='B' OR tulos='C'))
+         as kohteet,
+       (SELECT COUNT(k2.kohde) FROM siltatarkastuskohde k2 WHERE k2.siltatarkastus=st2.id AND (tulos='B' OR tulos='C')) as rikki_nyt,
+       s.id, s.siltanimi, s.siltanro, s.alue, st2.tarkastusaika, st2.tarkastaja
+  FROM siltatarkastus st1
+       JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika)
+       JOIN silta s ON st1.silta=s.id
+ WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
 
-
+       
+       
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
