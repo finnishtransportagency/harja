@@ -4,7 +4,8 @@
     [clojure.test :refer :all]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.http-palvelin :as http]))
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 
 (def testitietokanta [(if (= "harja-jenkins.solitaservices.fi"
@@ -15,6 +16,9 @@
                       "harjatest"
                       "harjatest"
                       nil])
+
+(defn luo-testitietokanta []
+  (apply tietokanta/luo-tietokanta testitietokanta))
 
 (defn q
   "Kysele Harjan kannasta yksikkötestauksen yhteydessä"
@@ -69,6 +73,12 @@
       (kutsu-palvelua [_ nimi kayttaja payload]
         ((get @palvelut nimi) kayttaja payload)))))
   
+(defn kutsu-http-palvelua
+  "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
+  ([nimi kayttaja]
+     (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja))
+  ([nimi kayttaja payload]
+     (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja payload)))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
