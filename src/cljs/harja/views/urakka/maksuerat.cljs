@@ -31,19 +31,34 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn tyyppi-enum->string-singular
+    [tyyppi]
+    (case tyyppi
+        "kokonaishintainen" "Kokonaishintainen"
+        "yksikkohintainen" "Yksikköhintainen"
+        "lisatyo" "Lisätyö"
+        "indeksi" "Indeksi"
+        "bonus" "Bonus"
+        "sakko" "Sakko"
+        "akillinen_hoitotyo" "Äkillinen hoitotyö"
+        "muu" "Muu"
+        "Ei tyyppiä"))
+
+(defn tyyppi-enum->string-plural [tyyppi]
+    (case tyyppi
+        "kokonaishintainen" "Kokonaishintaiset"
+        "yksikkohintainen" "Yksikköhintaiset"
+        "lisatyo" "Lisätyöt"
+        "indeksi" "Indeksit"
+        "bonus" "Bonukset"
+        "sakko" "Sakot"
+        "akillinen_hoitotyo" "Äkilliset hoitotyöt"
+        "muu" "Muut"
+        "Ei tyyppiä"))
+
 (defn ryhmittele-maksuerat [rivit]
     (log "rivit" (pr-str rivit))
-    (let [otsikko (fn [rivi]
-                      (case (:tyyppi rivi)
-                          "kokonaishintainen" "Kokonaishintaiset"
-                          "yksikkohintainen" "Yksikköhintaiset"
-                          "lisatyo" "Lisätyö"
-                          "indeksi" "Indeksi"
-                          "bonus" "Bonus"
-                          "sakko" "Sakko"
-                          "akillinen_hoitotyo" "Äkillinen hoitotyö"
-                          "muu" "Muu"
-                          "Muut"))
+    (let [otsikko (fn [rivi] (tyyppi-enum->string-plural (:tyyppi rivi)))
           otsikon-mukaan (group-by otsikko rivit)]
         (mapcat (fn [[otsikko rivit]]
                     (concat [(grid/otsikko otsikko)] rivit))
@@ -96,7 +111,7 @@
               :tallenna nil}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :pituus 16}
-              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :leveys "17%" :pituus 16}
+              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :fmt #(tyyppi-enum->string-singular %):leveys "17%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Tila" :nimi :tila :tyyppi :string :fmt #(case %
