@@ -36,7 +36,7 @@
     (let [otsikko (fn [rivi]
                       (case (:tyyppi rivi)
                           "kokonaishintainen" "Kokonaishintaiset"
-                          "yksikkohintainen" "Yksikköshintaiset"
+                          "yksikkohintainen" "Yksikköhintaiset"
                           "lisatyo" "Lisätyö"
                           "indeksi" "Indeksi"
                           "bonus" "Bonus"
@@ -104,7 +104,10 @@
                                                                     "lahetetty" "Lähetetty, kuittaus saatu" ; TODO Vihreä väri
                                                                     "virhe" "Lähetys epäonnistui!"; TODO Punainen väri
                                                                     "Ei lähetetty") :leveys "14%"}
-              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä" :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)})) :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetyksessa (:numero rivi)) "disabled"))) :leveys "10%"}] ;
+              {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :nappi :nappi-nimi "Lähetä"
+                    :nappi-toiminto (fn [rivi] (laheta-maksuerat #{(:numero rivi)}))
+                    :nappi-luokka (fn [rivi] (str "nappi-ensisijainen " (if (contains? @lahetyksessa (:numero rivi)) "disabled")))
+                    :leveys "10%"}] ;
               @maksuerarivit
              ]
 
