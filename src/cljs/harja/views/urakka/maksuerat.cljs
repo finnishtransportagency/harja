@@ -123,7 +123,7 @@
                                                                                               (let [maksueranumero (:numero rivi)]
                                                                                               [:button {:class (str "nappi-ensisijainen " (if (contains? @lahetyksessa maksueranumero) "disabled"))
                                                                                                         :type "button"
-                                                                                                        :on-click (fn [rivi] (laheta-maksuerat #{maksueranumero}))} "Lähetä"]))
+                                                                                                        :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
                     :leveys "10%"}] ;
               @maksuerarivit
              ]
