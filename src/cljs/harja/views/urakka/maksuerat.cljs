@@ -19,7 +19,7 @@
 
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
@@ -31,13 +31,32 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn ryhmittele-maksuerat [rivit]
+    (log "rivit" (pr-str rivit))
+    (let [otsikko (fn [rivi]
+                      (case (:tyyppi rivi)
+                          "kokonaishintainen" "Kokonaishintaiset"
+                          "yksikkohintainen" "Yksikköshintaiset"
+                          "lisatyo" "Lisätyö"
+                          "indeksi" "Indeksi"
+                          "bonus" "Bonus"
+                          "sakko" "Sakko"
+                          "akillinen_hoitotyo" "Äkillinen hoitotyö"
+                          "muu" "Muu"
+                          "Muut"))
+          otsikon-mukaan (group-by otsikko rivit)]
+        (mapcat (fn [[otsikko rivit]]
+                    (concat [(grid/otsikko otsikko)] rivit))
+                (seq otsikon-mukaan))))
+
+
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
     (let [lahetyksessa (atom #{}) ; Setti lähetyksessä olevista maksuerien numeroista
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur] (go
-                                      (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
+                                      (reset! maksuerarivit (ryhmittele-maksuerat (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
                                       (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                                                          (fn [rivi] (:numero rivi))
                                                                          (filter
@@ -62,6 +81,7 @@
                                                                                       (assoc rivi :tila "virhe")
                                                                                       rivi))
                                                                               @maksuerarivit))))))))]
+        (tarkkaile! "maksuerarivit" maksuerarivit)
         (hae-urakan-maksuerat ur) ; FIXME Urakan maksuerät ja tilat haetaan kannasta kun sivulle tullaan. Entä jos tilat muuttuvat sivulla oltaessa?
         (komp/luo
             {:component-will-receive-props
