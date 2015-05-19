@@ -50,8 +50,7 @@
                                           (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
                                           (if res ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
                                               ;; Lähetys ok
-                                              (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
-                                                  (reset! maksuerarivit (mapv (fn [rivi]
+                                              (do (reset! maksuerarivit (mapv (fn [rivi]
                                                                                   (if (contains? lahetettavat-maksueranumerot (:numero rivi))
                                                                                       (assoc rivi :tila "odottaa_vastausta")
                                                                                       rivi))
