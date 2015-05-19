@@ -116,7 +116,7 @@
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Tila" :nimi :tila :tyyppi :komponentti :komponentti (fn [rivi] (case (:tila rivi)
                                                                     "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta"]
-                                                                    "lahetetty" [:span.maksuera-lahetetty "Lähetetty, kuittaus saatu"]
+                                                                    "lahetetty" [:span.maksuera-lahetetty (str "Lähetetty, kuittaus saatu " (pvm/pvm-aika (:lahetetty rivi)))]
                                                                     "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"];
                                                                     [:span "Ei lähetetty"])) :leveys "14%"}
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti :komponentti (fn [rivi]
