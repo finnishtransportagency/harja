@@ -34,7 +34,7 @@
 (defn maksuerat
   "Maksuerien pääkomponentti"
     [ur]
-    (let [lahetyksessa (atom #{})
+    (let [lahetyksessa (atom #{}) ; Setti lähetyksessä olevista maksuerien numeroista
           maksuerarivit (atom nil)
           hae-urakan-maksuerat (fn [ur] (go
                                       (reset! maksuerarivit (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
@@ -47,18 +47,13 @@
           laheta-maksuerat (fn [maksueranumerot] ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
                                (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @lahetyksessa %)) maksueranumerot))]
                                       (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
-                                          (reset! maksuerarivit (mapv (fn [rivi]
-                                                                          (if (contains? lahetettavat-maksueranumerot (:numero rivi))
-                                                                              (assoc rivi :tila "odottaa_vastausta")
-                                                                              rivi))
-                                                                                @maksuerarivit))
                                           (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
                                           (if res ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
                                               ;; Lähetys ok
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
                                                   (reset! maksuerarivit (mapv (fn [rivi]
                                                                                   (if (contains? lahetettavat-maksueranumerot (:numero rivi))
-                                                                                      (assoc rivi :tila "lahetetty") ; TODO Vaihda sen mukaan mitä back palauttaa.
+                                                                                      (assoc rivi :tila "odottaa_vastausta")
                                                                                       rivi))
                                                                               @maksuerarivit)))
                                               ;; Epäonnistui jostain syystä
@@ -68,7 +63,7 @@
                                                                                       (assoc rivi :tila "virhe")
                                                                                       rivi))
                                                                               @maksuerarivit))))))))]
-        (hae-urakan-maksuerat ur)
+        (hae-urakan-maksuerat ur) ; FIXME Urakan maksuerät ja tilat haetaan kannasta kun sivulle tullaan. Entä jos tilat muuttuvat sivulla oltaessa?
         (komp/luo
             {:component-will-receive-props
              (fn [_ & [_ ur]]
