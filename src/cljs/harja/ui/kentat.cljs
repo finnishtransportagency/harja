@@ -100,12 +100,6 @@
            :on-focus on-focus
            :value @data}])
 
-(defmethod tee-kentta :nappi [{:keys [nappi-nimi nappi-toiminto lomake?]} data]
-    [:button {:class (str (when lomake? "form-control") "nappi-ensisijainen")
-             :type "button"
-             :on-click nappi-toiminto} nappi-nimi]
-    )
-
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
     (r/create-class
