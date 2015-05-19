@@ -76,7 +76,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
       (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))))
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
-  (q/luo-siltatarkastus<! silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user)))
+  (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user)))
               
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
