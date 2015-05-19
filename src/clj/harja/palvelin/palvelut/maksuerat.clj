@@ -36,7 +36,6 @@
         (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
 
 (defn laheta-maksuera-sampoon
-  "Palvelu, joka lähettää annetun maksuerän Sampoon."
   [sampo user maksueranumero]
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
   ;; FIXME: Palauta future

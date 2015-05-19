@@ -4,6 +4,7 @@
             [harja.palvelin.palvelut.maksuerat :refer :all]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]))
 
 
@@ -24,15 +25,20 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest urakan-maksuerat-haettu-okein []
+(deftest urakan-maksuerat-haettu-okein-urakalle-1 []
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)
-        maksuera (first maksuerat)]
+        maksuera-1 (first maksuerat)
+        maksuera-3 (nth maksuerat 2)]
     (is (= 5 (count maksuerat)))
-    (is (= "kokonaishintainen" (:tyyppi maksuera)))
-    (is (= "Oulu Talvihoito TP" (:nimi (:toimenpideinstanssi maksuera))))))
+    (mapv #(is (= 1 (:id (:toimenpideinstanssi %)))) maksuerat)
 
+    (is (= "kokonaishintainen" (:tyyppi maksuera-1)))
+    (is (= "Oulu Talvihoito TP" (:nimi (:toimenpideinstanssi maksuera-1))))
+    (is (nil? (:tila maksuera-1)))
 
-
+    (is (= "bonus" (:tyyppi maksuera-3)))
+    (is (= "odottaa_vastausta" (:tila maksuera-3)))
+    ))
 
 
