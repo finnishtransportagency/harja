@@ -10,6 +10,7 @@
     this)
   (stop [this]
     (println "Tietokanta suljetaan: " datasource)
+    (.close datasource)
     this))
 
 
