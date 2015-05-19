@@ -28,8 +28,7 @@
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)
         maksuera (first maksuerat)]
-    (is (= 1 (count maksuerat)))
-    (is (= 1 (:numero maksuera)))
+    (is (= 5 (count maksuerat)))
     (is (= "kokonaishintainen" (:tyyppi maksuera)))
     (is (= "Oulu Talvihoito TP" (:nimi (:toimenpideinstanssi maksuera))))))
 
