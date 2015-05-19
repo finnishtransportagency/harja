@@ -88,7 +88,8 @@
                      ]
   
   
-  :profiles {:dev {:dependencies []}
+  :profiles {:dev {:dependencies []
+                   :plugins [[com.jakemccrary/lein-test-refresh "0.9.0"]]}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
@@ -156,6 +157,8 @@
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
 
+  :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
+  
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)
