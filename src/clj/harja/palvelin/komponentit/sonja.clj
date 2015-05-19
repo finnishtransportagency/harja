@@ -151,7 +151,18 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 (defn luo-sonja [asetukset]
   (if asetukset
     (->SonjaYhteys asetukset nil nil nil)
-    {}))
+    (reify
+      component/Lifecycle
+      (start [this] this)
+      (stop [this] this)
+      
+      Sonja
+      (kuuntele [this jonon-nimi kuuntelija-fn]
+        (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
+        #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
+      (laheta [this jonon-nimi viesti]
+        (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
+        (str "ID:" (System/currentTimeMillis))))))
   
 
 ;;(def +sampo-to-harja+ "Harja13-16.SampoToHarja.Msg") ;; SAMPO -> Harja (SAMPOn hankkeet,urakat, jne)

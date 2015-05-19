@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.maksuerat_test
+(ns harja.palvelin.palvelut.maksuerat-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.maksuerat :refer :all]
@@ -25,13 +25,13 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest urakan-maksuerat-haettu-okein []
-                                       (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                       :hae-urakan-maksuerat +kayttaja-tero+ 1)
-                                             maksuera (first maksuerat)]
-                                         (is (= 1 (count maksuerat)))
-                                         (is (= 1 (:numero maksuera)))
-                                         (is (= "kokonaishintainen" (:tyyppi maksuera)))
-                                         (is (= "Oulu Talvihoito TP" (:nimi (:toimenpideinstanssi maksuera))))))
+  (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-urakan-maksuerat +kayttaja-jvh+ 1)
+        maksuera (first maksuerat)]
+    (is (= 1 (count maksuerat)))
+    (is (= 1 (:numero maksuera)))
+    (is (= "kokonaishintainen" (:tyyppi maksuera)))
+    (is (= "Oulu Talvihoito TP" (:nimi (:toimenpideinstanssi maksuera))))))
 
 
 
