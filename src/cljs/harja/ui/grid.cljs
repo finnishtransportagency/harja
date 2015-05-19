@@ -283,17 +283,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [:tr {:class luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi nappi-nimi nappi-toiminto nappi-luokka]} skeema]
+   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
        [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
        [:td {:class
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
-        (if (= tyyppi :nappi)
-            [:button {:class (nappi-luokka rivi)
-                      :type "button"
-                      :on-click #(nappi-toiminto rivi)} nappi-nimi]
+        (if (= tyyppi :komponentti)
+            (komponentti rivi)
             ((or fmt str) (if hae
                            (hae rivi)
                            (get rivi nimi))))]))])
