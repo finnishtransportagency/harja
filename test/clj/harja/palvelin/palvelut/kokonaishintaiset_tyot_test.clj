@@ -31,8 +31,7 @@
 
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-kokonaishintaiset-tyot-haettu-oikein []
-  (let [oulun-alueurakan-sopimus (ffirst (q jarjestelma
-                                            (str "SELECT id 
+  (let [oulun-alueurakan-sopimus (ffirst (q (str "SELECT id 
                                                  FROM sopimus 
                                                  WHERE urakka = " @oulun-alueurakan-id
                                                  " AND paasopimus IS null")))
@@ -43,7 +42,7 @@
                                                 :kokonaishintaiset-tyot +kayttaja-jvh+ @oulun-alueurakan-id))
         talvihoidon-tyot (filter #(= "Oulu Talvihoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         sorateiden-tyot (filter #(= "Oulu Sorateiden hoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
-        oulun-alueurakan-toiden-lkm (ffirst (q jarjestelma (str "SELECT count(*) 
+        oulun-alueurakan-toiden-lkm (ffirst (q (str "SELECT count(*) 
                                                                 FROM kokonaishintainen_tyo kt 
                                                                 LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                                                                 WHERE tpi.urakka = " @oulun-alueurakan-id

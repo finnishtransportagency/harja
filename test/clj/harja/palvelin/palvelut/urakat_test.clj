@@ -35,5 +35,4 @@
                         {:urakka-id     @oulun-alueurakan-id
                          :sopimustyyppi "kokonaisurakka"})]
     (is (= uusi-sopimustyyppi "kokonaisurakka"))
-    (u jarjestelma
-       (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-id))))
+    (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-id))))

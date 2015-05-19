@@ -22,10 +22,12 @@
 (defn luo-testitietokanta []
   (apply tietokanta/luo-tietokanta testitietokanta))
 
+(def db (:datasource (luo-testitietokanta)))
+  
 (defn q
   "Kysele Harjan kannasta yksikkötestauksen yhteydessä"
-  [jarjestelma & sql]
-  (with-open [c (.getConnection (:datasource (:db jarjestelma)))
+  [& sql]
+  (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))
               rs (.executeQuery ps)]
     (let [cols (-> (.getMetaData rs) .getColumnCount)]
@@ -42,8 +44,8 @@
 
 (defn u
   "Päivitä Harjan kantaa yksikkötestauksen yhteydessä"
-  [jarjestelma & sql]
-  (with-open [c (.getConnection (:datasource (:db jarjestelma)))
+  [& sql]
+  (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
 
@@ -104,12 +106,12 @@
 (def pudasjarven-alueurakan-id (atom nil))
 
 (defn hae-oulun-alueurakan-id []
-  (ffirst (q jarjestelma (str "SELECT id
+  (ffirst (q  (str "SELECT id
                                FROM   urakka
                                WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
 
 (defn hae-pudasjarven-alueurakan-id []
-  (ffirst (q jarjestelma (str "SELECT id        x
+  (ffirst (q  (str "SELECT id        x
                                FROM   urakka
                                WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
 
