@@ -172,6 +172,6 @@ L.Popup = function() {};
 L.Popup.prototype.setContent = function(c) {};
 
 /**
- * @parameter {L.LatLng} l
+ * @param {L.LatLng} l
  */
 L.Popup.prototype.setLatLng = function(l) {};
