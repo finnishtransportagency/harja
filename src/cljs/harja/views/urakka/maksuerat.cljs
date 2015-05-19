@@ -41,9 +41,8 @@
                                       (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                                                          (fn [rivi] (:numero rivi))
                                                                          (filter
-                                                                             (fn [rivi] (and
-                                                                                 (not (= (:tila rivi) nil))
-                                                                                 (not (= (:tila rivi) "virhe"))))
+                                                                             (fn [rivi]
+                                                                                 (= (:tila rivi) "odottaa_vastausta"))
                                                                              @maksuerarivit))))))
           laheta-maksuerat (fn [maksueranumerot] ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
                                (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @lahetyksessa %)) maksueranumerot))]
@@ -59,7 +58,7 @@
                                               (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
                                                   (reset! maksuerarivit (mapv (fn [rivi]
                                                                                   (if (contains? lahetettavat-maksueranumerot (:numero rivi))
-                                                                                      (assoc rivi :tila "lahetetty")
+                                                                                      (assoc rivi :tila "lahetetty") ; TODO Vaihda sen mukaan mitä back palauttaa.
                                                                                       rivi))
                                                                               @maksuerarivit)))
                                               ;; Epäonnistui jostain syystä
