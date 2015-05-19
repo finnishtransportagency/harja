@@ -70,26 +70,32 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
-  [db {:keys [id kohteet]}]
+  [db {:keys [id kohteet] :as siltatarkastus}]
   (doseq [[kohde [tulos lisatieto]] kohteet]
-    (do
-      (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))))
+    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))
+  siltatarkastus)
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
-  (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user)))
-              
+  (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user))
+        id (:id luotu-tarkastus)]
+    (doseq [[kohde [tulos lisatieto]] kohteet]
+      (q/luo-siltatarkastuksen-kohde<! db tulos lisatieto id kohde))
+    (assoc luotu-tarkastus
+      :kohteet kohteet)))
+  
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [tarkastus (if id
-                      siltatarkastus
+                      ;; Olemassaoleva tarkastus, päivitetään kohteet
+                      (paivita-siltatarkastuksen-kohteet! c siltatarkastus)
                       
-                      ;; Ei id:tä, kyseessä on uusi siltatarkastus
-                      (assoc (luo-siltatarkastus c user siltatarkastus)
-                        :kohteet kohteet))]
-      (paivita-siltatarkastuksen-kohteet! c tarkastus)
+                      ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
+                      ;; ja sen kohteet
+                      (luo-siltatarkastus c user siltatarkastus))]
+      
       (hae-siltatarkastus c (:id tarkastus)))))
 
       

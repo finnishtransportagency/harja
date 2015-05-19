@@ -79,6 +79,14 @@ UPDATE siltatarkastuskohde
    SET tulos = :tulos, lisatieto = :lisatieto
  WHERE siltatarkastus = :siltatarkastus AND kohde = :kohde
 
+-- name: luo-siltatarkastuksen-kohde<!
+-- Luo siltatarkastukselle uuden kohteet
+INSERT
+  INTO siltatarkastuskohde
+       (tulos, lisatieto, siltatarkastus, kohde)
+VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde)
+
+   
 -- name: poista-siltatarkastus!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
