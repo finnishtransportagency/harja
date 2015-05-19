@@ -1,20 +1,21 @@
 (ns harja.palvelin.integraatiot.sampo.maksuera
   (:require [hiccup.core :refer [html]]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
   (:import (java.text SimpleDateFormat)
            (java.util Date Calendar)))
 
 (defn muodosta-kulu-id []
-  (clojure.string/join "" ["kulu"
-                           (let [calendar (Calendar/getInstance)]
-                             (.setTime calendar (Date.))
-                             (.get calendar Calendar/YEAR))]))
+  (str/join "" ["kulu"
+                (let [calendar (Calendar/getInstance)]
+                  (.setTime calendar (Date.))
+                  (.get calendar Calendar/YEAR))]))
 
 (defn muodosta-maksueranumero [numero]
-  (clojure.string/join "" ["HA" numero]))
+  (str/join "" ["HA" numero]))
 
 (defn muodosta-instance-code [numero]
-  (clojure.string/join "" ["AL" numero]))
+  (str/join "" ["AL" numero]))
 
 (defn luo-custom-information [values & content]
   [:CustomInformation
