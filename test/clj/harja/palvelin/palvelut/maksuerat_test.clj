@@ -29,6 +29,14 @@
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
     (is (= 5 (count maksuerat)))
-    (mapv #(is (= 1 (:id (:toimenpideinstanssi %)))) maksuerat)))
+    (mapv #(is (= 1 (:id (:toimenpideinstanssi %)))) maksuerat)
+    (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "yksikkohintainen" (:tyyppi %)) maksuerat)) 1))
+    (is (= (count (filter #(= "bonus" (:tyyppi %)) maksuerat)) 1))
+    (is (= (count (filter #(= "akillinen_hoitotyo" (:tyyppi %)) maksuerat)) 1))
+    (is (= (count (filter #(nil? (:tila %)) maksuerat)) 2))
+    (is (= (count (filter #(= "odottaa_vastausta" (:tila %)) maksuerat)) 1))
+    (is (= (count (filter #(= "lahetetty" (:tila %)) maksuerat)) 1))
+    (is (= (count (filter #(= "virhe" (:tila %)) maksuerat)) 1))))
 
 
