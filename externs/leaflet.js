@@ -162,3 +162,16 @@ L.MultiPolygon.prototype.on = function(eventType, callback) {};
  * @extends {L.FeatureGroup}
  */
 L.MultiPolyline = function(t,e) {};
+
+/**
+ * @constructor
+ * @extends {L.Layer}
+ */
+L.Popup = function() {};
+
+L.Popup.prototype.setContent = function(c) {};
+
+/**
+ * @parameter {L.LatLng} l
+ */
+L.Popup.prototype.setLatLng = function(l) {};
