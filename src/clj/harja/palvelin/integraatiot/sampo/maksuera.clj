@@ -48,7 +48,7 @@
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
-      [:Product {:name                  "TESTI"    ;; FIXME: generoi nimi urakasta yms.
+      [:Product {:name                  (:nimi maksuera)    ;; FIXME: generoi nimi urakasta yms.
                  :financialProjectClass "INVCLASS"
                  :start                 (formatoi-paivamaara alkupvm)
                  :finish                (formatoi-paivamaara loppupvm)
@@ -87,7 +87,9 @@
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
                                 (luo-custom-information {"code"                 instance-code
-                                                         "vv_payment_date"      "FOO" ; FIXME: Mistä saadaan maksupäivä? (date-format me-paiva)
+                                                         ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
+                                                         ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
+                                                         "vv_payment_date"      (formatoi-paivamaara (java.util.Date.))
                                                          "vv_paym_sum"          (laske-summa maksuera)
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))

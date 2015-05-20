@@ -24,6 +24,7 @@ WHERE tpi.urakka = :urakkaid;
 SELECT
   m.numero,
   m.tyyppi,
+  m.nimi, 
   tpi.alkupvm          AS toimenpideinstanssi_alkupvm,
   tpi.loppupvm         AS toimenpideinstanssi_loppupvm,
   tpi.vastuuhenkilo_id AS toimenpideinstanssi_vastuuhenkilo,
