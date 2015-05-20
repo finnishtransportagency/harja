@@ -65,7 +65,6 @@ INSERT
        (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu)
 VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false)
 
-
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
 SELECT siltatarkastus, kohde, tulos, lisatieto

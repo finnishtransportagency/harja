@@ -153,8 +153,7 @@
     ;; FIXME: on-focus alasvetovalintaan?
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
                           :valinta @data
-                          :valitse-fn #(do (log "valinta: " %)
-                                           (reset! data %))
+                          :valitse-fn #(reset! data %)
                           :format-fn valinta-nayta}
      valinnat]))
 

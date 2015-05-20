@@ -23,12 +23,6 @@
   (log "tiedot, tallenna-siltatarkastus" (pr-str siltatarkastus))
   (k/post! :tallenna-siltatarkastus siltatarkastus))
 
-(defn paivita-siltatarkastuksen-kohteet!
-  [siltatarkastus-id kohderivit]
-  (k/post! :paivita-siltatarkastuksen-kohteet {:urakka-id @nav/valittu-urakka
-                                               :siltatarkastus-id siltatarkastus-id
-                                               :kohderivit kohderivit}))
-
 (defn poista-siltatarkastus! [silta tarkastus]
   "Merkitsee annetun sillantarkastuksen poistetuksi"
   (log "tiedot poista-st!" silta tarkastus)
@@ -77,5 +71,8 @@
 
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 
+(defn uusi-tarkastus [silta ur]
+  {:kohteet {}, :silta-id silta, :urakka-id ur, :id nil, :tarkastusaika nil, :tarkastaja nil})
+
 (tarkkaile! "valittu-silta" valittu-silta)
-(tarkkaile! "valitun-sillan-tarkastuksetko" valitun-sillan-tarkastukset)
+(tarkkaile! "valitun-sillan-tarkastukset" valitun-sillan-tarkastukset)

@@ -30,18 +30,34 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defonce uusi-tarkastus (atom false))
+(defonce uuden-syottaminen (atom false))
+(def +valitse-tulos+ "- valitse tulos -")
+
+(defn tarkastuksen-tekija-ja-aika [silta-tai-tarkastus]
+  (let [tarkastuksia? (> (count @st/valitun-sillan-tarkastukset) 0)
+        aika (if (:tarkastusaika silta-tai-tarkastus)
+               (pvm/pvm (:tarkastusaika silta-tai-tarkastus))
+               "Ei tietoa tarkastusajasta")
+        tarkastaja (if (:tarkastaja silta-tai-tarkastus)
+                     (:tarkastaja silta-tai-tarkastus)
+                     "Ei tietoa tarkastajasta")]
+    (if tarkastuksia?
+      (str aika " (" tarkastaja ")")
+      "Ei tarkastuksia"))
+  )
+
+(defn paivita-valittu-silta []
+  (let [silta @st/valittu-silta
+        tarkastukset @st/valitun-sillan-tarkastukset]
+    (sillat/paivita-silta! (:id silta)
+                           assoc :tarkastusaika (:tarkastusaika (first tarkastukset))
+                           :tarkastaja (:tarkastaja (first tarkastukset)))))
 
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
    [yleiset/tietoja {}
     "Sillan numero: " (:siltanro silta)
-    "Edellinen tarkastus: " (if (:tarkastusaika silta)
-                              (pvm/pvm (:tarkastusaika silta))
-                              "Ei tietoa")
-    "Tarkastaja: " (if (:tarkastaja silta)
-                     (:tarkastaja silta)
-                     "Ei tietoa")]])
+    "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)]])
 
 (defonce klikatun-sillan-popup
   (tapahtumat/kuuntele! :silta-klikattu
@@ -109,7 +125,7 @@
     "B" "B - puhdistettava"
     "C" "C - urakan kunnostettava"
     "D" "D - korjaus ohjelmoitava"
-    "-"))
+    +valitse-tulos+))
 
 (defn siltatarkastuksen-sarakkeet [valittu-tarkastus muut-tarkastukset]
   ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
@@ -117,9 +133,9 @@
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
-           {:otsikko       (str "Tulos " (pvm/vuosi (:tarkastusaika valittu-tarkastus))) :nimi :tulos :leveys "15%"
+           {:otsikko       "Tulos " :nimi :tulos :leveys "15%"
             :tyyppi        :valinta :valinta-arvo identity
-            :valinta-nayta #(if (nil? %) "-" (kohdetuloksen-teksti %))
+            :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
             :fmt           #(kohdetuloksen-teksti %)}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
@@ -130,24 +146,36 @@
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
-(defn tallenna-siltatarkastus!
-  [siltatarkastus]
-  (go (let [res (<! (st/tallenna-siltatarkastus! siltatarkastus))]
-        (log "view tallenna-siltarakastus, res" (pr-str res))
-        ;resetoi atomi st/valitun-sillan-tarkastukset
-        ;(reset! st/valittu-tarkastus)
-        ))
-  )
+(defn paivita-siltatarkastus! [taulukon-rivit]
+  (go (let [kohteet-mapissa (into {}
+                                  (map (fn [rivi]
+                                         [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi)]])
+                                       taulukon-rivit))
+            tallennettava-tarkastus (assoc @st/valittu-tarkastus :kohteet kohteet-mapissa)
+            res (<! (st/tallenna-siltatarkastus! tallennettava-tarkastus))
+            muut-tarkastukset (filter (fn [tarkastus]
+                                        (not (= (:id tarkastus) (:id res))))
+                                      @st/valitun-sillan-tarkastukset)
+            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge muut-tarkastukset res)))]
+        (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
+        (reset! st/valittu-tarkastus res))))
 
-(defn paivita-siltatarkastuksen-kohteet! [siltatarkastus-id tarkastuskohteet tallennettava]
-  (go (let [muuttuneet-kohteet (<! (st/paivita-siltatarkastuksen-kohteet! siltatarkastus-id tallennettava))
-            kohteet-jotka-eivat-muuttuneet (filter #(not (= (:siltatarkastus %) siltatarkastus-id))
-                                                   @tarkastuskohteet)
-            uudet-tarkastuskohteet (into []
-                                         (apply merge
-                                                kohteet-jotka-eivat-muuttuneet
-                                                muuttuneet-kohteet))]
-        (reset! tarkastuskohteet uudet-tarkastuskohteet))))
+
+
+(defn tallenna-uusi-siltatarkastus! [lomake taulukon-rivit]
+  (go (let [kohteet-mapissa (into {}
+                                  (map (fn [rivi]
+                                         [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi)]])
+                                       taulukon-rivit))
+            uusi-tarkastus (assoc lomake :kohteet kohteet-mapissa)
+            res (<! (st/tallenna-siltatarkastus! uusi-tarkastus))
+            olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
+            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))
+            silta @st/valittu-silta]
+        (reset! uuden-syottaminen false)
+        (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
+        (reset! st/valittu-tarkastus res)
+        (paivita-valittu-silta))))
 
 (defn siltatarkastusten-rivit
   [valittu-tarkastus muut-tarkastukset]
@@ -174,20 +202,15 @@
                 (assoc silta
                   :tarkastusaika (:tarkastusaika (first @st/valitun-sillan-tarkastukset))
                   :tarkastaja (:tarkastaja (first @st/valitun-sillan-tarkastukset))))
-        (sillat/paivita-silta! (:id silta)
-                               assoc :tarkastusaika (:tarkastusaika (first @st/valitun-sillan-tarkastukset))
-                               :tarkastaja (:tarkastaja (first @st/valitun-sillan-tarkastukset))))))
+        (paivita-valittu-silta))))
 
 
 (defn sillan-tarkastukset []
   (let [
-        tarkastuskohteet (reaction (let [val-tark @st/valittu-tarkastus]
-                                     (:kohteet val-tark)))
         muut-tarkastukset (reaction (let [kaikki @st/valitun-sillan-tarkastukset
                                           aika (:tarkastusaika @st/valittu-tarkastus)]
                                       (when aika
                                         (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
-        
         siltatarkastussarakkeet (reaction (let [vt @st/valittu-tarkastus
                                                 muut @muut-tarkastukset]
                                             (when vt
@@ -195,8 +218,7 @@
         siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
                                             muut @muut-tarkastukset]
                                         (when tark (siltatarkastusten-rivit tark muut))))
-        tallennus-kaynnissa (atom false)
-        poista-painettu (atom false)]
+        tallennus-kaynnissa (atom false)]
 
     (komp/luo
      
@@ -206,52 +228,57 @@
                                      :style {:display "block"}}
          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
 
-        [sillan-perustiedot @st/valittu-silta]
 
-        [:div.siltatarkastus-kontrollit
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Tarkastus"]
-          [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
-                                ;;\u2014 on väliviivan unikoodi
-                                :format-fn  #(if % (str (pvm/pvm (:tarkastusaika %))) "Valitse")
-                                :valitse-fn #(reset! st/valittu-tarkastus %)
-                                :class      "suunnittelu-alasveto"
-                                }
-           @st/valitun-sillan-tarkastukset]]
+          [sillan-perustiedot @st/valittu-silta]
 
-         [:button.nappi-kielteinen {:on-click
-                                    (fn [e]
-                                      (modal/nayta! {:otsikko "Sillan tarkastuksen poistaminen"
-                                                     :footer  [:span
-                                                               [:button.nappi-toissijainen {:type     "button"
-                                                                                            :on-click #(do (.preventDefault %)
-                                                                                                           (modal/piilota!))}
-                                                                "Peruuta"]
-                                                               [:button.nappi-kielteinen {:type     "button"
-                                                                                          :on-click #(do (.preventDefault %)
-                                                                                                         (modal/piilota!)
-                                                                                                         (poista-siltatarkastus!))}
-                                                                "Poista tarkastus"]
-                                                               ]
-                                                     :sulje   #(reset! poista-painettu false)}
-                                                    [:div "Haluatko varmasti poistaa sillalle "
-                                                     [:b (str (:siltanimi @st/valittu-silta) " (nro " (:siltanro @st/valittu-silta)
-                                                              ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
-                                                     " tehdyn tarkastuksen?"]))}
-          (ikonit/trash) " Poista tarkastus"]
-         [:button.nappi-toissijainen {:on-click #(swap! uusi-tarkastus not)}
-          (ikonit/plus) " Uusi tarkastus"]]
+
+          [:div.siltatarkastus-kontrollit
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Tarkastus"]
+           [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn  #(tarkastuksen-tekija-ja-aika %)
+                                 :valitse-fn #(reset! st/valittu-tarkastus %)
+                                 :class      "suunnittelu-alasveto"
+                                 }
+            @st/valitun-sillan-tarkastukset]]
+
+          [:button.nappi-kielteinen {:on-click
+                                     (fn [e]
+                                       (modal/nayta! {:otsikko "Sillan tarkastuksen poistaminen"
+                                                      :footer  [:span
+                                                                [:button.nappi-toissijainen {:type     "button"
+                                                                                             :on-click #(do (.preventDefault %)
+                                                                                                            (modal/piilota!))}
+                                                                 "Peruuta"]
+                                                                [:button.nappi-kielteinen {:type     "button"
+                                                                                           :on-click #(do (.preventDefault %)
+                                                                                                          (modal/piilota!)
+                                                                                                          (poista-siltatarkastus!))}
+                                                                 "Poista tarkastus"]
+                                                                ]}
+                                                     [:div "Haluatko varmasti poistaa sillalle "
+                                                      [:b (str (:siltanimi @st/valittu-silta) " (nro " (:siltanro @st/valittu-silta)
+                                                               ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
+                                                      " tehdyn tarkastuksen?"]))}
+           (ikonit/trash) " Poista tarkastus"]
+          [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen true)}
+           (ikonit/plus) " Uusi tarkastus"]]
 
         [grid/grid
-         {:otsikko        "Sillan tarkastukset"
-          :tyhja          (if (nil? @st/valitun-sillan-tarkastukset)
-                            [ajax-loader "Sillan tarkastuksia haetaan..."]
-                            "Sillasta ei ole vielä tarkastuksia Harjassa.")
-          :tunniste       :kohdenro
-          :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                      (:id @nav/valittu-urakka)
-                                                      #(tallenna-siltatarkastus! %)
-                                                      :ei-mahdollinen)
+         {:otsikko      (if @st/valittu-tarkastus
+                          (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
+                          "Sillan tarkastus")
+          :tyhja        (if (nil? @st/valitun-sillan-tarkastukset)
+                          [ajax-loader "Sillan tarkastuksia haetaan..."]
+                          "Sillasta ei ole vielä tarkastuksia Harjassa.")
+          :tunniste     :kohdenro
+          :voi-lisata?  false
+          :voi-poistaa? (constantly false)
+          :tallenna     (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
+                                                    (:id @nav/valittu-urakka)
+                                                    #(paivita-siltatarkastus! %)
+                                                    :ei-mahdollinen)
           }
 
          ;; sarakkeet
@@ -259,11 +286,90 @@
 
          @siltatarkastusrivit]]))))
 
-(defn uuden-tarkastuksen-syottaminen [ur]
-  [:div.uusi-siltatarkastus
-   "Uusi siltatarkastus"] )
+(defn uuden-siltatarkastusten-rivit [uusi-tarkastus]
+  (siltatarkastusten-rivit uusi-tarkastus []))
 
-(defn siltatarkastukset [ur]
+
+(defn uuden-tarkastuksen-syottaminen []
+  (let [uusi-tarkastus (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
+        lomakkeen-tiedot (atom (dissoc uusi-tarkastus :kohteet))
+        lomake-taytetty (reaction (and
+                                    (not (nil? (:tarkastusaika @lomakkeen-tiedot)))
+                                    (not (str/blank? (:tarkastaja @lomakkeen-tiedot)))))
+        tallennus-kaynnissa (atom false)
+        taulukon-rivit (reaction
+                         (uuden-siltatarkastusten-rivit uusi-tarkastus))
+        taulukon-riveilla-tulos (reaction (= (count @taulukon-rivit)
+                                              (count (filter #(not (nil? (:tulos %))) @taulukon-rivit))))
+        g (grid/grid-ohjaus)]
+
+    (komp/luo
+      (fn []
+        [:div.uusi-siltatarkastus
+         [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen false)
+                                      :style {:display "block"}}
+          (ikonit/chevron-left) " Palaa tallentamatta"]
+        [:h3 "Luo uusi siltatarkastus"]
+         [lomake {:luokka   :horizontal
+                  :muokkaa! (fn [uusi]
+                              (log "MUOKATAAN " (pr-str uusi))
+                              (reset! lomakkeen-tiedot uusi))}
+          [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
+           {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
+
+
+
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2}
+
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys-col 4
+            :tyyppi  :string}]
+
+          @lomakkeen-tiedot]
+
+         [grid/grid
+          {:otsikko      "Uusi sillan tarkastus"
+           :tunniste     :kohdenro
+           :ohjaus       g
+           :muokkaa-aina true
+           :voi-lisata?  false
+           :voi-poistaa? (constantly false)
+           :muutos       (fn [g]
+                           (reset! taulukon-rivit (vals (grid/hae-muokkaustila g))))}
+
+          ;; sarakkeet
+          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
+           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
+           {:otsikko       "Tulos" :nimi :tulos :leveys "15%"
+            :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
+            :tyyppi        :valinta :valinta-arvo identity
+            :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
+            :valinnat      ["A" "B" "C" "D"]
+            :fmt           #(kohdetuloksen-teksti %)}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
+
+          @taulukon-rivit]
+
+         ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
+         [:button.nappi-ensisijainen
+          {:class    (when @tallennus-kaynnissa "disabled")
+           :disabled (not (and @lomake-taytetty @taulukon-riveilla-tulos))
+           :on-click
+                     #(do (.preventDefault %)
+                          (reset! tallennus-kaynnissa true)
+                          (go (let [res (<! (tallenna-uusi-siltatarkastus! @lomakkeen-tiedot (vals (grid/hae-muokkaustila g))))]
+                                (if res
+                                  ;; Tallennus ok
+                                  (do (viesti/nayta! "Siltatarkastus tallennettu")
+                                      (reset! tallennus-kaynnissa false)
+                                      (reset! uuden-syottaminen false))
+                                  ;; Epäonnistui jostain syystä
+                                  ;; fixme: pitäisköhän näyttää se käyttäjällekin ;)
+                                  (reset! tallennus-kaynnissa false)))))}
+           (ikonit/ok) " Tallenna tarkastus"]
+         (when (not (and @lomake-taytetty @taulukon-riveilla-tulos))
+           [:span.napin-vinkki "Täytä kaikki tiedot ennen tallennusta"])]))))
+
+(defn siltatarkastukset []
 
   (komp/luo
     {:component-will-mount (fn [_]
@@ -272,8 +378,8 @@
                                (kartta-tasot/taso-pois! :sillat))}
 
     (fn [ur]
-      (if @uusi-tarkastus
-        [uuden-tarkastuksen-syottaminen ur]
-        (if-let [vs @st/valittu-silta]
-          [sillan-tarkastukset vs]
-          [sillat ur])))))
+      (if @uuden-syottaminen
+        [uuden-tarkastuksen-syottaminen]
+      (if-let [vs @st/valittu-silta]
+        [sillan-tarkastukset vs]
+        [sillat ur])))))
