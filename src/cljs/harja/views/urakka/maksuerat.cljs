@@ -31,19 +31,6 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn tyyppi-enum->string-singular
-    [tyyppi]
-    (case tyyppi
-        "kokonaishintainen" "Kokonaishintainen"
-        "yksikkohintainen" "Yksikköhintainen"
-        "lisatyo" "Lisätyö"
-        "indeksi" "Indeksi"
-        "bonus" "Bonus"
-        "sakko" "Sakko"
-        "akillinen_hoitotyo" "Äkillinen hoitotyö"
-        "muu" "Muu"
-        "Ei tyyppiä"))
-
 (defn tyyppi-enum->string-plural [tyyppi]
     (case tyyppi
         "kokonaishintainen" "Kokonaishintaiset"
@@ -57,13 +44,11 @@
         "Ei tyyppiä"))
 
 (defn ryhmittele-maksuerat [rivit]
-    (log "rivit" (pr-str rivit))
     (let [otsikko (fn [rivi] (tyyppi-enum->string-plural (:tyyppi rivi)))
           otsikon-mukaan (group-by otsikko rivit)]
         (mapcat (fn [[otsikko rivit]]
                     (concat [(grid/otsikko otsikko)] rivit))
                 (seq otsikon-mukaan))))
-
 
 (defn maksuerat
   "Maksuerien pääkomponentti"
@@ -110,15 +95,14 @@
               :tyhja "Ei maksueriä."
               :tallenna nil}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :pituus 16}
-              {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :string :fmt #(tyyppi-enum->string-singular %) :leveys "17%" :pituus 16}
+              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "30%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Tila" :nimi :tila :tyyppi :komponentti :komponentti (fn [rivi] (case (:tila rivi)
                                                                     "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta"]
-                                                                    "lahetetty" [:span.maksuera-lahetetty (str "Lähetetty, kuittaus saatu " (pvm/pvm-aika (:lahetetty rivi)))]
+                                                                    "lahetetty" [:span.maksuera-lahetetty (str "Lähetetty, kuitattu " (pvm/pvm-aika (:lahetetty rivi)))]
                                                                     "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"];
-                                                                    [:span "Ei lähetetty"])) :leveys "14%"}
+                                                                    [:span "Ei lähetetty"])) :leveys "19%"}
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti :komponentti (fn [rivi]
                                                                                               (let [maksueranumero (:numero rivi)]
                                                                                               [:button {:class (str "nappi-ensisijainen " (if (contains? @lahetyksessa maksueranumero) "disabled"))
