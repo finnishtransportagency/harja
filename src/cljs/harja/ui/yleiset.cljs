@@ -3,7 +3,10 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as t]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit])
+
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (declare kuuntelija)
 
@@ -44,6 +47,9 @@
       (when viesti
         [:div.viesti viesti])]))
 
+
+(defn indeksi [kokoelma itemi]
+  (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
 (defn sisalla? 
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
@@ -116,41 +122,54 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    {:auki (atom false)}
 
    (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
-     (let [auki (:auki (reagent/state (reagent/current-component)))]
+     (let [auki (:auki (reagent/state (reagent/current-component)))
+           term (atom "")]
        [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
         [:button.nappi-alasveto
-         {:type "button"
-          :disabled (if disabled "disabled" "")
-          :on-click #(do
-                       (swap! auki not)
-                       nil)
+         {:type        "button"
+          :disabled    (if disabled "disabled" "")
+          :on-click    #(do
+                         (swap! auki not)
+                         nil)
           :on-key-down #(let [kc (.-keyCode %)]
-                          (when (or (= kc 38)
-                                    (= kc 40)
-                                    (= kc 13))
-                            (.preventDefault %)
-                            (when-not (empty? vaihtoehdot)
-                              (let [nykyinen-valittu-idx (loop [i 0]
-                                                           (if (= i (count vaihtoehdot))
-                                                             nil
-                                                             (if (= (nth vaihtoehdot i) valinta)
-                                                               i
-                                                               (recur (inc i)))))]
-                                (case kc
-                                  38 ;; nuoli ylös
-                                  (if (or (nil? nykyinen-valittu-idx)
-                                          (= 0 nykyinen-valittu-idx))
-                                    (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
-                                    (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+                         (.preventDefault %)
+                         (.stopPropagation %)
+                         (if (or (= kc 38)
+                                 (= kc 40)
+                                 (= kc 13))
+                           (do
+                             (when-not (empty? vaihtoehdot)
+                               (let [nykyinen-valittu-idx (loop [i 0]
+                                                            (if (= i (count vaihtoehdot))
+                                                              nil
+                                                              (if (= (nth vaihtoehdot i) valinta)
+                                                                i
+                                                                (recur (inc i)))))]
+                                 (case kc
+                                   38 ;; nuoli ylös
+                                   (if (or (nil? nykyinen-valittu-idx)
+                                           (= 0 nykyinen-valittu-idx))
+                                     (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                     (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
 
-                                  40 ;; nuoli alas
-                                  (if (or (nil? nykyinen-valittu-idx)
-                                          (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
-                                    (valitse-fn (nth vaihtoehdot 0))
-                                    (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
-                               
-                                  13 ;; enter
-                                  (reset! auki false))))))}
+                                   40 ;; nuoli alas
+                                   (if (or (nil? nykyinen-valittu-idx)
+                                           (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                     (valitse-fn (nth vaihtoehdot 0))
+                                     (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+
+                                   13 ;; enter
+                                   (reset! auki false)))))
+
+                           (do
+                             (reset! term (char kc))
+                             (when-let [itemi (first (filter (fn [vaihtoehto]
+                                                               (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto ))
+                                                                            (.toLowerCase @term)) 0))
+                                                             vaihtoehdot))]
+                               (valitse-fn itemi)
+                               (reset! auki false)))) nil)}
+
          [:div.valittu (format-fn valinta)]
          [:span.caret]]
         [:ul.dropdown-menu.livi-alasvetolista
@@ -262,4 +281,3 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [& sisalto]
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
    sisalto])
-

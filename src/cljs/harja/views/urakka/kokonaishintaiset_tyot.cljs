@@ -25,12 +25,9 @@
 
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.ui.yleiset :refer [deftk]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 
-(defn indeksi [kokoelma itemi]
-  (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
 (defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
   (let [tyon-kalenteri-vuosi (if-not (= :hoito urakkatyyppi)
