@@ -95,7 +95,7 @@
               :tyhja "Ei maksueriä."
               :tallenna nil}
              [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "30%" :pituus 16}
+              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16}
               {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
               {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
               {:otsikko "Tila" :nimi :tila :tyyppi :komponentti :komponentti (fn [rivi] (case (:tila rivi)
@@ -105,10 +105,10 @@
                                                                     [:span "Ei lähetetty"])) :leveys "19%"}
               {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti :komponentti (fn [rivi]
                                                                                               (let [maksueranumero (:numero rivi)]
-                                                                                              [:button {:class (str "nappi-ensisijainen " (if (contains? @lahetyksessa maksueranumero) "disabled"))
+                                                                                              [:button.laheta-maksuera {:class (str "nappi-ensisijainen " (if (contains? @lahetyksessa maksueranumero) "disabled"))
                                                                                                         :type "button"
                                                                                                         :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
-                    :leveys "10%"}] ;
+                    :leveys "7%"}] ;
               @maksuerarivit
              ]
 
