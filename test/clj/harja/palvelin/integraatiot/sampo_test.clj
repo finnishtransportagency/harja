@@ -43,4 +43,5 @@
     (println "lahetyksen jalkeen")
     (let [[sampoon-lahetetty-xml luettu-ch] (async/alts!! [ch (async/timeout 1000)])]
       (is (= luettu-ch ch) "Sampo lähetys ei mennyt kanavaan sekunnissa")
-      (is (= (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-xml))))))
+      (is (= (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-xml))))
+    (u "UPDATE maksuera SET tila = NULL WHERE numero=1")))
