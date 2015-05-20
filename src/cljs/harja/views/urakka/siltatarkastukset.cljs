@@ -48,10 +48,14 @@
 
 (defn paivita-valittu-silta []
   (let [silta @st/valittu-silta
-        tarkastukset @st/valitun-sillan-tarkastukset]
-    (sillat/paivita-silta! (:id silta)
-                           assoc :tarkastusaika (:tarkastusaika (first tarkastukset))
-                           :tarkastaja (:tarkastaja (first tarkastukset)))))
+        silta-id (:id silta)
+        edellinen-tarkastus (first @st/valitun-sillan-tarkastukset)
+        paivitetty-silta
+                                 (assoc silta
+                                   :tarkastusaika (:tarkastusaika edellinen-tarkastus)
+                                   :tarkastaja (:tarkastaja edellinen-tarkastus))]
+    (reset! st/valittu-silta paivitetty-silta)
+    (sillat/paivita-silta! silta-id #(constantly paivitetty-silta))))
 
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
@@ -198,10 +202,6 @@
             tarkastus @st/valittu-tarkastus
             res (<! (st/poista-siltatarkastus! (:id silta) (:id tarkastus)))]
         (reset! st/valitun-sillan-tarkastukset res)
-        (reset! st/valittu-silta
-                (assoc silta
-                  :tarkastusaika (:tarkastusaika (first @st/valitun-sillan-tarkastukset))
-                  :tarkastaja (:tarkastaja (first @st/valitun-sillan-tarkastukset))))
         (paivita-valittu-silta))))
 
 
@@ -223,14 +223,12 @@
     (komp/luo
      
      (fn []
-       [:div.sillat
+       [:div.siltatarkastukset
         [:button.nappi-toissijainen {:on-click #(reset! st/valittu-silta nil)
                                      :style {:display "block"}}
          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
 
-
           [sillan-perustiedot @st/valittu-silta]
-
 
           [:div.siltatarkastus-kontrollit
           [:div.label-ja-alasveto
@@ -270,7 +268,8 @@
                           (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
                           "Sillan tarkastus")
           :tyhja        (if (nil? @st/valitun-sillan-tarkastukset)
-                          [ajax-loader "Sillan tarkastuksia haetaan..."]
+                          ;[ajax-loader "Sillan tarkastuksia haetaan..."] FIXME ajax loader jää pyörimään jos ei tarkastuksia
+                          "Ei vielä tarkastuksia"
                           "Sillasta ei ole vielä tarkastuksia Harjassa.")
           :tunniste     :kohdenro
           :voi-lisata?  false
