@@ -52,16 +52,16 @@
     (thread (loop []
               (when @ajossa
                 (with-open [stmt (.createStatement @connection)
-                            rs (.executeQuery stmt "SELECT 1")])
-                (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
-                                                                                   get-notifications
-                                                                                   C3P0ProxyConnection/RAW_CONNECTION
-                                                                                   (into-array Object [])))]
-                  (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification)) 
-                  (doseq [kasittelija (get @kuuntelijat (.getName notification))]
-                    ;; Käsittelijä ei sitten saa blockata
-                    (kasittelija (.getParameter notification))))
-                  
+                            rs (.executeQuery stmt "SELECT 1")]
+                  (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
+                                                                                     get-notifications
+                                                                                     C3P0ProxyConnection/RAW_CONNECTION
+                                                                                     (into-array Object [])))]
+                    (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification)) 
+                    (doseq [kasittelija (get @kuuntelijat (.getName notification))]
+                      ;; Käsittelijä ei sitten saa blockata
+                      (kasittelija (.getParameter notification)))))
+                
                 (Thread/sleep 150)
                 (recur))))
     this)

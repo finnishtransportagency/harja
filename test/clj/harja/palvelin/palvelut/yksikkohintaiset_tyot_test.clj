@@ -28,11 +28,11 @@
                       urakkatieto-fixture))
 
 ;; käyttää testidata.sql:stä tietoa
-(deftest kaikki-yksikkohintaiset-tyot-haettu-oikein []
+(deftest kaikki-yksikkohintaiset-tyot-haettu-oikein 
   (let [yksikkohintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :yksikkohintaiset-tyot +kayttaja-tero+ @oulun-alueurakan-id)
+                                              :yksikkohintaiset-tyot +kayttaja-tero+ @oulun-alueurakan-id)
         oulun-alueurakan-toiden-lkm (ffirst (q 
-                                               (str "SELECT count(*)
+                                             (str "SELECT count(*)
                                                        FROM yksikkohintainen_tyo
                                                       WHERE urakka = " @oulun-alueurakan-id)))]
     (is (= (count yksikkohintaiset-tyot) oulun-alueurakan-toiden-lkm))))

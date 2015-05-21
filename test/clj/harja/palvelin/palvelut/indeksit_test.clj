@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.indeksit-test
   (:require [clojure.test :refer :all]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.indeksit :refer :all]
             [harja.testi :refer :all]
@@ -29,7 +29,7 @@
 ;; maku 2005 vuonna 2013
 ;; ["MAKU 2005" 2013] {:vuosi 2013, 12 110.1, 11 110.5, 1 109.2}}
 
-(deftest kaikki-indeksit-haettu-oikein []
+(deftest kaikki-indeksit-haettu-oikein
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :indeksit +kayttaja-tero+)
         maku-2005-2013 (get indeksit ["MAKU 2005" 2013])]

@@ -30,7 +30,7 @@
 
 
 ;; käyttää testidata.sql:stä tietoa
-(deftest kaikki-kokonaishintaiset-tyot-haettu-oikein []
+(deftest kaikki-kokonaishintaiset-tyot-haettu-oikein 
   (let [oulun-alueurakan-sopimus (ffirst (q (str "SELECT id 
                                                  FROM sopimus 
                                                  WHERE urakka = " @oulun-alueurakan-id
@@ -38,8 +38,8 @@
 
 
         kokonaishintaiset-tyot (filter #(= oulun-alueurakan-sopimus (:sopimus %))
-                                        (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :kokonaishintaiset-tyot +kayttaja-jvh+ @oulun-alueurakan-id))
+                                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :kokonaishintaiset-tyot +kayttaja-jvh+ @oulun-alueurakan-id))
         talvihoidon-tyot (filter #(= "Oulu Talvihoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         sorateiden-tyot (filter #(= "Oulu Sorateiden hoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         oulun-alueurakan-toiden-lkm (ffirst (q (str "SELECT count(*) 
@@ -52,7 +52,7 @@
         ei-ole-taman-urakan-urakoitsijan-urakanvalvoja (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
         kokonaishintaiset-tyot-kutsujana-urakoitsija (filter #(= oulun-alueurakan-sopimus (:sopimus %))
                                                              (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                     :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja @oulun-alueurakan-id))]
+                                                                             :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja @oulun-alueurakan-id))]
 
     (is (= (count kokonaishintaiset-tyot) oulun-alueurakan-toiden-lkm))
     (is (= (count kokonaishintaiset-tyot-kutsujana-urakoitsija) oulun-alueurakan-toiden-lkm))
