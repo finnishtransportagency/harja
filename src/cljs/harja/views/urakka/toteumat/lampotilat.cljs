@@ -124,8 +124,8 @@
                                                                                    (reset! uudet-lampotilat lampotilat))}
                              (ikonit/remove)" Peruuta"]]])
                  }
-         [{:otsikko "Keskilampo" :nimi :keskilampo :tyyppi :numero :leveys-col 2}
-          {:otsikko "Pitkän aikavälin keskilämpö" :nimi :pitkalampo :tyyppi :numero :leveys-col 2}]
+         [{:otsikko "Keskilämpötila" :nimi :keskilampo :tyyppi :numero :leveys-col 2}
+          {:otsikko "Pitkän aikavälin keskilämpötila" :nimi :pitkalampo :tyyppi :numero :leveys-col 2}]
          @uudet-lampotilat]))))
 
 (defn lampotilat [ur]
