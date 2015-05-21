@@ -33,7 +33,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 		}
 	}
     div.panel-body {
-	padding: 0px;
+	padding: 0;
     }
     table {
 	td {
@@ -48,7 +48,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 	    }
 	    .dropdown-menu {
 		z-index: 1000;
-		margin-top: 0px;
+		margin-top: 0;
 	    }
 
 
@@ -196,5 +196,11 @@ tr.otsikko {
 	}
 	> span {
 		margin-left: 10px;
+	}
+}
+.tayta-alas {
+	.nappi-gridin-sisalla {
+		height: 31px; //sama korkeus kuin alasvedolla ympärillä
+		z-index: 1000;
 	}
 }

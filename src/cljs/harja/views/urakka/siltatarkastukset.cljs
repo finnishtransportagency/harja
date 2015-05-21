@@ -11,7 +11,6 @@
             [harja.ui.modal :refer [modal] :as modal]
 
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.siltatarkastukset :as st]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.sillat :as sillat]
@@ -20,10 +19,8 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
-            [cljs-time.core :as t]
             [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -72,10 +69,10 @@
                                                 [:div.keskita
                                                  [:a {:href "#" :on-click #(reset! st/valittu-silta (dissoc silta :aihe :klikkaus-koordinaatit))}
                                                   "Avaa valittu silta"]]]))))
-(defn sillat [ur]
+(defn sillat []
   (let [urakan-sillat sillat/sillat]
     (komp/luo
-      (fn [ur]
+      (fn []
         [:div.sillat
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Siltojen hakuehto"]
@@ -131,7 +128,7 @@
     "D" "D - korjaus ohjelmoitava"
     +valitse-tulos+))
 
-(defn siltatarkastuksen-sarakkeet [valittu-tarkastus muut-tarkastukset]
+(defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
   ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
   (into []
         (concat
@@ -174,8 +171,7 @@
             uusi-tarkastus (assoc lomake :kohteet kohteet-mapissa)
             res (<! (st/tallenna-siltatarkastus! uusi-tarkastus))
             olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
-            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))
-            silta @st/valittu-silta]
+            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
         (reset! uuden-syottaminen false)
         (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
         (reset! st/valittu-tarkastus res)
@@ -211,14 +207,11 @@
                                           aika (:tarkastusaika @st/valittu-tarkastus)]
                                       (when aika
                                         (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
-        siltatarkastussarakkeet (reaction (let [vt @st/valittu-tarkastus
-                                                muut @muut-tarkastukset]
-                                            (when vt
-                                              (siltatarkastuksen-sarakkeet vt muut))))
+        siltatarkastussarakkeet (reaction (let [muut @muut-tarkastukset]
+                                              (siltatarkastuksen-sarakkeet muut)))
         siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
                                             muut @muut-tarkastukset]
-                                        (when tark (siltatarkastusten-rivit tark muut))))
-        tallennus-kaynnissa (atom false)]
+                                        (when tark (siltatarkastusten-rivit tark muut))))]
 
     (komp/luo
      
@@ -242,7 +235,7 @@
             @st/valitun-sillan-tarkastukset]]
 
           [:button.nappi-kielteinen {:on-click
-                                     (fn [e]
+                                     (fn []
                                        (modal/nayta! {:otsikko "Sillan tarkastuksen poistaminen"
                                                       :footer  [:span
                                                                 [:button.nappi-toissijainen {:type     "button"
@@ -343,7 +336,12 @@
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
-            :fmt           #(kohdetuloksen-teksti %)}
+            :fmt           #(kohdetuloksen-teksti %)
+            ; Tarjoa alaspäin kopiointia vain arvolle A - ei toimenpiteitä
+            :tayta-alas?   #(= "A" %)
+                           :tayta-tooltip "Kopioi sama tulos seuraavillekin kohteille"
+                           :tayta-fn (fn [lahtorivi tama-rivi]
+                                       (assoc tama-rivi :tulos (:tulos lahtorivi)))}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
 
           @taulukon-rivit]
@@ -376,9 +374,9 @@
      :component-will-unmount (fn [_]
                                (kartta-tasot/taso-pois! :sillat))}
 
-    (fn [ur]
+    (fn []
       (if @uuden-syottaminen
         [uuden-tarkastuksen-syottaminen]
       (if-let [vs @st/valittu-silta]
         [sillan-tarkastukset vs]
-        [sillat ur])))))
+        [sillat])))))

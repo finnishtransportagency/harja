@@ -146,7 +146,7 @@
 
  
 
-(defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat]} data]
+(defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat on-focus]} data]
   (let [arvo (or valinta-arvo :id)
         nayta (or valinta-nayta str)
         nykyinen-arvo (arvo @data)]
@@ -154,6 +154,7 @@
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
                           :valinta @data
                           :valitse-fn #(reset! data %)
+                          :on-focus on-focus
                           :format-fn valinta-nayta}
      valinnat]))
 

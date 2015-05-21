@@ -121,7 +121,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   (kuuntelija
    {:auki (atom false)}
 
-   (fn [{:keys [valinta format-fn valitse-fn class disabled]} vaihtoehdot]
+   (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus]} vaihtoehdot]
      (let [auki (:auki (reagent/state (reagent/current-component)))
            term (atom "")]
        [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
@@ -131,6 +131,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
           :on-click    #(do
                          (swap! auki not)
                          nil)
+          :on-focus    on-focus
           :on-key-down #(let [kc (.-keyCode %)]
                          (.preventDefault %)
                          (.stopPropagation %)
@@ -164,7 +165,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            (do
                              (reset! term (char kc))
                              (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                               (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto ))
+                                                               (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
                                                                             (.toLowerCase @term)) 0))
                                                              vaihtoehdot))]
                                (valitse-fn itemi)

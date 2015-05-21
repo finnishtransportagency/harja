@@ -1,10 +1,8 @@
 (ns harja.ui.grid
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [schema.core :as s]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
-            [bootstrap :as bs]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]
 
@@ -227,7 +225,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (if (or (nil? muokattava?) (muokattava? rivi))
            ^{:key (str nimi)}
            [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
-                                             "has-error"))}
+                                             "has-error")
+                             (when (:tayta-alas? s) "tayta-alas"))}
             (when-not (empty? kentan-virheet)
               [:div.virheet
                [:div.virhe
