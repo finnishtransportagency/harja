@@ -2,11 +2,11 @@
   "Tämä nimiavaruus hallinnoi urakan siltatarkastuksien tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm])
+            [clojure.string :as str]
+            [harja.loki :refer [log logt tarkkaile!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -67,12 +67,14 @@
 (defonce valittu-silta (atom nil))
 
 (defonce valitun-sillan-tarkastukset (reaction<! (when-let [vs @valittu-silta]
-                                                   (hae-sillan-tarkastukset (:id @valittu-silta)))))
+                                                   (hae-sillan-tarkastukset (:id vs)))))
 
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 
 (defn uusi-tarkastus [silta ur]
-  {:kohteet {}, :silta-id silta, :urakka-id ur, :id nil, :tarkastusaika nil, :tarkastaja nil})
-
-(tarkkaile! "valittu-silta" valittu-silta)
-(tarkkaile! "valitun-sillan-tarkastukset" valitun-sillan-tarkastukset)
+  (let [kayttaja @istunto/kayttaja
+        etunimi (if kayttaja (:etunimi kayttaja) "")
+        sukunimi (if kayttaja (:sukunimi kayttaja) "")
+        nimi (str/trim (str etunimi " " sukunimi))]
+    {:kohteet       {}, :silta-id silta, :urakka-id ur, :id nil,
+     :tarkastusaika nil, :tarkastaja nimi}))
