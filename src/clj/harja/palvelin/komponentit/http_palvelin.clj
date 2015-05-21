@@ -13,10 +13,9 @@
   (:import (java.text SimpleDateFormat)))
 
 
-(defn- reitita [req kasittelijat]
+(defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  ;(log/debug "REQ " (:uri req))
-  ;(log/debug "kasittelijat: " kasittelijat)
+  [req kasittelijat]
   (apply compojure/routing
          (if (= "/" (:uri req))
            (assoc req :uri "/index.html")

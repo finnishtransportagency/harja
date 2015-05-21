@@ -5,10 +5,10 @@
 ;; Luetaan tr_syke_pvalue shapesta.
 ;; TR:n mukaan kentän PVSUOJA arvo on "1" jos alueella on suojoaus.
 
-(defn lue-pohjavesialueet [tiedosto]
+(defn lue-pohjavesialueet
   "Lukee pohjavesialueet .shp tiedostosta."
   [tiedosto]
-
+  
   (let [s (shp/lue-shapefile tiedosto)]
     ;;(.setCharset s (java.nio.charset.Charset/forName "UTF-8"))
     (->> s
@@ -16,7 +16,7 @@
          (map shp/feature-propertyt)
          
          (filter #(= (:pvsuola %) 1))
-         )) )
+         )))
        
 (defn pohjavesialue->sql [{:keys [pvaluetunn pvaluenimi muutospvm the_geom]}]
   (str "\nINSERT INTO pohjavesialue (tunnus, nimi, alue, muokattu) VALUES ('" pvaluetunn "', '" pvaluenimi "', "

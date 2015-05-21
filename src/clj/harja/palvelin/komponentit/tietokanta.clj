@@ -14,8 +14,9 @@
     this))
 
 
-(defn luo-tietokanta [palvelin portti tietokanta kayttaja salasana]
+(defn luo-tietokanta
   "Luodaan Harja järjestelmälle tietokantakomponentti käyttäen yhteyspoolia PostgreSQL tietokantaan."
+  [palvelin portti tietokanta kayttaja salasana]
   (->Tietokanta (doto (ComboPooledDataSource.)
                   (.setDriverClass "org.postgresql.Driver")
                   (.setJdbcUrl (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta))

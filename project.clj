@@ -105,6 +105,7 @@
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.2.7"]
             [codox "0.8.11"]
+            [jonase/eastwood "0.2.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {

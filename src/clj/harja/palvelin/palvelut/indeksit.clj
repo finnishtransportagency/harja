@@ -58,8 +58,9 @@
                                 :vuosi (:vuosi (first kuukaudet))))
                        indeksit-vuosittain))))
 
-(defn tallenna-indeksi [db user {:keys [nimi indeksit]}]
+(defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
+  [db user {:keys [nimi indeksit]}]
   (assert (vector? indeksit) "indeksit tulee olla vektori")
   (let [nykyiset-arvot (hae-indeksi db nimi)]
     (jdbc/with-db-transaction [c db]
