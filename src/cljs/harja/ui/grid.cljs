@@ -225,8 +225,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (if (or (nil? muokattava?) (muokattava? rivi))
            ^{:key (str nimi)}
            [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
-                                             "has-error")
-                             (when (:tayta-alas? s) "tayta-alas"))}
+                                             " has-error"))}
             (when-not (empty? kentan-virheet)
               [:div.virheet
                [:div.virhe
@@ -248,14 +247,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 "pull-left"
                                 "pull-right")}
                  [:div {:style {:position "absolute" :display "inline-block"}}
-                [:button.nappi-toissijainen.nappi-gridin-sisalla {:title (:tayta-tooltip s)
-                                                 :style {:position "absolute"
-                                                         :left (when (= :oikea (:tasaa s))
-                                                                 0)
-                                                         :right (when-not (= :oikea (:tasaa s))
-                                                                  "100%")}
-                                                 
-                                                   :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
+                [:button {:class    (str "nappi-toissijainen nappi-gridin-sisalla" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
+                          :title    (:tayta-tooltip s)
+                          :style    {:position "absolute"
+                                     :left     (when (= :oikea (:tasaa s)) 0)
+                                     :right    (when-not (= :oikea (:tasaa s)) "100%")}
+                          :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
                  (ikonit/arrow-down) " Täytä"]]]))
           
             ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))

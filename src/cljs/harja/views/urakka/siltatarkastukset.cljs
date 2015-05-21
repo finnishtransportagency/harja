@@ -339,9 +339,10 @@
             :fmt           #(kohdetuloksen-teksti %)
             ; Tarjoa alaspäin kopiointia vain arvolle A - ei toimenpiteitä
             :tayta-alas?   #(= "A" %)
-                           :tayta-tooltip "Kopioi sama tulos seuraavillekin kohteille"
-                           :tayta-fn (fn [lahtorivi tama-rivi]
-                                       (assoc tama-rivi :tulos (:tulos lahtorivi)))}
+            :tayta-tooltip "Kopioi sama tulos seuraavillekin kohteille"
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                                       (assoc tama-rivi :tulos (:tulos lahtorivi)))
+            :kelluta-tayta-nappi true}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
 
           @taulukon-rivit]
