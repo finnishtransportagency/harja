@@ -7,8 +7,8 @@
    [cljs.test :as test]
    [harja.app-test]
    [harja.tiedot.urakka.suunnittelu-test]
-   [harja.pvm-test]
-   ))
+   [harja.views.urakka.siltatarkastukset-test]
+   [harja.pvm-test]))
 
 
 (def +virheviestin-nayttoaika+ 5000)
@@ -49,6 +49,7 @@
                          {:reporter :harja})
                   'harja.app-test  
                   'harja.tiedot.urakka.suunnittelu-test
+                  'harja.views.urakka.siltatarkastukset-test
                   'harja.pvm-test)) 
  
  
