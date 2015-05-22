@@ -52,7 +52,7 @@
                                    :tarkastusaika (:tarkastusaika edellinen-tarkastus)
                                    :tarkastaja (:tarkastaja edellinen-tarkastus))]
     (reset! st/valittu-silta paivitetty-silta)
-    (sillat/paivita-silta! silta-id #(constantly paivitetty-silta))))
+    (sillat/paivita-silta! silta-id (constantly paivitetty-silta))))
 
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
