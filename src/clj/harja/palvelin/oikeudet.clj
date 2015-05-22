@@ -1,7 +1,8 @@
 (ns harja.palvelin.oikeudet
   "Kaikki palvelinpuolen käyttöoikeustarkistukset."
   (:require [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [clojure.set :refer [intersection]]))
 
 
 (def rooli-jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
@@ -47,9 +48,10 @@ rooleista."
                                    (filter #(= (:id (:urakka %)) urakka-id))
                                    (map :rooli) 
                                    (into #{}))]
-      (if (urakkaroolit rooli)
-        true
-        false)
+      (cond
+       (string? rooli) (if (urakkaroolit rooli) true false)
+       (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
+       :default false)
       false)))
 
 
