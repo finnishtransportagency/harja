@@ -183,11 +183,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          [:div.valittu (format-fn valinta)]
          [:span.caret]]
         [:ul.dropdown-menu.livi-alasvetolista
-         (for [vaihtoehto vaihtoehdot]
-           ^{:key (hash vaihtoehto)}
-           [:li.harja-alasvetolistaitemi (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                    (reset! auki false)
-                                                    nil))])
+         (doall
+          (for [vaihtoehto vaihtoehdot]
+            ^{:key (hash vaihtoehto)}
+            [:li.harja-alasvetolistaitemi
+             (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                 (reset! auki false)
+                                                 nil))]))
          ]]))
 
    :body-klikkaus
