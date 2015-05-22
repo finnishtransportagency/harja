@@ -103,11 +103,11 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
-  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
-                              (do
-                                (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
-                            (hae-sillan-tarkastukset c user silta-id)))
+    (do
+      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
+    (hae-sillan-tarkastukset c user silta-id)))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
