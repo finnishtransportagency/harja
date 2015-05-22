@@ -98,7 +98,8 @@
   [:input {:class (when lomake? "form-control")
            :on-change #(reset! data (-> % .-target .-value))
            :on-focus on-focus
-           :value @data}])
+           :value @data
+           :max-length pituus-max}])
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]

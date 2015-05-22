@@ -312,9 +312,9 @@
 
 
            {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2}
-
+           ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys-col 4
-            :tyyppi  :string}]
+            :tyyppi  :string :pituus-max 128}]
 
           @lomakkeen-tiedot]
 
@@ -343,7 +343,9 @@
             :tayta-fn (fn [lahtorivi tama-rivi]
                                        (assoc tama-rivi :tulos (:tulos lahtorivi)))
             :kelluta-tayta-nappi true}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
+           ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"
+            :pituus-max 255}]
 
           @taulukon-rivit]
 

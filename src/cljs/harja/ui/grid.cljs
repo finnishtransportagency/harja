@@ -258,7 +258,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))
             [tee-kentta (assoc s
                           :focus (= fokus fokus-id)
-                          :on-focus #(aseta-fokus! fokus-id))
+                          :on-focus #(aseta-fokus! fokus-id)
+                          :pituus-max (:pituus-max s))
              (r/wrap
               arvo
               (fn [uusi]
