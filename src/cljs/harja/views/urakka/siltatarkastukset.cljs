@@ -132,8 +132,8 @@
   ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
   (into []
         (concat
-          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
-           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
+          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"} 
+           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
            {:otsikko       "Tulos " :nimi :tulos :leveys "15%"
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
@@ -293,7 +293,16 @@
                          (uuden-siltatarkastusten-rivit uusi-tarkastus))
         taulukon-riveilla-tulos (reaction (= (count @taulukon-rivit)
                                               (count (filter #(not (nil? (:tulos %))) @taulukon-rivit))))
-        g (grid/grid-ohjaus)]
+        g (grid/grid-ohjaus)
+        lomakkeen-virheet (atom {})
+        olemassa-olevat-tarkastus-pvmt
+        (reaction (into #{}
+                     (mapv #(:tarkastusaika %)
+                       @st/valitun-sillan-tarkastukset)))
+        voi-tallentaa? (reaction (and
+                                   @lomake-taytetty
+                                   @taulukon-riveilla-tulos
+                                   (empty? @lomakkeen-virheet)))]
 
     (komp/luo
       (fn []
@@ -303,18 +312,22 @@
           (ikonit/chevron-left) " Palaa tallentamatta"]
         [:h3 "Luo uusi siltatarkastus"]
          [lomake {:luokka   :horizontal
+                  :virheet  lomakkeen-virheet
                   :muokkaa! (fn [uusi]
-                              (log "MUOKATAAN " (pr-str uusi))
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
 
 
 
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2}
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2
+            :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
+                      #(when (@olemassa-olevat-tarkastus-pvmt %1)
+                        "Tälle päivälle on jo kirjattu tarkastus.")]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys-col 4
-            :tyyppi  :string :pituus-max 128}]
+            :tyyppi  :string :pituus-max 128
+            :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
           @lomakkeen-tiedot]
 
@@ -329,8 +342,8 @@
                            (reset! taulukon-rivit (vals (grid/hae-muokkaustila g))))}
 
           ;; sarakkeet
-          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}  
-           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}  
+          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}
+           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
            {:otsikko       "Tulos" :nimi :tulos :leveys "15%"
             :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
             :tyyppi        :valinta :valinta-arvo identity
@@ -352,7 +365,7 @@
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
          [:button.nappi-ensisijainen
           {:class    (when @tallennus-kaynnissa "disabled")
-           :disabled (not (and @lomake-taytetty @taulukon-riveilla-tulos))
+           :disabled (not @voi-tallentaa?)
            :on-click
                      #(do (.preventDefault %)
                           (reset! tallennus-kaynnissa true)
@@ -366,7 +379,7 @@
                                   ;; fixme: pitäisköhän näyttää se käyttäjällekin ;)
                                   (reset! tallennus-kaynnissa false)))))}
            (ikonit/ok) " Tallenna tarkastus"]
-         (when (not (and @lomake-taytetty @taulukon-riveilla-tulos))
+         (when (not @voi-tallentaa?)
            [:span.napin-vinkki "Täytä kaikki tiedot ennen tallennusta"])]))))
 
 (defn siltatarkastukset []

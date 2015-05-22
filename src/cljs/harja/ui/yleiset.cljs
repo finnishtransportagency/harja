@@ -85,7 +85,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (enter)))))
 
   
-;;
+
+(defn virheen-ohje [virheet]
+  [:div.virheet
+   [:div.virhe
+    (for [v virheet]
+      ^{:key (hash v)}
+      [:span
+       (ikonit/warning-sign)
+       [:span (str " " v)]])]])
+
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 

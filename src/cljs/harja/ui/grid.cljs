@@ -2,9 +2,10 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.validointi :as validointi]
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
@@ -27,53 +28,6 @@
     
 (defn otsikko? [x]
   (instance? Otsikko x))
-
-
-;; Validointi
-;; Rivin skeema voi määritellä validointisääntöjä.
-;; validoi-saanto multimetodi toteuttaa tarkastuksen säännön keyword tyypin mukaan
-;;
-
-(defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
-
-(defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
-  (when (str/blank? data)
-    viesti))
-
-(defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
-  (let [rivit-arvoittain (group-by nimi (vals taulukko))]
-    (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
-    (when (> (count (get rivit-arvoittain data)) 1)
-      viesti)))
-
-
-(defn validoi-saannot
-  "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
-  [nimi data rivi taulukko saannot]
-  (keep (fn [saanto]
-          (if (fn? saanto)
-            (saanto data rivi)
-            (let [[saanto & optiot] saanto]
-              (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
-        saannot))
-
-(defn validoi-rivi
-  "Tekee validoinnin yhden rivin kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori."
-  [taulukko rivi skeema]
-  (loop [v {}
-         [s & skeema] skeema]
-    (if-not s
-      v
-      (let [{:keys [nimi hae validoi]} s]
-        (if (empty? validoi)
-          (recur v skeema)
-          (let [virheet (validoi-saannot nimi (if hae
-                                                  (hae rivi)
-                                                  (get rivi nimi))
-                                                rivi taulukko
-                                                validoi)]
-            (recur (if (empty? virheet) v (assoc v nimi virheet))
-                   skeema)))))))
 
 
 ;; Ohjausprotokolla
@@ -227,11 +181,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
            [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
                                              " has-error"))}
             (when-not (empty? kentan-virheet)
-              [:div.virheet
-               [:div.virhe
-                (for [v kentan-virheet]
-                  ^{:key (hash v)}
-                  [:span v])]])
+             (virheen-ohje kentan-virheet))
 
 
             ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
@@ -381,7 +331,7 @@ Optiot on mappi optioita:
                                               (keep (fn [rivi]
                                                       (if (::poistettu rivi)
                                                         nil
-                                                        (let [virheet (validoi-rivi uudet-tiedot rivi skeema)]
+                                                        (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema)]
                                                           (if (empty? virheet)
                                                             nil
                                                             [((or tunniste :id) rivi) virheet]))))
@@ -417,7 +367,7 @@ Optiot on mappi optioita:
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)
                                               rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                              (validoi-rivi uudet-tiedot uusi-rivi skeema))]
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema))]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
@@ -654,7 +604,7 @@ Optiot on mappi optioita:
                                                          (merge rivin-tiedot {:id id :koskematon true})))]
                                 (swap! historia conj [vanhat-tiedot vanhat-virheet])
                                 (swap! virheet (fn [virheet]
-                                                 (let [rivin-virheet (validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
+                                                 (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
                                                    (if (empty? rivin-virheet)
                                                      (dissoc virheet id)
                                                      (assoc virheet id rivin-virheet)))))
@@ -682,7 +632,7 @@ Optiot on mappi optioita:
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)
                                               rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                              (validoi-rivi uudet-tiedot uusi-rivi skeema))]
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema))]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
@@ -762,11 +712,7 @@ Optiot on mappi optioita:
                                          [:td {:class (str (when-not (empty? kentan-virheet)
                                                              "has-error"))}
                                           (when-not (empty? kentan-virheet)
-                                            [:div.virheet
-                                             [:div.virhe
-                                              (for [v kentan-virheet]
-                                                ^{:key (hash v)}
-                                                [:span v])]])
+                                            (virheen-ohje kentan-virheet))
                                           [tee-kentta s (r/wrap
                                                           arvo
                                                           (fn [uusi]

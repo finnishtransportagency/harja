@@ -56,11 +56,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 		display: none;
 		position: relative;
 	    }
-	    	    
+
 	    .virhe {
-		position: absolute;
-		bottom: 5px;
-		background-color: red;
+			background-color: @vaara;
+			bottom: 5px;
+			color: @valkoinen;
+			padding: 5px;
+			position: absolute;
+			width: 100%;
 	    }
 	}
 
@@ -102,7 +105,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     }
 
     .has-error {
-	border-bottom: solid 2px red !important;
+	border-bottom: solid 2px @vaara !important;
     }
 	    
     

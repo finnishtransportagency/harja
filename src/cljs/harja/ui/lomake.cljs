@@ -1,7 +1,10 @@
 (ns harja.ui.lomake
   "Lomakeapureita"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.kentat :refer [tee-kentta atomina]]))
+            [harja.ui.validointi :as validointi]
+            [harja.ui.yleiset :refer [virheen-ohje]]
+            [harja.ui.kentat :refer [tee-kentta atomina]]
+            [harja.loki :refer [log logt tarkkaile!]]))
 
 (defmulti kentan-otsikko (fn [luokka kentan-nimi teksti] luokka))
 
@@ -31,31 +34,44 @@
 (defmethod lomake-footer :default [_ footer]
   footer)
 
-(defn lomake [{:keys [muokkaa! luokka footer] :as opts} kentat data]
-  (let [luokka (or luokka :default)]
-    [:form {:class (case luokka
-                     :inline "form-inline"
-                     :horizontal "form-horizontal"
-                     :default "")}
-     (doall
-      (for [{:keys [muokattava? fmt hae nimi] :as kentta} kentat]
-        ^{:key (:nimi kentta)}
-        [:div.form-group
-         [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
-
-         [kentan-komponentti luokka kentta
-          (if-let [komponentti (:komponentti kentta)]
-            komponentti
-            (if (or (nil? muokattava?)
+(defn lomake [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
+  (let [luokka (or luokka :default)
+        virheet (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
+        koskemattomat (atom (into #{} (map :nimi skeema)))]
+    (tarkkaile! "koskemattomat" koskemattomat)
+    (fn [{:keys [muokkaa! luokka footer] :as opts} skeema data]
+      [:form.lomake {:class (case luokka
+                      :inline "form-inline"
+                      :horizontal "form-horizontal"
+                      :default "")}
+      (doall
+        (for [{:keys [muokattava? fmt hae nimi] :as kentta} skeema
+              :let [kentan-virheet (get @virheet nimi)]]
+          ^{:key (:nimi kentta)}
+          [:div.form-group
+           [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
+           [kentan-komponentti luokka kentta
+            (if-let [komponentti (:komponentti kentta)]
+              komponentti
+              (if (or (nil? muokattava?)
                     (muokattava? data))
-              ;; Muokattava tieto, tehdään sille kenttä
-              [tee-kentta (assoc kentta :lomake? true)
-               (atomina kentta data muokkaa!)]
+                ;; Muokattava tieto, tehdään sille kenttä
+                [:span {:class (str (when-not (empty? kentan-virheet)
+                                      "has-error"))}
+                 [tee-kentta (assoc kentta :lomake? true)
+                  (atomina kentta data (fn [uudet-tiedot]
+                                         (reset! virheet
+                                           (validointi/validoi-rivi nil uudet-tiedot skeema))
+                                         (swap! koskemattomat disj nimi)
+                                         (muokkaa! uudet-tiedot)))]
+                 (when (and (not (empty? kentan-virheet))
+                         (not (@koskemattomat nimi)))
+                   (virheen-ohje kentan-virheet))]
 
-              ;; Ei muokattava, näytetään
-              [:div.form-control-static
-               ((or fmt str) ((or hae #(get % nimi)) data))]))]]))
-     
-     (when footer
-       [lomake-footer luokka footer])]))
+                ;; Ei muokattava, näytetään
+                [:div.form-control-static
+                 ((or fmt str) ((or hae #(get % nimi)) data))]))]]))
+
+      (when footer
+        [lomake-footer luokka footer])])))
   
