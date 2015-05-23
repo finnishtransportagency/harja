@@ -15,6 +15,7 @@
    ;; Harjan bisneslogiikkapalvelut
    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
    [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
+   [harja.palvelin.palvelut.haku :as haku]
    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
    [harja.palvelin.palvelut.indeksit :as indeksit]
    [harja.palvelin.palvelut.urakat :as urakat]
@@ -79,8 +80,11 @@
                        [:http-palvelin :db])
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
-                       [:http-palvelin :db])
-     :indeksit (component/using
+                        [:http-palvelin :db])
+      :haku (component/using
+              (haku/->Haku)
+              [:http-palvelin :db])
+      :indeksit (component/using
                        (indeksit/->Indeksit)
                        [:http-palvelin :db])
      :urakat (component/using

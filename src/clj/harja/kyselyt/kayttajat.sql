@@ -121,3 +121,12 @@ INSERT
   INTO kayttaja
        (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio)
 VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio)
+
+-- name: hae-kayttajien-tunnistetiedot
+-- Hakee käyttäjistä ydintiedot tekstihaulla.
+SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi,
+       o.id as org_id, o.nimi as org_nimi, o.tyyppi as org_tyyppi
+  FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE k.kayttajanimi ILIKE :koka
+    OR o.nimi ILIKE :koka
+   AND k.poistettu = false
