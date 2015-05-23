@@ -13,19 +13,16 @@
   [db user hakutermi]
   ;; fixme: hanskaa oikeudet. Tilaajan käyttäjille palautetaan kaikki sisältö,
   ;; urakoitsijalle vain oman firmansa sisältö
-  (let
-    [loytyneet-urakat (into []
+  (let [termi (str "%" hakutermi "%")
+        loytyneet-urakat (into []
                         (map #(assoc % :tyyppi :urakka)
-                          (ur-q/hae-urakoiden-tunnistetiedot db
-                            (str "%" hakutermi "%"))))
+                          (ur-q/hae-urakoiden-tunnistetiedot db termi)))
      loytyneet-kayttajat (into []
                            (map #(assoc % :tyyppi :kayttaja)
-                             (k-q/hae-kayttajien-tunnistetiedot db
-                               (str "%" hakutermi "%"))))
+                             (k-q/hae-kayttajien-tunnistetiedot db termi)))
      loytyneet-organisaatiot (into []
                            (map #(assoc % :tyyppi :organisaatio)
-                             (org-q/hae-organisaation-tunnistetiedot db
-                               (str "%" hakutermi "%"))))
+                             (org-q/hae-organisaation-tunnistetiedot db termi)))
      tulokset (into []
                 (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
      _ (log/info "haun tulokset" tulokset)]
