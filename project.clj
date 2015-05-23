@@ -1,7 +1,7 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
   
-  :dependencies [[org.clojure/clojure "1.7.0-beta1"] ; siirrytään 1.7.0 heti kun valmis
+  :dependencies [[org.clojure/clojure "1.7.0-RC1"] ; siirrytään 1.7.0 heti kun valmis
                  [org.clojure/clojurescript "0.0-3196"]
 
                  ;;;;;;; Yleiset ;;;;;;;
