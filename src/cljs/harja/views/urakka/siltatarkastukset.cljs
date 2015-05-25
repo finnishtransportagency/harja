@@ -98,7 +98,15 @@
           [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
            {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}]
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
+           (when (= :puutteet @sillat/listaus)
+             {:otsikko "Puutteet" :nimi :kohteet :leveys "30%" :fmt (fn [kohteet]
+                                                                      [:ul.puutekohdelista
+                                                                      (for [[kohde [tulos _]] (seq kohteet)]
+                                                                        [:li.puutekohde
+                                                                        (str (st/siltatarkastuskohteen-nimi kohde)
+                                                                          ": "
+                                                                          tulos)])])})]
 
           @urakan-sillat
           ]]))))
