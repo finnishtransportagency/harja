@@ -142,7 +142,7 @@
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"} 
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos " :nimi :tulos :leveys "15%"
+           {:otsikko       "Tulos " :nimi :tulos :leveys "20%"
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
