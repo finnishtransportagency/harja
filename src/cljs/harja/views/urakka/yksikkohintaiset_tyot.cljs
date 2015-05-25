@@ -192,9 +192,9 @@
                      {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                      {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
 
-         [:div "Yksikkohintaisten töiden hoitokausi yhteensä "
+         [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-         [:div "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+         [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
         
         [grid/grid
