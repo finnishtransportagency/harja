@@ -352,7 +352,7 @@
           ;; sarakkeet
           [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}
            {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos" :nimi :tulos :leveys "15%"
+           {:otsikko       "Tulos" :nimi :tulos :leveys "20%"
             :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
@@ -365,7 +365,7 @@
                                        (assoc tama-rivi :tulos (:tulos lahtorivi)))
             :kelluta-tayta-nappi true}
            ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "30%"
             :pituus-max 255}]
 
           @taulukon-rivit]
