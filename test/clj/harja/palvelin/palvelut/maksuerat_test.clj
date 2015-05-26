@@ -28,15 +28,15 @@
 (deftest urakan-maksuerat-haettu-okein-urakalle-1
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
-    (is (= 5 (count maksuerat)))
-    (is (= [1 1 1 1 1] (mapv #(:id (:toimenpideinstanssi %)) maksuerat)))
+    (is (= 16 (count maksuerat)))
+    (is (= [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2] (mapv #(:id (:toimenpideinstanssi %)) maksuerat)))
     (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "yksikkohintainen" (:tyyppi %)) maksuerat)) 1))
-    (is (= (count (filter #(= "bonus" (:tyyppi %)) maksuerat)) 1))
-    (is (= (count (filter #(= "akillinen_hoitotyo" (:tyyppi %)) maksuerat)) 1))
-    (is (= (count (filter #(nil? (:tila %)) maksuerat)) 2))
-    (is (= (count (filter #(= "odottaa_vastausta" (:tila %)) maksuerat)) 1))
-    (is (= (count (filter #(= "lahetetty" (:tila %)) maksuerat)) 1))
-    (is (= (count (filter #(= "virhe" (:tila %)) maksuerat)) 1))))
+    (is (= (count (filter #(= "yksikkohintainen" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "bonus" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "akillinen_hoitotyo" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "lisatyo" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "sakko" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "indeksi" (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= "muu" (:tyyppi %)) maksuerat)) 2))))
 
 
