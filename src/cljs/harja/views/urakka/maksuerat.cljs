@@ -60,6 +60,7 @@
   (go
     (log (str "Urakan id: " ur))
     (reset! maksuerarivit (ryhmittele-maksuerat (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+    (log (str "ASD Maksuerät saatu: " (pr-str @maksuerarivit)))
     (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                      (fn [rivi] (:numero rivi))
                                      (filter
@@ -137,7 +138,9 @@
             :komponentti (fn [rivi]
                            (case (:tila rivi)
                              "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta"]
-                             "lahetetty" [:span.maksuera-lahetetty (str "Lähetetty, kuitattu " (pvm/pvm-aika (:lahetetty rivi)))]
+                             "lahetetty" [:span.maksuera-lahetetty (if (not (nil? (:lahetetty rivi)))
+                                                                     (str "Lähetetty, kuitattu " (pvm/pvm-aika (:lahetetty rivi)))
+                                                                     (str "Lähetetty, kuitattu (kuittauspäivämäärää puuttuu)"))]
                              "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"];
                              [:span "Ei lähetetty"])) :leveys "19%"}
            {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
