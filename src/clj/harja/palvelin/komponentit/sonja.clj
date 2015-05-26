@@ -6,7 +6,8 @@
             [clojure.data.zip.xml :as z]
             [clojure.core.async :refer [go <! >! thread >!!]]
             [taoensso.timbre :as log]
-            [hiccup.core :refer [html]])
+            [hiccup.core :refer [html]]
+            [clojure.string :as str])
   (:import (progress.message.jclient QueueConnectionFactory)
            (javax.jms Session Destination Queue TextMessage)))
 
@@ -149,7 +150,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     
     
 (defn luo-sonja [asetukset]
-  (if asetukset
+  (if (and asetukset (not (str/blank? (:url asetukset))))
     (->SonjaYhteys asetukset nil nil nil)
     (reify
       component/Lifecycle
