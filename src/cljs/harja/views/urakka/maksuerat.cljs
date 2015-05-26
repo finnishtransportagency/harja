@@ -26,7 +26,8 @@
             [clojure.string :as str]
             [cljs-time.core :as t]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -151,11 +152,11 @@
            {:otsikko "Tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (case (:tila rivi)
-                             "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta"]
+                             "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta" [yleiset/ajax-loader-pisteet]]
                              "lahetetty" [:span.maksuera-lahetetty (if (not (nil? (:lahetetty rivi)))
                                                                      (str "Lähetetty, kuitattu " (pvm/pvm-aika (:lahetetty rivi)))
                                                                      (str "Lähetetty, kuitattu (kuittauspäivämäärää puuttuu)"))]
-                             "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"];
+                             "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"] ;
                              [:span "Ei lähetetty"])) :leveys "19%"}
            {:otsikko "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]

@@ -47,6 +47,15 @@
       (when viesti
         [:div.viesti viesti])]))
 
+(defn ajax-loader-pisteet
+  "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
+  ([] (ajax-loader-pisteet nil))
+  ([viesti]
+   [:span.ajax-loader-pisteet
+    [:img {:class "ajax-loader-pisteet" :src "/images/ajax-loader-pisteet.gif"}]
+    (when viesti
+      [:div.viesti viesti])]))
+
 
 (defn indeksi [kokoelma itemi]
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
