@@ -1,17 +1,20 @@
 (ns harja.palvelin.integraatiot.sampo.kuittaukset_test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo :refer [->Sampo] :as sampo]
-            [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
-            [hiccup.core :refer [html]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [clojure.data.zip.xml :as z]
-            [com.stuartsierra.component :as component]
-            [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.jms :refer [feikki-sonja]]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [clojure.core.async :refer [<! >! go] :as async]
-            [harja.xml :as xml])
-  (:import (java.io ByteArrayInputStream)
-           (java.text SimpleDateFormat)))
+            [harja.palvelin.integraatiot.sampo.kuittaus :as kuittaukset]))
+
+(deftest lue-onnistunut-kuittaus
+  (let [xml (slurp "test/resurssit/sampo/maksuera_ack.xml")]
+    (is (= "ID:6c321b59:1460814e5:14AE0F721BF" (:viesti-id (kuittaukset/lue-kuittaus xml)))
+        "Kuittaus tulkittiin onnistuneeksi ja siltä saatiin luettua oikea viesti id")))
+
+
+(deftest lue-epaonnistunut-kuittaus
+  (let [xml (slurp "test/resurssit/sampo/maksuera_nack.xml")]
+    (let [vastaus (kuittaukset/lue-kuittaus xml)]
+      (let [virhe (first (:virheet vastaus))
+            varoitus (second (:virheet vastaus))]
+        (is (= :sampo-raportoi-virheita (:virhe vastaus)) "Virhe ilmoitus on oikea")
+        (is (= "FATAL" (:vakavuus virhe)) "Virheen vakavuus on saatu luettua oikein")
+        (is (= "OBS unit (Päivittäinen kunnossapito) is invalid. OBS unit path (/Päivittäinen kunnossapito/Hoito) is invalid. So, the OBS Association was not made. OBS association has been updated according to financial information." (:kuvaus virhe)))
+        (is (= "WARNING" (:vakavuus varoitus)) "Virheen vakavuus on saatu luettua oikein")
+        (is (= "Object: task Attribute: vv_linked_op is required in partition NIKU.ROOT but has no value" (:kuvaus varoitus)) "Virheen vakavuus on saatu luettua oikein")))))
