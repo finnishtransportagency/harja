@@ -15,6 +15,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
+            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+
             
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
@@ -279,13 +281,16 @@
 
 
 
-(defonce toteumat-valilehti (atom :tyot-ja-materiaalit))
+(defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
   [bs/tabs {:active toteumat-valilehti}
+
+   "Yksikköhintaiset työt" :yksikkohintaiset-tyot
+   [yks-hint-tyot/yksikkohintaisten-toteumat]
 
    "Työt ja materiaalit" :tyot-ja-materiaalit
    [tyot-ja-materiaalit ur] ;; FIXME: siirrä työt ja materiaalit omaan namespaceen

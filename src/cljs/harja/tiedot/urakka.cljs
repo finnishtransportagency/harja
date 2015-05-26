@@ -11,7 +11,8 @@
             [harja.pvm :as pvm])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction<!]]))
 
 (defonce valittu-sopimusnumero (let [val (atom nil)]
                                  (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))
@@ -136,3 +137,9 @@ ja viimeinen voivat olla vajaat)."
        (if (contains? ryhmitelty kausi)
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
+
+(defonce urakan-toimenpiteet-ja-tehtavat
+  (let [toimenpiteet-ja-tehtavat
+        (reaction<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id @nav/valittu-urakka)))]
+    (log "palautan toimenpiteet-ja-tehtäväat" (pr-str toimenpiteet-ja-tehtavat))
+    toimenpiteet-ja-tehtavat))
