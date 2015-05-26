@@ -34,10 +34,12 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (laheta [this jono viesti]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
-(defn- yhdista [{:keys [url kayttaja salasana]}]
-  (let [qcf (doto (QueueConnectionFactory. url)
-              (.setFaultTolerant true)
-              (.setFaultTolerantReconnectTimeout (int 30)))
+(defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
+  (let [qcf (if (= tyyppi :activemq)
+              (org.apache.activemq.ActiveMQConnectionFactory.)
+              (doto (QueueConnectionFactory. url)
+                (.setFaultTolerant true)
+                (.setFaultTolerantReconnectTimeout (int 30))))
         conn (.createConnection qcf  kayttaja salasana)]
     (.start conn)
     conn))

@@ -28,7 +28,8 @@
                                   :vastaanottaja [s/Str]}}
    (s/optional-key :sonja) {:url s/Str
                             :kayttaja s/Str
-                            :salasana s/Str}
+                            :salasana s/Str
+                            (s/optional-key :tyyppi) s/Keyword}
    (s/optional-key :sampo) {:lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str}
    }) 

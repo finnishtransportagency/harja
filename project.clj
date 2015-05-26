@@ -28,6 +28,9 @@
                  [compojure "1.3.3"]
                  [hiccup "1.0.5"]
 
+                 ;; API: RAML speksi ja JSON schema
+                 [org.raml/raml-parser "0.8.11"]
+
                  [org.clojure/core.cache "0.6.4"]
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -51,7 +54,9 @@
                  [progress/sonic-client "7.6.2"]
                  [progress/sonic-crypto "7.6.2"]
                  [progress/sonic-xmessage "7.6.2"]
-
+                 ;; ActiveMQ testejä varten
+                 [org.apache.activemq/activemq-client "5.11.1"]
+                 
                  ;; Sähköpostin lähetys
                  [com.draines/postal "1.11.3"]
                  
