@@ -32,10 +32,24 @@
                     (reset! zoom-taso +koko-suomi-zoom-taso+))))
 
 (defonce kartan-alueen-asetus
-  (run! (when-let [hal @nav/valittu-hallintayksikko]
-          (log "HAL vaihtui, zoomataan siihen: " (dissoc hal :alue))
-          (go (<! (timeout 500)) ;; leaflet vaatii hieman armon aikaa ennen kuin zoomataan
-              (leaflet/fit-bounds! (assoc hal :valittu true))))))
+  (run! (let [hal @nav/valittu-hallintayksikko
+              urakka @nav/valittu-urakka
+              koko @nav/kartan-koko]
+          (log "kartan koko, hallintayksikkö tai urakka vaihtui, koko:" koko)
+          (when (not= :S koko)
+            (log "Kartan koko: " koko)
+            (cond
+             (not (nil? urakka))
+             (do
+               (log "Urakka olemassa, zoomataan siihen: " (pr-str (dissoc urakka :alue)))
+               (go (<! (timeout 500))
+                   (leaflet/fit-bounds! urakka)))
+
+             (not (nil? hal))
+             (do
+               (log "HAL vaihtui, zoomataan siihen: " (pr-str (dissoc hal :alue)))
+               (go (<! (timeout 500)) ;; leaflet vaatii hieman armon aikaa ennen kuin zoomataan
+                   (leaflet/fit-bounds! (assoc hal :valittu true)))))))))
 
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
@@ -86,11 +100,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
               :height (if (= koko :S) "150px"
                           (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
               :style (when (= koko :S)
-                       {:position "absolute"
-                        :left (- lev 160)
-                        :top (+ (yleiset/navigaation-korkeus)
-                                (yleiset/murupolun-korkeus)
-                                20)})
+                       {:display "none"})
               :view kartta-sijainti
               :zoom zoom-taso
               :selection nav/valittu-hallintayksikko

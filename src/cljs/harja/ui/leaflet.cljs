@@ -1,13 +1,12 @@
 (ns harja.ui.leaflet
   (:require [reagent.core :as reagent :refer [atom]]
-            [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.loki :refer [log]]
-            [cljs.core.async :refer [<! timeout]]
+            [cljs.core.async :refer [<! >! chan timeout] :as async]
             [harja.tiedot.navigaatio :as nav]
             
   )
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -30,6 +29,9 @@
 (defn ^:export invalidate-size []
   (.invalidateSize @the-kartta))
 
+(def geometria-avain "Funktio, joka muuntaa geometrian tiedon avaimeksi mäppiä varten."
+  (juxt :type :id))
+
 (defn- leaflet-did-mount [this]
   "Initialize LeafletJS map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -39,34 +41,40 @@
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)
-        item-geometry (or (:geometry-fn mapspec) identity)]
+        item-geometry (or (:geometry-fn mapspec) identity)
+        unmount-ch (chan)]
 
     ;; Aloitetaan komentokanavan kuuntelu
-    (go (loop [[komento & args] (<! komento-ch)]
-          (log "TULI KOMENTO " komento) 
-          (case komento
-            ::fit-bounds (let [{:keys [leaflet geometries-map]} (reagent/state this)
-                               g (geometries-map (first args))]
-                           (log "löytyi geometrioista? " (first args) " => " g)
-                           (when g
-                             (.fitBounds leaflet g)))
-            ::popup (let [[[lat lng] content] args
-                          elt (js/document.createElement "div")
-                          comp (reagent/render content elt)]
-                      (log "ELEMENTTI: " elt " , COMP: " comp)
-                      (log "NÄYTÄ POPUP " lat ", " lng "  :: " content)
-                      (.openPopup leaflet
-                                  (doto (js/L.popup)
-                                    (.setLatLng (js/L.LatLng. lat lng))
-                                    (.setContent  elt #_(reagent/render-to-string content)))))
-            :default (log "tuntematon kartan komento: " komento))
-          (recur (<! komento-ch))))
+    (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
+      (when-not (= ch unmount-ch)
+        (log "TULI KOMENTO " komento) 
+        (case komento
+          ::fit-bounds (let [{:keys [leaflet geometries-map]} (reagent/state this)
+                             avain (geometria-avain (first args))
+                             g (geometries-map avain)]
+                         (log "löytyi geometrioista? " (pr-str avain) " => " g)
+                         (doseq [k (keys geometries-map)]
+                           (log "GEOMETRIA: " (pr-str k)))
+                         (when g
+                           (log "FIDBOUNDS kutsuttu")
+                           (.fitBounds leaflet g)))
+          ::popup (let [[[lat lng] content] args
+                        elt (js/document.createElement "div")
+                        comp (reagent/render content elt)]
+                    (log "ELEMENTTI: " elt " , COMP: " comp)
+                    (log "NÄYTÄ POPUP " lat ", " lng "  :: " content)
+                    (.openPopup leaflet
+                                (doto (js/L.popup)
+                                  (.setLatLng (js/L.LatLng. lat lng))
+                                  (.setContent  elt #_(reagent/render-to-string content)))))
+          :default (log "tuntematon kartan komento: " komento))
+        (recur (alts! [komento-ch unmount-ch]))))
     
     ;; Leaflet voi jäädä jumiin, jos kartan DOM elementtiä muuttelee eikä kerro siitä
     (add-watch nav/kartan-koko ::paivita-kartan-koko
                (fn [& _]
-                 (js/setTimeout #(do (log "kartan koko muuttui")
-                                     (.invalidateSize leaflet)) 100)))
+                 (log "LEAFLET: KARTAN KOKO MUUTTUI")
+                 (js/setTimeout #(.invalidateSize leaflet) 100)))
                
     (.setView leaflet (clj->js @view) @zoom)
     (doseq [{:keys [type url] :as layer-spec} (:layers mapspec)]
@@ -87,7 +95,8 @@
     ;;(.log js/console "L.map = " leaflet)
     (reagent/set-state this {:leaflet leaflet
                              :geometries-map {}
-                             :hover nil})
+                             :hover nil
+                             :unmount-ch unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to leaflet
     (when-let [on-click (:on-click mapspec)]
@@ -118,7 +127,7 @@
       (add-watch selection ::valinta
                  (fn [_ _ _ item]
                    (let [{:keys [leaflet geometries-map]} (reagent/state this)]
-                     (when-let [g (geometries-map item)]
+                     (when-let [g (geometries-map (geometria-avain item))]
                        ;; Löytyi Leaflet shape uudelle geometrialle
                        (.fitBounds leaflet  (.getBounds g)))))))
     
@@ -133,6 +142,15 @@
     ;;               (update-leaflet-geometries this new-items))))
     ))
 
+(defn leaflet-will-unmount [this]
+  (let [{:keys [leaflet geometries-map unmount-ch]} (reagent/state this)]
+    (log "LEAFLET: UNMOUNT")
+    (async/close! unmount-ch)
+    (doseq [shape (vals geometries-map)]
+      (try
+        (.remove leaflet shape)
+        (catch :default _)))))
+    
 (defn- leaflet-will-update [this [_ conf]]
   (update-leaflet-geometries this (-> conf :geometries)))
 
@@ -189,44 +207,49 @@
 (defn- update-leaflet-geometries [component items]
   "Update the LeafletJS layers based on the data, mutates the LeafletJS map object."
   ;;(.log js/console "geometries: " (pr-str items))
-  (let [{:keys [leaflet geometries-map mapspec hover]} (reagent/state component)
+  (let [{:keys [leaflet geometries-map mapspec hover fit-bounds]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)
         on-select (:on-select mapspec)
-        geometries-set (into #{} items)]
+        geometries-set (into #{} (map geometria-avain) items)]
     ;; Remove all LeafletJS shape objects that are no longer in the new geometries
-    (doseq [removed (keep (fn [[item shape]]
-                          (when-not (geometries-set item)
-                            shape))
-                        geometries-map)]
-      ;;(.log js/console "Removed: " removed)
-      (.removeLayer leaflet removed))
+    (doseq [[avain shape] (seq geometries-map)
+            :when (not (geometries-set avain))]
+      (log "LEAFLET POISTA: " (pr-str avain))
+      (.removeLayer leaflet shape))
 
     ;; Create new shapes for new geometries and update the geometries map
     (loop [new-geometries-map {}
+           new-fit-bounds fit-bounds
            [item & items] items]
       (if-not item
         ;; Update component state with the new geometries map
-        (reagent/set-state component {:geometries-map new-geometries-map})
-        (let [geom (geometry-fn item)]
+        (reagent/set-state component {:geometries-map new-geometries-map
+                                      :fit-bounds new-fit-bounds})
+          
+        (let [geom (geometry-fn item)
+              avain (geometria-avain item)]
           (if-not geom
-            (recur new-geometries-map items)
-            (let [shape (or (geometries-map item)
+            (recur new-geometries-map new-fit-bounds items)
+            (let [shape (or (geometries-map avain)
                             (doto (create-shape geom)
                               (.on "click" #(on-select item %))
                               (.on "mouseover" #(do ;;(log "EVENTTI ON " %)
-                                                    (reagent/set-state component
-                                                                   {:hover (assoc item
-                                                                             :x (aget % "containerPoint" "x")
-                                                                             :y (aget % "containerPoint" "y"))
-                                                                             })))
+                                                  (reagent/set-state component
+                                                                     {:hover (assoc item
+                                                                               :x (aget % "containerPoint" "x")
+                                                                               :y (aget % "containerPoint" "y"))
+                                                                      })))
                               (.on "mouseout" #(reagent/set-state component {:hover nil}))
                               (.addTo leaflet)))]
+              (log "LEAFLET: " (pr-str avain) " = " (pr-str geom))
               ;; If geometry has ::fit-bounds value true, then zoom to this
               ;; only 1 item should have this
-              ;;(when (::fit-bounds geom)
-              ;;  (go (<! (timeout 100))
-              ;;      (.fitBounds leaflet (.getBounds shape))))
-              (recur (assoc new-geometries-map item shape) items))))))))
+              (if (and (::fit-bounds geom) (not= fit-bounds avain))
+                (do
+                  (go (<! (timeout 100))
+                      (.fitBounds leaflet (.getBounds shape)))
+                  (recur (assoc new-geometries-map avain shape) avain items))
+                (recur (assoc new-geometries-map avain shape) new-fit-bounds items)))))))))
 
 
 
@@ -239,6 +262,7 @@
     {:get-initial-state (fn [_] {:mapspec mapspec})
      :component-did-mount leaflet-did-mount
      :component-will-update leaflet-will-update
-     :reagent-render leaflet-render}))
+     :reagent-render leaflet-render
+     :component-will-unmount leaflet-will-unmount}))
 
 

@@ -32,8 +32,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-kokovalinta "Kartan koko" (atom :M))
 
 (defn vaihda-kartan-koko! [uusi-koko]
-  (reset! kartan-kokovalinta uusi-koko)
-  (t/julkaise! {:aihe :kartan-koko-vaihdettu :uusi-koko uusi-koko}))
+  (let [vanha-koko @kartan-kokovalinta]
+    (reset! kartan-kokovalinta uusi-koko)
+    (t/julkaise! {:aihe :kartan-koko-vaihdettu
+                  :vanha-koko vanha-koko
+                  :uusi-koko uusi-koko})))
 
 ;; I-vaiheessa aina :tie
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
