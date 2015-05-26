@@ -29,7 +29,6 @@
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
     (is (= 16 (count maksuerat)))
-    (is (= [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2] (mapv #(:id (:toimenpideinstanssi %)) maksuerat)))
     (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %)) maksuerat)) 2))
     (is (= (count (filter #(= "yksikkohintainen" (:tyyppi %)) maksuerat)) 2))
     (is (= (count (filter #(= "bonus" (:tyyppi %)) maksuerat)) 2))
