@@ -16,7 +16,7 @@ The following keys are supported in the configuration:
                           :pills "nav-pills"
                           :tabs "nav-tabs")]
         (fn [config & alternating-title-and-component]
-            (let [tabs (filter #(not (nil? (second %))) (partition 3 alternating-title-and-component))
+            (let [tabs (filter #(not (nil? (nth % 2))) (partition 3 alternating-title-and-component))
                   [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]
                 [:span
                  [:ul.nav {:class style-class}
