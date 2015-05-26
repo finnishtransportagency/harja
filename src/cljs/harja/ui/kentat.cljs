@@ -181,7 +181,17 @@
 
 
 
-
+; ** 26.5.-15, Teemu K.***
+; Päivämääräkentissä on seuraavanlainen bugi:
+;  - Valitse kalenterista, tai kirjoita validi päivämäärä
+;  - Yritä muokata kirjoittamalla esimerkiksi kuukautta
+;  - Kentän arvo resetoituu välittömästi vanhaan arvoon, eli kenttää ei voi muokata enää käsin
+;
+; Bugiin törmättiin, kun :component-will-receive-props vaiheessa tehtävä swap! laitettiin palauttamaan
+; alkuperäinen teksti, jos päivämäärän parsiminen ei onnistu.
+;
+; Samalla aiheutui "virhe", jossa kenttään voi syöttää tauhkaa - tästä kuitenkin tulee käyttöliittymään
+; virheilmoitus, joten ainoa ongelma on, että yleensä Harjassa ei voi esim numerokenttiin syöttää aakkosia.
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -204,10 +214,10 @@
       {:component-will-receive-props
        (fn [this [_ {:keys [focus] :as s} data]]
          (when-not focus
-           (reset! auki false))
+             (reset! auki false))
          (swap! teksti #(if-let [p @data]
-                          (pvm/pvm p)
-                          "")))
+                         (pvm/pvm p)
+                         %)))
        
        :reagent-render
        (fn [_ data]
@@ -249,7 +259,7 @@
            (reset! auki false))
          (swap! teksti #(if-let [p @data]
                           (pvm/pvm p)
-                          "")))
+                          %)))
        
        :reagent-render
        (fn [_ data]
