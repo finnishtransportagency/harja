@@ -60,7 +60,7 @@
   (go
     (log (str "Urakan id: " ur))
     (reset! maksuerarivit (ryhmittele-maksuerat (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
-    (log (str "ASD Maksuerät saatu: " (pr-str @maksuerarivit)))
+    (log (str "Maksuerät saatu: " (pr-str @maksuerarivit)))
     (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                      (fn [rivi] (:numero rivi))
                                      (filter
@@ -91,7 +91,7 @@
 
 (defn lopeta-pollaus []
   (reset! pollataan-kantaa? false)
-  (log (str "ASD Kannan pollaus lopetettiin. Pollaus-id: " (pr-str @pollaus-id)))
+  (log (str "Kannan pollaus lopetettiin. Pollaus-id: " (pr-str @pollaus-id)))
   (js/clearInterval @pollaus-id) (reset! pollaus-id nil))
 
 (defn pollaa-kantaa
@@ -99,9 +99,9 @@
   []
   (if (not (empty? @lahetyksessa))
     (do
-      (log "ASD Pollataan kantaa...")
+      (log "Pollataan kantaa...")
       (hae-urakan-maksuerat @urakka-id))
-    (do (log "ASD Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
+    (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
         (lopeta-pollaus))))
 
 (defn aloita-pollaus
@@ -110,7 +110,7 @@
   (if (false? @pollataan-kantaa?) (do
                                     (reset! pollataan-kantaa? true)
                                     (reset! pollaus-id (js/setInterval pollaa-kantaa 10000))
-                                    (log (str "ASD Alettiin pollaamaan kantaa tietyn ajan välein. Pollaus-id: " (pr-str @pollaus-id))))))
+                                    (log (str "Alettiin pollaamaan kantaa tietyn ajan välein. Pollaus-id: " (pr-str @pollaus-id))))))
 
 (defn maksuerat
   "Maksuerien pääkomponentti"
