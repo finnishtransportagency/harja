@@ -1,6 +1,7 @@
 -- name: hae-urakan-sillat
 -- Hakee hoidon alueurakalle sillat sekä niiden viimeiset tarkastuspvm:t.
-SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja
+SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
+  s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero
   FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = false)
        LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = false)
@@ -11,6 +12,7 @@ SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja
 -- Hakee alueurakan sillat, joissa on puutteita (tulos muu kuin A) uusimmassa tarkastuksessa.
 -- DEPRECATED
 SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
+  s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero,
        (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
           FROM siltatarkastuskohde k
 	 WHERE k.siltatarkastus=s1.id
@@ -25,6 +27,7 @@ SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
 -- Hakee sillat, joissa viimeisimmässä tarkastuksessa vähintään 1 B TAI C kohde.
 -- Erona edellisiin puutteisiin on, että nyt ei näytetä D:tä
 SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
+  s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero,
   (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus=s1.id
@@ -40,6 +43,7 @@ WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka)
 -- name: hae-urakan-sillat-ohjelmoitavat
 -- Hakee sillat, joiden tulos on D ("Korjaus ohjelmoitava")
 SELECT s.id, s.siltanimi, s.siltanro, s.alue, s1.tarkastusaika, s1.tarkastaja,
+  s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero,
   (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus=s1.id
@@ -56,7 +60,8 @@ SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkast
        (SELECT array_agg(concat(k1.kohde, '=', k1.tulos, ':')) FROM siltatarkastuskohde k1 WHERE k1.siltatarkastus=st1.id AND (tulos='B' OR tulos='C'))
          as kohteet,
        (SELECT COUNT(k2.kohde) FROM siltatarkastuskohde k2 WHERE k2.siltatarkastus=st2.id AND (tulos='B' OR tulos='C')) as rikki_nyt,
-       s.id, s.siltanimi, s.siltanro, s.alue, st2.tarkastusaika, st2.tarkastaja
+       s.id, s.siltanimi, s.siltanro, s.alue, st2.tarkastusaika, st2.tarkastaja,
+       s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero
   FROM siltatarkastus st1
        JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
        AND st2.poistettu)

@@ -9,6 +9,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.tierekisteri :refer [tierekisteri]]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siltatarkastukset :as st]
@@ -58,7 +59,10 @@
   [:div [:h3 (:siltanimi silta)]
    [yleiset/tietoja {}
     "Sillan numero: " (:siltanro silta)
-    "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)]])
+    "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
+   "Tierekisteri: " [tierekisteri
+                     (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
+                     (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]])
 
 (defonce klikatun-sillan-popup
   (tapahtumat/kuuntele! :silta-klikattu
