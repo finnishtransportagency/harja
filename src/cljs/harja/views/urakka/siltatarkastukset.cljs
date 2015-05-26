@@ -80,13 +80,14 @@
                                 ;;\u2014 on väliviivan unikoodi
                                 :format-fn  #(case %
                                               :kaikki "Kaikki"
-                                              :puutteet "Puutteelliset"
-                                              :korjatut "Korjatut"
+                                              :urakan-korjattavat "Urakan korjattavat"
+                                              :korjaus-ohjelmoitava "Korjaus ohjelmoitava"
+                                              :urakassa-korjatut "Urakassa korjatut"
                                               "Kaikki")
                                 :valitse-fn #(reset! sillat/listaus %)
                                 :class      "suunnittelu-alasveto"
                                 }
-           [:kaikki :puutteet :korjatut]]]
+           [:kaikki :urakan-korjattavat :korjaus-ohjelmoitava :urakassa-korjatut]]]
 
          [grid/grid
           {:otsikko        "Sillat"

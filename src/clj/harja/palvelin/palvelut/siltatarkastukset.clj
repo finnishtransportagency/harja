@@ -37,6 +37,29 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
           (geo/muunna-pg-tulokset :alue)
           (q/hae-urakan-sillat db urakka-id))
 
+    :urakan-korjattavat
+    (into []
+          (comp (geo/muunna-pg-tulokset :alue)
+                kohteet-xf
+                (filter #(not (empty? (:kohteet %)))))
+          (q/hae-urakan-sillat-korjattavat db urakka-id))
+
+    :korjaus-ohjelmoitava
+    (into []
+          (comp (geo/muunna-pg-tulokset :alue)
+                kohteet-xf
+                (filter #(not (empty? (:kohteet %)))))
+          (q/hae-urakan-sillat-ohjelmoitavat db urakka-id))
+
+    :urakassa-korjatut
+    (into []
+          (comp (geo/muunna-pg-tulokset :alue)
+                kohteet-xf
+                (filter #(and (not= (:rikki_ennen %) 0)
+                              (= (:rikki_nyt %) 0))))
+          (q/hae-urakan-sillat-korjatut db urakka-id))
+
+    ;; DEPRECATED
     :puutteet
     (into []
           (comp (geo/muunna-pg-tulokset :alue)
