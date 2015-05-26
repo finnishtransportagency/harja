@@ -43,9 +43,22 @@
     "muu" "Muut"
     "Ei tyyppiä"))
 
+
+(defn sorttausjarjestys [tyyppi]
+  (case tyyppi
+    "kokonaishintainen" 1
+    "yksikkohintainen" 2
+    "lisatyo" 3
+    "indeksi" 4
+    "bonus" 5
+    "sakko" 6
+    "akillinen_hoitotyo" 7
+    "muu" 8
+    9))
+
 (defn ryhmittele-maksuerat [rivit]
   (let [otsikko (fn [rivi] (tyyppi-enum->string-plural (:tyyppi rivi)))
-        otsikon-mukaan (group-by otsikko rivit)]
+        otsikon-mukaan (group-by otsikko (sort-by #(sorttausjarjestys (:tyyppi %)) rivit))]
     (doall (mapcat (fn [[otsikko rivit]]
                      (concat [(grid/otsikko otsikko)] rivit))
                    (seq otsikon-mukaan)))))
@@ -56,10 +69,11 @@
 
 (declare aloita-pollaus)
 
+
 (defn hae-urakan-maksuerat [ur]
   (go
     (log (str "Urakan id: " ur))
-    (reset! maksuerarivit (ryhmittele-maksuerat (sort-by :tyyppi (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+    (reset! maksuerarivit (ryhmittele-maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
     (log (str "Maksuerät saatu: " (pr-str @maksuerarivit)))
     (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                      (fn [rivi] (:numero rivi))
