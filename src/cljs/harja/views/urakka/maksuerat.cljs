@@ -44,7 +44,6 @@
     "muu" "Muut"
     "Ei tyyppiä"))
 
-
 (defn sorttausjarjestys [tyyppi]
   (case tyyppi
     "kokonaishintainen" 1
@@ -70,18 +69,17 @@
 
 (declare aloita-pollaus)
 
-
 (defn hae-urakan-maksuerat [ur]
   (go
     (log (str "Urakan id: " ur))
     (reset! maksuerarivit (ryhmittele-maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
-    (log (str "Maksuerät saatu: " (pr-str @maksuerarivit)))
     (reset! lahetyksessa (into #{} (mapv ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
                                      (fn [rivi] (:numero rivi))
                                      (filter
                                        (fn [rivi]
                                          (= (:tila rivi) "odottaa_vastausta"))
                                        @maksuerarivit))))))
+
 (defn laheta-maksuerat [maksueranumerot] ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
   (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @lahetyksessa %)) maksueranumerot))]
     (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
@@ -101,6 +99,7 @@
                                                 (assoc rivi :tila "virhe")
                                                 rivi))
                                             @maksuerarivit))))))))
+
 (def pollaus-id (atom nil))
 (def pollataan-kantaa? (atom false))
 
@@ -114,7 +113,7 @@
   []
   (if (not (empty? @lahetyksessa))
     (do
-      (log "Pollataan kantaa...")
+      (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
       (hae-urakan-maksuerat @urakka-id))
     (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
         (lopeta-pollaus))))
@@ -137,7 +136,7 @@
     {:component-will-unmount
     (fn []
       (lopeta-pollaus))}
-    (fn [ur]
+    (fn []
       [:div
        (let [lahetyksessa @lahetyksessa]
          [grid/grid
@@ -171,4 +170,3 @@
        [:button.nappi-ensisijainen {:class (if (= (count @lahetyksessa) (count @maksuerarivit)) "disabled" "")
                                     :on-click #(do (.preventDefault %)
                                                    (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki" ]])))
-
