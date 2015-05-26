@@ -152,7 +152,7 @@
            {:otsikko "Tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (case (:tila rivi)
-                             "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                             "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
                              "lahetetty" [:span.maksuera-lahetetty (if (not (nil? (:lahetetty rivi)))
                                                                      (str "Lähetetty, kuitattu " (pvm/pvm-aika (:lahetetty rivi)))
                                                                      (str "Lähetetty, kuitattu (kuittauspäivämäärää puuttuu)"))]
