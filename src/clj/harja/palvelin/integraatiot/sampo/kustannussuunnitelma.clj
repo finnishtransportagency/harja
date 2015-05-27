@@ -35,7 +35,7 @@
    {:value arvo
     :code  koodi}])
 
-(defn valitse-lpk-tilinumero [toimenpidekoodi, tuotenumero]
+(defn valitse-lkp-tilinumero [toimenpidekoodi, tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
     "43021"
     ; Hoitotuotteet 110 - 150, 536
@@ -83,6 +83,6 @@
          (luo-summat (formatoi-paivamaara alkupvm) (formatoi-paivamaara loppupvm) maksuera)
          [:GroupingAttributes
           (muodosta-grouping-attribute "lov1_id" "3110201")
-          (muodosta-grouping-attribute "role_id" (valitse-lpk-tilinumero koodi tuotenumero))]
+          (muodosta-grouping-attribute "role_id" (valitse-lkp-tilinumero koodi tuotenumero))]
          (muodosta-custom-information "vv_vat_code" "L024")]]
        (muodosta-custom-information "vv_purpose" "5")]]]))
