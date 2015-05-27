@@ -13,9 +13,14 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
+(defn laske-kokonaishintaisten-toiden-summa [kokonaishintaiset-tyot]
+  (apply + (mapv (fn [kokonaishintainen-tyo] (:summa kokonaishintainen-tyo)) kokonaishintaiset-tyot)))
+
 (defn laske-summa [maksuera]
-  ;; FIXME: Tee summien laskenta
-  100)
+  (case (:tyyppi maksuera)
+    "kokonaishintainen" (laske-kokonaishintaisten-toiden-summa (:kokonaishintaiset-tyot maksuera))
+    "yksikköhintainen" 6
+    1))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
   [:Cost

@@ -38,8 +38,6 @@
 (defn laheta-maksuera-sampoon
   [sampo user maksueranumero]
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
-  ;; FIXME: Palauta future
-  ;; FIXME: Palauta true/false sen mukaan palautuiko virhettä
   (sampo/laheta-maksuera-sampoon sampo maksueranumero))
 
 (defn laheta-maksuerat-sampoon
