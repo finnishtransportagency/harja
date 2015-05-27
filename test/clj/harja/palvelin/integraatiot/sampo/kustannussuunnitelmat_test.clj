@@ -22,7 +22,11 @@
                                        :loppupvm      (parsi-paivamaara "1.1.2017")
                                        :vastuuhenkilo "A009717"
                                        :talousosasto  "talousosasto"
-                                       :tuotepolku    "polku/tuote"}
+                                       :tuotepolku    "polku/tuote"
+                                       :toimenpidekoodi {
+                                                         :koodi "20112"
+                                                         :tuotenumero 111
+                                                         }}
                  :urakka              {:sampoid "PR00020606"}
                  :sopimus             {:sampoid "00LZM-0033600"}})
 
@@ -31,3 +35,11 @@
         xsd "nikuxog_costPlan.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
+
+(deftest tarkista-lpk-tilinnumeron-paattely
+  (is (= "43021" (kustannussuunnitelma/valitse-lpk-tilinumero "20112" nil)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43021" (kustannussuunnitelma/valitse-lpk-tilinumero nil 112)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "43021" (kustannussuunnitelma/valitse-lpk-tilinumero nil 536)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lpk-tilinumero nil 30)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lpk-tilinumero nil 242)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lpk-tilinumero nil 318)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella"))
