@@ -53,15 +53,17 @@
         xsd "nikuxog_costPlan.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
-(deftest tarkista-lpk-tilinnumeron-paattely
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero "20112" nil)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 112)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 536)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 30)) "Oikea LPK-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 242)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 318)) "Oikea LPK-tilinnumero valittu toimenpidekoodin perusteella"))
+(deftest tarkista-LKP-tilinnumeron-paattely
+  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 112)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 536)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 30)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 242)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
+  (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
 
 (deftest tarkista-summien-laskenta
   (is (= 1 (kustannussuunnitelma/laske-summa {:tyyppi "sakko"})) "Sakoille summa on aina 1")
   (is (= 2234 (kustannussuunnitelma/laske-summa +kokonaishintainenmaksuera+)) "Summa lasketaan oikein kokonaishintaisista töistä")
-  (is (= 115.1 (kustannussuunnitelma/laske-summa +yksikkohintainenmaksuera+))))
+  (is (= 115.1 (kustannussuunnitelma/laske-summa +yksikkohintainenmaksuera+))) "Summa lasketaan oikein yksikköhintaisista töistä")

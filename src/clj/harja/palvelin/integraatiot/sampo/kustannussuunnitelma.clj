@@ -55,11 +55,12 @@
       (if (or (= tuotenumero 21)
               (= tuotenumero 30)
               (= tuotenumero 210)
-              (or (>= tuotenumero 240) (<= tuotenumero 271))
-              (or (>= tuotenumero 310) (<= tuotenumero 321)))
+              (and (>= tuotenumero 240) (<= tuotenumero 271))
+              (and (>= tuotenumero 310) (<= tuotenumero 321)))
         "12981"
-        ; FIXME: Mitä tehdään, jos ei löydy sopivaa? Aiheutetaan poikkeus?
-        ))))
+        (let [viesti (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle", toimenpidekoodi tuotenumero)]
+          (log/error viesti)
+          (throw (RuntimeException. viesti)))))))
 
 (defn muodosta-kustannussuunnitelma-xml [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
