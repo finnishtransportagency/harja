@@ -16,10 +16,13 @@
 (defn laske-kokonaishintaisten-toiden-summa [kokonaishintaiset-tyot]
   (apply + (mapv (fn [kokonaishintainen-tyo] (:summa kokonaishintainen-tyo)) kokonaishintaiset-tyot)))
 
+(defn laske-yksikkohintaisten-toiden-summa [yksikkohintaiset-tyot]
+  (apply + (mapv (fn [yksikkohintainen-tyo] (* (:maara yksikkohintainen-tyo) (:yksikkohinta yksikkohintainen-tyo))) yksikkohintaiset-tyot)))
+
 (defn laske-summa [maksuera]
   (case (:tyyppi maksuera)
     "kokonaishintainen" (laske-kokonaishintaisten-toiden-summa (:kokonaishintaiset-tyot maksuera))
-    "yksikköhintainen" 6
+    "yksikkohintainen" (laske-yksikkohintaisten-toiden-summa (:yksikkohintaiset-tyot maksuera))
     1))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
