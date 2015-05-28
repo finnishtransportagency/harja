@@ -80,7 +80,7 @@
                                      (filter
                                        (fn [rivi]
                                          (or (= (:tila rivi) "odottaa_vastausta")
-                                             (= (:tila (:kustannussuunnitelma) rivi) "odottaa_vastausta")))
+                                             (= (:tila (:kustannussuunnitelma rivi)) "odottaa_vastausta")))
                                        @maksuerarivit))))))
 
 (defn laheta-maksuerat [maksueranumerot]                    ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
