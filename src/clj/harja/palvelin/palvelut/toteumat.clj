@@ -1,14 +1,18 @@
 (ns harja.palvelin.palvelut.toteumat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.toteumat :as q]
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.roolit :as roolit]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+
+            [harja.kyselyt.toteumat :as q]
+            [harja.kyselyt.materiaalit :as materiaalit-q]
+
+            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]))
 
 (def toteuma-xf
      (comp (map #(-> %
@@ -54,6 +58,7 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
+
                           
 (defn tallenna-toteuma [db user toteuma]
   (validoi Toteuma toteuma)
@@ -71,7 +76,7 @@
         (q/luo-tehtava<! c id toimenpidekoodi maara))
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
-        (q/luo-materiaali<! c id materiaalikoodi maara))
+        (materiaalit-q/luo-materiaali<! c id materiaalikoodi maara))
       
       true)))
 
@@ -112,6 +117,35 @@
                                              :alkupvm (:alkupvm ek)
                                              :loppupvm (:loppupvm ek)})))
 
+(defn tallenna-toteuma-ja-toteumamateriaalit
+  "Tallentaa toteuman ja toteuma-materiaalin, ja palauttaa lopuksi kaikki urakassa käytetyt materiaalit (yksi rivi per materiaali).
+  Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä."
+  [db user t toteumamateriaalit]
+  ;(validoi Toteuma t) ;fixme skeema??
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+                            (:urakka t))
+  (log/info "Tallenna toteuma: "(pr-str t)" ja toteumamateriaalit "(pr-str toteumamateriaalit))
+  (jdbc/with-db-transaction [c db]
+                            (let [toteuma (if (and (:id t) (pos? (:id t)))
+                                            (do
+                                              (log/info "Pävitetään toteumaa " (:id t))
+                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t))
+                                                                  (:id t) (:urakka t))
+                                              t)
+                                            (do
+                                              (log/info "Luodaan uusi toteuma")
+                                              (q/luo-toteuma<! c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:tyyppi t))))]
+                              (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
+                              (doall
+                                (for [tm toteumamateriaalit]
+                                  (if (and (:id tm) (pos? (:id tm)))
+                                    (do
+                                      (log/info "Päivitä materiaalitoteuma " (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:id toteuma))
+                                      (materiaalit-q/paivita-toteuma-materiaali! c (:materiaalikoodi tm) (:maara tm) (:toteuma (:id toteuma)) (:id tm)))
+                                    (do
+                                      (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:id toteuma))
+                                      (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm))))))
+                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka t)))))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -139,12 +173,20 @@
       (julkaise-palvelu http :tallenna-erilliskustannus
         (fn [user toteuma]
           (tallenna-erilliskustannus db user toteuma)))
+      (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
+                        (fn [user tiedot]
+                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot) (:toteumamateriaalit tiedot))))
       this))
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-toteumat :urakan-toteuma-paivat
-      :hae-urakan-tehtavat :tallenna-urakan-toteuma
-      :urakan-erilliskustannukset :tallenna-erilliskustannus)
+      :urakan-toteumat
+      :urakan-toteuma-paivat
+      :urakan-tehtavat-toteumittain
+      :hae-urakan-tehtavat
+      :tallenna-urakan-toteuma
+      :urakan-erilliskustannukset
+      :tallenna-erilliskustannus
+      :tallenna-toteuma-ja-toteumamateriaalit)
     this))

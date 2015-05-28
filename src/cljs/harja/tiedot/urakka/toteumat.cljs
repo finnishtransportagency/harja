@@ -15,6 +15,9 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
+(defn hae-urakassa-kaytetyt-materiaalit [urakka-id]
+  (k/post! :hae-urakassa-kaytetyt-materiaalit urakka-id))
+
 (defn hae-urakan-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteumat
            {:urakka-id urakka-id
@@ -40,7 +43,6 @@
 (defn tallenna-toteuma [toteuma]
   (k/post! :tallenna-urakan-toteuma toteuma))
 
-
 (defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]
   (k/post! :urakan-erilliskustannukset
     {:urakka-id urakka-id
@@ -50,3 +52,6 @@
 (defn tallenna-erilliskustannus [ek]
   (log "Tiedot tallennea ek" (pr-str ek))
   (k/post! :tallenna-erilliskustannus ek))
+
+(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit]
+  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma :toteumamateriaalit toteumamateriaalit}))

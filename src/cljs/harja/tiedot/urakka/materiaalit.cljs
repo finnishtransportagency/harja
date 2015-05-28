@@ -18,6 +18,19 @@
                 (<! (k/get! :hae-materiaalikoodit)))))
   materiaalikoodit)
 
+
+(defn hae-materiaalit [urakka-id]
+  (k/post! :hae-urakan-materiaalit urakka-id))
+
+(defn hae-urakassa-kaytetyt-materiaalit [urakka-id]
+  (k/post! :hae-urakassa-kaytetyt-materiaalit urakka-id))
+
+(defn hae-toteumat-materiaalille [urakka-id materiaali-id]
+  (k/post! :hae-urakan-toteumat-materiaalille {:urakka-id urakka-id :materiaali-id materiaali-id}))
+
+(defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
+  (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))
+
 (defn hae-urakan-materiaalit [urakka-id]
   (let [ch (chan)]
     (go (>! ch (into []

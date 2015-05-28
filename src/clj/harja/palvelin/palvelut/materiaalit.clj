@@ -19,8 +19,49 @@
               (map #(if (:id (:pohjavesialue %))
                       %
                       (dissoc % :pohjavesialue)))
-              (map #(assoc % :maara (double (:maara %)))))
-        (q/hae-urakan-materiaalit db urakka-id)))
+              (map #(assoc % :maara (double (:maara %))))
+              (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
+        (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
+          (log/info "HAETAAN URAKAN MATERIAALIT")
+          (log/info tulos)
+          tulos)))
+
+(defn hae-urakassa-kaytetyt-materiaalit
+  [db user urakka-id]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(assoc % :maara (when (:maara %) (double (:maara %)))))
+              (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
+        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id)))
+
+(defn hae-urakan-toteumat-materiaalille
+  [db user urakka-id materiaali-id]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(if (:id (:pohjavesialue %))
+                     %
+                     (dissoc % :pohjavesialue)))
+              (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
+        (let [tulos (q/hae-urakan-toteumat-materiaalille db urakka-id materiaali-id)]
+          (log/info "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE")
+          (log/info tulos)
+          tulos)))
+
+(defn hae-toteuman-materiaalitiedot
+  [db user urakka-id toteuma-id]
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [mankeloitava (into []
+                           (comp (map konv/alaviiva->rakenne)
+                                 (map #(assoc-in % [:toteumamateriaali :maara] (double (:maara (:toteumamateriaali %))))))
+                           (q/hae-toteuman-materiaalitiedot db toteuma-id urakka-id))
+        tulos (assoc
+                (first (map :toteuma mankeloitava))
+                :toteumamateriaalit (into [] (map :toteumamateriaali mankeloitava)))]
+    (log/info "Hae toteuman materiaalitiedot:")
+    (log/info tulos)
+    tulos))
 
   
 (defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit]}]
@@ -46,7 +87,7 @@
           ;; Poistetaan kaikki pohjavesialueen materiaalit, joita ei enää ole
           (doseq [{:keys [alkupvm loppupvm materiaali pohjavesialue]} (filter :poistettu materiaalit)
                   :when pohjavesialue]
-            (q/poista-pohjavesialueen-materiaali! c (:id user)
+            (q/poista-pohjavesialueen-materiaalinkaytto! c (:id user)
                                                   urakka-id sopimus-id
                                                   (konv/sql-date alkupvm) (konv/sql-date loppupvm)
                                                   (:id materiaali) (:id pohjavesialue)))
@@ -55,7 +96,7 @@
           (doseq [[avain {id :id}] materiaalit-kannassa
                   :when (not (materiaalit-sisaan avain))]
             (log/info "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
-            (q/poista-materiaali-id! c (:id user) id))
+            (q/poista-materiaalinkaytto-id! c (:id user) id))
           
       
           ;; Käydään läpi frontin lähettämät uudet materiaalit
@@ -69,12 +110,12 @@
                   (if (== (:maara materiaali) (:maara materiaali-kannassa))
                     (do (log/info "Ei muutosta määrään, ei päivitetä."))
                     (do (log/info "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
-                        (q/paivita-materiaalin-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
+                        (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
                         )))
           
               (let [{:keys [alkupvm loppupvm maara materiaali pohjavesialue]} materiaali]
                 (log/info "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
-                (q/luo-materiaali<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
+                (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
                                     urakka-id sopimus-id (:id pohjavesialue) (:id user)))))))
           
           
@@ -94,9 +135,23 @@
                       (fn [user urakka-id]
                         (hae-urakan-materiaalit (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
+                      :hae-urakan-toteumat-materiaalille
+                      (fn [user tiedot]
+                        (hae-urakan-toteumat-materiaalille
+                          (:db this) user (:urakka-id tiedot) (:materiaali-id tiedot))))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-toteuman-materiaalitiedot
+                      (fn [user tiedot]
+                        (hae-toteuman-materiaalitiedot
+                          (:db this) user (:urakka-id tiedot) (:toteuma-id tiedot))))
+    (julkaise-palvelu (:http-palvelin this)
                       :tallenna-urakan-materiaalit
                       (fn [user tiedot]
                         (tallenna-urakan-materiaalit (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-urakassa-kaytetyt-materiaalit
+                      (fn [user urakka-id]
+                        (hae-urakassa-kaytetyt-materiaalit (:db this) user urakka-id)))
                            
     this)
 
@@ -104,6 +159,9 @@
     (poista-palvelut (:http-palvelin this)
                      :hae-materiaalikoodit
                      :hae-urakan-materiaalit
-                     :tallenna-urakan-materiaalit)
+                     :tallenna-urakan-materiaalit
+                     :hae-urakan-toteumat-materiaalille
+                     :hae-toteuman-materiaalitiedot
+                     :hae-urakassa-kaytetyt-materiaalit)
                     
     this))

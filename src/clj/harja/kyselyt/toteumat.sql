@@ -25,27 +25,24 @@ SELECT id,nimi,yksikko FROM toimenpidekoodi
    AND poistettu = false
    AND emo IN (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = :urakka);
 
+-- name: paivita-toteuma!
+UPDATE toteuma
+SET alkanut=:alkanut, paattynyt=:paattynyt
+WHERE id=:id AND urakka=:urakka;
+
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
 INSERT
   INTO toteuma
        (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu)
-VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW())
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW());
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
   INTO toteuma_tehtava
        (toteuma, toimenpidekoodi, maara, luotu)
-VALUES (:toteuma, :toimenpidekoodi, :maara, NOW())
-
--- name: luo-materiaali<!
--- Luo uuden materiaalin toteumalle
-INSERT
-  INTO toteuma_materiaali
-       (toteuma, materiaalikoodi, maara, luotu)
-VALUES (:toteuma, :materiaalikoodi, :maara, NOW())
-
+VALUES (:toteuma, :toimenpidekoodi, :maara, NOW());
 
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla

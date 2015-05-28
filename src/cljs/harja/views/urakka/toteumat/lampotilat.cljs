@@ -185,7 +185,6 @@
            {:placeholder "", :type "text", :name "keskilampo" :value (:keskilampo @uudet-lampotilat)
             :on-change #(let [uusi-arvo (-> % .-target .-value)]
                          (swap! uudet-lampotilat assoc :keskilampo uusi-arvo))}
-
            {:placeholder "", :type "text", :name "keskilampo" :value (:keskilampo @uudet-lampotilat)
             :readOnly "readOnly"})]
         (if (not (and saa-muokata? (kelvollinen-lampotila? (:keskilampo @uudet-lampotilat))))

@@ -9,9 +9,10 @@
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi
-  [teksti kysely asetukset]
+(defn palvelinkutsu-nappi ;todo lisää onnistumisviesti
+  [teksti kysely asetukset kun-valmis]
   "Nappi, jonka painaminen laukaisee palvelukutsun. Kyselyn pitää olla funktio, joka palauttaa kanavan.
+  Kun-valmis on callback funktio, joka saa parametrikseen kyselyn tuloksen.
   Asetukset ovat valinnaisia. Mahdolliset arvot ja niiden oletusarvot ovat:
   - luokka (nappi-toissijainen)
   - virheviesti (Virhe tapahtui)
@@ -48,17 +49,20 @@
                      (str (name luokka) " disabled")
                      luokka)
          :on-click #(do
+                     (.preventDefault %)
                      (reset! kysely-kaynnissa? true)
                      (reset! nayta-virheviesti? false)
                      (go (let [tulos (<! (kysely))]
                            (if (not (k/virhe? tulos))
                              (do
                                (reset! kysely-kaynnissa? false)
-                               (log "Palvelin vastasi:" (pr-str tulos)))
+                               (log "Palvelin vastasi:" (pr-str tulos))
+                               (when kun-valmis (kun-valmis tulos)))
                              (do
                                (reset! kysely-kaynnissa? false)
                                (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos)) ;fixme logitustaso?
-                               (reset! nayta-virheviesti? true))))))}
+                               (reset! nayta-virheviesti? true)
+                               #_(when kun-valmis (kun-valmis tulos)))))))}
 
         (if @kysely-kaynnissa? [y/ajax-loader] ikoni) (str " " teksti)]
        (when @nayta-virheviesti?

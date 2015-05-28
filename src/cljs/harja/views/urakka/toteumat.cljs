@@ -16,8 +16,9 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
 
+            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
+            [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
@@ -142,7 +143,7 @@
                 (toteumat/hae-tehtavat (:id ur)))))
 
 
-(def materiaalit
+(def materiaalit_foo
   (reaction<! (when-let [ur @nav/valittu-urakka]
                 (toteumat/hae-materiaalit (:id ur)))
               (fn [mat]
@@ -168,7 +169,7 @@
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."}
    [{:otsikko "Materiaali" :nimi :materiaalikoodi :tyyppi :valinta
-     :valinnat @materiaalit
+     :valinnat @materiaalit_foo
      :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
      :validoi [[:ei-tyhja "Valitse materiaali."]]
      :leveys "50%"}
@@ -298,6 +299,12 @@
 
    "Erilliskustannukset" :erilliskustannukset
    [erilliskustannukset/erilliskustannusten-toteumat]
+
+   "Materiaalit" :materiaalit
+   [materiaalit-nakyma ur]
+
+   "Hinnantarkistukset" :hinnantarkistukset
+   [:div "hinnantarkistukset tänne"]
    
    "Lämpötilat" :lampotilat
    [lampotilat ur]])
