@@ -18,6 +18,9 @@
                                  (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))
                                  val))
 
+(defonce urakan-yks-hint-tyot (atom nil))
+(defonce urakan-kok-hint-tyot (atom nil))
+
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
 

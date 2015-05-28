@@ -113,7 +113,7 @@
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
-  (let [urakan-kok-hint-tyot s/urakan-kok-hint-tyot
+  (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]

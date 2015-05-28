@@ -14,11 +14,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-
-(defonce urakan-yks-hint-tyot (atom nil))
-(defonce urakan-kok-hint-tyot (atom nil))
-
-
 (defn yhdista-rivien-hoitokaudet
   "Yhdistää rivejä, jotka sisältävät :alkupvm :loppupvm, siten että kaksi peräkäistä kautta
   yhdistetään samaksi (10-12 ja 1-9 kk:t). Ottaa kaksi funktiota: ryhmittely ja yhdista.
@@ -101,7 +96,7 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
 (def kaikki-sopimuksen-kok-hint-rivit
     (reaction (let [sopimus-id (first @u/valittu-sopimusnumero)]
                   (filter #(= sopimus-id (:sopimus %))
-                          @urakan-kok-hint-tyot))))
+                          @u/urakan-kok-hint-tyot))))
 
 (def kaikki-sopimuksen-ja-hoitokauden-kok-hint-rivit
     (reaction (let [hk-alku (first @u/valittu-hoitokausi)]

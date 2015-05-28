@@ -144,7 +144,7 @@
               (fn [tasot] (nth tasot 3))
               (filter
                 (fn [tasot] (= (:koodi (nth tasot 2)) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-                @u/urakan-toimenpiteet-ja-tehtavat))]
+                @u/urakan-toimenpiteet-ja-tehtavat))] ; FIXME Toimenpiteen vaihto ei toimi Firefoxilla?
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]] ))))
 

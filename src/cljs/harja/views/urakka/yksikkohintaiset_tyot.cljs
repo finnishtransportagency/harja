@@ -104,7 +104,7 @@
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
-  (let [urakan-yks-hint-tyot s/urakan-yks-hint-tyot
+  (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
         toimenpiteet-ja-tehtavat (atom nil)
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]

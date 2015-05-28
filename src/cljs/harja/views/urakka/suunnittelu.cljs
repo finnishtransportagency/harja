@@ -26,25 +26,17 @@
                        (get (u/ryhmittele-hoitokausittain (into []
                                                                 (filter (fn [t]
                                                                           (= (:sopimus t) (first @u/valittu-sopimusnumero))))
-                                                                @s/urakan-yks-hint-tyot)
+                                                                @u/urakan-yks-hint-tyot)
                                                           (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
 (def valittu-valilehti "Valittu välilehti" (atom :kokonaishintaiset))
 
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
-  (let [hae-urakan-tyot (fn [ur]
-                          (go (reset! s/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                          (go (reset! s/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))
-        valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
-    (hae-urakan-tyot ur)
-    
-    (r/create-class
-      {:component-will-receive-props
-       (fn [this [_ ur]]
-         (hae-urakan-tyot ur))
+  (let [valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
 
-       :reagent-render
+    (r/create-class
+      {:reagent-render
        (fn [ur]
 
          [:span.suunnittelu
