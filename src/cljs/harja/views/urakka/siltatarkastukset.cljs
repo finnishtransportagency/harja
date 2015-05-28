@@ -9,7 +9,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
-            [harja.ui.tierekisteri :refer [tierekisteri]]
+            [harja.ui.tierekisteri :refer [tieosoite]]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siltatarkastukset :as st]
@@ -60,7 +60,7 @@
    [yleiset/tietoja {}
     "Sillan numero: " (:siltanro silta)
     "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
-   "Tierekisteri: " [tierekisteri
+   "Tieosoite: " [tieosoite
                      (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
                      (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]])
 
@@ -73,6 +73,15 @@
                                                 [:div.keskita
                                                  [:a {:href "#" :on-click #(reset! st/valittu-silta (dissoc silta :aihe :klikkaus-koordinaatit))}
                                                   "Avaa valittu silta"]]]))))
+
+(defn kohdesarake [kohteet vika-korjattu]
+  [:ul.puutekohdelista {:style {:padding-left "20px"}}
+   (for [[kohde [tulos _]] (seq kohteet)]
+     [:li.puutekohde {:style {:list-style-type "circle"}}
+      (str (st/siltatarkastuskohteen-nimi kohde)
+        ": "
+        tulos (when vika-korjattu " \u2192 A"))])])
+
 (defn sillat []
   (let [urakan-sillat sillat/sillat]
     (komp/luo
@@ -84,18 +93,18 @@
                                 ;;\u2014 on väliviivan unikoodi
                                 :format-fn  #(case %
                                               :kaikki "Kaikki"
-                                              :urakan-korjattavat "Urakan korjattavat"
-                                              :korjaus-ohjelmoitava "Korjaus ohjelmoitava"
-                                              :urakassa-korjatut "Urakassa korjatut"
+                                              :urakan-korjattavat "Urakan korjattavat (B-C)"
+                                              :urakassa-korjatut "Urakassa korjatut (ei enää B:tä eikä C:tä)"
+                                              :korjaus-ohjelmoitava "Korjaus ohjelmoitava (D)"
                                               "Kaikki")
                                 :valitse-fn #(reset! sillat/listaus %)
                                 :class      "suunnittelu-alasveto"
                                 }
-           [:kaikki :urakan-korjattavat :korjaus-ohjelmoitava :urakassa-korjatut]]]
+           [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
 
          [grid/grid
           {:otsikko        "Sillat"
-           :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Urakan alueella olevia siltoja haetaan..."] "Urakan alueella ei ole siltoja.")
+           :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
            }
 
@@ -104,14 +113,15 @@
            {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
-           (when (= :puutteet @sillat/listaus)
-             {:otsikko "Puutteet" :nimi :kohteet :leveys "30%" :fmt (fn [kohteet]
-                                                                      [:ul.puutekohdelista
-                                                                      (for [[kohde [tulos _]] (seq kohteet)]
-                                                                        [:li.puutekohde
-                                                                        (str (st/siltatarkastuskohteen-nimi kohde)
-                                                                          ": "
-                                                                          tulos)])])})]
+           (when (= :urakan-korjattavat @sillat/listaus)
+             {:otsikko "Korjattavat" :nimi :kohteet :leveys "30%" :fmt (fn [kohteet]
+                                                                         [kohdesarake kohteet])})
+           (when (= :urakassa-korjatut @sillat/listaus)
+             {:otsikko "Korjatut" :nimi :kohteet :leveys "30%" :fmt  (fn [kohteet]
+                                                                       [kohdesarake kohteet true])})
+           (when (= :korjaus-ohjelmoitava @sillat/listaus)
+             {:otsikko "Ohjelmoitavat" :nimi :kohteet :leveys "30%" :fmt  (fn [kohteet]
+                                                                            [kohdesarake kohteet])})]
 
           @urakan-sillat
           ]]))))

@@ -64,7 +64,7 @@ SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkast
        s.tr_alkuosa, s.tr_alkuetaisyys, s.tr_loppuosa, s.tr_loppuetaisyys, s.tr_numero
   FROM siltatarkastus st1
        JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
-       AND st2.poistettu)
+       AND st2.poistettu = false)
        JOIN silta s ON st1.silta=s.id
  WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka) AND st1.poistettu = false;
 
