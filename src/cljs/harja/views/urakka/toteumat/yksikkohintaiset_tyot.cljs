@@ -31,6 +31,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defonce valittu-toteuma (atom nil))
+(defonce rivit (atom nil))
 
 (defn tallenna-toteuma [toteuma tehtavat]
   (let [toteuma (assoc toteuma
@@ -55,7 +56,7 @@
                                             @u/urakan-toimenpiteet-ja-tehtavat)))
         tallennus-kaynnissa (atom false)]
 
-(log "@toimenpiteen-tehtavat" (pr-str @toimenpiteen-tehtavat))
+    (log "@toimenpiteen-tehtavat" (pr-str @toimenpiteen-tehtavat))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -113,8 +114,10 @@
   []
     (let [urakka @nav/valittu-urakka
           hoitokausi @u/valittu-hoitokausi
-          toteumat (atom nil)]
+          toteumat (atom nil)
+          muodosta-rivit (fn [] (reset! rivit @u/urakan-toimenpiteet-ja-tehtavat))]
 
+      (muodosta-rivit)
       (run! (let [urakka-id (:id urakka)
                   [sopimus-id _] @u/valittu-sopimusnumero
                   aikavali [(first hoitokausi) (second hoitokausi)]]
@@ -122,8 +125,8 @@
                 (go (reset! toteumat
                       (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))))
 
-      (when @u/urakan-toimenpiteet-ja-tehtavat
-        (log "u/urakan-toimenpiteet-ja-tehtavat" (pr-str @u/urakan-toimenpiteet-ja-tehtavat)))
+      (when @rivit
+        (log "u/urakan-toimenpiteet-ja-tehtavat" (pr-str @rivit)))
 
       (komp/luo
         (fn []
@@ -144,7 +147,9 @@
               (fn [tasot] (nth tasot 3))
               (filter
                 (fn [tasot] (= (:koodi (nth tasot 2)) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-                @u/urakan-toimenpiteet-ja-tehtavat))] ; FIXME Toimenpiteen vaihto ei toimi Firefoxilla?
+                @rivit))]
+                ; FIXME Tee rivit-atomin sisällöstä valmiiksi sellainen, että siinä on gridiin tarvittava data. Helpottaa elämää eikä tarvitse täällä filtteröidä mitään.
+                ; FIXME Toimenpiteen vaihto ei toimi Firefoxilla?
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]] ))))
 
