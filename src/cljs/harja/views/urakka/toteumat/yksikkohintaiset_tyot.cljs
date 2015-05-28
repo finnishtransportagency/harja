@@ -139,8 +139,12 @@
              {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
              {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
              {:otsikko "Hoitokauden suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-             {:otsikko "Hoitokauden toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}]
-            (filter #(= (:taso %) 4) (flatten @u/urakan-toimenpiteet-ja-tehtavat))]
+             {:otsikko "Hoitokauden toteutunut määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}]
+            (map
+              (fn [tasot] (nth tasot 3))
+              (filter
+                (fn [tasot] (= (:koodi (nth tasot 2)) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+                @u/urakan-toimenpiteet-ja-tehtavat))]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]] ))))
 

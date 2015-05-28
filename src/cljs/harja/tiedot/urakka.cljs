@@ -141,5 +141,5 @@ ja viimeinen voivat olla vajaat)."
 (defonce urakan-toimenpiteet-ja-tehtavat
   (let [toimenpiteet-ja-tehtavat
         (reaction<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id @nav/valittu-urakka)))]
-    (log "palautan toimenpiteet-ja-tehtäväat" (pr-str toimenpiteet-ja-tehtavat))
+    (log "palautan toimenpiteet-ja-tehtävät" (pr-str toimenpiteet-ja-tehtavat))
     toimenpiteet-ja-tehtavat))
