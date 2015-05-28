@@ -46,6 +46,8 @@
   (into {}
         (mapv (fn [maksueranumero]
                 [maksueranumero
-                 (laheta-maksuera-sampoon sampo user maksueranumero)])
+                 (let [tulos (laheta-maksuera-sampoon sampo user maksueranumero)]
+                   (log/debug "Maksueran (numero: " maksueranumero " lähetyksen tulos:" tulos)
+                   tulos)])
               maksueranumerot)))
 

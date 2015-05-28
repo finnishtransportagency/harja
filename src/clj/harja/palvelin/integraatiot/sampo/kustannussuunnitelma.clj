@@ -13,16 +13,10 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
-(defn laske-kokonaishintaisten-toiden-summa [kokonaishintaiset-tyot]
-  (apply + (mapv (fn [kokonaishintainen-tyo] (:summa kokonaishintainen-tyo)) kokonaishintaiset-tyot)))
-
-(defn laske-yksikkohintaisten-toiden-summa [yksikkohintaiset-tyot]
-  (apply + (mapv (fn [yksikkohintainen-tyo] (* (:maara yksikkohintainen-tyo) (:yksikkohinta yksikkohintainen-tyo))) yksikkohintaiset-tyot)))
-
 (defn laske-summa [maksuera]
   (case (:tyyppi maksuera)
-    "kokonaishintainen" (laske-kokonaishintaisten-toiden-summa (:kokonaishintaiset-tyot maksuera))
-    "yksikkohintainen" (laske-yksikkohintaisten-toiden-summa (:yksikkohintaiset-tyot maksuera))
+    "kokonaishintainen" (:kokonaishintaisten-toiden-summa maksuera)
+    "yksikkohintainen" (:yksikkohintaisten-toiden-summa maksuera)
     1))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
@@ -64,7 +58,8 @@
 
 (defn muodosta-kustannussuunnitelma-xml [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
-        {:keys [koodi tuotenumero]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
+        {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
+        tuotenumero (:tuotenumero maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
     [:NikuDataBus
