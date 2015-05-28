@@ -247,13 +247,12 @@
           [sillan-perustiedot @st/valittu-silta]
 
           [:div.siltatarkastus-kontrollit
-          [:div.label-ja-alasveto
+          [:div.label-ja-alasveto.alasveto-sillan-tarkastaja
            [:span.alasvedon-otsikko "Tarkastus"]
            [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
                                  ;;\u2014 on väliviivan unikoodi
                                  :format-fn  #(tarkastuksen-tekija-ja-aika %)
                                  :valitse-fn #(reset! st/valittu-tarkastus %)
-                                 :class      "suunnittelu-alasveto"
                                  }
             @st/valitun-sillan-tarkastukset]]
 

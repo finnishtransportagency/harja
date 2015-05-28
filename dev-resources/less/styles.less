@@ -14,7 +14,11 @@
 .alasveto-urakoitsija {
 	.livi-alasveto(200px);
 }
-
+.label-ja-alasveto.alasveto-sillan-tarkastaja {
+	@leveys: 330px;
+	width: @leveys;
+	.livi-alasveto(@leveys);
+}
 #footer {
 	background-color: @harjan-taustavari;
 	clear: both;
@@ -140,7 +144,6 @@ tr.uusitehtavakoodi td {
 	.alasvedon-otsikko {
 		display: inline-block;
 		font-weight: bold;
-		min-width: 150px;
 	}
 	.livi-alasveto(300px);
 }
