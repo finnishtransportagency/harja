@@ -17,8 +17,13 @@
 (defn onnistunut? [xml]
   (= "SUCCESS" (z/xml1-> xml :Status (z/attr :state))))
 
-(defn viesti-id [xml]
+(defn hae-viesti-id [xml]
   (z/xml1-> xml :Object (z/attr :messageId)))
+
+(defn hae-viesti-tyyppi [xml]
+  (if (= (z/xml1-> xml :Object (z/attr :type)) "costPlan")
+    :kustannussuunnitelma
+    :maksuera))
 
 (defn hae-virheet [xml]
   (z/xml-> xml :Records :Record :ErrorInformation
@@ -31,8 +36,10 @@
     ;; Huom. root-elementti voi vaihtua!
     (let [xml (or (z/xml1-> xml :XOGOutput) xml)]
       (if (onnistunut? xml)
-        {:viesti-id (viesti-id xml)}
-        {:viesti-id (viesti-id xml)
-         :virhe   :sampo-raportoi-virheita
-         :virheet (hae-virheet xml)}))
+        {:viesti-id     (hae-viesti-id xml)
+         :viesti-tyyppi (hae-viesti-tyyppi xml)}
+        {:viesti-id     (hae-viesti-id xml)
+         :viesti-tyyppi (hae-viesti-tyyppi xml)
+         :virhe         :sampo-raportoi-virheita
+         :virheet       (hae-virheet xml)}))
     {:virhe :kuittaus-xml-ei-validi}))

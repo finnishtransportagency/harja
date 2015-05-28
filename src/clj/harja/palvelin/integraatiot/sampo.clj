@@ -17,8 +17,11 @@
 (defn hae-maksuera [db numero]
   (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero))))
 
-(defn hae-maksuera-numero [db lahetys-id]
+(defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
+
+(defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
+  (:maksuera (first (qk/hae-maksuera-lahetys-idlla db lahetys-id))))
 
 (defn lukitse-maksuera [db numero]
   (let [lukko (str (java.util.UUID/randomUUID))]
@@ -73,6 +76,25 @@
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
   (sonja/laheta sonja lahetysjono sanoma-xml))
 
+(defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
+  (jdbc/with-db-transaction [c db]
+                            (if-let [maksueranumero (hae-maksueranumero c viesti-id)]
+                              (if (contains? kuittaus :virhe)
+                                (do
+                                  (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+                                  (merkitse-maksueralle-lahetysvirhe c maksueranumero))
+                                (merkitse-maksuera-lahetetyksi c maksueranumero))
+                              (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+
+(defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
+  (jdbc/with-db-transaction [c db]
+                            (if-let [maksuera (hae-kustannussuunnitelman-maksuera c viesti-id)]
+                              (if (contains? kuittaus :virhe)
+                                (do
+                                  (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
+                                  (merkitse-kustannussuunnitelmalle-lahetysvirhe c maksuera))
+                                (merkitse-kustannussuunnitelma-lahetetyksi c maksuera))
+                              (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
 
 (defn laheta-maksuera [this lahetysjono-ulos numero]
@@ -103,22 +125,14 @@
   )
 
 (defn kasittele-kuittaus [db viesti]
-  (jdbc/with-db-transaction [c db]
-                            (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
-                            (let [kuittaus (kuittaus/lue-kuittaus (.getText viesti))]
-                              (log/debug "Luettiin kuittaus: " kuittaus)
-
-                              ;; FIXME: Täytyy tsekata tyyppi onko kyseessä maksuerä vai kustannussuunnitelma!
-
-                              (if-let [viesti-id (:viesti-id kuittaus)]
-                                (if-let [maksueranumero (hae-maksuera-numero c viesti-id)]
-                                  (if (contains? kuittaus :virhe)
-                                    (do
-                                      (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-                                      (merkitse-maksueralle-lahetysvirhe c maksueranumero))
-                                    (merkitse-maksuera-lahetetyksi c maksueranumero))
-                                  (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))
-                                (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))))
+  (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
+  (let [kuittaus (kuittaus/lue-kuittaus (.getText viesti))]
+    (log/debug "Luettiin kuittaus: " kuittaus)
+    (if-let [viesti-id (:viesti-id kuittaus)]
+      (if (= :maksuera (:viesti-tyyppi kuittaus))
+        (kasittele-maksuera-kuittaus db kuittaus viesti-id)
+        (kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id))
+      (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä."))))
 
 
 
@@ -138,5 +152,3 @@
   (laheta-maksuera-sampoon [this numero]
     {:maksuera             (laheta-maksuera this lahetysjono-ulos numero)
      :kustannussuunnitelma (laheta-kustannussuunitelma this lahetysjono-ulos numero)}))
-
-

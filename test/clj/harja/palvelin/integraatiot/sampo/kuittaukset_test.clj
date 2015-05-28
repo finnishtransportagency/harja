@@ -4,9 +4,10 @@
 
 (deftest lue-onnistunut-kuittaus
   (let [xml (slurp "test/resurssit/sampo/maksuera_ack.xml")]
-    (is (= "ID:6c321b59:1460814e5:14AE0F721BF" (:viesti-id (kuittaukset/lue-kuittaus xml)))
-        "Kuittaus tulkittiin onnistuneeksi ja siltä saatiin luettua oikea viesti id")))
-
+    (let [vastaus (kuittaukset/lue-kuittaus xml)]
+      (is (= "ID:6c321b59:1460814e5:14AE0F721BF" (:viesti-id vastaus))
+          "Kuittaus tulkittiin onnistuneeksi ja siltä saatiin luettua oikea viesti id")
+      (is (= :kustannussuunnitelma (:viesti-tyyppi vastaus)) "Vastauksen tyyppi pääteltiin oikein"))))
 
 (deftest lue-epaonnistunut-kuittaus
   (let [xml (slurp "test/resurssit/sampo/maksuera_nack.xml")]
