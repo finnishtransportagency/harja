@@ -131,6 +131,16 @@
            [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
 
+           [grid/grid
+            {:otsikko (str "Yksikköhintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+             :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Toteumia haetaan..."] "Ei toteumia")
+             }
+            [{:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+             {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+             {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+             {:otsikko "Hoitokauden suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+             {:otsikko "Hoitokauden toteutunut määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}]
+            @u/urakan-toimenpiteet-ja-tehtavat]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]] ))))
 
