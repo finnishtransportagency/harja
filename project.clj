@@ -2,14 +2,14 @@
   :description "Liikenneviraston Harja"
   
   :dependencies [[org.clojure/clojure "1.7.0-RC1"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-3196"]
+                 [org.clojure/clojurescript "0.0-3297"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "0.4.0"]
+                 [prismatic/schema "0.4.2"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.207"]
+                 [com.cognitect/transit-cljs "0.8.215"]
                  [com.cognitect/transit-clj "0.8.271"]
                  
                  ;;;;;;; Palvelin ;;;;;;;
@@ -28,9 +28,10 @@
                  [compojure "1.3.3"]
                  [hiccup "1.0.5"]
 
-                 ;; API: RAML speksi ja JSON schema
+                 ;; API: RAML speksi ja JSON schema (FIXME: nämä vain, jos API kutsuja implementoidaan)
                  [org.raml/raml-parser "0.8.11"]
-
+                 [bigml/closchema "0.6"]
+                 
                  [org.clojure/core.cache "0.6.4"]
                  
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -57,7 +58,7 @@
                  ;; ActiveMQ testejä varten
                  [org.apache.activemq/activemq-client "5.11.1"]
                  
-                 ;; Sähköpostin lähetys
+                 ;; Sähköposti lähetys
                  [com.draines/postal "1.11.3"]
                  
                  ;; Asiakas
@@ -67,8 +68,8 @@
                  
                  [cljs-ajax "0.3.11"]
                  ;;[lively "0.2.0"]
-                 [figwheel "0.2.7"]
-
+                 [figwheel "0.3.3"]
+                 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.1-0"]
                  
@@ -76,6 +77,8 @@
 
                  [com.andrewmcveigh/cljs-time "0.3.3"]
 
+                 [cljsjs/openlayers "3.3.0-0"]
+                 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
                  [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
@@ -108,7 +111,7 @@
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.2.7"]
+            [lein-figwheel "0.3.3"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
@@ -120,7 +123,11 @@
                                    :source-map true
                                    ;;:preamble ["reagent/react.js"]
                                    :output-to "dev-resources/js/harja.js"
-                                   :output-dir "dev-resources/js/out"}}
+                                   :output-dir "dev-resources/js/out"
+
+                                   :closure-extra-annotations #{"api" "observable"}
+                                   
+                                   }}
                        {:id "test"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
                         :compiler {:output-to "target/cljs/test/test.js"

@@ -24,10 +24,11 @@
 
  ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
  ;; tarvii SSH-tunnelin testi-Sonjaan
- ;; :sonja
- ;;       {:url      "localhost:2511"
- ;;        :kayttaja "harja"
- ;;        :salasana "harjaxx"}
+  :sonja
+        {:url      "" ;"tcp://axiom:8094"
+         :kayttaja "harja"
+         :salasana "harjaxx"
+         :tyyppi :activemq}
 
 :sampo {
                        :lahetysjono-ulos  "Harja17.HarjaToSampo.Msg"
