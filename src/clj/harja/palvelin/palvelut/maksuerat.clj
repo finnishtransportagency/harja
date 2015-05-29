@@ -30,7 +30,7 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  ;(oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
         (comp (map konversio/alaviiva->rakenne)
