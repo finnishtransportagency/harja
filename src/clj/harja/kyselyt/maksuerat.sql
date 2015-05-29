@@ -65,7 +65,7 @@ FROM maksuera m
   JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
-WHERE tpi.urakka = :numero;
+WHERE m.numero = :numero;
 
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi
