@@ -7,18 +7,27 @@ SELECT
   m.nimi,
   m.tila,
   m.lahetetty,
-  tpi.id       AS toimenpideinstanssi_id,
-  tpi.nimi     AS toimenpideinstanssi_nimi,
-  tpi.alkupvm  AS toimenpideinstanssi_alkupvm,
-  tpi.loppupvm AS toimenpideinstanssi_loppupvm,
-  s.sampoid    AS sopimus_sapoid,
-  k.tila       AS kustannussuunnitelma_tila,
-  k.lahetetty  AS kustannussuunnitelma_lahetetty
+  tpi.id                                      AS toimenpideinstanssi_id,
+  tpi.nimi                                    AS toimenpideinstanssi_nimi,
+  tpi.alkupvm                                 AS toimenpideinstanssi_alkupvm,
+  tpi.loppupvm                                AS toimenpideinstanssi_loppupvm,
+  s.sampoid                                   AS sopimus_sapoid,
+  k.tila                                      AS kustannussuunnitelma_tila,
+  k.lahetetty                                 AS kustannussuunnitelma_lahetetty,
+  (SELECT SUM(yht.maara * yht.yksikkohinta)
+   FROM yksikkohintainen_tyo yht
+   WHERE yht.tehtava IN (SELECT id
+                         FROM toimenpidekoodi
+                         WHERE emo = tpk.id)) AS yksikkohintaisettyot_summa,
+  (SELECT SUM(kht.summa)
+   FROM kokonaishintainen_tyo kht
+   WHERE kht.toimenpideinstanssi = tpi.id)    AS kokonaishintaisettyot_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
   JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
+  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
 
 
@@ -28,31 +37,30 @@ SELECT
   m.numero,
   m.tyyppi,
   m.nimi,
+  m.tila,
+  m.lahetetty,
+  tpi.id                                      AS toimenpideinstanssi_id,
+  tpi.nimi                                    AS toimenpideinstanssi_nimi,
   tpi.alkupvm                                 AS toimenpideinstanssi_alkupvm,
   tpi.loppupvm                                AS toimenpideinstanssi_loppupvm,
-  tpi.vastuuhenkilo_id                        AS toimenpideinstanssi_vastuuhenkilo,
-  tpi.talousosasto_id                         AS toimenpideinstanssi_talousosasto,
-  tpi.tuotepolku                              AS toimenpideinstanssi_tuotepolku,
-  u.sampoid                                   AS urakka_sampoid,
   s.sampoid                                   AS sopimus_sapoid,
+  k.tila                                      AS kustannussuunnitelma_tila,
+  k.lahetetty                                 AS kustannussuunnitelma_lahetetty,
   (SELECT SUM(yht.maara * yht.yksikkohinta)
    FROM yksikkohintainen_tyo yht
    WHERE yht.tehtava IN (SELECT id
                          FROM toimenpidekoodi
-                         WHERE emo = tpk.id)) AS yksikkohintaisten_toiden_summa,
+                         WHERE emo = tpk.id)) AS yksikkohintaisettyot_summa,
   (SELECT SUM(kht.summa)
    FROM kokonaishintainen_tyo kht
-   WHERE kht.toimenpideinstanssi = tpi.id)    AS kokonaishintaisten_toiden_summa,
-  (SELECT emo.tuotenumero
-   FROM toimenpidekoodi emo
-     JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
-   WHERE tpk.id = tpi.toimenpide)             AS tuotenumero
+   WHERE kht.toimenpideinstanssi = tpi.id)    AS kokonaishintaisettyot_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
   JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+  JOIN kustannussuunnitelma k ON m.numero = k.maksuera
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
-WHERE m.numero = :numero;
+WHERE tpi.urakka = :numero;
 
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi

@@ -30,10 +30,21 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  ;(oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
-        (map konversio/alaviiva->rakenne (q/hae-urakan-maksuerat db urakka-id))))
+        (comp (map konversio/alaviiva->rakenne)
+              (map (fn [rivi]
+                     (log/debug "Rivi on:" rivi)
+                     (case (:tyyppi rivi)
+                       "kokonaishintainen" (if-let [summa (:summa (:kokonaishintaisettyot rivi))]
+                                             (assoc rivi :kustannussuunnitelma-summa (double summa))
+                                             (assoc rivi :kustannussuunnitelma-summa 0))
+                       "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot rivi))]
+                                            (assoc rivi :kustannussuunnitelma-summa (double summa))
+                                            (assoc rivi :kustannussuunnitelma-summa 0))
+                       (assoc rivi :kustannussuunnitelma-summa 1)))))
+        (q/hae-urakan-maksuerat db urakka-id)))
 
 (defn laheta-maksuera-sampoon
   [sampo user maksueranumero]

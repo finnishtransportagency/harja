@@ -15,8 +15,8 @@
 
 (defn laske-summa [maksuera]
   (case (:tyyppi maksuera)
-    "kokonaishintainen" (:kokonaishintaisten-toiden-summa maksuera)
-    "yksikkohintainen" (:yksikkohintaisten-toiden-summa maksuera)
+    "kokonaishintainen" (:kokonaishintaisettyot_summa maksuera)
+    "yksikkohintainen" (:yksikkohintaisettyot_summa maksuera)
     1))
 
 (defn luo-summat [alkupvm loppupvm maksuera]

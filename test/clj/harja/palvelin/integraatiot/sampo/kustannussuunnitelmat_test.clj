@@ -26,8 +26,8 @@
                                                                      }}
                  :urakka                          {:sampoid "PR00020606"}
                  :sopimus                         {:sampoid "00LZM-0033600"}
-                 :kokonaishintaisten-toiden-summa 1230.5
-                 :yksikkohintaisten_toiden_summa  3232.2
+                 :kokonaishintaisettyot_summa 1230.5
+                 :yksikkohintaisettyot_summa  3232.2
                  :tuotenumero 111})
 
 (deftest tarkista-kustannussuunnitelman-validius
