@@ -125,7 +125,6 @@
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"
 
-                                   :closure-extra-annotations #{"api" "observable"}
                                    
                                    }}
                        {:id "test"
@@ -145,7 +144,7 @@
                                    
                                    ;;:preamble ["reagent/react.min.js"]
                                    :output-to "resources/public/js/harja.js"
-                                   :externs ["externs/leaflet.js"]
+                                   :closure-extra-annotations #{"api" "observable"}
 
                                    ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
                                    :source-map "resources/public/js/harja.js.map"
