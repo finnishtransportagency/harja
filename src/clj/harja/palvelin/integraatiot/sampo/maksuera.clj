@@ -59,7 +59,9 @@
                  :financialLocation     "Kpito"}
        [:InvestmentAssociations
         [:Allocations
-         [:ParentInvestment {:defaultAllocationPercent "1.0" :InvestmentType "project" :InvestmentID (:sampoid (:urakka maksuera))}]]]
+         [:ParentInvestment {:defaultAllocationPercent "1.0"
+                             :InvestmentType           "project"
+                             :InvestmentID             (:sampoid (:urakka maksuera))}]]]
        [:InvestmentResources
         [:Resource {:resourceID kulu-id}]]
        [:InvestmentTasks

@@ -55,7 +55,10 @@ SELECT
                          WHERE emo = tpk.id)) AS yksikkohintaisettyot_summa,
   (SELECT SUM(kht.summa)
    FROM kokonaishintainen_tyo kht
-   WHERE kht.toimenpideinstanssi = tpi.id)    AS kokonaishintaisettyot_summa
+   WHERE kht.toimenpideinstanssi = tpi.id)    AS kokonaishintaisettyot_summa,
+  (SELECT emo.tuotenumero
+   FROM toimenpidekoodi emo
+   WHERE emo.id = tpk.emo)                    AS tuotenumero
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
