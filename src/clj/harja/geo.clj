@@ -35,12 +35,14 @@
 
   Point 
   (pg->clj [^Point p]
-    (euref->osm [(.x p) (.y p)]))
+    [(.x p) (.y p)]
+    #_(euref->osm [(.x p) (.y p)]))
   
   ;; Piste muunnetaan muotoon [x y]
   PGpoint
   (pg->clj [^PGpoint p]
-    (euref->osm [(.x p) (.y p)]))
+    #_(euref->osm [(.x p) (.y p)])
+    [(.x p) (.y p)])
 
   ;; Polygoni muunnetaan muotoon [[x1 y1] ... [xN yN]]
   PGpolygon

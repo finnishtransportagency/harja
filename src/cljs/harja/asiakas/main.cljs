@@ -12,7 +12,7 @@
             [harja.loki :refer [log]]
 
             [cljsjs.react]
-
+            
             [harja.pvm]))
 
 (defn render []

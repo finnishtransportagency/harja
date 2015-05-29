@@ -67,6 +67,7 @@
 (defonce klikatun-sillan-popup
   (tapahtumat/kuuntele! :silta-klikattu
                         (fn [{:keys [klikkaus-koordinaatit] :as silta}]
+                          (log "SILTAA KLIKKAILTIIN: " (pr-str silta))
                           (kartta/nayta-popup! klikkaus-koordinaatit
                                                [:span
                                                 [sillan-perustiedot silta]
