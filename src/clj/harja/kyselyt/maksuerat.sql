@@ -43,7 +43,9 @@ SELECT
   tpi.nimi                                    AS toimenpideinstanssi_nimi,
   tpi.alkupvm                                 AS toimenpideinstanssi_alkupvm,
   tpi.loppupvm                                AS toimenpideinstanssi_loppupvm,
+  tpi.tuotepolku                              AS toimenpideinstanssi_tuotepolku,
   s.sampoid                                   AS sopimus_sampoid,
+  u.sampoid                                   AS urakka_sampoid,
   k.tila                                      AS kustannussuunnitelma_tila,
   k.lahetetty                                 AS kustannussuunnitelma_lahetetty,
   (SELECT SUM(yht.maara * yht.yksikkohinta)
