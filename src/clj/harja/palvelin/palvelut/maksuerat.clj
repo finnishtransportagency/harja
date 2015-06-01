@@ -27,16 +27,26 @@
     (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
     this))
 
-(defn aseta-summa [rivi]
-  (case (:tyyppi rivi)
-    "kokonaishintainen" (if-let [summa (:summa (:kokonaishintaisettyot rivi))]
-                          (assoc rivi :kustannussuunnitelma-summa (double summa))
-                          (assoc rivi :kustannussuunnitelma-summa 0))
-    "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot rivi))]
-                         (assoc rivi :kustannussuunnitelma-summa (double summa))
-                         (assoc rivi :kustannussuunnitelma-summa 0))
-    (assoc rivi :kustannussuunnitelma-summa 1))
-  )
+(def aseta-kustannussuunnitelman-summa-xf
+  (map
+    #(case (:tyyppi %)
+      "kokonaishintainen" (if-let [summa (:summa (:kokonaishintaisettyot %))]
+                            (assoc % :kustannussuunnitelma-summa (double summa))
+                            (assoc % :kustannussuunnitelma-summa 0))
+      "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot %))]
+                           (assoc % :kustannussuunnitelma-summa (double summa))
+                           (assoc % :kustannussuunnitelma-summa 0))
+      (assoc % :kustannussuunnitelma-summa 1))))
+
+(def aseta-tyyppi-ja-tila-xf
+  (map #(do (log/debug "Rivi on:" %)
+            (assoc % :tyyppi (keyword (:tyyppi %))
+                     :tila (keyword (:tila %))))))
+
+(def maksuera-xf
+  (comp (map konversio/alaviiva->rakenne)
+        aseta-kustannussuunnitelman-summa-xf
+        aseta-tyyppi-ja-tila-xf))
 
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
@@ -44,14 +54,7 @@
   (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
-        (comp (map konversio/alaviiva->rakenne)
-              (map (fn [rivi]
-                     (log/debug "Rivi on:" rivi)
-                     (assoc
-                       (assoc
-                         (aseta-summa rivi)
-                         :tyyppi (keyword (:tyyppi rivi)))
-                       :tila (keyword (:tila rivi))))))
+        maksuera-xf
         (q/hae-urakan-maksuerat db urakka-id)))
 
 (defn laheta-maksuera-sampoon

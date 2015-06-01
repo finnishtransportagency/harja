@@ -29,13 +29,13 @@
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
     (is (= 16 (count maksuerat)))
-    (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "yksikkohintainen" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "bonus" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "akillinen_hoitotyo" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "lisatyo" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "sakko" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "indeksi" (:tyyppi %)) maksuerat)) 2))
-    (is (= (count (filter #(= "muu" (:tyyppi %)) maksuerat)) 2))))
+    (is (= (count (filter #(= :kokonaishintainen (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :yksikkohintainen (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :bonus (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :akillinen_hoitotyo (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :lisatyo (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :sakko (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :indeksi (:tyyppi %)) maksuerat)) 2))
+    (is (= (count (filter #(= :muu (:tyyppi %)) maksuerat)) 2))))
 
 
