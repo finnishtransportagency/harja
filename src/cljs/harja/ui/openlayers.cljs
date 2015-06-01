@@ -4,6 +4,9 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
+
+            [harja.ui.ikonit :as ikonit]
+            
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -21,11 +24,12 @@
             [ol.geom.Point]
             [ol.geom.LineString]
             [ol.geom.MultiLineString]
-
+            
             [ol.style.Style]
             [ol.style.Fill]
             [ol.style.Stroke]
-
+            [ol.style.Icon]
+            
             [ol.control :as ol-control]
             [ol.interaction :as ol-interaction]
 
@@ -61,6 +65,7 @@
 (defn ^:export invalidate-size []
   (.invalidateSize @the-kartta))
 
+
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
   [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
@@ -68,7 +73,13 @@
 (def projektio (ol-proj/Projection. #js {:code "EPSG:3067"
                                          :extent (clj->js suomen-extent)}))
 
-
+(defn keskipiste
+  "Laskee geometrian keskipisteen extent perusteella"
+  [geometria]
+  (let [[x1 y1 x2 y2] (.getExtent geometria)]
+    [(+ x1 (/ (- x2 x1) 2))
+     (+ y1 (/ (- y2 y1) 2))]))
+  
 (defn geometria-avain
   "Funktio, joka muuntaa geometrian tiedon avaimeksi mäppiä varten."
   [g]
@@ -93,7 +104,7 @@
 
 (defn- mml-wmts-layer []
   (ol.layer.Tile.
-   #js {:opacity 1.0
+   #js {:opacity 0.8
         :source (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
                                       :url "/wmts/maasto/wmts" ;; Tämä pitää olla nginx proxyssa
                                       :layer "taustakartta"
@@ -150,23 +161,27 @@
     (.removeOverlay ol3 popup)
     (reagent/set-state this {:popup nil}))))
 
+(defn luo-overlay [koordinaatti sisalto]
+  (let [elt (js/document.createElement "span")
+        comp (reagent/render sisalto elt)]
+    (ol.Overlay. (clj->js {:element elt
+                           :position koordinaatti
+                           :stopEvent false}))))
+
+    
 (defn- nayta-popup!
   "Näyttää annetun popup sisällön annetussa koordinaatissa. Mahdollinen edellinen popup poistetaan."
   [this koordinaatti sisalto]
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup))
-    (let [elt (js/document.createElement "div")
-          comp (reagent/render [:div.ol-popup
-                                [:a.ol-popup-closer {:on-click #(do
-                                                                  (.stopPropagation %)
-                                                                  (.preventDefault %)
-                                                                  (poista-popup! this))}]
-                                sisalto]
-                               elt)
-          popup (ol.Overlay. (clj->js {:element elt
-                                       :position koordinaatti
-                                       :stopEvent false}))]
+    (let [popup (luo-overlay koordinaatti
+                             [:div.ol-popup
+                              [:a.ol-popup-closer {:on-click #(do
+                                                                (.stopPropagation %)
+                                                                (.preventDefault %)
+                                                                (poista-popup! this))}]
+                              sisalto])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
@@ -284,13 +299,14 @@
 
 (defmulti luo-feature :type)
 
-(defn- aseta-tyylit [feature {:keys [color fill stroke]}]
+(defn- aseta-tyylit [feature {:keys [color fill stroke marker] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
                 #js {:fill (when fill (ol.style.Fill. #js {:color (or color "red")
                                                            :opacity 0.5}))
                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
                                                     :width (or (:width stroke) 1)})}))))
+
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
@@ -315,6 +331,13 @@
 
 (defmethod luo-feature :line [{:keys [points] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
+
+(defn luo-marker [geometry]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js (keskipiste geometry)))})
+    (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src "images/marker.png"
+                                                                 :anchor #js [0.5 35]
+                                                                 :anchorXUnits "fraction"
+                                                                 :anchorYUnits "pixels"})}))))
 
                                     
 (defn- update-ol3-geometries [component items]
@@ -347,6 +370,7 @@
             (recur new-geometries-map new-fit-bounds items)
             (let [shape (or (first (geometries-map avain))
                             (let [new-shape (doto (luo-feature geom)
+                                              ;; FIXME: leaflet kamaa
                                               (.on "mouseover" #(do ;;(log "EVENTTI ON " %)
                                                                   (reagent/set-state component
                                                                                      {:hover (assoc item
@@ -356,6 +380,12 @@
                                               (.on "mouseout" #(reagent/set-state component {:hover nil})))]
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
+
+                              ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
+                              ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
+                              #_(when (:marker geom)
+                                (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
+                                                              [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
                               new-shape))]
               (aseta-tyylit shape geom)
               ;;(log "OL3: " (pr-str avain) " = " (pr-str geom))
@@ -364,8 +394,7 @@
               (if (and (::fit-bounds geom) (not= fit-bounds avain))
                 (do
                   (go (<! (timeout 100))
-                      (keskita! ol3 shape)
-                      )
+                      (keskita! ol3 shape))
                   (recur (assoc new-geometries-map avain [shape item]) avain items))
                 (recur (assoc new-geometries-map avain [shape item]) new-fit-bounds items)))))))))
 

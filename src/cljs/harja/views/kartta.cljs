@@ -119,7 +119,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                        (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
       :tooltip-fn (fn [geom]
                     (and geom
-                         [:div {:class (name (:type geom))} (:nimi geom)]))
+                         [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
       (concat (cond
                ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
@@ -143,11 +143,14 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                        (when (map? alue)
                          (assoc alue
                            :fill (if (:valittu hy) false true)
-                           :stroke (when (:valittu hy)
+                           :stroke (when (or (:valittu hy)
+                                             (= :silta (:type hy)))
                                      {:width 3})
                            :harja.ui.openlayers/fit-bounds (:valittu hy) ;; kerro leafletille, että siirtyy valittuun
                            :color (or (:color alue)
-                                      (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))))))
+                                      (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))
+                           ;;:marker (= :silta (:type hy))
+                           ))))
 
       ;; PENDING: tilalle MML kartat, kunhan ne saadaan 
       :layers [ ;;{:type :wms
