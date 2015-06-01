@@ -120,18 +120,32 @@
                                         (fn [tasot] (let [kolmostaso (nth tasot 2)
                                                           nelostaso (nth tasot 3)]
                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                                        @u/urakan-toimenpiteet-ja-tehtavat)))]
-
+                                        @u/urakan-toimenpiteet-ja-tehtavat)))
+        selvita-yksikkohinta (fn [] (reset! rivit
+                                  (map
+                                    (fn [rivi] (assoc rivi :yksikkohinta (or (:yksikkohinta (first
+                                                                                          (filter
+                                                                                            (fn [tyo] (= (:tehtavan_nimi tyo) (:nimi rivi))) ; TODO Onhan oikea hoitokausi?
+                                                                                            @u/urakan-yks-hint-tyot))) 0)))
+                                      @rivit)))
+        selvita-suunniteltu-maara (fn [] (reset! rivit
+                                        (map
+                                          (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara 0)) ; TODO Selvitä oikea arvo
+                                          @rivit)))
+        selvita-toteutunut-maara (fn [] (reset! rivit
+                                        (map
+                                          (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara 0)) ; TODO Selvitä oikea arvo
+                                          @rivit)))]
       (muodosta-rivit)
+      (selvita-yksikkohinta)
+      (selvita-suunniteltu-maara)
+      (selvita-toteutunut-maara)
       (run! (let [urakka-id (:id urakka)
                   [sopimus-id _] @u/valittu-sopimusnumero
                   aikavali [(first hoitokausi) (second hoitokausi)]]
               (when (and urakka-id sopimus-id aikavali)
                 (go (reset! toteumat
                       (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))))
-
-      (when @rivit
-        (log "u/urakan-toimenpiteet-ja-tehtavat" (pr-str @rivit)))
 
       (komp/luo
         (fn []
