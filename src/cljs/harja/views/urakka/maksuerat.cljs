@@ -34,26 +34,26 @@
 
 (defn tyyppi-enum->string-plural [tyyppi]
   (case tyyppi
-    "kokonaishintainen" "Kokonaishintaiset"
-    "yksikkohintainen" "Yksikköhintaiset"
-    "lisatyo" "Lisätyöt"
-    "indeksi" "Indeksit"
-    "bonus" "Bonukset"
-    "sakko" "Sakot"
-    "akillinen_hoitotyo" "Äkilliset hoitotyöt"
-    "muu" "Muut"
+    :kokonaishintainen "Kokonaishintaiset"
+    :yksikkohintainen "Yksikköhintaiset"
+    :lisatyo "Lisätyöt"
+    :indeksi "Indeksit"
+    :bonus "Bonukset"
+    :sakko "Sakot"
+    :akillinen_hoitotyo "Äkilliset hoitotyöt"
+    :muu "Muut"
     "Ei tyyppiä"))
 
 (defn sorttausjarjestys [tyyppi]
   (case tyyppi
-    "kokonaishintainen" 1
-    "yksikkohintainen" 2
-    "lisatyo" 3
-    "indeksi" 4
-    "bonus" 5
-    "sakko" 6
-    "akillinen_hoitotyo" 7
-    "muu" 8
+    :kokonaishintainen 1
+    :yksikkohintainen 2
+    :lisatyo 3
+    :indeksi 4
+    :bonus 5
+    :sakko 6
+    :akillinen_hoitotyo 7
+    :muu 8
     9))
 
 (defn ryhmittele-maksuerat [rivit]
@@ -63,7 +63,7 @@
                      (concat [(grid/otsikko otsikko)] rivit))
                    (seq otsikon-mukaan)))))
 
-(def lahetyksessa (atom #{}))                               ; Setti lähetyksessä olevista maksuerien numeroista
+(def lahetyksessa (atom #{})) ; Setti lähetyksessä olevista maksuerien numeroista
 (def maksuerarivit (atom nil))
 (def urakka-id (atom nil))
 
@@ -79,8 +79,8 @@
                                      (fn [rivi] (:numero rivi))
                                      (filter
                                        (fn [rivi]
-                                         (or (= (:tila rivi) "odottaa_vastausta")
-                                             (= (:tila (:kustannussuunnitelma rivi)) "odottaa_vastausta")))
+                                         (or (= (:tila rivi) :odottaa_vastausta)
+                                             (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
                                        @maksuerarivit))))))
 
 (defn laheta-maksuerat [maksueranumerot]                    ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
@@ -91,7 +91,7 @@
             ;; Lähetys ok
             (do (reset! maksuerarivit (mapv (fn [rivi]
                                               (if (contains? lahetettavat-maksueranumerot (:numero rivi))
-                                                (assoc-in (assoc rivi :tila "odottaa_vastausta") [:kustannussuunnitelma :tila] "odottaa_vastausta")
+                                                (assoc-in (assoc rivi :tila :odottaa_vastausta) [:kustannussuunnitelma :tila] :odottaa_vastausta)
                                                 rivi))
                                             @maksuerarivit))
                 (aloita-pollaus))
@@ -129,13 +129,13 @@
                                     (reset! pollaus-id (js/setInterval pollaa-kantaa 10000))
                                     (log (str "Alettiin pollaamaan kantaa tietyn ajan välein. Pollaus-id: " (pr-str @pollaus-id))))))
 
-(defn aseta-tila [tila lahetetty]
+(defn tilan-naytto [tila lahetetty]
   (case tila
-    "odottaa_vastausta" [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
-    "lahetetty" [:span.maksuera-lahetetty (if (not (nil? lahetetty))
+    :odottaa_vastausta [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
+    :lahetetty [:span.maksuera-lahetetty (if (not (nil? lahetetty))
                                             (str "Lähetetty, kuitattu " (pvm/pvm-aika lahetetty))
                                             (str "Lähetetty, kuitattu (kuittauspäivämäärää puuttuu)"))]
-    "virhe" [:span.maksuera-virhe "Lähetys epäonnistui!"]   ;
+    :virhe [:span.maksuera-virhe "Lähetys epäonnistui!"]
     [:span "Ei lähetetty"]))
 
 (defn maksuerat
@@ -161,9 +161,9 @@
            {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
            {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
            {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
-            :komponentti (fn [rivi] (aseta-tila (:tila rivi) (:lahetetty rivi))) :leveys "19%"}
+            :komponentti (fn [rivi] (tilan-naytto (:tila rivi) (:lahetetty rivi))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
-            :komponentti (fn [rivi] (aseta-tila (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
+            :komponentti (fn [rivi] (tilan-naytto (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (let [maksueranumero (:numero rivi)]
