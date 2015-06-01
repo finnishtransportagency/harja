@@ -31,12 +31,15 @@
   (map
     #(case (:tyyppi %)
       "kokonaishintainen" (if-let [summa (:summa (:kokonaishintaisettyot %))]
-                            (assoc % :kustannussuunnitelma-summa (double summa))
-                            (assoc % :kustannussuunnitelma-summa 0))
+                            (assoc-in % [:kustannussuunnitelma :summa] (double summa))
+                            (assoc-in % [:kustannussuunnitelma :summa] 0))
       "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot %))]
-                           (assoc % :kustannussuunnitelma-summa (double summa))
-                           (assoc % :kustannussuunnitelma-summa 0))
-      (assoc % :kustannussuunnitelma-summa 1))))
+                           (assoc-in % [:kustannussuunnitelma :summa] (double summa))
+                           (assoc-in % [:kustannussuunnitelma :summa] 0))
+      (assoc-in % [:kustannussuunnitelma :summa] 1))))
+
+(def aseta-kustannussuunnitelman-tila
+  (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
 
 (def aseta-tyyppi-ja-tila-xf
   (map #(do (log/debug "Rivi on:" %)
@@ -46,12 +49,13 @@
 (def maksuera-xf
   (comp (map konversio/alaviiva->rakenne)
         aseta-kustannussuunnitelman-summa-xf
+        aseta-kustannussuunnitelman-tila
         aseta-tyyppi-ja-tila-xf))
 
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  ;(oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
         maksuera-xf

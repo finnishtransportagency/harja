@@ -159,7 +159,8 @@
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16}
            {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16}
            {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16}
-           {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summa :tyyppi :numero :leveys "18%"}
+           {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :komponentti :leveys "18%"
+            :komponentti (fn [rivi] (:summa (:kustannussuunnitelma rivi))) }
            {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi] (tilan-naytto (:tila rivi) (:lahetetty rivi))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
