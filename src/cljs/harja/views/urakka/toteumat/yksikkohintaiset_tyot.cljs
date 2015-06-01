@@ -122,7 +122,7 @@
                                                           nelostaso (nth tasot 3)]
                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
                                         @u/urakan-toimenpiteet-ja-tehtavat)))
-        selvita-yksikkohinta (fn [] (reset! rivit
+        lisaa-riveille-yksikkohinta (fn [] (reset! rivit
                                             (map
                                               (fn [rivi] (assoc rivi :yksikkohinta
                                                            (or (:yksikkohinta (first (filter
@@ -130,7 +130,7 @@
                                                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                   @u/urakan-yks-hint-tyot))) 0)))
                                               @rivit)))
-        selvita-suunniteltu-maara (fn [] (reset! rivit
+        lisaa-riveille-suunniteltu-maara (fn [] (reset! rivit
                                                  (map
                                                    (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
                                                                 (or (:yhteensa (first (filter
@@ -138,17 +138,16 @@
                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                        @u/urakan-yks-hint-tyot))) 0)))
                                                    @rivit)))
-        selvita-toteutunut-maara (fn [] (reset! rivit
+        lisaa-riveille-toteutunut-maara (fn [] (reset! rivit
                                                 (map
                                                   (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara 0)) ; TODO Selvitä oikea arvo
                                                   @rivit)))
         muodosta-rivit (fn []
                          (hae-nelostason-tehtavat)
-                         (selvita-yksikkohinta)
-                         (selvita-suunniteltu-maara)
-                         (selvita-toteutunut-maara))]
+                         (lisaa-riveille-yksikkohinta)
+                         (lisaa-riveille-suunniteltu-maara)
+                         (lisaa-riveille-toteutunut-maara))]
     (muodosta-rivit)
-    (log (str "SÖSÖ " (pr-str (first @u/valittu-hoitokausi))))
     (run! (let [urakka-id (:id urakka)
                 [sopimus-id _] @u/valittu-sopimusnumero
                 aikavali [(first hoitokausi) (second hoitokausi)]]
