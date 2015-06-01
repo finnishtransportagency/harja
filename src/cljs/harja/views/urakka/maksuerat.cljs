@@ -147,11 +147,7 @@
   (komp/luo
     {:component-will-unmount
      (fn []
-       (lopeta-pollaus))
-     :component-will-receive-props
-      (fn [_ & [_ ur]]
-        (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
-        (hae-urakan-maksuerat ur))}
+       (lopeta-pollaus))}
     (fn []
       [:div
        (let [lahetyksessa @lahetyksessa]
