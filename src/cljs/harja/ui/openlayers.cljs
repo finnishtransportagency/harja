@@ -53,6 +53,9 @@
 (defn show-popup! [lat-lng content]
   (go (>! komento-ch [::popup lat-lng content])))
 
+(defn invalidate-size! []
+  (go (>! komento-ch [::invalidate-size])))
+
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
 ;; Javascript objects.
@@ -217,6 +220,7 @@
           ::popup (let [[coordinate content] args]
                     (nayta-popup! this coordinate content))
           
+          ::invalidate-size (.updateSize ol3)
           
           :default (log "tuntematon kartan komento: " komento))
         (recur (alts! [komento-ch unmount-ch]))))
@@ -369,23 +373,15 @@
           (if-not geom
             (recur new-geometries-map new-fit-bounds items)
             (let [shape (or (first (geometries-map avain))
-                            (let [new-shape (doto (luo-feature geom)
-                                              ;; FIXME: leaflet kamaa
-                                              (.on "mouseover" #(do ;;(log "EVENTTI ON " %)
-                                                                  (reagent/set-state component
-                                                                                     {:hover (assoc item
-                                                                                               :x (aget % "containerPoint" "x")
-                                                                                               :y (aget % "containerPoint" "y"))
-                                                                                      })))
-                                              (.on "mouseout" #(reagent/set-state component {:hover nil})))]
+                            (let [new-shape  (luo-feature geom)]
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
                               ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
                               #_(when (:marker geom)
-                                (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
-                                                              [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
+                                  (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
+                                                                [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
                               new-shape))]
               (aseta-tyylit shape geom)
               ;;(log "OL3: " (pr-str avain) " = " (pr-str geom))

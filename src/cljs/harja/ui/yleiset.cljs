@@ -12,6 +12,10 @@
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
+
+(defonce ikkunan-koko
+  (reaction [@leveys @korkeus]))
+
 ;;(defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
 
 
