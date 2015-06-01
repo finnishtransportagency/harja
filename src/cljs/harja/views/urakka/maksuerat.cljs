@@ -99,7 +99,7 @@
             (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
                 (reset! maksuerarivit (mapv (fn [rivi]
                                               (if (contains? lahetettavat-maksueranumerot (:numero rivi))
-                                                (assoc rivi :tila "virhe")
+                                                (assoc rivi :tila :virhe)
                                                 rivi))
                                             @maksuerarivit))))))))
 
