@@ -112,10 +112,15 @@
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-    (let [urakka @nav/valittu-urakka
-          hoitokausi @u/valittu-hoitokausi
-          toteumat (atom nil)
-          muodosta-rivit (fn [] (reset! rivit @u/urakan-toimenpiteet-ja-tehtavat))]
+  (let [urakka @nav/valittu-urakka
+        hoitokausi @u/valittu-hoitokausi
+        toteumat (atom nil)
+        muodosta-rivit (fn [] (reset! rivit
+                                      (map
+                                        (fn [tasot] (let [kolmostaso (nth tasot 2)
+                                                          nelostaso (nth tasot 3)]
+                                                      (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                        @u/urakan-toimenpiteet-ja-tehtavat)))]
 
       (muodosta-rivit)
       (run! (let [urakka-id (:id urakka)
@@ -143,13 +148,9 @@
              {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
              {:otsikko "Hoitokauden suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
              {:otsikko "Hoitokauden toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-            (map
-              (fn [tasot] (nth tasot 3))
               (filter
-                (fn [tasot] (= (:koodi (nth tasot 2)) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-                @rivit))]
-                ; FIXME Tee rivit-atomin sisällöstä valmiiksi sellainen, että siinä on gridiin tarvittava data. Helpottaa elämää eikä tarvitse täällä filtteröidä mitään.
-                ; FIXME Toimenpiteen vaihto ei toimi Firefoxilla?
+                (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+                @rivit)]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]] ))))
 
