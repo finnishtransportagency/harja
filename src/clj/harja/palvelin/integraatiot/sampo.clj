@@ -12,8 +12,6 @@
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
 
-
-
 (defn hae-maksuera [db numero]
   (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero))))
 
@@ -133,7 +131,6 @@
         (kasittele-maksuera-kuittaus db kuittaus viesti-id)
         (kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id))
       (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä."))))
-
 
 
 (defrecord Sampo [lahetysjono-ulos kuittausjono-ulos]

@@ -43,7 +43,8 @@
                        "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot rivi))]
                                             (assoc rivi :kustannussuunnitelma-summa (double summa))
                                             (assoc rivi :kustannussuunnitelma-summa 0))
-                       (assoc rivi :kustannussuunnitelma-summa 1)))))
+                       (assoc rivi :kustannussuunnitelma-summa 1))
+                     (assoc rivi :tyyppi (keyword (:tyyppi rivi))))))
         (q/hae-urakan-maksuerat db urakka-id)))
 
 (defn laheta-maksuera-sampoon
