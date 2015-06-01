@@ -30,7 +30,7 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  ;(oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
         (comp (map konversio/alaviiva->rakenne)
@@ -44,7 +44,8 @@
                                             (assoc rivi :kustannussuunnitelma-summa (double summa))
                                             (assoc rivi :kustannussuunnitelma-summa 0))
                        (assoc rivi :kustannussuunnitelma-summa 1))
-                     (assoc rivi :tyyppi (keyword (:tyyppi rivi))))))
+                     (assoc rivi :tyyppi (keyword (:tyyppi rivi)))
+                     (assoc rivi :tila (keyword (:tila rivi))))))
         (q/hae-urakan-maksuerat db urakka-id)))
 
 (defn laheta-maksuera-sampoon
