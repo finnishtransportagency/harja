@@ -211,6 +211,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (reset! (:auki (reagent/state this)) false)))
    ))
 
+(defn pudotusvalikko [otsikko optiot valinnat]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko otsikko]
+   [livi-pudotusvalikko optiot valinnat]])
+
+    
 (defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
   (let [vaihda-valinta (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
     [:div.btn-group.pull-right.murupolku-radiovalinta
