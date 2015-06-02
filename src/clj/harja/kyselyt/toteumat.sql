@@ -1,14 +1,14 @@
 -- name: listaa-urakan-toteumat
 -- Listaa kaikki urakan toteumat
-  SELECT t.id, t.alkanut, t.paattynyt, t.tyyppi,
+SELECT t.id, t.alkanut, t.paattynyt, t.tyyppi,
   (SELECT array_agg(concat(tpk.nimi, '^', tpk.koodi, '^', tt.maara)) FROM toteuma_tehtava tt
-      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-   WHERE tt.toteuma IN (SELECT id FROM toteuma t WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
-  AND alkanut >= :alkupvm
-  AND paattynyt <= :loppupvm)) as tehtavat FROM TOTEUMA t
-  GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
+    LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  WHERE tt.toteuma = t.id) as tehtavat FROM toteuma t WHERE
+    urakka = :urakka
+    AND sopimus = :sopimus
+    AND alkanut >= :alkupvm
+    AND paattynyt <= :loppupvm
+GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 
 
 -- name: hae-urakan-toteuma-paivat
