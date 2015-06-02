@@ -30,6 +30,13 @@
                                       (:tehtavat rivi))))
          rivit)))
 
+(defn urakan-tehtavat-toteumittain [db user {:keys [urakka-id sopimus-id toimenpidekoodi]}]
+  (log/debug "Haetaan urakan tehtävät toteumittain: " urakka-id)
+  ;(oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        toteuma-xf
+        (q/listaa-urakan-tehtavat-toteumittain db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) toimenpidekoodi)))
+
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -72,6 +79,9 @@
       (julkaise-palvelu http :urakan-toteumat
                         (fn [user tiedot]
                           (urakan-toteumat db user tiedot)))
+      (julkaise-palvelu http :urakan-tehtavat-toteumittain
+                        (fn [user tiedot]
+                          (urakan-tehtavat-toteumittain db user tiedot)))
       (julkaise-palvelu http :urakan-toteuma-paivat
                         (fn [user tiedot]
                           (urakan-toteuma-paivat db user tiedot)))
