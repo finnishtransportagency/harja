@@ -19,16 +19,16 @@
   (log/debug "Haetaan urakan toteumat: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
-        toteuma-xf
-        (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))]
-(map (fn [rivi] (assoc rivi :tehtavat ; FIXME Toimii mutta jokainen tehtävä tulee kahdesti
-                                 (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
-                                                       {:nimi (first splitattu)
-                                                      :koodi (second splitattu)
-                                                      :maara (nth splitattu 2)
-                                                      }))
-                                       (:tehtavat rivi))))
-     rivit)))
+                    toteuma-xf
+                    (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))]
+    (map (fn [rivi] (assoc rivi :tehtavat
+                                (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
+                                                      {:nimi (first splitattu)
+                                                       :toimenpidekoodi (second splitattu)
+                                                       :maara (nth splitattu 2)
+                                                       }))
+                                      (:tehtavat rivi))))
+         rivit)))
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
