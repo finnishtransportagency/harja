@@ -110,8 +110,13 @@
 
           @muokattu]]))))
 
-(defn tehtavan-toteumat []
-  [:p "Testi"])
+(defn tehtavan-toteumat [rivi]
+  (let [urakka-id (:id @nav/valittu-urakka)
+        [sopimus-id _] @u/valittu-sopimusnumero
+        aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
+        toimenpidekoodi (:koodi rivi)
+        tehtavat-toimenpiteittain (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi)]
+  [:p (pr-str tehtavat-toimenpiteittain)]))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -195,9 +200,7 @@
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :tunniste :nimi}
-           ;:vetolaatikot (into {} (map (juxt :id (fn [] (tehtavan-toteumat))) @rivit))}
-           ;:vetolaatikot {1351 [:div "Vetolaatikko"]}} ; FIXME Vetolaatikot ei toimi :(
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) @rivit))} ; FIXME Vetolaatikot ei toimi :(
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
