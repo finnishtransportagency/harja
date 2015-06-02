@@ -115,8 +115,21 @@
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toimenpidekoodi (:koodi rivi)
-        tehtavat-toimenpiteittain (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi)]
-  [:p (pr-str tehtavat-toimenpiteittain)]))
+        tehtavat-toimenpiteittain (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi)
+        testidata [{:alkanut "11.6.1998" :maara 10 :suorittaja "Teppo" :lisatieto "Lisätietoja..."}
+                   {:alkanut "11.6.1998" :maara 4 :suorittaja "Matti" :lisatieto "Lisätietoja..."}]]
+    [:div.tehtavat-toteumittain
+     [:table
+      [:tr
+       [:td "Päivämäärä"]
+       [:td "Määrä"]
+       [:td "Suorittaja"]
+       [:td "Lisätieto"]]
+      (map (fn [rivi] [:tr
+                   [:td (:alkanut rivi)]
+                   [:td (:maara rivi)]
+                   [:td (:suorittaja rivi)]
+                   [:td (:lisatieto rivi)]]) testidata)]]))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"

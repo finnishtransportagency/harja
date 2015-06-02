@@ -32,7 +32,7 @@
 
 (defn urakan-tehtavat-toteumittain [db user {:keys [urakka-id sopimus-id toimenpidekoodi alkupvm loppupvm]}]
   (log/debug "Haetaan urakan tehtävät toteumittain: " urakka-id)
-  ;(oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         toteuma-xf
         (q/listaa-urakan-tehtavat-toteumittain db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) toimenpidekoodi)))
