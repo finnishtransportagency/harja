@@ -53,7 +53,7 @@
         materiaalit (atom {})
         toimenpiteen-tehtavat (reaction (map #(nth % 3)
                                              (filter (fn [[t1 t2 t3 t4]]
-                                                       (= (t3 (:toimenpide @u/valittu-toimenpideinstanssi))))
+                                                       (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
                                                      @u/urakan-toimenpiteet-ja-tehtavat)))
         tallennus-kaynnissa (atom false)]
 
@@ -109,6 +109,9 @@
            ]
 
           @muokattu]]))))
+
+(defn tehtavan-toteumat []
+  [:p "Testi"])
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -179,14 +182,6 @@
                                      (lisaa-riveille-toteutuneet-kustannukset))))]
     (muodosta-rivit)
 
-    ; TODO Toteutettu ylempänä, katsotaan tarviiko tätä versiota enää
-    ;(run! (let [urakka-id (:id urakka)
-    ;            [sopimus-id _] @u/valittu-sopimusnumero
-    ;            aikavali [(first hoitokausi) (second hoitokausi)]]
-    ;        (when (and urakka-id sopimus-id aikavali)
-    ;          (go (reset! toteumat
-    ;                      (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))))
-
     (komp/luo
       (fn []
         [:div.yksikkohintaisten-toteumat
@@ -197,7 +192,10 @@
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :tunniste :nimi}
-          [{:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           ;:vetolaatikot (into {} (map (juxt :id (fn [] (tehtavan-toteumat))) @rivit))}
+           ;:vetolaatikot {1351 [:div "Vetolaatikko"]}} ; FIXME Vetolaatikot ei toimi :(
+          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
