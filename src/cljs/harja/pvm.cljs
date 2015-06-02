@@ -174,3 +174,25 @@
                 (dec kk))
         ]
     [ed-vuosi ed-kk]))
+
+(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
+  (doto (goog.date.DateTime.)
+    (.setYear (.getYear dt))
+    (.setMonth (.getMonth dt))
+    (.setDate (.getDate dt))
+    (.setHours tunnit)
+    (.setMinutes minuutit)
+    (.setSeconds sekunnit)
+    (.setMilliseconds millisekunnit)))
+  
+(defn kuukauden-aikavali
+  "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
+kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
+  [dt]
+  (let [alku (aikana (t/first-day-of-the-month dt)
+                     0 0 0 0)
+        loppu (aikana (t/last-day-of-the-month dt)
+                      23 59 59 999)]
+    ;; aseta aika
+    [alku loppu]))
+        
