@@ -75,23 +75,23 @@
   (sonja/laheta sonja lahetysjono sanoma-xml))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [c db]
-                            (if-let [maksueranumero (hae-maksueranumero c viesti-id)]
+  (jdbc/with-db-transaction [transaktio db]
+                            (if-let [maksueranumero (hae-maksueranumero transaktio viesti-id)]
                               (if (contains? kuittaus :virhe)
                                 (do
                                   (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-                                  (merkitse-maksueralle-lahetysvirhe c maksueranumero))
-                                (merkitse-maksuera-lahetetyksi c maksueranumero))
+                                  (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
+                                (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
                               (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [c db]
-                            (if-let [maksuera (hae-kustannussuunnitelman-maksuera c viesti-id)]
+  (jdbc/with-db-transaction [transaktio db]
+                            (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
                               (if (contains? kuittaus :virhe)
                                 (do
                                   (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
-                                  (merkitse-kustannussuunnitelmalle-lahetysvirhe c maksuera))
-                                (merkitse-kustannussuunnitelma-lahetetyksi c maksuera))
+                                  (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
+                                (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
                               (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
 
