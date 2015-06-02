@@ -25,7 +25,7 @@
                                 (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
                                                       {:nimi (first splitattu)
                                                        :toimenpidekoodi (second splitattu)
-                                                       :maara (nth splitattu 2)
+                                                       :maara (read-string (nth splitattu 2))
                                                        }))
                                       (:tehtavat rivi))))
          rivit)))

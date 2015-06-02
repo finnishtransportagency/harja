@@ -147,12 +147,19 @@
                                                                                                                  @u/urakan-yks-hint-tyot))) 0)))
                                                                   @rivit)))
         lisaa-riveille-toteutunut-maara (fn [] (reset! rivit
-                                                (map
-                                                  (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara 0)) ; TODO Selvitä oikea arvo
-                                                  @rivit)))
+                                                       (map
+                                                         (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
+                                                                                                                      (map (fn [toteuma]
+                                                                                                                             (map (fn [tehtava]
+                                                                                                                                    (if (= (:nimi tehtava) (:nimi rivi))
+                                                                                                                                      (:maara tehtava)
+                                                                                                                                      0))
+                                                                                                                                  (:tehtavat toteuma)))
+                                                                                                                           @toteumat)))))
+                                                         @rivit)))
         lisaa-riveille-toteutuneet-kustannukset (fn [] (reset! rivit
                                                        (map
-                                                         (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset 0)) ; TODO Selvitä oikea arvo
+                                                         (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
                                                          @rivit)))
         muodosta-rivit (fn []
                          (go (reset! toteumat
@@ -201,8 +208,6 @@
             @rivit)]
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
           (ikonit/plus-sign) " Lisää toteuma"]] ))))
-
-
 
 (defn yksikkohintaisten-toteumat []
   (if @valittu-toteuma
