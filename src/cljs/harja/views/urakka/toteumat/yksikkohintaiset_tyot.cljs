@@ -164,6 +164,9 @@
                                                        (map
                                                          (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
                                                          @rivit)))
+        lisaa-riveille-erotus (fn [] (reset! rivit (map
+                                                     (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutunut-maara rivi))))
+                                                     @rivit)))
         muodosta-rivit (fn []
                          (go (reset! toteumat
                                      (let [urakka-id (:id urakka)
@@ -179,7 +182,8 @@
                                      (lisaa-riveille-suunniteltu-maara)
                                      (lisaa-riveille-suunnitellut-kustannukset)
                                      (lisaa-riveille-toteutunut-maara)
-                                     (lisaa-riveille-toteutuneet-kustannukset))))]
+                                     (lisaa-riveille-toteutuneet-kustannukset)
+                                     (lisaa-riveille-erotus))))]
     (muodosta-rivit)
 
     (komp/luo
@@ -199,9 +203,10 @@
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           {:otsikko "Kustannuserotus" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
           (filter
             (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
             @rivit)]
