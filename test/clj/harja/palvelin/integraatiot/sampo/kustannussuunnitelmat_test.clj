@@ -13,22 +13,22 @@
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
-(def +maksuera+ {:nimi                            "Testimaksuera"
-                 :tyyppi                          "kokonaishintainen"
-                 :numero                          123456789
-                 :toimenpideinstanssi             {:alkupvm         (parsi-paivamaara "12.12.2015")
-                                                   :loppupvm        (parsi-paivamaara "1.1.2017")
-                                                   :vastuuhenkilo   "A009717"
-                                                   :talousosasto    "talousosasto"
-                                                   :tuotepolku      "polku/tuote"
-                                                   :toimenpidekoodi {
-                                                                     :koodi "20112"
-                                                                     }}
-                 :urakka                          {:sampoid "PR00020606"}
-                 :sopimus                         {:sampoid "00LZM-0033600"}
-                 :kokonaishintaisettyot_summa 1230.5
-                 :yksikkohintaisettyot_summa  3232.2
-                 :tuotenumero 111})
+(def +maksuera+ {:maksuera             {:nimi
+                                                "Testimaksuera"
+                                        :tyyppi "kokonaishintainen"
+                                        :numero 123456789}
+                 :toimenpideinstanssi  {:alkupvm         (parsi-paivamaara "12.12.2015")
+                                        :loppupvm        (parsi-paivamaara "1.1.2017")
+                                        :vastuuhenkilo   "A009717"
+                                        :talousosasto    "talousosasto"
+                                        :tuotepolku      "polku/tuote"
+                                        :toimenpidekoodi {
+                                                          :koodi "20112"
+                                                          }}
+                 :urakka               {:sampoid "PR00020606"}
+                 :sopimus              {:sampoid "00LZM-0033600"}
+                 :kustannussuunnitelma {:summa 93999M}
+                 :tuotenumero          111})
 
 (deftest tarkista-kustannussuunnitelman-validius
   (let [maksuera (html (kustannussuunnitelma/muodosta-kustannussuunnitelma-xml +maksuera+))
@@ -44,8 +44,3 @@
   (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
   (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
   (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
-
-(deftest tarkista-summien-laskenta
-  (is (= 1 (kustannussuunnitelma/laske-summa {:tyyppi "sakko"})) "Sakoille summa on aina 1")
-  (is (= 1230.5 (kustannussuunnitelma/laske-summa +maksuera+)) "Summa lasketaan oikein kokonaishintaisista töistä")
-  (is (= 1230.5 (kustannussuunnitelma/laske-summa +maksuera+))) "Summa lasketaan oikein yksikköhintaisista töistä")

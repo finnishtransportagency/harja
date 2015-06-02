@@ -15,9 +15,10 @@
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
-(def +maksuera+ {:nimi                "Testimaksuera"
-                 :tyyppi              "kokonaishintainen"
-                 :numero              123456789
+(def +maksuera+ {:maksuera            {:nimi   "Testimaksuera"
+                                       :tyyppi "kokonaishintainen"
+                                       :numero 123456789
+                                       :summa  1304.89}
                  :toimenpideinstanssi {:alkupvm       (parsi-paivamaara "12.12.2015")
                                        :loppupvm      (parsi-paivamaara "1.1.2017")
                                        :vastuuhenkilo "A009717"
@@ -47,4 +48,5 @@
     (is (= "00LZM-0033600" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_tilaus") z/text)))
     (is (= "2" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_me_type") z/text)))
     (is (= "123456789" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_inst_no") z/text)))
-    (is (= "AL123456789" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :instance (z/attr :instanceCode))))))
+    (is (= "AL123456789" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :instance (z/attr :instanceCode))))
+    (is (= "1304.89" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :instance :CustomInformation :ColumnValue (z/attr= :name "vv_paym_sum") z/text)))))

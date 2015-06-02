@@ -27,35 +27,31 @@
     (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
     this))
 
-(def aseta-kustannussuunnitelman-summa-xf
-  (map
-    #(case (:tyyppi %)
-      "kokonaishintainen" (if-let [summa (:summa (:kokonaishintaisettyot %))]
-                            (assoc-in % [:kustannussuunnitelma :summa] (double summa))
-                            (assoc-in % [:kustannussuunnitelma :summa] 0))
-      "yksikkohintainen" (if-let [summa (:summa (:yksikkohintaisettyot %))]
-                           (assoc-in % [:kustannussuunnitelma :summa] (double summa))
-                           (assoc-in % [:kustannussuunnitelma :summa] 0))
-      (assoc-in % [:kustannussuunnitelma :summa] 1))))
-
 (def aseta-kustannussuunnitelman-tila
   (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
 
 (def aseta-tyyppi-ja-tila-xf
-  (map #(do (log/debug "Rivi on:" %)
-            (assoc % :tyyppi (keyword (:tyyppi %))
-                     :tila (keyword (:tila %))))))
+  (map #(-> %
+            (assoc-in [:maksuera :tyyppi] (keyword (:tyyppi (:maksuera %))))
+            (assoc-in [:maksuera :tila] (keyword (:tila (:maksuera %)))))))
+
+(def muunna-desimaaliluvut-xf
+  (map #(-> %
+            (assoc-in [:maksuera :summa]
+                      (or (some-> % :maksuera :summa double) 0))
+            (assoc-in [:kustannussuunnitelma :summa]
+                      (or (some-> % :kustannussuunnitelma :summa double) 0)))))
 
 (def maksuera-xf
   (comp (map konversio/alaviiva->rakenne)
-        aseta-kustannussuunnitelman-summa-xf
         aseta-kustannussuunnitelman-tila
-        aseta-tyyppi-ja-tila-xf))
+        aseta-tyyppi-ja-tila-xf
+        muunna-desimaaliluvut-xf))
 
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  ;(oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
         maksuera-xf

@@ -13,16 +13,10 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
-(defn laske-summa [maksuera]
-  (case (:tyyppi maksuera)
-    "kokonaishintainen" (:kokonaishintaisettyot_summa maksuera)
-    "yksikkohintainen" (:yksikkohintaisettyot_summa maksuera)
-    1))
-
 (defn luo-summat [alkupvm loppupvm maksuera]
   [:Cost
    [:segment
-    {:value  (laske-summa maksuera)
+    {:value  (:summa (:maksuera maksuera))
      :finish alkupvm
      :start  loppupvm}]])
 
@@ -60,8 +54,8 @@
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
         {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
         tuotenumero (:tuotenumero maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero maksuera))
-        kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
+        maksueranumero (muodosta-maksueranumero (:numero (:maksuera maksuera)))
+        kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero (:maksuera maksuera)))]
     [:NikuDataBus
      [:Header
       {:objectType     "costPlan"
@@ -75,7 +69,7 @@
         :periodType     "ANNUALLY"
         :investmentType "PRODUCT"
         :investmentCode maksueranumero
-        :name           (:nimi maksuera)
+        :name           (:nimi (:maksuera maksuera))
         :code           kustannussuunnitelmanumero
         :isPlanOfRecord "true"}
        [:Description ""]
