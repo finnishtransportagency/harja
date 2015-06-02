@@ -14,7 +14,9 @@
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.views.urakka.laadunseuranta :as laadunseuranta]
+            )
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -47,8 +49,8 @@
    "Laadunseuranta"
    :laadunseuranta
    ^{:key "laadunseuranta"}
-   [:div
-    "laatua vois toki seurata"]
+   [laadunseuranta/laadunseuranta]
+
 
    "Siltatarkastukset"
    :siltatarkastukset
