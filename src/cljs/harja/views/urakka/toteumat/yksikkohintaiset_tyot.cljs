@@ -126,7 +126,7 @@
                                             (map
                                               (fn [rivi] (assoc rivi :yksikkohinta
                                                            (or (:yksikkohinta (first (filter
-                                                                                  (fn [tyo] (and (= (:tehtavan_nimi tyo) (:nimi rivi))
+                                                                                  (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
                                                                                   @u/urakan-yks-hint-tyot))) 0)))
                                               @rivit)))
@@ -134,7 +134,7 @@
                                                         (map
                                                           (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
                                                                                  (or (:maara (first (filter
-                                                                                                         (fn [tyo] (and (= (:tehtavan_nimi tyo) (:nimi rivi))
+                                                                                                         (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                                         (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
                                                                                                          @u/urakan-yks-hint-tyot))) 0)))
                                                           @rivit)))
@@ -142,7 +142,7 @@
                                                                 (map
                                                                   (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
                                                                                          (or (:yhteensa (first (filter
-                                                                                                                 (fn [tyo] (and (= (:tehtavan_nimi tyo) (:nimi rivi))
+                                                                                                                 (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                                                 (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
                                                                                                                  @u/urakan-yks-hint-tyot))) 0)))
                                                                   @rivit)))
@@ -151,7 +151,7 @@
                                                          (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
                                                                                                                       (map (fn [toteuma]
                                                                                                                              (map (fn [tehtava]
-                                                                                                                                    (if (= (:nimi tehtava) (:nimi rivi))
+                                                                                                                                    (if (= (:tpk-id tehtava) (:id rivi))
                                                                                                                                       (:maara tehtava)
                                                                                                                                       0))
                                                                                                                                   (:tehtavat toteuma)))
@@ -169,8 +169,9 @@
                                        (when (and urakka-id sopimus-id aikavali)
                                          (reset! toteumat
                                                  (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))
-                                     (log (str "SÖSÖ " (pr-str @toteumat)))
+                                     (log (str "SÖSÖ TOTEUMAT" (pr-str @toteumat)))
                                      (hae-nelostason-tehtavat)
+                                     (log (str "SÖSÖ RIVIT" (pr-str @rivit)))
                                      (lisaa-riveille-yksikkohinta)
                                      (lisaa-riveille-suunniteltu-maara)
                                      (lisaa-riveille-suunnitellut-kustannukset)
