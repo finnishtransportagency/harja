@@ -182,7 +182,7 @@
                                                          (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
                                                          @rivit)))
         lisaa-riveille-erotus (fn [] (reset! rivit (map
-                                                     (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutunut-maara rivi))))
+                                                     (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                                      @rivit)))
         muodosta-rivit (fn []
                          (go (reset! toteumat
