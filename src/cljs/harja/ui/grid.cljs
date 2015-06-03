@@ -153,9 +153,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [vetolaatikot vetolaatikot-auki id colspan]
   (when-let [vetolaatikko (get vetolaatikot id)]
     ^{:key (str "vetolaatikko" id)}
-    [:tr.vetolaatikko {:class (if (@vetolaatikot-auki id) "vetolaatikko-auki" "vetolaatikko-kiinni")} 
-     [:td {:colSpan colspan}
-      [:div.vetolaatikko-sisalto vetolaatikko]]]))
+    (let [auki (@vetolaatikot-auki id)]
+      [:tr.vetolaatikko {:class (if auki "vetolaatikko-auki" "vetolaatikko-kiinni")}
+       [:td {:colSpan colspan}
+       [:div.vetolaatikko-sisalto
+        (when auki
+          vetolaatikko)]]])))
   
   
 
