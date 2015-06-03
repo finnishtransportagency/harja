@@ -1,8 +1,6 @@
 (ns harja.views.urakka.toteumat.yksikkohintaiset-tyot
   "Urakan 'Toteumat' välilehden Yksikköhintaist työt osio"
-  (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
-            [harja.ui.grid :as grid]
+  (:require [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
@@ -10,21 +8,15 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             [harja.pvm :as pvm]
 
-            [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
+
             [cljs.core.async :refer [<! >! chan]]
-            [clojure.string :as str]
-            [cljs-time.core :as t]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -32,7 +24,6 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defonce valittu-toteuma (atom nil))
-(defonce rivit (atom nil))
 
 (defn tallenna-toteuma [toteuma tehtavat]
   (let [toteuma (assoc toteuma
@@ -115,14 +106,12 @@
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toimenpidekoodi (:id rivi)
-        tehtavat-toimenpiteittain (atom nil)]
-    (go (do (reset! tehtavat-toimenpiteittain (<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))))
-        (log "SÄSÄ tehtävät-toteumittain " (pr-str @tehtavat-toimenpiteittain)))
+        tehtavat-toimenpiteittain (reaction<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))]
 
     (fn [rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
-        {:tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
+        {:tyhja (if (nil? @tehtavat-toimenpiteittain) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :komponentti :komponentti (fn [rivi] (pvm/pvm-aika (:alkanut rivi))) :leveys "25%"}
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
@@ -136,86 +125,86 @@
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-  (let [urakka @nav/valittu-urakka
-        hoitokausi @u/valittu-hoitokausi
-        toteumat (atom nil)
-        hae-nelostason-tehtavat (fn [] (reset! rivit
-                                      (map
-                                        (fn [tasot] (let [kolmostaso (nth tasot 2)
-                                                          nelostaso (nth tasot 3)]
-                                                      (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                                        @u/urakan-toimenpiteet-ja-tehtavat)))
-        lisaa-riveille-yksikkohinta (fn [] (reset! rivit
-                                            (map
-                                              (fn [rivi] (assoc rivi :yksikkohinta
-                                                           (or (:yksikkohinta (first (filter
-                                                                                  (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                 (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
-                                                                                  @u/urakan-yks-hint-tyot))) 0)))
-                                              @rivit)))
-        lisaa-riveille-suunniteltu-maara (fn [] (reset! rivit
-                                                        (map
-                                                          (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
-                                                                                 (or (:maara (first (filter
-                                                                                                         (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
-                                                                                                         @u/urakan-yks-hint-tyot))) 0)))
-                                                          @rivit)))
-        lisaa-riveille-suunnitellut-kustannukset (fn [] (reset! rivit
-                                                                (map
-                                                                  (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
-                                                                                         (or (:yhteensa (first (filter
-                                                                                                                 (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first hoitokausi))))
-                                                                                                                 @u/urakan-yks-hint-tyot))) 0)))
-                                                                  @rivit)))
-        lisaa-riveille-toteutunut-maara (fn [] (reset! rivit
-                                                       (map
-                                                         (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
-                                                                                                                      (map (fn [toteuma]
-                                                                                                                             (map (fn [tehtava]
-                                                                                                                                    (if (= (:tpk-id tehtava) (:id rivi))
-                                                                                                                                      (:maara tehtava)
-                                                                                                                                      0))
-                                                                                                                                  (:tehtavat toteuma)))
-                                                                                                                           (filter (fn [toteuma] (= (:tyyppi toteuma) "yksikkohintainen")) @toteumat))))))
-                                                         @rivit)))
-        lisaa-riveille-toteutuneet-kustannukset (fn [] (reset! rivit
-                                                       (map
-                                                         (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
-                                                         @rivit)))
-        lisaa-riveille-erotus (fn [] (reset! rivit (map
-                                                     (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
-                                                     @rivit)))
-        muodosta-rivit (fn []
-                         (go (reset! toteumat
-                                     (let [urakka-id (:id urakka)
-                                           [sopimus-id _] @u/valittu-sopimusnumero
-                                           aikavali [(first hoitokausi) (second hoitokausi)]]
-                                       (when (and urakka-id sopimus-id aikavali)
-                                         (reset! toteumat
-                                                 (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali)))))
-                                     (log (str "SÖSÖ TOTEUMAT" (pr-str @toteumat)))
-                                     (hae-nelostason-tehtavat)
-                                     (log (str "SÖSÖ RIVIT" (pr-str @rivit)))
-                                     (lisaa-riveille-yksikkohinta)
-                                     (lisaa-riveille-suunniteltu-maara)
-                                     (lisaa-riveille-suunnitellut-kustannukset)
-                                     (lisaa-riveille-toteutunut-maara)
-                                     (lisaa-riveille-toteutuneet-kustannukset)
-                                     (lisaa-riveille-erotus))))]
-    (muodosta-rivit)
+  (let [toteumat (reaction nil)
+        hae-nelostason-tehtavat (fn [] (map
+                                         (fn [tasot] (let [kolmostaso (nth tasot 2)
+                                                           nelostaso (nth tasot 3)]
+                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                         @u/urakan-toimenpiteet-ja-tehtavat))
+        hae-toteumat (fn []
+                       (go (do (reset! toteumat
+                                   (let [urakka-id (:id @nav/valittu-urakka)
+                                         [sopimus-id _] @u/valittu-sopimusnumero
+                                         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
+                                     (when (and urakka-id sopimus-id aikavali)
+                                       (reset! toteumat
+                                               (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali))))))
+                               (log "SÖSÖ Toteumat " (pr-str @toteumat)))))
+        lisaa-riveille-yksikkohinta (fn [rivit valittu-hoitokausi] (map
+                                                                     (fn [rivi] (assoc rivi :yksikkohinta
+                                                                                            (or (:yksikkohinta (first (filter
+                                                                                                                        (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
+                                                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
+                                                                                                                        @u/urakan-yks-hint-tyot))) 0)))
+                                                                     rivit))
+        lisaa-riveille-suunniteltu-maara (fn [rivit valittu-hoitokausi] (map
+                                                                          (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
+                                                                                                 (or (:maara (first (filter
+                                                                                                                      (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
+                                                                                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
+                                                                                                                      @u/urakan-yks-hint-tyot))) 0)))
+                                                                          rivit))
+        lisaa-riveille-suunnitellut-kustannukset (fn [rivit valittu-hoitokausi]
+                                                   (map
+                                                     (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
+                                                                            (or (:yhteensa (first (filter
+                                                                                                    (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
+                                                                                                                   (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
+                                                                                                    @u/urakan-yks-hint-tyot))) 0)))
+                                                     rivit))
+        lisaa-riveille-toteutunut-maara (fn [rivit valittu-hoitokausi toteumat]
+                                          (map
+                                            (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
+                                                                                                             (map (fn [toteuma]
+                                                                                                                    (map (fn [tehtava]
+                                                                                                                           (if (= (:tpk-id tehtava) (:id rivi))
+                                                                                                                             (:maara tehtava)
+                                                                                                                             0))
+                                                                                                                         (:tehtavat toteuma)))
+                                                                                                                  (filter (fn [toteuma] (= (:tyyppi toteuma) "yksikkohintainen")) toteumat))))))
+                                            rivit))
+        lisaa-riveille-toteutuneet-kustannukset (fn [rivit valittu-hoitokausi]
+                                                  (map
+                                                    (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
+                                                    rivit))
+        lisaa-riveille-erotus (fn [rivit valittu-hoitokausi] (map
+                                                               (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                                               rivit))
+        tyorivit (reaction
+                   (let [rivit (hae-nelostason-tehtavat)
+                         valittu-hoitokausi @u/valittu-hoitokausi
+                         toteumat @toteumat]
+                     ; Odotetaan toteumia. Kun toteumat saadaan, tämä reaction body ajetaan automaattisesti uudelleen.
+                     (if (not (nil? toteumat))
+                     (-> (lisaa-riveille-yksikkohinta rivit valittu-hoitokausi)
+                         (lisaa-riveille-suunniteltu-maara valittu-hoitokausi)
+                         (lisaa-riveille-suunnitellut-kustannukset valittu-hoitokausi)
+                         (lisaa-riveille-toteutunut-maara valittu-hoitokausi toteumat)
+                         (lisaa-riveille-toteutuneet-kustannukset valittu-hoitokausi)
+                         (lisaa-riveille-erotus valittu-hoitokausi)))))]
+
+    (hae-toteumat)
 
     (komp/luo
       (fn []
         [:div.yksikkohintaisten-toteumat
          [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @rivit)))}
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -230,7 +219,7 @@
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (:kustannuserotus rivi)])) :leveys "20%"}]
           (filter
             (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-            @rivit)]
+            @tyorivit)]
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
           (ikonit/plus-sign) " Lisää toteuma"]] ))))
 
