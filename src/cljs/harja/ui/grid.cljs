@@ -435,7 +435,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja
-                    vetolaatikot]} skeema tiedot]
+                    vetolaatikot] :as opts} skeema tiedot]
          (let [colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))]
            [:div.panel.panel-default.livi-grid
@@ -463,7 +463,7 @@ Optiot on mappi optioita:
                 (when-not (= false voi-lisata?)
                   [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                          (lisaa-rivi! ohjaus {}))}
-                   (ikonit/plus-sign) " Lisää rivi"])
+                   (ikonit/plus-sign) (or (:lisaa-rivi opts) " Lisää rivi")])
 
                 [:span {:class (str (if (empty? @virheet)
                                       "hide"
@@ -665,7 +665,8 @@ Optiot on mappi optioita:
          )
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
+       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu
+                    muokkaa-footer muokkaa-aina uusi-rivi tyhja] :as opts} skeema muokatut]
          [:div.panel.panel-default.livi-grid
           [:div.panel-heading
            (when otsikko [:h6.panel-title otsikko])
@@ -680,7 +681,7 @@ Optiot on mappi optioita:
               (when (not= false voi-lisata?)
                 [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                        (lisaa-rivi! ohjaus {}))}
-                 (ikonit/plus-sign) " Lisää rivi"])])]
+                 (ikonit/plus-sign) (or (:lisaa-rivi opts) " Lisää rivi")])])]
           [:div.panel-body
            [:table.grid
             [:thead
@@ -693,7 +694,7 @@ Optiot on mappi optioita:
 
             [:tbody
              (let [muokatut @muokatut]
-               (if (empty? muokatut)
+               (if (every? :poistettu (vals muokatut))
                  [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                  (let [kaikki-virheet @virheet]
                    (doall (map-indexed
