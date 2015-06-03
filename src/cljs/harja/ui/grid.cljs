@@ -668,7 +668,7 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja]} skeema muokatut]
          [:div.panel.panel-default.livi-grid
           [:div.panel-heading
-           [:h6.panel-title otsikko]
+           (when otsikko [:h6.panel-title otsikko])
            (when (not= false voi-muokata?)
              [:span.pull-right.muokkaustoiminnot
               [:button.nappi-toissijainen
