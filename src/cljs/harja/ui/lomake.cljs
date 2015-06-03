@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
-            [harja.ui.kentat :refer [tee-kentta atomina]]
+            [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!]]))
 
 (defrecord Ryhma [otsikko skeemat])
@@ -54,7 +54,13 @@
                       :default "")}
        (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
                       (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
-                      (let [kentan-virheet (get @virheet nimi)]
+                      (let [kentan-virheet (get @virheet nimi)
+                            kentta (assoc kentta :lomake? true)
+                            arvo (atomina kentta data (fn [uudet-tiedot]
+                                                        (reset! virheet
+                                                                (validointi/validoi-rivi nil uudet-tiedot skeema))
+                                                        (swap! koskemattomat disj nimi)
+                                                        (muokkaa! uudet-tiedot)))]
                         ^{:key (:nimi kentta)}
                         [:div.form-group
                          [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
@@ -66,19 +72,16 @@
                               ;; Muokattava tieto, tehdään sille kenttä
                               [:span {:class (str (when-not (empty? kentan-virheet)
                                                     "has-error"))}
-                               [tee-kentta (assoc kentta :lomake? true)
-                                (atomina kentta data (fn [uudet-tiedot]
-                                                       (reset! virheet
-                                                               (validointi/validoi-rivi nil uudet-tiedot skeema))
-                                                       (swap! koskemattomat disj nimi)
-                                                       (muokkaa! uudet-tiedot)))]
+                               [tee-kentta kentta arvo]
                                (when (and (not (empty? kentan-virheet))
                                           (not (@koskemattomat nimi)))
                                  (virheen-ohje kentan-virheet))]
                               
                               ;; Ei muokattava, näytetään
                               [:div.form-control-static
-                               ((or fmt str) ((or hae #(get % nimi)) data))]))]]))]
+                               (if fmt
+                                 (fmt ((or hae #(get % nimi)) data))
+                                 (nayta-arvo kentta arvo))]))]]))]
          (doall
           (for [skeema (keep identity skeema)]
             (if-let [ryhma (and (ryhma? skeema) skeema)]

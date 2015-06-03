@@ -25,7 +25,17 @@
 
    
 
-(defmulti tee-kentta (fn [t _] (:tyyppi t)))
+(defmulti tee-kentta
+  "Tekee muokattavan kentän tyypin perusteella"
+  (fn [t _] (:tyyppi t)))
+
+(defmulti nayta-arvo
+  "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella. Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
+  (fn [t _] (:tyyppi t)))
+
+
+(defmethod nayta-arvo :default [_ data]
+  (str @data))
 
 (defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?]} data]
   (let [nyt-valittu @data
@@ -167,6 +177,8 @@
                           :format-fn valinta-nayta}
      valinnat]))
 
+(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo]} data]
+  ((or valinta-nayta str) @data))
 
 
 
@@ -246,7 +258,12 @@
                                                (reset! data %)
                                                (reset! teksti (pvm/pvm %)))
                                  :pvm     naytettava-pvm}]])]))})))
- 
+
+(defmethod nayta-arvo :pvm [_ data]
+  (if-let [p @data]
+    (pvm/pvm p)
+    ""))
+    
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
@@ -318,3 +335,8 @@
                [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                                (muuta! (pvm/pvm %)))
                                  :pvm     naytettava-pvm}]])]))})))
+
+(defmethod nayta-arvo :pvm-aika [_ data]
+  (if-let [p @data]
+    (pvm/pvm-aika p)
+    ""))
