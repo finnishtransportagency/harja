@@ -11,9 +11,14 @@
             [clojure.java.jdbc :as jdbc]))
 
 (def toteuma-xf
-  (comp (map #(-> %
-                  (konv/array->vec :tehtavat)
-                  (konv/array->vec :materiaalit)))))
+     (comp (map #(-> %
+                     (konv/array->vec :tehtavat)
+                     (konv/array->vec :materiaalit)))))
+
+(def muunna-desimaaliluvut-xf
+     (map #(-> %
+               (assoc-in [:maara]
+                         (or (some-> % :maara double) 0)))))
 
 (defn urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumat: " urakka-id)
@@ -33,7 +38,9 @@
 (defn urakan-tehtavat-toteumittain [db user {:keys [urakka-id sopimus-id toimenpidekoodi alkupvm loppupvm]}]
   (log/debug "Haetaan urakan tehtävät toteumittain: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into [] (q/listaa-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
+  (into []
+        muunna-desimaaliluvut-xf
+        (q/listaa-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
