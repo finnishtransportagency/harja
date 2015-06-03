@@ -163,6 +163,11 @@
   [pvm]
   (t/year pvm))
 
+(defn kuukausi
+  "Palauttaa annetun DateTime kuukauden."
+  [pvm]
+  (t/month pvm))
+
 (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
   (let [vuosi (first vuosi-kk)
         kk (second vuosi-kk)
@@ -196,3 +201,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     ;; aseta aika
     [alku loppu]))
         
+
+(defn hoitokauden-kuukausivalit
+  "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun hoitokauden
+  jokaiselle kuukaudelle."
+  [[alkupvm loppupvm]]
+  (let [alku (t/first-day-of-the-month alkupvm)]
+    (loop [kkt [(kuukauden-aikavali alkupvm)]
+           kk (t/plus alku (t/months 1))]
+      (if (t/after? kk loppupvm)
+        kkt
+        (recur (conj kkt
+                     (kuukauden-aikavali kk))
+               (t/plus kk (t/months 1)))))))
+
