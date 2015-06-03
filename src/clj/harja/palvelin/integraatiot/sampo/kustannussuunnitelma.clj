@@ -54,8 +54,8 @@
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
         {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
         tuotenumero (:tuotenumero maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero (:maksuera maksuera)))
-        kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero (:maksuera maksuera)))]
+        maksueranumero (muodosta-maksueranumero (:numero maksuera))
+        kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
     [:NikuDataBus
      [:Header
       {:objectType     "costPlan"

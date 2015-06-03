@@ -39,9 +39,9 @@
 
 (defn muodosta-maksuera-xml [maksuera]
   (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto tuotepolku]} (:toimenpideinstanssi maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero (:maksuera maksuera)))
+        maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
-        instance-code (muodosta-instance-code (:numero (:maksuera maksuera)))]
+        instance-code (muodosta-instance-code (:numero maksuera))]
 
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
@@ -76,7 +76,7 @@
         [:OBSAssoc#tuote2013 {:unitPath tuotepolku
                               :name     "Tuoteryhma/Tuote"}]]
        (luo-custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
-                                "vv_inst_no"     (:numero (:maksuera maksuera))
+                                "vv_inst_no"     (:numero maksuera)
                                 "vv_code"        maksueranumero
                                 "vv_me_type"     (paattele-tyyppi (:tyyppi (:maksuera maksuera)))
                                 "vv_type"        "me"

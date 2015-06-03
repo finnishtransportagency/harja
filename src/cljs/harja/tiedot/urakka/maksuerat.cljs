@@ -12,4 +12,4 @@
     (k/post! :hae-urakan-maksuerat urakka-id))
 
 (defn laheta-maksuerat [maksueranumerot]
-    (k/post! :laheta-maksuerat-sampoon (into [] maksueranumerot))) ; TODO Rajapinta voisi ottaa vastaan setin eikä mappia?
+    (k/post! :laheta-maksuerat-sampoon (into [] maksueranumerot)))

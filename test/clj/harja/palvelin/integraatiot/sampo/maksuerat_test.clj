@@ -15,9 +15,10 @@
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
-(def +maksuera+ {:maksuera            {:nimi   "Testimaksuera"
+(def +maksuera+ {:numero              123456789
+                 :maksuera
+                                      {:nimi   "Testimaksuera"
                                        :tyyppi "kokonaishintainen"
-                                       :numero 123456789
                                        :summa  1304.89}
                  :toimenpideinstanssi {:alkupvm       (parsi-paivamaara "12.12.2015")
                                        :loppupvm      (parsi-paivamaara "1.1.2017")

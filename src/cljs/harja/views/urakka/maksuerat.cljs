@@ -63,45 +63,55 @@
                      (concat [(grid/otsikko otsikko)] rivit))
                    (seq otsikon-mukaan)))))
 
-(def lahetyksessa (atom #{}))                               ; Setti lähetyksessä olevista maksuerien numeroista
-(def maksuerarivit (atom nil))
 (def urakka-id (atom nil))
+(def maksuerat (atom nil))
+(def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat)))
+(def kuittausta-odottavat-maksuerat (reaction (into #{}
+                                                    (mapv
+                                                      (fn [rivi] (:numero rivi))
+                                                      (filter
+                                                        (fn [rivi]
+                                                          (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
+                                                              (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
+                                                        @maksuerat)))))
 
 (declare aloita-pollaus)
 
-
-
-(defn hae-urakan-maksuerat [ur]
+(defn hae-urakan-maksuerat [urakka]
   (go
-    (log (str "Urakan id: " ur))
-    (reset! maksuerarivit (ryhmittele-maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id ur)))))
-    (reset! lahetyksessa (into #{} (mapv                    ; Lisää lahetyksessa-settiin lähetyksessä olevat maksueränumerot
-                                     (fn [rivi] (:numero (:maksuera rivi)))
-                                     (filter
-                                       (fn [rivi]
-                                         (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
-                                             (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
-                                       @maksuerarivit))))))
+    (log (str "Urakan id: " (:id urakka)))
+    (reset! maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id urakka))))))
+
+(defn rakenna-paivittyneet-maksuerat [paivittyneiden-maksuerien-tilat]
+  (mapv (fn [uusi-maksuera]
+          (let [m (first (filter (fn [maksuera]
+                                   (= (:numero maksuera) (:numero uusi-maksuera))) @maksuerat))]
+            (assoc-in (assoc-in m
+                                [:maksuera :tila] (:tila (:maksuera uusi-maksuera)))
+                      [:kustannussuunnitelma :tila] (:tila (:kustannussuunnitelma uusi-maksuera)))))
+        paivittyneiden-maksuerien-tilat))
 
 (defn laheta-maksuerat [maksueranumerot]                    ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
-  (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @lahetyksessa %)) maksueranumerot))]
-    (go (reset! lahetyksessa (into #{} (clojure.set/union @lahetyksessa lahetettavat-maksueranumerot)))
-        (let [res (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))]
-          (if res                                           ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
+  (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @kuittausta-odottavat-maksuerat %)) maksueranumerot))]
+    (go (reset! kuittausta-odottavat-maksuerat (into #{} (clojure.set/union @kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot)))
+        (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))
+              paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
+              samana-pysyneet (filter #(not (lahetettavat-maksueranumerot (:numero %))) @maksuerat)
+              uudet-maksuerat (sort-by :numero (apply merge samana-pysyneet paivittyneet-maksuerat))
+              uudet-kuittausta-odottavat (into #{} (remove (set lahetettavat-maksueranumerot) @kuittausta-odottavat-maksuerat))]
+          (if vastaus
             ;; Lähetys ok
-            (do (reset! maksuerarivit (mapv (fn [rivi]
-                                              (if (contains? lahetettavat-maksueranumerot (:numero (:maksuera rivi)))
-                                                (assoc-in (assoc-in rivi [:maksuera :tila] :odottaa_vastausta) [:kustannussuunnitelma :tila] :odottaa_vastausta)
-                                                rivi))
-                                            @maksuerarivit))
-                (aloita-pollaus))
+            (do
+              (reset! maksuerat uudet-maksuerat)
+              (aloita-pollaus))
             ;; Epäonnistui jostain syystä
-            (do (reset! lahetyksessa (into #{} (remove (set lahetettavat-maksueranumerot) @lahetyksessa)))
-                (reset! maksuerarivit (mapv (fn [rivi]
-                                              (if (contains? lahetettavat-maksueranumerot (:numero (:maksuera rivi)))
+            (do (reset! maksuerarivit (mapv (fn [rivi]
+                                              (if (contains? lahetettavat-maksueranumerot (:numero rivi))
                                                 (assoc rivi :tila :virhe)
                                                 rivi))
-                                            @maksuerarivit))))))))
+                                            @maksuerarivit))
+                ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
+                (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))))))
 
 (def pollaus-id (atom nil))
 (def pollataan-kantaa? (atom false))
@@ -114,7 +124,7 @@
 (defn pollaa-kantaa
   "Jos tiedossa on lähetyksessä olevia maksueriä, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
   []
-  (if (not (empty? @lahetyksessa))
+  (if (not (empty? @kuittausta-odottavat-maksuerat))
     (do
       (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
       (hae-urakan-maksuerat @urakka-id))
@@ -138,7 +148,7 @@
     :virhe [:span.maksuera-virhe "Lähetys epäonnistui!"]
     [:span "Ei lähetetty"]))
 
-(defn maksuerat
+(defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   [ur]
   (reset! urakka-id ur)
@@ -150,36 +160,35 @@
        (lopeta-pollaus))}
     (fn []
       [:div
-       (let [lahetyksessa @lahetyksessa]
+       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat]
          [grid/grid
           {:otsikko  "Maksuerät"
            :tyhja    "Ei maksueriä."
            :tallenna nil
            :tunniste :numero}
           [{:otsikko     "Numero" :nimi :numero :tyyppi :komponentti :leveys "10%" :pituus 16
-            :komponentti (fn [rivi] (:numero (:maksuera rivi)))}
+            :komponentti (fn [rivi] (:numero rivi))}
            {:otsikko     "Nimi" :nimi :nimi :tyyppi :komponentti :leveys "33%" :pituus 16
             :komponentti (fn [rivi] (:nimi (:maksuera rivi)))}
            {:otsikko     "Maksuerän summa" :nimi :maksueran-summa :tyyppi :komponentti :leveys "14%" :pituus 16
             :komponentti (fn [rivi] (:summa (:maksuera rivi)))}
            {:otsikko     "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :komponentti :leveys "18%"
             :komponentti (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
-           {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
+           {:otsikko "Maksueran tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi]
-                           (log "Nönnönöö rivi:" (pr-str rivi))
                            (tilan-naytto (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
             :komponentti (fn [rivi] (tilan-naytto (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]
-                           (let [maksueranumero (:numero (:maksuera rivi))]
-                             [:button.laheta-maksuera {:class    (str "nappi-ensisijainen " (if (contains? lahetyksessa maksueranumero) "disabled"))
+                           (let [maksueranumero (:numero rivi)]
+                             [:button.laheta-maksuera {:class    (str "nappi-ensisijainen " (if (contains? kuittausta-odottavat maksueranumero) "disabled"))
                                                        :type     "button"
                                                        :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
             :leveys      "7%"}]
           @maksuerarivit
           ])
 
-       [:button.nappi-ensisijainen {:class    (if (= (count @lahetyksessa) (count @maksuerarivit)) "disabled" "")
+       [:button.nappi-ensisijainen {:class    (if (= (count @kuittausta-odottavat-maksuerat) (count @maksuerarivit)) "disabled" "")
                                     :on-click #(do (.preventDefault %)
-                                                   (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero (:maksuera rivi))) @maksuerarivit))))} "Lähetä kaikki"]])))
+                                                   (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki"]])))

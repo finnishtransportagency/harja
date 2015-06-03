@@ -1,7 +1,7 @@
 -- name: hae-urakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot
 SELECT
-  m.numero     AS maksuera_numero,
+  m.numero     AS numero,
   m.tyyppi     AS maksuera_tyyppi,
   m.nimi       AS maksuera_nimi,
   m.tila       AS maksuera_tila,
@@ -90,17 +90,24 @@ SELECT
 
   WHEN m.tyyppi = 'muu'
     THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-              t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'muutostyo')
+      (SELECT
+         -- Muutostyo
+         (SELECT (sum(tt.maara * yt.yksikkohinta))
+          FROM toteuma t
+            JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+            JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
+                                        (tpk.emo IN (SELECT id
+                                                     FROM toimenpidekoodi emo
+                                                     WHERE emo.id = tpi.toimenpide))
+            JOIN yksikkohintainen_tyo yt
+              ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
+                 t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
+          WHERE t.tyyppi = 'muutostyo')
+         +
+         -- Erilliskustannukset
+         (SELECT (sum(ek.rahasumma))
+          FROM erilliskustannus ek
+          WHERE ek.toimenpideinstanssi = tpi.id))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
   ELSE 0
@@ -119,7 +126,7 @@ WHERE tpi.urakka = :urakkaid;
 -- name: hae-lahetettava-maksuera
 -- Hakee numeron perusteella maksueran lähettämiseen tarvittavat tiedot
 SELECT
-  m.numero                 AS maksuera_numero,
+  m.numero                 AS numero,
   m.tyyppi                 AS maksuera_tyyppi,
   m.nimi                   AS maksuera_nimi,
   m.tila                   AS maksuera_tila,
@@ -206,16 +213,24 @@ SELECT
 
   WHEN m.tyyppi = 'muu'
     THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'muutostyo')
+
+      (SELECT
+         -- Muutostyöt
+         (SELECT (sum(tt.maara * yt.yksikkohinta))
+          FROM toteuma t
+            JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+            JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
+                                        (tpk.emo IN (SELECT id
+                                                     FROM toimenpidekoodi emo
+                                                     WHERE emo.id = tpi.toimenpide))
+            JOIN yksikkohintainen_tyo yt
+              ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
+          WHERE t.tyyppi = 'muutostyo')
+         +
+         -- Erilliskustannukset
+         (SELECT (sum(ek.rahasumma))
+          FROM erilliskustannus ek
+          WHERE ek.toimenpideinstanssi = tpi.id))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
   ELSE 0
@@ -231,12 +246,16 @@ FROM maksuera m
 WHERE m.numero = :numero;
 
 
--- name: lukitse-maksuera!
--- Lukitsee maksuerän lähetyksen ajaksi
-UPDATE maksuera
-SET lukko = :lukko, lukittu = current_timestamp
-WHERE numero = :numero AND (lukko IS NULL OR
-                            (EXTRACT(EPOCH FROM (current_timestamp - lukittu)) > 300));
+-- name: hae-maksueran-ja-kustannussuunnitelman-tilat
+-- Hakee maksueran ja kustannussuunnitelman tilat
+SELECT
+  m.tila      AS maksuera_tila,
+  m.lahetetty AS maksuera_lahetetty,
+  k.tila      AS kustannussuunnitelma_tila,
+  k.lahetetty AS kustannussuunnitelma_lahetetty
+FROM maksuera m
+  JOIN kustannussuunnitelma k ON k.maksuera = m.numero
+WHERE m.numero = :numero;
 
 
 -- name: hae-maksueranumero-lahetys-idlla
@@ -244,6 +263,13 @@ WHERE numero = :numero AND (lukko IS NULL OR
 SELECT numero
 FROM maksuera
 WHERE lahetysid = :lahetysid;
+
+-- name: lukitse-maksuera!
+-- Lukitsee maksuerän lähetyksen ajaksi
+UPDATE maksuera
+SET lukko = :lukko, lukittu = current_timestamp
+WHERE numero = :numero AND (lukko IS NULL OR
+                            (EXTRACT(EPOCH FROM (current_timestamp - lukittu)) > 300));
 
 
 -- name: merkitse-maksuera-odottamaan-vastausta!

@@ -37,5 +37,3 @@
     (is (= (count (filter #(= :sakko (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :indeksi (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :muu (:tyyppi (:maksuera %))) maksuerat)) 2))))
-
-

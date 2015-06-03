@@ -67,5 +67,5 @@
    "Maksuerät"
    :maksuerat
    ^{:key "maksuerat"}
-    [maksuerat/maksuerat ur]
+    [maksuerat/maksuerat-listaus ur]
    ]))

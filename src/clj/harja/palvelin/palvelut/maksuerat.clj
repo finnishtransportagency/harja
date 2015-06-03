@@ -19,7 +19,7 @@
 
     (julkaise-palvelu (:http-palvelin this)
                       :laheta-maksuerat-sampoon (fn [user maksueranumerot]
-                                                  (laheta-maksuerat-sampoon (:sampo this) user maksueranumerot)))
+                                                  (laheta-maksuerat-sampoon (:sampo this) (:db this) user maksueranumerot)))
     this)
 
   (stop [this]
@@ -27,7 +27,7 @@
     (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
     this))
 
-(def aseta-kustannussuunnitelman-tila
+(def aseta-kustannussuunnitelman-tila-xf
   (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
 
 (def aseta-tyyppi-ja-tila-xf
@@ -44,9 +44,25 @@
 
 (def maksuera-xf
   (comp (map konversio/alaviiva->rakenne)
-        aseta-kustannussuunnitelman-tila
+        aseta-kustannussuunnitelman-tila-xf
         aseta-tyyppi-ja-tila-xf
         muunna-desimaaliluvut-xf))
+
+(defn hae-maksueran-ja-kustannussuunnitelman-tilat [db maksueranumero]
+  (let [tilat (q/hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)
+        muunnetut-tilat (into []
+                              maksuera-xf
+                              tilat)]
+    (assoc (first muunnetut-tilat) :numero maksueranumero)))
+
+(defn laheta-maksuera-sampoon
+  [sampo db user maksueranumero]
+  (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
+  (let [tulos (sampo/laheta-maksuera-sampoon sampo maksueranumero)
+        tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
+    (log/debug "Maksueran (numero: " maksueranumero " lähetyksen tulos:" tulos)
+    (log/debug "Maksuerän tilat" tilat)
+    tilat))
 
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
@@ -57,19 +73,10 @@
         maksuera-xf
         (q/hae-urakan-maksuerat db urakka-id)))
 
-(defn laheta-maksuera-sampoon
-  [sampo user maksueranumero]
-  (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
-  (sampo/laheta-maksuera-sampoon sampo maksueranumero))
-
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon. Ei vaadi erillisoikeuksia."
-  [sampo user maksueranumerot]
-  (into {}
-        (mapv (fn [maksueranumero]
-                [maksueranumero
-                 (let [tulos (laheta-maksuera-sampoon sampo user maksueranumero)]
-                   (log/debug "Maksueran (numero: " maksueranumero " lähetyksen tulos:" tulos)
-                   tulos)])
-              maksueranumerot)))
+  [sampo db user maksueranumerot]
+  (mapv (fn [maksueranumero]
+          (laheta-maksuera-sampoon sampo db user maksueranumero))
+        maksueranumerot))
 
