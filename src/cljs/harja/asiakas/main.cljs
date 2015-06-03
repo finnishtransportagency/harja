@@ -19,7 +19,7 @@
   (reagent/render [main-view/main] (.getElementById js/document "app")))
 
 (defn ^:export harja []
-  (ymparisto/alusta {:on-reload render})
+  (ymparisto/alusta {:on-reload #(reagent/render [#'main-view/main] (.getElementById js/document "app"))})
   (render)
 
   ;; Jotkut komponentit haluavat body klikkauksia kuunnella
