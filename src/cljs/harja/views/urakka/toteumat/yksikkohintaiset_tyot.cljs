@@ -127,8 +127,11 @@
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "25%"}]
-        (sort (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka))) @tehtavat-toimenpiteittain)]])
-))
+        (sort
+          (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
+              (filter
+                (fn [rivi] (= (:tyyppi rivi) "yksikkohintainen"))
+                @tehtavat-toimenpiteittain))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -175,7 +178,7 @@
                                                                                                                                       (:maara tehtava)
                                                                                                                                       0))
                                                                                                                                   (:tehtavat toteuma)))
-                                                                                                                           @toteumat)))))
+                                                                                                                           (filter (fn [toteuma] (= (:tyyppi toteuma) "yksikkohintainen")) @toteumat))))))
                                                          @rivit)))
         lisaa-riveille-toteutuneet-kustannukset (fn [] (reset! rivit
                                                        (map
