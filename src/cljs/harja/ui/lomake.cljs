@@ -53,6 +53,7 @@
                       :horizontal "form-horizontal"
                       :default "")}
        (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
+                      (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                       (let [kentan-virheet (get @virheet nimi)]
                         ^{:key (:nimi kentta)}
                         [:div.form-group
