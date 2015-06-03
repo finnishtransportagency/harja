@@ -118,20 +118,17 @@
         tehtavat-toimenpiteittain (atom nil)]
     (go (do (reset! tehtavat-toimenpiteittain (<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))))
         (log "SÄSÄ tehtävät-toteumittain " (pr-str @tehtavat-toimenpiteittain)))
+    
     (fn [rivi]
       [:div.tehtavat-toteumittain
-       [:table
-        [:thead
-         [:tr
-          [:th "Päivämäärä"]
-          [:th "Määrä"]
-          [:th "Suorittaja"]
-          [:th "Lisätieto"]]]
-         (map (fn [rivi] [:tr
-                          [:td (pvm/pvm-aika (:alkanut rivi))]
-                          [:td (:maara rivi)]
-                          [:td (:suorittajan_nimi rivi)]
-                          [:td (:lisatieto rivi)]]) @tehtavat-toimenpiteittain)]])))
+       [grid/grid
+        {:tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
+        [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :komponentti :komponentti (fn [rivi] (pvm/pvm-aika (:alkanut rivi))) :leveys "25%"}
+         {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+         {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
+         {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "25%"}]
+        @tehtavat-toimenpiteittain]])
+))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -215,7 +212,7 @@
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) @rivit))} ; FIXME Vetolaatikot ei toimi :(
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) @rivit))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
