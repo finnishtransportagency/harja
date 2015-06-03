@@ -48,7 +48,7 @@ VALUES (:toteuma, :materiaalikoodi, :maara, NOW())
 
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla
-SELECT t.id, t.alkanut, SUM(tt.maara) as maara
+SELECT t.id, t.alkanut, t.suorittajan_nimi, t.suorittajan_ytunnus, t.lisatieto, SUM(tt.maara) as maara
   FROM toteuma t JOIN toteuma_tehtava tt ON tt.toteuma=t.id
  WHERE (t.alkanut >= :alkupvm AND t.alkanut <= :loppupvm)
        AND toimenpidekoodi = :toimenpidekoodi

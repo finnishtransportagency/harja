@@ -114,22 +114,24 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-        toimenpidekoodi (:koodi rivi)
-        tehtavat-toimenpiteittain (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi)
-        testidata [{:alkanut "11.6.1998" :maara 10 :suorittaja "Teppo" :lisatieto "Lisätietoja..."}
-                   {:alkanut "11.6.1998" :maara 4 :suorittaja "Matti" :lisatieto "Lisätietoja..."}]]
-    [:div.tehtavat-toteumittain
-     [:table
-      [:tr
-       [:td "Päivämäärä"]
-       [:td "Määrä"]
-       [:td "Suorittaja"]
-       [:td "Lisätieto"]]
-      (map (fn [rivi] [:tr
-                   [:td (:alkanut rivi)]
-                   [:td (:maara rivi)]
-                   [:td (:suorittaja rivi)]
-                   [:td (:lisatieto rivi)]]) testidata)]]))
+        toimenpidekoodi (:id rivi)
+        tehtavat-toimenpiteittain (atom nil)]
+    (go (do (reset! tehtavat-toimenpiteittain (<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))))
+        (log "SÄSÄ tehtävät-toteumittain " (pr-str @tehtavat-toimenpiteittain)))
+    (fn [rivi]
+      [:div.tehtavat-toteumittain
+       [:table
+        [:thead
+         [:tr
+          [:th "Päivämäärä"]
+          [:th "Määrä"]
+          [:th "Suorittaja"]
+          [:th "Lisätieto"]]]
+         (map (fn [rivi] [:tr
+                          [:td (pvm/pvm-aika (:alkanut rivi))]
+                          [:td (:maara rivi)]
+                          [:td (:suorittajan_nimi rivi)]
+                          [:td (:lisatieto rivi)]]) @tehtavat-toimenpiteittain)]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
