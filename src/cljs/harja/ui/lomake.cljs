@@ -45,7 +45,7 @@
                       :horizontal "form-horizontal"
                       :default "")}
       (doall
-        (for [{:keys [muokattava? fmt hae nimi] :as kentta} skeema
+        (for [{:keys [muokattava? fmt hae nimi] :as kentta} (keep identity skeema)
               :let [kentan-virheet (get @virheet nimi)]]
           ^{:key (:nimi kentta)}
           [:div.form-group
