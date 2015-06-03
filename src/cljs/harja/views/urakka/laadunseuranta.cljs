@@ -18,7 +18,7 @@
    "Tarkastukset" :tarkastukset
    [tarkastukset/tarkastukset]
 
-   "Havainnot" :havainnot
+   "Havainnot" :havainnot 
    [havainnot/havainnot]
 
    "Reklamaatiot ja sanktiot" :sanktiot
