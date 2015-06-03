@@ -35,7 +35,7 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         toteuma-xf
-        (q/listaa-urakan-tehtavat-toteumittain db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) toimenpidekoodi)))
+        (q/listaa-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
