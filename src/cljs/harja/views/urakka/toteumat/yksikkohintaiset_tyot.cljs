@@ -118,7 +118,7 @@
         tehtavat-toimenpiteittain (atom nil)]
     (go (do (reset! tehtavat-toimenpiteittain (<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))))
         (log "SÄSÄ tehtävät-toteumittain " (pr-str @tehtavat-toimenpiteittain)))
-    
+
     (fn [rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
@@ -221,7 +221,10 @@
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Kustannuserotus" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+           {:otsikko "Kustannuserotus" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
+                     (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
+                                  [:span.kustannuserotus.kustannuserotus-positiivinen (:kustannuserotus rivi)]
+                                  [:span.kustannuserotus.kustannuserotus-negatiivinen (:kustannuserotus rivi)])) :leveys "20%"}]
           (filter
             (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
             @rivit)]
