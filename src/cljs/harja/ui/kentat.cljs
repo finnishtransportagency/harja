@@ -5,6 +5,7 @@
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta]]
             [harja.ui.protokollat :refer [hae]]
+            [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [clojure.string :as str]
             [cljs.core.async :refer [<!]])
@@ -112,12 +113,27 @@
            :max-length pituus-max}])
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
-(defmethod tee-kentta :text [{:keys [nimi koko on-focus lomake?]} data]
-  [:textarea {:value @data
-              :on-chage #(reset! data (-> % .-target .-value))
-              :on-focus on-focus
-              :cols (or (some-> koko first) 80)
-              :rows (or (some-> koko second) 5)}])
+(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake?]} data]
+  (let [[koko-sarakkeet koko-rivit] koko
+        rivit (atom (if (= :auto koko-rivit)
+                      2
+                      koko-rivit))]
+    (komp/luo
+     (when (= koko-rivit :auto)
+       {:component-did-update
+        (fn [this _]
+          (let [n (r/dom-node this)]
+            (let [erotus (- (.-scrollHeight n) (.-clientHeight n))]
+              (when (> erotus 0)
+                (swap! rivit + (/ erotus 19))))))})
+     
+     (fn [{:keys [nimi koko on-focus lomake?]} data]
+       [:textarea {:value @data
+                   :on-change #(reset! data (-> % .-target .-value))
+                   :on-focus on-focus
+                   :cols (or koko-sarakkeet 80)
+                   :rows @rivit
+                   :placeholder placeholder}]))))
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
