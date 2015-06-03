@@ -80,7 +80,7 @@
 (defn hae-urakan-maksuerat [urakka]
   (go
     (log (str "Urakan id: " (:id urakka)))
-    (reset! maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id urakka))))))
+    (reset! maksuerat (sort-by :numero (<! (maksuerat/hae-urakan-maksuerat (:id urakka)))))))
 
 (defn rakenna-paivittyneet-maksuerat [paivittyneiden-maksuerien-tilat]
   (mapv (fn [uusi-maksuera]
