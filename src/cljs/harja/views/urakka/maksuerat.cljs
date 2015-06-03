@@ -56,6 +56,11 @@
     :muu 8
     9))
 
+(defn hae-urakan-maksuerat [urakka]
+  (go
+    (log (str "Urakan id: " (:id urakka)))
+    (sort-by :numero (<! (maksuerat/hae-urakan-maksuerat (:id urakka))))))
+
 (defn ryhmittele-maksuerat [rivit]
   (let [otsikko (fn [rivi] (tyyppi-enum->string-plural (:tyyppi (:maksuera rivi))))
         otsikon-mukaan (group-by otsikko (sort-by #(sorttausjarjestys (:tyyppi (:maksuera %))) rivit))]
@@ -64,23 +69,23 @@
                    (seq otsikon-mukaan)))))
 
 (def urakka-id (atom nil))
-(def maksuerat (atom nil))
+(def maksuerat (reaction<! (hae-urakan-maksuerat @nav/valittu-urakka)))
 (def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat)))
-(def kuittausta-odottavat-maksuerat (reaction (into #{}
-                                                    (mapv
-                                                      (fn [rivi] (:numero rivi))
-                                                      (filter
-                                                        (fn [rivi]
-                                                          (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
-                                                              (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
-                                                        @maksuerat)))))
+(defn rakenna-kuittausta-odottavat-maksuerat []
+  (into #{}
+        (mapv
+          (fn [rivi] (:numero rivi))
+          (filter
+            (fn [rivi]
+              (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
+                  (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
+            @maksuerat))))
+
+(def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat)))
+(def pollaus-id (atom nil))
+(def pollataan-kantaa? (atom false))
 
 (declare aloita-pollaus)
-
-(defn hae-urakan-maksuerat [urakka]
-  (go
-    (log (str "Urakan id: " (:id urakka)))
-    (reset! maksuerat (sort-by :numero (<! (maksuerat/hae-urakan-maksuerat (:id urakka)))))))
 
 (defn rakenna-paivittyneet-maksuerat [paivittyneiden-maksuerien-tilat]
   (mapv (fn [uusi-maksuera]
@@ -113,21 +118,18 @@
                 ; Poistaa lahetyksessa-setistä ne numerot, jotka lähetettiin tässä pyynnössä
                 (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))))))
 
-(def pollaus-id (atom nil))
-(def pollataan-kantaa? (atom false))
-
 (defn lopeta-pollaus []
   (reset! pollataan-kantaa? false)
   (log (str "Kannan pollaus lopetettiin. Pollaus-id: " (pr-str @pollaus-id)))
   (js/clearInterval @pollaus-id) (reset! pollaus-id nil))
 
 (defn pollaa-kantaa
-  "Jos tiedossa on lähetyksessä olevia maksueriä, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
+  "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
   []
   (if (not (empty? @kuittausta-odottavat-maksuerat))
     (do
       (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
-      (hae-urakan-maksuerat @urakka-id))
+      (go (reset! maksuerat (<! (hae-urakan-maksuerat @urakka-id)))))
     (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
         (lopeta-pollaus))))
 
@@ -137,9 +139,9 @@
   (if (false? @pollataan-kantaa?) (do
                                     (reset! pollataan-kantaa? true)
                                     (reset! pollaus-id (js/setInterval pollaa-kantaa 10000))
-                                    (log (str "Alettiin pollaamaan kantaa tietyn ajan välein. Pollaus-id: " (pr-str @pollaus-id))))))
+                                    (log (str "Aloitettiin pollaus 10s välein. Pollaus-id: " (pr-str @pollaus-id))))))
 
-(defn tilan-naytto [tila lahetetty]
+(defn nayta-tila [tila lahetetty]
   (case tila
     :odottaa_vastausta [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
     :lahetetty [:span.maksuera-lahetetty (if (not (nil? lahetetty))
@@ -176,9 +178,9 @@
             :komponentti (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
            {:otsikko "Maksueran tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi]
-                           (tilan-naytto (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
+                           (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
-            :komponentti (fn [rivi] (tilan-naytto (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
+            :komponentti (fn [rivi] (nayta-tila (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (let [maksueranumero (:numero rivi)]
