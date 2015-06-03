@@ -101,6 +101,14 @@
            :value @data
            :max-length pituus-max}])
 
+;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
+(defmethod tee-kentta :text [{:keys [nimi koko on-focus lomake?]} data]
+  [:textarea {:value @data
+              :on-chage #(reset! data (-> % .-target .-value))
+              :on-focus on-focus
+              :cols (or (some-> koko first) 80)
+              :rows (or (some-> koko second) 5)}])
+
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
     (r/create-class
