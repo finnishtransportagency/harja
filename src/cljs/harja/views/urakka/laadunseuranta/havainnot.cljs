@@ -6,6 +6,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
+            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -112,6 +113,7 @@
       :tekija "Sami Sanktioija"
       :kommentit [{:pvm (pvm/->pvm-aika "22.3.2015 11:07")
                    :tekija "Sami Sanktioija"
+                   :rooli :tilaaja
                    :kommentti "Vt 20 Kuusamontien risteyksessä on täysin jätetty auraamatta. Nyt 30cm lunta ja polanteet hyvin vaarallisia."}]
       :sanktiot {1 {:perintapvm (pvm/->pvm "8.4.2014")
                     :ryhma :A
@@ -137,11 +139,21 @@
 
      ]]])
 
-(defn kommentit [kommentit]
-  [:ul.kommentit
-   (for [{:keys [pvm tekija kommentti]} kommentit]
-     ^{:key (pvm/millisekunteina pvm)}
-     [:li [:b (pvm/pvm-aika pvm) " " tekija] ": " kommentti])])
+(defn kommentit [{:keys [kommentoi!]} kommentit]
+  (let [uusi-kommentti (atom "")]
+    (fn [{:keys [kommentoi!]} kommentit]
+      [:div.kommentit
+       (for [{:keys [pvm tekija kommentti rooli]} kommentit]
+         ^{:key (pvm/millisekunteina pvm)}
+         [:div.kommentti {:class (when rooli (name rooli))}
+          [:span.kommentin-tekija tekija]
+          [:span.kommentin-aika (pvm/pvm-aika pvm)]
+          [:div.kommentin-teksti kommentti]])
+       (when kommentoi!
+         [kentat/tee-kentta {:tyyppi :text :nimi :teksti
+                             :placeholder "Kirjoita uusi kommentti..."
+                             :koko [80 :auto]}
+          uusi-kommentti])])))
 
 
 (defn paatos?
@@ -159,119 +171,136 @@
         (log "UUSI havainto: " havainto))}
      
      (fn [alkuperainen]
-       [:div.havainto
-        [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto nil)}
-         (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
+       (let [muokattava? (constantly (not (paatos? alkuperainen)))]
+         [:div.havainto
+          [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto nil)}
+           (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
 
-        [:h3 "Havainnon tiedot"]
-        [lomake/lomake
-         {:muokkaa! #(reset! havainto %)
-          :luokka :horizontal
-          :footer [:button.nappi-ensisijainen {:on-click #(log (pr-str @havainto))}
-                   ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
-                   ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
+          [:h3 "Havainnon tiedot"]
+          [lomake/lomake
+           {:muokkaa! #(reset! havainto %)
+            :luokka :horizontal
+            :footer [:button.nappi-ensisijainen {:on-click #(log (pr-str @havainto))}
+                     ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
+                     ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
          
-                   (cond
-                    (and (not (paatos? alkuperainen))
-                         (paatos? @havainto))
-                    "Lukitse havainnon päätös"
+                     (cond
+                      (and (not (paatos? alkuperainen))
+                           (paatos? @havainto))
+                      "Tallenna ja lukitse havainto"
           
-                    :default
-                    "Tallenna havainto")]}
-         [{:otsikko "Tekija" :nimi :tekijarooli
-           :tyyppi :valinta
-           :valinnat [:tilaaja :urakoitsija :konsultti]
-           :valinta-nayta #(case %
-                             :tilaaja "Tilaaja"
-                             :urakoitsija "Urakoitsija"
-                             :konsultti "Konsultti")
-           :leveys-col 4}
-
-          {:otsikko "Kohde" :tyyppi :string :nimi :kohde
-           :leveys-col 4}
-
-          {:otsikko "Kuvaus ja kommentit" :nimi :kommentit
-           :komponentti [kommentit (:kommentit havainto)]}
-
-          (lomake/ryhma
-           "Käsittely ja päätös"
-           
-           {:otsikko "Käsittelyn pvm"
-            :nimi :paatos-pvm :hae (comp :pvm :paatos)
-            :tyyppi :pvm-aika}
-           
-           {:otsikko "Käsitelty" :nimi :kasittelytapa
-            :hae (comp :kasittelytapa :paatos)
-            :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
-            :tyyppi :valinta
-           :valinnat [:tyomaakokous :puhelin :kommentit :muu]
-            :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                      :default
+                      "Tallenna havainto")]}
+           [
+            {:otsikko "Havainnon pvm ja aika"
+             :tyyppi :pvm-aika
+             :nimi :pvm}
             
-            :leveys-col 4}
+            {:otsikko "Tekija" :nimi :tekijarooli
+             :tyyppi :valinta
+             :valinnat [:tilaaja :urakoitsija :konsultti]
+             :valinta-nayta #(case %
+                               :tilaaja "Tilaaja"
+                               :urakoitsija "Urakoitsija"
+                               :konsultti "Konsultti")
+             :leveys-col 4
+             :muokattava? muokattava?}
+
+            {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+             :leveys-col 4
+             :muokattava? muokattava?}
+
+            {:otsikko "Kuvaus ja kommentit" :nimi :kommentit
+             :komponentti [:div.col-md-6
+                           [kommentit {:kommentoi! (when muokattava? #(log "kommentoit: " (pr-str %)))}
+                            (:kommentit @havainto)]]}
+
+            ;; Päätös
+          
+            (lomake/ryhma
+               "Käsittely ja päätös"
            
-           (when (= :muu (:kasittelytapa (:paatos @havainto)))
-             {:otsikko "Muu käsittelytapa"
-              :nimi :kasittelytapa-selite
-              :hae (comp :kasittelytapa-selite :paatos)
-             :aseta #(assoc-in %1 [:paatos :kasittelytapa-selite] %2)
-              :tyyppi :string
-              :leveys-col 4
-              :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
+               {:otsikko "Käsittelyn pvm"
+                :nimi :paatos-pvm :hae (comp :pvm :paatos)
+                :tyyppi :pvm-aika
+                :muokattava? muokattava?}
+           
+               {:otsikko "Käsitelty" :nimi :kasittelytapa
+                :hae (comp :kasittelytapa :paatos)
+                :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
+                :tyyppi :valinta
+                :valinnat [:tyomaakokous :puhelin :kommentit :muu]
+                :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                :leveys-col 4
+                :muokattava? muokattava?}
+           
+               (when (= :muu (:kasittelytapa (:paatos @havainto)))
+                 {:otsikko "Muu käsittelytapa"
+                  :nimi :kasittelytapa-selite
+                  :hae (comp :kasittelytapa-selite :paatos)
+                  :aseta #(assoc-in %1 [:paatos :kasittelytapa-selite] %2)
+                  :tyyppi :string
+                  :leveys-col 4
+                  :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]
+                  :muokattava? muokattava?})
 
 
-           {:otsikko "Päätös"
-            :nimi :paatos-paatos
-            :tyyppi :valinta
-            :valinnat [:sanktio :ei-sanktiota :hylatty]
-            :hae (comp :paatos :paatos)
-            :aseta #(assoc-in %1 [:paatos :paatos] %2)
-            :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
-            :leveys-col 4}
+               {:otsikko "Päätös"
+                :nimi :paatos-paatos
+                :tyyppi :valinta
+                :valinnat [:sanktio :ei-sanktiota :hylatty]
+                :hae (comp :paatos :paatos)
+                :aseta #(assoc-in %1 [:paatos :paatos] %2)
+                :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
+                :leveys-col 4
+                :muokattava? muokattava?}
 
-           (when (:paatos (:paatos @havainto))
-             {:otsikko "Päätöksen selitys"
-              :nimi :paatoksen-selitys
-              :tyyppi :text
-              :hae (comp :selitys :paatos)
-              :koko [80 4]
-              :leveys-col 6
-              :aseta #(assoc-in %1 [:paatos :selitys] %2)})
+               (when (:paatos (:paatos @havainto))
+                 {:otsikko "Päätöksen selitys"
+                  :nimi :paatoksen-selitys
+                  :tyyppi :text
+                  :hae (comp :selitys :paatos)
+                  :koko [80 4]
+                  :leveys-col 6
+                  :aseta #(assoc-in %1 [:paatos :selitys] %2)
+                  :muokattava? muokattava?})
 
 
-           (when (= :sanktio (:paatos (:paatos @havainto)))
-             {:otsikko "Sanktiot"
-              :nimi :sanktiot
-              :komponentti [:div.sanktiot
-                            [grid/muokkaus-grid
-                             {:tyhja "Ei kirjattuja sanktioita."
-                              :lisaa-rivi " Lisää sanktio"}
-                             [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys "20%"}
-                              {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys "25%"
-                               :nimi :ryhma
-                               :valinnat [:A :B :C :muistutus]
-                               :valinta-nayta #(case %
-                                                 :A "Ryhmä A"
-                                                 :B "Ryhmä B"
-                                                 :C "Ryhmä C"
-                                                 :muistutus "Muistutus"
-                                                 "- valitse ryhmä -")}
-                              {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys "15%"}
-                              {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys "35%"
-                               :tyyppi :valinta
-                               :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-                               :valinta-nayta #(or % "Ei sidota indeksiin")}
-                              ]
+               (when (= :sanktio (:paatos (:paatos @havainto)))
+                 ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
+                 {:otsikko "Sanktiot"
+                  :nimi :sanktiot
+                  :komponentti [:div.sanktiot
+                                [grid/muokkaus-grid
+                                 {:tyhja "Ei kirjattuja sanktioita."
+                                  :lisaa-rivi " Lisää sanktio"}
+                                 [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys "20%"}
+                                  {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys "25%"
+                                   :nimi :ryhma
+                                   :valinnat [:A :B :C :muistutus]
+                                   :valinta-nayta #(case %
+                                                     :A "Ryhmä A"
+                                                     :B "Ryhmä B"
+                                                     :C "Ryhmä C"
+                                                     :muistutus "Muistutus"
+                                                     "- valitse ryhmä -")}
+                                  {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys "15%"}
+                                  {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys "35%"
+                                   :tyyppi :valinta
+                                   :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+                                   :valinta-nayta #(or % "Ei sidota indeksiin")}
+                                  ]
 
-                             (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
-           )]
+                                 (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
+               )]
          
-         @havainto]
+           @havainto]
 
         
         
                 
         
-        ]))))
+          ])))))
   
 
 (defn havainnot []
