@@ -28,9 +28,9 @@
                     (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))]
     (map (fn [rivi] (assoc rivi :tehtavat
                                 (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
-                                                      {:tpk-id (read-string (first splitattu))
+                                                      {:tpk-id (Integer/parseInt (first splitattu))
                                                        :nimi (second splitattu)
-                                                       :maara (read-string (nth splitattu 2))
+                                                       :maara (Integer/parseInt (nth splitattu 2))
                                                        }))
                                       (:tehtavat rivi))))
          rivit)))
