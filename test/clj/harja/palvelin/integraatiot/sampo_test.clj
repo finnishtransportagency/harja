@@ -22,7 +22,7 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :sonja (feikki-sonja)
-                        :sampo (component/using (->Sampo +lahetysjono+ +kuittausjono+) [:db :sonja])))))
+                        :sampo (component/using (->Sampo +lahetysjono+ +kuittausjono+ nil) [:db :sonja])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
