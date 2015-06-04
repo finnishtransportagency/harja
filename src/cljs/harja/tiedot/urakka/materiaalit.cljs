@@ -31,6 +31,10 @@
 (defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
   (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))
 
+(defn poista-toteuma-materiaaleja [urakka-id tm-idt]
+  "tm-idt voi olla yksittäinen arvo, tai useampi arvo vektorissa []"
+  (k/post! :poista-toteuma-materiaali! {:urakka urakka-id :id tm-idt}))
+
 (defn hae-urakan-materiaalit [urakka-id]
   (let [ch (chan)]
     (go (>! ch (into []

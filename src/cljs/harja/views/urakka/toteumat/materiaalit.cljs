@@ -57,7 +57,8 @@
 (defn poista-toteuma-materiaaleja
   [urakka]
   (fn [materiaalit]
-    ))
+    #_(log (pr-str materiaalit))
+    (materiaali-tiedot/poista-toteuma-materiaaleja urakka (map :tmid materiaalit))))
 
 #_(def materiaalikoodit (->>
                         @(materiaali-tiedot/hae-materiaalikoodit)
