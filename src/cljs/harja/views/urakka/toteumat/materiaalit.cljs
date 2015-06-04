@@ -54,6 +54,11 @@
                               (map #(dissoc % :kohdistettava)))
                             @(materiaali-tiedot/hae-materiaalikoodit))))
 
+(defn poista-toteuma-materiaaleja
+  [urakka]
+  (fn [materiaalit]
+    ))
+
 #_(def materiaalikoodit (->>
                         @(materiaali-tiedot/hae-materiaalikoodit)
                         (map #(dissoc % :urakkatyyppi))
@@ -174,11 +179,16 @@
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja   (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           :rivi-klikattu #(reset! valittu-materiaalin-kaytto %)}
+           :rivi-klikattu #(reset! valittu-materiaalin-kaytto %)
+           :tallenna (poista-toteuma-materiaaleja urakan-id)
+           :voi-lisata? false}
 
-          [{:otsikko "Aloitus" :tyyppi :pvm :nimi :aloitus :hae (comp pvm/pvm :alkanut :toteuma) :leveys "30%"}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :lopetus :hae (comp pvm/pvm :paattynyt :toteuma) :leveys "30%"}
-           {:otsikko "Määrä" :nimi :toteuman_maara :hae (comp :maara :toteuma) :leveys "40%"}]
+          [{:otsikko "Aloitus" :tyyppi :pvm :nimi :aloitus
+            :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
+           {:otsikko "Lopetus" :tyyppi :pvm :nimi :lopetus :hae (comp pvm/pvm :paattynyt :toteuma)
+            :muokattava? (constantly false)}
+           {:otsikko "Määrä" :nimi :toteuman_maara :hae (comp :maara :toteuma)
+            :muokattava? (constantly false)}]
           @tiedot]]))))
 
 (defn materiaalit-paasivu
