@@ -16,7 +16,7 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 SELECT DISTINCT date_trunc('day', alkanut) as paiva
   FROM toteuma
  WHERE urakka = :urakka AND sopimus = :sopimus
-   AND alkanut >= :alkupvm AND paattynyt <= :loppupvm
+   AND alkanut >= :alkupvm AND paattynyt <= :loppupvm;
 
 -- name: hae-urakan-tehtavat
 -- Hakee tehtävät, joita annetulle urakalle voi kirjata.
@@ -52,7 +52,7 @@ SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.l
        AND toimenpidekoodi = :toimenpidekoodi
        AND urakka = :urakka
        AND sopimus = :sopimus
- GROUP BY t.id
+ GROUP BY t.id;
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset
@@ -60,7 +60,7 @@ SELECT id, tyyppi, sopimus, toimenpideinstanssi, pvm,
        rahasumma, indeksin_nimi, lisatieto, luotu, luoja
   FROM erilliskustannus
  WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = :urakka)
-   AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu = false
+   AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu = false;
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
@@ -69,7 +69,7 @@ INSERT
        (tyyppi, sopimus, toimenpideinstanssi, pvm,
        rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
 VALUES (:tyyppi::erilliskustannustyyppi, :sopimus, :toimenpideinstanssi, :pvm,
-       :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja)
+       :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja);
 
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
@@ -77,4 +77,4 @@ UPDATE erilliskustannus
    SET tyyppi = :tyyppi::erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi, pvm = :pvm,
        rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja,
        poistettu = :poistettu
- WHERE id = :id
+ WHERE id = :id;
