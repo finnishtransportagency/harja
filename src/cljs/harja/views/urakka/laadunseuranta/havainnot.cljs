@@ -8,11 +8,14 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
+            [harja.ui.liitteet :as liitteet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
+
+            [clojure.string :as str]
             )
   (:require-macros [reagent.ratom :refer [reaction]]))
 
@@ -129,7 +132,13 @@
       :kommentit [{:pvm (pvm/luo-pvm 2015 1 25)
                    :rooli :urakoitsija
                    :tekija "Unto Urakoistija"
-                   :kommentti "Emme voineet aurata tie 123, alusta, tiellä oli pysähtynyt yhdistelmärekka. Katso kuvat!"}
+                   :kommentti "Emme voineet aurata tie 123, alusta, tiellä oli pysähtynyt yhdistelmärekka. Katso kuvat!"
+                   :liitteet [{:nimi "rekka_kaatui.jpg"
+                               :koko 70272
+                               :tyyppi "image/jpeg"
+                               :pikkukuva-url "/images/rekka_kaatui_thumbnail.jpg"
+                               :url "/images/rekka_kaatui.jpg"}]}
+                  
                   {:pvm (pvm/luo-pvm 2015 1 27)
                    :rooli :tilaaja
                    :tekija "Antti Anteeksiantava"
@@ -143,17 +152,31 @@
   (let [uusi-kommentti (atom "")]
     (fn [{:keys [kommentoi!]} kommentit]
       [:div.kommentit
-       (for [{:keys [pvm tekija kommentti rooli]} kommentit]
+       (for [{:keys [pvm tekija kommentti rooli liitteet]} kommentit]
          ^{:key (pvm/millisekunteina pvm)}
          [:div.kommentti {:class (when rooli (name rooli))}
           [:span.kommentin-tekija tekija]
           [:span.kommentin-aika (pvm/pvm-aika pvm)]
-          [:div.kommentin-teksti kommentti]])
+          [:div.kommentin-teksti kommentti]
+          (when-not (empty? liitteet)
+            [:div.kommentin-liitteet
+             (for [{:keys [nimi tyyppi pikkukuva-url url]} liitteet]
+               [:span
+                [:img.pikkukuva {:src pikkukuva-url}]
+                [:a {:target "_blank" :href url} nimi]])])
+          ])
        (when kommentoi!
-         [kentat/tee-kentta {:tyyppi :text :nimi :teksti
-                             :placeholder "Kirjoita uusi kommentti..."
-                             :koko [80 :auto]}
-          uusi-kommentti])])))
+         [:div.uusi-kommentti
+          [kentat/tee-kentta {:tyyppi :text :nimi :teksti
+                              :placeholder "Kirjoita uusi kommentti..."
+                              :koko [80 :auto]}
+           uusi-kommentti]
+          [:button.nappi-ensisijainen.pull-right
+           {:on-click #(kommentoi! @uusi-kommentti)
+            :disabled (str/blank? @uusi-kommentti)}
+           "Tallenna kommentti"]
+          [liitteet/liite]]
+          )])))
 
 
 (defn paatos?
@@ -192,6 +215,12 @@
                       :default
                       "Tallenna havainto")]}
            [
+            {:otsikko "Toimenpide" :nimi :toimenpide
+             :tyyppi :valinta
+             :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+             :valinta-nayta :tpi_nimi
+             :leveys-col 4}
+            
             {:otsikko "Havainnon pvm ja aika"
              :tyyppi :pvm-aika
              :nimi :pvm}

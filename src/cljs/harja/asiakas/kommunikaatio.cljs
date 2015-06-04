@@ -4,15 +4,17 @@
             [cljs.core.async :refer [put! close! chan]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
-            [cognitect.transit :as t])
+            [cognitect.transit :as t]
+            [harja.loki :refer [log]])
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:import (goog.date DateTime UtcDateTime)))
 
-
+(def +polku+ (let [host (.-host js/location)]
+               (if (#{"localhost" "localhost:3000" "harja-test.solitaservices.fi"} host)
+                 "/"
+                 "/harja/")))
 (defn polku []
-  ;; FIXME: tämä on vähän ruma
-  (if (= "testiextranet.liikennevirasto.fi" (.-host js/location))
-    "/harja/_/"
-    "/_/"))
+  (str +polku+ "_/"))
 
 
 (deftype DateTimeHandler []
@@ -63,3 +65,39 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   [vastaus]
   (and (map? vastaus) (not (nil? (get vastaus :failure)))))
 
+(defn laheta-liite!
+  "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
+  Kun liite on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
+  [input-elementti]
+  (let [ch (chan)
+        xhr (doto (js/XMLHttpRequest.)
+              (.open "POST" (str +polku+ "_/tallenna-liite")))
+        siirto (.-upload xhr)
+        form-data (js/FormData.)
+        tiedostot (.-files input-elementti)]
+    (dotimes [i (.-length tiedostot)]
+      (.append form-data "liite" (aget tiedostot i)))
+
+    (set! (.-onload xhr)
+          (fn [result]
+            (log "SAATIIN VASTAUS: " xhr)
+            (put! ch {:nimi "rekka_kaatui.jpg"
+                      :pikkukuva-url "/images/rekka_kaatui_thumbnail.jpg"
+                      :tyyppi "image/jpeg"
+                      :koko 70720})
+            (close! ch)))
+
+    (set! (.-onprogress siirto)
+          (fn [e]
+            (when (.-lengthComputable e)
+              (put! ch (* 100 (/ (.-loaded e) (.-total e)))))))
+
+    (.send xhr form-data)
+    ch))
+
+
+                        
+
+
+                    
+    
