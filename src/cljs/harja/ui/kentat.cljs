@@ -243,7 +243,7 @@
         ;; picker auki?
         auki (atom false)
 
-        muuta! (fn [t]
+        muuta! (fn [data t]
                  (let [d (pvm/->pvm t)]
                    (reset! teksti t)
                    (reset! data d)))]
@@ -268,7 +268,7 @@
             [:input.pvm {:class (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus on-focus
-                         :on-change #(muuta! (-> % .-target .-value))}]
+                         :on-change #(muuta! data (-> % .-target .-value))}]
             (when @auki
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse #(do (reset! auki false)
