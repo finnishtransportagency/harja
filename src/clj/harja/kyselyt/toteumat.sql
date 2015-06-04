@@ -3,11 +3,15 @@
 SELECT t.id, t.alkanut, t.paattynyt, t.tyyppi,
   (SELECT array_agg(concat(tpk.id, '^', tpk.nimi,'^', tt.maara)) FROM toteuma_tehtava tt
     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  WHERE tt.toteuma = t.id) as tehtavat FROM toteuma t WHERE
+  WHERE tt.toteuma = t.id
+        AND tt.poistettu is not true)
+    as tehtavat
+FROM toteuma t WHERE
     urakka = :urakka
     AND sopimus = :sopimus
     AND alkanut >= :alkupvm
     AND paattynyt <= :loppupvm
+    AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 
 
@@ -15,8 +19,11 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 -- Hakee päivät tietyllä aikavälillä, jolle urakalla on toteumia.
 SELECT DISTINCT date_trunc('day', alkanut) as paiva
   FROM toteuma
- WHERE urakka = :urakka AND sopimus = :sopimus
-   AND alkanut >= :alkupvm AND paattynyt <= :loppupvm;
+ WHERE urakka = :urakka
+       AND sopimus = :sopimus
+       AND alkanut >= :alkupvm
+       AND paattynyt <= :loppupvm
+       AND poistettu IS NOT true;
 
 -- name: hae-urakan-tehtavat
 -- Hakee tehtävät, joita annetulle urakalle voi kirjata.
@@ -27,22 +34,22 @@ SELECT id,nimi,yksikko FROM toimenpidekoodi
 
 -- name: paivita-toteuma!
 UPDATE toteuma
-SET alkanut=:alkanut, paattynyt=:paattynyt
+SET alkanut=:alkanut, paattynyt=:paattynyt, muokattu=NOW(), muokkaaja=:kayttaja
 WHERE id=:id AND urakka=:urakka;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
 INSERT
   INTO toteuma
-       (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu)
-VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW());
+       (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja, poistettu)
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja, false);
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
   INTO toteuma_tehtava
-       (toteuma, toimenpidekoodi, maara, luotu)
-VALUES (:toteuma, :toimenpidekoodi, :maara, NOW());
+       (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu)
+VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, false);
 
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla
@@ -52,6 +59,8 @@ SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.l
        AND toimenpidekoodi = :toimenpidekoodi
        AND urakka = :urakka
        AND sopimus = :sopimus
+       AND t.poistettu IS NOT true
+       AND tt.poistettu IS NOT true
  GROUP BY t.id;
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset

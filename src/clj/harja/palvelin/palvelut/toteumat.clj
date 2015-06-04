@@ -69,14 +69,15 @@
     (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
                                 (konv/sql-timestamp (:alkanut toteuma))
                                 (konv/sql-timestamp (:paattynyt toteuma))
-                                (name (:tyyppi toteuma)))
+                                (name (:tyyppi toteuma))
+                                (:id user))
           id (:id uusi)]
       ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
       (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-        (q/luo-tehtava<! c id toimenpidekoodi maara))
+        (q/luo-tehtava<! c id toimenpidekoodi maara (:id user)))
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
-        (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara))
+        (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
       
       true)))
 
@@ -130,22 +131,22 @@
                             (let [toteuma (if (and (:id t) (pos? (:id t)))
                                             (do
                                               (log/info "Pävitetään toteumaa " (:id t))
-                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t))
+                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
                                                                   (:id t) (:urakka t))
                                               t)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
-                                              (q/luo-toteuma<! c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:tyyppi t))))]
+                                              (q/luo-toteuma<! c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user))))]
                               (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
                               (doall
                                 (for [tm toteumamateriaalit]
                                   (if (and (:id tm) (pos? (:id tm)))
                                     (do
                                       (log/info "Päivitä materiaalitoteuma " (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:id toteuma))
-                                      (materiaalit-q/paivita-toteuma-materiaali! c (:materiaalikoodi tm) (:maara tm) (:toteuma (:id toteuma)) (:id tm)))
+                                      (materiaalit-q/paivita-toteuma-materiaali! c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm)))
                                     (do
                                       (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:id toteuma))
-                                      (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm))))))
+                                      (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
                               (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka t)))))
 
 (defrecord Toteumat []

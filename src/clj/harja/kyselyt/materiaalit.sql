@@ -15,7 +15,7 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
        LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
        LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
  WHERE mk.urakka = :urakka AND
-       poistettu = false;
+       mk.poistettu = false;
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
@@ -30,6 +30,8 @@ FROM materiaalikoodi m
   INNER JOIN toteuma_materiaali tm ON tm.materiaalikoodi = m.id
   LEFT JOIN toteuma t ON t.id = tm.toteuma
 WHERE mk.poistettu IS NOT true AND
+      t.poistettu IS NOT true AND
+      tm.poistettu IS NOT true AND
       t.urakka = :urakka;
 
 -- name: hae-urakan-toteumat-materiaalille
@@ -45,7 +47,9 @@ FROM toteuma t
   LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
 WHERE t.urakka = :urakka AND
       m.id = :materiaali AND
-      mk.poistettu IS NOT true;
+      mk.poistettu IS NOT true AND
+      t.poistettu IS NOT true AND
+      tm.poistettu IS NOT true;
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT m.nimi as toteumamateriaali_materiaali_nimi, m.yksikko as toteumamateriaali_materiaali_yksikko, tm.maara as toteumamateriaali_maara,
@@ -54,14 +58,16 @@ FROM toteuma_materiaali tm
   LEFT JOIN toteuma t ON t.id = tm.toteuma
   LEFT JOIN materiaalikoodi m ON tm.materiaalikoodi = m.id
 WHERE t.id = :toteuma_id AND
-    t.urakka = :urakka_id;
+    t.urakka = :urakka_id AND
+    t.poistettu IS NOT true AND
+    tm.poistettu IS NOT true;
 
 -- name: luo-materiaalinkaytto<!
 -- Luo uuden materiaalin käytön
 INSERT
 INTO materiaalin_kaytto
-(alkupvm, loppupvm, maara,  materiaali,  urakka,  sopimus,    luotu, luoja,     poistettu)
-VALUES (:alku,   :loppu,   :maara, :materiaali, :urakka, :sopimus, NOW(), :kayttaja, false);
+(alkupvm, loppupvm, maara,  materiaali,  urakka,  sopimus, pohjavesialue,   luotu, luoja,     poistettu)
+VALUES (:alku,   :loppu,   :maara, :materiaali, :urakka, :sopimus, :pohjavesialue, NOW(), :kayttaja, false);
 
 -- name: paivita-materiaalinkaytto-maara!
 -- Päivittää yhden materiaalin määrän id:n perusteella
@@ -97,11 +103,11 @@ UPDATE materiaalin_kaytto
 -- Luo uuden materiaalin toteumalle
 INSERT
 INTO toteuma_materiaali
-(toteuma, materiaalikoodi, maara, luotu)
-VALUES (:toteuma, :materiaalikoodi, :maara, NOW());
+(toteuma, materiaalikoodi, maara, luotu, luoja, poistettu)
+VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE );
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma_materiaalin
 UPDATE toteuma_materiaali
-SET materiaalikoodi=:materiaalikoodi, maara=:maara
+SET materiaalikoodi=:materiaalikoodi, maara=:maara, muokattu = NOW(), muokkaaja = :kayttaja
 WHERE toteuma=:toteuma AND id=:id;
