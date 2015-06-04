@@ -37,7 +37,7 @@
 (defprotocol Grid
   "Ohjausprotokolla, jolla gridin muokkaustilaa voidaan kysellä ja manipuloida."
 
-  (lisaa-rivi! [g rivin-tiedot] "Lisää muokkaustilassa uuden rivin. 
+  (lisaa-rivi! [g rivin-tiedot] "Lisää muokkaustilassa uuden rivin.
 Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (hae-muokkaustila [g] "Hakee tämänhetkisen muokkaustilan, joka on mäppi id:stä rivin tietoihin.")
@@ -49,14 +49,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   ;; PENDING: oisko "jemmaa muokkaushistoria", jolla sen saisi avaimella talteen ja otettua takaisin?
   (hae-viimeisin-muokattu-id [g] "Hakee viimeisimmän muokatun id:n")
   (muokkaa-rivit! [this funktio args] "Muokkaa kaikki taulukon rivit funktion avulla.")
-  
+
   (vetolaatikko-auki? [this id] "Tarkista onko vetolaatikko auki annetulla rivin id:llä.")
 
   (avaa-vetolaatikko! [this id] "Avaa vetolaatikko rivin id:llä.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
-    
+
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
 
@@ -413,7 +413,8 @@ Optiot on mappi optioita:
                                         rivit)
                                  (let [id ((or tunniste :id) r)]
                                    (recur (assoc muok
-                                            id r)
+                                            id (assoc r :koskematon true)
+                                            )
                                           (conj jarj id)
                                           rivit)))))
                            nil)
