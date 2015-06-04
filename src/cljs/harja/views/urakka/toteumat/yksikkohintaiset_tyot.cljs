@@ -207,7 +207,7 @@
 
     (komp/luo
       (fn []
-        [:div.yksikkohintaisten-toteumat
+        [:div#yksikkohintaisten-toteumat
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-yks-hint-toteuma {})}
