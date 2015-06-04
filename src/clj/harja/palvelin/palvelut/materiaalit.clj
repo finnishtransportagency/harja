@@ -125,7 +125,8 @@
 
 (defn poista-toteuma-materiaali!
   [db user tiedot]
-  "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen."
+  "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
+  Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla."
   [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka tiedot))

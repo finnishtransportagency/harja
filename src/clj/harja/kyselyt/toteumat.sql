@@ -20,7 +20,7 @@ SELECT tt.id as tehtava_id, tm.id as materiaali_id
 FROM toteuma t
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-WHERE t.id = :id;
+WHERE t.id IN (:id);
 
 -- name: hae-urakan-toteuma-paivat
 -- Hakee päivät tietyllä aikavälillä, jolle urakalla on toteumia.
@@ -54,7 +54,7 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), 
 -- name: poista-toteuma!
 UPDATE toteuma
 SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=true
-WHERE id=:id AND poistettu IS NOT true;
+WHERE id IN (:id) AND poistettu IS NOT true;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -66,7 +66,7 @@ VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, false);
 -- name: poista-tehtava!
 UPDATE toteuma_tehtava
 SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=true
-WHERE id=:id AND poistettu IS NOT true;
+WHERE id IN (:id) AND poistettu IS NOT true;
 
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla

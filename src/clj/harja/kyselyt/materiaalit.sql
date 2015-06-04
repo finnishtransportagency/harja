@@ -115,4 +115,4 @@ WHERE toteuma=:toteuma AND id=:id;
 -- name: poista-toteuma-materiaali!
 UPDATE toteuma_materiaali
 SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=TRUE
-WHERE id=:id AND poistettu IS NOT true;
+WHERE id IN (:id) AND poistettu IS NOT true;

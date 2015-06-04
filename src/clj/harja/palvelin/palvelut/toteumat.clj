@@ -155,16 +155,15 @@
                             (:urakka t))
   (jdbc/with-db-transaction [c db]
                             (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))]
-                              (doseq [mat-id (filter #(not (nil? %)) (map :materiaali_id mat-ja-teht))]
-                                (materiaalit-q/poista-toteuma-materiaali! c (:id user) mat-id))
-                              (doseq [teht-id (filter #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
-                                (q/poista-tehtava! c (:id user) teht-id))
+                              (materiaalit-q/poista-toteuma-materiaali!
+                                c (:id user) (filterv #(not (nil? %)) (map :materiaali_id mat-ja-teht)))
+                              (q/poista-tehtava! c (:id user) (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht)))
                               (q/poista-toteuma! c (:id user) (:id t))
                               true)))
 
 (defn poista-tehtava!
   "Poistaa toteuma-tehtävän id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
-  {:urakka X, :id Y}"
+  {:urakka X, :id [A, B, ..]}"
   [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka tiedot))
