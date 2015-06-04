@@ -54,13 +54,13 @@ SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.l
        AND sopimus = :sopimus
  GROUP BY t.id
 
--- name: listaa-urakan-erilliskustannukset
+-- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset
 SELECT id, tyyppi, sopimus, toimenpideinstanssi, pvm,
        rahasumma, indeksin_nimi, lisatieto, luotu, luoja
   FROM erilliskustannus
  WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = :urakka)
-   AND pvm >= :alkupvm AND pvm <= :loppupvm
+   AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu = false
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
@@ -75,5 +75,6 @@ VALUES (:tyyppi::erilliskustannustyyppi, :sopimus, :toimenpideinstanssi, :pvm,
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
    SET tyyppi = :tyyppi::erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi, pvm = :pvm,
-       rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja
+       rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja,
+       poistettu = :poistettu
  WHERE id = :id

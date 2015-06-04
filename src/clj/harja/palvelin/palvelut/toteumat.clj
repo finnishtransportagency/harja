@@ -99,7 +99,7 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
     erilliskustannus-xf
-    (q/listaa-urakan-erilliskustannukset db urakka-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
+    (q/listaa-urakan-hoitokauden-erilliskustannukset db urakka-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
 (defn tallenna-erilliskustannus [db user ek]
   (oik/vaadi-rooli-urakassa user
@@ -111,7 +111,8 @@
         (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user))
 
       (q/paivita-erilliskustannus! c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
-        (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user) (:id ek)))
+        (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)
+        (or (:poistettu ek) false) (:id ek)))
 
     (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
                                              :alkupvm (:alkupvm ek)

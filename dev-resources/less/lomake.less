@@ -14,3 +14,16 @@
         padding: 2px 6px;
     }
 }
+.lomake-footer{
+    button + button {
+        margin-left: @harja-nappien-valinen-etaisyys;
+        margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
+    }
+    // but override that for button groups
+    .btn-group button + button {
+        margin-left: -1px;
+    }
+    .nappi-kielteinen {
+        float: right;
+        margin-right: @harja-nappien-valinen-etaisyys}
+}

@@ -35,7 +35,7 @@
 (defmulti lomake-footer (fn [luokka footer] luokka))
 
 (defmethod lomake-footer :horizontal [_ footer]
-  [:div.form-group
+  [:div.form-group.lomake-footer
    [:div.col-sm-offset-2.col-sm-10
     footer]])
 

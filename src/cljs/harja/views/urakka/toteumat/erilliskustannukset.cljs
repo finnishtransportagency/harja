@@ -4,6 +4,7 @@
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
@@ -39,7 +40,6 @@
 (def +ei-sidota-indeksiin+
      "Ei sidota indeksiin")
 
-
 (defn tallenna-erilliskustannus [muokattu]
   (log "tallenna-erilliskustannus" (pr-str muokattu))
   (go (let [sopimus-id (first (:sopimus muokattu))
@@ -60,8 +60,6 @@
                                                     :tyyppi tyyppi
                                                     :rahasumma rahasumma
                                                     :indeksin_nimi indeksi)))]
-        (log "res " (pr-str res))
-        (log "erilliskustannukset " (pr-str @u/erilliskustannukset-hoitokaudella))
         (reset! u/erilliskustannukset-hoitokaudella res)
         true)))
 
@@ -110,7 +108,6 @@
                            :indeksin_nimi +ei-sidota-indeksiin+)))
         tallennus-kaynnissa (atom false)]
 
-    (log "erilliskustannusten-toteuman-muokkaus, valittu-kustannus: " (pr-str @valittu-kustannus))
     (komp/luo
       (fn [ur]
         [:div.erilliskustannuksen-tiedot
@@ -124,22 +121,52 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
-                  :footer   [:button.nappi-ensisijainen
-                             {:class (when @tallennus-kaynnissa "disabled")
-                              :on-click
-                                     #(do (.preventDefault %)
-                                          (reset! tallennus-kaynnissa true)
-                                          (go (let [res (<! (tallenna-erilliskustannus @muokattu))]
-                                                (if res
-                                                  ;; Tallennus ok
-                                                  (do (viesti/nayta! "Toteuma tallennettu")
-                                                      ; FIXME Pitäisikö asettaa tallennus-kaynnissa false? -Jari
-                                                      (reset! valittu-kustannus nil))
+                  :footer   [:span
+                             [:button.nappi-ensisijainen
+                              {:class (when @tallennus-kaynnissa "disabled")
+                               :on-click
+                                      #(do (.preventDefault %)
+                                           (reset! tallennus-kaynnissa true)
+                                           (go (let [res (<! (tallenna-erilliskustannus @muokattu))]
+                                                 (if res
+                                                   ;; Tallennus ok
+                                                   (do (viesti/nayta! "Kustannus tallennettu")
+                                                       (reset! tallennus-kaynnissa false)
+                                                       (reset! valittu-kustannus nil))
 
-                                                  ;; Epäonnistui jostain syystä
-                                                  (reset! tallennus-kaynnissa false)))))}
-                             "Tallenna kustannus"]
-                  }
+                                                   ;; Epäonnistui jostain syystä
+                                                   (reset! tallennus-kaynnissa false)))))}
+                              (ikonit/ok)  " Tallenna kustannus"]
+                             (when (:id @muokattu)
+                               [:button.nappi-kielteinen
+                                {:class (when @tallennus-kaynnissa "disabled")
+                                 :on-click
+                                        (fn []
+                                          (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
+                                                         :footer  [:span
+                                                                   [:button.nappi-toissijainen {:type     "button"
+                                                                                                :on-click #(do (.preventDefault %)
+                                                                                                               (modal/piilota!))}
+                                                                    "Peruuta"]
+                                                                   [:button.nappi-kielteinen {:type     "button"
+                                                                                              :on-click #(do (.preventDefault %)
+                                                                                                             (modal/piilota!)
+                                                                                                             (reset! tallennus-kaynnissa true)
+                                                                                                             (go (let [res (tallenna-erilliskustannus
+                                                                                                                             (assoc @muokattu :poistettu true))]
+                                                                                                                   (if res
+                                                                                                                     ;; Tallennus ok
+                                                                                                                     (do (viesti/nayta! "Kustannus poistettu")
+                                                                                                                         (reset! tallennus-kaynnissa false)
+                                                                                                                         (reset! valittu-kustannus nil))
+
+                                                                                                                     ;; Epäonnistui jostain syystä
+                                                                                                                     (reset! tallennus-kaynnissa false)))))}
+                                                                    "Poista kustannus"]]}
+                                            [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
+                                                    (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                    (pvm/pvm (:pvm @muokattu)) "?")]))}
+                                (ikonit/trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
             :tyyppi        :valinta :valinta-arvo identity
@@ -190,12 +217,7 @@
                     (filter #(and
                               (= sopimus-id (:sopimus %))
                               (= (:toimenpideinstanssi %) toimenpideinstanssi))
-                      @u/erilliskustannukset-hoitokaudella)))
-        muodosta-rivit (fn [] (log "muodosta rivit kutsuttu mutta ei toteutettu"))
-        _ (log " val tpi" (pr-str @u/valittu-toimenpideinstanssi))]
-
-
-    (muodosta-rivit)
+                      @u/erilliskustannukset-hoitokaudella)))]
 
     (komp/luo
       (fn []
