@@ -127,12 +127,17 @@
   []
   (let [toteumat (reaction nil) ; Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
         paivita-toteumat (fn []
-                           (go (let [urakka-id (:id @nav/valittu-urakka)
-                                                 [sopimus-id _] @u/valittu-sopimusnumero
-                                                 aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-                                         uudet-toteumat (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali))]
-                                     (if (not (= uudet-toteumat @toteumat))
-                                       (reset! toteumat {:aikavali aikavali :vastaus uudet-toteumat})))))
+                           "Päivittää toteumat, jos asetukset ovat muuttuneet ja kannassa on uutta dataa saatavilla."
+                           (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                 valittu-aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
+                             (if (or
+                                   (nil? @toteumat)
+                                   (not (= (:aikavali @toteumat) valittu-aikavali)))
+                               (go
+                                 (let [uudet-toteumat (<! (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-aikavali))]
+                                   (if (not (= uudet-toteumat @toteumat))
+                                     (reset! toteumat {:aikavali valittu-aikavali :vastaus uudet-toteumat})))))))
         hae-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
@@ -182,16 +187,16 @@
                                                rivit))
         tyorivit (reaction
                    (let [rivit (hae-nelostason-tehtavat)
-                         urakka- @nav/valittu-urakka
-                         sopimus @u/valittu-sopimusnumero
+                         valittu-urakka @nav/valittu-urakka
+                         valittu-sopimus @u/valittu-sopimusnumero
                          valittu-hoitokausi @u/valittu-hoitokausi
-                         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
+                         valittu-aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
 
                      (paivita-toteumat)
-                     ; Jos toteumia ei ole vielä saatu, ei tehdä mitään
+                     ; Jos toteumia ei ole vielä saatu valitulle hoitokaudelle, palauttaa nil.
                      ; Tämä reaction body ajetaan automaattisesti uudelleen kun toteumat saadaan.
                      (if (and (not (nil? @toteumat))
-                              (= (:aikavali @toteumat) aikavali))
+                              (= (:aikavali @toteumat) valittu-aikavali))
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
                            (lisaa-tyoriveille-suunnitellut-kustannukset valittu-hoitokausi)
