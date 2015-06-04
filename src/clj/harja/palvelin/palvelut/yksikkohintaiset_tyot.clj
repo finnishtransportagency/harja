@@ -71,5 +71,7 @@
                   (log/info "  päivittyi: " (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
                                                                                     urakka-id sopimusnumero (:tehtava tyo)
                                                                                     (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))))
+                                                                                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))
+            (log/info "Merkitään kustannussuunnitelma likaiseksi")
+            (q/merkitse-kustannussuunnitelma-likaiseksi! c urakka-id (:tehtava tyo))))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
