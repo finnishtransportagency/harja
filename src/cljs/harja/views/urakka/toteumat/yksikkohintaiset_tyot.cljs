@@ -132,8 +132,7 @@
                                                  aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
                                          uudet-toteumat (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali))]
                                      (if (not (= uudet-toteumat @toteumat))
-                                       (reset! toteumat uudet-toteumat))
-                                   (log "SÖSÖ Toteumat " (pr-str @toteumat))))))
+                                       (reset! toteumat uudet-toteumat))))))
         hae-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
@@ -190,6 +189,7 @@
                      (paivita-toteumat)
                      ; Jos toteumia ei ole vielä saatu, ei tehdä mitään
                      ; Tämä reaction body ajetaan automaattisesti uudelleen kun toteumat saadaan.
+                     ; FIXME Jos hoitokausi vaihtuu, näyttää vanhat toteumat pienen hetken ennen kuin uudet saadaan kannasta. Miten korjataan?
                      (if (not (nil? @toteumat))
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
