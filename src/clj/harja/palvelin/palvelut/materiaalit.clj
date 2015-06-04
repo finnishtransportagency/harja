@@ -5,7 +5,8 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -122,6 +123,14 @@
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi
       (hae-urakan-materiaalit c user urakka-id))))
 
+(defn poista-toteuma-materiaali!
+  [db user tiedot]
+  "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen."
+  [db user tiedot]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+                            (:urakka tiedot))
+  (q/poista-toteuma-materiaali! db (:id user) (:id tiedot)))
+
 
 (defrecord Materiaalit []
   component/Lifecycle
@@ -134,6 +143,10 @@
                       :hae-urakan-materiaalit
                       (fn [user urakka-id]
                         (hae-urakan-materiaalit (:db this) user urakka-id)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :poista-toteuma-materiaali!
+                      (fn [user tiedot]
+                        (poista-toteuma-materiaali! (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakan-toteumat-materiaalille
                       (fn [user tiedot]
@@ -162,6 +175,7 @@
                      :tallenna-urakan-materiaalit
                      :hae-urakan-toteumat-materiaalille
                      :hae-toteuman-materiaalitiedot
-                     :hae-urakassa-kaytetyt-materiaalit)
+                     :hae-urakassa-kaytetyt-materiaalit
+                     :poista-toteuma-materiaali!)
                     
     this))

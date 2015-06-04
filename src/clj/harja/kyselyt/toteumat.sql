@@ -14,6 +14,13 @@ FROM toteuma t WHERE
     AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 
+-- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
+-- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
+SELECT tt.id as tehtava_id, tm.id as materiaali_id
+FROM toteuma t
+  LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+WHERE t.id = :id;
 
 -- name: hae-urakan-toteuma-paivat
 -- Hakee päivät tietyllä aikavälillä, jolle urakalla on toteumia.
@@ -44,12 +51,22 @@ INSERT
        (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja, poistettu)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja, false);
 
+-- name: poista-toteuma!
+UPDATE toteuma
+SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=true
+WHERE id=:id AND poistettu IS NOT true;
+
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
   INTO toteuma_tehtava
        (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, false);
+
+-- name: poista-tehtava!
+UPDATE toteuma_tehtava
+SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=true
+WHERE id=:id AND poistettu IS NOT true;
 
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla

@@ -111,3 +111,8 @@ VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE );
 UPDATE toteuma_materiaali
 SET materiaalikoodi=:materiaalikoodi, maara=:maara, muokattu = NOW(), muokkaaja = :kayttaja
 WHERE toteuma=:toteuma AND id=:id;
+
+-- name: poista-toteuma-materiaali!
+UPDATE toteuma_materiaali
+SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=TRUE
+WHERE id=:id AND poistettu IS NOT true;

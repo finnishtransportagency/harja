@@ -149,6 +149,27 @@
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
                               (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka t)))))
 
+(defn poista-toteuma!
+  [db user t]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+                            (:urakka t))
+  (jdbc/with-db-transaction [c db]
+                            (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))]
+                              (doseq [mat-id (filter #(not (nil? %)) (map :materiaali_id mat-ja-teht))]
+                                (materiaalit-q/poista-toteuma-materiaali! c (:id user) mat-id))
+                              (doseq [teht-id (filter #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
+                                (q/poista-tehtava! c (:id user) teht-id))
+                              (q/poista-toteuma! c (:id user) (:id t))
+                              true)))
+
+(defn poista-tehtava!
+  "Poistaa toteuma-tehtävän id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
+  {:urakka X, :id Y}"
+  [db user tiedot]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+                            (:urakka tiedot))
+  (q/poista-tehtava! db (:id user) (:id tiedot)))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -157,6 +178,12 @@
       (julkaise-palvelu http :urakan-toteumat
                         (fn [user tiedot]
                           (urakan-toteumat db user tiedot)))
+      (julkaise-palvelu http :poista-toteuma!
+                        (fn [user toteuma]
+                          (poista-toteuma! db user toteuma)))
+      (julkaise-palvelu http :poista-tehtava!
+                        (fn [user tiedot]
+                          (poista-tehtava! db user tiedot)))
       (julkaise-palvelu http :urakan-tehtavat-toteumittain
                         (fn [user tiedot]
                           (urakan-tehtavat-toteumittain db user tiedot)))
@@ -190,5 +217,7 @@
       :tallenna-urakan-toteuma
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
-      :tallenna-toteuma-ja-toteumamateriaalit)
+      :tallenna-toteuma-ja-toteumamateriaalit
+      :poista-toteuma!
+      :poista-tehtava!)
     this))
