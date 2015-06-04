@@ -7,7 +7,8 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.loki :refer [log]]
+            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -146,3 +147,11 @@ ja viimeinen voivat olla vajaat)."
         (reaction<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id @nav/valittu-urakka)))]
     (log "palautan toimenpiteet-ja-tehtävät" (pr-str toimenpiteet-ja-tehtavat))
     toimenpiteet-ja-tehtavat))
+
+(defonce erilliskustannukset-hoitokaudella
+  (let [aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)])
+        kustannukset (reaction<!
+              (toteumat/hae-urakan-erilliskustannukset (:id @nav/valittu-urakka) @aikavali))]
+    kustannukset))
+
+(tarkkaile! "erilliskustannukset-hoitokaudella" erilliskustannukset-hoitokaudella)

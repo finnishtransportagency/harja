@@ -6,7 +6,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             )
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction<!]]))
 
 
 (def indeksit (atom nil))
@@ -23,3 +25,7 @@
   (k/post! :tallenna-indeksi
            {:nimi nimi
             :indeksit indeksit}))
+
+(defonce indeksien-nimet
+  (reaction<!
+    (k/get! :indeksien-nimet)))

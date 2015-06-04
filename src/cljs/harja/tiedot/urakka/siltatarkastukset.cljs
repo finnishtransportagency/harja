@@ -15,9 +15,6 @@
 (defn hae-sillan-tarkastukset [silta-id]
   (k/post! :hae-sillan-tarkastukset silta-id))
 
-(defn hae-siltatarkastusten-kohteet [siltatarkastus-idt]
-  (k/post! :hae-siltatarkastusten-kohteet siltatarkastus-idt))
-
 (defn tallenna-siltatarkastus!
   [siltatarkastus]
   (log "tiedot, tallenna-siltatarkastus" (pr-str siltatarkastus))

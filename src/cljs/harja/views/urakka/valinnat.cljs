@@ -44,3 +44,22 @@
                          :valitse-fn u/valitse-toimenpideinstanssi!}
     @u/urakan-toimenpideinstanssit]]]
   )
+
+(defn urakan-sopimus-ja-toimenpide [ur]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Sopimusnumero"]
+    [livi-pudotusvalikko {:valinta @u/valittu-sopimusnumero
+                          :format-fn second
+                          :valitse-fn u/valitse-sopimusnumero!
+                          :class "suunnittelu-alasveto"
+                          }
+     (:sopimukset ur)]]
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta    @u/valittu-toimenpideinstanssi
+                          ;;\u2014 on väliviivan unikoodi
+                          :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
+                          :valitse-fn u/valitse-toimenpideinstanssi!}
+     @u/urakan-toimenpideinstanssit]]]
+  )

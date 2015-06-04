@@ -29,7 +29,7 @@
 
 
 (defonce uuden-syottaminen (atom false))
-(def +valitse-tulos+ "- valitse tulos -")
+(def +valitse-tulos+ "- Valitse tulos -")
 
 (defn tarkastuksen-tekija-ja-aika [silta-tai-tarkastus]
   (let [tarkastuksia? (> (count @st/valitun-sillan-tarkastukset) 0)

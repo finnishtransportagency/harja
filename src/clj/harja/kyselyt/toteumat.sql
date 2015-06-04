@@ -46,6 +46,7 @@ INSERT
        (toteuma, materiaalikoodi, maara, luotu)
 VALUES (:toteuma, :materiaalikoodi, :maara, NOW())
 
+
 -- name: listaa-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla
 SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.lisatieto, SUM(tt.maara) as maara
@@ -54,4 +55,28 @@ SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.l
        AND toimenpidekoodi = :toimenpidekoodi
        AND urakka = :urakka
        AND sopimus = :sopimus
- GROUP BY t.id;
+ GROUP BY t.id
+
+-- name: listaa-urakan-erilliskustannukset
+-- Listaa urakan erilliskustannukset
+SELECT id, tyyppi, sopimus, toimenpideinstanssi, pvm,
+       rahasumma, indeksin_nimi, lisatieto, luotu, luoja
+  FROM erilliskustannus
+ WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = :urakka)
+   AND pvm >= :alkupvm AND pvm <= :loppupvm
+
+-- name: luo-erilliskustannus<!
+-- Listaa urakan erilliskustannukset
+INSERT
+  INTO erilliskustannus
+       (tyyppi, sopimus, toimenpideinstanssi, pvm,
+       rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
+VALUES (:tyyppi::erilliskustannustyyppi, :sopimus, :toimenpideinstanssi, :pvm,
+       :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja)
+
+-- name: paivita-erilliskustannus!
+-- Päivitä erilliskustannus
+UPDATE erilliskustannus
+   SET tyyppi = :tyyppi::erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi, pvm = :pvm,
+       rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja
+ WHERE id = :id

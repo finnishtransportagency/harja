@@ -8,25 +8,14 @@
             
             [harja.kyselyt.indeksit :as q]))
 
-(declare hae-indeksit tallenna-indeksi)
-                        
-(defrecord Indeksit []
-  component/Lifecycle
-  (start [this]
-   (doto (:http-palvelin this)
-     (julkaise-palvelu
-       :indeksit (fn [user]
-         (hae-indeksit (:db this) user)))
-     (julkaise-palvelu :tallenna-indeksi
-       (fn [user tiedot]
-         (tallenna-indeksi (:db this) user tiedot))))
-   this)
 
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :indeksit)
-    (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
-    this))
 
+
+(defn hae-indeksien-nimet
+      "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
+  [db user]
+  (into #{}
+    (map :nimi (q/hae-indeksien-nimet db))))
 
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
@@ -93,3 +82,25 @@
                                     (q/poista-indeksi! c 
                                                        nimi vuosi kk))))
                                   (hae-indeksit c user))))
+
+
+(defrecord Indeksit []
+  component/Lifecycle
+  (start [this]
+    (doto (:http-palvelin this)
+      (julkaise-palvelu
+        :indeksit (fn [user]
+                    (hae-indeksit (:db this) user)))
+      (julkaise-palvelu :tallenna-indeksi
+        (fn [user tiedot]
+          (tallenna-indeksi (:db this) user tiedot)))
+      (julkaise-palvelu
+        :indeksien-nimet (fn [user]
+                    (hae-indeksien-nimet (:db this) user))))
+    this)
+
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :indeksit)
+    (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
+    (poista-palvelu (:http-palvelin this) :indeksien-nimet)
+    this))

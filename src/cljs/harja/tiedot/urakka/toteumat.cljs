@@ -39,5 +39,14 @@
 
 (defn tallenna-toteuma [toteuma]
   (k/post! :tallenna-urakan-toteuma toteuma))
-           
-           
+
+
+(defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]
+  (k/post! :urakan-erilliskustannukset
+    {:urakka-id urakka-id
+     :alkupvm alkupvm
+     :loppupvm loppupvm}))
+
+(defn tallenna-erilliskustannus [ek]
+  (log "Tiedot tallennea ek" (pr-str ek))
+  (k/post! :tallenna-erilliskustannus ek))

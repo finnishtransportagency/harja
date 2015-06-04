@@ -112,6 +112,7 @@
            :value @data
            :max-length pituus-max}])
 
+
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake?]} data]
   (let [[koko-sarakkeet koko-rivit] koko

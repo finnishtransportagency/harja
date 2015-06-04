@@ -16,6 +16,7 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
 
             
             [harja.ui.visualisointi :as vis]
@@ -295,8 +296,8 @@
    "Työt ja materiaalit" :tyot-ja-materiaalit
    [tyot-ja-materiaalit ur] ;; FIXME: siirrä työt ja materiaalit omaan namespaceen
 
-   "Hinnantarkistukset" :hinnantarkistukset
-   [:div "hinnantarkistukset tänne"]
+   "Erilliskustannukset" :erilliskustannukset
+   [erilliskustannukset/erilliskustannusten-toteumat]
    
    "Lämpötilat" :lampotilat
    [lampotilat ur]])
