@@ -294,17 +294,11 @@
    "Yksikköhintaiset työt" :yksikkohintaiset-tyot
    [yks-hint-tyot/yksikkohintaisten-toteumat]
 
-   "Työt ja materiaalit" :tyot-ja-materiaalit
-   [tyot-ja-materiaalit ur] ;; FIXME: siirrä työt ja materiaalit omaan namespaceen
-
-   "Erilliskustannukset" :erilliskustannukset
-   [erilliskustannukset/erilliskustannusten-toteumat]
-
    "Materiaalit" :materiaalit
    [materiaalit-nakyma ur]
 
-   "Hinnantarkistukset" :hinnantarkistukset
-   [:div "hinnantarkistukset tänne"]
+   "Erilliskustannukset" :erilliskustannukset
+   [erilliskustannukset/erilliskustannusten-toteumat]
    
    "Lämpötilat" :lampotilat
    [lampotilat ur]])
