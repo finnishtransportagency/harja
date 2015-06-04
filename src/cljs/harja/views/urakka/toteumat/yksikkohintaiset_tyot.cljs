@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat.yksikkohintaiset-tyot
   "Urakan 'Toteumat' välilehden Yksikköhintaist työt osio"
-  (:require [harja.ui.grid :as grid]
+  (:require [reagent.core :refer [atom]]
+            [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
@@ -14,7 +15,7 @@
             [harja.pvm :as pvm]
 
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
 
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
@@ -23,7 +24,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce valittu-toteuma (atom nil))
+(defonce valittu-yks-hint-toteuma (atom nil))
 
 (defn tallenna-toteuma [toteuma tehtavat]
   (let [toteuma (assoc toteuma
@@ -39,7 +40,7 @@
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
-  (let [muokattu (atom @valittu-toteuma)
+  (let [muokattu (atom @valittu-yks-hint-toteuma)
         tehtavat (atom {})
         materiaalit (atom {})
         toimenpiteen-tehtavat (reaction (map #(nth % 3)
@@ -52,9 +53,9 @@
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
+         [:button.nappi-toissijainen {:on-click #(reset! valittu-yks-hint-toteuma nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
-         (if (:id @valittu-toteuma)
+         (if (:id @valittu-yks-hint-toteuma)
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
 
@@ -72,7 +73,7 @@
                                                 ;; Tallennus ok
                                                 (do (viesti/nayta! "Toteuma tallennettu")
                                                     ; FIXME Pitäisikö asettaa tallennus-kaynnissa false? -Jari
-                                                    (reset! valittu-toteuma nil))
+                                                    (reset! valittu-yks-hint-toteuma nil))
 
                                                 ;; Epäonnistui jostain syystä
                                                 (reset! tallennus-kaynnissa false)))))}
@@ -207,8 +208,10 @@
     (komp/luo
       (fn []
         [:div.yksikkohintaisten-toteumat
-         [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+
+         [:button.nappi-ensisijainen {:on-click #(reset! valittu-yks-hint-toteuma {})}
+          (ikonit/plus-sign) " Lisää toteuma"]
 
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
@@ -228,11 +231,10 @@
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (:kustannuserotus rivi)])) :leveys "20%"}]
           (filter
             (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-            @tyorivit)]
-         [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
-          (ikonit/plus-sign) " Lisää toteuma"]] ))))
+            @tyorivit)]]))))
 
 (defn yksikkohintaisten-toteumat []
-  (if @valittu-toteuma
+  (if @valittu-yks-hint-toteuma
     [yksikkohintaisen-toteuman-muokkaus]
-    [yksikkohintaisten-toteumalistaus]))
+    [yksikkohintaisten-toteumalistaus]
+    ))
