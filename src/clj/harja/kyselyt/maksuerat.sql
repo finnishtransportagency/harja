@@ -264,6 +264,12 @@ SELECT numero
 FROM maksuera
 WHERE lahetysid = :lahetysid;
 
+-- name: hae-likaiset-maksuerat
+-- Hakee maksuerät, jotka täytyy lähettää
+SELECT numero
+FROM maksuera
+WHERE likainen = TRUE;
+
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi
 UPDATE maksuera
@@ -273,14 +279,14 @@ WHERE numero = :numero AND (lukko IS NULL OR
 
 
 -- name: merkitse-maksuera-odottamaan-vastausta!
--- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
+-- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE maksuera
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta'
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE
 WHERE numero = :numero;
 
 
 -- name: merkitse-maksuera-lahetetyksi!
--- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
+-- Merkitsee maksuerän lähetetyksi
 UPDATE maksuera
 SET lahetetty = current_timestamp, tila = 'lahetetty'
 WHERE numero = :numero;

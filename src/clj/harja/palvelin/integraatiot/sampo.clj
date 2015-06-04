@@ -2,12 +2,14 @@
   (:require [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
             [harja.kyselyt.konversio :as konversio]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
             [harja.palvelin.integraatiot.sampo.kustannussuunnitelma :as kustannussuunitelma]
             [harja.palvelin.integraatiot.sampo.kuittaus :as kuittaus]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.core :as t]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -95,32 +97,31 @@
                               (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
 
-(defn laheta-maksuera [this lahetysjono-ulos numero]
+(defn laheta-maksuera [sonja db lahetysjono-ulos numero]
   (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
-  (if-let [maksuera-xml (muodosta-maksuera (:db this) numero)]
-    (if-let [lahetys-id (laheta-sanoma-jonoon (:sonja this) lahetysjono-ulos maksuera-xml)]
-      (merkitse-maksuera-odottamaan-vastausta (:db this) numero lahetys-id)
+  (if-let [maksuera-xml (muodosta-maksuera db numero)]
+    (if-let [lahetys-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
+      (merkitse-maksuera-odottamaan-vastausta db numero lahetys-id)
       (do
         (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
-        (merkitse-maksueralle-lahetysvirhe (:db this) numero)
+        (merkitse-maksueralle-lahetysvirhe db numero)
         {:virhe :sonja-lahetys-epaonnistui}))
     (do
       (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
       {:virhe :maksueran-lukitseminen-epaonnistui})))
 
-(defn laheta-kustannussuunitelma [this lahetysjono-ulos numero]
+(defn laheta-kustannussuunitelma [sonja db lahetysjono-ulos numero]
   (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
-  (if-let [kustannussuunnitelma-xml (muodosta-kustannussuunnitelma (:db this) numero)]
-    (if-let [lahetys-id (laheta-sanoma-jonoon (:sonja this) lahetysjono-ulos kustannussuunnitelma-xml)]
-      (merkitse-kustannussuunnitelma-odottamaan-vastausta (:db this) numero lahetys-id)
+  (if-let [kustannussuunnitelma-xml (muodosta-kustannussuunnitelma db numero)]
+    (if-let [lahetys-id (laheta-sanoma-jonoon sonja lahetysjono-ulos kustannussuunnitelma-xml)]
+      (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero lahetys-id)
       (do
         (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")
-        (merkitse-kustannussuunnitelmalle-lahetysvirhe (:db this) numero)
+        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
         {:virhe :sonja-lahetys-epaonnistui}))
     (do
       (log/warn "Kustannussuunnitelman (numero: " numero ") lukitus epäonnistui.")
-      {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
-  )
+      {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui})))
 
 (defn kasittele-kuittaus [db viesti]
   (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
@@ -132,20 +133,44 @@
         (kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id))
       (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä."))))
 
+(defn aja-paivittainen-lahetys [sonja db lahetysjono-ulos]
+  (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
+  (let [maksuerat (qm/hae-likaiset-maksuerat db)
+        kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)]
+    (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
+    (doseq [maksuera maksuerat]
+      (laheta-maksuera sonja db lahetysjono-ulos (:numero maksuera)))
+    (doseq [kustannussuunnitelma kustannussuunnitelmat]
+      (laheta-kustannussuunitelma sonja db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
 
-(defrecord Sampo [lahetysjono-ulos kuittausjono-ulos]
+(defn tee-sonja-kuittauskuuntelija [this kuittausjono-ulos]
+  (log/debug "Käynnistetään Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
+  (sonja/kuuntele (:sonja this) kuittausjono-ulos
+                  (fn [viesti]
+                    (kasittele-kuittaus (:db this) viesti))))
+
+(defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika lahetysjono-ulos]
+  (if paivittainen-lahetysaika
+    (do
+      (log/debug "Ajastetaan maksuerien ja kustannussuunnitelmien lähetys ajettavaksi joka päivä kello: " paivittainen-lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain
+        paivittainen-lahetysaika
+        (fn [_] (aja-paivittainen-lahetys (:sonja this) (:db this) lahetysjono-ulos))))
+    (fn [] ())))
+
+(defrecord Sampo [lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   com.stuartsierra.component/Lifecycle
   (start [this]
-    (assoc this :sonja-kuittauskuuntelija
-                (sonja/kuuntele (:sonja this) kuittausjono-ulos
-                                (fn [viesti]
-                                  (kasittele-kuittaus (:db this) viesti)))))
+    (assoc this :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
+                :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika lahetysjono-ulos)))
   (stop [this]
-    (let [poista-kuuntelija (:sonja-kuittauskuuntelija this)]
-      (poista-kuuntelija))
+    (let [poista-kuuntelija (:sonja-kuittauskuuntelija this)
+          poista-paivittainen-lahetys-tehtava (:paivittainen-lahetys-tehtava this)]
+      (poista-kuuntelija)
+      (poista-paivittainen-lahetys-tehtava))
     this)
 
   Maksueralahetys
   (laheta-maksuera-sampoon [this numero]
-    {:maksuera             (laheta-maksuera this lahetysjono-ulos numero)
-     :kustannussuunnitelma (laheta-kustannussuunitelma this lahetysjono-ulos numero)}))
+    {:maksuera             (laheta-maksuera (:sonja this) (:db this) lahetysjono-ulos numero)
+     :kustannussuunnitelma (laheta-kustannussuunitelma (:sonja this) (:db this) lahetysjono-ulos numero)}))

@@ -31,7 +31,8 @@
                             :salasana s/Str
                             (s/optional-key :tyyppi) s/Keyword}
    (s/optional-key :sampo) {:lahetysjono-ulos s/Str
-                            :kuittausjono-ulos s/Str}
+                            :kuittausjono-ulos s/Str
+                            :paivittainen-lahetysaika [s/Num]}
    }) 
 
 (def oletusasetukset
