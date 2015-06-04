@@ -87,6 +87,9 @@
 
                  ;; Chime -ajastuskirjasto
                  [jarohen/chime "0.1.6"]
+
+                 ;; Pikkukuvien muodostamiseen 
+                 [net.coobird/thumbnailator "0.4.8"]
                  
                  ]
   

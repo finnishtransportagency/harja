@@ -104,10 +104,15 @@ Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodi
 Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
 
   :last-modified    fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
-                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.")
-  
+                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
+
+  :ring-kasittelija?  Jos true, ei transit käsittelyä tehdä vaan anneta Ring request mäp suoraan palvelulle.
+                      Palvelun tulee palauttaa Ring response mäppi.")
+
   (poista-palvelu [this nimi]
-    "Poistaa nimetyn palvelun käsittelijän."))
+    "Poistaa nimetyn palvelun käsittelijän.")
+
+  )
 
 (defn- arityt 
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
@@ -146,15 +151,17 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (let [ar (arityt palvelu-fn)]
-      (when (ar 2)
-        ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
-        (swap! kasittelijat
-               conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
-      (when (ar 1)
-        ;; GET metodi, vain käyttäjätiedot parametrina
-        (swap! kasittelijat
-               conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)}))))
+    (if (:ring-kasittelija? optiot)
+      (swap! kasittelijat conj {:nimi nimi :fn palvelu-fn}) ;; FIXME: käyttäjätieto request mäppiin
+      (let [ar (arityt palvelu-fn)]
+        (when (ar 2)
+          ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
+          (swap! kasittelijat
+                 conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
+        (when (ar 1)
+          ;; GET metodi, vain käyttäjätiedot parametrina
+          (swap! kasittelijat
+                 conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
 
   (poista-palvelu [this nimi]
     (swap! kasittelijat
