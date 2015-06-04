@@ -47,9 +47,7 @@
 (defn ring-kasittelija [nimi kasittelija-fn]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
-      (when (and (= :post (:request-method req))
-                 (= polku (:uri req)))
-        ;; FIXME: assoc käyttäjä requestiin
+      (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
 (defn- transit-post-kasittelija

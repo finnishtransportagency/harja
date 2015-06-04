@@ -26,6 +26,7 @@
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
                  [compojure "1.3.3"]
+                 [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
                  ;; API: RAML speksi ja JSON schema (FIXME: nämä vain, jos API kutsuja implementoidaan)
