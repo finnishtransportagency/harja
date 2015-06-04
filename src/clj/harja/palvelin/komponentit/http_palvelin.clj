@@ -32,6 +32,26 @@
                                                               #(.format (SimpleDateFormat. +fi-date-time-format+) %))}})
 (def read-optiot {:handlers {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}})
 
+(defn clj->transit
+  "Muuntaa Clojure tietorakenteen Transit+JSON merkkijonoksi."
+  [data]
+  (with-open [out (java.io.ByteArrayOutputStream.)]
+    (t/write (t/writer out :json write-optiot) data)
+    (str out)))
+
+(defn lue-transit
+  "Lukee Transit+JSON muotoisen tiedon annetusta inputista."
+  [in]
+  (t/read (t/reader in :json read-optiot)))
+
+(defn ring-kasittelija [nimi kasittelija-fn]
+  (let [polku (transit-palvelun-polku nimi)]
+    (fn [req]
+      (when (and (= :post (:request-method req))
+                 (= polku (:uri req)))
+        ;; FIXME: assoc käyttäjä requestiin
+        (kasittelija-fn req)))))
+
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
@@ -40,7 +60,7 @@
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
-              kysely (t/read (t/reader (:body req) :json read-optiot))
+              kysely (lue-transit (:body req))
               kysely (if-not skeema
                        kysely
                        (try
@@ -55,9 +75,7 @@
             (let [vastaus (palvelu-fn (:kayttaja req) kysely)]
               {:status 200
                :headers {"Content-Type" "application/transit+json"}
-               :body (with-open [out (java.io.ByteArrayOutputStream.)]
-                       (t/write (t/writer out :json write-optiot) vastaus)
-                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
+               :body (clj->transit vastaus)})))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -152,7 +170,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
-      (swap! kasittelijat conj {:nimi nimi :fn palvelu-fn}) ;; FIXME: käyttäjätieto request mäppiin
+      (swap! kasittelijat conj {:nimi nimi
+                                :fn (ring-kasittelija nimi palvelu-fn)})
       (let [ar (arityt palvelu-fn)]
         (when (ar 2)
           ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla

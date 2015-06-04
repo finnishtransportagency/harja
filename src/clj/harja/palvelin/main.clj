@@ -33,6 +33,7 @@
    [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
    [harja.palvelin.palvelut.lampotilat :as lampotilat]
    [harja.palvelin.palvelut.maksuerat :as maksuerat]
+   [harja.palvelin.palvelut.liitteet :as liitteet]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -132,6 +133,10 @@
      :maksuerat (component/using
                    (maksuerat/->Maksuerat)
                    [:http-palvelin :sampo :db])
+
+     :liitteet (component/using
+                (liitteet/->Liitteet)
+                [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)

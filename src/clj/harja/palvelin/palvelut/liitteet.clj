@@ -22,7 +22,8 @@
   component/Lifecycle
   (start [{:keys [http-palvelin] :as this}]
     (julkaise-palvelu http-palvelin :tallenna-liite
-                      tallenna-liite)
+                      tallenna-liite
+                      {:ring-kasittelija? true})
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
