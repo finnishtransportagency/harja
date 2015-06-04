@@ -125,14 +125,14 @@
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-  (let [toteumat (reaction nil)
+  (let [toteumat (reaction nil) ; Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
         paivita-toteumat (fn []
-                           (go (do (let [urakka-id (:id @nav/valittu-urakka)
+                           (go (let [urakka-id (:id @nav/valittu-urakka)
                                                  [sopimus-id _] @u/valittu-sopimusnumero
                                                  aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
                                          uudet-toteumat (<! (toteumat/hae-urakan-toteumat urakka-id sopimus-id aikavali))]
                                      (if (not (= uudet-toteumat @toteumat))
-                                       (reset! toteumat uudet-toteumat))))))
+                                       (reset! toteumat {:aikavali aikavali :vastaus uudet-toteumat})))))
         hae-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
@@ -184,17 +184,18 @@
                    (let [rivit (hae-nelostason-tehtavat)
                          urakka- @nav/valittu-urakka
                          sopimus @u/valittu-sopimusnumero
-                         valittu-hoitokausi @u/valittu-hoitokausi]
+                         valittu-hoitokausi @u/valittu-hoitokausi
+                         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
 
                      (paivita-toteumat)
                      ; Jos toteumia ei ole vielä saatu, ei tehdä mitään
                      ; Tämä reaction body ajetaan automaattisesti uudelleen kun toteumat saadaan.
-                     ; FIXME Jos hoitokausi vaihtuu, näyttää vanhat toteumat pienen hetken ennen kuin uudet saadaan kannasta. Miten korjataan?
-                     (if (not (nil? @toteumat))
+                     (if (and (not (nil? @toteumat))
+                              (= (:aikavali @toteumat) aikavali))
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
                            (lisaa-tyoriveille-suunnitellut-kustannukset valittu-hoitokausi)
-                           (lisaa-tyoriveille-toteutunut-maara @toteumat)
+                           (lisaa-tyoriveille-toteutunut-maara (:vastaus @toteumat))
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
                            (lisaa-tyoriveille-erotus)))))]
 
@@ -206,7 +207,7 @@
 
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
-           :tyhja (if (nil? @u/urakan-toimenpiteet-ja-tehtavat) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
+           :tyhja (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
