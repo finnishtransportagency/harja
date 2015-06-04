@@ -33,6 +33,6 @@
 :sampo {
                        :lahetysjono-ulos  "Harja17.HarjaToSampo.Msg"
                        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
-                       :paivittainen-lahetysaika
+                       :paivittainen-lahetysaika nil
         }
  }
