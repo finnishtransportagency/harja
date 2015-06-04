@@ -76,7 +76,7 @@
         (q/luo-tehtava<! c id toimenpidekoodi maara))
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
-        (materiaalit-q/luo-materiaali<! c id materiaalikoodi maara))
+        (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara))
       
       true)))
 
