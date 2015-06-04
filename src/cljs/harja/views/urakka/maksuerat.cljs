@@ -95,6 +95,18 @@
                       [:kustannussuunnitelma :tila] (:tila (:kustannussuunnitelma uusi-maksuera)))))
         paivittyneiden-maksuerien-tilat))
 
+(defn hae-lahetettavat-maksueranumerot [maksueranumerot kuittausta-odottavat-maksuerat]
+  (into #{} (filter #(not (contains? kuittausta-odottavat-maksuerat %)) maksueranumerot)))
+
+(defn rakenna-samana-pysyneet-maksuerat [lahetettavat-maksueranumerot maksuerat]
+  (filter #(not (lahetettavat-maksueranumerot (:numero %))) maksuerat))
+
+(defn rakenna-uudet-maksuerat [samana-pysyneet paivittyneet-maksuerat]
+  (sort-by :numero (apply merge samana-pysyneet paivittyneet-maksuerat)))
+
+(defn rakenna-uudet-kuittausta-odottavat-maksuerat [lahetettavat-maksueranumerot kuittausta-odottavat-maksuerat]
+  (into #{} (remove (set lahetettavat-maksueranumerot) kuittausta-odottavat-maksuerat)))
+
 (defn kasittele-onnistunut-siirto [uudet-maksuerat]
   (do
     (reset! maksuerat uudet-maksuerat)
@@ -108,14 +120,14 @@
                                   @maksuerarivit))
       (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))
 
-(defn laheta-maksuerat [maksueranumerot]                    ; Lähetä vain ne numerot, jotka eivät jo ole lähetyksessä
-  (let [lahetettavat-maksueranumerot (into #{} (filter #(not (contains? @kuittausta-odottavat-maksuerat %)) maksueranumerot))]
+(defn laheta-maksuerat [maksueranumerot]
+  (let [lahetettavat-maksueranumerot (hae-lahetettavat-maksueranumerot maksueranumerot @kuittausta-odottavat-maksuerat)]
     (go (reset! kuittausta-odottavat-maksuerat (into #{} (clojure.set/union @kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot)))
         (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))
               paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
-              samana-pysyneet (filter #(not (lahetettavat-maksueranumerot (:numero %))) @maksuerat)
-              uudet-maksuerat (sort-by :numero (apply merge samana-pysyneet paivittyneet-maksuerat))
-              uudet-kuittausta-odottavat (into #{} (remove (set lahetettavat-maksueranumerot) @kuittausta-odottavat-maksuerat))]
+              samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat)
+              uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
+              uudet-kuittausta-odottavat (rakenna-uudet-kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot @kuittausta-odottavat-maksuerat)]
           (if vastaus
             (kasittele-onnistunut-siirto uudet-maksuerat)
             (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat))))))
@@ -178,9 +190,8 @@
             :komponentti (fn [rivi] (:summa (:maksuera rivi)))}
            {:otsikko     "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :komponentti :leveys "18%"
             :komponentti (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
-           {:otsikko "Maksueran tila" :nimi :tila :tyyppi :komponentti
-            :komponentti (fn [rivi]
-                           (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
+           {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
+            :komponentti (fn [rivi] (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
             :komponentti (fn [rivi] (nayta-tila (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
@@ -190,8 +201,7 @@
                                                        :type     "button"
                                                        :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
             :leveys      "7%"}]
-          @maksuerarivit
-          ])
+          @maksuerarivit])
        [:button.nappi-ensisijainen {:class    (if (= (count @kuittausta-odottavat-maksuerat) (count @maksuerarivit)) "disabled" "")
                                     :on-click #(do (.preventDefault %)
                                                    (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki"]])))
