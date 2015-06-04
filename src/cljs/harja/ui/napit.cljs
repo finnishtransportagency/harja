@@ -16,6 +16,7 @@
   Asetukset ovat valinnaisia. Mahdolliset arvot ja niiden oletusarvot ovat:
   - luokka (nappi-toissijainen)
   - virheviesti (Virhe tapahtui)
+  - ikoni. Oletuksena haetaan luokan perusteella, mutta on mahdollista antaa myös itse.
   - virheen-esitystapa (:vertical), joko :modal, :flash, :vertical tai :horizontal
     * Nappi käyttää harja.ui.yleiset/virheviesti-sailiota, modalia ja viestia
     * horizontal asettaa sailion tyylin inline-blockiksi (8.5.2015)
@@ -26,11 +27,14 @@
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)
         luokka (if(nil? (:luokka asetukset)) :nappi-toissijainen (:luokka asetukset))
-        ikoni (case luokka
-                :nappi-toissijainen (ikonit/plus)
-                :nappi-ensisijainen (ikonit/search)
-                :nappi-kielteinen (ikonit/remove)
-                (ikonit/check))
+        ikoni (if (:ikoni asetukset)
+                (:ikoni asetukset)
+
+                (case luokka
+                  :nappi-toissijainen (ikonit/plus)
+                  :nappi-ensisijainen (ikonit/search)
+                  :nappi-kielteinen (ikonit/remove)
+                  (ikonit/check)))
         virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
         virheen-esitystapa (case (:virheen-esitystapa asetukset)
                              :modal :modal
