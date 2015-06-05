@@ -40,7 +40,7 @@ WHERE mk.poistettu IS NOT true AND
 SELECT t.id, m.id as materiaali_id, m.nimi as materiaali_nimi, m.yksikko as materiaali_yksikko,
       tm.maara as toteuma_maara, t.alkanut as toteuma_alkanut, t.paattynyt as toteuma_paattynyt,
       pa.id as pohjavesialue_id, pa.nimi as pohjavesialue_nimi, pa.tunnus as pohjavesialue_tunnus,
-      tm.id as tmid
+      tm.id as tmid, t.lisatieto as toteuma_lisatieto, t.suorittajan_nimi as toteuma_suorittaja
 FROM toteuma t
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
   LEFT JOIN materiaalikoodi m ON tm.materiaalikoodi = m.id

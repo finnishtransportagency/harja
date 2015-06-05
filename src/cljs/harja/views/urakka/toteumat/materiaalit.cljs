@@ -162,6 +162,9 @@
 
           @muokattu]]))))
 
+(defn tarkastele-toteumaa-nappi [rivi]
+  [:button.nappi-toissijainen {:on-click #(reset! valittu-materiaalin-kaytto rivi)} (ikonit/eye-open) " Toteuma"])
+
 (defn materiaalinkaytto-vetolaatikko
   [urakan-id mk]
   (let [tiedot (atom nil)]
@@ -180,16 +183,17 @@
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja   (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           :rivi-klikattu #(reset! valittu-materiaalin-kaytto %)
+           ;:rivi-klikattu #(reset! valittu-materiaalin-kaytto %)
            :tallenna (poista-toteuma-materiaaleja urakan-id)
            :voi-lisata? false}
 
-          [{:otsikko "Aloitus" :tyyppi :pvm :nimi :aloitus
+          [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :lopetus :hae (comp pvm/pvm :paattynyt :toteuma)
-            :muokattava? (constantly false)}
-           {:otsikko "Määrä" :nimi :toteuman_maara :hae (comp :maara :toteuma)
-            :muokattava? (constantly false)}]
+           {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)}
+           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :aseta #(assoc-in % [:toteuma :suorittaja] %2)}
+           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :aseta #(assoc-in % [:toteuma :lisatieto] %2)}
+           {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
+            :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false)}]
           @tiedot]]))))
 
 (defn materiaalit-paasivu
