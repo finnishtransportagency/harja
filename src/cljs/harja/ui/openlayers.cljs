@@ -105,12 +105,12 @@
                (inc i))))))
     
 
-(defn- mml-wmts-layer []
+(defn- mml-wmts-layer [url layer]
   (ol.layer.Tile.
    #js {:opacity 0.8
         :source (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
-                                      :url "/wmts/maasto/wmts" ;; Tämä pitää olla nginx proxyssa
-                                      :layer "taustakartta"
+                                      :url url  ;; Tämä pitää olla nginx proxyssa
+                                      :layer layer
                                       :matrixSet "ETRS-TM35FIN"
                                       :format "image/png"
                                       :projection projektio
@@ -191,7 +191,8 @@
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
-        mml (mml-wmts-layer)
+        [mml-spec & _] (:layers mapspec)
+        mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
         geometry-layer  (ol.layer.Vector. #js {:source (ol.source.Vector.) :opacity 0.7})
         map-optiot (clj->js {:layers  [mml geometry-layer]
                              :target (:id mapspec)

@@ -68,13 +68,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
   Kun liite on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
-  [input-elementti]
+  [input-elementti urakka-id]
   (let [ch (chan)
         xhr (doto (js/XMLHttpRequest.)
               (.open "POST" (str +polku+ "_/tallenna-liite")))
         siirto (.-upload xhr)
         form-data (js/FormData.)
         tiedostot (.-files input-elementti)]
+    (.append form-data "urakka" urakka-id)
     (dotimes [i (.-length tiedostot)]
       (.append form-data "liite" (aget tiedostot i)))
 
@@ -95,9 +96,11 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (.send xhr form-data)
     ch))
 
+(defn liite-url [liite-id]
+  (str (polku) "lataa-liite?id=" liite-id))
 
-                        
+(defn pikkukuva-url [liite-id]
+  (str (polku) "lataa-pikkukuva?id=" liite-id))
 
-
-                    
-    
+(defn wmts-polku []
+  (str +polku+ "wmts/"))
