@@ -117,10 +117,12 @@
       [:div.tehtavat-toteumittain
        [grid/grid
         {:tyhja (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
-        [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :komponentti :komponentti (fn [rivi] (pvm/pvm-aika (:alkanut rivi))) :leveys "25%"}
-         {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-         {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
-         {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "25%"}]
+        [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :komponentti :komponentti (fn [rivi] (pvm/pvm-aika (:alkanut rivi))) :leveys "20%"}
+         {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+         {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
+         {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
+         {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti :leveys "20%"
+          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click #(reset! valittu-yks-hint-toteuma rivi)} (ikonit/eye-open) " Toteuma"]) :muokattava? (constantly false)}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter
