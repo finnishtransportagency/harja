@@ -46,4 +46,20 @@ button .ajax-loader {
 .keskita {
   text-align: center;
 }
+.korosta {
+	-webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
+	-webkit-animation-duration: 4s; /* Chrome, Safari, Opera */
+	animation-name: rivin-korostusanimaatio;
+	animation-duration: 4s;
+}
+/* Chrome, Safari, Opera */
+@-webkit-keyframes rivin-korostusanimaatio {
+	from {background-color: @onnistuminen;}
+	to {background-color: @harjan-taustavari;}
+}
 
+/* Standard syntax */
+@keyframes rivin-korostusanimaatio {
+	from {background-color: @onnistuminen;}
+	to {background-color: @harjan-taustavari;}
+}

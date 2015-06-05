@@ -270,6 +270,7 @@ Optiot on mappi optioita:
   :muokkaa-aina    jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
   :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                    Parametrina Grid ohjauskahva
+  :rivin-luokka    funktio joka palauttaa rivin luokan
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                    jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
@@ -278,7 +279,7 @@ Optiot on mappi optioita:
   
   "
   [{:keys [otsikko tallenna peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
-           muokkaa-footer muokkaa-aina muutos
+           muokkaa-footer muokkaa-aina muutos rivin-luokka
            uusi-rivi vetolaatikot] :as opts} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
@@ -435,7 +436,8 @@ Optiot on mappi optioita:
            (aloita-muokkaus! (nth new-argv 3))))
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina uusi-rivi tyhja
+       (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina
+                    rivin-luokka uusi-rivi tyhja
                     vetolaatikot] :as opts} skeema tiedot]
          (let [colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))]
@@ -518,60 +520,62 @@ Optiot on mappi optioita:
                        (let [kaikki-virheet @virheet
                              nykyinen-fokus @fokus]
                          (mapcat #(keep identity %)
-                                 (map-indexed
-                                   (fn [i id]
-                                     (if (otsikko? id)
-                                       (let [teksti (:teksti id)]
-                                         [^{:key teksti}
-                                         [:tr.otsikko
-                                          [:td {:colSpan colspan}
-                                           [:h5 teksti]]]])
-                                       (let [rivi (get muokatut id)
-                                             rivin-virheet (get kaikki-virheet id)]
-                                         (when-not (:poistettu rivi)
-                                           [^{:key id}
-                                           [muokkaus-rivi {:ohjaus        ohjaus
-                                                           :vetolaatikot  vetolaatikot
-                                                           :muokkaa!      muokkaa!
-                                                           :luokka        (str (if (even? (+ i 1))
-                                                                                 "parillinen"
-                                                                                 "pariton"))
-                                                           :id            id
-                                                           :rivin-virheet rivin-virheet
-                                                           :voi-poistaa?  voi-poistaa?
-                                                           :fokus         nykyinen-fokus
-                                                           :aseta-fokus!  #(reset! fokus %)
-                                                           :tulevat-rivit (tulevat-rivit i)}
-                                            skeema rivi]
-                                            (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
-                                   jarjestys)))))
+                           (map-indexed
+                             (fn [i id]
+                               (if (otsikko? id)
+                                 (let [teksti (:teksti id)]
+                                   [^{:key teksti}
+                                   [:tr.otsikko
+                                    [:td {:colSpan colspan}
+                                     [:h5 teksti]]]])
+                                 (let [rivi (get muokatut id)
+                                       rivin-virheet (get kaikki-virheet id)]
+                                   (when-not (:poistettu rivi)
+                                     [^{:key id}
+                                     [muokkaus-rivi {:ohjaus        ohjaus
+                                                     :vetolaatikot  vetolaatikot
+                                                     :muokkaa!      muokkaa!
+                                                     :luokka        (str (if (even? (+ i 1))
+                                                                           "parillinen"
+                                                                           "pariton"))
+                                                     :id            id
+                                                     :rivin-virheet rivin-virheet
+                                                     :voi-poistaa?  voi-poistaa?
+                                                     :fokus         nykyinen-fokus
+                                                     :aseta-fokus!  #(reset! fokus %)
+                                                     :tulevat-rivit (tulevat-rivit i)}
+                                      skeema rivi]
+                                      (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
+                             jarjestys)))))
 
                    ;; Näyttömuoto
                    (let [rivit tiedot]
                      (if (empty? rivit)
                        [:tr.tyhja [:td {:col-span colspan} tyhja]]
                        (mapcat #(keep identity %)
-                               (map-indexed
-                                 (fn [i rivi]
-                                   (if (otsikko? rivi)
-                                     [^{:key (:teksti rivi)}
-                                     [:tr.otsikko
-                                      [:td {:colSpan (inc (count skeema))}
-                                       [:h5 (:teksti rivi)]]]]
+                         (map-indexed
+                           (fn [i rivi]
+                             (if (otsikko? rivi)
+                               [^{:key (:teksti rivi)}
+                               [:tr.otsikko
+                                [:td {:colSpan (inc (count skeema))}
+                                 [:h5 (:teksti rivi)]]]]
 
-                                     (let [id ((or tunniste :id) rivi)]
-                                       [^{:key id}
-                                       [naytto-rivi {:ohjaus        ohjaus
-                                                     :vetolaatikot  vetolaatikot
-                                                     :id            id
-                                                     :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                         (when rivi-klikattu
-                                                                           " klikattava"))
-                                                     :rivi-klikattu rivi-klikattu}
-                                        skeema rivi]
-                                        (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
-                                        ])))
-                                 rivit)))))]])
+                               (let [id ((or tunniste :id) rivi)]
+                                 [^{:key id}
+                                 [naytto-rivi {:ohjaus        ohjaus
+                                               :vetolaatikot  vetolaatikot
+                                               :id            id
+                                               :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                (when rivi-klikattu
+                                                                  " klikattava ")
+                                                                (when rivin-luokka
+                                                                  (rivin-luokka rivi)))
+                                               :rivi-klikattu rivi-klikattu}
+                                  skeema rivi]
+                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
+                                  ])))
+                           rivit)))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])
              ]]))})))

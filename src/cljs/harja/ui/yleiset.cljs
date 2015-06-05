@@ -312,3 +312,5 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [& sisalto]
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
    sisalto])
+
+(def +korostuksen-kesto+ 4000)

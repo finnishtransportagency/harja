@@ -6,7 +6,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      livi-pudotusvalikko]]
+                                      livi-pudotusvalikko +korostuksen-kesto+]]
+            [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
@@ -25,6 +26,7 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [cljs-time.core :as t]
+            [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -32,7 +34,6 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defonce valittu-kustannus (atom nil))
-(defonce rivit (atom nil))
 
 (def +valitse-indeksi+
      "- Valitse indeksi -")
@@ -41,27 +42,29 @@
      "Ei sidota indeksiin")
 
 (defn tallenna-erilliskustannus [muokattu]
-  (log "tallenna-erilliskustannus" (pr-str muokattu))
   (go (let [sopimus-id (first (:sopimus muokattu))
-         tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
-         tyyppi (name (:tyyppi muokattu))
-         indeksi (if (= +ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
-                   nil
-                   (:indeksin_nimi muokattu))
-         rahasumma (if (= (:maksaja muokattu) :urakoitsija)
-                     (- (:rahasumma muokattu))
-                     (:rahasumma muokattu))
-         res (<! (toteumat/tallenna-erilliskustannus (assoc muokattu
-                                                    :urakka-id (:id @nav/valittu-urakka)
-                                                    :alkupvm (first @u/valittu-hoitokausi)
-                                                    :loppupvm (second @u/valittu-hoitokausi)
-                                                    :sopimus sopimus-id
-                                                    :toimenpideinstanssi tpi-id
-                                                    :tyyppi tyyppi
-                                                    :rahasumma rahasumma
-                                                    :indeksin_nimi indeksi)))]
+            tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
+            tyyppi (name (:tyyppi muokattu))
+            indeksi (if (= +ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
+                      nil
+                      (:indeksin_nimi muokattu))
+            rahasumma (if (= (:maksaja muokattu) :urakoitsija)
+                        (- (:rahasumma muokattu))
+                        (:rahasumma muokattu))
+            vanhat-idt (into #{} (map #(:id %) @u/erilliskustannukset-hoitokaudella))
+            res (<! (toteumat/tallenna-erilliskustannus (assoc muokattu
+                                                          :urakka-id (:id @nav/valittu-urakka)
+                                                          :alkupvm (first @u/valittu-hoitokausi)
+                                                          :loppupvm (second @u/valittu-hoitokausi)
+                                                          :sopimus sopimus-id
+                                                          :toimenpideinstanssi tpi-id
+                                                          :tyyppi tyyppi
+                                                          :rahasumma rahasumma
+                                                          :indeksin_nimi indeksi)))
+            uuden-id (:id (first (filter #(not (vanhat-idt (:id %)))
+                                   res)))]
         (reset! u/erilliskustannukset-hoitokaudella res)
-        true)))
+        (or uuden-id true))))
 
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
@@ -88,6 +91,23 @@
 
 (def +maksajavalinnat+
   [:tilaaja :urakoitsija])
+
+
+(def korostettavan-rivin-id (atom nil))
+
+(defn korosta-rivia
+  ([id] (korosta-rivia id +korostuksen-kesto+))
+  ([id kesto]
+   (reset! korostettavan-rivin-id id)
+   (go (<! (timeout kesto))
+     (reset! korostettavan-rivin-id nil))))
+
+(def rivin-luokka (atom "korosta"))
+
+(defn aseta-rivin-luokka [rivi]
+  (if (= @korostettavan-rivin-id (:id rivi))
+    "korosta"
+    ""))
 
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen"
@@ -122,21 +142,20 @@
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
                   :footer   [:span
-                             [:button.nappi-ensisijainen
-                              {:class (when @tallennus-kaynnissa "disabled")
-                               :on-click
-                                      #(do (.preventDefault %)
-                                           (reset! tallennus-kaynnissa true)
-                                           (go (let [res (<! (tallenna-erilliskustannus @muokattu))]
-                                                 (if res
-                                                   ;; Tallennus ok
-                                                   (do (viesti/nayta! "Kustannus tallennettu")
-                                                       (reset! tallennus-kaynnissa false)
-                                                       (reset! valittu-kustannus nil))
-
-                                                   ;; Epäonnistui jostain syystä
-                                                   (reset! tallennus-kaynnissa false)))))}
-                              (ikonit/ok)  " Tallenna kustannus"]
+                             [napit/palvelinkutsu-nappi
+                              " Tallenna kustannus"
+                              #(tallenna-erilliskustannus @muokattu)
+                              {:luokka :nappi-ensisijainen}
+                              #(let [muokatun-id (or (:id @muokattu) %)]
+                                (if %
+                                  ;; Tallennus ok
+                                  (do
+                                    (korosta-rivia muokatun-id)
+                                    (reset! tallennus-kaynnissa false)
+                                    (reset! valittu-kustannus nil))
+                                  ;; Epäonnistui jostain syystä
+                                  (reset! tallennus-kaynnissa false)))
+                              ]
                              (when (:id @muokattu)
                                [:button.nappi-kielteinen
                                 {:class (when @tallennus-kaynnissa "disabled")
@@ -229,11 +248,12 @@
           (ikonit/plus-sign) " Lisää kustannus"]
 
          [grid/grid
-          {:otsikko (str "Erilliskustannukset " )
-          :tyhja (if (nil? @valitut-kustannukset)
-                   [ajax-loader "Erilliskustannuksia haetaan..."]
-                   "Ei erilliskustannuksia saatavilla.")
-           :rivi-klikattu #(reset! valittu-kustannus %)}
+          {:otsikko       (str "Erilliskustannukset ")
+           :tyhja         (if (nil? @valitut-kustannukset)
+                            [ajax-loader "Erilliskustannuksia haetaan..."]
+                            "Ei erilliskustannuksia saatavilla.")
+           :rivi-klikattu #(reset! valittu-kustannus %)
+           :rivin-luokka  #(aseta-rivin-luokka %)}
           [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
            {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
            {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :leveys "10%"}
