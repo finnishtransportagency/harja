@@ -41,17 +41,15 @@ SELECT id,nimi,yksikko FROM toimenpidekoodi
 
 -- name: hae-urakan-tehtavat-toimenpidekoodilla
 -- Hakee urakan tehtävät tietyllä toimenpidekoodilla
-SELECT tt.id as tehtava_id, tt.toteuma as toteuma_id, tt.toimenpidekoodi, tt.maara,
-(SELECT nimi FROM toimenpidekoodi tpk WHERE id = tt.toimenpidekoodi) as toimenpide,
-(SELECT tyyppi FROM toteuma t WHERE t.id = tt.toteuma) as tyyppi
+SELECT tt.id as tehtava_id, tt.toteuma as toteuma_id, tt.toimenpidekoodi, tt.maara, t.tyyppi, t.alkanut, t.suorittajan_nimi, t.lisatieto,
+(SELECT nimi FROM toimenpidekoodi tpk WHERE id = tt.toimenpidekoodi) as toimenpide
 FROM toteuma_tehtava tt
 RIGHT JOIN toteuma t ON tt.toteuma = t.id
-      AND sopimus = 1
-      AND urakka = 1
-      AND alkanut >= '2005-10-01 00:00.00'
-      AND paattynyt <= '2006-09-30 00:00.00'
-WHERE toimenpidekoodi = 1350
-AND tt.poistettu IS NOT true;
+      AND sopimus = :sopimus
+      AND urakka = :urakka
+      AND alkanut >= :alkupvm
+      AND paattynyt <= :loppupvm
+WHERE toimenpidekoodi = :toimenpidekoodi;
 
 -- name: paivita-toteuma!
 UPDATE toteuma
@@ -82,7 +80,7 @@ UPDATE toteuma_tehtava
 SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=true
 WHERE id IN (:id) AND poistettu IS NOT true;
 
--- name: listaa-urakan-tehtavat-toteumittain
+-- name: hae-urakan-tehtavat-toteumittain
 -- listaa-toteuman-tehtavat ID:n avulla
 SELECT t.id, t.alkanut, t.tyyppi, t.suorittajan_nimi, t.suorittajan_ytunnus, t.lisatieto, SUM(tt.maara) as maara
   FROM toteuma t JOIN toteuma_tehtava tt ON tt.toteuma=t.id

@@ -33,6 +33,14 @@
             :loppupvm loppupvm
             :toimenpidekoodi toimenpidekoodi}))
 
+(defn hae-urakan-tehtavat-toimenpidekoodilla [urakka-id sopimus-id [alkupvm loppupvm] toimenpidekoodi]
+  (k/post! :urakan-tehtavat-toteumittain
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :toimenpidekoodi toimenpidekoodi}))
+
 (defn hae-urakan-toteuma-paivat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteuma-paivat
            {:urakka-id urakka-id

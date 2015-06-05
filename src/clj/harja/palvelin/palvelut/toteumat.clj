@@ -44,7 +44,15 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/listaa-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
+        (q/hae-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
+
+(defn urakan-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpidekoodi]}]
+  (log/debug "Haetaan urakan tehtävät toimenpidekoodilla: " urakka-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        muunna-desimaaliluvut-xf
+        (q/hae-urakan-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi)))
+
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
@@ -64,7 +72,7 @@
   (validoi Toteuma toteuma)
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id toteuma))
-  
+  (log/debug "Toteuman tallennus aloitettu.")
   (jdbc/with-db-transaction [c db]
     (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
                                 (konv/sql-timestamp (:alkanut toteuma))
@@ -183,6 +191,9 @@
       (julkaise-palvelu http :poista-tehtava!
                         (fn [user tiedot]
                           (poista-tehtava! db user tiedot)))
+      (julkaise-palvelu http :urakan-tehtavat-toimenpidekoodilla
+                        (fn [user tiedot]
+                          (urakan-tehtavat-toimenpidekoodilla db user tiedot)))
       (julkaise-palvelu http :urakan-tehtavat-toteumittain
                         (fn [user tiedot]
                           (urakan-tehtavat-toteumittain db user tiedot)))
