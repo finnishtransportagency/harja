@@ -26,6 +26,25 @@
 
 (defonce valittu-yks-hint-toteuma (atom nil))
 
+(defn tehtavat-ja-maarat []
+  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
+                                       (filter (fn [[t1 t2 t3 t4]]
+                                                 (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+                                               @u/urakan-toimenpiteet-ja-tehtavat)))
+        tehtavat (atom nil)]
+  [grid/muokkaus-grid
+   {:tyhja "Ei töitä."}
+
+   [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
+     :valinnat @toimenpiteen-tehtavat
+     :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
+     :validoi [[:ei-tyhja "Valitse tehtävä."]]
+     :leveys "50%"}
+
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+    {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :tehtava) :leveys "5%"}]
+   tehtavat]))
+
 (defn tallenna-toteuma [toteuma tehtavat]
   (let [toteuma (assoc toteuma
                   :alkanut (:toteutunut-pvm toteuma)
@@ -46,14 +65,8 @@
   []
   (let [muokattu (atom @valittu-yks-hint-toteuma)
         tehtavat (atom {})
-        materiaalit (atom {})
-        toimenpiteen-tehtavat (reaction (map #(nth % 3)
-                                             (filter (fn [[t1 t2 t3 t4]]
-                                                       (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-                                                     @u/urakan-toimenpiteet-ja-tehtavat)))
         tallennus-kaynnissa (atom false)]
 
-    (log "@toimenpiteen-tehtavat" (pr-str @toimenpiteen-tehtavat))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -92,15 +105,8 @@
             :muokattava? (constantly false)}
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
-
-           {:otsikko       "Tehtävä " :nimi :tehtava :leveys "20%"
-            :tyyppi        :valinta :valinta-arvo identity
-            :leveys-col 4
-            :valinta-nayta #(if (nil? %) "Valitse tehtävä" (:nimi %))
-            :valinnat      @toimenpiteen-tehtavat}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
-           ;; fixme: alas valitun tehtävän yksikkö toteutuneen määrän jälkeen näkyviin
-           {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :tyyppi :numero :leveys-col 2}
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
            ]
 
