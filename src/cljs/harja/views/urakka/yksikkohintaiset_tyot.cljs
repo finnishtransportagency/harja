@@ -89,9 +89,9 @@
 (defn hoidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "30%"}
    {:otsikko (str "Määrä 10-12/" (.getYear (first @u/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :numero :leveys "10%"}
-   {:otsikko (str "Yhteensä " (.getYear (first @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-10-12 :tasaa :oikea :tyyppi :string :leveys "10%" :fmt fmt/euro-opt}
+   {:otsikko (str "Yhteensä " (.getYear (first @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-10-12 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
    {:otsikko (str "Määrä 1-9/" (.getYear (second @u/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :numero :leveys "10%"}
-   {:otsikko (str "Yhteensä " (.getYear (second @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-1-9 :tasaa :oikea :tyyppi :string :leveys "10%" :fmt fmt/euro-opt}
+   {:otsikko (str "Yhteensä " (.getYear (second @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-1-9 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "7%"}
    {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "10%"}
    {:otsikko "Kausi yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "13%" :fmt fmt/euro-opt}])
