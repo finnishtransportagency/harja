@@ -30,7 +30,10 @@
     * horizontal asettaa sailion tyylin inline-blockiksi (8.5.2015)
   - suljettava-virhe? (false)
     * Jos virhe on suljettava, annetaan inline viestille oikeaan yläkulmaan rasti.
-    * Oletuksena viestit suljetaan aina, kun tätä nappia painetaan uudelleen"
+    * Oletuksena viestit suljetaan aina, kun tätä nappia painetaan uudelleen
+  - disabled (false)
+    * jos true, nappi on disabloitu aina"
+  
 
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)
@@ -54,9 +57,9 @@
       (log "Näytä virheviest? " @nayta-virheviesti?)
       [:span
        [:button
-        {:class    (if @kysely-kaynnissa?
-                     (str (name luokka) " disabled")
-                     luokka)
+        {:class (if (or @kysely-kaynnissa? (:disabled asetukset))
+                  (str (name luokka) " disabled")
+                  luokka)
          :on-click #(do
                      (.preventDefault %)
                      (reset! kysely-kaynnissa? true)
