@@ -26,18 +26,18 @@
 
 (defonce valittu-yks-hint-toteuma (atom nil))
 
-(defn tallenna-toteuma [toteuma tehtavat]
-  (let [toteuma (->
-                  (assoc toteuma
-                  :alkanut (:toteutunut-pvm toteuma)
-                  :paattynyt (:toteutunut-pvm toteuma)
+(defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
+  (let [schema-toteuma (->
+                  (assoc lomakkeen-toteuma
+                  :alkanut (:toteutunut-pvm lomakkeen-toteuma)
+                  :paattynyt (:toteutunut-pvm lomakkeen-toteuma)
                   :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
-                  :tehtavat tehtavat)
+                  :tehtavat lomakkeen-tehtavat)
                   (dissoc :toteutunut-pvm))]
-    (log "SÖSÖ Tallennetaan toteuma: " (pr-str toteuma))
-    (toteumat/tallenna-toteuma toteuma)))
+    (log "SÖSÖ Tallennetaan toteuma: " (pr-str schema-toteuma))
+    (toteumat/tallenna-toteuma schema-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat]
   (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
