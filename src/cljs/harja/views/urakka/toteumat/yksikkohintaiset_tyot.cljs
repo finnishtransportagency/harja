@@ -26,46 +26,45 @@
 
 (defonce valittu-yks-hint-toteuma (atom nil))
 
-(defn tehtavat-ja-maarat []
-  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
-                                       (filter (fn [[t1 t2 t3 t4]]
-                                                 (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
-                                               @u/urakan-toimenpiteet-ja-tehtavat)))
-        tehtavat (atom nil)]
-  [grid/muokkaus-grid
-   {:tyhja "Ei töitä."}
-
-   [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
-     :valinnat @toimenpiteen-tehtavat
-     :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
-     :validoi [[:ei-tyhja "Valitse tehtävä."]]
-     :leveys "50%"}
-
-    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
-    {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :tehtava) :leveys "5%"}]
-   tehtavat]))
-
 (defn tallenna-toteuma [toteuma tehtavat]
-  (let [toteuma (assoc toteuma
+  (log "SÖSÖ Tallennettava toteuma: " (pr-str toteuma))
+  (log "SÖSÖ Tallennettavat tehtävät: " (pr-str tehtavat))
+  (let [toteuma (->
+                  (assoc toteuma
                   :alkanut (:toteutunut-pvm toteuma)
                   :paattynyt (:toteutunut-pvm toteuma)
                   :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
-                  :tehtavat (mapv (fn [tehtava]
-                                    (log "TEHTAVA: " (pr-str tehtava))
-                                    {:toimenpidekoodi (:id (:toimenpidekoodi tehtava))
-                                     :maara (js/parseFloat (:maara tehtava))})
-                                  tehtavat))]
+                  :tehtavat tehtavat)
+                  (dissoc :toteutunut-pvm))]
     (log "SÖSÖ Tallennetaan toteuma: " (pr-str toteuma))
     (toteumat/tallenna-toteuma toteuma)))
+
+(defn tehtavat-ja-maarat [tehtavat]
+  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
+                                             (filter (fn [[t1 t2 t3 t4]]
+                                                       (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+                                                     @u/urakan-toimenpiteet-ja-tehtavat)))]
+    (log "SÖSÖ tehtavat " (pr-str tehtavat))
+    [grid/muokkaus-grid
+     {:tyhja "Ei töitä."}
+
+     [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
+       :valinnat @toimenpiteen-tehtavat
+       :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
+       :validoi [[:ei-tyhja "Valitse tehtävä."]]
+       :leveys "50%"}
+
+      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :tehtava) :leveys "5%"}]
+     tehtavat]))
 
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
-  (let [muokattu (atom @valittu-yks-hint-toteuma)
-        tehtavat (atom {})
-        tallennus-kaynnissa (atom false)]
+  (let [muokattava-toteuma (atom @valittu-yks-hint-toteuma)
+        tehtavat (atom {})]
 
     (komp/luo
       (fn [ur]
@@ -79,22 +78,20 @@
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
-                              (reset! muokattu uusi))
-                  :footer [:button.nappi-ensisijainen
-                           {:class (when @tallennus-kaynnissa "disabled")
-                            :on-click
-                                   #(do (.preventDefault %)
-                                        (reset! tallennus-kaynnissa true)
-                                        (go (let [res (<! (tallenna-toteuma @muokattu (vals @tehtavat)))]
-                                              (if res
-                                                ;; Tallennus ok
-                                                (do (viesti/nayta! "Toteuma tallennettu")
-                                                    (reset! tallennus-kaynnissa false)
-                                                    (reset! valittu-yks-hint-toteuma nil))
-
-                                                ;; Epäonnistui jostain syystä
-                                                (reset! tallennus-kaynnissa false)))))}
-                           "Tallenna toteuma"]
+                              (reset! muokattava-toteuma uusi))
+                  :footer   [harja.ui.napit/palvelinkutsu-nappi
+                             "Tallenna toteuma"
+                             #(tallenna-toteuma @muokattava-toteuma (mapv
+                                                                      (fn [rivi]
+                                                                        {:toimenpidekoodi (:id (:tehtava rivi))
+                                                                         :maara (:maara rivi)})
+                                                                      (vals @tehtavat)))
+                             {:luokka :nappi-ensisijainen}
+                             {:kun-onnistuu
+                              #(do
+                                (reset! tehtavat nil)
+                                (reset! muokattava-toteuma nil)
+                                (reset! valittu-yks-hint-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
@@ -106,11 +103,9 @@
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat]}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
-           ]
-
-          @muokattu]]))))
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat tehtavat]}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
+          @muokattava-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
