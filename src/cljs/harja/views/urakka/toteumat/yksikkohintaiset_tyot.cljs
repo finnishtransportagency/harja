@@ -24,7 +24,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce valittu-yks-hint-toteuma (atom nil))
+(defonce lomakkeessa-muokattava-toteuma (atom nil))
 
 (defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
   (let [schema-toteuma (->
@@ -60,35 +60,33 @@
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
-  (let [muokattava-toteuma (atom @valittu-yks-hint-toteuma)
-        tehtavat (atom {})]
-
-    (log "SÖSÖ Muokataan: " (pr-str muokattava-toteuma))
+  (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
+        lomake-tehtavat (atom {})]
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-yks-hint-toteuma nil)}
+         [:button.nappi-toissijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
-         (if (:toteuma_id @valittu-yks-hint-toteuma)
+         (if (:toteuma-id @lomakkeessa-muokattava-toteuma)
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
                               (log "SÖSÖ Muokataan" (pr-str uusi))
-                              (reset! muokattava-toteuma uusi))
+                              (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
-                             #(tallenna-toteuma @muokattava-toteuma (mapv
+                             #(tallenna-toteuma @lomake-toteuma (mapv
                                                                       (fn [rivi]
                                                                         {:toimenpidekoodi (:id (:tehtava rivi))
                                                                          :maara (:maara rivi)})
-                                                                      (vals @tehtavat)))
+                                                                      (vals @lomake-tehtavat)))
                              {:luokka :nappi-ensisijainen
                               :kun-onnistuu #(do
-                                        (reset! tehtavat nil)
-                                        (reset! muokattava-toteuma nil)
-                                        (reset! valittu-yks-hint-toteuma nil))}]
+                                        (reset! lomake-tehtavat nil)
+                                        (reset! lomake-toteuma nil)
+                                        (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
@@ -100,10 +98,10 @@
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
-           {:otsikko "Suorittaja" :nimi :suorittajan_nimi :tyyppi :string}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat tehtavat]}
+           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string}
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
-          @muokattava-toteuma]]))))
+          @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
@@ -123,15 +121,17 @@
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :numero :leveys "20%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-         {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti :leveys "20%"
+         {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
-                                                               #(reset! valittu-yks-hint-toteuma (->
-                                                                                                   (assoc rivi :toteutunut-pvm (:alkanut rivi))
-                                                                                                   (assoc :tehtavat (filter
-                                                                                                                           (fn [tehtava]
-                                                                                                                             (= (:toteuma_id tehtava) (:toteuma_id rivi)))
-                                                                                                                             @yksiloidyt-tehtavat))))
-                                                               } (ikonit/eye-open) " Toteuma"]) :muokattava? (constantly false)}]
+                                                               #(reset! lomakkeessa-muokattava-toteuma {:toteuma-id (:toteuma_id rivi)
+                                                                                                        :tehtavat (filter ; Tehtävät, jotka kuuluvat samaan toteumaan
+                                                                                                                    (fn [tehtava]
+                                                                                                                      (= (:toteuma_id tehtava) (:toteuma_id rivi)))
+                                                                                                                    @yksiloidyt-tehtavat)
+                                                                                                        :toteutunut-pvm (:alkanut rivi)
+                                                                                                        :lisatieto (:lisatieto rivi)
+                                                                                                        :suorittajan-nimi (:suorittajan_nimi rivi)})}
+                                   (ikonit/eye-open) " Toteuma"]) }]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter
@@ -225,7 +225,7 @@
         [:div#yksikkohintaisten-toteumat
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
-         [:button.nappi-ensisijainen {:on-click #(reset! valittu-yks-hint-toteuma {})}
+         [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
           (ikonit/plus-sign) " Lisää toteuma"]
 
          [grid/grid
@@ -249,7 +249,6 @@
             @tyorivit)]]))))
 
 (defn yksikkohintaisten-toteumat []
-  (if @valittu-yks-hint-toteuma
+  (if @lomakkeessa-muokattava-toteuma
     [yksikkohintaisen-toteuman-muokkaus]
-    [yksikkohintaisten-toteumalistaus]
-    ))
+    [yksikkohintaisten-toteumalistaus]))
