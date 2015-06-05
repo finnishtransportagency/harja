@@ -61,7 +61,10 @@
   "Uuden toteuman syöttäminen"
   []
   (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
-        lomake-tehtavat (atom {})]
+        lomake-tehtavat (atom (:tehtavat @lomakkeessa-muokattava-toteuma))]
+
+    (log "SÖSÖ Lomake-toteuma: " (pr-str @lomake-toteuma))
+    (log "SÖSÖ Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -73,7 +76,7 @@
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
-                              (log "SÖSÖ Muokataan" (pr-str uusi))
+                              (log "SÖSÖ Muokataan toteumaa: " (pr-str uusi))
                               (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -123,15 +126,13 @@
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
-                                                               #(reset! lomakkeessa-muokattava-toteuma {:toteuma-id (:toteuma_id rivi)
-                                                                                                        :tehtavat (filter ; Tehtävät, jotka kuuluvat samaan toteumaan
-                                                                                                                    (fn [tehtava]
-                                                                                                                      (= (:toteuma_id tehtava) (:toteuma_id rivi)))
-                                                                                                                    @yksiloidyt-tehtavat)
-                                                                                                        :toteutunut-pvm (:alkanut rivi)
-                                                                                                        :lisatieto (:lisatieto rivi)
+                                                               #(reset! lomakkeessa-muokattava-toteuma {:toteuma-id       (:toteuma_id rivi)
+                                                                                                        :tehtavat         {1 {:maara 5 :tehtava {:id 1351 :yksikko "vrk"}}
+                                                                                                                           2 {:maara 3 :tehtava {:id 1350 :yksikko "km"}}}
+                                                                                                        :toteutunut-pvm   (:alkanut rivi)
+                                                                                                        :lisatieto        (:lisatieto rivi)
                                                                                                         :suorittajan-nimi (:suorittajan_nimi rivi)})}
-                                   (ikonit/eye-open) " Toteuma"]) }]
+                                   (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter
