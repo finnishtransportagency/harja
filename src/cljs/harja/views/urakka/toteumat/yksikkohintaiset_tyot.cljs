@@ -27,8 +27,6 @@
 (defonce valittu-yks-hint-toteuma (atom nil))
 
 (defn tallenna-toteuma [toteuma tehtavat]
-  (log "SÖSÖ Tallennettava toteuma: " (pr-str toteuma))
-  (log "SÖSÖ Tallennettavat tehtävät: " (pr-str tehtavat))
   (let [toteuma (->
                   (assoc toteuma
                   :alkanut (:toteutunut-pvm toteuma)
@@ -46,7 +44,6 @@
                                              (filter (fn [[t1 t2 t3 t4]]
                                                        (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
                                                      @u/urakan-toimenpiteet-ja-tehtavat)))]
-    (log "SÖSÖ tehtavat " (pr-str tehtavat))
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
 
@@ -66,6 +63,7 @@
   (let [muokattava-toteuma (atom @valittu-yks-hint-toteuma)
         tehtavat (atom {})]
 
+    (log "SÖSÖ Muokataan: " (pr-str muokattava-toteuma))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -77,7 +75,7 @@
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
-                              (log "MUOKATAAN " (pr-str uusi))
+                              (log "SÖSÖ Muokataan" (pr-str uusi))
                               (reset! muokattava-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -102,6 +100,7 @@
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
+           {:otsikko "Suorittaja" :nimi :suorittajan_nimi :tyyppi :text :leveys-col 2}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat tehtavat]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
           @muokattava-toteuma]]))))
@@ -125,7 +124,10 @@
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti :leveys "20%"
-          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click #(reset! valittu-yks-hint-toteuma rivi)} (ikonit/eye-open) " Toteuma"]) :muokattava? (constantly false)}]
+          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
+                                                               #(reset! valittu-yks-hint-toteuma (->
+                                                                                                   (assoc rivi :toteutunut-pvm (:alkanut rivi))))
+                                                               } (ikonit/eye-open) " Toteuma"]) :muokattava? (constantly false)}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter
