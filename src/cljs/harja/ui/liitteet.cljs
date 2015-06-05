@@ -20,11 +20,10 @@ Optiot voi sisältää:
   [opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
-
-        ;; Edistymi nen, kun lataus on menossa (nil jos ei lataus menossa)
+        ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)]
     
-    (fn [opts]
+    (fn [{:keys [liite-ladattu] :as opts}]
       (if-let [tiedosto @tiedosto]
         ;; Tiedosto on jo ladatty palvelimelle, näytetään se
         [:div.liite
@@ -46,7 +45,7 @@ Optiot voi sisältää:
                                        (do (reset! edistyminen ed)
                                            (recur (<! ch)))
 
-                                       (reset! tiedosto ed)))))}])))))
+                                       (liite-ladattu (reset! tiedosto ed))))))}])))))
           
                                    
                                  

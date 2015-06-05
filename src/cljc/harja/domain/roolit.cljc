@@ -25,6 +25,14 @@
     urakoitsijan-urakan-vastuuhenkilo
     urakoitsijan-laatuvastaava})
 
+(def havaintojen-kirjaus
+  "Roolit, joilla on oikeus kirjata havaintoja urakkaan."
+  #{urakanvalvoja
+    urakoitsijan-paakayttaja
+    urakoitsijan-urakan-vastuuhenkilo
+    urakoitsijan-laatuvastaava
+    tilaajan-laadunvalvontakonsultti})
+
 ;; Tietokannan rooli enumin selvempi kuvaus
 (def +rooli->kuvaus+
   {"jarjestelmavastuuhenkilo" "Järjestelmävastuuhenkilö"

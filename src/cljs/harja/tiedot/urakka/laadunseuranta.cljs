@@ -13,8 +13,8 @@
   "Hakee annetun urakan havainnot urakka id:n ja aikavälin perusteella."
   [urakka-id alkupvm loppupvm]
   (k/post! :hae-urakan-havainnot {:urakka-id urakka-id
-                                  :alkupvm alkupvm
-                                  :loppupvm loppupvm}))
+                                  :alku alkupvm
+                                  :loppu loppupvm}))
 
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
@@ -22,6 +22,8 @@
   (k/post! :hae-tarkastus {:urakka-id urakka-id
                            :tarkastus-id tarkastus-id}))
 
+(defn tallenna-havainto [havainto]
+  (k/post! :tallenna-havainto havainto))
 
   
   

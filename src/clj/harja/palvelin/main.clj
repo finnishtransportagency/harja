@@ -34,6 +34,7 @@
    [harja.palvelin.palvelut.lampotilat :as lampotilat]
    [harja.palvelin.palvelut.maksuerat :as maksuerat]
    [harja.palvelin.palvelut.liitteet :as liitteet]
+   [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -139,6 +140,10 @@
      :liitteet (component/using
                 (liitteet/->Liitteet)
                 [:http-palvelin :db])
+
+     :laadunseuranta (component/using
+                      (laadunseuranta/->Laadunseuranta)
+                      [:http-palvelin :db])
      )))
 
 (defonce harja-jarjestelma nil)
