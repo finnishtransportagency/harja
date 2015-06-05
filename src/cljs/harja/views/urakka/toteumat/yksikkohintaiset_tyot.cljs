@@ -69,7 +69,7 @@
         [:div.toteuman-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! valittu-yks-hint-toteuma nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
-         (if (:id @valittu-yks-hint-toteuma)
+         (if (:toteuma_id @valittu-yks-hint-toteuma)
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
 
@@ -100,7 +100,7 @@
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
-           {:otsikko "Suorittaja" :nimi :suorittajan_nimi :tyyppi :text :leveys-col 2}
+           {:otsikko "Suorittaja" :nimi :suorittajan_nimi :tyyppi :string}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat tehtavat]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
           @muokattava-toteuma]]))))
@@ -126,7 +126,11 @@
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
                                                                #(reset! valittu-yks-hint-toteuma (->
-                                                                                                   (assoc rivi :toteutunut-pvm (:alkanut rivi))))
+                                                                                                   (assoc rivi :toteutunut-pvm (:alkanut rivi))
+                                                                                                   (assoc :tehtavat (filter
+                                                                                                                           (fn [tehtava]
+                                                                                                                             (= (:toteuma_id tehtava) (:toteuma_id rivi)))
+                                                                                                                             @yksiloidyt-tehtavat))))
                                                                } (ikonit/eye-open) " Toteuma"]) :muokattava? (constantly false)}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
