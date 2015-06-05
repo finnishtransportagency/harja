@@ -78,7 +78,9 @@
                                 (konv/sql-timestamp (:alkanut toteuma))
                                 (konv/sql-timestamp (:paattynyt toteuma))
                                 (name (:tyyppi toteuma))
-                                (:id user))
+                                (:id user)
+                                (:suorittajan-nimi toteuma)
+                                (:suorittajan-ytunnus toteuma))
           id (:id uusi)]
       ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
       (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
@@ -140,11 +142,15 @@
                                             (do
                                               (log/info "Pävitetään toteumaa " (:id t))
                                               (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
-                                                                  (:id t) (:urakka t))
+                                                                  (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:id t) (:urakka t))
                                               t)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
-                                              (q/luo-toteuma<! c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user))))]
+                                              (q/luo-toteuma<!
+                                                c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
+                                                (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
+                                                (:suorittajan-nimi t)
+                                                (:suorittajan-ytunnus t))))]
                               (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
                               (doall
                                 (for [tm toteumamateriaalit]

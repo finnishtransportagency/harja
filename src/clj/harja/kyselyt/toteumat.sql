@@ -53,15 +53,16 @@ WHERE toimenpidekoodi = :toimenpidekoodi;
 
 -- name: paivita-toteuma!
 UPDATE toteuma
-SET alkanut=:alkanut, paattynyt=:paattynyt, muokattu=NOW(), muokkaaja=:kayttaja
+SET alkanut=:alkanut, paattynyt=:paattynyt, muokattu=NOW(), muokkaaja=:kayttaja,
+  suorittajan_nimi=:suorittajan_nimi, suorittajan_ytunnus=:ytunnus
 WHERE id=:id AND urakka=:urakka;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
 INSERT
   INTO toteuma
-       (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja, poistettu)
-VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja, false);
+       (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja, poistettu, suorittajan_nimi, suorittajan_ytunnus)
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja, false, :suorittaja, :tunnus);
 
 -- name: poista-toteuma!
 UPDATE toteuma
