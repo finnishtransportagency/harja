@@ -28,6 +28,9 @@
 
 (defn tallenna-toteuma [toteuma tehtavat]
   (let [toteuma (assoc toteuma
+                  :alkanut (:toteutunut-pvm toteuma)
+                  :paattynyt (:toteutunut-pvm toteuma)
+                  :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
                   :tehtavat (mapv (fn [tehtava]
@@ -35,6 +38,7 @@
                                     {:toimenpidekoodi (:id (:toimenpidekoodi tehtava))
                                      :maara (js/parseFloat (:maara tehtava))})
                                   tehtavat))]
+    (log "SÖSÖ Tallennetaan toteuma: " (pr-str toteuma))
     (toteumat/tallenna-toteuma toteuma)))
 
 (defn yksikkohintaisen-toteuman-muokkaus
@@ -72,7 +76,7 @@
                                               (if res
                                                 ;; Tallennus ok
                                                 (do (viesti/nayta! "Toteuma tallennettu")
-                                                    ; FIXME Pitäisikö asettaa tallennus-kaynnissa false? -Jari
+                                                    (reset! tallennus-kaynnissa false)
                                                     (reset! valittu-yks-hint-toteuma nil))
 
                                                 ;; Epäonnistui jostain syystä
@@ -97,22 +101,22 @@
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
            ;; fixme: alas valitun tehtävän yksikkö toteutuneen määrän jälkeen näkyviin
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :tyyppi :numero :leveys-col 2}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
            ]
 
           @muokattu]]))))
 
-(defn tehtavan-toteumat [rivi]
+(defn yksiloidyt-tehtavat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toimenpidekoodi (:id rivi)
-        tehtavat-toimenpiteittain (reaction<! (toteumat/hae-urakan-tehtavat-toteumittain urakka-id sopimus-id aikavali toimenpidekoodi))]
+        yksiloidyt-tehtavat (reaction<! (toteumat/hae-urakan-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali toimenpidekoodi))]
 
     (fn [rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
-        {:tyhja (if (nil? @tehtavat-toimenpiteittain) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
+        {:tyhja (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :komponentti :komponentti (fn [rivi] (pvm/pvm-aika (:alkanut rivi))) :leveys "25%"}
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
@@ -121,7 +125,7 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter
             (fn [rivi] (= (:tyyppi rivi) "yksikkohintainen"))
-            @tehtavat-toimenpiteittain))]])))
+            @yksiloidyt-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -216,7 +220,7 @@
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [tehtavan-toteumat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
