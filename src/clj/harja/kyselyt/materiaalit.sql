@@ -54,7 +54,8 @@ WHERE t.urakka = :urakka AND
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT m.nimi as toteumamateriaali_materiaali_nimi, m.yksikko as toteumamateriaali_materiaali_yksikko, tm.maara as toteumamateriaali_maara,
-  t.alkanut as toteuma_alkanut, t.paattynyt as toteuma_paattynyt, m.id as toteumamateriaali_materiaali_id, t.id as toteuma_id, tm.id as toteumamateriaali_tmid
+  t.alkanut as toteuma_alkanut, t.paattynyt as toteuma_paattynyt, m.id as toteumamateriaali_materiaali_id, t.id as toteuma_id, tm.id as toteumamateriaali_tmid,
+  t.suorittajan_nimi as toteuma_suorittaja, t.suorittajan_ytunnus as toteuma_ytunnus, t.lisatieto as toteuma_lisatieto
 FROM toteuma_materiaali tm
   LEFT JOIN toteuma t ON t.id = tm.toteuma
   LEFT JOIN materiaalikoodi m ON tm.materiaalikoodi = m.id

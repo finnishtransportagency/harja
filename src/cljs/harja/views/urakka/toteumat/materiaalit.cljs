@@ -43,7 +43,10 @@
                                  tm)
         toteuma {:id (:id m) :urakka (:id @nav/valittu-urakka)
                  :alkanut (:alkanut m) :paattynyt (:paattynyt m)
-                 :sopimus (first @u/valittu-sopimusnumero) :tyyppi nil}] ;fixme hard-koodattu tyyppi
+                 :sopimus (first @u/valittu-sopimusnumero) :tyyppi nil
+                 :suorittajan-nimi (:suorittaja m)
+                 :suorittajan-ytunnus (:ytunnus m)
+                 :lisatieto (:lisatieto m)}]
     (log "KÄSITELTY TM: " (pr-str toteumamateriaalit))
     (log "KÄSITELTY T: " (pr-str toteuma))
     (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit)))
@@ -123,10 +126,11 @@
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
                              #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
-                             {:luokka :nappi-ensisijainen}
-                             #(do
+                             {:luokka :nappi-ensisijainen
+                              :ikoni (ikonit/envelope)
+                             :kun-onnistuu #(do
                                (reset! urakan-materiaalin-kaytot %)
-                               (reset! valittu-materiaalin-kaytto nil))]
+                               (reset! valittu-materiaalin-kaytto nil))}]
                             #_[:button.nappi-ensisijainen
                              {:class (when @tallennus-kaynnissa "disabled")
                               :on-click #(do (.preventDefault %)
@@ -153,12 +157,14 @@
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
-
+           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja}
+           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus}
+           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto}
            {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut
             :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"} ;fixme päivämääräkenttä fukkaa kun muokattava?=false
            {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt
             :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
-           {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat materiaalitoteumat-mapissa]}]
+           {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat materiaalitoteumat-mapissa] :tyyppi :komponentti}]
 
           @muokattu]]))))
 

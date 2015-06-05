@@ -80,7 +80,8 @@
                                 (name (:tyyppi toteuma))
                                 (:id user)
                                 (:suorittajan-nimi toteuma)
-                                (:suorittajan-ytunnus toteuma))
+                                (:suorittajan-ytunnus toteuma)
+                                (:lisatieto toteuma))
           id (:id uusi)]
       ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
       (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
@@ -142,7 +143,7 @@
                                             (do
                                               (log/info "Pävitetään toteumaa " (:id t))
                                               (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
-                                                                  (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:id t) (:urakka t))
+                                                                  (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
                                               t)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
@@ -150,7 +151,8 @@
                                                 c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
                                                 (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
                                                 (:suorittajan-nimi t)
-                                                (:suorittajan-ytunnus t))))]
+                                                (:suorittajan-ytunnus t)
+                                                (:lisatieto t))))]
                               (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
                               (doall
                                 (for [tm toteumamateriaalit]
