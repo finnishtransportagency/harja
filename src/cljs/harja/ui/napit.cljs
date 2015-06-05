@@ -11,12 +11,12 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn palvelinkutsu-nappi ;todo lisää onnistumisviesti
-  [teksti kysely asetukset cbs]
+  [teksti kysely asetukset callback]
   "Nappi, jonka painaminen laukaisee palvelukutsun. Kyselyn pitää olla funktio, joka palauttaa kanavan.
 
 
   Napille voi antaa callback funktion, jolloin callback on kun-onnistuu,
-  tai useamman callbackin mapissa:
+  tai useamman callbackin asetuksissa:
   - kun-valmis: kutsutaan AINA jos annettu. Kutsutaan ENSIMMÄISENÄ!
   - kun-virhe: kutsutaan, kun palvelinkutsu epäonnistuu
   - kun-onnistuu: kutsutaan, kun palvelinkutsu onnistuu.
@@ -35,14 +35,7 @@
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)
         luokka (if(nil? (:luokka asetukset)) :nappi-toissijainen (:luokka asetukset))
-        ikoni (if (:ikoni asetukset)
-                (:ikoni asetukset)
-
-                (case luokka
-                  :nappi-toissijainen (ikonit/plus)
-                  :nappi-ensisijainen (ikonit/search)
-                  :nappi-kielteinen (ikonit/remove)
-                  (ikonit/check)))
+        ikoni (:ikoni asetukset)
         virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
         virheen-esitystapa (case (:virheen-esitystapa asetukset)
                              :modal :modal
@@ -52,10 +45,9 @@
                              :vertical)
         suljettava-virhe? (if (nil? (:suljettava-virhe? asetukset)) true false)
         sulkemisfunktio #(reset! nayta-virheviesti? false)
-        callbackit (if (fn? cbs) {:kun-onnistuu cbs} cbs)
-        kun-valmis (:kun-valmis callbackit)
-        kun-virhe (:kun-virhe callbackit )
-        kun-onnistuu (:kun-onnistuu callbackit)
+        kun-valmis (:kun-valmis asetukset)
+        kun-virhe (:kun-virhe asetukset)
+        kun-onnistuu (:kun-onnistuu asetukset)
         ]
 
     (fn [teksti kysely asetukset cbs]
@@ -83,7 +75,7 @@
                                (when kun-valmis (kun-valmis tulos))
                                (when kun-virhe (kun-virhe tulos)))))))}
 
-        (if @kysely-kaynnissa? [y/ajax-loader] ikoni) (str " " teksti)]
+        (if @kysely-kaynnissa? [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
        (when @nayta-virheviesti?
          (do
            (log "Näytetään virheviesti")
