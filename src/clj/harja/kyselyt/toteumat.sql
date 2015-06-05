@@ -36,8 +36,22 @@ SELECT DISTINCT date_trunc('day', alkanut) as paiva
 -- Hakee tehtävät, joita annetulle urakalle voi kirjata.
 SELECT id,nimi,yksikko FROM toimenpidekoodi
  WHERE taso = 4
-   AND poistettu = false
+   AND poistettu IS NOT true
    AND emo IN (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = :urakka);
+
+-- name: hae-urakan-tehtavat-toimenpidekoodilla
+-- Hakee urakan tehtävät tietyllä toimenpidekoodilla
+SELECT tt.id as tehtava_id, tt.toteuma as toteuma_id, tt.toimenpidekoodi, tt.maara,
+(SELECT nimi FROM toimenpidekoodi tpk WHERE id = tt.toimenpidekoodi) as toimenpide,
+(SELECT tyyppi FROM toteuma t WHERE t.id = tt.toteuma) as tyyppi
+FROM toteuma_tehtava tt
+RIGHT JOIN toteuma t ON tt.toteuma = t.id
+      AND sopimus = 1
+      AND urakka = 1
+      AND alkanut >= '2005-10-01 00:00.00'
+      AND paattynyt <= '2006-09-30 00:00.00'
+WHERE toimenpidekoodi = 1350
+AND tt.poistettu IS NOT true;
 
 -- name: paivita-toteuma!
 UPDATE toteuma
