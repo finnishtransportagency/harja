@@ -86,12 +86,11 @@
                                                                         {:toimenpidekoodi (:id (:tehtava rivi))
                                                                          :maara (:maara rivi)})
                                                                       (vals @tehtavat)))
-                             {:luokka :nappi-ensisijainen}
-                             {:kun-onnistuu
-                              #(do
-                                (reset! tehtavat nil)
-                                (reset! muokattava-toteuma nil)
-                                (reset! valittu-yks-hint-toteuma nil))}]
+                             {:luokka :nappi-ensisijainen
+                              :kun-onnistuu #(do
+                                        (reset! tehtavat nil)
+                                        (reset! muokattava-toteuma nil)
+                                        (reset! valittu-yks-hint-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
