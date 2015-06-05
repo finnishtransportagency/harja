@@ -12,7 +12,7 @@ Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
 tiedoston lataamisesta.
 
 Optiot voi sisältää:
-
+  :urakka-id         urakan id, jolle liite lisätään
   :liite-ladattu     Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
                      Parametriksi annetaan mäppi, jossa liitteen tiedot: :id,
                      :nimi, :tyyppi, :pikkukuva-url, :url. "
@@ -28,8 +28,7 @@ Optiot voi sisältää:
       (if-let [tiedosto @tiedosto]
         ;; Tiedosto on jo ladatty palvelimelle, näytetään se
         [:div.liite
-         (when-let [pikkukuva-url (:pikkukuva-url tiedosto)]
-           [:img.pikkukuva {:src pikkukuva-url}])
+         [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
          ;; FIXME: voiko tässä poistaa myös?
          (:nimi tiedosto)]
 
@@ -40,7 +39,7 @@ Optiot voi sisältää:
           
           ;; Tiedostoa ei vielä valittu
           [:input {:type "file"
-                   :on-change #(let [ch (k/laheta-liite! (.-target %))]
+                   :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
                                  (go
                                    (loop [ed (<! ch)]
                                      (if (number? ed)

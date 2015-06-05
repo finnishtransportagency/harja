@@ -50,6 +50,11 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
+(defn transit-vastaus [data]
+  {:status 200
+   :headers {"Content-Type" "application/transit+json"}
+   :body (clj->transit data)})
+
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
@@ -71,9 +76,7 @@
              :body "Ei validi kysely"}
             
             (let [vastaus (palvelu-fn (:kayttaja req) kysely)]
-              {:status 200
-               :headers {"Content-Type" "application/transit+json"}
-               :body (clj->transit vastaus)})))))))
+              (transit-vastaus vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 

@@ -16,11 +16,18 @@
 (defn polku []
   (str +polku+ "_/"))
 
-
 (deftype DateTimeHandler []
   Object
   (tag [_ v] "dt")
   (rep [_ v] (pvm/pvm-aika-sek v)))
+
+(def transit-request-optiot {:handlers
+                             {DateTime    (DateTimeHandler.)
+                              UtcDateTime (DateTimeHandler.)}})
+
+(def transit-response-optiot {:handlers
+                              {"dt" (fn [v]
+                                      (pvm/->pvm-aika-sek v))}})
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
@@ -32,12 +39,8 @@
     (ajax-request {:uri             (str (polku) (name palvelu))
                    :method          metodi
                    :params          parametrit
-                   :format          (transit-request-format {:handlers
-                                                             {DateTime    (DateTimeHandler.)
-                                                              UtcDateTime (DateTimeHandler.)}})
-                   :response-format (transit-response-format {:handlers
-                                                              {"dt" (fn [v]
-                                                                      (pvm/->pvm-aika-sek v))}})
+                   :format          (transit-request-format transit-request-optiot)
+                   :response-format (transit-response-format transit-response-optiot)
                    :handler         cb
                    :error-handler   (fn [[_ error]]
                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
@@ -80,13 +83,16 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (.append form-data "liite" (aget tiedostot i)))
 
     (set! (.-onload xhr)
-          (fn [result]
-            (log "SAATIIN VASTAUS: " xhr)
-            (put! ch {:nimi "rekka_kaatui.jpg"
-                      :pikkukuva-url "/images/rekka_kaatui_thumbnail.jpg"
-                      :tyyppi "image/jpeg"
-                      :koko 70720})
-            (close! ch)))
+          (fn [event]
+            (let [request (.-target event)]
+              (if (= 200 (.-status request))
+                (let [transit-json (.-responseText request)
+                      transit (t/read (t/reader :json transit-response-optiot) transit-json)]
+                  (log "SAATIIN VASTAUS: " (pr-str transit))
+                  (put! ch transit)
+                  (close! ch))
+                (do (put! ch {:error :liitteen-lahetys-epaonnistui})
+                    (close! ch))))))
 
     (set! (.-onprogress siirto)
           (fn [e]

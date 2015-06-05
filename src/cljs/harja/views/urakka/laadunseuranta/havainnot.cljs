@@ -149,7 +149,7 @@
      ]]])
 
 (defn kommentit [{:keys [kommentoi!]} kommentit]
-  (let [uusi-kommentti (atom "")]
+  (let [uusi-kommentti (atom {:kommentti "" :liite nil})]
     (fn [{:keys [kommentoi!]} kommentit]
       [:div.kommentit
        (for [{:keys [pvm tekija kommentti rooli liitteet]} kommentit]
@@ -170,13 +170,13 @@
           [kentat/tee-kentta {:tyyppi :text :nimi :teksti
                               :placeholder "Kirjoita uusi kommentti..."
                               :koko [80 :auto]}
-           uusi-kommentti]
+           (r/wrap (:kommentti @uusi-kommentti) #(swap! uusi-kommentti assoc :kommentti %))]
           [:button.nappi-ensisijainen.pull-right
            {:on-click #(kommentoi! @uusi-kommentti)
-            :disabled (str/blank? @uusi-kommentti)}
+            :disabled (str/blank? (:kommentti @uusi-kommentti))}
            "Tallenna kommentti"]
-          [liitteet/liite]]
-          )])))
+          [liitteet/liite {:urakka-id (:id @nav/valittu-urakka)
+                           :liite-ladattu #(swap! uusi-kommentti assoc :liite %)}]])])))
 
 
 (defn paatos?

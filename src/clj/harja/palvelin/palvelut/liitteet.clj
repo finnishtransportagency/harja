@@ -1,13 +1,14 @@
 (ns harja.palvelin.palvelut.liitteet
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [cognitect.transit :as t]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.params :refer [wrap-params]]
             [harja.kyselyt.liitteet :as q]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.oikeudet :as oik])
   (:import (java.io InputStream ByteArrayInputStream ByteArrayOutputStream)
            (org.postgresql PGConnection)
            (org.postgresql.largeobject LargeObject LargeObjectManager
@@ -62,19 +63,28 @@
 (defn tallenna-liite [db req]
   (println "LIITEHÄN SIELTÄ TULI: " (:params req))
 
-  (if-let [{:keys [filename content-type tempfile size]} (get (:params req) "liite")]
-    (let [pikkukuva (muodosta-pikkukuva tempfile)
-          oid (tallenna-lob db (io/input-stream tempfile))
-          liite (q/tallenna-liite<! db filename content-type size oid pikkukuva (:id (:kayttja req)))]
-      (log/debug "Tallennettu liite " filename " (" size " tavua)")
-      (-> liite
-          (dissoc :liite_oid :pikkukuva :luoja :luotu)))))
+  (let [parametrit (:params req)
+        liite (get parametrit "liite")
+        urakka (Integer/parseInt (get parametrit "urakka"))] 
+        
+    (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
+    (if liite 
+      (let [{:keys [filename content-type tempfile size]} liite
+            pikkukuva (muodosta-pikkukuva tempfile)
+            oid (tallenna-lob db (io/input-stream tempfile))
+            liite (q/tallenna-liite<! db filename content-type size oid pikkukuva (:id (:kayttaja req)) urakka)]
+        (log/debug "Tallennettu liite " filename " (" size " tavua)")
+        (transit-vastaus (-> liite
+                             (dissoc :liite_oid :pikkukuva :luoja :luotu))))
+
+      {:status 400
+       :body "Ei liitettä"})))
 
 
 (defn lataa-liite [db req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        ;; FIXME: tarkista pääsy liitteeseen! Ehkä pitää antaa linkki mistä liitettä haetaan (esim. kommentti tms)
-        {:keys [liite_oid tyyppi koko]} (first (q/hae-liite-lataukseen db id))]
+        {:keys [liite_oid tyyppi koko urakka]} (first (q/hae-liite-lataukseen db id))]
+    (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
     {:status 200
      :headers {"Content-Type" tyyppi
                "Content-Length" koko}
@@ -82,9 +92,9 @@
 
 (defn lataa-pikkukuva [db req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        ;; FIXME: tarkista pääsy liitteeseen! Ehkä pitää antaa linkki mistä liitettä haetaan (esim. kommentti tms)
-        {:keys [pikkukuva]} (first (q/hae-pikkukuva-lataukseen db id))]
-    (log/info "Ladataan pikkukuva " id)
+        {:keys [pikkukuva urakka]} (first (q/hae-pikkukuva-lataukseen db id))]
+    (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
+    (log/debug "Ladataan pikkukuva " id)
     (if pikkukuva
       {:status 200
        :headers {"Content-Type" "image/png"
@@ -106,7 +116,6 @@
                       {:ring-kasittelija? true})
     (julkaise-palvelu http-palvelin :lataa-pikkukuva
                       (wrap-params (fn [req]
-                                     (log/info "PIKKU KUVA")
                                      (lataa-pikkukuva (:db this) req)))
                       {:ring-kasittelija? true})
     this)
