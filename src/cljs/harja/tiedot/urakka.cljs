@@ -142,6 +142,8 @@ ja viimeinen voivat olla vajaat)."
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
 
+(defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
+
 (defonce urakan-toimenpiteet-ja-tehtavat
   (let [toimenpiteet-ja-tehtavat
         (reaction<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id @nav/valittu-urakka)))]
@@ -149,9 +151,8 @@ ja viimeinen voivat olla vajaat)."
     toimenpiteet-ja-tehtavat))
 
 (defonce erilliskustannukset-hoitokaudella
-  (let [aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)])
-        kustannukset (reaction<!
-              (toteumat/hae-urakan-erilliskustannukset (:id @nav/valittu-urakka) @aikavali))]
-    kustannukset))
-
-(tarkkaile! "erilliskustannukset-hoitokaudella" erilliskustannukset-hoitokaudella)
+  (reaction<! (let [ur (:id @nav/valittu-urakka)
+                    aikavali @valittu-hoitokausi
+                    sivu @toteumat-valilehti]
+                (when (and ur aikavali (= :erilliskustannukset sivu))
+                  (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
