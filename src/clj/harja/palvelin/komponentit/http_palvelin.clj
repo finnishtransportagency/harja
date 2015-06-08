@@ -173,7 +173,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
     (if (:ring-kasittelija? optiot)
       (swap! kasittelijat conj {:nimi nimi
                                 :fn (ring-kasittelija nimi palvelu-fn)})
-      (let [ar (arityt palvelu-fn)]
+      (let [ar (arityt palvelu-fn)
+            liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
+        (when liikaa-parametreja
+          (log/fatal "Palvelufunktiolla on oltava 1 parametri (GET: user) tai 2 parametria (POST: user payload), oli: " liikaa-parametreja))
         (when (ar 2)
           ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
           (swap! kasittelijat
