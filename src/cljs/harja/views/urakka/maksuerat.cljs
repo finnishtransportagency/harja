@@ -27,7 +27,7 @@
     :indeksi "Indeksit"
     :bonus "Bonukset"
     :sakko "Sakot"
-    :akillinen_hoitotyo "Äkilliset hoitotyöt"
+    :akillinen-hoitotyo "Äkilliset hoitotyöt"
     :muu "Muut"
     "Ei tyyppiä"))
 
@@ -39,7 +39,7 @@
     :indeksi 4
     :bonus 5
     :sakko 6
-    :akillinen_hoitotyo 7
+    :akillinen-hoitotyo 7
     :muu 8
     9))
 

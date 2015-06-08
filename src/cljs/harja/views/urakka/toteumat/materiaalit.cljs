@@ -24,7 +24,9 @@
 
 (def urakan-materiaalin-kaytot
   (reaction<! (when-let [ur @nav/valittu-urakka]
-                (toteumat/hae-urakassa-kaytetyt-materiaalit (:id ur)))))
+                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
+                                                                     (first @u/valittu-hoitokausi)
+                                                                     (second @u/valittu-hoitokausi)))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -60,13 +62,12 @@
 (defn poista-toteuma-materiaaleja
   [urakka]
   (fn [materiaalit]
-    #_(log (pr-str materiaalit))
-    (materiaali-tiedot/poista-toteuma-materiaaleja urakka (map :tmid materiaalit))))
+    (go (let [tulos (<!(materiaali-tiedot/poista-toteuma-materiaaleja urakka
+                                                   (map :tmid materiaalit)
+                                                   (first @u/valittu-hoitokausi)
+                                                   (second @u/valittu-hoitokausi)))]
+          (reset! urakan-materiaalin-kaytot tulos)))))
 
-#_(def materiaalikoodit (->>
-                        @(materiaali-tiedot/hae-materiaalikoodit)
-                        (map #(dissoc % :urakkatyyppi))
-                        (map #(dissoc % :kohdistettava))))
 
 
 (defn materiaalit-ja-maarat
@@ -126,29 +127,12 @@
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
                              #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
-                             {:luokka :nappi-ensisijainen
+                             {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
-                             :kun-onnistuu #(do
-                               (reset! urakan-materiaalin-kaytot %)
-                               (reset! valittu-materiaalin-kaytto nil))}]
-                            #_[:button.nappi-ensisijainen
-                             {:class (when @tallennus-kaynnissa "disabled")
-                              :on-click #(do (.preventDefault %)
-                                          (reset! tallennus-kaynnissa true)
-                                          (go (let
-                                                [res (<! (tallenna-toteuma-ja-toteumamateriaalit!
-                                                           (vals @materiaalitoteumat-mapissa)
-                                                           @muokattu))]
-                                                (if res
-                                                  ;; Tallennus ok
-                                                  (do
-                                                    (reset! tallennus-kaynnissa false)
-                                                    (viesti/nayta! "Toteuma tallennettu")
-                                                    (reset! valittu-materiaali-toteuma nil)
-
-                                                  ;; Epäonnistui jostain syystä
-                                                  (reset! tallennus-kaynnissa false))))))}
-                             "Tallenna toteuma"]}
+                             :kun-onnistuu
+                                      #(do
+                                        (reset! urakan-materiaalin-kaytot %)
+                                        (reset! valittu-materiaalin-kaytto nil))}]}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
@@ -177,10 +161,19 @@
     (komp/luo
       {:component-will-mount
        (fn [_]
-         ;(log "COMPONENT WILL MOUNT")
          (go
            (reset! tiedot
-                   (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk)))))))}
+                   (filter
+                     (fn [kartta]
+                       (let [hoitokauden-alku (first @u/valittu-hoitokausi)
+                             hoitokauden-loppu (second @u/valittu-hoitokausi)
+                             toteuman-alku (:alkanut (:toteuma kartta))
+                             toteuman-loppu (:paattynyt (:toteuma kartta))]
+
+                         (and
+                           (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku))
+                           (pvm/sama-tai-ennen? toteuman-loppu hoitokauden-loppu)))
+                     (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk))))))))}
 
       (fn [urakan-id vm]
         (log "Vetolaatikko tiedot:" (pr-str @tiedot))

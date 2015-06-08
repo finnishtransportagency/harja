@@ -36,7 +36,7 @@
 
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)
-        luokka (if(nil? (:luokka asetukset)) "nappi-ensisijainen" (:luokka asetukset))
+        luokka (if(nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
         ikoni (:ikoni asetukset)
         virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
         virheen-esitystapa (case (:virheen-esitystapa asetukset)
@@ -44,7 +44,7 @@
                              :flash :flash
                              :vertical :vertical
                              :horizontal :horizontal
-                             :verizontal)
+                             :vertical)
         suljettava-virhe? (if (nil? (:suljettava-virhe? asetukset)) true false)
         sulkemisfunktio #(reset! nayta-virheviesti? false)
         kun-valmis (:kun-valmis asetukset)

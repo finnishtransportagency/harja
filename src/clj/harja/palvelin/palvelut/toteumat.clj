@@ -67,7 +67,7 @@
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
 
-                          
+
 (defn tallenna-toteuma [db user toteuma]
   ; FIXME Tee tästä tallenna-toteuma-ja-tehtavat joka osaa myös päivittää. Katso mallia: tallenna-toteuma-ja-toteumamateriaalit
   (validoi Toteuma toteuma)
@@ -90,7 +90,7 @@
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
         (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
-      
+
       true)))
 
 (defn paivita-yk-hint-toiden-tehtavat [db user payload]
@@ -140,6 +140,9 @@
         (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)
         (or (:poistettu ek) false) (:id ek)))
 
+    (log/debug "Merkitään maksuerä likaiseksi erilliskustannuksen toimenpideinstanssille: " (:toimenpideinstanssi ek))
+    (q/merkitse-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
+
     (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
                                              :alkupvm (:alkupvm ek)
                                              :loppupvm (:loppupvm ek)})))
@@ -171,13 +174,19 @@
                               (doall
                                 (for [tm toteumamateriaalit]
                                   (if (and (:id tm) (pos? (:id tm)))
-                                    (do
-                                      (log/info "Päivitä materiaalitoteuma " (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:id toteuma))
-                                      (materiaalit-q/paivita-toteuma-materiaali! c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm)))
+                                    (if (:poistettu tm)
+                                      (do
+                                        (log/info "Poistetaan materiaalitoteuma " (:id tm))
+                                        (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+                                      (do
+                                        (log/info "Päivitä materiaalitoteuma "
+                                                  (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)", "(:poistettu tm)"), toteumassa " (:id toteuma))
+                                        (materiaalit-q/paivita-toteuma-materiaali!
+                                          c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
                                     (do
                                       (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:id toteuma))
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
-                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka t)))))
+                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (:alkanut toteuma) (:paattynyt toteuma)))))
 
 (defn poista-toteuma!
   [db user t]

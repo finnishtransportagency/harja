@@ -5,7 +5,8 @@
             [clojure.data.zip.xml :as z]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 ;; Kentät, joita voidaan hakea:
 ;; ObjectID EmployeeEndDate
@@ -52,7 +53,8 @@
                                                                :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"
                                                                }})]
     (if error
-      (throw (RuntimeException. "FIM haku epäonnistui: " error))
+      (do (log/error "FIM haku epäonnistui: " error)
+          (throw (RuntimeException. "FIM haku epäonnistui: " error)))
       (first (lue-fim-vastaus (lue-xml body))))))
             
 

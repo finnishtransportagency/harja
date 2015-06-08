@@ -28,13 +28,14 @@
           tulos)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
-  [db user urakka-id]
+  [db user urakka-id alkanut paattynyt]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/info "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "alkanut" - "paattynyt)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (when (:maara %) (double (:maara %)))))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
-        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id)))
+        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id (konv/sql-date alkanut) (konv/sql-date paattynyt))))
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id]
@@ -126,11 +127,17 @@
 (defn poista-toteuma-materiaali!
   [db user tiedot]
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
-  Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla."
+  Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla.
+
+  Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka tiedot))
-  (q/poista-toteuma-materiaali! db (:id user) (:id tiedot)))
+  (jdbc/with-db-transaction [c db]
+                            (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))
+                            (when (and (:hk-alku tiedot) (:hk-loppu tiedot))
+                              (hae-urakassa-kaytetyt-materiaalit
+                                c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot)))))
 
 
 (defrecord Materiaalit []
@@ -164,8 +171,8 @@
                         (tallenna-urakan-materiaalit (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakassa-kaytetyt-materiaalit
-                      (fn [user urakka-id]
-                        (hae-urakassa-kaytetyt-materiaalit (:db this) user urakka-id)))
+                      (fn [user tiedot]
+                        (hae-urakassa-kaytetyt-materiaalit (:db this) user (:urakka-id tiedot) (:alkanut tiedot) (:paattynyt tiedot))))
                            
     this)
 

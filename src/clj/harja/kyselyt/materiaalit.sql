@@ -24,7 +24,10 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
 SELECT DISTINCT
   m.nimi as materiaali_nimi, mk.maara, m.yksikko as materiaali_yksikko, m.id as materiaali_id,
   (SELECT SUM(maara) as kokonaismaara from toteuma_materiaali
-  WHERE materiaalikoodi = m.id AND toteuma IN (SELECT id FROM toteuma WHERE urakka=:urakka))
+  WHERE materiaalikoodi = m.id AND toteuma IN (SELECT id FROM toteuma WHERE
+    urakka=:urakka AND
+    alkanut::DATE <= :alku AND
+    paattynyt::DATE >= :loppu))
 FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk ON m.id = mk.materiaali
   INNER JOIN toteuma_materiaali tm ON tm.materiaalikoodi = m.id
@@ -32,7 +35,9 @@ FROM materiaalikoodi m
 WHERE mk.poistettu IS NOT true AND
       t.poistettu IS NOT true AND
       tm.poistettu IS NOT true AND
-      t.urakka = :urakka;
+      t.urakka = :urakka AND
+      t.alkanut::DATE <= :alku AND
+      t.paattynyt::DATE >= :loppu;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

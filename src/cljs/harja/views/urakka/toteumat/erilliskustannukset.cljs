@@ -192,19 +192,19 @@
                                 (ikonit/trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
-            :tyyppi        :valinta :valinta-arvo identity
+            :tyyppi        :valinta
             :valinta-nayta second
             :valinnat      (:sopimukset @nav/valittu-urakka)
             :fmt           second
             :leveys-col    3}
            {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
-            :tyyppi        :valinta :valinta-arvo identity
+            :tyyppi        :valinta
             :valinta-nayta #(:tpi_nimi %)
             :valinnat      @u/urakan-toimenpideinstanssit
             :fmt           #(:tpi_nimi %)
             :leveys-col    3}
-           {:otsikko "Tyyppi" :nimi :tyyppi
-            :tyyppi        :valinta :valinta-arvo identity
+           {:otsikko       "Tyyppi" :nimi :tyyppi
+            :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
             :valinnat      +erilliskustannustyypit+
             :fmt           #(erilliskustannustyypin-teksti %)
@@ -212,13 +212,13 @@
             :leveys-col    3}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]] :leveys-col 3}
            {:otsikko "Rahamäärä" :nimi :rahasumma :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
-           {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta :valinta-arvo identity
+           {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet +ei-sidota-indeksiin+)
             :fmt           #(if (nil? %) +valitse-indeksi+ str)
             :leveys-col    3
             }
-           {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta :valinta-arvo identity
+           {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat      +maksajavalinnat+
             :fmt           #(maksajavalinnan-teksti %)
@@ -245,7 +245,6 @@
     (komp/luo
       (fn []
         [:div.erilliskustannusten-toteumat
-         [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
           (ikonit/plus-sign) " Lisää kustannus"]

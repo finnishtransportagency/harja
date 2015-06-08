@@ -34,7 +34,7 @@
     "indeksi" 7
     "bonus" 8
     "sakko" 9
-    "akillinen_hoitotyo" 10
+    "akillinen-hoitotyo" 10
     99))
 
 (defn muodosta-maksuera-xml [maksuera]

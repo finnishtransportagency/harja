@@ -72,7 +72,7 @@ SELECT
               t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
        WHERE t.tyyppi = 'lisatyo')
 
-  WHEN m.tyyppi = 'akillinen_hoitotyo'
+  WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
@@ -184,7 +184,7 @@ SELECT
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
        WHERE t.tyyppi = 'yksikkohintainen')
 
-  WHEN m.tyyppi = 'akillinen_hoitotyo'
+  WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t

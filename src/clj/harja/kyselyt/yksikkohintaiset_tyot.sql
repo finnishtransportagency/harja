@@ -30,14 +30,14 @@ VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
         :alkupvm, :loppupvm)
 
--- name: merkitse-kustannussuunnitelma-likaiseksi!
--- Merkitsee yksikköhintaista työtä vastaavan kustannussuunnitelman likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
+-- name: merkitse-kustannussuunnitelmat-likaisiksi!
+-- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE kustannussuunnitelma
 SET likainen = TRUE
-WHERE maksuera = (SELECT m.numero
+WHERE maksuera in (SELECT m.numero
                   FROM maksuera m
                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                     join toimenpidekoodi emo on emo.id = tpi.toimenpide
                     join toimenpidekoodi tpk on tpk.emo = emo.id
-                  WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka and tpk.id = :tehtava);
+                  WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka and tpk.id in (:tehtavat));
 

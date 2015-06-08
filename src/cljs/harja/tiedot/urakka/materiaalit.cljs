@@ -22,8 +22,9 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
-(defn hae-urakassa-kaytetyt-materiaalit [urakka-id]
-  (k/post! :hae-urakassa-kaytetyt-materiaalit urakka-id))
+(defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu]
+  (log "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(pvm/pvm alku)" - "(pvm/pvm loppu))
+  (k/post! :hae-urakassa-kaytetyt-materiaalit {:urakka-id urakka-id :alkanut alku :paattynyt loppu}))
 
 (defn hae-toteumat-materiaalille [urakka-id materiaali-id]
   (k/post! :hae-urakan-toteumat-materiaalille {:urakka-id urakka-id :materiaali-id materiaali-id}))
@@ -31,9 +32,9 @@
 (defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
   (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))
 
-(defn poista-toteuma-materiaaleja [urakka-id tm-idt]
+(defn poista-toteuma-materiaaleja [urakka-id tm-idt hk-alku hk-loppu]
   "tm-idt voi olla yksittäinen arvo, tai useampi arvo vektorissa []"
-  (k/post! :poista-toteuma-materiaali! {:urakka urakka-id :id tm-idt}))
+  (k/post! :poista-toteuma-materiaali! {:urakka urakka-id :id tm-idt :hk-alku hk-alku :hk-loppu hk-loppu}))
 
 (defn hae-urakan-materiaalit [urakka-id]
   (let [ch (chan)]
