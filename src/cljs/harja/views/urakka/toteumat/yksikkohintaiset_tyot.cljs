@@ -127,8 +127,14 @@
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
                                                                #(reset! lomakkeessa-muokattava-toteuma {:toteuma-id       (:toteuma_id rivi)
-                                                                                                        :tehtavat         {1 {:maara 5 :tehtava {:id 1351 :yksikko "vrk"}}
-                                                                                                                           2 {:maara 3 :tehtava {:id 1350 :yksikko "km"}}}
+                                                                                                        :tehtavat         (zipmap (iterate inc 1)
+                                                                                                                                  (map (fn [tehtava] {
+                                                                                                                                                      :tehtava {:id (:toimenpidekoodi tehtava)}
+                                                                                                                                                      :maara (:maara tehtava)
+                                                                                                                                                      })
+                                                                                                                                       (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
+                                                                                                                                                 (= (:toteuma_id tehtava) (:toteuma_id rivi)))
+                                                                                                                                               @yksiloidyt-tehtavat)))
                                                                                                         :toteutunut-pvm   (:alkanut rivi)
                                                                                                         :lisatieto        (:lisatieto rivi)
                                                                                                         :suorittajan-nimi (:suorittajan_nimi rivi)})}
@@ -143,7 +149,7 @@
   "Yksikköhintaisten töiden toteumat"
   []
   (let [toteumat (reaction nil) ; Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
-        paivita-toteumat (fn []
+        hae-toteumat (fn []
                            "Päivittää toteumat, jos asetukset ovat muuttuneet ja kannassa on uutta dataa saatavilla."
                            (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                  [valittu-sopimus-id _] @u/valittu-sopimusnumero
@@ -155,7 +161,7 @@
                                  (let [uudet-toteumat (<! (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-aikavali))]
                                    (if (not (= uudet-toteumat @toteumat))
                                      (reset! toteumat {:aikavali valittu-aikavali :vastaus uudet-toteumat})))))))
-        hae-nelostason-tehtavat (fn []
+        muodosta-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
                                     (fn [tasot] (let [kolmostaso (nth tasot 2)
@@ -203,13 +209,13 @@
                                                (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                                rivit))
         tyorivit (reaction
-                   (let [rivit (hae-nelostason-tehtavat)
+                   (let [rivit (muodosta-nelostason-tehtavat)
                          valittu-urakka @nav/valittu-urakka
                          valittu-sopimus @u/valittu-sopimusnumero
                          valittu-hoitokausi @u/valittu-hoitokausi
-                         valittu-aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
-
-                     (paivita-toteumat)
+                         valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]] ;FIXME destruct
+                      ; TODO UI:n mahdollisuus valita tarkempi aikaväli (kuukaisväli ja päivämääräväli)
+                     (hae-toteumat) ;FIXME Reaction
                      ; Jos toteumia ei ole vielä saatu valitulle hoitokaudelle, palauttaa nil.
                      ; Tämä reaction body ajetaan automaattisesti uudelleen kun toteumat saadaan.
                      (if (and (not (nil? @toteumat))
@@ -235,13 +241,13 @@
            :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"} ; FIXME Euroformatter
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Kustannuserotus" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
+           {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
                      (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                                   [:span.kustannuserotus.kustannuserotus-positiivinen (:kustannuserotus rivi)]
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (:kustannuserotus rivi)])) :leveys "20%"}]
