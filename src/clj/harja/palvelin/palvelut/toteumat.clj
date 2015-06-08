@@ -148,7 +148,7 @@
 (defn tallenna-toteuma-ja-toteumamateriaalit
   "Tallentaa toteuman ja toteuma-materiaalin, ja palauttaa lopuksi kaikki urakassa käytetyt materiaalit (yksi rivi per materiaali).
   Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä."
-  [db user t toteumamateriaalit]
+  [db user t toteumamateriaalit hoitokausi]
   ;(validoi Toteuma t) ;fixme skeema??
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka t))
@@ -184,7 +184,8 @@
                                     (do
                                       (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:id toteuma))
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
-                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (:alkanut toteuma) (:paattynyt toteuma)))))
+                              (when hoitokausi
+                                (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi))))))
 
 (defn poista-toteuma!
   [db user t]
@@ -246,7 +247,7 @@
           (tallenna-erilliskustannus db user toteuma)))
       (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
                         (fn [user tiedot]
-                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot) (:toteumamateriaalit tiedot))))
+                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot) (:toteumamateriaalit tiedot) (:hoitokausi tiedot))))
       this))
 
   (stop [this]

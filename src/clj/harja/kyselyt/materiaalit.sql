@@ -26,8 +26,10 @@ SELECT DISTINCT
   (SELECT SUM(maara) as kokonaismaara from toteuma_materiaali
   WHERE materiaalikoodi = m.id AND toteuma IN (SELECT id FROM toteuma WHERE
     urakka=:urakka AND
-    alkanut::DATE <= :alku AND
-    paattynyt::DATE >= :loppu))
+    alkanut::DATE >= :alku AND
+    alkanut::DATE <= :loppu AND
+    poistettu IS NOT TRUE) AND
+  poistettu IS NOT TRUE)
 FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk ON m.id = mk.materiaali
   INNER JOIN toteuma_materiaali tm ON tm.materiaalikoodi = m.id
@@ -36,8 +38,8 @@ WHERE mk.poistettu IS NOT true AND
       t.poistettu IS NOT true AND
       tm.poistettu IS NOT true AND
       t.urakka = :urakka AND
-      t.alkanut::DATE <= :alku AND
-      t.paattynyt::DATE >= :loppu;
+      t.alkanut::DATE >= :alku AND
+      t.alkanut::DATE <= :loppu;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

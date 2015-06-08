@@ -48,10 +48,11 @@
                  :sopimus (first @u/valittu-sopimusnumero) :tyyppi nil
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
-                 :lisatieto (:lisatieto m)}]
+                 :lisatieto (:lisatieto m)}
+        hoitokausi @u/valittu-hoitokausi]
     (log "KÄSITELTY TM: " (pr-str toteumamateriaalit))
     (log "KÄSITELTY T: " (pr-str toteuma))
-    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit)))
+    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi)))
 
 (def materiaalikoodit (reaction (into []
                             (comp
@@ -64,8 +65,7 @@
   (fn [materiaalit]
     (go (let [tulos (<!(materiaali-tiedot/poista-toteuma-materiaaleja urakka
                                                    (map :tmid materiaalit)
-                                                   (first @u/valittu-hoitokausi)
-                                                   (second @u/valittu-hoitokausi)))]
+                                                   (first @u/valittu-hoitokausi)))]
           (reset! urakan-materiaalin-kaytot tulos)))))
 
 
@@ -170,9 +170,11 @@
                              toteuman-alku (:alkanut (:toteuma kartta))
                              toteuman-loppu (:paattynyt (:toteuma kartta))]
 
+                         (log "Toteuman alku:" (pvm/pvm toteuman-alku))
+                         (log "Hoitokausi:" (pvm/pvm hoitokauden-alku) "-" (pvm/pvm hoitokauden-loppu))
                          (and
-                           (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku))
-                           (pvm/sama-tai-ennen? toteuman-loppu hoitokauden-loppu)))
+                           (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku)
+                           (pvm/sama-tai-ennen? toteuman-alku hoitokauden-loppu))))
                      (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk))))))))}
 
       (fn [urakan-id vm]
@@ -189,8 +191,8 @@
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)}
-           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :aseta #(assoc-in % [:toteuma :suorittaja] %2)}
-           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :aseta #(assoc-in % [:toteuma :lisatieto] %2)}
+           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false)}
+           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false)}
            {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
             :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false)}]
           @tiedot]]))))
