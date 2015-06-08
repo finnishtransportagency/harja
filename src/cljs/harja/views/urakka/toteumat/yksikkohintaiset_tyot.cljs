@@ -34,7 +34,8 @@
                   :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
-                  :tehtavat lomakkeen-tehtavat)
+                  :tehtavat lomakkeen-tehtavat
+                  :materiaalit [])
                   (dissoc :toteutunut-pvm))]
     (log "SÖSÖ Tallennetaan toteuma: " (pr-str schema-toteuma))
     (toteumat/tallenna-toteuma schema-toteuma)))
@@ -83,7 +84,7 @@
                              #(tallenna-toteuma @lomake-toteuma (mapv
                                                                       (fn [rivi]
                                                                         {:toimenpidekoodi (:id (:tehtava rivi))
-                                                                         :maara (:maara rivi)})
+                                                                         :maara (js/parseInt (:maara rivi))})
                                                                       (vals @lomake-tehtavat)))
                              {:luokka :nappi-ensisijainen
                               :kun-onnistuu #(do
@@ -131,6 +132,8 @@
                                                                                                                                   (map (fn [tehtava] {
                                                                                                                                                       :tehtava {:id (:toimenpidekoodi tehtava)}
                                                                                                                                                       :maara (:maara tehtava)
+                                                                                                                                                      :yksikko (:yksikko tehtava)
+                                                                                                                                                      :nimi (:toimenpide tehtava)
                                                                                                                                                       })
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))

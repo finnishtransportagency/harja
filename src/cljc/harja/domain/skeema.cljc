@@ -15,6 +15,8 @@
    :alkanut pvm-tyyppi
    :paattynyt pvm-tyyppi
    :tyyppi (apply s/enum +tyotyypit+)
+   :suorittajan-nimi s/Str
+   :lisatieto s/Str
    :tehtavat [{:toimenpidekoodi s/Int
                :maara s/Num}]
    :materiaalit [{:materiaalikoodi s/Int
