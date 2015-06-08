@@ -162,8 +162,8 @@ UPDATE erilliskustannus
        poistettu = :poistettu
  WHERE id = :id;
 
--- name: paivita-urakan-yk-hint-toteumien-tehtavat
--- Päivitä erilliskustannus
+-- name: paivita-urakan-yk-hint-toteumien-tehtavat!
+-- Päivitä urakan yksikköhintaisten töiden toteumien tehtävät
 UPDATE toteuma_tehtava
    SET maara = :maara
  WHERE id = :id;

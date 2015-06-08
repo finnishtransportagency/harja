@@ -102,10 +102,8 @@
                             (for [tehtava (:tehtavat payload)]
                               (do
                                 (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
-                                (q/paivita-urakan-yk-hint-toteumien-tehtavat db (:maara tehtava) (:tehtava_id tehtava)))))))
+                                (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava)))))))
 ; TODO Palauta päivittyneet tiedot
-
-
 
 (def erilliskustannus-tyyppi-xf
      (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
