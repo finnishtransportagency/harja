@@ -153,7 +153,7 @@
 
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-havainto {})}
     (ikonit/plus-sign)
-    "Uusi havainto"]
+    " Uusi havainto"]
     
      
    [grid/grid
@@ -245,7 +245,7 @@
                      #(tallenna-havainto @havainto)
                      {:ikoni (ikonit/check)
                       :disabled (let [h @havainto]
-                                  (not (and (:toimenpide h)
+                                  (not (and (:toimenpideinstanssi h)
                                             (:aika h))))}
                      #(log "Tuli: " %)]}
            [
