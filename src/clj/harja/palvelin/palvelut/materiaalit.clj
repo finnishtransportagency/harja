@@ -127,11 +127,17 @@
 (defn poista-toteuma-materiaali!
   [db user tiedot]
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
-  Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla."
+  Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla.
+
+  Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka tiedot))
-  (q/poista-toteuma-materiaali! db (:id user) (:id tiedot)))
+  (jdbc/with-db-transaction [c db]
+                            (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))
+                            (when (and (:hk-alku tiedot) (:hk-loppu tiedot))
+                              (hae-urakassa-kaytetyt-materiaalit
+                                c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot)))))
 
 
 (defrecord Materiaalit []

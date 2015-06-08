@@ -62,13 +62,12 @@
 (defn poista-toteuma-materiaaleja
   [urakka]
   (fn [materiaalit]
-    #_(log (pr-str materiaalit))
-    (materiaali-tiedot/poista-toteuma-materiaaleja urakka (map :tmid materiaalit))))
+    (go (let [tulos (<!(materiaali-tiedot/poista-toteuma-materiaaleja urakka
+                                                   (map :tmid materiaalit)
+                                                   (first @u/valittu-hoitokausi)
+                                                   (second @u/valittu-hoitokausi)))]
+          (reset! urakan-materiaalin-kaytot tulos)))))
 
-#_(def materiaalikoodit (->>
-                        @(materiaali-tiedot/hae-materiaalikoodit)
-                        (map #(dissoc % :urakkatyyppi))
-                        (map #(dissoc % :kohdistettava))))
 
 
 (defn materiaalit-ja-maarat
@@ -130,27 +129,10 @@
                              #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
                              {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
-                             :kun-onnistuu #(do
-                               (reset! urakan-materiaalin-kaytot %)
-                               (reset! valittu-materiaalin-kaytto nil))}]
-                            #_[:button.nappi-ensisijainen
-                             {:class (when @tallennus-kaynnissa "disabled")
-                              :on-click #(do (.preventDefault %)
-                                          (reset! tallennus-kaynnissa true)
-                                          (go (let
-                                                [res (<! (tallenna-toteuma-ja-toteumamateriaalit!
-                                                           (vals @materiaalitoteumat-mapissa)
-                                                           @muokattu))]
-                                                (if res
-                                                  ;; Tallennus ok
-                                                  (do
-                                                    (reset! tallennus-kaynnissa false)
-                                                    (viesti/nayta! "Toteuma tallennettu")
-                                                    (reset! valittu-materiaali-toteuma nil)
-
-                                                  ;; Epäonnistui jostain syystä
-                                                  (reset! tallennus-kaynnissa false))))))}
-                             "Tallenna toteuma"]}
+                             :kun-onnistuu
+                                      #(do
+                                        (reset! urakan-materiaalin-kaytot %)
+                                        (reset! valittu-materiaalin-kaytto nil))}]}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
