@@ -38,7 +38,7 @@
                   :tehtavat lomakkeen-tehtavat
                   :materiaalit [])
                   (dissoc :toteutunut-pvm))]
-    (log "SÖSÖ Tallennetaan toteuma: " (pr-str schema-toteuma))
+    (log "TOT Tallennetaan toteuma: " (pr-str schema-toteuma))
     (toteumat/tallenna-toteuma schema-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat]
@@ -68,8 +68,8 @@
                                         (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                         (not (empty? (vals @lomake-tehtavat)))))]
 
-    (log "SÖSÖ Lomake-toteuma: " (pr-str @lomake-toteuma))
-    (log "SÖSÖ Lomake tehtävät: " (pr-str @lomake-tehtavat))
+    (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
+    (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -81,7 +81,7 @@
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
-                              (log "SÖSÖ Muokataan toteumaa: " (pr-str uusi))
+                              (log "TOT Muokataan toteumaa: " (pr-str uusi))
                               (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -121,11 +121,11 @@
     (fn [rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
-        {:otsikko (str "Yksilöidyt tehtävät: " (:nimi rivi))
-         :tyhja (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna #(toteumat/paivita-yksikkohintaiset-tehtavat urakka-id @yksiloidyt-tehtavat)
+        {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi rivi))
+         :tyhja       (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
+         :tallenna    #(toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id @yksiloidyt-tehtavat)
          :voi-lisata? false
-         :tunniste :tehtava_id }
+         :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :numero :leveys "20%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}

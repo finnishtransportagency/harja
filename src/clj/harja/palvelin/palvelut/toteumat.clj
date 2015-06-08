@@ -69,6 +69,7 @@
 
                           
 (defn tallenna-toteuma [db user toteuma]
+  ; FIXME Tee tästä tallenna-toteuma-ja-tehtavat joka osaa myös päivittää. Katso mallia: tallenna-toteuma-ja-toteumamateriaalit
   (validoi Toteuma toteuma)
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id toteuma))
@@ -92,10 +93,19 @@
       
       true)))
 
-(defn paivita-yksikkohintaiset-tehtavat [db user urakka-id tehtavat]
+(defn paivita-yk-hint-toiden-tehtavat [db user payload]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
-                            (:urakka-id urakka-id))
-  (log/debug "Yksikköhintaisten töiden päivitys aloitettu."))
+                            (:urakka-id payload))
+  (log/debug "Yksikköhintaisten töiden päivitys aloitettu.")
+  (jdbc/with-db-transaction [c db]
+                            (doall
+                            (for [tehtava (:tehtavat payload)]
+                              (do
+                                (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
+                                (q/paivita-urakan-yk-hint-toteumien-tehtavat db (:maara tehtava) (:tehtava_id tehtava)))))))
+; TODO Palauta päivittyneet tiedot
+
+
 
 (def erilliskustannus-tyyppi-xf
      (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
@@ -218,9 +228,9 @@
       (julkaise-palvelu http :tallenna-urakan-toteuma
                         (fn [user toteuma]
                           (tallenna-toteuma db user toteuma)))
-      (julkaise-palvelu http :paivita-yksikkohintaiset-tehtavat
-                        (fn [user urakka-id tehtavat]
-                          (paivita-yksikkohintaiset-tehtavat db user urakka-id tehtavat)))
+      (julkaise-palvelu http :paivita-yk-hint-toteumien-tehtavat
+                        (fn [user payload]
+                          (paivita-yk-hint-toiden-tehtavat db user payload)))
       (julkaise-palvelu http :urakan-erilliskustannukset
         (fn [user tiedot]
           (hae-urakan-erilliskustannukset db user tiedot)))

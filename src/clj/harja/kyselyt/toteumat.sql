@@ -119,3 +119,10 @@ UPDATE erilliskustannus
        rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja,
        poistettu = :poistettu
  WHERE id = :id;
+
+
+-- name: paivita-urakan-yk-hint-toteumien-tehtavat
+-- Päivitä erilliskustannus
+UPDATE toteuma_tehtava
+   SET maara = :maara
+ WHERE id = :id;
