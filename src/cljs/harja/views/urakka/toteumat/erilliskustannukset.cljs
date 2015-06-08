@@ -245,7 +245,6 @@
     (komp/luo
       (fn []
         [:div.erilliskustannusten-toteumat
-         [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
           (ikonit/plus-sign) " Lisää kustannus"]
