@@ -95,6 +95,7 @@
 
 (def korostettavan-rivin-id (atom nil))
 
+;; FIXME: siirrä rivin korostuksen funktio gridiin josta sitä voi käyttää
 (defn korosta-rivia
   ([id] (korosta-rivia id +korostuksen-kesto+))
   ([id kesto]
@@ -110,7 +111,7 @@
     ""))
 
 (defn erilliskustannusten-toteuman-muokkaus
-  "Erilliskustannuksen muokkaaminen"
+  "Erilliskustannuksen muokkaaminen ja lisääminen"
   []
   (let [muokattu (atom (if (:id @valittu-kustannus)
                          (assoc @valittu-kustannus
@@ -126,6 +127,12 @@
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi
                            :maksaja :tilaaja
                            :indeksin_nimi +ei-sidota-indeksiin+)))
+        valmis-tallennettavaksi? (reaction (let [m @muokattu]
+                                             (not (and
+                                                    (:toimenpideinstanssi m)
+                                                    (:tyyppi m)
+                                                    (:pvm m)
+                                                    (:rahasumma m)))))
         tallennus-kaynnissa (atom false)]
 
     (komp/luo
@@ -145,17 +152,14 @@
                              [napit/palvelinkutsu-nappi
                               " Tallenna kustannus"
                               #(tallenna-erilliskustannus @muokattu)
-                              {:luokka :nappi-ensisijainen}
-                              #(let [muokatun-id (or (:id @muokattu) %)]
-                                (if %
-                                  ;; Tallennus ok
-                                  (do
-                                    (korosta-rivia muokatun-id)
-                                    (reset! tallennus-kaynnissa false)
-                                    (reset! valittu-kustannus nil))
-                                  ;; Epäonnistui jostain syystä
-                                  (reset! tallennus-kaynnissa false)))
-                              ]
+                              {:luokka "nappi-ensisijainen"
+                               :disabled @valmis-tallennettavaksi?
+                               :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
+                                               (do
+                                                 (korosta-rivia muokatun-id)
+                                                 (reset! tallennus-kaynnissa false)
+                                                 (reset! valittu-kustannus nil)))
+                               :kun-virhe  (reset! tallennus-kaynnissa false)}]
                              (when (:id @muokattu)
                                [:button.nappi-kielteinen
                                 {:class (when @tallennus-kaynnissa "disabled")
@@ -204,10 +208,10 @@
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
             :valinnat      +erilliskustannustyypit+
             :fmt           #(erilliskustannustyypin-teksti %)
-            :leveys-col 3}
-           {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm :leveys-col 3}
-           ;; fixme: alas valitun tehtävän yksikkö toteutuneen määrän jälkeen näkyviin
-           {:otsikko "Rahamäärä" :nimi :rahasumma :tyyppi :numero :leveys-col 3}
+            :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
+            :leveys-col    3}
+           {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]] :leveys-col 3}
+           {:otsikko "Rahamäärä" :nimi :rahasumma :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta :valinta-arvo identity
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet +ei-sidota-indeksiin+)
@@ -233,15 +237,14 @@
         valitut-kustannukset
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
                         toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
-                    (sort-by :pvm (filter #(and
-                               (= sopimus-id (:sopimus %))
-                               (= (:toimenpideinstanssi %) toimenpideinstanssi))
-                       @u/erilliskustannukset-hoitokaudella))))]
+                    (reverse (sort-by :pvm (filter #(and
+                                             (= sopimus-id (:sopimus %))
+                                             (= (:toimenpideinstanssi %) toimenpideinstanssi))
+                                     @u/erilliskustannukset-hoitokaudella)))))]
 
     (komp/luo
       (fn []
         [:div.erilliskustannusten-toteumat
-         ;[:div  (str " filtter " (pr-str @valitut-kustannukset)) ]
          [:div  "Tämä toiminto on keskeneräinen. Älä raportoi bugeja."]
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
          [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
@@ -253,10 +256,11 @@
                             [ajax-loader "Erilliskustannuksia haetaan..."]
                             "Ei erilliskustannuksia saatavilla.")
            :rivi-klikattu #(reset! valittu-kustannus %)
+           ;; kutsu gridin sisällä olevaa funktiota grid/korosta (jota ei vielä ole fixme)
            :rivin-luokka  #(aseta-rivin-luokka %)}
           [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
            {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
-           {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :leveys "10%"}
+           {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "10%"}
            {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
             :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
            {:otsikko "Lisätieto"  :nimi :lisatieto :leveys "45%"}

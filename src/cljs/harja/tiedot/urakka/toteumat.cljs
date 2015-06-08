@@ -58,7 +58,6 @@
      :loppupvm loppupvm}))
 
 (defn tallenna-erilliskustannus [ek]
-  (log "Tiedot tallennea ek" (pr-str ek))
   (k/post! :tallenna-erilliskustannus ek))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit]
