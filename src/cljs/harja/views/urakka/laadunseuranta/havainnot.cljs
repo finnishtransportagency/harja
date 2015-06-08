@@ -40,11 +40,15 @@
                     
 (defonce valittu-havainto-id (atom nil))
 
-(defonce valittu-havainto (reaction<!
-                           (when-let [id @valittu-havainto-id]
-                             (if (= :uusi id)
-                               (go {})
-                               (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))))
+(defonce valittu-havainto
+  (reaction<!
+   (when-let [id @valittu-havainto-id]
+     (if (= :uusi id)
+       (go {})
+       (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))
+   (fn [havainto]
+     ;; Tarvitsemme urakan liitteen linkitystä varten
+     (assoc havainto :urakka (:id @nav/valittu-urakka)))))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
@@ -177,20 +181,16 @@
     ]])
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
+  (log "KOMMENTIT: " (pr-str kommentit))
   [:div.kommentit
-   (for [{:keys [aika tekijanimi kommentti tekija liitteet]} kommentit]
+   (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
      [:div.kommentti {:class (when tekija (name tekija))}
       [:span.kommentin-tekija tekijanimi]
       [:span.kommentin-aika (pvm/pvm-aika aika)]
       [:div.kommentin-teksti kommentti]
-      (when-not (empty? liitteet)
-        [:div.kommentin-liitteet
-         (for [{:keys [nimi tyyppi pikkukuva-url url]} liitteet]
-           [:span
-            [:img.pikkukuva {:src pikkukuva-url}]
-            [:a {:target "_blank" :href url} nimi]])])
-      ])
+      (when liite
+        [liitteet/liitetiedosto liite])])
    (when voi-kommentoida?
      [:div.uusi-kommentti
       [:div.uusi-kommentti-teksti
@@ -278,7 +278,7 @@
                       :disabled (let [h @havainto]
                                   (not (and (:toimenpideinstanssi h)
                                             (:aika h))))
-                      :kun-onnistuu #(reset! valittu-havainto nil)}]}
+                      :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}]}
            [
             {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
              :tyyppi :valinta

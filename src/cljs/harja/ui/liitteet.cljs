@@ -5,6 +5,13 @@
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn liitetiedosto
+  "Olemassaolevan liitteen näyttäminen. Näyttää pikkukuvan ja tiedoston nimen."
+  [tiedosto]
+  [:div.liite
+   [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
+   ;; FIXME: voiko tässä poistaa myös?
+   (:nimi tiedosto)])
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
@@ -26,10 +33,7 @@ Optiot voi sisältää:
     (fn [{:keys [liite-ladattu] :as opts}]
       (if-let [tiedosto @tiedosto]
         ;; Tiedosto on jo ladatty palvelimelle, näytetään se
-        [:div.liite
-         [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
-         ;; FIXME: voiko tässä poistaa myös?
-         (:nimi tiedosto)]
+        [liitetiedosto tiedosto]
 
         ;; Ei tiedostoa vielä, joko siirto on menossa tai ei vielä alkanut
         (if-let [edistyminen @edistyminen]
