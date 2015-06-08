@@ -29,11 +29,20 @@ INSERT INTO kokonaishintainen_tyo
 (summa, maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi)
 VALUES (:summa, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi)
 
--- name: merkitse-kustannussuunnitelma-likaiseksi!
--- Merkitsee kokonaishintaista työtä vastaavan kustannussuunnitelman likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
+-- name: merkitse-kustannussuunnitelmat-likaisiksi!
+-- Merkitsee kokonaishintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE kustannussuunnitelma
 SET likainen = TRUE
-WHERE maksuera = (SELECT m.numero
-                  FROM maksuera m
-                    JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                  WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id = :toimenpideinstanssi);
+WHERE maksuera IN (SELECT m.numero
+                   FROM maksuera m
+                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id IN (:toimenpideinstanssit));
+
+
+-- name: hae-testi
+SELECT maksuera
+FROM kustannussuunnitelma
+WHERE maksuera IN (SELECT m.numero
+                   FROM maksuera m
+                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id IN (:toimenpideinstanssit));

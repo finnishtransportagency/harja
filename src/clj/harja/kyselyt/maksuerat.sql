@@ -19,7 +19,6 @@ SELECT
 
   WHEN m.tyyppi = 'kokonaishintainen'
     THEN
-
       (SELECT SUM(kht.summa)
        FROM kokonaishintainen_tyo kht
        WHERE kht.toimenpideinstanssi = tpi.id)
@@ -41,7 +40,6 @@ SELECT
 
   WHEN m.tyyppi = 'kokonaishintainen'
     THEN
-
       (SELECT SUM(kht.summa)
        FROM kokonaishintainen_tyo kht
        WHERE kht.toimenpideinstanssi = tpi.id)
@@ -105,6 +103,7 @@ SELECT
           WHERE t.tyyppi = 'muutostyo')
          +
          -- Erilliskustannukset
+           -- Fixme: indeksien laskenta!
          (SELECT (sum(ek.rahasumma))
           FROM erilliskustannus ek
           WHERE ek.toimenpideinstanssi = tpi.id))

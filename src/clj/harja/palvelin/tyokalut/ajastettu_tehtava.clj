@@ -6,7 +6,7 @@
     [clj-time.core :as t]
     [clj-time.core :as t]
     [clj-time.periodic :refer [periodic-seq]])
-  (:import (org.joda.time DateTime DateTimeZone)))
+  (:import (org.joda.time DateTimeZone)))
 
 (defn ajasta-paivittain [[tunti minuutti sekuntti] tehtava]
   (chime-at (periodic-seq
