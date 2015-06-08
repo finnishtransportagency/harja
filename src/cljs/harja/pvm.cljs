@@ -36,8 +36,14 @@
 (defn ennen? [eka toka]
   (t/before? eka toka))
 
+(defn sama-tai-ennen? [eka toka]
+  (or (t/before? eka toka) (= (millisekunteina eka) (millisekunteina toka))))
+
 (defn jalkeen? [eka toka]
   (t/after? eka toka))
+
+(defn sama-tai-jalkeen? [eka toka]
+  (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka))))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
