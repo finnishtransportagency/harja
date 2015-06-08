@@ -183,15 +183,20 @@
  
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat on-focus]} data]
-  (let [arvo (or valinta-arvo :id)
-        nayta (or valinta-nayta str)
-        nykyinen-arvo (arvo @data)]
+  ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
+  ;; esim. :id 
+  (let [nykyinen-arvo @data]
     ;; FIXME: on-focus alasvetovalintaan?
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
-                          :valinta @data
-                          :valitse-fn #(reset! data %)
+                          :valinta (if valinta-arvo
+                                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                                     nykyinen-arvo)
+                          :valitse-fn #(reset! data
+                                               (if valinta-arvo
+                                                 (valinta-arvo %)
+                                                 %))
                           :on-focus on-focus
-                          :format-fn valinta-nayta}
+                          :format-fn (or valinta-nayta str)}
      valinnat]))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo]} data]
