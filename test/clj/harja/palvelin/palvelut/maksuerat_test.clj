@@ -32,7 +32,7 @@
     (is (= (count (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :yksikkohintainen (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :bonus (:tyyppi (:maksuera %))) maksuerat)) 2))
-    (is (= (count (filter #(= :akillinen_hoitotyo (:tyyppi (:maksuera %))) maksuerat)) 2))
+    (is (= (count (filter #(= :akillinen-hoitotyo (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :lisatyo (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :sakko (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :indeksi (:tyyppi (:maksuera %))) maksuerat)) 2))
