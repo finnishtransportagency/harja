@@ -7,12 +7,12 @@
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            
+
             [harja.palvelin.oikeudet :as oikeudet]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]))
 
 (declare hae-urakan-yksikkohintaiset-tyot tallenna-urakan-yksikkohintaiset-tyot)
-                        
+
 (defrecord Yksikkohintaiset-tyot []
   component/Lifecycle
   (start [this]
@@ -31,17 +31,17 @@
     this))
 
 
-(defn hae-urakan-yksikkohintaiset-tyot 
+(defn hae-urakan-yksikkohintaiset-tyot
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
   [db user urakka-id]
   ;; FIXME: (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
-        (map #(assoc % 
-                     :maara (if (:maara %) (double (:maara %))) 
+        (map #(assoc %
+                     :maara (if (:maara %) (double (:maara %)))
                      :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))
         (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
-(defn tallenna-urakan-yksikkohintaiset-tyot 
+(defn tallenna-urakan-yksikkohintaiset-tyot
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
   (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
@@ -53,9 +53,10 @@
                           [(:alkupvm rivi) (:loppupvm rivi) (:tehtava rivi)])
               tyot-kannassa (into #{} (map tyo-avain
                                            (filter #(and
-                                                      (= (:sopimus %) sopimusnumero) 
+                                                      (= (:sopimus %) sopimusnumero)
                                                       (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
-                                                   nykyiset-arvot)))]
+                                                   nykyiset-arvot)))
+              uniikit-tehtavat (into #{} (map #(:tehtava %) tyot)) ]
           (doseq [tyo tyot]
             (log/info "TALLENNA TYÖ: " (pr-str tyo))
             (if (not (tyot-kannassa (tyo-avain tyo)))
@@ -71,7 +72,7 @@
                   (log/info "  päivittyi: " (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
                                                                                     urakka-id sopimusnumero (:tehtava tyo)
                                                                                     (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                                                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))
-            (log/info "Merkitään kustannussuunnitelma likaiseksi")
-            (q/merkitse-kustannussuunnitelma-likaiseksi! c urakka-id (:tehtava tyo))))
+                                                                                    (java.sql.Date. (.getTime (:loppupvm tyo))))))))
+          (log/info "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
+          (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
