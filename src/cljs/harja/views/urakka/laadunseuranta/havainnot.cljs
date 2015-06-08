@@ -249,10 +249,11 @@
                                             (:aika h))))}
                      #(log "Tuli: " %)]}
            [
-            {:otsikko "Toimenpide" :nimi :toimenpide
+            {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
              :tyyppi :valinta
              :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
              :valinta-nayta #(or (:tpi_nimi %) "- valitse toimenpide -")
+             :valinta-arvo :tpi_id
              :leveys-col 4
              :validoi [[:ei-tyhja "Valitse urakan toimenpide"]]}
             

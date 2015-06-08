@@ -2,7 +2,9 @@
 -- Hakee listaukseen kaikki urakan havainnot annetulle aikavälille
 SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
-       h.kasittelyaika, h.kasittelytapa, h.paatos
+       h.kasittelyaika, h.kasittelytapa,
+       h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
+       h.toimenpideinstanssi
   FROM havainto h
        JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
        JOIN kayttaja k ON h.luoja = k.id       
