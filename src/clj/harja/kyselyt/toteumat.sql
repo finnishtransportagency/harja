@@ -53,7 +53,7 @@ WHERE taso = 4
                   FROM toimenpideinstanssi
                   WHERE urakka = :urakka);
 
--- name: hae-urakan-tehtavat-toimenpidekoodilla
+-- name: hae-urakan-toteutuneet-tehtavat
 -- Hakee urakan tehtävät tietyllä toimenpidekoodilla
 SELECT
   tt.id                           AS tehtava_id,
@@ -73,7 +73,7 @@ FROM toteuma_tehtava tt
                           AND urakka = :urakka
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
-WHERE toimenpidekoodi = :toimenpidekoodi;
+                          AND tyyppi = :tyyppi :: toteumatyyppi
 
 -- name: paivita-toteuma!
 UPDATE toteuma
@@ -106,25 +106,6 @@ VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE);
 UPDATE toteuma_tehtava
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
-
--- name: hae-urakan-tehtavat-toteumittain
--- listaa-toteuman-tehtavat ID:n avulla
-SELECT
-  t.id,
-  t.alkanut,
-  t.tyyppi,
-  t.suorittajan_nimi,
-  t.suorittajan_ytunnus,
-  t.lisatieto,
-  SUM(tt.maara) AS maara
-FROM toteuma t JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-WHERE (t.alkanut >= :alkupvm AND t.alkanut <= :loppupvm)
-      AND toimenpidekoodi = :toimenpidekoodi
-      AND urakka = :urakka
-      AND sopimus = :sopimus
-      AND t.poistettu IS NOT TRUE
-      AND tt.poistettu IS NOT TRUE
-GROUP BY t.id;
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset

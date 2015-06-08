@@ -39,19 +39,12 @@
                                       (:tehtavat rivi))))
          rivit)))
 
-(defn urakan-tehtavat-toteumittain [db user {:keys [urakka-id sopimus-id toimenpidekoodi alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan tehtävät toteumittain: " urakka-id)
+(defn urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/hae-urakan-tehtavat-toteumittain db (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi urakka-id sopimus-id)))
-
-(defn urakan-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpidekoodi]}]
-  (log/debug "Haetaan urakan tehtävät toimenpidekoodilla: " urakka-id)
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        muunna-desimaaliluvut-xf
-        (q/hae-urakan-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) toimenpidekoodi)))
+        (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) tyyppi)))
 
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
@@ -221,12 +214,9 @@
       (julkaise-palvelu http :poista-tehtava!
                         (fn [user tiedot]
                           (poista-tehtava! db user tiedot)))
-      (julkaise-palvelu http :urakan-tehtavat-toimenpidekoodilla
+      (julkaise-palvelu http :urakan-toteutuneet-tehtavat
                         (fn [user tiedot]
-                          (urakan-tehtavat-toimenpidekoodilla db user tiedot)))
-      (julkaise-palvelu http :urakan-tehtavat-toteumittain
-                        (fn [user tiedot]
-                          (urakan-tehtavat-toteumittain db user tiedot)))
+                          (urakan-toteutuneet-tehtavat db user tiedot)))
       (julkaise-palvelu http :urakan-toteuma-paivat
                         (fn [user tiedot]
                           (urakan-toteuma-paivat db user tiedot)))
@@ -255,10 +245,10 @@
       (:http-palvelin this)
       :urakan-toteumat
       :urakan-toteuma-paivat
-      :urakan-tehtavat-toteumittain
       :hae-urakan-tehtavat
       :tallenna-urakan-toteuma
       :urakan-erilliskustannukset
+      :paivita-yk-hint-toteumien-tehtavat
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!

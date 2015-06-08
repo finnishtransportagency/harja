@@ -25,21 +25,13 @@
             :alkupvm alkupvm
             :loppupvm loppupvm}))
 
-(defn hae-urakan-tehtavat-toteumittain [urakka-id sopimus-id [alkupvm loppupvm] toimenpidekoodi]
-  (k/post! :urakan-tehtavat-toteumittain
+(defn hae-urakan-toteutuneet-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
+  (k/post! :urakan-toteutuneet-tehtavat
            {:urakka-id urakka-id
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm
-            :toimenpidekoodi toimenpidekoodi}))
-
-(defn hae-urakan-tehtavat-toimenpidekoodilla [urakka-id sopimus-id [alkupvm loppupvm] toimenpidekoodi]
-  (k/post! :urakan-tehtavat-toimenpidekoodilla
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :toimenpidekoodi toimenpidekoodi}))
+            :tyyppi tyyppi}))
 
 (defn hae-urakan-toteuma-paivat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteuma-paivat

@@ -115,14 +115,13 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-        toimenpidekoodi (:id rivi)
-        yksiloidyt-tehtavat (reaction<! (toteumat/hae-urakan-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali toimenpidekoodi))]
+        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali "yksikkohintainen"))]
 
     (fn [rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi rivi))
-         :tyhja       (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
+         :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna    #(toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id %)
          :voi-lisata? false
          :tunniste    :tehtava_id}
@@ -142,24 +141,20 @@
                                                                                                                                                       })
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))
-                                                                                                                                               @yksiloidyt-tehtavat)))
+                                                                                                                                               @toteutuneet-tehtavat)))
                                                                                                         :toteutunut-pvm   (:alkanut rivi)
                                                                                                         :lisatieto        (:lisatieto rivi)
                                                                                                         :suorittajan-nimi (:suorittajan_nimi rivi)})}
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-          (filter
-            (fn [rivi] (= (:tyyppi rivi) "yksikkohintainen"))
-            @yksiloidyt-tehtavat))]])))
+          @toteutuneet-tehtavat)]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
   (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
-        toteumat (reaction<!  ;;Päivittää toteumat asynkronisesti heti kun asetukset muuttuvat ja kannassa on uutta dataa saatavilla.
-                              ;;Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
-                              (let [valittu-urakka-id (:id @nav/valittu-urakka)
+        toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero]
                                     (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali)))
         muodosta-nelostason-tehtavat (fn []
@@ -200,7 +195,7 @@
                                                                                                                                 (:maara tehtava)
                                                                                                                                 0))
                                                                                                                             (:tehtavat toteuma)))
-                                                                                                                     (filter (fn [toteuma] (= (:tyyppi toteuma) "yksikkohintainen")) toteumat))))))
+                                                                                                                     toteumat)))))
                                                rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
