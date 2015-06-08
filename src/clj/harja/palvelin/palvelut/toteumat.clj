@@ -92,6 +92,10 @@
       
       true)))
 
+(defn paivita-yksikkohintaiset-tehtavat [db user urakka-id tehtavat]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
+                            (:urakka-id urakka-id))
+  (log/debug "Yksikköhintaisten töiden päivitys aloitettu."))
 
 (def erilliskustannus-tyyppi-xf
      (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
@@ -214,6 +218,9 @@
       (julkaise-palvelu http :tallenna-urakan-toteuma
                         (fn [user toteuma]
                           (tallenna-toteuma db user toteuma)))
+      (julkaise-palvelu http :paivita-yksikkohintaiset-tehtavat
+                        (fn [user urakka-id tehtavat]
+                          (paivita-yksikkohintaiset-tehtavat db user urakka-id tehtavat)))
       (julkaise-palvelu http :urakan-erilliskustannukset
         (fn [user tiedot]
           (hae-urakan-erilliskustannukset db user tiedot)))

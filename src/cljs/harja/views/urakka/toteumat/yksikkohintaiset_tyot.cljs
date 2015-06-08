@@ -48,7 +48,6 @@
                                                      @u/urakan-toimenpiteet-ja-tehtavat)))]
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
-
      [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
        :valinnat @toimenpiteen-tehtavat
        :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
@@ -124,8 +123,9 @@
        [grid/grid
         {:otsikko (str "Yksilöidyt tehtävät: " (:nimi rivi))
          :tyhja (if (nil? @yksiloidyt-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna #()
-         :voi-lisata? false}
+         :tallenna #(toteumat/paivita-yksikkohintaiset-tehtavat urakka-id @yksiloidyt-tehtavat)
+         :voi-lisata? false
+         :tunniste :tehtava_id }
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :numero :leveys "20%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
@@ -241,7 +241,7 @@
            :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"} ; FIXME Euroformatter
+           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
