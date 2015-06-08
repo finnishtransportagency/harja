@@ -157,13 +157,19 @@
                               (doall
                                 (for [tm toteumamateriaalit]
                                   (if (and (:id tm) (pos? (:id tm)))
-                                    (do
-                                      (log/info "Päivitä materiaalitoteuma " (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:id toteuma))
-                                      (materiaalit-q/paivita-toteuma-materiaali! c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm)))
+                                    (if (:poistettu tm)
+                                      (do
+                                        (log/info "Poistetaan materiaalitoteuma " (:id tm))
+                                        (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+                                      (do
+                                        (log/info "Päivitä materiaalitoteuma "
+                                                  (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)", "(:poistettu tm)"), toteumassa " (:id toteuma))
+                                        (materiaalit-q/paivita-toteuma-materiaali!
+                                          c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
                                     (do
                                       (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:id toteuma))
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
-                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka t)))))
+                              (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (:alkanut toteuma) (:paattynyt toteuma)))))
 
 (defn poista-toteuma!
   [db user t]
