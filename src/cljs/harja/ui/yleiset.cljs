@@ -134,9 +134,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([viesti rasti-funktio inline-block?]
    (let [sulkemisnappi [:span.inlinenappi {:on-click #(rasti-funktio)} [ikonit/remove]]]
      (if inline-block?
-       [:div {:style {:display :inline-block :background-color "#fffff"}} viesti
+       [:div {:style {:display :inline-block :background-color "red"}} viesti
         (when rasti-funktio sulkemisnappi)]
-       [:div {:style {:background-color "#fffff"}} viesti
+       [:div {:style {:background-color "red"}} viesti
         (when rasti-funktio sulkemisnappi)]))))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
