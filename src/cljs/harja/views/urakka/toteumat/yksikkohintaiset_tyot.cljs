@@ -148,19 +148,12 @@
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-  (let [toteumat (reaction nil) ; Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
-        hae-toteumat (fn []
-                           "Päivittää toteumat, jos asetukset ovat muuttuneet ja kannassa on uutta dataa saatavilla."
-                           (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 valittu-aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]]
-                             (if (or
-                                   (nil? @toteumat)
-                                   (not (= (:aikavali @toteumat) valittu-aikavali)))
-                               (go
-                                 (let [uudet-toteumat (<! (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-aikavali))]
-                                   (if (not (= uudet-toteumat @toteumat))
-                                     (reset! toteumat {:aikavali valittu-aikavali :vastaus uudet-toteumat})))))))
+  (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
+        toteumat (reaction<!  ;;Päivittää toteumat asynkronisesti heti kun asetukset muuttuvat ja kannassa on uutta dataa saatavilla.
+                              ;;Mappi, jossa avaimina :aikavali (vector, mille aikavälille toteumat haettiin) ja :vastaus (backendin vastaus)
+                              (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero]
+                                    (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali)))
         muodosta-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
@@ -213,19 +206,18 @@
                          valittu-urakka @nav/valittu-urakka
                          valittu-sopimus @u/valittu-sopimusnumero
                          valittu-hoitokausi @u/valittu-hoitokausi
-                         valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]] ;FIXME destruct
-                      ; TODO UI:n mahdollisuus valita tarkempi aikaväli (kuukaisväli ja päivämääräväli)
-                     (hae-toteumat) ;FIXME Reaction
-                     ; Jos toteumia ei ole vielä saatu valitulle hoitokaudelle, palauttaa nil.
-                     ; Tämä reaction body ajetaan automaattisesti uudelleen kun toteumat saadaan.
-                     (if (and (not (nil? @toteumat))
-                              (= (:aikavali @toteumat) valittu-aikavali))
+                         valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
+                         toteumat @toteumat]
+
+                     (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
                            (lisaa-tyoriveille-suunnitellut-kustannukset valittu-hoitokausi)
-                           (lisaa-tyoriveille-toteutunut-maara (:vastaus @toteumat))
+                           (lisaa-tyoriveille-toteutunut-maara toteumat)
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
                            (lisaa-tyoriveille-erotus)))))]
+
+    ; TODO UI:n mahdollisuus valita tarkempi aikaväli (kuukaisväli ja päivämääräväli)
 
     (komp/luo
       (fn []
