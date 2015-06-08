@@ -21,8 +21,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def valittu-valilehti "Valittu välilehti" (atom :yleiset))
-
 (defn urakka
   "Urakkanäkymä"
   [ur]
@@ -30,7 +28,7 @@
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
    (hae-urakan-tyot ur)
-   [bs/tabs {:style :tabs :active valittu-valilehti}
+   [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
    "Yleiset"
    :yleiset
    ^{:key "yleiset"}

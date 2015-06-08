@@ -142,6 +142,8 @@ ja viimeinen voivat olla vajaat)."
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
 
+(defonce urakan-valittu-valilehti (atom :yleiset))
+
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
@@ -156,3 +158,5 @@ ja viimeinen voivat olla vajaat)."
                     sivu @toteumat-valilehti]
                 (when (and ur aikavali (= :erilliskustannukset sivu))
                   (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
+
+(def suunnittelun-valittu-valilehti "Suunnitteluosion valittu välilehti" (atom :kokonaishintaiset))

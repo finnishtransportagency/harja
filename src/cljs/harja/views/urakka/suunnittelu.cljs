@@ -11,11 +11,11 @@
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.materiaalit :as mat]
-            
+
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
-  
+
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -29,8 +29,6 @@
                                                                 @u/urakan-yks-hint-tyot)
                                                           (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
-(def valittu-valilehti "Valittu välilehti" (atom :kokonaishintaiset))
-
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -40,11 +38,11 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (if (= :kokonaishintaiset @valittu-valilehti)
+          (if (= :kokonaishintaiset @u/suunnittelun-valittu-valilehti)
             [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
             [valinnat/urakan-sopimus-ja-hoitokausi ur])
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :active valittu-valilehti}
+          [bs/tabs {:style :tabs :active u/suunnittelun-valittu-valilehti}
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset

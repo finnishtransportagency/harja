@@ -66,9 +66,8 @@
             maksuerat))))
 
 (def urakka-id (atom nil))
-(def maksuerat (reaction<! (hae-urakan-maksuerat @nav/valittu-urakka)))
-(def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat)))
-(def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat)))
+(def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat/maksuerat)))
+(def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
 (def pollaus-id (atom nil))
 (def pollataan-kantaa? (atom false))
 
@@ -77,7 +76,7 @@
 (defn rakenna-paivittyneet-maksuerat [paivittyneiden-maksuerien-tilat]
   (mapv (fn [uusi-maksuera]
           (let [m (first (filter (fn [maksuera]
-                                   (= (:numero maksuera) (:numero uusi-maksuera))) @maksuerat))]
+                                   (= (:numero maksuera) (:numero uusi-maksuera))) @maksuerat/maksuerat))]
             (assoc-in (assoc-in m [:maksuera :tila] (:tila (:maksuera uusi-maksuera)))
                       [:kustannussuunnitelma :tila] (:tila (:kustannussuunnitelma uusi-maksuera)))))
         paivittyneiden-maksuerien-tilat))
@@ -112,7 +111,7 @@
     (go (reset! kuittausta-odottavat-maksuerat (into #{} (clojure.set/union @kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot)))
         (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))
               paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
-              samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat)
+              samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat/maksuerat)
               uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
               uudet-kuittausta-odottavat (rakenna-uudet-kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot @kuittausta-odottavat-maksuerat)]
           (if vastaus
