@@ -16,6 +16,13 @@
                                   :alku alkupvm
                                   :loppu loppupvm}))
 
+(defn hae-havainnon-tiedot
+  "Hakee urakan havainnon tiedot urakan id:n ja havainnon id:n perusteella.
+  Palauttaa kaiken tiedon mitä havainnon muokkausnäkymään tarvitaan."
+  [urakka-id havainto-id]
+  (k/post! :hae-havainnon-tiedot {:urakka-id urakka-id
+                                  :havainto-id havainto-id}))
+
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
   [urakka-id tarkastus-id]

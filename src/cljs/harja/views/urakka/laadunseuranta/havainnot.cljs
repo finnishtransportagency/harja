@@ -16,8 +16,10 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [clojure.string :as str]
-            )
+            [harja.asiakas.kommunikaatio :as k]
+            [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 (defonce listaus (atom :kaikki))
@@ -36,7 +38,13 @@
                   (laadunseuranta/hae-urakan-havainnot urakka-id alku loppu)))))
                 
                     
-(defonce valittu-havainto (atom nil))
+(defonce valittu-havainto-id (atom nil))
+
+(defonce valittu-havainto (reaction<!
+                           (when-let [id @valittu-havainto-id]
+                             (if (= :uusi id)
+                               (go {})
+                               (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
@@ -151,13 +159,13 @@
     [:kaikki :selvitys :kasitellyt :omat]]
 
 
-   [:button.nappi-ensisijainen {:on-click #(reset! valittu-havainto {})}
+   [:button.nappi-ensisijainen {:on-click #(reset! valittu-havainto-id :uusi)}
     (ikonit/plus-sign)
     " Uusi havainto"]
     
      
    [grid/grid
-    {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto %)
+    {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
      :tyhja "Ei havaintoja."}
     [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys "10%"}
      {:otsikko "Kohde" :nimi :kohde :leveys "25%"}
@@ -170,11 +178,11 @@
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
   [:div.kommentit
-   (for [{:keys [pvm tekija kommentti rooli liitteet]} kommentit]
-     ^{:key (pvm/millisekunteina pvm)}
-     [:div.kommentti {:class (when rooli (name rooli))}
-      [:span.kommentin-tekija tekija]
-      [:span.kommentin-aika (pvm/pvm-aika pvm)]
+   (for [{:keys [aika tekijanimi kommentti tekija liitteet]} kommentit]
+     ^{:key (pvm/millisekunteina aika)}
+     [:div.kommentti {:class (when tekija (name tekija))}
+      [:span.kommentin-tekija tekijanimi]
+      [:span.kommentin-aika (pvm/pvm-aika aika)]
       [:div.kommentin-teksti kommentti]
       (when-not (empty? liitteet)
         [:div.kommentin-liitteet
@@ -205,26 +213,49 @@
   (not (nil? (get-in havainto [:paatos :paatos]))))
 
 
-(defn tallenna-havainto [havainto]
-  (-> havainto
-      (assoc :toimenpideinstanssi (:tpi_id (:toimenpide havainto)))
-      (dissoc :toimenpide)
-      laadunseuranta/tallenna-havainto))
+(defn tallenna-havainto
+  "Tallentaa annetun havainnon palvelimelle. Lukee serveriltä palautuvan havainnon ja 
+   päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
+  [havainto]
+  (go 
+    (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
+      (if (k/virhe? tulos)
+        ;; Palautetaan virhe, jotta nappi näyttää virheviestin
+        tulos
+
+        ;; Havainto tallennettu onnistuneesti, päivitetään sen tiedot
+        (let [uusi-havainto tulos
+              aika (:aika uusi-havainto)
+              [alku loppu] @aikavali]
+          (when (and (pvm/sama-tai-jalkeen? aika alku)
+                     (pvm/sama-tai-ennen? aika loppu))
+            ;; Kuuluu aikavälille, lisätään tai päivitetään
+            (if (:id havainto)
+              ;; Päivitetty olemassaolevaa
+              (swap! urakan-havainnot
+                     (fn [havainnot]
+                       (mapv (fn [h]
+                               (if (= (:id h) (:id uusi-havainto))
+                                 uusi-havainto
+                                 h)) havainnot)))
+              ;; Luotu uusi
+              (swap! urakan-havainnot
+                     conj uusi-havainto)))
+          true)))))
       
 (defn havainto [havainto]
-  (let [havainto (atom (assoc havainto
-                         :urakka (:id @nav/valittu-urakka)))]
+  (let [havainto (atom havainto)]
     (tarkkaile! "Havainto: " havainto)
     (komp/luo
      {:component-will-receive-props
-      (fn [this havainto]
-        (log "UUSI havainto: " havainto))}
+      (fn [this uusi-havainto]
+        (reset! havainto uusi-havainto))}
      
      (fn [alkuperainen]
        (let [muokattava? (constantly (not (paatos? alkuperainen)))
              uusi? (not (:id alkuperainen))]
          [:div.havainto
-          [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto nil)}
+          [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
            (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
 
           [:h3 "Havainnon tiedot"]
@@ -246,8 +277,8 @@
                      {:ikoni (ikonit/check)
                       :disabled (let [h @havainto]
                                   (not (and (:toimenpideinstanssi h)
-                                            (:aika h))))}
-                     #(log "Tuli: " %)]}
+                                            (:aika h))))
+                      :kun-onnistuu #(reset! valittu-havainto nil)}]}
            [
             {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
              :tyyppi :valinta
@@ -313,7 +344,7 @@
                  {:otsikko "Muu käsittelytapa"
                   :nimi :kasittelytapa-selite
                   :hae (comp :kasittelytapa-selite :paatos)
-                  :aseta #(assoc-in %1 [:paatos :kasittelytapa-selite] %2)
+                  :aseta #(assoc-in %1 [:paatos :muukasittelytapa] %2)
                   :tyyppi :string
                   :leveys-col 4
                   :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]
@@ -334,7 +365,7 @@
                  {:otsikko "Päätöksen selitys"
                   :nimi :paatoksen-selitys
                   :tyyppi :text
-                  :hae (comp :selitys :paatos)
+                  :hae (comp :perustelu :paatos)
                   :koko [80 4]
                   :leveys-col 6
                   :aseta #(assoc-in %1 [:paatos :selitys] %2)
@@ -369,13 +400,7 @@
                                  (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
                ))]
          
-           @havainto]
-
-          
-        
-                
-        
-          ])))))
+           @havainto]])))))
   
 
 (defn havainnot []
