@@ -62,7 +62,11 @@
   "Uuden toteuman syöttäminen"
   []
   (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
-        lomake-tehtavat (atom (:tehtavat @lomakkeessa-muokattava-toteuma))]
+        lomake-tehtavat (atom (:tehtavat @lomakkeessa-muokattava-toteuma))
+        valmis-tallennettavaksi? (reaction
+                                   (and ;(not (empty? (:toteutunut-pvm @lomake-toteuma))) FIXME pvm:ää ei voi valita jos tämä on tässä
+                                        (not (empty? (:suorittajan-nimi @lomake-toteuma)))
+                                        (not (empty? (vals @lomake-tehtavat)))))]
 
     (log "SÖSÖ Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "SÖSÖ Lomake tehtävät: " (pr-str @lomake-tehtavat))
@@ -86,7 +90,7 @@
                                                                         {:toimenpidekoodi (:id (:tehtava rivi))
                                                                          :maara (js/parseInt (:maara rivi))})
                                                                       (vals @lomake-tehtavat)))
-                             {:luokka :nappi-ensisijainen
+                             {:luokka :nappi-ensisijainen :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
                                         (reset! lomake-tehtavat nil)
                                         (reset! lomake-toteuma nil)
