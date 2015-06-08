@@ -67,7 +67,7 @@
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
 
-                          
+
 (defn tallenna-toteuma [db user toteuma]
   (validoi Toteuma toteuma)
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
@@ -89,7 +89,7 @@
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
         (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
-      
+
       true)))
 
 
@@ -125,6 +125,9 @@
       (q/paivita-erilliskustannus! c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
         (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)
         (or (:poistettu ek) false) (:id ek)))
+
+    (log/debug "Merkitään maksuerä likaiseksi erilliskustannuksen toimenpideinstanssille: " (:toimenpideinstanssi ek))
+    (q/merkitse-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
 
     (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
                                              :alkupvm (:alkupvm ek)
