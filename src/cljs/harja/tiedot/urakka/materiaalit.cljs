@@ -22,8 +22,9 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
-(defn hae-urakassa-kaytetyt-materiaalit [urakka-id]
-  (k/post! :hae-urakassa-kaytetyt-materiaalit urakka-id))
+(defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu]
+  (log "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(pvm/pvm alku)" - "(pvm/pvm loppu))
+  (k/post! :hae-urakassa-kaytetyt-materiaalit {:urakka-id urakka-id :alkanut alku :paattynyt loppu}))
 
 (defn hae-toteumat-materiaalille [urakka-id materiaali-id]
   (k/post! :hae-urakan-toteumat-materiaalille {:urakka-id urakka-id :materiaali-id materiaali-id}))

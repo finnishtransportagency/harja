@@ -24,7 +24,9 @@
 
 (def urakan-materiaalin-kaytot
   (reaction<! (when-let [ur @nav/valittu-urakka]
-                (toteumat/hae-urakassa-kaytetyt-materiaalit (:id ur)))))
+                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
+                                                                     (first @u/valittu-hoitokausi)
+                                                                     (second @u/valittu-hoitokausi)))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -126,7 +128,7 @@
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
                              #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
-                             {:luokka :nappi-ensisijainen
+                             {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
                              :kun-onnistuu #(do
                                (reset! urakan-materiaalin-kaytot %)
@@ -177,10 +179,19 @@
     (komp/luo
       {:component-will-mount
        (fn [_]
-         ;(log "COMPONENT WILL MOUNT")
          (go
            (reset! tiedot
-                   (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk)))))))}
+                   (filter
+                     (fn [kartta]
+                       (let [hoitokauden-alku (first @u/valittu-hoitokausi)
+                             hoitokauden-loppu (second @u/valittu-hoitokausi)
+                             toteuman-alku (:alkanut (:toteuma kartta))
+                             toteuman-loppu (:paattynyt (:toteuma kartta))]
+
+                         (and
+                           (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku))
+                           (pvm/sama-tai-ennen? toteuman-loppu hoitokauden-loppu)))
+                     (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk))))))))}
 
       (fn [urakan-id vm]
         (log "Vetolaatikko tiedot:" (pr-str @tiedot))

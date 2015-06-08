@@ -28,13 +28,14 @@
           tulos)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
-  [db user urakka-id]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  [db user tiedot]
+  (oik/vaadi-lukuoikeus-urakkaan user (:urakka-id tiedot))
+  (log/info "Haetaan urakassa ("(:urakka-id tiedot)") käytetyt materiaalit ajalta "(:alkanut tiedot)" - "(:paattynyt tiedot))
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (when (:maara %) (double (:maara %)))))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
-        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id)))
+        (q/hae-urakassa-kaytetyt-materiaalit db (:urakka-id tiedot) (konv/sql-date (:alkanut tiedot)) (konv/sql-date (:paattynyt tiedot)))))
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id]
@@ -164,8 +165,8 @@
                         (tallenna-urakan-materiaalit (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakassa-kaytetyt-materiaalit
-                      (fn [user urakka-id]
-                        (hae-urakassa-kaytetyt-materiaalit (:db this) user urakka-id)))
+                      (fn [user tiedot]
+                        (hae-urakassa-kaytetyt-materiaalit (:db this) user tiedot)))
                            
     this)
 
