@@ -101,8 +101,8 @@
             :muokattava? (constantly false)}
 
            {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
-           {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm :leveys-col 2}
-           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string}
+           {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
           @lomake-toteuma]]))))
