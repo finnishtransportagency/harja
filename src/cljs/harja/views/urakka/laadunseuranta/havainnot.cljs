@@ -61,6 +61,13 @@
      " ("
      (kuvaile-kasittelytapa kasittelytapa) ")")))
 
+(defn kuvaile-tekija [tekija]
+  (case tekija
+    :tilaaja "Tilaaja"
+    :urakoitsija "Urakoitsija"
+    :konsultti "Konsultti"))
+
+
 (def +testidata+
   [{:id 1
     :pvm (pvm/->pvm-aika "2.6.2015 08:22")
@@ -137,7 +144,7 @@
      :valitse-fn #(reset! listaus %)
      :format-fn #(case %
                    :kaikki "Kaikki"
-                   :kasitellyt "Käsittelyt (päätös tehty)"
+                   :kasitellyt "Käsitellyt (päätös tehty)"
                    :selvitys "Odottaa urakoitsijan selvitystä"
                    :omat "Minun kirjaamat / kommentoimat")}
 
@@ -150,14 +157,16 @@
     
      
    [grid/grid
-    {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto %)}
-    [{:otsikko "Päivämäärä" :nimi :pvm :fmt pvm/pvm-aika :leveys "10%"}
+    {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto %)
+     :tyhja "Ei havaintoja."}
+    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys "10%"}
      {:otsikko "Kohde" :nimi :kohde :leveys "25%"}
-     {:otsikko "Tekijä" :nimi :tekija :leveys "25%"}
+     {:otsikko "Tekijä" :nimi :tekija :leveys "25%" :fmt kuvaile-tekija}
      {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys "35%"} ;; Päätös
      ]
 
-    +testidata+]])
+    @urakan-havainnot
+    ]])
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
   [:div.kommentit

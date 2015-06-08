@@ -18,6 +18,9 @@
 (defn hae-urakan-havainnot [db user {:keys [urakka-id alku loppu]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
+        (comp
+         (map konv/alaviiva->rakenne)
+         (map #(assoc % :tekija (keyword (:tekija %)))))
         (havainnot/hae-kaikki-havainnot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn- luo-tai-paivita-havainto
