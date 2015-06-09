@@ -11,6 +11,21 @@ SELECT h.id, h.aika, h.kohde,
  WHERE tpi.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
 
+-- name: hae-selvitysta-odottavat-havainnot
+-- Hakee listaukseen kaikki urakan havainnot, jotka odottavat urakoitsijalta selvitystä.
+SELECT h.id, h.aika, h.kohde,
+       h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
+       h.kasittelyaika as paatos_kasittelyaika,
+       h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
+       h.toimenpideinstanssi
+  FROM havainto h
+       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
+       JOIN kayttaja k ON h.luoja = k.id       
+ WHERE tpi.urakka = :urakka
+   AND (aika >= :alku AND aika <= :loppu)
+   AND selvitys_pyydetty = true AND selvitys_annettu = false
+   
+
 -- name: hae-havainnon-tiedot
 -- Hakee havainnon tiedot muokkausnäkymiin.
 SELECT h.id, h.aika, h.kohde,
@@ -50,7 +65,8 @@ UPDATE havainto
        aika = :aika,
        tekija = :tekija::osapuoli,
        kohde = :kohde,
-       muokkaaja = :muokkaaja,
+       selvitys_pyydetty = :selvitys,
+       Muokkaaja = :muokkaaja,
        muokattu = current_timestamp
  WHERE id = :id
 
@@ -59,8 +75,8 @@ UPDATE havainto
 -- voi antaa päätöstietoja.
 INSERT
   INTO havainto
-       (toimenpideinstanssi, aika, tekija, kohde, luoja, luotu)
-VALUES (:toimenpideinstanssi, :aika, :tekija::osapuoli, :kohde, :luoja, current_timestamp)
+       (toimenpideinstanssi, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu)
+VALUES (:toimenpideinstanssi, :aika, :tekija::osapuoli, :kohde, :selvitys, :luoja, current_timestamp)
 
 -- name: kirjaa-havainnon-paatos!
 -- Kirjaa havainnolle päätöksen.

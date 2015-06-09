@@ -39,15 +39,21 @@ rooleista."
     (log/warn viesti)
         (throw (RuntimeException. viesti)))))
 
+(defn urakkaroolit
+  "Palauttaa setin rooleja, joita käyttäjällä on annetussa urakassa."
+  [kayttaja urakka-id]
+  (some->> (:urakkaroolit kayttaja)
+           (filter #(= (:id (:urakka %)) urakka-id))
+           (map :rooli) 
+           (into #{})))
+
+
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   [kayttaja rooli urakka-id]
   (if (roolissa? kayttaja rooli-jarjestelmavastuuhenkilo)
     true
-    (if-let [urakkaroolit (some->> (:urakkaroolit kayttaja)
-                                   (filter #(= (:id (:urakka %)) urakka-id))
-                                   (map :rooli) 
-                                   (into #{}))]
+    (if-let [urakkaroolit (urakkaroolit kayttaja urakka-id)]
       (cond
        (string? rooli) (if (urakkaroolit rooli) true false)
        (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
@@ -86,3 +92,24 @@ rooleista."
     (log/warn viesti)
         (throw (RuntimeException. viesti))))
   )
+
+(defn osapuoli
+  "Päättelee kuka osapuoli on kyseessä roolien perusteella. 
+Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
+  [kayttaja urakka-id]
+  (let [roolit (urakkaroolit kayttaja urakka-id)]
+    (cond
+     (some roolit [roolit/jarjestelmavastuuhenkilo
+                   roolit/tilaajan-kayttaja
+                   roolit/urakanvalvoja
+                   roolit/tilaajan-asiantuntija])
+     :tilaaja
+
+     (some roolit [roolit/tilaajan-laadunvalvontakonsultti])
+     :konsultti
+     
+     (some roolit [roolit/urakoitsijan-paakayttaja
+                   roolit/urakoitsijan-urakan-vastuuhenkilo
+                   roolit/urakoitsijan-kayttaja
+                   roolit/urakoitsijan-laatuvastaava])
+     :urakoitsija)))

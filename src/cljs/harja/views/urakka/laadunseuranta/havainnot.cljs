@@ -33,10 +33,11 @@
 
 (defonce urakan-havainnot
   (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
-                    [alku loppu] @aikavali]
+                    [alku loppu] @aikavali
+                    listaus @listaus]
                 (when (and urakka-id alku loppu)
-                  (laadunseuranta/hae-urakan-havainnot urakka-id alku loppu)))))
-                
+                  (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu)))))
+
                     
 (defonce valittu-havainto-id (atom nil))
 
@@ -149,7 +150,7 @@
      :valitse-fn #(reset! aikavali  %)
      :format-fn (fn [[kk _]] (str (pvm/kuukauden-nimi (pvm/kuukausi kk)) " " (pvm/vuosi kk)))}
     @hoitokauden-kuukaudet]
-   
+
    [yleiset/pudotusvalikko
     "Näytä havainnot"
     {:valinta @listaus
@@ -258,6 +259,8 @@
           [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
            (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
 
+          ;[(aget js/window "EIOO") 1 ]
+
           [:h3 "Havainnon tiedot"]
           [lomake/lomake
            {:muokkaa! #(reset! havainto %)
@@ -304,6 +307,11 @@
              :leveys-col 4
              :muokattava? muokattava?
              :validoi [[:ei-tyhja "Valitse havainnon tehnyt osapuoli"]]}
+
+            (when-not (= :urakoitsija (:tekija @havainto))
+              {:otsikko "Urakoitsijan selvitystä pyydetään"
+               :nimi :selvitys-pyydetty
+               :tyyppi :boolean})
 
             {:otsikko "Kohde" :tyyppi :string :nimi :kohde
              :leveys-col 4

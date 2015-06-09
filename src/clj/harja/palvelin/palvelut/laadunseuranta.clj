@@ -18,23 +18,28 @@
                   (map konv/alaviiva->rakenne)
                   (map #(assoc % :tekija (keyword (:tekija %))))))
 
-(defn hae-urakan-havainnot [db user {:keys [urakka-id alku loppu]}]
+(defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         havainto-xf
-        (havainnot/hae-kaikki-havainnot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+        ((case listaus
+           :kaikki havainnot/hae-kaikki-havainnot
+           :selvitys havainnot/hae-selvitysta-odottavat-havainnot)
+         db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn- luo-tai-paivita-havainto
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
-  [db user {:keys [id kohde tekija toimenpideinstanssi aika] :as havainto}]
+  [db user {:keys [id kohde tekija toimenpideinstanssi aika selvitys-pyydetty] :as havainto}]
   (if id
     (do (havainnot/paivita-havainnon-perustiedot! db toimenpideinstanssi
                                                   (konv/sql-timestamp aika) (name tekija) kohde
+                                                  selvitys-pyydetty
                                                   (:id user)
                                                   id)
         id)
     
-    (:id (havainnot/luo-havainto<! db toimenpideinstanssi (konv/sql-timestamp aika) (name tekija) kohde (:id user)))))
+    (:id (havainnot/luo-havainto<! db toimenpideinstanssi (konv/sql-timestamp aika) (name tekija) kohde
+                                   selvitys-pyydetty (:id user)))))
 
 
 (defn hae-havainnon-tiedot
@@ -63,7 +68,17 @@
   (log/info "Tuli havainto: " havainto)
   (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
-    (let [id (luo-tai-paivita-havainto c user havainto)]
+    
+    (let [osapuoli (oik/osapuoli user urakka)
+          havainto (assoc havainto
+                     ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
+                     :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                             (:selvitys-pyydetty havainto))
+                     
+                     ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu 
+                     :selvitys-annettu (and (:uusi-kommentti havainto)
+                                            (= :urakoitsija osapuoli))) 
+          id (luo-tai-paivita-havainto c user havainto)]
       ;; Luodaan uudet kommentit
       (when-let [uusi-kommentti (:uusi-kommentti havainto)]
         (log/info "UUSI KOMMENTTI: " uusi-kommentti)
@@ -79,10 +94,8 @@
                                                    liite
                                                    (:id user))]
           ;; Liitä kommentti havaintoon
-          (havainnot/liita-kommentti<! c id (:id kommentti))
-          ))
-      
-        
+          (havainnot/liita-kommentti<! c id (:id kommentti))))
+              
 
       (when (:paatos (:paatos havainto))
         ;; Urakanvalvoja voi kirjata päätöksen

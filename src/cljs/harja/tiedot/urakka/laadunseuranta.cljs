@@ -11,8 +11,9 @@
 
 (defn hae-urakan-havainnot
   "Hakee annetun urakan havainnot urakka id:n ja aikavälin perusteella."
-  [urakka-id alkupvm loppupvm]
-  (k/post! :hae-urakan-havainnot {:urakka-id urakka-id
+  [listaus urakka-id alkupvm loppupvm]
+  (k/post! :hae-urakan-havainnot {:listaus listaus
+                                  :urakka-id urakka-id
                                   :alku alkupvm
                                   :loppu loppupvm}))
 
