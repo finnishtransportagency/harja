@@ -51,6 +51,14 @@
 (deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot []
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
        urakka-id @pudasjarven-alueurakan-id
+          maara-kannassa (ffirst (q
+                                   (str "SELECT count(*)
+                                           FROM toimenpidekoodi t4
+                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           WHERE t4.taso = 4 AND
+                                                t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
+                                     urakka-id ") AND
+                                                         t4.poistettu = false")))
        response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
      (is (not (nil? response)))
-     (is (= (count response) 2))))
+     (is (= (count response) maara-kannassa))))
