@@ -54,7 +54,7 @@ WHERE taso = 4
                   WHERE urakka = :urakka);
 
 -- name: hae-urakan-toteutuneet-tehtavat
--- Hakee urakan tehtävät tietyllä toimenpidekoodilla
+-- Hakee urakan tietyntyyppiset toteutuneet tehtävät
 SELECT
   tt.id                           AS tehtava_id,
   tt.toteuma                      AS toteuma_id,

@@ -122,7 +122,8 @@
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna    #(toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id %)
+         :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
+                             (reset! toteutuneet-tehtavat vastaus)))
          :voi-lisata? false
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}

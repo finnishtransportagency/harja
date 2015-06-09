@@ -43,8 +43,12 @@
 (defn tallenna-toteuma [toteuma]
   (k/post! :tallenna-urakan-toteuma toteuma))
 
-(defn paivita-yk-hint-toteumien-tehtavat [urakka-id tehtavat]
+(defn paivita-yk-hint-toteumien-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi tehtavat]
   (k/post! :paivita-yk-hint-toteumien-tehtavat {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :alkupvm alkupvm
+                                                :loppupvm loppupvm
+                                                :tyyppi tyyppi
                                                 :tehtavat tehtavat}))
 
 (defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]

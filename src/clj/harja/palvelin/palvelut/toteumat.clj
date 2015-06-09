@@ -39,15 +39,14 @@
                                       (:tehtavat rivi))))
          rivit)))
 
-(defn urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id)
+(defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+  (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
         (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi))))
 
-
-(defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
+(defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into #{}
@@ -89,14 +88,16 @@
 (defn paivita-yk-hint-toiden-tehtavat [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id tiedot))
-  (log/debug "Yksikköhintaisten töiden päivitys aloitettu.")
+  (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Data: " (pr-str (into [] (:tehtavat tiedot)))))
   (jdbc/with-db-transaction [c db]
                             (doall
-                            (for [tehtava (:tehtavat tiedot)]
-                              (do
-                                (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
-                                (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava)))))))
-; TODO Palauta päivittyneet tiedot
+                              (for [tehtava (:tehtavat tiedot)]
+                                (do
+                                  (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
+                                  (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava))))))
+  (let [paivitetty-data (hae-urakan-toteutuneet-tehtavat db user tiedot)]
+    (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetty-data))
+    paivitetty-data))
 
 (def erilliskustannus-tyyppi-xf
      (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
@@ -216,10 +217,10 @@
                           (poista-tehtava! db user tiedot)))
       (julkaise-palvelu http :urakan-toteutuneet-tehtavat
                         (fn [user tiedot]
-                          (urakan-toteutuneet-tehtavat db user tiedot)))
+                          (hae-urakan-toteutuneet-tehtavat db user tiedot)))
       (julkaise-palvelu http :urakan-toteuma-paivat
                         (fn [user tiedot]
-                          (urakan-toteuma-paivat db user tiedot)))
+                          (hae-urakan-toteuma-paivat db user tiedot)))
       (julkaise-palvelu http :hae-urakan-tehtavat
                         (fn [user urakka-id]
                           (hae-urakan-tehtavat db user urakka-id)))
