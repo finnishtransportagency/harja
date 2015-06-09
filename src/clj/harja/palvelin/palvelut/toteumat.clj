@@ -94,7 +94,7 @@
                             (:urakka-id tiedot))
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Data: " (pr-str (into [] (:tehtavat tiedot)))))
 
-  (let [uniikit-tehtavat (into #{} (map #(:tehtava_id %) (:tehtavat tiedot)))]
+  (let [tehtavatidt (into #{} (map #(:tehtava_id %) (:tehtavat tiedot)))]
     (jdbc/with-db-transaction [c db]
                               (doall
                                 (for [tehtava (:tehtavat tiedot)]
@@ -102,8 +102,8 @@
                                     (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
                                     (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava)))))
 
-                              (log/debug "Merkitään tehtavien: " uniikit-tehtavat " maksuerät likaisiksi")
-                              (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c uniikit-tehtavat)))
+                              (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
+                              (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
 
   (let [paivitetty-data (hae-urakan-toteutuneet-tehtavat db user tiedot)]
     (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetty-data))
@@ -197,10 +197,15 @@
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka t))
   (jdbc/with-db-transaction [c db]
-                            (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))]
+                            (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))
+                                  tehtavaidt (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
+
+                              (log/debug "Merkitään tehtavien: " tehtavaidt " maksuerät likaisiksi")
+                              (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavaidt)
+
                               (materiaalit-q/poista-toteuma-materiaali!
                                 c (:id user) (filterv #(not (nil? %)) (map :materiaali_id mat-ja-teht)))
-                              (q/poista-tehtava! c (:id user) (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht)))
+                              (q/poista-tehtava! c (:id user) tehtavaidt)
                               (q/poista-toteuma! c (:id user) (:id t))
                               true)))
 
@@ -210,7 +215,11 @@
   [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka tiedot))
-  (q/poista-tehtava! db (:id user) (:id tiedot)))
+  (let [tehtavaid (:id tiedot)]
+    (log/debug "Merkitään tehtava: " tehtavaid " maksuerä likaiseksi")
+    (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! db tehtavaid)
+
+    (q/poista-tehtava! db (:id user) (:id tiedot))))
 
 (defrecord Toteumat []
   component/Lifecycle
