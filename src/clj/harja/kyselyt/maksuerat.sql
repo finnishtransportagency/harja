@@ -90,23 +90,25 @@ SELECT
     THEN
       (SELECT
          -- Muutostyo
-         (SELECT (sum(tt.maara * yt.yksikkohinta))
-          FROM toteuma t
-            JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-            JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                        (tpk.emo IN (SELECT id
-                                                     FROM toimenpidekoodi emo
-                                                     WHERE emo.id = tpi.toimenpide))
-            JOIN yksikkohintainen_tyo yt
-              ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-                 t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-          WHERE t.tyyppi = 'muutostyo')
+         coalesce((SELECT (sum(tt.maara * yt.yksikkohinta))
+                   FROM toteuma t
+                     JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+                     JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
+                                                 (tpk.emo IN (SELECT id
+                                                              FROM toimenpidekoodi emo
+                                                              WHERE emo.id = tpi.toimenpide))
+                     JOIN yksikkohintainen_tyo yt
+                       ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
+                          t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
+                   WHERE t.tyyppi = 'muutostyo'),
+                  0)
          +
          -- Erilliskustannukset
            -- Fixme: indeksien laskenta!
-         (SELECT (sum(ek.rahasumma))
-          FROM erilliskustannus ek
-          WHERE ek.toimenpideinstanssi = tpi.id))
+         coalesce((SELECT (sum(ek.rahasumma))
+                   FROM erilliskustannus ek
+                   WHERE ek.toimenpideinstanssi = tpi.id)),
+         0)
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
   ELSE 0
@@ -213,23 +215,26 @@ SELECT
   WHEN m.tyyppi = 'muu'
     THEN
 
-      (SELECT
-         -- Muutostyöt
-         (SELECT (sum(tt.maara * yt.yksikkohinta))
-          FROM toteuma t
-            JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-            JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                        (tpk.emo IN (SELECT id
-                                                     FROM toimenpidekoodi emo
-                                                     WHERE emo.id = tpi.toimenpide))
-            JOIN yksikkohintainen_tyo yt
-              ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-          WHERE t.tyyppi = 'muutostyo')
-         +
-         -- Erilliskustannukset
-         (SELECT (sum(ek.rahasumma))
-          FROM erilliskustannus ek
-          WHERE ek.toimenpideinstanssi = tpi.id))
+      (SELECT (
+        -- Muutostyöt
+        coalesce((SELECT (sum(tt.maara * yt.yksikkohinta))
+                  FROM toteuma t
+                    JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+                    JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
+                                                (tpk.emo IN (SELECT id
+                                                             FROM toimenpidekoodi emo
+                                                             WHERE emo.id = tpi.toimenpide))
+                    JOIN yksikkohintainen_tyo yt
+                      ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND
+                         t.alkanut <= yt.loppupvm
+                  WHERE t.tyyppi = 'muutostyo'),
+                 0)
+        +
+        -- Erilliskustannukset
+        coalesce((SELECT (sum(ek.rahasumma))
+                  FROM erilliskustannus ek
+                  WHERE ek.toimenpideinstanssi = tpi.id)
+        , 0)))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
   ELSE 0
