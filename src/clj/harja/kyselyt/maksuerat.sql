@@ -29,7 +29,8 @@ SELECT
        FROM yksikkohintainen_tyo yht
        WHERE yht.tehtava IN (SELECT id
                              FROM toimenpidekoodi
-                             WHERE emo = tpk.id))
+                             WHERE emo = tpk.id) AND
+             yht.urakka = u.id)
 
   ELSE 1
 
