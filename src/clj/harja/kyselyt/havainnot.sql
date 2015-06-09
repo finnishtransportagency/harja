@@ -38,7 +38,25 @@ SELECT h.id, h.aika, h.kohde,
  WHERE tpi.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND paatos IS NOT NULL
-   
+
+-- name: hae-omat-havainnot
+-- Hakee listaukseen kaikki urakan havainnot, joiden luoja tai kommentoija on annettu henkilö.
+SELECT h.id, h.aika, h.kohde,
+       h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
+       h.kasittelyaika as paatos_kasittelyaika,
+       h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
+       h.toimenpideinstanssi
+  FROM havainto h
+       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
+       JOIN kayttaja k ON h.luoja = k.id       
+ WHERE tpi.urakka = :urakka
+   AND (aika >= :alku AND aika <= :loppu)
+   AND (h.luoja = :kayttaja OR
+        h.id IN (SELECT hk.havainto
+	           FROM havainto_kommentti hk JOIN kommentti k ON hk.kommentti=k.id
+		  WHERE k.luoja = :kayttaja))
+
+
 
 -- name: hae-havainnon-tiedot
 -- Hakee havainnon tiedot muokkausnäkymiin.

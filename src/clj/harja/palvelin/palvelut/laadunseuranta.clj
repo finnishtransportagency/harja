@@ -26,13 +26,16 @@
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        havainto-xf
-        ((case listaus
-           :kaikki havainnot/hae-kaikki-havainnot
-           :selvitys havainnot/hae-selvitysta-odottavat-havainnot
-           :kasitellyt havainnot/hae-kasitellyt-havainnot)
-         db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+  (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
+    (into []
+          havainto-xf
+          
+          (if (= :omat listaus)
+            (apply havainnot/hae-omat-havainnot (conj parametrit (:id user)))
+            (apply (case listaus
+                     :kaikki havainnot/hae-kaikki-havainnot
+                     :selvitys havainnot/hae-selvitysta-odottavat-havainnot
+                     :kasitellyt havainnot/hae-kasitellyt-havainnot) parametrit)))))
 
 (defn- luo-tai-paivita-havainto
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
