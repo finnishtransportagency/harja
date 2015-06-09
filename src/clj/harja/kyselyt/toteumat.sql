@@ -76,6 +76,8 @@ FROM toteuma_tehtava tt
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
                           AND tyyppi = :tyyppi::toteumatyyppi
+                          AND tt.poistettu IS NOT TRUE
+                          AND t.poistettu IS NOT TRUE;
 
 -- name: paivita-toteuma!
 UPDATE toteuma
@@ -150,7 +152,7 @@ WHERE id = :id;
 -- name: paivita-urakan-yk-hint-toteumien-tehtavat!
 -- Päivitä urakan yksikköhintaisten töiden toteumien tehtävät
 UPDATE toteuma_tehtava
-SET maara = :maara
+SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu
 WHERE id = :id;
 
 -- name: merkitse-toteuman-maksuera-likaiseksi!

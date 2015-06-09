@@ -60,7 +60,7 @@
         (q/hae-urakan-tehtavat db urakka-id)))
 
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
-  "Tallentaa toteuman ja palauttaa kaikki urakan yksikköhintaiset toteutuneet tehtävät."
+  "Tallentaa toteuman ja palauttaa sen."
   [db user toteuma]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ; FIXME Oikea rooli?
                             (:urakka toteuma))
@@ -72,6 +72,8 @@
                                               (q/paivita-toteuma! c (konv/sql-date (:aloituspvm toteuma)) (konv/sql-date (:lopetuspvm toteuma)) (:id user)
                                                                   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
                                               (log/info "Pävitetään toteuman tehtävät.")
+                                              (for [tehtava (:tehtavat toteuma)]
+                                                (q/paivita-urakan-yk-hint-toteumien-tehtavat! (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))
                                               toteuma)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
@@ -95,9 +97,12 @@
                                                 (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
                                                   (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
 
-                                                true)))))
+                                                true)
+                                              toteuma))))
 
-(defn paivita-yk-hint-toiden-tehtavat [db user tiedot]
+(defn paivita-yk-hint-toiden-tehtavat
+  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät ja palauttaa kaikki urakan toteutuneet yksikköhintaiset tehtävät."
+  [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id tiedot))
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] (:tehtavat tiedot)))))
@@ -107,8 +112,8 @@
                               (doall
                                 (for [tehtava (:tehtavat tiedot)]
                                   (do
-                                    (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
-                                    (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava)))))
+                                    (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
+                                    (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))))
 
                               (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                               (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
