@@ -64,6 +64,7 @@ SELECT
   t.alkanut,
   t.paattynyt,
   t.suorittajan_nimi,
+  t.suorittajan_ytunnus,
   t.lisatieto,
   (SELECT nimi
    FROM toimenpidekoodi tpk

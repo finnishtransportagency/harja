@@ -111,6 +111,7 @@
            {:otsikko "Aloitus" :nimi :alkupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Lopetus" :nimi :loppupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
+           {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
           @lomake-toteuma]]))))
@@ -148,7 +149,8 @@
                                                                                                         :alkupvm       (:alkanut rivi)
                                                                                                         :loppupvm       (:paattynyt rivi)
                                                                                                         :lisatieto        (:lisatieto rivi)
-                                                                                                        :suorittajan-nimi (:suorittajan_nimi rivi)})}
+                                                                                                        :suorittajan-nimi (:suorittajan_nimi rivi)
+                                                                                                        :suorittajan-ytunnus (:suorittajan_ytunnus rivi)})}
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
