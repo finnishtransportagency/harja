@@ -46,9 +46,11 @@
                                              (filter (fn [[t1 t2 t3 t4]]
                                                        (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
                                                      @u/urakan-toimenpiteet-ja-tehtavat)))]
+
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
      [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
+       :valinta-arvo :id
        :valinnat @toimenpiteen-tehtavat
        :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
        :validoi [[:ei-tyhja "Valitse tehtävä."]]
@@ -58,11 +60,16 @@
       {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :tehtava) :leveys "5%"}]
      tehtavat]))
 
+
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
   (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
-        lomake-tehtavat (atom (:tehtavat @lomakkeessa-muokattava-toteuma))
+        lomake-tehtavat (atom  (into {}
+                                     (map (fn [[id tehtava]]
+                                            [id (assoc tehtava :tehtava
+                                                               (:id (:tehtava tehtava)))])
+                                        (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
                                    (and ;(not (empty? (:toteutunut-pvm @lomake-toteuma))) FIXME pvm:ää ei voi valita jos tämä on tässä
                                         (not (empty? (:suorittajan-nimi @lomake-toteuma)))
