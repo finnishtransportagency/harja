@@ -42,6 +42,20 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
           (recur (assoc-in (dissoc m vanha-key)
                            uusi-key arvo)
                  ks))))))
+
+(defn string->keyword
+  "Muuttaa annetut kentät keywordeiksi, jos ne eivät ole NULL."
+  [rivi & kentat]
+  (loop [rivi rivi
+         [k & kentat] kentat]
+    (if-not k
+      rivi
+      (let [arvo (get rivi k)]
+        (recur (if arvo
+                 (assoc rivi k (keyword arvo))
+                 rivi)
+               kentat)))))
+  
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."
   [rivi kentta]

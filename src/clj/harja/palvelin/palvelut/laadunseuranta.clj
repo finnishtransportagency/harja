@@ -7,7 +7,8 @@
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
-            
+            [harja.kyselyt.sanktiot :as sanktiot]
+             
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -53,7 +54,7 @@
 
 
 (defn hae-havainnon-tiedot
-  "Hakee yhden havainnon kaiken tiedon muokkausnäkymää varten: havainnon perustiedot, kommentit ja liitteet, päätös.
+  "Hakee yhden havainnon kaiken tiedon muokkausnäkymää varten: havainnon perustiedot, kommentit ja liitteet, päätös ja sanktiot.
    Ottaa urakka-id:n ja havainto-id:n. Urakka id:tä käytetään oikeustarkistukseen, havainnon tulee olla annetun urakan
    toimenpiteeseen kytketty."
   [db user urakka-id havainto-id]
@@ -70,10 +71,22 @@
                                       (if (:id liite)
                                         kommentti
                                         (dissoc kommentti :liite)))))
-                         (havainnot/hae-havainnon-kommentit db havainto-id))))))
+                         (havainnot/hae-havainnon-kommentit db havainto-id))
+        :sanktiot (into []
+                        (comp (map #(konv/string->keyword % :ryhma))
+                              (map #(assoc % :summa (double (:summa %)))))
+                        (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
    
+(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm ryhma summa indeksi] :as sanktio} havainto]
+  (if (neg? id)
+    ;; Luodaan uusi sanktio, jos id negatiivinen
+    (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto)
 
+    ;; FIXME: voiko päivittää sanktiota?
+    nil))
+    
+     
 (defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
   (log/info "Tuli havainto: " havainto)
   (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
@@ -117,7 +130,10 @@
                                               (name paatos) perustelu
                                               (name kasittelytapa) muukasittelytapa
                                               (:id user)
-                                              id)))
+                                              id))
+        (when (= :sanktio (:paatos (:paatos havainto)))
+          (doseq [sanktio (:sanktiot havainto)]
+            (tallenna-havainnon-sanktio c user sanktio id))))
       
       (hae-havainnon-tiedot c user urakka id))))
 

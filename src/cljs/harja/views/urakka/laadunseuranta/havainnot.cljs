@@ -48,8 +48,11 @@
        (go {})
        (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))
    (fn [havainto]
-     ;; Tarvitsemme urakan liitteen linkitystä varten
-     (assoc havainto :urakka (:id @nav/valittu-urakka)))))
+     (-> havainto
+         ;; Tarvitsemme urakan liitteen linkitystä varten
+         (assoc :urakka (:id @nav/valittu-urakka))
+         (assoc :sanktiot (into {}
+                                (map (juxt :id identity) (:sanktiot havainto))))))))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
@@ -79,59 +82,6 @@
     :tilaaja "Tilaaja"
     :urakoitsija "Urakoitsija"
     :konsultti "Konsultti"))
-
-
-(def +testidata+
-  [{:id 1
-    :pvm (pvm/->pvm-aika "2.6.2015 08:22")
-    :kohde "Tie 8 Sammalniemen kohdalla liukkautta"
-    :tekija :konsultti
-    :paatos nil
-    :kommentit [{:pvm (pvm/->pvm-aika "2.6.2015 08:22")
-                 :tekija "Late Laadukas"
-                 :kommentti "Tie 8 Sammalniemen kohdalla liukkautta. Kitkamittaus tehty, arvo 0,15 alittaa laatuvaatimukset vaarallisesti."}]
-    }
-
-   {:id 2
-    :pvm (pvm/->pvm-aika "22.3.2015 11:07")
-    :kohde "Vt 20 / Kuusamontien risteys"
-    :paatos {:pvm (pvm/->pvm-aika "28.3.2015 15:00")
-             :paatos :sanktio
-             :kasittelytapa :tyomaakokous
-             :selitys "Työmaakokouksessa käsitelty asia, urakoitsija myöntänyt aliurakoitsijan jättäneen alueen hoitamatta."}
-    :tekija :tilaaja
-    :kommentit [{:pvm (pvm/->pvm-aika "22.3.2015 11:07")
-                 :tekija "Sami Sanktioija"
-                 :rooli :tilaaja
-                 :kommentti "Vt 20 Kuusamontien risteyksessä on täysin jätetty auraamatta. Nyt 30cm lunta ja polanteet hyvin vaarallisia."}]
-    :sanktiot {1 {:perintapvm (pvm/->pvm "8.4.2014")
-                  :ryhma :A
-                  :summa 3500
-                  :indeksi "MAKU 2005"}}}
-      
-
-   {:id 3
-    :pvm (pvm/luo-pvm 2015 1 25)
-    :kohde "Tie 123, aet 100 auraamatta"
-    :tekija :urakoitsija
-    :kommentit [{:pvm (pvm/luo-pvm 2015 1 25)
-                 :rooli :urakoitsija
-                 :tekija "Unto Urakoistija"
-                 :kommentti "Emme voineet aurata tie 123, alusta, tiellä oli pysähtynyt yhdistelmärekka. Katso kuvat!"
-                 :liitteet [{:nimi "rekka_kaatui.jpg"
-                             :koko 70272
-                             :tyyppi "image/jpeg"
-                             :pikkukuva-url "/images/rekka_kaatui_thumbnail.jpg"
-                             :url "/images/rekka_kaatui.jpg"}]}
-                  
-                {:pvm (pvm/luo-pvm 2015 1 27)
-                 :rooli :tilaaja
-                 :tekija "Antti Anteeksiantava"
-                 :kommentti "Näyttää tosiaan olevan, ei hätää, sitähän sattuu kaikille..."}]}
-     
-                   
-
-   ])
 
 
 (defn havaintolistaus
@@ -218,31 +168,33 @@
   "Tallentaa annetun havainnon palvelimelle. Lukee serveriltä palautuvan havainnon ja 
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
   [havainto]
-  (go 
-    (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
-      (if (k/virhe? tulos)
-        ;; Palautetaan virhe, jotta nappi näyttää virheviestin
-        tulos
+  (let [havainto (-> havainto
+                     (assoc :sanktiot (vals (:sanktiot havainto))))]
+    (go 
+      (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
+        (if (k/virhe? tulos)
+          ;; Palautetaan virhe, jotta nappi näyttää virheviestin
+          tulos
 
-        ;; Havainto tallennettu onnistuneesti, päivitetään sen tiedot
-        (let [uusi-havainto tulos
-              aika (:aika uusi-havainto)
-              [alku loppu] @aikavali]
-          (when (and (pvm/sama-tai-jalkeen? aika alku)
-                     (pvm/sama-tai-ennen? aika loppu))
-            ;; Kuuluu aikavälille, lisätään tai päivitetään
-            (if (:id havainto)
-              ;; Päivitetty olemassaolevaa
-              (swap! urakan-havainnot
-                     (fn [havainnot]
-                       (mapv (fn [h]
-                               (if (= (:id h) (:id uusi-havainto))
-                                 uusi-havainto
-                                 h)) havainnot)))
-              ;; Luotu uusi
-              (swap! urakan-havainnot
-                     conj uusi-havainto)))
-          true)))))
+          ;; Havainto tallennettu onnistuneesti, päivitetään sen tiedot
+          (let [uusi-havainto tulos
+                aika (:aika uusi-havainto)
+                [alku loppu] @aikavali]
+            (when (and (pvm/sama-tai-jalkeen? aika alku)
+                       (pvm/sama-tai-ennen? aika loppu))
+              ;; Kuuluu aikavälille, lisätään tai päivitetään
+              (if (:id havainto)
+                ;; Päivitetty olemassaolevaa
+                (swap! urakan-havainnot
+                       (fn [havainnot]
+                         (mapv (fn [h]
+                                 (if (= (:id h) (:id uusi-havainto))
+                                   uusi-havainto
+                                   h)) havainnot)))
+                ;; Luotu uusi
+                (swap! urakan-havainnot
+                       conj uusi-havainto)))
+            true))))))
       
 (defn havainto [havainto]
   (let [havainto (atom havainto)]
@@ -403,7 +355,7 @@
                                    :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
                                    :valinta-nayta #(or % "Ei sidota indeksiin")}
                                   ]
-
+                                 
                                  (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
                ))]
          
