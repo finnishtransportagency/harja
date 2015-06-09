@@ -206,7 +206,7 @@
   [:div.checkbox
    [:label
     [:input {:type "checkbox" :checked @data
-             :on-click #(do (swap! data not) nil)}
+             :on-change #(do (reset! data (-> % .-target .-checked)) nil)}
      otsikko]]])
 
 (defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
