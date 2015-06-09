@@ -163,7 +163,7 @@ WHERE
                             JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                           WHERE tpk.id = :toimenpidekoodi);
 
--- name: merkitse-toteumatehtavien-maksuerat-likaiseksi!
+-- name: merkitse-toteumatehtavien-maksuerat-likaisiksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
 SET likainen = TRUE
