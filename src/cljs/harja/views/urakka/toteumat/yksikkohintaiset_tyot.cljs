@@ -56,7 +56,9 @@
        :leveys "50%"}
 
       {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
-      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :tehtava) :leveys "5%"}]
+      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :tyyppi :string :fmt (fn [rivi] (:yksikko (first ; FIXME Selvitä yksikkö suunnitelluista tehtävistä, tämä ei toimi (ei päivity kun tehtävä valitaan)
+                                                                                                                  (filter (fn [[t1 t2 t3 t4]] (= (:id t4) (:tehtava rivi)))
+                                                                                                                          @u/urakan-toimenpiteet-ja-tehtavat)))) :leveys "5%"}]
      tehtavat]))
 
 
@@ -122,10 +124,10 @@
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen))]
 
-    (fn [rivi]
+    (fn [toteuma-rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
-        {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi rivi))
+        {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
                              (reset! toteutuneet-tehtavat vastaus)))
@@ -142,8 +144,6 @@
                                                                                                                                   (map (fn [tehtava] {
                                                                                                                                                       :tehtava {:id (:toimenpidekoodi tehtava)}
                                                                                                                                                       :maara (:maara tehtava)
-                                                                                                                                                      :yksikko (:yksikko tehtava)
-                                                                                                                                                      :nimi (:toimenpide tehtava)
                                                                                                                                                       })
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))
@@ -154,7 +154,7 @@
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-          (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id rivi))) @toteutuneet-tehtavat))]])))
+          (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
