@@ -241,6 +241,16 @@
      {:otsikko "Yksikkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
      {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys "20%"}
      {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%"}
+     {:otsikko "Jäljellä " :nimi :materiaalierotus :tyyppi :komponentti
+      :muokattava? (constantly false) :leveys "20%"
+      :komponentti
+      (fn [rivi]
+        (let [erotus (-
+                       (if (:maara rivi) (:maara rivi) 0)
+                       (:kokonaismaara rivi))]
+          (if (>= erotus 0)
+            [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
+            [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}
      ]
 
     @urakan-materiaalin-kaytot]])
