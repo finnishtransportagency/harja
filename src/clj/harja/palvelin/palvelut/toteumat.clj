@@ -43,7 +43,7 @@
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
-        muunna-desimaaliluvut-xf ; FIXME Miksi SQL palauttaa myös kokonaishintaiset työt??
+        muunna-desimaaliluvut-xf
         (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi))))
 
 

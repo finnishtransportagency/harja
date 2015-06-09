@@ -68,7 +68,7 @@ SELECT
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
-  RIGHT JOIN toteuma t ON tt.toteuma = t.id
+  INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
