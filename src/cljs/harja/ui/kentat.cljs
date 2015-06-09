@@ -180,7 +180,24 @@
                          (when (re-matches #"(\s|\d)*" uusi)
                            (reset! data uusi)))}])
 
- 
+
+(defmethod tee-kentta :radio [{:keys [valinta-nayta valinta-arvo valinnat on-focus]} data]
+  (let [arvo (or valinta-arvo identity)
+        nayta (or valinta-nayta str)
+        nykyinen-arvo @data]
+    [:span.radiovalinnat
+     (doall
+      (map-indexed (fn [i valinta]
+                     (let [otsikko (nayta valinta)
+                           arvo (arvo valinta)]
+                       ^{:key otsikko}
+                       [:span.radiovalinta
+                        [:input {:type "radio" :value i
+                                 :checked (= nykyinen-arvo arvo)
+                                 :on-change #(reset! data arvo)}]
+                        [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
+                         otsikko]]))
+                   valinnat))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat on-focus]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
