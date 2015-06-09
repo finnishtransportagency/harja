@@ -3,25 +3,30 @@
             [bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
-
+            [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.ui.komponentti :as komp]
             ))
 
-(defonce valittu-valilehti (atom :havainnot))
+
 
 
 (defn laadunseuranta []
-  [bs/tabs
-   {:active valittu-valilehti}
+  (komp/luo
+   (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
+   (fn []
+     [bs/tabs
+      {:active urakka-laadunseuranta/valittu-valilehti}
    
-   "Tarkastukset" :tarkastukset
-   [tarkastukset/tarkastukset]
+      "Tarkastukset" :tarkastukset
+      [tarkastukset/tarkastukset]
 
-   "Havainnot" :havainnot 
-   [havainnot/havainnot]
+      "Havainnot" :havainnot 
+      [havainnot/havainnot]
 
-   "Reklamaatiot ja sanktiot" :sanktiot
-   [:div "tänne listaus sanktioista"]
-   ])
+      "Sanktiot" :sanktiot
+      [sanktiot/sanktiot]
+      ])))
 

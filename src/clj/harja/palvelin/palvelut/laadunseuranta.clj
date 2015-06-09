@@ -137,7 +137,16 @@
       
       (hae-havainnon-tiedot c user urakka id))))
 
-
+(defn hae-urakan-sanktiot
+  "Hakee urakan sanktiot perintäpvm:n mukaan"
+  [db user {:keys [urakka-id alku loppu]}]
+  
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(decimal->double % :summa)))
+        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+  
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -150,6 +159,10 @@
     (julkaise-palvelu http-palvelin :hae-havainnon-tiedot
                       (fn [user {:keys [urakka-id havainto-id]}]
                         (hae-havainnon-tiedot db user urakka-id havainto-id)))
+    (julkaise-palvelu http-palvelin :hae-urakan-sanktiot
+                      (fn [user tiedot]
+                        (hae-urakan-sanktiot db user tiedot)))
+                           
                            
     this)
 
@@ -157,6 +170,7 @@
     (poista-palvelut http-palvelin
                      :hae-urakan-havainnot
                      :tallenna-havainto
-                     :hae-havainnon-tiedot)
+                     :hae-havainnon-tiedot
+                     :hae-urakan-sanktiot)
     this))
             

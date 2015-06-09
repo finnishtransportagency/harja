@@ -43,18 +43,29 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                            uusi-key arvo)
                  ks))))))
 
-(defn string->keyword
-  "Muuttaa annetut kentät keywordeiksi, jos ne eivät ole NULL."
-  [rivi & kentat]
+(defn muunna
+  "Muuntaa mäpin annetut keyt muunnos-fn funktiolla. Nil arvot menevät läpi sellaisenaan ilman muunnosta."
+  [rivi kentat muunnos-fn]
   (loop [rivi rivi
          [k & kentat] kentat]
     (if-not k
       rivi
       (let [arvo (get rivi k)]
         (recur (if arvo
-                 (assoc rivi k (keyword arvo))
+                 (assoc rivi k (muunnos-fn arvo))
                  rivi)
                kentat)))))
+
+(defn string->keyword
+  "Muuttaa annetut kentät keywordeiksi, jos ne eivät ole NULL."
+  [rivi & kentat]
+  (muunna rivi kentat keyword))
+
+(defn decimal->double
+  "Muuntaa postgresin tarkan numerotyypin doubleksi."
+  [rivi & kentat]
+  (muunna rivi kentat double))
+
   
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."

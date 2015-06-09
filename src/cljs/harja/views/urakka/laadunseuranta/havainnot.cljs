@@ -339,22 +339,7 @@
                                 [grid/muokkaus-grid
                                  {:tyhja "Ei kirjattuja sanktioita."
                                   :lisaa-rivi " Lisää sanktio"}
-                                 [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys "20%"}
-                                  {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys "25%"
-                                   :nimi :ryhma
-                                   :valinnat [:A :B :C :muistutus]
-                                   :valinta-nayta #(case %
-                                                     :A "Ryhmä A"
-                                                     :B "Ryhmä B"
-                                                     :C "Ryhmä C"
-                                                     :muistutus "Muistutus"
-                                                     "- valitse ryhmä -")}
-                                  {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys "15%"}
-                                  {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys "35%"
-                                   :tyyppi :valinta
-                                   :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-                                   :valinta-nayta #(or % "Ei sidota indeksiin")}
-                                  ]
+                                 laadunseuranta/+sanktio-skeema+
                                  
                                  (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
                ))]

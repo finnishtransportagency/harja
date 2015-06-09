@@ -11,3 +11,13 @@ VALUES (:perintapvm, :ryhma::sakkoryhma, :summa, :indeksi, :havainto)
 SELECT id, perintapvm, maara as summa, sakkoryhma as ryhma, indeksi
   FROM sanktio
  WHERE havainto = :havainto
+
+-- name: hae-urakan-sanktiot
+-- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä rajattuna
+SELECT s.id, s.perintapvm, s.maara as summa, s.sakkoryhma as ryhma, s.indeksi,
+       h.id as havainto_id, h.kohde as havainto_kohde
+  FROM sanktio s
+       JOIN havainto h ON s.havainto = h.id
+       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
+ WHERE tpi.urakka = :urakka
+   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
