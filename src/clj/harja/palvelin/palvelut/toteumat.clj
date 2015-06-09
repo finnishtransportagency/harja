@@ -152,19 +152,30 @@
 
 (defn tallenna-toteuma-ja-toteumamateriaalit
   "Tallentaa toteuman ja toteuma-materiaalin, ja palauttaa lopuksi kaikki urakassa käytetyt materiaalit (yksi rivi per materiaali).
-  Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä."
+  Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä.
+  * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
+  materiaalit/tallenna-toteumamateriaaleja! funktioon (todnäk)"
   [db user t toteumamateriaalit hoitokausi]
-  ;(validoi Toteuma t) ;fixme skeema??
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka t))
   (log/info "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
+                            ;; Jos toteumalla on positiivinen id, toteuma on olemassa
                             (let [toteuma (if (and (:id t) (pos? (:id t)))
-                                            (do
-                                              (log/info "Pävitetään toteumaa " (:id t))
-                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
-                                                                  (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
-                                              t)
+                                            ;; Jos poistettu=true, halutaan toteuma poistaa.
+                                            ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
+                                            (if (:poistettu t)
+                                              (do
+                                                (log/info "Poistetaan toteuma " (:id t))
+                                                (q/poista-toteuma! c (:id user) (:id t))
+                                                t)
+                                              (do
+                                                (log/info "Pävitetään toteumaa " (:id t))
+                                                (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
+                                                                    (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
+                                                t))
+                                            ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
+                                            ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
                                             (do
                                               (log/info "Luodaan uusi toteuma")
                                               (q/luo-toteuma<!
@@ -174,8 +185,10 @@
                                                 (:suorittajan-ytunnus t)
                                                 (:lisatieto t))))]
                               (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
+
                               (doall
                                 (for [tm toteumamateriaalit]
+                                  ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
                                   (if (and (:id tm) (pos? (:id tm)))
                                     (if (:poistettu tm)
                                       (do
@@ -189,6 +202,9 @@
                                     (do
                                       (log/info "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
+                              ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
+                              ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
+                              ;; tarvitaan tätä tietoa. -Teemu K
                               (when hoitokausi
                                 (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi))))))
 

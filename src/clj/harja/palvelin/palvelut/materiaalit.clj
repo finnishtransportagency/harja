@@ -124,6 +124,34 @@
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi
       (hae-urakan-materiaalit c user urakka-id))))
 
+(defn tallenna-toteuma-materiaaleja!
+  [db user urakka-id toteumamateriaalit hoitokausi]
+  "Tallentaa toteuma-materiaaleja (yhden tai useamman), ja palauttaa urakassa käytetyt materiaalit jos
+  hoitokausi on annettu.
+  * Jos tehdään vain poistoja, on parempi käyttää poista-toteuma-materiaali! funktiota
+  * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
+  toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+                            urakka-id)
+  (jdbc/with-db-transaction [c db]
+                            (doseq [tm toteumamateriaalit]
+                              ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
+                              (if (and (:id tm) (pos? (:id tm)))
+                                (if (:poistettu tm)
+                                  (do
+                                    (log/info "Poistetaan materiaalitoteuma " (:id tm))
+                                    (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+                                  (do
+                                    (log/info "Päivitä materiaalitoteuma "
+                                              (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:toteuma tm))
+                                    (q/paivita-toteuma-materiaali!
+                                      c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm))))
+                                (do
+                                  (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
+                                  (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm) (:maara tm) (:id user)))))
+                            (when hoitokausi
+                              (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi)))))
+
 (defn poista-toteuma-materiaali!
   [db user tiedot]
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
@@ -170,6 +198,11 @@
                       (fn [user tiedot]
                         (tallenna-urakan-materiaalit (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-toteuma-materiaaleja!
+                      (fn [user tiedot]
+                        (tallenna-toteuma-materiaaleja!
+                          (:db this) user (:urakka-id tiedot) (:toteumamateriaalit tiedot) (:hoitokausi tiedot))))
+    (julkaise-palvelu (:http-palvelin this)
                       :hae-urakassa-kaytetyt-materiaalit
                       (fn [user tiedot]
                         (hae-urakassa-kaytetyt-materiaalit (:db this) user (:urakka-id tiedot) (:hk-alku tiedot) (:hk-loppu tiedot))))
@@ -184,6 +217,7 @@
                      :hae-urakan-toteumat-materiaalille
                      :hae-toteuman-materiaalitiedot
                      :hae-urakassa-kaytetyt-materiaalit
-                     :poista-toteuma-materiaali!)
+                     :poista-toteuma-materiaali!
+                     :tallenna-toteuma-materiaaleja!)
                     
     this))

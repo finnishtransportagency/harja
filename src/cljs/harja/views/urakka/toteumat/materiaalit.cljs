@@ -60,15 +60,51 @@
                               (map #(dissoc % :kohdistettava)))
                             @(materiaali-tiedot/hae-materiaalikoodit))))
 
-(defn poista-toteuma-materiaaleja
-  [urakka]
+(defn hae-tiedot-vetolaatikkoon
+  [tiedot urakan-id materiaali-id]
+  (go
+    (reset! tiedot
+            (filter
+              (fn [kartta]
+                (let [hoitokauden-alku (first @u/valittu-hoitokausi)
+                      hoitokauden-loppu (second @u/valittu-hoitokausi)
+                      toteuman-alku (:alkanut (:toteuma kartta))
+                      toteuman-loppu (:paattynyt (:toteuma kartta))]
+
+                  (log "Toteuman alku:" (pvm/pvm toteuman-alku))
+                  (log "Hoitokausi:" (pvm/pvm hoitokauden-alku) "-" (pvm/pvm hoitokauden-loppu))
+                  (and
+                    (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku)
+                    (pvm/sama-tai-ennen? toteuman-alku hoitokauden-loppu))))
+              (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id materiaali-id))))))
+
+(defn tallenna-toteuma-materiaaleja
+  [urakka atomi]
+  "Tätä funktiota käytetään, kun materiaalitoteuman tietoja muutetaan suoraan pääsivulla,
+  kun vetolaatikko on aukaistu. Parametrina saatava atomi sisältää vetolaatikossa näytettävät tiedot,
+  ja se päivitetään kun tallennus on saatu tehtyä - eli joudutaan tekemään kaksi kyselyä."
   (fn [materiaalit]
-    (go (let [tulos (<!(materiaali-tiedot/poista-toteuma-materiaaleja urakka
-                                                   (map :tmid materiaalit)
-                                                   (first @u/valittu-hoitokausi)))]
-          (reset! urakan-materiaalin-kaytot tulos)))))
-
-
+    (let [toteumamateriaalit (into []
+                                   (comp
+                                     (map #(assoc % :materiaalikoodi (:id (:materiaali %))))
+                                     (map #(dissoc % :materiaali))
+                                     (map #(assoc % :maara (if (string? (:maara (:toteuma %)))
+                                                             (js/parseInt (:maara (:toteuma %)) 10)
+                                                             (:maara (:toteuma %)))))
+                                     (map #(assoc % :toteuma (:id %)))
+                                     (map #(assoc % :id (:tmid %)))
+                                     (map #(dissoc % :tmid)))
+                                   materiaalit)]
+      (log (pr-str toteumamateriaalit))
+     (go (let [tulos (<!(materiaali-tiedot/tallenna-toteuma-materiaaleja urakka
+                                                                          toteumamateriaalit
+                                                                          @u/valittu-hoitokausi))]
+            (log (pr-str tulos))
+            ;; fixme: (reset! atomi uudet tiedot)
+            (reset! urakan-materiaalin-kaytot tulos)
+            ;; Koska vetolaatikon kautta voidaan kerralla muokata vain yhtä materiaalia, voidaan kaivaa vaan
+            ;; materiaalikoodi ensimmäisestä materiaalitoteumasta.
+            (hae-tiedot-vetolaatikkoon atomi urakka (:materiaalikoodi (first toteumamateriaalit))))))))
 
 (defn materiaalit-ja-maarat
   [materiaalit-atom]
@@ -161,21 +197,7 @@
     (komp/luo
       {:component-will-mount
        (fn [_]
-         (go
-           (reset! tiedot
-                   (filter
-                     (fn [kartta]
-                       (let [hoitokauden-alku (first @u/valittu-hoitokausi)
-                             hoitokauden-loppu (second @u/valittu-hoitokausi)
-                             toteuman-alku (:alkanut (:toteuma kartta))
-                             toteuman-loppu (:paattynyt (:toteuma kartta))]
-
-                         (log "Toteuman alku:" (pvm/pvm toteuman-alku))
-                         (log "Hoitokausi:" (pvm/pvm hoitokauden-alku) "-" (pvm/pvm hoitokauden-loppu))
-                         (and
-                           (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku)
-                           (pvm/sama-tai-ennen? toteuman-alku hoitokauden-loppu))))
-                     (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id (:id (:materiaali mk))))))))}
+         (hae-tiedot-vetolaatikkoon tiedot urakan-id (:id (:materiaali mk))))}
 
       (fn [urakan-id vm]
         (log "Vetolaatikko tiedot:" (pr-str @tiedot))
@@ -184,8 +206,7 @@
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja   (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           ;:rivi-klikattu #(reset! valittu-materiaalin-kaytto %)
-           :tallenna (poista-toteuma-materiaaleja urakan-id)
+           :tallenna (tallenna-toteuma-materiaaleja urakan-id tiedot)
            :voi-lisata? false}
 
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
