@@ -78,7 +78,10 @@
           id (:id uusi)]
       ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
       (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-        (q/luo-tehtava<! c id toimenpidekoodi maara (:id user)))
+        (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
+
+        (log/info "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
+        (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
 
       (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
         (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
@@ -132,7 +135,7 @@
         (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)
         (or (:poistettu ek) false) (:id ek)))
 
-    (log/debug "Merkitään maksuerä likaiseksi erilliskustannuksen toimenpideinstanssille: " (:toimenpideinstanssi ek))
+    (log/debug "Merkitään kustannussuunnitelma likaiseksi erilliskustannuksen toimenpideinstanssille: " (:toimenpideinstanssi ek))
     (q/merkitse-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
 
     (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)

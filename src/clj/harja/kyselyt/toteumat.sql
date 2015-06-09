@@ -138,18 +138,46 @@ VALUES (:tyyppi :: erilliskustannustyyppi, :sopimus, :toimenpideinstanssi, :pvm,
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
-   SET tyyppi = :tyyppi::erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi, pvm = :pvm,
-       rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(), muokkaaja = :muokkaaja,
-       poistettu = :poistettu
- WHERE id = :id;
+SET tyyppi  = :tyyppi :: erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi,
+  pvm       = :pvm,
+  rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
+  muokkaaja = :muokkaaja,
+  poistettu = :poistettu
+WHERE id = :id;
 
 -- name: paivita-urakan-yk-hint-toteumien-tehtavat!
 -- Päivitä urakan yksikköhintaisten töiden toteumien tehtävät
 UPDATE toteuma_tehtava
-   SET maara = :maara
- WHERE id = :id;
+SET maara = :maara
+WHERE id = :id;
 
--- name: merkitse-kustannussuunnitelma-likaiseksi!
+-- name: merkitse-toteuman-maksuera-likaiseksi!
+-- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
+UPDATE maksuera
+SET likainen = TRUE
+WHERE
+  tyyppi = :tyyppi::maksueratyyppi  AND
+  toimenpideinstanssi IN (SELECT tpi.id
+                          FROM toimenpideinstanssi tpi
+                            JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
+                            JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
+                          WHERE tpk.id = :toimenpidekoodi);
+
+-- name: merkitse-toteumatehtavien-maksuerat-likaiseksi!
+-- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
+UPDATE maksuera
+SET likainen = TRUE
+WHERE
+  numero IN (SELECT m.numero
+             FROM maksuera m
+               JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+               JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
+               JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
+               JOIN toteuma_tehtava tt ON tt.toimenpidekoodi = tpk.id
+               JOIN toteuma t ON t.id = tt.toteuma
+             WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi::TEXT = m.tyyppi :: TEXT);
+
+-- name: merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi!
 -- Merkitsee erilliskustannuksia vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
 SET likainen = TRUE

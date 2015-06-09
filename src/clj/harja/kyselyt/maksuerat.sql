@@ -48,7 +48,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -62,7 +62,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -76,7 +76,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -92,7 +92,7 @@ SELECT
          -- Muutostyo
          (SELECT (sum(tt.maara * yt.yksikkohinta))
           FROM toteuma t
-            JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+            JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
             JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                         (tpk.emo IN (SELECT id
                                                      FROM toimenpidekoodi emo
@@ -175,7 +175,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -188,7 +188,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -201,7 +201,7 @@ SELECT
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
        FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
          JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                      (tpk.emo IN (SELECT id
                                                   FROM toimenpidekoodi emo
@@ -217,7 +217,7 @@ SELECT
          -- Muutostyöt
          (SELECT (sum(tt.maara * yt.yksikkohinta))
           FROM toteuma t
-            JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+            JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
             JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
                                         (tpk.emo IN (SELECT id
                                                      FROM toimenpidekoodi emo
