@@ -30,8 +30,8 @@
 (defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
   (let [schema-toteuma (->
                   (assoc lomakkeen-toteuma
-                  :alkanut (:toteutunut-pvm lomakkeen-toteuma)
-                  :paattynyt (:toteutunut-pvm lomakkeen-toteuma)
+                  :aloituspvm (:aloituspvm lomakkeen-toteuma)
+                  :lopetuspvm (:lopetuspvm lomakkeen-toteuma)
                   :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
@@ -42,9 +42,7 @@
     (toteumat/tallenna-toteuma schema-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat]
-  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
-                                             (filter (fn [[t1 t2 t3 t4]] t3)
-                                                     @u/urakan-toimenpiteet-ja-tehtavat)))]
+  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat))]
 
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
@@ -56,9 +54,7 @@
        :leveys "50%"}
 
       {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
-      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :tyyppi :string :fmt (fn [rivi] (:yksikko (first ; FIXME Selvitä yksikkö suunnitelluista tehtävistä, tämä ei toimi (ei päivity kun tehtävä valitaan)
-                                                                                                                  (filter (fn [[t1 t2 t3 t4]] (= (:id t4) (:tehtava rivi)))
-                                                                                                                          @u/urakan-toimenpiteet-ja-tehtavat)))) :leveys "5%"}]
+      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae :yksikko :leveys "5%"}] ; FIXME Yksikön hakeminen ei toimi
      tehtavat]))
 
 
@@ -66,14 +62,14 @@
   "Uuden toteuman syöttäminen"
   []
   (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
-        lomake-tehtavat (atom  (into {}
+        lomake-tehtavat (atom (into {}
                                      (map (fn [[id tehtava]]
                                             [id (assoc tehtava :tehtava
                                                                (:id (:tehtava tehtava)))])
                                         (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
-                                   (and ;(not (empty? (:toteutunut-pvm @lomake-toteuma))) FIXME pvm:ää ei voi valita jos tämä on tässä
-                                        (not (empty? (:suorittajan-nimi @lomake-toteuma)))
+                                   (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME pvm:ää ei voi valita jos tämä on tässä
+                                        (not (empty? (:suorittajan-nimi @lomake-toteuma))) ; FIXME Tarkista että lopetus ei ole ennen aloitusta
                                         (not (empty? (vals @lomake-tehtavat)))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
@@ -112,10 +108,11 @@
             :fmt identity
             :muokattava? (constantly false)}
 
-           {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Aloitus" :nimi :alkupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Lopetus" :nimi :loppupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
           @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi]
@@ -148,7 +145,8 @@
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))
                                                                                                                                                @toteutuneet-tehtavat)))
-                                                                                                        :toteutunut-pvm   (:alkanut rivi)
+                                                                                                        :alkupvm       (:alkanut rivi)
+                                                                                                        :loppupvm       (:paattynyt rivi)
                                                                                                         :lisatieto        (:lisatieto rivi)
                                                                                                         :suorittajan-nimi (:suorittajan_nimi rivi)})}
                                    (ikonit/eye-open) " Toteuma"])}]

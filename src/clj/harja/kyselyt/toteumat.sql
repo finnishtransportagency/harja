@@ -62,6 +62,7 @@ SELECT
   tt.maara,
   t.tyyppi,
   t.alkanut,
+  t.paattynyt,
   t.suorittajan_nimi,
   t.lisatieto,
   (SELECT nimi

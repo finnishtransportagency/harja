@@ -60,34 +60,43 @@
         (q/hae-urakan-tehtavat db urakka-id)))
 
 
-(defn tallenna-toteuma [db user toteuma]
-  ; FIXME Tee tästä tallenna-toteuma-ja-tehtavat joka osaa myös päivittää. Katso mallia: tallenna-toteuma-ja-toteumamateriaalit
-  (validoi Toteuma toteuma)
-  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
-                            (:urakka-id toteuma))
+(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
+  "Tallentaa toteuman ja palauttaa kaikki urakan yksikköhintaiset toteutuneet tehtävät."
+  [db user toteuma]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ; FIXME Oikea rooli?
+                            (:urakka toteuma))
   (log/debug "Toteuman tallennus aloitettu.")
+
   (jdbc/with-db-transaction [c db]
-                            (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
-                                                        (konv/sql-timestamp (:alkanut toteuma))
-                                                        (konv/sql-timestamp (:paattynyt toteuma))
-                                                        (name (:tyyppi toteuma))
-                                                        (:id user)
-                                                        (:suorittajan-nimi toteuma)
-                                                        (:suorittajan-ytunnus toteuma)
-                                                        (:lisatieto toteuma))
-                                  id (:id uusi)
-                                  toteumatyyppi (name (:tyyppi toteuma))]
-                              ;; Luodaan uudelle toteumalle tehtävät ja materiaalit
-                              (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-                                (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
+                            (if (:id toteuma)
+                                            (do
+                                              (log/info "Pävitetään toteuma.")
+                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                                                                  (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:id toteuma) (:urakka toteuma))
+                                              toteuma)
+                                            (do
+                                              (log/info "Luodaan uusi toteuma")
+                                              (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
+                                                                          (konv/sql-timestamp (:alkanut toteuma))
+                                                                          (konv/sql-timestamp (:paattynyt toteuma))
+                                                                          (name (:tyyppi toteuma))
+                                                                          (:id user)
+                                                                          (:suorittajan-nimi toteuma)
+                                                                          (:suorittajan-ytunnus toteuma)
+                                                                          (:lisatieto toteuma))
+                                                    id (:id uusi)
+                                                    toteumatyyppi (name (:tyyppi toteuma))]
+                                                (log/info "Luodaan uudelle toteumalle tehtävät")
+                                                (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
+                                                  (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
 
-                                (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
-                                (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
+                                                  (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
+                                                  (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
 
-                              (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
-                                (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
+                                                (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
+                                                  (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
 
-                              true)))
+                                                true)))))
 
 (defn paivita-yk-hint-toiden-tehtavat [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
