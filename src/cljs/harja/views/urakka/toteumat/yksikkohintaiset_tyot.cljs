@@ -87,7 +87,7 @@
                              "Tallenna toteuma"
                              #(tallenna-toteuma @lomake-toteuma (mapv
                                                                       (fn [rivi]
-                                                                        {:toimenpidekoodi (:id (:tehtava rivi))
+                                                                        {:toimenpidekoodi (:tehtava rivi)
                                                                          :maara (js/parseInt (:maara rivi))})
                                                                       (vals @lomake-tehtavat)))
                              {:luokka :nappi-ensisijainen :disabled (false? @valmis-tallennettavaksi?)
