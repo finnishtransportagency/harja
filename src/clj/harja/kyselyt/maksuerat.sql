@@ -107,8 +107,8 @@ SELECT
            -- Fixme: indeksien laskenta!
          coalesce((SELECT (sum(ek.rahasumma))
                    FROM erilliskustannus ek
-                   WHERE ek.toimenpideinstanssi = tpi.id)),
-         0)
+                   WHERE ek.toimenpideinstanssi = tpi.id),
+                  0))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
   ELSE 0

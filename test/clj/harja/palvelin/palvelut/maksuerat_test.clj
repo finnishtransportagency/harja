@@ -25,7 +25,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest urakan-maksuerat-haettu-okein-urakalle-1
+(deftest urakan-maksuerat-haettu-oikein-urakalle-1
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
     (is (= 16 (count maksuerat)))
