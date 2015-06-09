@@ -28,14 +28,14 @@
           tulos)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
-  [db user urakka-id hk-alkanut hk-paattynyt]
+  [db user urakka-id hk-alkanut hk-paattynyt sopimus]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/info "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(konv/sql-date hk-alkanut))
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
-        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt))))
+        (q/hae-urakassa-kaytetyt-materiaalit db urakka-id (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id]
@@ -125,7 +125,7 @@
       (hae-urakan-materiaalit c user urakka-id))))
 
 (defn tallenna-toteuma-materiaaleja!
-  [db user urakka-id toteumamateriaalit hoitokausi]
+  [db user urakka-id toteumamateriaalit hoitokausi sopimus]
   "Tallentaa toteuma-materiaaleja (yhden tai useamman), ja palauttaa urakassa käytetyt materiaalit jos
   hoitokausi on annettu.
   * Jos tehdään vain poistoja, on parempi käyttää poista-toteuma-materiaali! funktiota
@@ -150,7 +150,7 @@
                                   (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
                                   (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm) (:maara tm) (:id user)))))
                             (when hoitokausi
-                              (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi)))))
+                              (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi) sopimus))))
 
 (defn poista-toteuma-materiaali!
   [db user tiedot]
@@ -165,7 +165,7 @@
                             (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))
                             (when (:hk-alku tiedot)
                               (hae-urakassa-kaytetyt-materiaalit
-                                c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot)))))
+                                c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
 
 (defrecord Materiaalit []
@@ -201,11 +201,19 @@
                       :tallenna-toteuma-materiaaleja!
                       (fn [user tiedot]
                         (tallenna-toteuma-materiaaleja!
-                          (:db this) user (:urakka-id tiedot) (:toteumamateriaalit tiedot) (:hoitokausi tiedot))))
+                          (:db this) user
+                          (:urakka-id tiedot)
+                          (:toteumamateriaalit tiedot)
+                          (:hoitokausi tiedot)
+                          (:sopimus tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakassa-kaytetyt-materiaalit
                       (fn [user tiedot]
-                        (hae-urakassa-kaytetyt-materiaalit (:db this) user (:urakka-id tiedot) (:hk-alku tiedot) (:hk-loppu tiedot))))
+                        (hae-urakassa-kaytetyt-materiaalit (:db this) user
+                                                           (:urakka-id tiedot)
+                                                           (:hk-alku tiedot)
+                                                           (:hk-loppu tiedot)
+                                                           (:sopimus tiedot))))
                            
     this)
 

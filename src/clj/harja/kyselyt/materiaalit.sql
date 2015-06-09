@@ -34,6 +34,7 @@ SELECT DISTINCT
             urakka=:urakka AND
             alkanut::DATE >= :alku AND
             alkanut::DATE <= :loppu AND
+            sopimus = :sopimus AND
             poistettu IS NOT TRUE) AND
           poistettu IS NOT TRUE)
 FROM materiaalikoodi m
@@ -57,7 +58,8 @@ WHERE mk.poistettu IS NOT true AND
             mk.alkupvm::DATE >= :alku AND
             mk.alkupvm::DATE <= :loppu
           )
-        );
+        ) AND
+      (t.sopimus = :sopimus OR mk.sopimus = :sopimus);
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

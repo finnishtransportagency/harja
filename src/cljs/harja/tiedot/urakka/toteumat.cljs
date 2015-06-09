@@ -15,9 +15,6 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
-(defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu]
-  (k/post! :hae-urakassa-kaytetyt-materiaalit {:urakka-id urakka-id :hk-alku alku :hk-loppu loppu}))
-
 (defn hae-urakan-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteumat
            {:urakka-id urakka-id
@@ -60,5 +57,8 @@
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
 
-(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi]
-  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma :toteumamateriaalit toteumamateriaalit :hoitokausi hoitokausi}))
+(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
+  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
+                                                    :toteumamateriaalit toteumamateriaalit
+                                                    :hoitokausi hoitokausi
+                                                    :sopimus sopimus-id}))

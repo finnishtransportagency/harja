@@ -26,7 +26,8 @@
   (reaction<! (when-let [ur @nav/valittu-urakka]
                 (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
                                                                      (first @u/valittu-hoitokausi)
-                                                                     (second @u/valittu-hoitokausi)))))
+                                                                     (second @u/valittu-hoitokausi)
+                                                                     (first @u/valittu-sopimusnumero)))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -49,10 +50,11 @@
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
                  :lisatieto (:lisatieto m)}
-        hoitokausi @u/valittu-hoitokausi]
+        hoitokausi @u/valittu-hoitokausi
+        sopimus-id (first @u/valittu-sopimusnumero)]
     (log "KÄSITELTY TM: " (pr-str toteumamateriaalit))
     (log "KÄSITELTY T: " (pr-str toteuma))
-    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi)))
+    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id)))
 
 (def materiaalikoodit (reaction (into []
                             (comp
@@ -98,7 +100,8 @@
       (log (pr-str toteumamateriaalit))
      (go (let [tulos (<!(materiaali-tiedot/tallenna-toteuma-materiaaleja urakka
                                                                           toteumamateriaalit
-                                                                          @u/valittu-hoitokausi))]
+                                                                          @u/valittu-hoitokausi
+                                                                         (first @u/valittu-sopimusnumero)))]
             (log (pr-str tulos))
             ;; fixme: (reset! atomi uudet tiedot)
             (reset! urakan-materiaalin-kaytot tulos)

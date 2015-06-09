@@ -164,7 +164,7 @@
   Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä.
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   materiaalit/tallenna-toteumamateriaaleja! funktioon (todnäk)"
-  [db user t toteumamateriaalit hoitokausi]
+  [db user t toteumamateriaalit hoitokausi sopimus]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka t))
   (log/info "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
@@ -215,7 +215,7 @@
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
                               ;; tarvitaan tätä tietoa. -Teemu K
                               (when hoitokausi
-                                (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi))))))
+                                (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi) sopimus)))))
 
 (defn poista-toteuma!
   [db user t]
@@ -283,7 +283,10 @@
                           (tallenna-erilliskustannus db user toteuma)))
       (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
                         (fn [user tiedot]
-                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot) (:toteumamateriaalit tiedot) (:hoitokausi tiedot))))
+                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
+                                                                  (:toteumamateriaalit tiedot)
+                                                                  (:hoitokausi tiedot)
+                                                                  (:sopimus tiedot))))
       this))
 
   (stop [this]
