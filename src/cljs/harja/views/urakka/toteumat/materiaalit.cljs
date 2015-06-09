@@ -231,8 +231,14 @@
      :tunniste #(:id (:materiaali %))
      :vetolaatikot
       (into {}
-            (map (juxt (comp :id :materiaali) (fn [mk] [materiaalinkaytto-vetolaatikko (:id ur) mk])))
-            @urakan-materiaalin-kaytot)
+            (map
+              (juxt
+                (comp :id :materiaali)
+                (fn [mk] [materiaalinkaytto-vetolaatikko (:id ur) mk]))
+              )
+            (filter
+              (fn [rivi] (> (:kokonaismaara rivi) 0))
+              @urakan-materiaalin-kaytot))
      }
 
     ;; sarakkeet
@@ -253,7 +259,7 @@
             [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}
      ]
 
-    @urakan-materiaalin-kaytot]])
+    (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 
 (defn materiaalit-nakyma
   [ur]

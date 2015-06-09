@@ -33,7 +33,7 @@
   (log/info "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(konv/sql-date hk-alkanut))
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (when (:maara %) (double (:maara %)))))
+              (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (q/hae-urakassa-kaytetyt-materiaalit db urakka-id (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt))))
 
