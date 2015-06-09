@@ -43,8 +43,7 @@
 
 (defn tehtavat-ja-maarat [tehtavat]
   (let [toimenpiteen-tehtavat (reaction (map #(nth % 3)
-                                             (filter (fn [[t1 t2 t3 t4]]
-                                                       (= (:koodi t3) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+                                             (filter (fn [[t1 t2 t3 t4]] t3)
                                                      @u/urakan-toimenpiteet-ja-tehtavat)))]
 
     [grid/muokkaus-grid
@@ -111,7 +110,6 @@
             :fmt identity
             :muokattava? (constantly false)}
 
-           {:otsikko "Toimenpide" :nimi :toimenpide :hae (fn [_] (:tpi_nimi @u/valittu-toimenpideinstanssi)) :muokattava? (constantly false)}
            {:otsikko "Toteutunut pvm" :nimi :toteutunut-pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
