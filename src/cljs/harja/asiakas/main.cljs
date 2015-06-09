@@ -19,7 +19,12 @@
   (reagent/render [main-view/main] (.getElementById js/document "app")))
 
 (defn ^:export harja []
-  (ymparisto/alusta {:on-reload #(reagent/render [#'main-view/main] (.getElementById js/document "app"))})
+  (ymparisto/alusta {:on-reload #(try
+                                   (reagent/render [#'main-view/main] (.getElementById js/document "app"))
+                                   (catch js/Error e
+                                     (log "VIRHE RENDERISSÄ, yritetään täysi re-render tyhjälle sivulle")
+                                     (set! (.-innerHTML (.getElementById js/document "app"))  "")
+                                     (reagent/render [#'main-view/main] (.getElementById js/document "app"))))})
   (render)
 
   ;; Jotkut komponentit haluavat body klikkauksia kuunnella
