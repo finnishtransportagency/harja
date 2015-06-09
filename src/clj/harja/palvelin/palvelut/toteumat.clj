@@ -25,7 +25,7 @@
                       (or (some-> % :maara double) 0)))))
 
 (defn urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan toteumat: " urakka-id)
+  (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
                     toteuma-xf
@@ -93,10 +93,6 @@
 
                                                   (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
                                                   (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
-
-                                                (doseq [{:keys [materiaalikoodi maara]} (:materiaalit toteuma)]
-                                                  (materiaalit-q/luo-toteuma-materiaali<! c id materiaalikoodi maara (:id user)))
-
                                                 true)
                                               toteuma))))
 
