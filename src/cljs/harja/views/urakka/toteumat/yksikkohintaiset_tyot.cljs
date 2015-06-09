@@ -249,7 +249,10 @@
                                   [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "20%"}]
           (filter
-            (fn [rivi] (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi)))
+            (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi))
+                            (or
+                              (> (:hoitokauden-toteutunut-maara rivi) 0)
+                              (> (:hoitokauden-suunniteltu-maara rivi) 0))))
             @tyorivit)]]))))
 
 (defn yksikkohintaisten-toteumat []
