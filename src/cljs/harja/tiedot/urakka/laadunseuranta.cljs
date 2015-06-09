@@ -8,8 +8,8 @@
 (defonce valittu-valilehti (atom :havainnot))
 
 (def +sanktio-skeema+
-  [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys "20%"}
-   {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys "25%"
+  [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2}
+   {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys 2
     :nimi :ryhma
     :valinnat [:A :B :C :muistutus]
     :valinta-nayta #(case %
@@ -18,8 +18,8 @@
                       :C "Ryhmä C"
                       :muistutus "Muistutus"
                       "- valitse ryhmä -")}
-   {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys "15%"}
-   {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys "35%"
+   {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys 2}
+   {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 3
     :tyyppi :valinta
     :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
     :valinta-nayta #(or % "Ei sidota indeksiin")}
