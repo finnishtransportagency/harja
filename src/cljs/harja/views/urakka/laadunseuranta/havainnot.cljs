@@ -62,13 +62,13 @@
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
     :sanktio "Sanktio"
-    :ei-sanktiota "Ei sanktiota"
+    :ei_sanktiota "Ei sanktiota"
     :hylatty "Hylätty"))
   
-(defn kuvaile-paatos [{:keys [pvm paatos kasittelytapa]}]
+(defn kuvaile-paatos [{:keys [kasittelyaika paatos kasittelytapa]}]
   (when paatos
     (str
-     (pvm/pvm pvm)
+     (pvm/pvm kasittelyaika)
      " "
      (kuvaile-paatostyyppi paatos)
      " ("
@@ -259,8 +259,7 @@
           [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
            (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
 
-          ;[(aget js/window "EIOO") 1 ]
-
+          #_[(aget js/window "FOO") 1]
           [:h3 "Havainnon tiedot"]
           [lomake/lomake
            {:muokkaa! #(reset! havainto %)
@@ -362,7 +361,7 @@
                {:otsikko "Päätös"
                 :nimi :paatos-paatos
                 :tyyppi :valinta
-                :valinnat [:sanktio :ei-sanktiota :hylatty]
+                :valinnat [:sanktio :ei_sanktiota :hylatty]
                 :hae (comp :paatos :paatos)
                 :aseta #(assoc-in %1 [:paatos :paatos] %2)
                 :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
@@ -376,7 +375,7 @@
                   :hae (comp :perustelu :paatos)
                   :koko [80 4]
                   :leveys-col 6
-                  :aseta #(assoc-in %1 [:paatos :selitys] %2)
+                  :aseta #(assoc-in %1 [:paatos :perustelu] %2)
                   :muokattava? muokattava?})
 
 

@@ -24,6 +24,20 @@ SELECT h.id, h.aika, h.kohde,
  WHERE tpi.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND selvitys_pyydetty = true AND selvitys_annettu = false
+
+-- name: hae-kasitellyt-havainnot
+-- Hakee listaukseen kaikki urakan havainnot, jotka on käsitelty.
+SELECT h.id, h.aika, h.kohde,
+       h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
+       h.kasittelyaika as paatos_kasittelyaika,
+       h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
+       h.toimenpideinstanssi
+  FROM havainto h
+       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
+       JOIN kayttaja k ON h.luoja = k.id       
+ WHERE tpi.urakka = :urakka
+   AND (aika >= :alku AND aika <= :loppu)
+   AND paatos IS NOT NULL
    
 
 -- name: hae-havainnon-tiedot

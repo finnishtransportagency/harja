@@ -16,7 +16,13 @@
 
 (def havainto-xf (comp
                   (map konv/alaviiva->rakenne)
-                  (map #(assoc % :tekija (keyword (:tekija %))))))
+                  (map #(assoc % :tekija (keyword (:tekija %))))
+                  (map #(update-in % [:paatos :paatos]
+                                   (fn [p]
+                                     (when p (keyword p)))))
+                  (map #(update-in % [:paatos :kasittelytapa]
+                                   (fn [k]
+                                     (when k (keyword k)))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -24,7 +30,8 @@
         havainto-xf
         ((case listaus
            :kaikki havainnot/hae-kaikki-havainnot
-           :selvitys havainnot/hae-selvitysta-odottavat-havainnot)
+           :selvitys havainnot/hae-selvitysta-odottavat-havainnot
+           :kasitellyt havainnot/hae-kasitellyt-havainnot)
          db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn- luo-tai-paivita-havainto
@@ -33,13 +40,13 @@
   (if id
     (do (havainnot/paivita-havainnon-perustiedot! db toimenpideinstanssi
                                                   (konv/sql-timestamp aika) (name tekija) kohde
-                                                  selvitys-pyydetty
+                                                  (if selvitys-pyydetty true false)
                                                   (:id user)
                                                   id)
         id)
     
     (:id (havainnot/luo-havainto<! db toimenpideinstanssi (konv/sql-timestamp aika) (name tekija) kohde
-                                   selvitys-pyydetty (:id user)))))
+                                   (if selvitys-pyydetty true false) (:id user)))))
 
 
 (defn hae-havainnon-tiedot
@@ -109,8 +116,7 @@
                                               (:id user)
                                               id)))
       
-      (hae-havainnon-tiedot c user urakka id)
-      havainto)))
+      (hae-havainnon-tiedot c user urakka id))))
 
 
 (defrecord Laadunseuranta []
