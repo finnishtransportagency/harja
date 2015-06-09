@@ -95,7 +95,7 @@
 
 (defn kasittele-onnistunut-siirto [uudet-maksuerat]
   (do
-    (reset! maksuerat uudet-maksuerat)
+    (reset! maksuerat/maksuerat uudet-maksuerat)
     (aloita-pollaus)))
 
 (defn kasittele-epaonnistunut-siirto [lahetetetyt-maksueranumerot uudet-kuittausta-odottavat]
@@ -129,7 +129,7 @@
   (if (not (empty? @kuittausta-odottavat-maksuerat))
     (do
       (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
-      (go (reset! maksuerat (<! (hae-urakan-maksuerat @urakka-id)))))
+      (go (reset! maksuerat/maksuerat (<! (hae-urakan-maksuerat @urakka-id)))))
     (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
         (lopeta-pollaus))))
 
