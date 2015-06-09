@@ -30,16 +30,12 @@
 (defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
   (let [schema-toteuma (->
                   (assoc lomakkeen-toteuma
-                  :aloituspvm (:aloituspvm lomakkeen-toteuma)
-                  :lopetuspvm (:lopetuspvm lomakkeen-toteuma)
                   :tyyppi :yksikkohintainen
                   :urakka-id (:id @nav/valittu-urakka)
                   :sopimus-id (first @u/valittu-sopimusnumero)
-                  :tehtavat lomakkeen-tehtavat
-                  :materiaalit [])
-                  (dissoc :toteutunut-pvm))]
+                  :tehtavat lomakkeen-tehtavat))]
     (log "TOT Tallennetaan toteuma: " (pr-str schema-toteuma))
-    (toteumat/tallenna-toteuma schema-toteuma)))
+    (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat schema-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat]
   (let [toimenpiteen-tehtavat (reaction (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat))]
@@ -108,8 +104,8 @@
             :fmt identity
             :muokattava? (constantly false)}
 
-           {:otsikko "Aloitus" :nimi :alkupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
-           {:otsikko "Lopetus" :nimi :loppupvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
@@ -146,8 +142,8 @@
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))
                                                                                                                                                @toteutuneet-tehtavat)))
-                                                                                                        :alkupvm       (:alkanut rivi)
-                                                                                                        :loppupvm       (:paattynyt rivi)
+                                                                                                        :aloituspvm       (:alkanut rivi)
+                                                                                                        :lopetuspvm       (:paattynyt rivi)
                                                                                                         :lisatieto        (:lisatieto rivi)
                                                                                                         :suorittajan-nimi (:suorittajan_nimi rivi)
                                                                                                         :suorittajan-ytunnus (:suorittajan_ytunnus rivi)})}

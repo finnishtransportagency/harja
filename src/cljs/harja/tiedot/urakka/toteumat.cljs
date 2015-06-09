@@ -40,8 +40,8 @@
             :alkupvm alkupvm
             :loppupvm loppupvm}))
 
-(defn tallenna-toteuma [toteuma]
-  (k/post! :tallenna-urakan-toteuma toteuma))
+(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat [toteuma]
+  (k/post! :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat toteuma))
 
 (defn paivita-yk-hint-toteumien-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi tehtavat]
   (k/post! :paivita-yk-hint-toteumien-tehtavat {:urakka-id urakka-id

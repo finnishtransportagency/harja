@@ -59,26 +59,25 @@
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
 
-
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman ja palauttaa kaikki urakan yksikköhintaiset toteutuneet tehtävät."
   [db user toteuma]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ; FIXME Oikea rooli?
                             (:urakka toteuma))
-  (log/debug "Toteuman tallennus aloitettu.")
-
+  (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
-                            (if (:id toteuma)
+                            (if (:toteuma-id toteuma)
                                             (do
                                               (log/info "Pävitetään toteuma.")
-                                              (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                                                                  (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:id toteuma) (:urakka toteuma))
+                                              (q/paivita-toteuma! c (konv/sql-date (:aloituspvm toteuma)) (konv/sql-date (:lopetuspvm toteuma)) (:id user)
+                                                                  (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
+                                              (log/info "Pävitetään toteuman tehtävät.")
                                               toteuma)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
                                               (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
-                                                                          (konv/sql-timestamp (:alkanut toteuma))
-                                                                          (konv/sql-timestamp (:paattynyt toteuma))
+                                                                          (konv/sql-timestamp (:aloituspvm toteuma))
+                                                                          (konv/sql-timestamp (:lopetuspvm toteuma))
                                                                           (name (:tyyppi toteuma))
                                                                           (:id user)
                                                                           (:suorittajan-nimi toteuma)
@@ -101,7 +100,7 @@
 (defn paivita-yk-hint-toiden-tehtavat [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id tiedot))
-  (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Data: " (pr-str (into [] (:tehtavat tiedot)))))
+  (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] (:tehtavat tiedot)))))
 
   (let [tehtavatidt (into #{} (map #(:tehtava_id %) (:tehtavat tiedot)))]
     (jdbc/with-db-transaction [c db]
@@ -269,9 +268,9 @@
       (julkaise-palvelu http :hae-urakan-tehtavat
                         (fn [user urakka-id]
                           (hae-urakan-tehtavat db user urakka-id)))
-      (julkaise-palvelu http :tallenna-urakan-toteuma
+      (julkaise-palvelu http :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                         (fn [user toteuma]
-                          (tallenna-toteuma db user toteuma)))
+                          (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma)))
       (julkaise-palvelu http :paivita-yk-hint-toteumien-tehtavat
                         (fn [user tiedot]
                           (paivita-yk-hint-toiden-tehtavat db user tiedot)))
