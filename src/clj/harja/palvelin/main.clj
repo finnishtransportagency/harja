@@ -22,6 +22,7 @@
    [harja.palvelin.palvelut.urakan-toimenpiteet :as urakan-toimenpiteet]
    [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
    [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+   [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
    [harja.palvelin.palvelut.toteumat :as toteumat]
    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
    [harja.palvelin.palvelut.yhteyshenkilot]
@@ -103,6 +104,9 @@
      :kokonaishintaiset-tyot (component/using
                               (kokonaishintaiset-tyot/->Kokonaishintaiset-tyot)
                               [:http-palvelin :db])
+     :muut-tyot (component/using
+                  (muut-tyot/->Muut-tyot)
+                                [:http-palvelin :db])
      :toteumat (component/using
                                (toteumat/->Toteumat)
                                [:http-palvelin :db])

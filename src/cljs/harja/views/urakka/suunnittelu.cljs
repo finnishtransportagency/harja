@@ -10,6 +10,7 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+            [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.materiaalit :as mat]
 
             [harja.pvm :as pvm]
@@ -53,6 +54,11 @@
            :yksikkohintaiset
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
+
+           "Muut työt"
+           :muut
+           ^{:key "muut-tyot"}
+           [muut-tyot/muut-tyot]
 
            "Materiaalit"
            :materiaalit

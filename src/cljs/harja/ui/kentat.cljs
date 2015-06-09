@@ -214,10 +214,13 @@
            "\u2713 "
            "\u2610 ") otsikko])
 
-(defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat on-focus]} data]
+(defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
+                                        valinnat valinnat-fn rivi on-focus]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
-  ;; esim. :id 
-  (let [nykyinen-arvo @data]
+  ;; esim. :id
+  (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
+  (let [nykyinen-arvo @data
+        valinnat (or valinnat (valinnat-fn rivi))]
     ;; FIXME: on-focus alasvetovalintaan?
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
                           :valinta (if valinta-arvo

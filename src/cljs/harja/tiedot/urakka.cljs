@@ -147,10 +147,8 @@ ja viimeinen voivat olla vajaat)."
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (let [toimenpiteet-ja-tehtavat
-        (reaction<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id @nav/valittu-urakka)))]
-    (log "palautan toimenpiteet-ja-tehtävät" (pr-str toimenpiteet-ja-tehtavat))
-    toimenpiteet-ja-tehtavat))
+  (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
+                  (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! (let [ur (:id @nav/valittu-urakka)
