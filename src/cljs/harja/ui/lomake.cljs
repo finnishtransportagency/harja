@@ -42,6 +42,17 @@
 (defmethod lomake-footer :default [_ footer]
   footer)
 
+(defmulti tyhja-otsikko (fn [tyyppi] tyyppi))
+
+(defmethod tyhja-otsikko :horizontal [_]
+  [:label.col-sm-2])
+
+(defmethod tyhja-otsikko :default [_]
+  [:span])
+  
+(def +ei-otsikkoa+ #{:boolean})
+
+
 (defn lomake [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
@@ -63,7 +74,9 @@
                                                         (muokkaa! uudet-tiedot)))]
                         ^{:key (:nimi kentta)}
                         [:div.form-group
-                         [kentan-otsikko luokka (name nimi) (:otsikko kentta)]
+                         (if (+ei-otsikkoa+ (:tyyppi kentta))
+                           [tyhja-otsikko luokka]
+                           [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
                          [kentan-komponentti luokka kentta
                           (if-let [komponentti (:komponentti kentta)]
                             komponentti

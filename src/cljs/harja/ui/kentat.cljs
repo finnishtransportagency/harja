@@ -199,6 +199,21 @@
                          otsikko]]))
                    valinnat))]))
 
+(defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
+  ((or valinta-nayta str) @data))
+
+(defmethod tee-kentta :boolean [{:keys [otsikko]} data]
+  [:div.checkbox
+   [:label
+    [:input {:type "checkbox" :checked @data
+             :on-click #(do (swap! data not) nil)}
+     otsikko]]])
+
+(defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
+  [:span (if @data
+           "\u2713 "
+           "\u2610 ") otsikko])
+
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo valinnat on-focus]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id 
