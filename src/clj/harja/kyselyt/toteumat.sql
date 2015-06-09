@@ -69,11 +69,11 @@ SELECT
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   RIGHT JOIN toteuma t ON tt.toteuma = t.id
-                          AND sopimus = :sopimus
                           AND urakka = :urakka
+                          AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
-                          AND tyyppi = :tyyppi :: toteumatyyppi
+                          AND tyyppi = :tyyppi::toteumatyyppi
 
 -- name: paivita-toteuma!
 UPDATE toteuma

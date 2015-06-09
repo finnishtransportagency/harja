@@ -43,8 +43,8 @@
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
-        muunna-desimaaliluvut-xf
-        (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) tyyppi)))
+        muunna-desimaaliluvut-xf ; FIXME Miksi SQL palauttaa myös kokonaishintaiset työt??
+        (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi))))
 
 
 (defn urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
@@ -86,13 +86,13 @@
 
       true)))
 
-(defn paivita-yk-hint-toiden-tehtavat [db user payload]
+(defn paivita-yk-hint-toiden-tehtavat [db user tiedot]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
-                            (:urakka-id payload))
+                            (:urakka-id tiedot))
   (log/debug "Yksikköhintaisten töiden päivitys aloitettu.")
   (jdbc/with-db-transaction [c db]
                             (doall
-                            (for [tehtava (:tehtavat payload)]
+                            (for [tehtava (:tehtavat tiedot)]
                               (do
                                 (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava) ", määrä: " (:maara tehtava)))
                                 (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:maara tehtava) (:tehtava_id tehtava)))))))
@@ -227,8 +227,8 @@
                         (fn [user toteuma]
                           (tallenna-toteuma db user toteuma)))
       (julkaise-palvelu http :paivita-yk-hint-toteumien-tehtavat
-                        (fn [user payload]
-                          (paivita-yk-hint-toiden-tehtavat db user payload)))
+                        (fn [user tiedot]
+                          (paivita-yk-hint-toiden-tehtavat db user tiedot)))
       (julkaise-palvelu http :urakan-erilliskustannukset
         (fn [user tiedot]
           (hae-urakan-erilliskustannukset db user tiedot)))

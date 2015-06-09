@@ -115,7 +115,7 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali "yksikkohintainen"))]
+        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen))]
 
     (fn [rivi]
       [:div.tehtavat-toteumittain
@@ -148,7 +148,7 @@
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-          @toteutuneet-tehtavat)]])))
+          (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id rivi))) @toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
