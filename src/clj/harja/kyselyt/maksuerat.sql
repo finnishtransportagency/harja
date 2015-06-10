@@ -224,7 +224,7 @@ SELECT
   WHEN m.tyyppi = 'sakko'
     THEN
       (SELECT (sum(sa.maara))
-       FROM sakko sa
+       FROM sanktio sa
          JOIN havainto h ON h.id = sa.havainto
        WHERE h.toimenpideinstanssi = tpi.id)
 
