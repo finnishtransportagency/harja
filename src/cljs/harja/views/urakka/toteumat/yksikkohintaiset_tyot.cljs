@@ -105,11 +105,11 @@
             :muokattava? (constantly false)}
 
            {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
-           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2} ; FIXME Kun aloitus annettu, aseta tälle arvoksi sama. Miten?
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}] ; FIXME Ryhmittele toteuman mukaan
           @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi]
@@ -117,14 +117,14 @@
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen))]
-
+    ; FIXME Hakee kaikki tehtävät jokaiselle haitarille, rajoita haku samoihin tehtäviin. Tämän jälkeen kun klikataan Toteuma-nappia, tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
     (fn [toteuma-rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
-                             (reset! toteutuneet-tehtavat vastaus)))
+                             (reset! toteutuneet-tehtavat vastaus))) ; FIXME Yhteenveto-rivi ei päivity, kyselyn pitää palauttaa uusi summa kannasta?
          :voi-lisata? false
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
@@ -138,6 +138,7 @@
                                                                                                                                   (map (fn [tehtava] {
                                                                                                                                                       :tehtava {:id (:toimenpidekoodi tehtava)}
                                                                                                                                                       :maara (:maara tehtava)
+                                                                                                                                                      :tehtava-id (:tehtava_id tehtava)
                                                                                                                                                       })
                                                                                                                                        (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
                                                                                                                                                  (= (:toteuma_id tehtava) (:toteuma_id rivi)))
@@ -214,6 +215,7 @@
                          valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
                          toteumat @toteumat]
 
+                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa tämän ja summat suoraan kannasta
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)

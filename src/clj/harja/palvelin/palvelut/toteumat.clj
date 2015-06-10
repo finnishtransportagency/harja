@@ -73,7 +73,10 @@
                                                                   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
                                               (log/info "Pävitetään toteuman tehtävät.")
                                               (for [tehtava (:tehtavat toteuma)]
-                                                (q/paivita-urakan-yk-hint-toteumien-tehtavat! (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))
+                                                (do (log/info "Pävitetään toteuman tehtävä: " (pr-str tehtava))
+                                                    (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
+                                                      (q/paivita-urakan-yk-hint-toteumien-tehtavat! (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava))
+                                                      (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user)))))
                                               toteuma)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
