@@ -8,7 +8,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
-             
+
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -16,21 +16,21 @@
             [clojure.java.jdbc :as jdbc]))
 
 (def havainto-xf (comp
-                  (map konv/alaviiva->rakenne)
-                  (map #(assoc % :tekija (keyword (:tekija %))))
-                  (map #(update-in % [:paatos :paatos]
-                                   (fn [p]
-                                     (when p (keyword p)))))
-                  (map #(update-in % [:paatos :kasittelytapa]
-                                   (fn [k]
-                                     (when k (keyword k)))))))
+                   (map konv/alaviiva->rakenne)
+                   (map #(assoc % :tekija (keyword (:tekija %))))
+                   (map #(update-in % [:paatos :paatos]
+                                    (fn [p]
+                                      (when p (keyword p)))))
+                   (map #(update-in % [:paatos :kasittelytapa]
+                                    (fn [k]
+                                      (when k (keyword k)))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
     (into []
           havainto-xf
-          
+
           (if (= :omat listaus)
             (apply havainnot/hae-omat-havainnot (conj parametrit (:id user)))
             (apply (case listaus
@@ -48,7 +48,7 @@
                                                   (:id user)
                                                   id)
         id)
-    
+
     (:id (havainnot/luo-havainto<! db toimenpideinstanssi (konv/sql-timestamp aika) (name tekija) kohde
                                    (if selvitys-pyydetty true false) (:id user)))))
 
@@ -77,76 +77,77 @@
                               (map #(assoc % :summa (double (:summa %)))))
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
-   
+
 (defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm ryhma summa indeksi] :as sanktio} havainto]
   (if (neg? id)
-    ;; Luodaan uusi sanktio, jos id negatiivinen
-    (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto)
-
+    (do
+      ;; Luodaan uusi sanktio, jos id negatiivinen
+      (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto)
+      (sanktiot/merkitse-maksuera-likaiseksi! db havainto))
     ;; FIXME: voiko päivittää sanktiota?
     nil))
-    
-     
+
+
 (defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
   (log/info "Tuli havainto: " havainto)
   (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
-    
-    (let [osapuoli (oik/osapuoli user urakka)
-          havainto (assoc havainto
-                     ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
-                     :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                             (:selvitys-pyydetty havainto))
-                     
-                     ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu 
-                     :selvitys-annettu (and (:uusi-kommentti havainto)
-                                            (= :urakoitsija osapuoli))) 
-          id (luo-tai-paivita-havainto c user havainto)]
-      ;; Luodaan uudet kommentit
-      (when-let [uusi-kommentti (:uusi-kommentti havainto)]
-        (log/info "UUSI KOMMENTTI: " uusi-kommentti)
-        (let [liite (some->> uusi-kommentti
-                             :liite
-                             :id
-                             (liitteet/hae-urakan-liite-id c urakka)
-                             first
-                             :id)
-              kommentti (kommentit/luo-kommentti<! c
-                                                   (name (:tekija havainto))
-                                                   (:kommentti uusi-kommentti)
-                                                   liite
-                                                   (:id user))]
-          ;; Liitä kommentti havaintoon
-          (havainnot/liita-kommentti<! c id (:id kommentti))))
-              
 
-      (when (:paatos (:paatos havainto))
-        ;; Urakanvalvoja voi kirjata päätöksen
-        (oik/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
-        (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
-        (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
-          (havainnot/kirjaa-havainnon-paatos! c
-                                              (konv/sql-timestamp kasittelyaika)
-                                              (name paatos) perustelu
-                                              (name kasittelytapa) muukasittelytapa
-                                              (:id user)
-                                              id))
-        (when (= :sanktio (:paatos (:paatos havainto)))
-          (doseq [sanktio (:sanktiot havainto)]
-            (tallenna-havainnon-sanktio c user sanktio id))))
-      
-      (hae-havainnon-tiedot c user urakka id))))
+                            (let [osapuoli (oik/osapuoli user urakka)
+                                  havainto (assoc havainto
+                                             ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
+                                             :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                                                     (:selvitys-pyydetty havainto))
+
+                                             ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
+                                             :selvitys-annettu (and (:uusi-kommentti havainto)
+                                                                    (= :urakoitsija osapuoli)))
+                                  id (luo-tai-paivita-havainto c user havainto)]
+                              ;; Luodaan uudet kommentit
+                              (when-let [uusi-kommentti (:uusi-kommentti havainto)]
+                                (log/info "UUSI KOMMENTTI: " uusi-kommentti)
+                                (let [liite (some->> uusi-kommentti
+                                                     :liite
+                                                     :id
+                                                     (liitteet/hae-urakan-liite-id c urakka)
+                                                     first
+                                                     :id)
+                                      kommentti (kommentit/luo-kommentti<! c
+                                                                           (name (:tekija havainto))
+                                                                           (:kommentti uusi-kommentti)
+                                                                           liite
+                                                                           (:id user))]
+                                  ;; Liitä kommentti havaintoon
+                                  (havainnot/liita-kommentti<! c id (:id kommentti))))
+
+
+                              (when (:paatos (:paatos havainto))
+                                ;; Urakanvalvoja voi kirjata päätöksen
+                                (oik/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
+                                (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
+                                (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
+                                  (havainnot/kirjaa-havainnon-paatos! c
+                                                                      (konv/sql-timestamp kasittelyaika)
+                                                                      (name paatos) perustelu
+                                                                      (name kasittelytapa) muukasittelytapa
+                                                                      (:id user)
+                                                                      id))
+                                (when (= :sanktio (:paatos (:paatos havainto)))
+                                  (doseq [sanktio (:sanktiot havainto)]
+                                    (tallenna-havainnon-sanktio c user sanktio id))))
+
+                              (hae-havainnon-tiedot c user urakka id))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu]}]
-  
+
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa)))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
-  
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -162,8 +163,8 @@
     (julkaise-palvelu http-palvelin :hae-urakan-sanktiot
                       (fn [user tiedot]
                         (hae-urakan-sanktiot db user tiedot)))
-                           
-                           
+
+
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
