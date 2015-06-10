@@ -34,16 +34,24 @@
        (= (t/day eka) (t/day toka))))
 
 (defn ennen? [eka toka]
-  (t/before? eka toka))
+  (if-not (or (nil? eka) (nil? toka))
+    (t/before? eka toka)
+    false))
 
 (defn sama-tai-ennen? [eka toka]
-  (or (t/before? eka toka) (= (millisekunteina eka) (millisekunteina toka))))
+  (if-not (or (nil? eka) (nil? toka))
+    (or (t/before? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+    false))
 
 (defn jalkeen? [eka toka]
-  (t/after? eka toka))
+  (if-not (or (nil? eka) (nil? toka))
+    (t/after? eka toka)
+    false))
 
 (defn sama-tai-jalkeen? [eka toka]
-  (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka))))
+  (if-not (or (nil? eka) (nil? toka))
+    (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+    false))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
