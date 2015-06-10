@@ -172,10 +172,10 @@
             :hae     (fn [rivi] (:numero rivi))}
            {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16
             :hae     (fn [rivi] (:nimi (:maksuera rivi)))}
-           {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16
-            :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:maksuera rivi)))}
            {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "18%"
             :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
+           {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16
+            :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:maksuera rivi)))}
            {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
             :komponentti (fn [rivi] (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
