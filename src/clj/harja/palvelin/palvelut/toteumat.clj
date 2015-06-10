@@ -71,11 +71,12 @@
                                               (log/info "Pävitetään toteuma.")
                                               (q/paivita-toteuma! c (konv/sql-date (:aloituspvm toteuma)) (konv/sql-date (:lopetuspvm toteuma)) (:id user)
                                                                   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
-                                              (log/info "Pävitetään toteuman tehtävät.")
-                                              (for [tehtava (:tehtavat toteuma)]
-                                                (do (log/info "Pävitetään toteuman tehtävä: " (pr-str tehtava))
+                                              (log/info "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
+                                              (doseq [tehtava (:tehtavat toteuma)]
                                                     (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
-                                                      (q/paivita-urakan-yk-hint-toteumien-tehtavat! (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava))
+                                                      (do (log/info "Pävitetään tehtävä.")
+                                                      (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))
+                                                      (do (log/info "Luodaan uusi tehtävä.")
                                                       (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user)))))
                                               toteuma)
                                             (do

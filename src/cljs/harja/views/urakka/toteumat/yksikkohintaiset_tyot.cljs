@@ -54,6 +54,13 @@
      tehtavat]))
 
 
+(defn ryhmittele-tehtavat [rivit]
+  (let [otsikko (fn [rivi] (:toimenpidekoodi rivi)) ; FIXME Toimenpiteen mukaan
+        otsikon-mukaan (group-by otsikko rivit)]
+    (doall (mapcat (fn [[otsikko rivit]]
+                     (concat [(grid/otsikko otsikko)] rivit))
+                   (seq otsikon-mukaan)))))
+
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
@@ -90,7 +97,8 @@
                              #(tallenna-toteuma @lomake-toteuma (mapv
                                                                       (fn [rivi]
                                                                         {:toimenpidekoodi (:tehtava rivi)
-                                                                         :maara (js/parseInt (:maara rivi))})
+                                                                         :maara (js/parseInt (:maara rivi))
+                                                                         :tehtava-id (:tehtava-id rivi)})
                                                                       (vals @lomake-tehtavat)))
                              {:luokka :nappi-ensisijainen :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
