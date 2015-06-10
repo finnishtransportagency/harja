@@ -66,7 +66,7 @@
                                    (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME Lomake ei toimi jos tämä on tässä
                                         (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                         (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
-                                        (pvm/ennen? (:aloituspvm @lomake-toteuma) (:lopetuspvm @lomake-toteuma))
+                                        (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                         (not (empty? (vals @lomake-tehtavat)))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
