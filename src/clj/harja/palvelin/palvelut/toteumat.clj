@@ -128,16 +128,16 @@
                                               toteuma))))
 
 (defn paivita-yk-hint-toiden-tehtavat
-  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät ja palauttaa kaikki urakan toteutuneet yksikköhintaiset tehtävät."
-  [db user tiedot]
-  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
-                            (:urakka-id tiedot))
-  (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] (:tehtavat tiedot)))))
+  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa urakan toteutuneet tehtävät ensimmäisen tehtävän toimenpidekoodilla.
+  Lisäksi palauttaa urakan toteumat" ; FIXME Palauta toteumien sijaan summat tehtävittäin.
+  [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)
+  (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
 
-  (let [tehtavatidt (into #{} (map #(:tehtava_id %) (:tehtavat tiedot)))]
+  (let [tehtavatidt (into #{} (map #(:tehtava_id %) tehtavat))]
     (jdbc/with-db-transaction [c db]
                               (doall
-                                (for [tehtava (:tehtavat tiedot)]
+                                (for [tehtava tehtavat]
                                   (do
                                     (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
                                     (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))))
@@ -145,10 +145,19 @@
                               (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                               (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
 
-  (let [paivitetty-data (hae-urakan-toteutuneet-tehtavat db user tiedot)]
-    (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetty-data))
-    paivitetty-data)
-  )
+  (let [paivitetyt-tehtavat (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user {:urakka-id urakka-id
+                                                                      :sopimus-id sopimus-id
+                                                                      :alkupvm alkupvm
+                                                                      :loppupvm loppupvm
+                                                                      :tyyppi tyyppi
+                                                                      :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
+        paivitetyt-toteumat (hae-urakan-toteumat db user {:urakka-id urakka-id
+                                                         :sopimus-id sopimus-id
+                                                         :alkupvm alkupvm
+                                                         :loppupvm loppupvm
+                                                         :tyyppi tyyppi})]
+    (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetyt-tehtavat))
+    {:tehtavat paivitetyt-tehtavat :toteumat paivitetyt-toteumat}))
 
 (def erilliskustannus-tyyppi-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))

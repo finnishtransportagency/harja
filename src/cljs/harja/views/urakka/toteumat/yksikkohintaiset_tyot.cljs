@@ -124,9 +124,10 @@
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
           @lomake-toteuma]]))))
 
-(defn yksiloidyt-tehtavat [rivi]
+(defn yksiloidyt-tehtavat [rivi toteumat]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
+        toteumat toteumat
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
     (fn [toteuma-rivi]
@@ -135,7 +136,9 @@
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
-                             (reset! toteutuneet-tehtavat vastaus))) ; FIXME Yhteenveto-rivi ei päivity, kyselyn pitää palauttaa uusi summa kannasta?
+                             (log "TOT Tehtävät tallennettu: " (pr-str vastaus))
+                             (reset! toteutuneet-tehtavat (:tehtavat vastaus))
+                             (reset! toteumat (:toteumat vastaus))))
          :voi-lisata? false
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
@@ -228,8 +231,8 @@
                          valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
                          toteumat @toteumat]
 
-                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
-                     ; FIXME Sama homma toteumille (lasketaanko toteumien summa jo kannassa vai frontissa?)
+                     ; TODO Tee SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
+                     ; TODO Back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
@@ -251,7 +254,7 @@
          [grid/grid
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi toteumat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
