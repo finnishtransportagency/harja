@@ -152,7 +152,7 @@
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click ; FIXME Tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
-                                                               #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id (first @toteutuneet-tehtavat))))]
+                                                               #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
                                                                     (log "TOT toteuma: " (pr-str toteuma)
                                                                          (let [lomake-tiedot {:toteuma-id       (:id toteuma)
                                                                                               :tehtavat         (zipmap (iterate inc 1)
