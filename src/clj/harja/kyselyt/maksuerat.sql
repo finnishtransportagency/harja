@@ -87,6 +87,14 @@ SELECT
               t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
        WHERE t.tyyppi = 'akillinen-hoitotyo')
 
+
+  WHEN m.tyyppi = 'sakko'
+    THEN
+      (SELECT (sum(sa.maara))
+       FROM sanktio sa
+         JOIN havainto h ON h.id = sa.havainto
+       WHERE h.toimenpideinstanssi = tpi.id)
+
   WHEN m.tyyppi = 'muu'
     THEN
       (SELECT
@@ -187,6 +195,19 @@ SELECT
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
        WHERE t.tyyppi = 'yksikkohintainen')
 
+  WHEN m.tyyppi = 'lisatyo'
+    THEN
+      (SELECT (sum(tt.maara * yt.yksikkohinta))
+       FROM toteuma t
+         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
+                                     (tpk.emo IN (SELECT id
+                                                  FROM toimenpidekoodi emo
+                                                  WHERE emo.id = tpi.toimenpide))
+         JOIN yksikkohintainen_tyo yt
+           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
+       WHERE t.tyyppi = 'lisatyo')
+
   WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
       (SELECT (sum(tt.maara * yt.yksikkohinta))
@@ -200,18 +221,12 @@ SELECT
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
        WHERE t.tyyppi = 'akillinen-hoitotyo')
 
-  WHEN m.tyyppi = 'lisatyo'
+  WHEN m.tyyppi = 'sakko'
     THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'lisatyo')
+      (SELECT (sum(sa.maara))
+       FROM sakko sa
+         JOIN havainto h ON h.id = sa.havainto
+       WHERE h.toimenpideinstanssi = tpi.id)
 
   WHEN m.tyyppi = 'muu'
     THEN
