@@ -154,21 +154,21 @@
           :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click ; FIXME Tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
                                                                #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id (first @toteutuneet-tehtavat))))]
                                                                     (log "TOT toteuma: " (pr-str toteuma)
-                                                                    (reset! lomakkeessa-muokattava-toteuma {:toteuma-id       (:id rivi)
-                                                                                                             :tehtavat         (zipmap (iterate inc 1)
-                                                                                                                                       (map (fn [tehtava] {
-                                                                                                                                                           :tehtava {:id (:toimenpidekoodi tehtava)}
-                                                                                                                                                           :maara (:maara tehtava)
-                                                                                                                                                           :tehtava-id (:tehtava_id tehtava)
-                                                                                                                                                           })
-                                                                                                                                            (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
-                                                                                                                                                      (= (:toteuma_id tehtava) (:toteuma_id rivi)))
-                                                                                                                                                    @toteutuneet-tehtavat)))
-                                                                                                             :aloituspvm       (:alkanut rivi)
-                                                                                                             :lopetuspvm       (:paattynyt rivi)
-                                                                                                             :lisatieto        (:lisatieto rivi)
-                                                                                                             :suorittajan-nimi (:suorittajan_nimi rivi)
-                                                                                                             :suorittajan-ytunnus (:suorittajan_ytunnus rivi)}))))}
+                                                                         (let [lomake-tiedot {:toteuma-id       (:id toteuma)
+                                                                                              :tehtavat         (zipmap (iterate inc 1)
+                                                                                                                        (mapv (fn [tehtava] {
+                                                                                                                                            :tehtava {:id (:tpk-id tehtava)}
+                                                                                                                                            :maara (:maara tehtava)
+                                                                                                                                            :tehtava-id (:tehtava-id tehtava)
+                                                                                                                                            })
+                                                                                                                             (:tehtavat toteuma)))
+                                                                                              :aloituspvm       (:alkanut toteuma)
+                                                                                              :lopetuspvm       (:paattynyt toteuma)
+                                                                                              :lisatieto        (:lisatieto toteuma)
+                                                                                              :suorittajan-nimi (:suorittajan_nimi toteuma)
+                                                                                              :suorittajan-ytunnus (:suorittajan_ytunnus toteuma)}]
+                                                                           (log "Toteuma-data lomakkeelle: " (pr-str lomakkeessa-muokattava-toteuma))
+                                                                           (reset! lomakkeessa-muokattava-toteuma lomake-tiedot)))))}
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
@@ -236,7 +236,8 @@
                          valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
                          toteumat @toteumat]
 
-                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa tämän ja summat suoraan kannasta
+                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä ja laskee jokaiselle tehtävälle suunnitellun summan.
+                     ; Sama homma toteumille (summan voi laskea jo kannassa?)
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)

@@ -5,6 +5,9 @@ SELECT
   t.alkanut,
   t.paattynyt,
   t.tyyppi,
+  t.suorittajan_nimi,
+  t.suorittajan_ytunnus,
+  t.lisatieto,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -28,6 +31,9 @@ SELECT
   t.alkanut,
   t.paattynyt,
   t.tyyppi,
+  t.suorittajan_nimi,
+  t.suorittajan_ytunnus,
+  t.lisatieto,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id

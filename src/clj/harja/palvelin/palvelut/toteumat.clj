@@ -25,15 +25,21 @@
                       (or (some-> % :maara double) 0)))))
 
 (defn toteuman-tehtavat->map [toteumat]
-  (map (fn [rivi] (assoc rivi :tehtavat
-                              (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
-                                                    {:tehtava-id (Integer/parseInt (first splitattu))
-                                                     :tpk-id (Integer/parseInt (second splitattu))
-                                                     :nimi   (get splitattu 2)
-                                                     :maara  (Integer/parseInt (get splitattu 3))
-                                                     }))
-                                    (:tehtavat rivi))))
-       toteumat))
+  (let [mapattu (map (fn [rivi]
+         (log/debug "Mapataan rivi: " (pr-str rivi))
+         (assoc rivi :tehtavat
+                     (mapv (fn [tehtava]
+                             (log/debug "Mapataan Tehtävä: " (pr-str tehtava))
+                             (let [splitattu (str/split tehtava #"\^")]
+                                           {:tehtava-id (Integer/parseInt (first splitattu))
+                                            :tpk-id (Integer/parseInt (second splitattu))
+                                            :nimi   (get splitattu 2)
+                                            :maara  (Integer/parseInt (get splitattu 3))
+                                            }))
+                           (:tehtavat rivi))))
+       toteumat)]
+  (log/debug "Mappaus valmis: " (pr-str mapattu))
+  mapattu))
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
@@ -46,10 +52,10 @@
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuman id:llä: " toteuma-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [rivit (into []
+  (let [rivi (first (into []
                     toteuma-xf
-                    (q/listaa-urakan-toteuma db urakka-id toteuma-id))]
-    (toteuman-tehtavat->map rivit)))
+                    (q/listaa-urakan-toteuma db urakka-id toteuma-id)))]
+    (first (toteuman-tehtavat->map [rivi]))))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
