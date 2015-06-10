@@ -53,14 +53,6 @@
       {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae :yksikko :leveys "5%"}] ; FIXME Yksikön hakeminen ei toimi
      tehtavat]))
 
-
-(defn ryhmittele-tehtavat [rivit]
-  (let [otsikko (fn [rivi] (:toimenpidekoodi rivi)) ; FIXME Toimenpiteen mukaan
-        otsikon-mukaan (group-by otsikko rivit)]
-    (doall (mapcat (fn [[otsikko rivit]]
-                     (concat [(grid/otsikko otsikko)] rivit))
-                   (seq otsikon-mukaan)))))
-
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
@@ -125,11 +117,11 @@
                                                                                   rivi)
                                                                                 :aloituspvm
                                                                                 arvo)) :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
-           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2} ; FIXME Kun aloitus annettu, aseta tälle arvoksi sama. Miten?
+           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}] ; FIXME Ryhmittele toteuman mukaan
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
           @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi]
@@ -151,7 +143,7 @@
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
-          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click ; FIXME Tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
+          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
                                                                #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
                                                                     (log "TOT toteuma: " (pr-str toteuma)
                                                                          (let [lomake-tiedot {:toteuma-id       (:id toteuma)
@@ -236,8 +228,8 @@
                          valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
                          toteumat @toteumat]
 
-                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä ja laskee jokaiselle tehtävälle suunnitellun summan.
-                     ; Sama homma toteumille (summan voi laskea jo kannassa?)
+                     ; FIXME Tee mieluummin SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
+                     ; FIXME Sama homma toteumille (lasketaanko toteumien summa jo kannassa vai frontissa?)
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
