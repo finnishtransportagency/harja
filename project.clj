@@ -103,7 +103,8 @@
   
   
   :profiles {:dev {:dependencies []
-                   :plugins [[com.jakemccrary/lein-test-refresh "0.9.0"]]}
+                   :plugins [[com.jakemccrary/lein-test-refresh "0.9.0"]
+                             [test2junit "1.1.0"]]}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
@@ -189,7 +190,7 @@
 
              }
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
+  :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -199,5 +200,6 @@
 
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             }
+
   
   )
