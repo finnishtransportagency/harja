@@ -16,3 +16,10 @@
   "Hakee urakan toimenpiteet (3. taso) urakan id:llä."
   [urakka-id]
   (k/post! :urakan-toimenpiteet urakka-id))
+
+;; yleisiä pikkuapureita
+(defn toimenpideinstanssit-tehtavat [tpi-id tp-instanssit tehtavat-tasoineen]
+  (let [tpin-koodi (:id (first (filter #(= (:tpi_id %) tpi-id) tp-instanssit)))]
+    (into []
+      (filter (fn [t]
+                (= (:id (nth t 2)) tpin-koodi)) tehtavat-tasoineen))))
