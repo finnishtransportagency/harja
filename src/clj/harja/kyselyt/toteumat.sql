@@ -5,7 +5,7 @@ SELECT
   t.alkanut,
   t.paattynyt,
   t.tyyppi,
-  (SELECT array_agg(concat(tpk.id, '^', tpk.nimi, '^', tt.maara))
+  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
@@ -17,6 +17,7 @@ WHERE
   AND sopimus = :sopimus
   AND alkanut >= :alkupvm
   AND paattynyt <= :loppupvm
+  AND tyyppi = :tyyppi::toteumatyyppi
   AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 
@@ -76,6 +77,33 @@ FROM toteuma_tehtava tt
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
                           AND tyyppi = :tyyppi::toteumatyyppi
+                          AND tt.poistettu IS NOT TRUE
+                          AND t.poistettu IS NOT TRUE;
+
+-- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
+-- Hakee urakan tietyntyyppiset toteutuneet tehtävät tietyllä toimenpidekoodilla
+SELECT
+  tt.id                           AS tehtava_id,
+  tt.toteuma                      AS toteuma_id,
+  tt.toimenpidekoodi,
+  tt.maara,
+  t.tyyppi,
+  t.alkanut,
+  t.paattynyt,
+  t.suorittajan_nimi,
+  t.suorittajan_ytunnus,
+  t.lisatieto,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpide
+FROM toteuma_tehtava tt
+  INNER JOIN toteuma t ON tt.toteuma = t.id
+                          AND urakka = :urakka
+                          AND sopimus = :sopimus
+                          AND alkanut >= :alkupvm
+                          AND paattynyt <= :loppupvm
+                          AND tyyppi = :tyyppi::toteumatyyppi
+                          AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
 

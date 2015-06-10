@@ -24,17 +24,18 @@
             (assoc-in [:maara]
                       (or (some-> % :maara double) 0)))))
 
-(defn urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm)
+(defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+  (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
                     toteuma-xf
-                    (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))]
+                    (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi)))]
     (map (fn [rivi] (assoc rivi :tehtavat
                                 (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
-                                                      {:tpk-id (Integer/parseInt (first splitattu))
-                                                       :nimi   (second splitattu)
-                                                       :maara  (Integer/parseInt (nth splitattu 2))
+                                                      {:tehtava-id (Integer/parseInt (first splitattu))
+                                                       :tpk-id (Integer/parseInt (second splitattu))
+                                                       :nimi   (get splitattu 2)
+                                                       :maara  (Integer/parseInt (get splitattu 3))
                                                        }))
                                       (:tehtavat rivi))))
          rivit)))
@@ -257,7 +258,7 @@
           db (:db this)]
       (julkaise-palvelu http :urakan-toteumat
                         (fn [user tiedot]
-                          (urakan-toteumat db user tiedot)))
+                          (hae-urakan-toteumat db user tiedot)))
       (julkaise-palvelu http :poista-toteuma!
                         (fn [user toteuma]
                           (poista-toteuma! db user toteuma)))

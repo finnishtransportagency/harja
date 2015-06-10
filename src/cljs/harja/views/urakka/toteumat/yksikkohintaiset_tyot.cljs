@@ -179,7 +179,7 @@
   (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
         toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero]
-                                    (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali)))
+                                    (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali :yksikkohintainen)))
         muodosta-nelostason-tehtavat (fn []
                                   "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                   (map
