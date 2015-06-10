@@ -136,8 +136,7 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen))]
-    ; FIXME Hakee kaikki tehtävät jokaiselle haitarille, rajoita haku samoihin tehtäviin. Tämän jälkeen kun klikataan Toteuma-nappia, tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
+        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
     (fn [toteuma-rivi]
       [:div.tehtavat-toteumittain
        [grid/grid
@@ -152,22 +151,24 @@
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
-          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click
-                                                               #(reset! lomakkeessa-muokattava-toteuma {:toteuma-id       (:toteuma_id rivi)
-                                                                                                        :tehtavat         (zipmap (iterate inc 1)
-                                                                                                                                  (map (fn [tehtava] {
-                                                                                                                                                      :tehtava {:id (:toimenpidekoodi tehtava)}
-                                                                                                                                                      :maara (:maara tehtava)
-                                                                                                                                                      :tehtava-id (:tehtava_id tehtava)
-                                                                                                                                                      })
-                                                                                                                                       (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
-                                                                                                                                                 (= (:toteuma_id tehtava) (:toteuma_id rivi)))
-                                                                                                                                               @toteutuneet-tehtavat)))
-                                                                                                        :aloituspvm       (:alkanut rivi)
-                                                                                                        :lopetuspvm       (:paattynyt rivi)
-                                                                                                        :lisatieto        (:lisatieto rivi)
-                                                                                                        :suorittajan-nimi (:suorittajan_nimi rivi)
-                                                                                                        :suorittajan-ytunnus (:suorittajan_ytunnus rivi)})}
+          :komponentti (fn [rivi] [:button.nappi-toissijainen {:on-click ; FIXME Tee uusi kysely ja hae saman toteuman tehtävät lomaketta varten
+                                                               #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id (first @toteutuneet-tehtavat))))]
+                                                                    (log "TOT toteuma: " (pr-str toteuma)
+                                                                    (reset! lomakkeessa-muokattava-toteuma {:toteuma-id       (:id rivi)
+                                                                                                             :tehtavat         (zipmap (iterate inc 1)
+                                                                                                                                       (map (fn [tehtava] {
+                                                                                                                                                           :tehtava {:id (:toimenpidekoodi tehtava)}
+                                                                                                                                                           :maara (:maara tehtava)
+                                                                                                                                                           :tehtava-id (:tehtava_id tehtava)
+                                                                                                                                                           })
+                                                                                                                                            (filter (fn [tehtava] ; Hae tehtävät, jotka kuuluvat samaan toteumaan
+                                                                                                                                                      (= (:toteuma_id tehtava) (:toteuma_id rivi)))
+                                                                                                                                                    @toteutuneet-tehtavat)))
+                                                                                                             :aloituspvm       (:alkanut rivi)
+                                                                                                             :lopetuspvm       (:paattynyt rivi)
+                                                                                                             :lisatieto        (:lisatieto rivi)
+                                                                                                             :suorittajan-nimi (:suorittajan_nimi rivi)
+                                                                                                             :suorittajan-ytunnus (:suorittajan_ytunnus rivi)}))))}
                                    (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))

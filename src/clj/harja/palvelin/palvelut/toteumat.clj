@@ -24,28 +24,48 @@
             (assoc-in [:maara]
                       (or (some-> % :maara double) 0)))))
 
+(defn toteuman-tehtavat->map [toteumat]
+  (map (fn [rivi] (assoc rivi :tehtavat
+                              (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
+                                                    {:tehtava-id (Integer/parseInt (first splitattu))
+                                                     :tpk-id (Integer/parseInt (second splitattu))
+                                                     :nimi   (get splitattu 2)
+                                                     :maara  (Integer/parseInt (get splitattu 3))
+                                                     }))
+                                    (:tehtavat rivi))))
+       toteumat))
+
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
                     toteuma-xf
                     (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi)))]
-    (map (fn [rivi] (assoc rivi :tehtavat
-                                (mapv (fn [tehtava] (let [splitattu (str/split tehtava #"\^")]
-                                                      {:tehtava-id (Integer/parseInt (first splitattu))
-                                                       :tpk-id (Integer/parseInt (second splitattu))
-                                                       :nimi   (get splitattu 2)
-                                                       :maara  (Integer/parseInt (get splitattu 3))
-                                                       }))
-                                      (:tehtavat rivi))))
-         rivit)))
+    (toteuman-tehtavat->map rivit)))
+
+(defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
+  (log/debug "Haetaan urakan toteuman id:llä: " toteuma-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [rivit (into []
+                    toteuma-xf
+                    (q/listaa-urakan-toteuma db urakka-id toteuma-id))]
+    (toteuman-tehtavat->map rivit)))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä: " urakka-id)
+  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteutuneet-tehtavat (into []
+        muunna-desimaaliluvut-xf
+        (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi)))]
+    (log/debug "Haetty urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
+  toteutuneet-tehtavat))
+
+(defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi]}]
+  (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä ja toimenpidekoodilla: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi))))
+        (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
 (defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
@@ -259,6 +279,9 @@
       (julkaise-palvelu http :urakan-toteumat
                         (fn [user tiedot]
                           (hae-urakan-toteumat db user tiedot)))
+      (julkaise-palvelu http :urakan-toteuma
+                        (fn [user tiedot]
+                          (hae-urakan-toteuma db user tiedot)))
       (julkaise-palvelu http :poista-toteuma!
                         (fn [user toteuma]
                           (poista-toteuma! db user toteuma)))
@@ -268,6 +291,9 @@
       (julkaise-palvelu http :urakan-toteutuneet-tehtavat
                         (fn [user tiedot]
                           (hae-urakan-toteutuneet-tehtavat db user tiedot)))
+      (julkaise-palvelu http :urakan-toteutuneet-tehtavat-toimenpidekoodilla
+                        (fn [user tiedot]
+                          (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot)))
       (julkaise-palvelu http :urakan-toteuma-paivat
                         (fn [user tiedot]
                           (hae-urakan-toteuma-paivat db user tiedot)))

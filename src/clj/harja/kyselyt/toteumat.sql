@@ -21,6 +21,26 @@ WHERE
   AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 
+-- name: listaa-urakan-toteuma
+-- Listaa urakan toteuman id:llä
+SELECT
+  t.id,
+  t.alkanut,
+  t.paattynyt,
+  t.tyyppi,
+  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
+   FROM toteuma_tehtava tt
+     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+   WHERE tt.toteuma = t.id
+         AND tt.poistettu IS NOT TRUE)
+    AS tehtavat
+FROM toteuma t
+WHERE
+  urakka = :urakka
+  AND id = :toteuma
+  AND t.poistettu IS NOT TRUE
+GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
+
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
 -- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
 SELECT

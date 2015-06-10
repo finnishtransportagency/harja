@@ -23,6 +23,11 @@
             :loppupvm loppupvm
             :tyyppi tyyppi}))
 
+(defn hae-urakan-toteuma [urakka-id toteuma-id]
+  (k/post! :urakan-toteuma
+           {:urakka-id urakka-id
+            :toteuma-id toteuma-id}))
+
 (defn hae-urakan-toteutuneet-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
   (k/post! :urakan-toteutuneet-tehtavat
            {:urakka-id urakka-id
@@ -30,6 +35,16 @@
             :alkupvm alkupvm
             :loppupvm loppupvm
             :tyyppi tyyppi}))
+
+(defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [urakka-id sopimus-id [alkupvm loppupvm] tyyppi toimenpidekoodi]
+  (log "TOT Haetaan urakan toteutuneet tehtävät toimenpidekoodilla: " toimenpidekoodi)
+  (k/post! :urakan-toteutuneet-tehtavat-toimenpidekoodilla
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :tyyppi tyyppi
+            :toimenpidekoodi toimenpidekoodi}))
 
 (defn hae-urakan-toteuma-paivat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :urakan-toteuma-paivat
