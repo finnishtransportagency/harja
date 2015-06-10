@@ -92,8 +92,7 @@ SELECT
     THEN
       (SELECT (sum(sa.maara))
        FROM sanktio sa
-         JOIN havainto h ON h.id = sa.havainto
-       WHERE h.toimenpideinstanssi = tpi.id)
+       WHERE sa.toimenpideinstanssi = tpi.id)
 
   WHEN m.tyyppi = 'muu'
     THEN
@@ -225,8 +224,7 @@ SELECT
     THEN
       (SELECT (sum(sa.maara))
        FROM sanktio sa
-         JOIN havainto h ON h.id = sa.havainto
-       WHERE h.toimenpideinstanssi = tpi.id)
+       WHERE sa.toimenpideinstanssi = tpi.id)
 
   WHEN m.tyyppi = 'muu'
     THEN
