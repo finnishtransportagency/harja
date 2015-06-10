@@ -23,3 +23,14 @@
     (into []
       (filter (fn [t]
                 (= (:id (nth t 2)) tpin-koodi)) tehtavat-tasoineen))))
+
+(defn tehtava-nimella
+  [tehtavan-nimi tehtavat]
+  "Palauttaa tehtävän nimeä vastaan"
+  (first (filter #(= (:nimi %) tehtavan-nimi) tehtavat)))
+
+(defn toimenpideinstanssi-idlla
+  "Palauttaa toimenpideinstanssin id:tä vastaan"
+  [tpi-id toimenpideinstanssit]
+  (first (filter #(= (:tpi_id %) tpi-id)
+           toimenpideinstanssit)))

@@ -30,17 +30,16 @@
     muutoshintaiset-xf
     (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
 
-(defn tallenna-urakan-muutoshintaiset-tyot
-      "Palvelu joka tallentaa urakan muutoshintaiset tyot."
-  [db user {:keys [urakka-id sopimusnumero tyot]}]
+(defn tallenna-muutoshintaiset-tyot
+      "Palvelu joka tallentaa muutoshintaiset tyot."
+  [db user {:keys [urakka-id tyot]}]
+  (log/info "tallenna-muutoshintaiset-tyot" urakka-id " työt " tyot)
   (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
 
-
-  ;; FIXME: ei ole vielä implementoitu
-
   (jdbc/with-db-transaction [c db]
     (let [nykyiset-arvot (hae-urakan-muutoshintaiset-tyot c user urakka-id)
+          sopimusnumero (:sopimus (first tyot))
           valitut-pvmt (into #{} (map (juxt :alkupvm :loppupvm) tyot))
           tyo-avain (fn [rivi]
                       [(:alkupvm rivi) (:loppupvm rivi) (:tehtava rivi)])
@@ -48,22 +47,21 @@
                                     (filter #(and
                                               (= (:sopimus %) sopimusnumero)
                                               (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
-                                      nykyiset-arvot)))
-          uniikit-tehtavat (into #{} (map #(:tehtava %) tyot)) ]
+                                      nykyiset-arvot)))]
       (doseq [tyo tyot]
         (log/info "TALLENNA TYÖ: " (pr-str tyo))
-        (if (not (tyot-kannassa (tyo-avain tyo)))
+        (if (neg? (:id tyo))
           ;; insert
           (do
             (log/info "--> LISÄTÄÄN UUSI!")
-            (q/lisaa-urakan-muutoshintainen-tyo<! c (:yksikko tyo) (:yksikkohinta tyo)
-              urakka-id sopimusnumero (:tehtava tyo)
+            (q/lisaa-muutoshintainen-tyo<! c (:yksikko tyo) (:yksikkohinta tyo)
+              urakka-id (:sopimus tyo) (:tehtava tyo)
               (java.sql.Date. (.getTime (:alkupvm tyo)))
               (java.sql.Date. (.getTime (:loppupvm tyo)))))
           ;;update
           (do (log/info " --> päivitetään vanha")
-              (log/info "  päivittyi: " (q/paivita-urakan-muutoshintainen-tyo! c (:yksikko tyo) (:yksikkohinta tyo)
-                                          urakka-id sopimusnumero (:tehtava tyo)
+              (log/info "  päivittyi: " (q/paivita-muutoshintainen-tyo! c (:yksikko tyo) (:yksikkohinta tyo)
+                                          urakka-id (:sopimus tyo) (:tehtava tyo)
                                           (java.sql.Date. (.getTime (:alkupvm tyo)))
                                           (java.sql.Date. (.getTime (:loppupvm tyo)))))))))
     (hae-urakan-muutoshintaiset-tyot c user urakka-id)))
@@ -76,11 +74,11 @@
         :muutoshintaiset-tyot (fn [user urakka-id]
                                  (hae-urakan-muutoshintaiset-tyot (:db this) user urakka-id)))
       (julkaise-palvelu
-        :tallenna-urakan-muutoshintaiset-tyot (fn [user tiedot]
-                                                 (tallenna-urakan-muutoshintaiset-tyot (:db this) user tiedot))))
+        :tallenna-muutoshintaiset-tyot (fn [user tiedot]
+                                                 (tallenna-muutoshintaiset-tyot (:db this) user tiedot))))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :muutoshintaiset-tyot)
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-muutoshintaiset-tyot)
+    (poista-palvelu (:http-palvelin this) :tallenna-muutoshintaiset-tyot)
     this))

@@ -14,13 +14,12 @@
   (k/post! :muutoshintaiset-tyot urakka-id))
 
 
-(defn tallenna-urakan-muutoshintaiset-tyot
-  "Tallentaa urakan muutoshintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
-  [{:keys [tyyppi id]} sopimusnumero tyot]
-  (log "tallenna-urakan-muut-tyot, urakka: " id "sopimus: " (first sopimusnumero))
+(defn tallenna-muutoshintaiset-tyot
+  "Tallentaa muutoshintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
+  [urakka-id tyot]
+  (log "tallenna-urakan-muut-tyot, urakka: " urakka-id)
   (log "työt" (pr-str tyot))
-  (let [hyotykuorma {:urakka-id id
-                     :sopimusnumero (first sopimusnumero)
+  (let [hyotykuorma {:urakka-id urakka-id
                      :tyot tyot}]
-    (k/post! :tallenna-urakan-muutoshintaiset-tyot
+    (k/post! :tallenna-muutoshintaiset-tyot
              hyotykuorma)))

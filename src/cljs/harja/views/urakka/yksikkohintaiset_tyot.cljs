@@ -74,6 +74,7 @@
 (defn ryhmittele-tehtavat
   "Ryhmittelee 4. tason tehtävät. Lisää väliotsikot eri tehtävien väliin"
   [toimenpiteet-tasoittain tyorivit]
+  (log "toimenpiteet" (pr-str toimenpiteet-tasoittain))
   (let [otsikko (fn [{:keys [tehtava]}]
                   (or
                     (some (fn [[t1 t2 t3 t4]]

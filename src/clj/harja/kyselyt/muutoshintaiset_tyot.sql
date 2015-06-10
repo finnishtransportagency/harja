@@ -16,14 +16,14 @@ SELECT
        JOIN toimenpideinstanssi tpi ON tk.emo = tpi.toimenpide
  WHERE mt.urakka = :urakka AND tpi.urakka = mt.urakka;
 
--- name: paivita-urakan-muutoshintainen-tyo!
+-- name: paivita-muutoshintainen-tyo!
 -- Päivittää urakan hoitokauden muutoshintaiset tyot
 UPDATE muutoshintainen_tyo
    SET yksikko = :yksikko, yksikkohinta = :yksikkohinta
  WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
 
--- name: lisaa-urakan-muutoshintainen-tyo<!
+-- name: lisaa-muutoshintainen-tyo<!
 INSERT INTO yksikkohintainen_tyo
 (yksikko, yksikkohinta,
  urakka, sopimus, tehtava,
