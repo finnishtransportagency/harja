@@ -21,6 +21,11 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :positiivinen-luku [_ nimi data _ _ & [viesti]]
+  (let [arvo (if (string? data) (js/parseFloat data 10) data)]
+    (when (or (nil? arvo) (< data 0)
+      viesti))))
+
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
     (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)

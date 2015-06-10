@@ -110,14 +110,15 @@
             (hae-tiedot-vetolaatikkoon atomi urakka (:materiaalikoodi (first toteumamateriaalit))))))))
 
 (defn materiaalit-ja-maarat
-  [materiaalit-atom]
+  [materiaalit-atom virheet-atom]
 
 
   (log "Materiaalit-ja-maarat, tiedot: " (pr-str @materiaalit-atom))
   (log "Materiaalikoodit:" (pr-str @materiaalikoodit))
 
   [grid/muokkaus-grid
-   {:tyhja "Ei materiaaleja."}
+   {:tyhja "Ei materiaaleja."
+    :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))}
 
    [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
      :valinnat @materiaalikoodit
@@ -125,7 +126,7 @@
      :validoi [[:ei-tyhja "Valitse materiaali."]]
      :leveys "50%"}
 
-    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :validoi [[:yli-nolla "Anna käytetty määrä."]] :leveys "40%"}
     {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
    materiaalit-atom])
 
@@ -137,7 +138,9 @@
         muokattu (reaction @tiedot)
         ;tallennus-kaynnissa (atom false)
         materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @muokattu))))
-        uusi-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)]
+        uusi-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
+        lomakkeen-virheet (atom {})
+        materiaalien-virheet (atom {})]
 
     (komp/luo
       {:component-will-mount
@@ -168,10 +171,16 @@
                              #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
                              {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
-                             :kun-onnistuu
+                              :kun-onnistuu
                                       #(do
                                         (reset! urakan-materiaalin-kaytot %)
-                                        (reset! valittu-materiaalin-kaytto nil))}]}
+                                        (reset! valittu-materiaalin-kaytto nil))
+                              :disabled (or
+                                          (> (count @lomakkeen-virheet ) 0)
+                                          (= (count @muokattu) 0)
+                                          (= (count @materiaalitoteumat-mapissa) 0)
+                                          (> (count @materiaalien-virheet) 0))}]
+                  :virheet lomakkeen-virheet}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
@@ -180,23 +189,26 @@
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
-           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut
-            :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%" :aseta (fn [rivi arvo]
-                                                                                 (assoc
-                                                                                   (if
-                                                                                     (or
-                                                                                       (not (:paattynyt rivi))
-                                                                                       (pvm/jalkeen? arvo (:paattynyt rivi)))
-                                                                                     (assoc rivi :paattynyt arvo)
-                                                                                     rivi)
-                                                                                   :alkanut
-                                                                                   arvo))}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt
+           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+            :muokattava? (constantly (not uusi-toteuma?)) :aseta (fn [rivi arvo]
+                                                                   (assoc
+                                                                     (if
+                                                                       (or
+                                                                         (not (:paattynyt rivi))
+                                                                         (pvm/jalkeen? arvo (:paattynyt rivi)))
+                                                                       (assoc rivi :paattynyt arvo)
+                                                                       rivi)
+                                                                     :alkanut
+                                                                     arvo))
+            :leveys "30%"}
+           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
-           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja}
-           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus}
+           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :validoi [[:ei-tyhja "Anna y-tunnus"]]}
            {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto}
-           {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat materiaalitoteumat-mapissa] :tyyppi :komponentti}]
+           {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat
+                                                                    materiaalitoteumat-mapissa
+                                                                    materiaalien-virheet] :tyyppi :komponentti}]
 
           @muokattu]]))))
 
@@ -223,7 +235,8 @@
 
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
-           {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)}
+           {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
+            :validoi [[:yli-nolla "Anna käytetty määrä."]]}
            {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false)}
            {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false)}
            {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
