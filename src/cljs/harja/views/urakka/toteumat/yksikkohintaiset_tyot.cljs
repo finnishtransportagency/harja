@@ -64,8 +64,10 @@
                                                                (:id (:tehtava tehtava)))])
                                         (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
-                                   (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME pvm:ää ei voi valita jos tämä on tässä
-                                        (not (empty? (:suorittajan-nimi @lomake-toteuma))) ; FIXME Tarkista että lopetus ei ole ennen aloitusta
+                                   (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME Lomake ei toimi jos tämä on tässä
+                                        (not (empty? (:suorittajan-nimi @lomake-toteuma)))
+                                        (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
+                                        (pvm/ennen? (:aloituspvm @lomake-toteuma) (:lopetuspvm @lomake-toteuma))
                                         (not (empty? (vals @lomake-tehtavat)))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
