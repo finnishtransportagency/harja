@@ -98,7 +98,8 @@
                                                                       (fn [rivi]
                                                                         {:toimenpidekoodi (:tehtava rivi)
                                                                          :maara (js/parseInt (:maara rivi))
-                                                                         :tehtava-id (:tehtava-id rivi)})
+                                                                         :tehtava-id (:tehtava-id rivi)
+                                                                         :poistettu (:poistettu rivi)})
                                                                       (vals @lomake-tehtavat)))
                              {:luokka :nappi-ensisijainen :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
