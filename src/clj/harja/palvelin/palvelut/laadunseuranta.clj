@@ -144,7 +144,7 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(decimal->double % :summa)))
+              (map #(konv/decimal->double % :summa)))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
   
 (defrecord Laadunseuranta []
