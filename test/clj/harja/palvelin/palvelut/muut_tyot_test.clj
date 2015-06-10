@@ -31,7 +31,7 @@
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-muut-tyot-haettu-oikein
          (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :muutoshintaiset-tyot +kayttaja-tero+ @oulun-alueurakan-id)
+                                      :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-id)
                oulun-alueurakan-toiden-lkm (ffirst (q
                                                      (str "SELECT count(*)
                                                              FROM muutoshintainen_tyo
@@ -45,7 +45,7 @@
                urakan-loppupvm (java.sql.Date. 110 8 30)] ;;30.9.2010
            (is (= (:yksikkohinta ramppitehtava) 4.5) "muutoshintaisen yksikköhinta")
            (is (= (:yksikko ramppitehtava) "tiekm") "muutoshintaisen yksikköhinta")
-           (is (= (:tehtavan_nimi ramppitehtava) "I rampit") "muutoshintaisen tehtävän nimi")
+           (is (= (:tehtavanimi ramppitehtava) "I rampit") "muutoshintaisen tehtävän nimi")
            (is (= (:alkupvm  ramppitehtava) urakan-alkupvm) "muutoshintaisen tehtävän nimi")
            (is (= (:loppupvm ramppitehtava) urakan-loppupvm) "muutoshintaisen tehtävän nimi")
            (is (= (count muutoshintaiset-tyot) oulun-alueurakan-toiden-lkm) "muutoshintaisten lkm")))

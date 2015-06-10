@@ -30,7 +30,8 @@
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-yksikkohintaiset-tyot-haettu-oikein 
   (let [yksikkohintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                              :yksikkohintaiset-tyot +kayttaja-tero+ @oulun-alueurakan-id)
+                                              :yksikkohintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
+                                @oulun-alueurakan-id)
         oulun-alueurakan-toiden-lkm (ffirst (q 
                                              (str "SELECT count(*)
                                                        FROM yksikkohintainen_tyo
