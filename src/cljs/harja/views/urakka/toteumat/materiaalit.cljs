@@ -180,9 +180,18 @@
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut
-            :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :hae #(or (:paattynyt %) (:alkanut %))
+           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut
+            :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%" :aseta (fn [rivi arvo]
+                                                                                 (assoc
+                                                                                   (if
+                                                                                     (or
+                                                                                       (not (:paattynyt rivi))
+                                                                                       (pvm/jalkeen? arvo (:paattynyt rivi)))
+                                                                                     (assoc rivi :paattynyt arvo)
+                                                                                     rivi)
+                                                                                   :alkanut
+                                                                                   arvo))}
+           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt
             :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
            {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja}
            {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus}
