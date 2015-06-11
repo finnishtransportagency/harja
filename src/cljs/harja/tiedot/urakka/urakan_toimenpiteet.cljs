@@ -1,7 +1,6 @@
 (ns harja.tiedot.urakka.urakan-toimenpiteet
   "Urakan toimenpiteet"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.asiakas.tapahtumat :as t]
 
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -18,7 +17,7 @@
   (k/post! :urakan-toimenpiteet urakka-id))
 
 ;; yleisiä pikkuapureita
-(defn toimenpideinstanssit-tehtavat [tpi-id tp-instanssit tehtavat-tasoineen]
+(defn toimenpideinstanssin-tehtavat [tpi-id tp-instanssit tehtavat-tasoineen]
   (let [tpin-koodi (:id (first (filter #(= (:tpi_id %) tpi-id) tp-instanssit)))]
     (into []
       (filter (fn [t]

@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.muut-tyot-test
   (:require [clojure.test :refer :all]
-
-            [harja.kyselyt.urakat :as urk-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.muut-tyot :refer :all]
             [harja.testi :refer :all]
@@ -49,3 +47,38 @@
            (is (= (:alkupvm  ramppitehtava) urakan-alkupvm) "muutoshintaisen tehtävän nimi")
            (is (= (:loppupvm ramppitehtava) urakan-loppupvm) "muutoshintaisen tehtävän nimi")
            (is (= (count muutoshintaiset-tyot) oulun-alueurakan-toiden-lkm) "muutoshintaisten lkm")))
+
+
+(deftest tallenna-muutoshintaiset-tyot-testi
+  (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-id)
+        muutoshintaisten-toiden-maara-ennen-paivitysta (ffirst (q
+                                       (str "SELECT count(*)
+                                                       FROM muutoshintainen_tyo
+                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-id
+                                            ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2010-09-30'")))
+
+        muokattavan-tyon-tehtava (ffirst (q (str "select id from toimenpidekoodi where nimi = 'I rampit'")))
+        muokattava-tyo (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) muutoshintaiset-tyot))
+        uusi-yksikkohinta 888.0
+        uusi-yksikko "kg"
+        muokattava-tyo-uudet-arvot (assoc muokattava-tyo :yksikkohinta uusi-yksikkohinta :yksikko uusi-yksikko)
+
+        muutoshintaiset-tyot-paivitetty (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
+                                                      {:urakka-id @oulun-alueurakan-id
+                                                       :tyot       [muokattava-tyo-uudet-arvot]})
+        muokattu-tyo-paivitetty (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava) muutoshintaiset-tyot-paivitetty))
+
+        alkuperaiset-arvot-palautettu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
+                                                     {:urakka-id @oulun-alueurakan-id
+                                                      :tyot       [muokattava-tyo]})
+        muokattu-tyo-palautuksen-jalkeen   (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) alkuperaiset-arvot-palautettu))]
+
+    (is (= (count muutoshintaiset-tyot)  muutoshintaisten-toiden-maara-ennen-paivitysta) "Tallennuksen jälkeen muutoshintaisten määrä")
+
+    (is (= (:yksikkohinta muokattu-tyo-paivitetty) uusi-yksikkohinta) "Tallennuksen jälkeen muutoshintaisen yksikköhinta")
+    (is (= (:yksikko muokattu-tyo-paivitetty) uusi-yksikko) "Tallennuksen jälkeen muutoshintaisen yksikkö")
+    (is (= (:yksikkohinta muokattu-tyo-palautuksen-jalkeen) 4.5) "Muutoshintaisen työn vanha tila palautettu, yksikköhinta")
+    (is (= (:yksikko muokattu-tyo-palautuksen-jalkeen) "tiekm") "Muutoshintaisen työn vanha tila palautettu, yksikkö")))

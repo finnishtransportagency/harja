@@ -1,29 +1,22 @@
 (ns harja.views.urakka.suunnittelu.muut-tyot
   "Urakan 'Muut työt' välilehti, sis. Muutos-, lisä- ja äkilliset hoitotyöt"
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom]]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]
              :as yleiset]
-            [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.istunto :as istunto]
 
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [cljs-time.core :as t]
+            [cljs.core.async :refer [<!]])
 
-            )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -47,7 +40,7 @@
   [toimenpiteet-tasoittain tyorivit]
   (let [otsikko (fn [{:keys [tehtava]}]
                   (or
-                    (some (fn [[t1 t2 t3 t4]]
+                    (some (fn [[_ t2 t3 t4]]
                             (when (= (:id t4) tehtava)
                               (str (:nimi t2) " / " (:nimi t3))))
                       toimenpiteet-tasoittain)
@@ -66,6 +59,7 @@
         tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
+        ryhmitellyt-tehtavat (reaction (ryhmittele-tehtavat tehtavat-tasoineen @muutoshintaiset-tyot))
         _ (log "tehtävät" (pr-str tehtavat))
         _ (log "tehtavat-tasoineen" (pr-str tehtavat-tasoineen))
         _ (log "toimenpideinstanssit" (pr-str toimenpideinstanssit))
@@ -84,6 +78,7 @@
                        #(tallenna-tyot
                          % muutoshintaiset-tyot)
                        :ei-mahdollinen)
+           :voi-poistaa? #(istunto/roolissa? istunto/rooli-jarjestelmavastuuhenkilo)
            :tunniste :tehtavanimi}
 
           [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
@@ -100,7 +95,7 @@
             :valinta-arvo  #(:nimi (nth % 3))
             :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
             :tyyppi        :valinta
-            :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssit-tehtavat
+            :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                              (:toimenpideinstanssi %)
                              toimenpideinstanssit tehtavat-tasoineen)
             :muokattava?   #(neg? (:id %))
@@ -111,6 +106,5 @@
            {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "20%"}]
 
-          @muutoshintaiset-tyot]]))))
-
+          @ryhmitellyt-tehtavat]]))))
 

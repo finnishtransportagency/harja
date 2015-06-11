@@ -14,20 +14,29 @@ SELECT
   FROM muutoshintainen_tyo mt
        JOIN toimenpidekoodi tk ON mt.tehtava = tk.id
        JOIN toimenpideinstanssi tpi ON tk.emo = tpi.toimenpide
- WHERE mt.urakka = :urakka AND tpi.urakka = mt.urakka;
+ WHERE mt.urakka = :urakka AND tpi.urakka = mt.urakka
+       AND mt.poistettu != true;
 
 -- name: paivita-muutoshintainen-tyo!
 -- Päivittää urakan hoitokauden muutoshintaiset tyot
 UPDATE muutoshintainen_tyo
-   SET yksikko = :yksikko, yksikkohinta = :yksikkohinta
+   SET yksikko = :yksikko, yksikkohinta = :yksikkohinta, muokattu = NOW(), muokkaaja = :kayttaja
  WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
 
+-- name: poista-muutoshintainen-tyo!
+-- Päivittää urakan hoitokauden muutoshintaiset tyot
+UPDATE muutoshintainen_tyo
+SET poistettu = true, yksikko = :yksikko, yksikkohinta = :yksikkohinta, muokattu = NOW(), muokkaaja = :kayttaja
+WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
+      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
+
+
 -- name: lisaa-muutoshintainen-tyo<!
-INSERT INTO yksikkohintainen_tyo
-(yksikko, yksikkohinta,
+INSERT INTO muutoshintainen_tyo
+(yksikko, yksikkohinta, muokattu, muokkaaja,
  urakka, sopimus, tehtava,
  alkupvm, loppupvm)
-VALUES (:yksikko, :yksikkohinta,
+VALUES (:yksikko, :yksikkohinta, NOW(), :kayttaja,
         :urakka, :sopimus, :tehtava,
         :alkupvm, :loppupvm);

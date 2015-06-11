@@ -5,8 +5,6 @@
             [clojure.set :refer [intersection difference]]
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
 
             [harja.palvelin.oikeudet :as oikeudet]
             [harja.kyselyt.muutoshintaiset-tyot :as q]
@@ -22,48 +20,40 @@
 
 
 (defn hae-urakan-muutoshintaiset-tyot
-      "Palvelu, joka palauttaa urakan muutoshintaiset työt."
+  "Palvelu, joka palauttaa urakan muutoshintaiset työt."
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/info "hae-urakan-muutoshintaiset-tyot" urakka-id)
   (into []
     muutoshintaiset-xf
     (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
 
 (defn tallenna-muutoshintaiset-tyot
-      "Palvelu joka tallentaa muutoshintaiset tyot."
+  "Palvelu joka tallentaa muutoshintaiset tyot."
   [db user {:keys [urakka-id tyot]}]
-  (log/info "tallenna-muutoshintaiset-tyot" urakka-id " työt " tyot)
   (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
 
-  (jdbc/with-db-transaction [c db]
-    (let [nykyiset-arvot (hae-urakan-muutoshintaiset-tyot c user urakka-id)
-          sopimusnumero (:sopimus (first tyot))
-          valitut-pvmt (into #{} (map (juxt :alkupvm :loppupvm) tyot))
-          tyo-avain (fn [rivi]
-                      [(:alkupvm rivi) (:loppupvm rivi) (:tehtava rivi)])
-          tyot-kannassa (into #{} (map tyo-avain
-                                    (filter #(and
-                                              (= (:sopimus %) sopimusnumero)
-                                              (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
-                                      nykyiset-arvot)))]
-      (doseq [tyo tyot]
-        (log/info "TALLENNA TYÖ: " (pr-str tyo))
-        (if (neg? (:id tyo))
-          ;; insert
+  (jdbc/with-db-transaction
+    [c db]
+    (doseq [tyo tyot]
+      (let [parametrit [c (:yksikko tyo) (:yksikkohinta tyo) (:id user)
+                        urakka-id (:sopimus tyo) (:tehtava tyo)
+                        (java.sql.Date. (.getTime (:alkupvm tyo)))
+                        (java.sql.Date. (.getTime (:loppupvm tyo)))]]
+
+        (if (:poistettu tyo)
           (do
-            (log/info "--> LISÄTÄÄN UUSI!")
-            (q/lisaa-muutoshintainen-tyo<! c (:yksikko tyo) (:yksikkohinta tyo)
-              urakka-id (:sopimus tyo) (:tehtava tyo)
-              (java.sql.Date. (.getTime (:alkupvm tyo)))
-              (java.sql.Date. (.getTime (:loppupvm tyo)))))
-          ;;update
-          (do (log/info " --> päivitetään vanha")
-              (log/info "  päivittyi: " (q/paivita-muutoshintainen-tyo! c (:yksikko tyo) (:yksikkohinta tyo)
-                                          urakka-id (:sopimus tyo) (:tehtava tyo)
-                                          (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                          (java.sql.Date. (.getTime (:loppupvm tyo)))))))))
+            ;; vain järjestelmän vastuuhenkilö voi poistaa muutoshintaisia töitä
+            (oikeudet/vaadi-rooli user oikeudet/rooli-jarjestelmavastuuhenkilo)
+            (apply q/poista-muutoshintainen-tyo! parametrit))
+          ;; uusien rivien id on negatiivinen
+          (if (neg? (:id tyo))
+            ;; insert
+            (do
+              (apply q/lisaa-muutoshintainen-tyo<! parametrit))
+            ;;update
+            (do
+              (apply q/paivita-muutoshintainen-tyo! parametrit))))))
     (hae-urakan-muutoshintaiset-tyot c user urakka-id)))
 
 (defrecord Muut-tyot []
