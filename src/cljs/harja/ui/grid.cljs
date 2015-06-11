@@ -287,12 +287,12 @@ Optiot on mappi optioita:
   :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                    jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                    rivin alla
-
+  :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   
   "
   [{:keys [otsikko tallenna peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
            muokkaa-footer muokkaa-aina muutos rivin-luokka
-           uusi-rivi vetolaatikot] :as opts} skeema tiedot]
+           uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -454,7 +454,7 @@ Optiot on mappi optioita:
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))]
-           [:div.panel.panel-default.livi-grid
+           [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
             [:div.panel-heading
              [:h6.panel-title otsikko
 
@@ -605,11 +605,12 @@ Optiot on mappi optioita:
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
-  :jarjesta         jos annettu funktio, sortataan rivit tämän mukaan
+  :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
+  :luokat           Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
            voi-muokata? voi-lisata? jarjesta
-           muokkaa-footer muutos uusi-rivi] :as opts} skeema muokatut]
+           muokkaa-footer muutos uusi-rivi luokat] :as opts} skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
@@ -686,7 +687,7 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu
                     muokkaa-footer muokkaa-aina uusi-rivi tyhja] :as opts} skeema muokatut]
          (let [skeema (laske-sarakkeiden-leveys skeema)]
-           [:div.panel.panel-default.livi-grid
+           [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
