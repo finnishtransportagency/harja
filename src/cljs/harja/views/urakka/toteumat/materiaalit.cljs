@@ -226,7 +226,7 @@
       (fn [urakan-id vm]
         (log "Vetolaatikko tiedot:" (pr-str @tiedot))
         {:key (:id vm)}
-        [:span
+        [:div.toteumat-haitari
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja   (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
@@ -246,7 +246,7 @@
 (defn materiaalit-paasivu
   [ur]
   (log "Paasivu, urakan-materiaalin-kaytot:" (pr-str @urakan-materiaalin-kaytot))
-  [:span
+  [:div.toteumat-paasisalto
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-materiaalin-kaytto {})}
     (ikonit/plus-sign) " Lisää toteuma"]

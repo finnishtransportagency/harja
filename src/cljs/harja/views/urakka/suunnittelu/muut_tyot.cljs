@@ -91,7 +91,8 @@
             :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
             :valinta-arvo  :tpi_id
             :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-            :valinnat      toimenpideinstanssit :leveys "25%"
+            :valinnat      toimenpideinstanssit
+            :leveys "25%"
             :aseta         #(assoc %1 :toimenpideinstanssi %2
                                       :tehtavanimi nil)
             :muokattava?   #(neg? (:id %))}

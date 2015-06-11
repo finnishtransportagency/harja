@@ -131,7 +131,7 @@
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
     (fn [toteuma-rivi]
-      [:div.tehtavat-toteumittain
+      [:div.toteumat-haitari
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
@@ -245,7 +245,7 @@
 
     (komp/luo
       (fn []
-        [:div#yksikkohintaisten-toteumat
+        [:div.toteumat-paasisalto
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
          [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
