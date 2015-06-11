@@ -100,13 +100,6 @@
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-
-           {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
-                                                           (let [[alku loppu] @u/valittu-hoitokausi]
-                                                             [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
-            :fmt identity
-            :muokattava? (constantly false)}
-
            {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :aseta (fn [rivi arvo]
                                                                        (assoc
                                                                          (if
