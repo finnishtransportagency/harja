@@ -206,10 +206,11 @@
 
 
 (defn havainnon-sanktiot
-  "Näyttää muokkaus-gridin havainnon sanktioista."
-  [_]
+  "Näyttää muokkaus-gridin havainnon sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
+sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
+  [_ _]
   (let [g (grid/grid-ohjaus)]
-    (fn [sanktiot-atom]
+    (fn [sanktiot-atom sanktio-virheet]
       [:div.sanktiot
        [grid/muokkaus-grid
         {:tyhja "Ei kirjattuja sanktioita."
@@ -223,11 +224,13 @@
                                         (fn [[id sanktio]]
                                           (log "SANKTIO: " (pr-str sanktio))
                                           [lomake/lomake
-                                           {:otsikko "Sakon suuruus"
+                                           {:otsikko "Sanktion tiedot"
                                             :luokka :horizontal
                                             :muokkaa! (fn [uudet-tiedot]
                                                         (swap! sanktiot-atom
-                                                               assoc id uudet-tiedot))}
+                                                               assoc id uudet-tiedot))
+                                            :virheet (r/wrap (get @sanktio-virheet id)
+                                                             #(swap! sanktio-virheet assoc id %))}
                                            [{:otsikko "Sakko/muistutus"
                                              :nimi :sakko?
                                              :tyyppi :valinta
@@ -236,18 +239,31 @@
                                              :valinnat [:sakko :muistutus]
                                              :valinta-nayta #(case %
                                                                :sakko "Sakko"
-                                                               :muistutus "Muistutus")}
+                                                               :muistutus "Muistutus")
+                                             :leveys-col 2}
+
+                                            (when (:sakko? sanktio)
+                                              {:otsikko "Toimenpide"
+                                               :nimi :toimenpideinstanssi
+                                               :tyyppi :valinta
+                                               :valinta-nayta :tpi_nimi
+                                               :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+                                               :leveys-col 3
+                                               :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]})
 
                                             (when (:sakko? sanktio)
                                               {:otsikko "Sakko (€)"
                                                :tyyppi :numero
-                                               :nimi :summa})
+                                               :nimi :summa
+                                               :leveys-col 2
+                                               :validoi [[:ei-tyhja "Anna sakon summa euroina"]]})
                                         
                                             (when (:sakko? sanktio)
                                               {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 2
                                                :tyyppi :valinta
                                                :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-                                               :valinta-nayta #(or % "Ei sidota indeksiin")})
+                                               :valinta-nayta #(or % "Ei sidota indeksiin")
+                                               :leveys-col 3})
 
                                         
                                             ]
@@ -269,8 +285,15 @@
                         "- valitse -")}
      {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
       :tyyppi :valinta
+      :aseta (fn [sanktio tyyppi]
+               ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+               (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
+               (assoc sanktio
+                 :tyyppi tyyppi
+                 :toimenpideinstanssi (first (filter #(= (:toimenpidekoodi tyyppi)
+                                                         (:id %))
+                                                     @tiedot-urakka/urakan-toimenpideinstanssit))))
       :valinnat-fn #(laadunseuranta/lajin-sanktiotyypit (:laji %))
-      :valinta-arvo :id
       :valinta-nayta :nimi
       }
      {:otsikko "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
@@ -281,7 +304,8 @@
     sanktiot-atom]])))
   
 (defn havainto [havainto]
-  (let [havainto (atom havainto)]
+  (let [havainto (atom havainto)
+        sanktio-virheet (atom {})]
     (tarkkaile! "Havainto: " havainto)
     (komp/luo
      {:component-will-receive-props
@@ -313,8 +337,11 @@
                      #(tallenna-havainto @havainto)
                      {:ikoni (ikonit/check)
                       :disabled (let [h @havainto]
-                                  (not (and (:toimenpideinstanssi h)
-                                            (:aika h))))
+                                  (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
+                                  (not (and (:aika h)
+                                            (if (:paatos h)
+                                              (every? empty? (vals @sanktio-virheet))
+                                              true))))
                       :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}]}
            [
             {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
@@ -422,7 +449,8 @@
                                 (r/wrap (:sanktiot @havainto)
                                         #(do
                                            (log "Havainnon sanktiot: " (pr-str %))
-                                           (swap! havainto assoc :sanktiot %)))]})
+                                           (swap! havainto assoc :sanktiot %)))
+                                sanktio-virheet]})
                ))]
          
            @havainto]])))))

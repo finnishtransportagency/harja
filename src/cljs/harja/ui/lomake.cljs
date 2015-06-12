@@ -53,11 +53,40 @@
 (def +ei-otsikkoa+ #{:boolean})
 
 
-(defn lomake [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
+(defn lomake
+  "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
+Ottaa kolme parametria: optiot, skeeman (vektori kenttiä) sekä datan (mäppi).
+
+Kenttiä voi poistaa käytöstä ehdollisesti, kaikki nil kentät jätetään näyttämättä.
+Kenttä voi olla myös ryhmä (ks. ryhma funktio), jolla on otsikko ja kentät.
+Ryhmistä muodostetaan fieldset lomakkeelle.
+
+Optioissa voi olla seuraavat avaimet:
+
+  :muokkaa!       callback, jolla kaikki muutokset tehdään, ottaa sisään uudet tiedot
+                  ja tekee sille jotain (oletettavasti swap! tai reset! atomille,
+                  joka sisältää lomakkeen tiedot
+
+  :luokka         lomakkeen tyyli: tuetut ovat :inline, :horizontal ja :default
+
+  :footer         Komponentti, joka asetetaan lomakkeen footer sijaintiin, yleensä
+                  submit nappi tms.
+
+  :virheet        atomi, joka sisältää mäpin kentän nimestä virheisiin, jos tätä ei
+                  anneta, lomake luo sisäisesti uuden atomin.
+"                   
+ 
+  [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
         koskemattomat (atom (into #{} (map :nimi skeema)))]
-    (tarkkaile! "koskemattomat" koskemattomat)
+
+    ;; Validoidaan kaikki kentät heti lomakkeen luontivaiheessa,
+    ;; koskemattomien kenttien virheitä ei kuitenkaan näytetä.
+    (reset! virheet-atom
+            (into {}
+                  (validointi/validoi-rivi nil data skeema)))
+    
     (fn [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
       (let [virheet (or virheet virheet-atom)]
         [:form.lomake {:class (case luokka
