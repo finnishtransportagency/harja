@@ -79,8 +79,8 @@
                                          (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
                                    (and
-                                     ;(not (empty? (:aloituspvm @lomake-toteuma)))
-                                     ;(not (empty? (:lopetuspvm @lomake-toteuma)))
+                                     (not (nil? (:aloituspvm @lomake-toteuma)))
+                                     (not (nil? (:lopetuspvm @lomake-toteuma)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                      (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                      (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
