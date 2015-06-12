@@ -23,7 +23,7 @@
 (defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
 
 (defmethod validoi-saanto :hoitokaudella [_ _ data _ _ & [viesti]]
-  (when (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)))
+  (when (and data (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi))))
     viesti))
 
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
