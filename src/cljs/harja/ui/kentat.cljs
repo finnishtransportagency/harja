@@ -114,7 +114,7 @@
 
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
-(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake?]} data]
+(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       2
@@ -134,7 +134,8 @@
                    :on-focus on-focus
                    :cols (or koko-sarakkeet 80)
                    :rows @rivit
-                   :placeholder placeholder}]))))
+                   :placeholder placeholder
+                   :max-length pituus-max}]))))
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]

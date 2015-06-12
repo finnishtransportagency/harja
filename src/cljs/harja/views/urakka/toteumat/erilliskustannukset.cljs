@@ -224,7 +224,7 @@
             :fmt           #(maksajavalinnan-teksti %)
             :leveys-col    3
             }
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
             :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
            ]
 
