@@ -40,6 +40,7 @@
 
 (defn tehtavat-ja-maarat [tehtavat]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+        nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit]
 
     (tarkkaile! "TOT Tehtävät-atomi:" tehtavat)
@@ -63,9 +64,12 @@
        :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                         (:toimenpideinstanssi %)
                         toimenpideinstanssit tehtavat-tasoineen)
-       :leveys        "45%"}
+       :leveys        "45%"
+       :aseta         (fn [rivi arvo] (assoc rivi
+                                        :tehtava arvo
+                                        :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
       {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "40%"}
-      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae :yksikko :leveys "5%"}] ; FIXME Yksikön hakeminen ei toimi
+      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "5%"}]
      tehtavat]))
 
 (defn yksikkohintaisen-toteuman-muokkaus
@@ -166,7 +170,10 @@
                                                                            (let [lomake-tiedot {:toteuma-id       (:id toteuma)
                                                                                                 :tehtavat         (zipmap (iterate inc 1)
                                                                                                                           (mapv (fn [tehtava]
-                                                                                                                                  (let [emo (get (first (filter (fn [tehtavat]
+                                                                                                                                  (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
+                                                                                                                                                                  (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                                                                @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                                                                                                        emo (get (first (filter (fn [tehtavat]
                                                                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
                                                                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 2)
                                                                                                                                         tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
@@ -177,6 +184,7 @@
                                                                                                                                      :maara (:maara tehtava)
                                                                                                                                      :tehtava-id (:tehtava-id tehtava)
                                                                                                                                      :toimenpideinstanssi (:tpi_id tpi)
+                                                                                                                                     :yksikko (:yksikko tehtava-urakassa)
                                                                                                                                      }))
                                                                                                                                 (:tehtavat toteuma)))
                                                                                                 :aloituspvm       (:alkanut toteuma)
@@ -253,8 +261,8 @@
                          valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
                          toteumat @toteumat]
 
-                     ; TODO Tee SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
-                     ; TODO Back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
+                     ; TODO Jos/kun halutaan valita tarkempi aikaväli, tee SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
+                     ; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
@@ -262,8 +270,6 @@
                            (lisaa-tyoriveille-toteutunut-maara toteumat)
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
                            (lisaa-tyoriveille-erotus)))))]
-
-    ; TODO UI:n mahdollisuus valita tarkempi aikaväli (kuukaisväli ja päivämääräväli)
 
     (komp/luo
       (fn []

@@ -103,7 +103,7 @@
                                       :tehtava (:id (urakan-toimenpiteet/tehtava-nimella %2 tehtavat))
                                       :yksikko (:yksikko (urakan-toimenpiteet/tehtava-nimella %2 tehtavat)))
             :leveys        "45%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
+           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
            {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "20%"}]
 
           @ryhmitellyt-tehtavat]]))))

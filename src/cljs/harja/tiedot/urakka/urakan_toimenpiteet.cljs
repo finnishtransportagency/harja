@@ -28,6 +28,11 @@
   "Palauttaa tehtävän nimeä vastaan"
   (first (filter #(= (:nimi %) tehtavan-nimi) tehtavat)))
 
+(defn tehtava-idlla
+  [id tehtavat]
+  "Palauttaa tehtävän id:tä vastaan"
+  (first (filter #(= (:id %) id) tehtavat)))
+
 (defn toimenpideinstanssi-idlla
   "Palauttaa toimenpideinstanssin id:tä vastaan"
   [tpi-id toimenpideinstanssit]
