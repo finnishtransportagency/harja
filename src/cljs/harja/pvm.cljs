@@ -62,7 +62,7 @@
 (defn valissa?
   "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."
   [pvm alkupvm loppupvm]
-  (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm))
+  (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm)))
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
