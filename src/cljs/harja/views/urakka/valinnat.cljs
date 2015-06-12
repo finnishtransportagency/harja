@@ -5,7 +5,9 @@
             
             [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
+            [harja.ui.pvm :as ui-pvm]
             [harja.loki :refer [log]]
+            [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]))
 
 (defn urakan-sopimus [ur]
@@ -32,17 +34,18 @@
       hoitokaudet]]))
 
 (defn hoitokauden-aikavali [ur]
-  ; TODO
-  [:span
-   [:div.label-ja-alasveto
-    [:span.alasvedon-otsikko "Sopimusnumero"]
-    [livi-pudotusvalikko {:valinta @u/valittu-sopimusnumero
-                          :format-fn second
-                          :valitse-fn u/valitse-sopimusnumero!
-                          :class "suunnittelu-alasveto"
-                          }
-     (:sopimukset ur)]]
-   [urakan-hoitokausi ur]])
+  (let [valittu-aikavali u/valittu-aikavali]
+    [:span.label-ja-aikavali
+     [:span.alasvedon-otsikko "Aikaväli"]
+     [:span.aikavali-valinnat
+      [tee-kentta {:tyyppi :pvm} (r/wrap (first @valittu-aikavali)
+                                         (fn [uusi-arvo]
+                                           (reset! valittu-aikavali [uusi-arvo uusi-arvo])))]
+      [:span " - "]
+      [tee-kentta {:tyyppi :pvm} (r/wrap (second @valittu-aikavali)
+                                         (fn [uusi-arvo]
+                                           (swap! valittu-aikavali (fn [[alku _]] [alku uusi-arvo]))))]
+      ]]))
 
 (defn urakan-toimenpide []
   [:div.label-ja-alasveto
@@ -71,5 +74,5 @@
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   [:span
    [urakan-sopimus-ja-hoitokausi ur]
-   ;[hoitokauden-aikavali ur]
+   [hoitokauden-aikavali ur]
    [urakan-toimenpide ur]])

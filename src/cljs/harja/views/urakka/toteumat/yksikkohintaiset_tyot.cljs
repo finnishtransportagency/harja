@@ -274,7 +274,7 @@
     (komp/luo
       (fn []
         [:div
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
 
          [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
           (ikonit/plus-sign) " Lisää toteuma"]
