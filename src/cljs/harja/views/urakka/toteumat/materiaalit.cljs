@@ -274,7 +274,7 @@
      {:otsikko "Yksikkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
      {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys "20%"}
      {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%"}
-     {:otsikko "Jäljellä " :nimi :materiaalierotus :tyyppi :komponentti
+     {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti
       :muokattava? (constantly false) :leveys "20%"
       :komponentti
       (fn [rivi]
