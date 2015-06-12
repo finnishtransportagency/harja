@@ -20,7 +20,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -38,17 +39,31 @@
     (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat schema-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat]
-  (let [toimenpiteen-tehtavat (reaction (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat))]
+  (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+
+    (tarkkaile! "TOT Tehtävät-atomi:" tehtavat)
+    (log "TOT Toimenpideinstanssit " (pr-str toimenpideinstanssit))
 
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
-     [{:otsikko "Tehtävät" :nimi :tehtava :tyyppi :valinta
-       :valinta-arvo :id
-       :valinnat @toimenpiteen-tehtavat
-       :valinta-nayta #(if % (:nimi %) "- valitse tehtävä -")
-       :validoi [[:ei-tyhja "Valitse tehtävä."]]
-       :leveys "50%"}
-
+     [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
+       :tyyppi        :valinta
+       :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+       :valinta-arvo  :tpi_id
+       :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+       :valinnat      toimenpideinstanssit
+       :leveys "25%"
+       :aseta         #(assoc %1 :toimenpideinstanssi %2
+                                 :tehtava nil)}
+      {:otsikko       "Tehtävä" :nimi :tehtava
+       :valinta-arvo  #(:id (nth % 3))
+       :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+       :tyyppi        :valinta
+       :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssit-tehtavat
+                        (:toimenpideinstanssi %)
+                        toimenpideinstanssit tehtavat-tasoineen)
+       :leveys        "45%"}
       {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
       {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae :yksikko :leveys "5%"}] ; FIXME Yksikön hakeminen ei toimi
      tehtavat]))
@@ -66,6 +81,7 @@
                                    (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME Lomake ei toimi jos tämä on tässä
                                      (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                      (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
+                                     (nil? (some #(nil? (:tehtava %)) (vals @lomake-tehtavat)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                      (not (empty? (vals @lomake-tehtavat)))))]
 
@@ -145,11 +161,19 @@
                                                                       (log "TOT toteuma: " (pr-str toteuma)
                                                                            (let [lomake-tiedot {:toteuma-id       (:id toteuma)
                                                                                                 :tehtavat         (zipmap (iterate inc 1)
-                                                                                                                          (mapv (fn [tehtava] {
-                                                                                                                                               :tehtava {:id (:tpk-id tehtava)}
-                                                                                                                                               :maara (:maara tehtava)
-                                                                                                                                               :tehtava-id (:tehtava-id tehtava)
-                                                                                                                                               })
+                                                                                                                          (mapv (fn [tehtava]
+                                                                                                                                  (let [emo (get (first (filter (fn [tehtavat]
+                                                                                                                                                                  (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                                                                @u/urakan-toimenpiteet-ja-tehtavat)) 2)
+                                                                                                                                        tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
+                                                                                                                                    (log "TOT Toteuman tehtävän emo selvitetty: " (pr-str emo))
+                                                                                                                                    (log "TOT Toteuman tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                                                                                                    {
+                                                                                                                                     :tehtava {:id (:tpk-id tehtava)}
+                                                                                                                                     :maara (:maara tehtava)
+                                                                                                                                     :tehtava-id (:tehtava-id tehtava)
+                                                                                                                                     :toimenpideinstanssi (:tpi_id tpi)
+                                                                                                                                     }))
                                                                                                                                 (:tehtavat toteuma)))
                                                                                                 :aloituspvm       (:alkanut toteuma)
                                                                                                 :lopetuspvm       (:paattynyt toteuma)
