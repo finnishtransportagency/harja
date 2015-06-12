@@ -62,7 +62,7 @@
                                     ;; insert
                                     (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
                                                                      (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
-                                                                     (:toimenpideinstanssi) tyo
+                                                                     (:toimenpideinstanssi tyo)
                                                                      sopimusnumero (:vuosi tyo) (:kuukausi tyo))
                                     ;;update
                                     (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
