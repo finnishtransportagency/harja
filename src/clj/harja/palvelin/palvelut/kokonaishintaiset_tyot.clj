@@ -69,6 +69,8 @@
                                                                       (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
                                                                       (:toimenpideinstanssi tyo)
                                                                       sopimusnumero (:vuosi tyo) (:kuukausi tyo)))))
-                              (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)
-                              (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit))
+
+                              (when (not (empty? uniikit-toimenpideninstanssit))
+                                (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)
+                                (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit)))
                             (hae-urakan-kokonaishintaiset-tyot c user urakka-id)))
