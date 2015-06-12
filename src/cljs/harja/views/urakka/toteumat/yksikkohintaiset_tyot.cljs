@@ -60,7 +60,7 @@
        :valinta-arvo  #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
        :tyyppi        :valinta
-       :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssit-tehtavat
+       :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                         (:toimenpideinstanssi %)
                         toimenpideinstanssit tehtavat-tasoineen)
        :leveys        "45%"}
@@ -166,8 +166,8 @@
                                                                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
                                                                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 2)
                                                                                                                                         tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                                                                                    (log "TOT Toteuman tehtävän emo selvitetty: " (pr-str emo))
-                                                                                                                                    (log "TOT Toteuman tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                                                                                                    (log "TOT Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                                                                                                    (log "TOT Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
                                                                                                                                     {
                                                                                                                                      :tehtava {:id (:tpk-id tehtava)}
                                                                                                                                      :maara (:maara tehtava)
