@@ -8,14 +8,23 @@
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [schema.core :as s :include-macros true])
+            [schema.core :as s :include-macros true]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Validointi
 ;; Rivin skeema voi määritellä validointisääntöjä.
 ;; validoi-saanto multimetodi toteuttaa tarkastuksen säännön keyword tyypin mukaan
-;;
+;; nimi = Kentän nimi
+;; data = Riville syötettävä data
+;; rivi = Rivillä olevat tiedot
+;; taulukko = Koko grid-taulukko
 (defmulti validoi-saanto (fn [saanto nimi data rivi taulukko & optiot] saanto))
+
+(defmethod validoi-saanto :hoitokaudella [_ _ data _ _ & [viesti]]
+  (when (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)))
+    viesti))
 
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
   (when (str/blank? data)

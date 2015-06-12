@@ -140,9 +140,7 @@
                                                                            rivi)
                                                                          :aloituspvm
                                                                          arvo)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                                                                         (fn [arvo]
-                                                                                           (when (not (pvm/valissa? arvo (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)))
-                                                                                             "Toteuman pitää olla hoitokaudella."))]}
+                                                                                         [:hoitokaudella "Toteuman pitää olla hoitokaudella"]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
