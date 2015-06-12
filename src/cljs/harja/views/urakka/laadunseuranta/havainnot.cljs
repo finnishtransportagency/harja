@@ -134,7 +134,6 @@
     ]])
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
-  (log "KOMMENTIT: " (pr-str kommentit))
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -222,7 +221,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          :vetolaatikot (into {}
                              (map (juxt first
                                         (fn [[id sanktio]]
-                                          (log "SANKTIO: " (pr-str sanktio))
                                           [lomake/lomake
                                            {:otsikko "Sanktion tiedot"
                                             :luokka :horizontal
@@ -271,7 +269,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                   @sanktiot-atom))}
                                  
     [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-     {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2}
+     {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2
+      :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
      {:otsikko "Laji" :tyyppi :valinta :leveys 1
       :nimi :laji
       :aseta #(assoc %1
@@ -282,7 +281,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         :A "Ryhmä A"
                         :B "Ryhmä B"
                         :C "Ryhmä C"
-                        "- valitse -")}
+                        "- valitse -")
+      :validoi [[:ei-tyhja "Valitse laji"]]}
      {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
       :tyyppi :valinta
       :aseta (fn [sanktio tyyppi]
@@ -295,6 +295,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                      @tiedot-urakka/urakan-toimenpideinstanssit))))
       :valinnat-fn #(laadunseuranta/lajin-sanktiotyypit (:laji %))
       :valinta-nayta :nimi
+      :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]
       }
      {:otsikko "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
       :muokattava? (constantly false)}
@@ -339,7 +340,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       :disabled (let [h @havainto]
                                   (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
                                   (not (and (:aika h)
-                                            (if (:paatos h)
+                                            (if (paatos? h)
                                               (every? empty? (vals @sanktio-virheet))
                                               true))))
                       :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}]}
@@ -438,7 +439,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :koko [80 4]
                   :leveys-col 6
                   :aseta #(assoc-in %1 [:paatos :perustelu] %2)
-                  :muokattava? muokattava?})
+                  :muokattava? muokattava?
+                  :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})
 
 
                (when (= :sanktio (:paatos (:paatos @havainto)))
@@ -447,9 +449,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :nimi :sanktiot
                   :komponentti [havainnon-sanktiot 
                                 (r/wrap (:sanktiot @havainto)
-                                        #(do
-                                           (log "Havainnon sanktiot: " (pr-str %))
-                                           (swap! havainto assoc :sanktiot %)))
+                                        #(swap! havainto assoc :sanktiot %))
                                 sanktio-virheet]})
                ))]
          

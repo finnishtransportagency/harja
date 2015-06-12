@@ -4,7 +4,8 @@
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
-            [harja.loki :refer [log logt tarkkaile!]]))
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.komponentti :as komp]))
 
 (defrecord Ryhma [otsikko skeemat])
 
@@ -79,14 +80,17 @@ Optioissa voi olla seuraavat avaimet:
   [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
-        koskemattomat (atom (into #{} (map :nimi skeema)))]
+        kentat (into #{} (map :nimi skeema))
+
+        ;; Kaikki kentät, joita käyttäjä on muokannut
+        muokatut (atom #{})]
 
     ;; Validoidaan kaikki kentät heti lomakkeen luontivaiheessa,
     ;; koskemattomien kenttien virheitä ei kuitenkaan näytetä.
     (reset! virheet-atom
             (into {}
                   (validointi/validoi-rivi nil data skeema)))
-    
+
     (fn [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
       (let [virheet (or virheet virheet-atom)]
         [:form.lomake {:class (case luokka
@@ -100,7 +104,7 @@ Optioissa voi olla seuraavat avaimet:
                               arvo (atomina kentta data (fn [uudet-tiedot]
                                                           (reset! virheet
                                                                   (validointi/validoi-rivi nil uudet-tiedot skeema))
-                                                          (swap! koskemattomat disj nimi)
+                                                          (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))]
                           ^{:key (:nimi kentta)}
                           [:div.form-group
@@ -117,7 +121,7 @@ Optioissa voi olla seuraavat avaimet:
                                                       "has-error"))}
                                  [tee-kentta kentta arvo]
                                  (when (and (not (empty? kentan-virheet))
-                                            (not (@koskemattomat nimi)))
+                                            (@muokatut nimi))
                                    (virheen-ohje kentan-virheet))]
                               
                                 ;; Ei muokattava, näytetään

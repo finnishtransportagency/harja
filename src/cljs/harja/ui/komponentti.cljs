@@ -85,3 +85,16 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
   [lippu-atom]
   (sisaan-ulos #(reset! lippu-atom true)
                #(reset! lippu-atom false)))
+
+(defn kun-muuttuu
+  "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
+  kuuntelijan ja laukaisee callbackin aina kun järjestysnumerolla (nollasta alkaen) ilmaistu parametri muuttuu.
+Callbackille annetaan samat parametrit kuin render funktiolle."
+  [alkuarvo jarjestys callback]
+  (let [arvo (cljs.core/atom alkuarvo)]
+    {:component-will-receive-props
+     (fn [& args]
+       (let [uusi-arvo (nth args (+ jarjestys 2))]
+         (when (not= @arvo uusi-arvo)
+           (reset! arvo uusi-arvo)
+           (callback (drop 2 args)))))}))
