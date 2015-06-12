@@ -86,6 +86,7 @@
                                      (not (nil? (:aloituspvm @lomake-toteuma)))
                                      (not (nil? (:lopetuspvm @lomake-toteuma)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
+                                     (pvm/valissa? (:aloituspvm @lomake-toteuma) (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi))
                                      (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                      (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
                                      ; Validoi tehtävät
