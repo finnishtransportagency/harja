@@ -55,56 +55,57 @@
 
 (defn lomake [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
   (let [luokka (or luokka :default)
-        virheet (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
+        virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
         koskemattomat (atom (into #{} (map :nimi skeema)))]
     (tarkkaile! "koskemattomat" koskemattomat)
-    (fn [{:keys [muokkaa! luokka footer] :as opts} skeema data]
-      [:form.lomake {:class (case luokka
-                      :inline "form-inline"
-                      :horizontal "form-horizontal"
-                      :default "")}
-       (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
-                      (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
-                      (let [kentan-virheet (get @virheet nimi)
-                            kentta (assoc kentta :lomake? true)
-                            arvo (atomina kentta data (fn [uudet-tiedot]
-                                                        (reset! virheet
-                                                                (validointi/validoi-rivi nil uudet-tiedot skeema))
-                                                        (swap! koskemattomat disj nimi)
-                                                        (muokkaa! uudet-tiedot)))]
-                        ^{:key (:nimi kentta)}
-                        [:div.form-group
-                         (if (+ei-otsikkoa+ (:tyyppi kentta))
-                           [tyhja-otsikko luokka]
-                           [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
-                         [kentan-komponentti luokka kentta
-                          (if-let [komponentti (:komponentti kentta)]
-                            komponentti
-                            (if (or (nil? muokattava?)
-                                    (muokattava? data))
-                              ;; Muokattava tieto, tehdään sille kenttä
-                              [:span {:class (str (when-not (empty? kentan-virheet)
-                                                    "has-error"))}
-                               [tee-kentta kentta arvo]
-                               (when (and (not (empty? kentan-virheet))
-                                          (not (@koskemattomat nimi)))
-                                 (virheen-ohje kentan-virheet))]
+    (fn [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
+      (let [virheet (or virheet virheet-atom)]
+        [:form.lomake {:class (case luokka
+                                :inline "form-inline"
+                                :horizontal "form-horizontal"
+                                :default "")}
+         (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
+                        (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
+                        (let [kentan-virheet (get @virheet nimi)
+                              kentta (assoc kentta :lomake? true)
+                              arvo (atomina kentta data (fn [uudet-tiedot]
+                                                          (reset! virheet
+                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema))
+                                                          (swap! koskemattomat disj nimi)
+                                                          (muokkaa! uudet-tiedot)))]
+                          ^{:key (:nimi kentta)}
+                          [:div.form-group
+                           (if (+ei-otsikkoa+ (:tyyppi kentta))
+                             [tyhja-otsikko luokka]
+                             [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
+                           [kentan-komponentti luokka kentta
+                            (if-let [komponentti (:komponentti kentta)]
+                              komponentti
+                              (if (or (nil? muokattava?)
+                                      (muokattava? data))
+                                ;; Muokattava tieto, tehdään sille kenttä
+                                [:span {:class (str (when-not (empty? kentan-virheet)
+                                                      "has-error"))}
+                                 [tee-kentta kentta arvo]
+                                 (when (and (not (empty? kentan-virheet))
+                                            (not (@koskemattomat nimi)))
+                                   (virheen-ohje kentan-virheet))]
                               
-                              ;; Ei muokattava, näytetään
-                              [:div.form-control-static
-                               (if fmt
-                                 (fmt ((or hae #(get % nimi)) data))
-                                 (nayta-arvo kentta arvo))]))]]))]
-         (doall
-          (for [skeema (keep identity skeema)]
-            (if-let [ryhma (and (ryhma? skeema) skeema)]
-              ^{:key (:otsikko ryhma)}
-              [:fieldset
-               [:legend (:otsikko ryhma)]
-               (doall (map kentta (keep identity (:skeemat ryhma))))]
+                                ;; Ei muokattava, näytetään
+                                [:div.form-control-static
+                                 (if fmt
+                                   (fmt ((or hae #(get % nimi)) data))
+                                   (nayta-arvo kentta arvo))]))]]))]
+           (doall
+            (for [skeema (keep identity skeema)]
+              (if-let [ryhma (and (ryhma? skeema) skeema)]
+                ^{:key (:otsikko ryhma)}
+                [:fieldset
+                 [:legend (:otsikko ryhma)]
+                 (doall (map kentta (keep identity (:skeemat ryhma))))]
               
-              (kentta skeema)))))
+                (kentta skeema)))))
        
-       (when footer
-         [lomake-footer luokka footer])])))
+         (when footer
+           [lomake-footer luokka footer])]))))
 
