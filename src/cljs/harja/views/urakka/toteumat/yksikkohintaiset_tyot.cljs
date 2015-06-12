@@ -269,7 +269,6 @@
                          valittu-aikavali @u/valittu-aikavali
                          toteumat @toteumat]
 
-                     ; TODO Jos/kun halutaan valita tarkempi aikaväli, tee SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
                      ; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)

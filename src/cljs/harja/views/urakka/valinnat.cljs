@@ -38,7 +38,7 @@
   (let [valittu-aikavali u/valittu-aikavali]
     [:span.label-ja-aikavali
      [:span.alasvedon-otsikko "Aikaväli"]
-     [:span.aikavali-valinnat
+     [:div.aikavali-valinnat
       [tee-kentta {:tyyppi :pvm} (r/wrap (first @valittu-aikavali)
                                          (fn [uusi-arvo]
                                            (reset! valittu-aikavali [uusi-arvo uusi-arvo])))]
