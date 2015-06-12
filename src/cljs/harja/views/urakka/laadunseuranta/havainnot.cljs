@@ -13,6 +13,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [clojure.string :as str]
@@ -122,10 +123,11 @@
    [grid/grid
     {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
      :tyhja "Ei havaintoja."}
-    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys "10%"}
-     {:otsikko "Kohde" :nimi :kohde :leveys "25%"}
-     {:otsikko "Tekijä" :nimi :tekija :leveys "25%" :fmt kuvaile-tekija}
-     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys "35%"} ;; Päätös
+    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+     {:otsikko "Kohde" :nimi :kohde :leveys 1}
+     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
+     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt kuvaile-tekija}
+     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys 2} ;; Päätös
      ]
 
     @urakan-havainnot
@@ -195,7 +197,89 @@
                 (swap! urakan-havainnot
                        conj uusi-havainto)))
             true))))))
-      
+
+(defn kuvaile-sanktion-sakko [{:keys [sakko? summa indeksi]}]
+  (if-not sakko?
+    "Muistutus"
+    (str "Sakko " (fmt/euro-opt summa)
+         (when indeksi (str " (" indeksi ")")))))
+
+
+(defn havainnon-sanktiot
+  "Näyttää muokkaus-gridin havainnon sanktioista."
+  [_]
+  (let [g (grid/grid-ohjaus)]
+    (fn [sanktiot-atom]
+      [:div.sanktiot
+       [grid/muokkaus-grid
+        {:tyhja "Ei kirjattuja sanktioita."
+         :lisaa-rivi " Lisää sanktio"
+         :ohjaus g
+         :uusi-rivi (fn [rivi]
+                      (grid/avaa-vetolaatikko! g (:id rivi))
+                      rivi)
+         :vetolaatikot (into {}
+                             (map (juxt first
+                                        (fn [[id sanktio]]
+                                          (log "SANKTIO: " (pr-str sanktio))
+                                          [lomake/lomake
+                                           {:otsikko "Sakon suuruus"
+                                            :luokka :horizontal
+                                            :muokkaa! (fn [uudet-tiedot]
+                                                        (swap! sanktiot-atom
+                                                               assoc id uudet-tiedot))}
+                                           [{:otsikko "Sakko/muistutus"
+                                             :nimi :sakko?
+                                             :tyyppi :valinta
+                                             :hae #(if (:sakko? %) :sakko :muistutus)
+                                             :aseta #(assoc %1 :sakko? (= :sakko %2))
+                                             :valinnat [:sakko :muistutus]
+                                             :valinta-nayta #(case %
+                                                               :sakko "Sakko"
+                                                               :muistutus "Muistutus")}
+
+                                            (when (:sakko? sanktio)
+                                              {:otsikko "Sakko (€)"
+                                               :tyyppi :numero
+                                               :nimi :summa})
+                                        
+                                            (when (:sakko? sanktio)
+                                              {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 2
+                                               :tyyppi :valinta
+                                               :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+                                               :valinta-nayta #(or % "Ei sidota indeksiin")})
+
+                                        
+                                            ]
+                                           sanktio]))
+                                  @sanktiot-atom))}
+                                 
+    [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+     {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2}
+     {:otsikko "Laji" :tyyppi :valinta :leveys 1
+      :nimi :laji
+      :aseta #(assoc %1
+                :laji %2
+                :tyyppi nil)
+      :valinnat [:A :B :C :muistutus]
+      :valinta-nayta #(case %
+                        :A "Ryhmä A"
+                        :B "Ryhmä B"
+                        :C "Ryhmä C"
+                        "- valitse -")}
+     {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
+      :tyyppi :valinta
+      :valinnat-fn #(laadunseuranta/lajin-sanktiotyypit (:laji %))
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      }
+     {:otsikko "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
+      :muokattava? (constantly false)}
+                                  
+     ]
+                                 
+    sanktiot-atom]])))
+  
 (defn havainto [havainto]
   (let [havainto (atom havainto)]
     (tarkkaile! "Havainto: " havainto)
@@ -211,7 +295,6 @@
           [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
            (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
 
-          #_[(aget js/window "FOO") 1]
           [:h3 "Havainnon tiedot"]
           [lomake/lomake
            {:muokkaa! #(reset! havainto %)
@@ -335,13 +418,11 @@
                  ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
                  {:otsikko "Sanktiot"
                   :nimi :sanktiot
-                  :komponentti [:div.sanktiot
-                                [grid/muokkaus-grid
-                                 {:tyhja "Ei kirjattuja sanktioita."
-                                  :lisaa-rivi " Lisää sanktio"}
-                                 laadunseuranta/+sanktio-skeema+
-                                 
-                                 (r/wrap (:sanktiot @havainto) #(swap! havainto assoc :sanktiot %))]]})
+                  :komponentti [havainnon-sanktiot 
+                                (r/wrap (:sanktiot @havainto)
+                                        #(do
+                                           (log "Havainnon sanktiot: " (pr-str %))
+                                           (swap! havainto assoc :sanktiot %)))]})
                ))]
          
            @havainto]])))))
