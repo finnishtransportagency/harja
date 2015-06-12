@@ -75,6 +75,8 @@ ja viimeinen voivat olla vajaat)."
 (defonce valittu-hoitokausi
          (reaction (first @valitun-urakan-hoitokaudet)))
 
+(defonce valittu-aikavali (atom [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
+
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 

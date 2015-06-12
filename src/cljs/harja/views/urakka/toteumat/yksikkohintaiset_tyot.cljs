@@ -83,14 +83,16 @@
                                          (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
                                    (and
+                                     ; Validoi toteuma
                                      (not (nil? (:aloituspvm @lomake-toteuma)))
                                      (not (nil? (:lopetuspvm @lomake-toteuma)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                      (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                      (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
-                                     (nil? (some #(nil? (:tehtava %)) (vals @lomake-tehtavat)))
-                                     (nil? (some #(not (integer? (:maara %))) (vals @lomake-tehtavat)))
-                                     (not (empty? (vals @lomake-tehtavat)))))]
+                                     ; Validoi tehtävät
+                                     (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
+                                     (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
+                                     (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
@@ -257,8 +259,8 @@
                    (let [rivit (muodosta-nelostason-tehtavat)
                          valittu-urakka @nav/valittu-urakka
                          valittu-sopimus @u/valittu-sopimusnumero
-                         valittu-hoitokausi @u/valittu-hoitokausi
-                         valittu-aikavali [(first valittu-hoitokausi) (second valittu-hoitokausi)]
+                         valittu-hoitokausi [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
+                         valittu-aikavali @u/valittu-aikavali
                          toteumat @toteumat]
 
                      ; TODO Jos/kun halutaan valita tarkempi aikaväli, tee SQL-kysely joka palauttaa suunnitelmat tietyltä aikaväliltä. Frontti laskee jokaiselle tehtävälle suunnitellun summan.
@@ -274,7 +276,8 @@
     (komp/luo
       (fn []
         [:div
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
+         ;[valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka] TODO Käytä tätä kun toimii oikein
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
          [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
           (ikonit/plus-sign) " Lisää toteuma"]

@@ -34,6 +34,7 @@
       hoitokaudet]]))
 
 (defn hoitokauden-aikavali [ur]
+  ; TODO Harjaa vastaava tyyli tälle
   (let [valittu-aikavali u/valittu-aikavali]
     [:span.label-ja-aikavali
      [:span.alasvedon-otsikko "Aikaväli"]
