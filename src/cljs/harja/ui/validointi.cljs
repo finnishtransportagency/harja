@@ -5,6 +5,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]
+            [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
@@ -38,6 +39,12 @@
     (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
     (when (> (count (get rivit-arvoittain data)) 1)
       viesti)))
+
+(defmethod validoi-saanto :pvm-kentan-jalkeen [_ _ data rivi _ & [avain viesti]]
+  (when (and
+          (avain rivi)
+          (pvm/ennen? data (avain rivi)))
+    viesti))
 
 
 (defn validoi-saannot
