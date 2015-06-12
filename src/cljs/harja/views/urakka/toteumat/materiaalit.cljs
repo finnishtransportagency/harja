@@ -201,7 +201,13 @@
                                                                      :alkanut
                                                                      arvo))
             :leveys "30%"}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
+                                                                       (fn [arvo rivi]
+                                                                         (when
+                                                                           (pvm/ennen?
+                                                                             (pvm/->pvm arvo)
+                                                                             (pvm/->pvm (:alkanut rivi))))
+                                                                         "Lopetus ei voi olla aloituksen jälkeen.")]
             :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
            {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
            {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :validoi [[:ei-tyhja "Anna y-tunnus"]]}
