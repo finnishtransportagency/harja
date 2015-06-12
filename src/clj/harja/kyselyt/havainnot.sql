@@ -4,11 +4,13 @@ SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
        h.kasittelyaika as paatos_kasittelyaika,
        h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
-       h.toimenpideinstanssi
+       (SELECT k.kommentti
+          FROM kommentti k
+	 WHERE k.id IN (SELECT hk.kommentti FROM havainto_kommentti hk WHERE hk.havainto = h.id)
+        ORDER BY luotu ASC OFFSET 0 LIMIT 1) as kuvaus
   FROM havainto h
-       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
-       JOIN kayttaja k ON h.luoja = k.id       
- WHERE tpi.urakka = :urakka
+       JOIN kayttaja k ON h.luoja = k.id
+ WHERE h.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
 
 -- name: hae-selvitysta-odottavat-havainnot
@@ -17,11 +19,13 @@ SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
        h.kasittelyaika as paatos_kasittelyaika,
        h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
-       h.toimenpideinstanssi
+       (SELECT k.kommentti
+          FROM kommentti k
+	 WHERE k.id IN (SELECT hk.kommentti FROM havainto_kommentti hk WHERE hk.havainto = h.id)
+        ORDER BY luotu ASC OFFSET 0 LIMIT 1) as kuvaus
   FROM havainto h
-       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
        JOIN kayttaja k ON h.luoja = k.id       
- WHERE tpi.urakka = :urakka
+ WHERE h.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND selvitys_pyydetty = true AND selvitys_annettu = false
 
@@ -31,11 +35,13 @@ SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
        h.kasittelyaika as paatos_kasittelyaika,
        h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
-       h.toimenpideinstanssi
+       (SELECT k.kommentti
+          FROM kommentti k
+	 WHERE k.id IN (SELECT hk.kommentti FROM havainto_kommentti hk WHERE hk.havainto = h.id)
+        ORDER BY luotu ASC OFFSET 0 LIMIT 1) as kuvaus
   FROM havainto h
-       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
        JOIN kayttaja k ON h.luoja = k.id       
- WHERE tpi.urakka = :urakka
+ WHERE h.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND paatos IS NOT NULL
 
@@ -45,11 +51,13 @@ SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
        h.kasittelyaika as paatos_kasittelyaika,
        h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
-       h.toimenpideinstanssi
+       (SELECT k.kommentti
+          FROM kommentti k
+	 WHERE k.id IN (SELECT hk.kommentti FROM havainto_kommentti hk WHERE hk.havainto = h.id)
+        ORDER BY luotu ASC OFFSET 0 LIMIT 1) as kuvaus       
   FROM havainto h
-       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
        JOIN kayttaja k ON h.luoja = k.id       
- WHERE tpi.urakka = :urakka
+ WHERE h.urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND (h.luoja = :kayttaja OR
         h.id IN (SELECT hk.havainto
@@ -64,12 +72,10 @@ SELECT h.id, h.aika, h.kohde,
        h.tekija, CONCAT(k.etunimi, ' ', k.sukunimi) as tekijanimi,
        h.kasittelyaika as paatos_kasittelyaika,
        h.paatos as paatos_paatos, h.kasittelytapa as paatos_kasittelytapa,
-       h.perustelu as paatos_perustelu, h.muu_kasittelytapa as paatos_muukasittelytapa,
-       h.toimenpideinstanssi
+       h.perustelu as paatos_perustelu, h.muu_kasittelytapa as paatos_muukasittelytapa
   FROM havainto h
-       JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
        JOIN kayttaja k ON h.luoja = k.id       
- WHERE h.toimenpideinstanssi IN (SELECT id FROM toimenpideinstanssi tpi WHERE tpi.urakka = :urakka)
+ WHERE h.urakka = :urakka
    AND h.id = :id
 
 -- name: hae-havainnon-kommentit
@@ -93,8 +99,7 @@ ORDER BY k.luotu ASC
 -- name: paivita-havainnon-perustiedot!
 -- Päivittää aiemmin luodun havainnon perustiedot
 UPDATE havainto
-   SET toimenpideinstanssi = :toimenpideinstanssi,
-       aika = :aika,
+   SET aika = :aika,
        tekija = :tekija::osapuoli,
        kohde = :kohde,
        selvitys_pyydetty = :selvitys,
@@ -107,8 +112,8 @@ UPDATE havainto
 -- voi antaa päätöstietoja.
 INSERT
   INTO havainto
-       (toimenpideinstanssi, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu)
-VALUES (:toimenpideinstanssi, :aika, :tekija::osapuoli, :kohde, :selvitys, :luoja, current_timestamp)
+       (urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu)
+VALUES (:urakka, :aika, :tekija::osapuoli, :kohde, :selvitys, :luoja, current_timestamp)
 
 -- name: kirjaa-havainnon-paatos!
 -- Kirjaa havainnolle päätöksen.

@@ -23,7 +23,7 @@ SELECT
   s.id,
   s.perintapvm,
   s.maara      AS summa,
-  s.sakkoryhma AS ryhma,
+  s.sakkoryhma AS laji,
   s.indeksi,
   h.id         AS havainto_id,
   h.kohde      AS havainto_kohde
@@ -40,7 +40,9 @@ SET likainen = TRUE
 WHERE tyyppi = 'sakko' AND
       toimenpideinstanssi IN (
         SELECT toimenpideinstanssi
-        FROM havainto
-        WHERE id = :havainto);
+        FROM sanktio
+        WHERE id = :sanktio);
 
-
+-- name: hae-sanktiotyypit
+-- Hakee kaikki sanktiotyypit
+SELECT id, nimi, toimenpidekoodi, sanktiolaji as laji FROM sanktiotyyppi

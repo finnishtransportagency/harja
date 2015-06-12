@@ -40,16 +40,16 @@
 
 (defn- luo-tai-paivita-havainto
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
-  [db user {:keys [id kohde tekija toimenpideinstanssi aika selvitys-pyydetty] :as havainto}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty] :as havainto}]
   (if id
-    (do (havainnot/paivita-havainnon-perustiedot! db toimenpideinstanssi
+    (do (havainnot/paivita-havainnon-perustiedot! db 
                                                   (konv/sql-timestamp aika) (name tekija) kohde
                                                   (if selvitys-pyydetty true false)
                                                   (:id user)
                                                   id)
         id)
 
-    (:id (havainnot/luo-havainto<! db toimenpideinstanssi (konv/sql-timestamp aika) (name tekija) kohde
+    (:id (havainnot/luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
                                    (if selvitys-pyydetty true false) (:id user)))))
 
 
@@ -80,9 +80,7 @@
 
 (defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm ryhma summa indeksi] :as sanktio} havainto]
   (if (neg? id)
-    (do
-      ;; Luodaan uusi sanktio, jos id negatiivinen
-      (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto)
+    (let [id (:id (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto))]
       (sanktiot/merkitse-maksuera-likaiseksi! db havainto))
     ;; FIXME: voiko päivittää sanktiota?
     nil))
@@ -148,6 +146,17 @@
               (map #(konv/decimal->double % :summa)))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
+(defn hae-sanktiotyypit
+  "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
+  [db user]
+  (into []
+        ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
+        (map #(let [laji (:laji (konv/array->set % :laji))]
+                (assoc %
+                  :laji (into #{} (map keyword) laji))))
+        (sanktiot/hae-sanktiotyypit db)))
+  
+                         
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -164,7 +173,9 @@
                       (fn [user tiedot]
                         (hae-urakan-sanktiot db user tiedot)))
 
-
+    (julkaise-palvelu http-palvelin :hae-sanktiotyypit
+                      (fn [user]
+                        (hae-sanktiotyypit db user)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -172,6 +183,7 @@
                      :hae-urakan-havainnot
                      :tallenna-havainto
                      :hae-havainnon-tiedot
-                     :hae-urakan-sanktiot)
+                     :hae-urakan-sanktiot
+                     :hae-sanktiotyypit)
     this))
             

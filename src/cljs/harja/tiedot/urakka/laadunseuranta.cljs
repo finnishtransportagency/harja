@@ -1,29 +1,22 @@
 (ns harja.tiedot.urakka.laadunseuranta
   "Urakan tarkastukset: tiestötarkastukset, talvihoitotarkastukset sekä soratietarkastukset."
   (:require [harja.asiakas.kommunikaatio :as k]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :refer [atom] :as r])
+  (:require-macros [harja.atom :refer [reaction<!]]))
 
 (defonce laadunseurannassa? (atom false)) ; jos true, laadunseurantaosio nyt käytössä
 
 (defonce valittu-valilehti (atom :havainnot))
 
-(def +sanktio-skeema+
-  [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2}
-   {:otsikko "Sakkoryhmä" :tyyppi :valinta :leveys 2
-    :nimi :ryhma
-    :valinnat [:A :B :C :muistutus]
-    :valinta-nayta #(case %
-                      :A "Ryhmä A"
-                      :B "Ryhmä B"
-                      :C "Ryhmä C"
-                      :muistutus "Muistutus"
-                      "- valitse ryhmä -")}
-   {:otsikko "Sakko (€)" :nimi :summa :tyyppi :numero :leveys 2}
-   {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 3
-    :tyyppi :valinta
-    :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-    :valinta-nayta #(or % "Ei sidota indeksiin")}
-   ])
+(defonce sanktiotyypit
+  (reaction<! (when @laadunseurannassa?
+                (k/get! :hae-sanktiotyypit))))
+
+(defn lajin-sanktiotyypit
+  [laji]
+  (filter #((:laji %) laji) @sanktiotyypit))
+              
+
 
 
 (defn hae-urakan-tarkastukset
