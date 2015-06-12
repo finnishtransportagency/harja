@@ -64,7 +64,7 @@
                         (:toimenpideinstanssi %)
                         toimenpideinstanssit tehtavat-tasoineen)
        :leveys        "45%"}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys "40%"}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "40%"}
       {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae :yksikko :leveys "5%"}] ; FIXME Yksikön hakeminen ei toimi
      tehtavat]))
 
@@ -78,11 +78,14 @@
                                                               (:id (:tehtava tehtava)))])
                                          (:tehtavat @lomakkeessa-muokattava-toteuma))))
         valmis-tallennettavaksi? (reaction
-                                   (and ;(not (empty? (:aloituspvm @lomake-toteuma))) FIXME Lomake ei toimi jos tämä on tässä
+                                   (and
+                                     ;(not (empty? (:aloituspvm @lomake-toteuma)))
+                                     ;(not (empty? (:lopetuspvm @lomake-toteuma)))
+                                     (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                      (not (empty? (:suorittajan-nimi @lomake-toteuma)))
                                      (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
                                      (nil? (some #(nil? (:tehtava %)) (vals @lomake-tehtavat)))
-                                     (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
+                                     (nil? (some #(not (integer? (:maara %))) (vals @lomake-tehtavat)))
                                      (not (empty? (vals @lomake-tehtavat)))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
@@ -109,7 +112,8 @@
                                                                      :tehtava-id (:tehtava-id rivi)
                                                                      :poistettu (:poistettu rivi)})
                                                                   (vals @lomake-tehtavat)))
-                             {:luokka :nappi-ensisijainen :disabled (false? @valmis-tallennettavaksi?)
+                             {:luokka "nappi-ensisijainen"
+                              :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
                                               (reset! lomake-tehtavat nil)
                                               (reset! lomake-toteuma nil)

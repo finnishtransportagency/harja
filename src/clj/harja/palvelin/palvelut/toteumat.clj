@@ -129,7 +129,7 @@
 
 (defn paivita-yk-hint-toiden-tehtavat
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa urakan toteutuneet tehtävät ensimmäisen tehtävän toimenpidekoodilla.
-  Lisäksi palauttaa urakan toteumat" ; FIXME Palauta toteumien sijaan summat tehtävittäin.
+  Lisäksi palauttaa urakan toteumat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
