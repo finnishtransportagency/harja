@@ -13,7 +13,6 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             [harja.pvm :as pvm]
-
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
 
@@ -126,7 +125,12 @@
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :aseta (fn [rivi arvo]
+           {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
+                                                           (let [[alku loppu] @u/valittu-hoitokausi]
+                                                             [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
+            :fmt identity
+            :muokattava? (constantly false)}
+           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2 :aseta (fn [rivi arvo]
                                                                        (assoc
                                                                          (if
                                                                            (or
@@ -135,7 +139,10 @@
                                                                            (assoc rivi :lopetuspvm arvo)
                                                                            rivi)
                                                                          :aloituspvm
-                                                                         arvo)) :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
+                                                                         arvo)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                                                                                         (fn [arvo]
+                                                                                           (when (not (pvm/valissa? arvo (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)))
+                                                                                             "Toteuman pitää olla hoitokaudella."))]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
@@ -276,7 +283,6 @@
     (komp/luo
       (fn []
         [:div
-         ;[valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka] TODO Käytä tätä kun toimii oikein
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
          [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
