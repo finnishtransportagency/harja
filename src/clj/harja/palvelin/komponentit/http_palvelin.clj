@@ -126,7 +126,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                     voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
 
   :ring-kasittelija?  Jos true, ei transit käsittelyä tehdä vaan anneta Ring request mäp suoraan palvelulle.
-                      Palvelun tulee palauttaa Ring response mäppi.")
+                      Palvelun tulee palauttaa Ring response mäppi.
+
+  :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
+                      ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa 
+                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
+")
 
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän.")
@@ -172,7 +177,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
       (swap! kasittelijat conj {:nimi nimi
-                                :fn (ring-kasittelija nimi palvelu-fn)})
+                                :fn (if (= false (:tarkista-polku? optiot))
+                                      palvelu-fn
+                                      (ring-kasittelija nimi palvelu-fn))})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -194,6 +201,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 (defn luo-http-palvelin [portti kehitysmoodi]
   (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
 
+(defn julkaise-reitti [http nimi reitti]
+  (julkaise-palvelu http nimi reitti
+                    {:ring-kasittelija? true
+                     :tarkista-polku? false}))
+
+                    
 (defn poista-palvelut [http & palvelut]
   (doseq [p palvelut]
     (poista-palvelu http p)))

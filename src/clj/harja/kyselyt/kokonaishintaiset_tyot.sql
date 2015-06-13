@@ -1,12 +1,14 @@
 -- name: listaa-kokonaishintaiset-tyot
 -- Hakee kaikki urakan kokonaishintaiset-tyot
 SELECT
+  kt.id, 
   kt.vuosi,
   kt.kuukausi,
   kt.summa,
   kt.maksupvm,
   kt.toimenpideinstanssi,
   kt.sopimus,
+  tpi.id         AS tpi_id,
   tpi.nimi       AS tpi_nimi,
   tpi.toimenpide AS toimenpide
 FROM kokonaishintainen_tyo kt

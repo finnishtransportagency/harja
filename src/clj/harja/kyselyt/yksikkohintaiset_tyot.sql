@@ -1,6 +1,7 @@
 -- name: listaa-urakan-yksikkohintaiset-tyot
 -- Hakee kaikki yksikkohintaiset-tyot
 SELECT
+  yt.id,
   yt.alkupvm,
   yt.loppupvm,
   yt.maara,
@@ -9,6 +10,7 @@ SELECT
   yt.tehtava,
   yt.urakka,
   yt.sopimus,
+  tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
   LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id

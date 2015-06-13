@@ -70,3 +70,17 @@ SELECT u.id, u.nimi, u.hallintayksikko
  WHERE u.nimi ILIKE :teksti
     OR hal.nimi ILIKE :teksti
     OR urk.nimi ILIKE :teksti
+
+-- name: hae-urakka
+-- Hakee urakan perustiedot id:llä APIa varten.
+SELECT u.id, u.nimi, u.tyyppi, u.alkupvm, u.loppupvm,
+       urk.nimi as urakoitsija_nimi, urk.ytunnus as urakoitsija_ytunnus
+  FROM urakka u
+       JOIN organisaatio urk ON u.urakoitsija = urk.id
+ WHERE u.id = :id
+
+-- name: hae-urakan-sopimukset
+-- Hakee urakan sopimukset urakan id:llä.
+SELECT s.id, s.nimi, s.alkupvm, s.loppupvm
+  FROM sopimus s
+ WHERE s.urakka = :urakka

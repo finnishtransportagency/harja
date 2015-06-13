@@ -36,6 +36,9 @@
    [harja.palvelin.palvelut.maksuerat :as maksuerat]
    [harja.palvelin.palvelut.liitteet :as liitteet]
    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+
+   ;; Harja API
+   [harja.palvelin.api.urakat :as api-urakat]
    
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
@@ -148,6 +151,12 @@
      :laadunseuranta (component/using
                       (laadunseuranta/->Laadunseuranta)
                       [:http-palvelin :db])
+
+     ;; Haja API
+     :api-urakat (component/using
+                  (api-urakat/->Urakat)
+                  [:http-palvelin :db])
+     
      )))
 
 (defonce harja-jarjestelma nil)
