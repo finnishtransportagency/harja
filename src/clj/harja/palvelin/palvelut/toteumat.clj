@@ -102,10 +102,10 @@
                                               (doseq [tehtava (:tehtavat toteuma)]
                                                 (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
                                                   (do
-                                                    (log/info "Pävitetään tehtävä.")
+                                                    (log/info "Pävitetään tehtävä: " (pr-str tehtava))
                                                     (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))
                                                   (do
-                                                    (when (false? (:poistettu tehtava))
+                                                    (when (not (:poistettu tehtava))
                                                       (log/info "Luodaan uusi tehtävä.")
                                                       (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user))))))
                                               toteuma)
