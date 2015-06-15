@@ -1,7 +1,20 @@
 (ns harja.palvelin.api.yleinen
   "Yleiset APIn apurit"
   (:require [cheshire.core :as cheshire]
-            [harja.tyokalut.json_validointi :as json]))
+            [harja.tyokalut.json_validointi :as json]
+            [taoensso.timbre :as log]))
+
+
+(defn logita-kutsu [resurssi kutsu]
+  (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi)
+  (log/debug "Kutsu" kutsu)
+  (when (= :post (:request-method kutsu))
+    (log/debug "POST-kutsun sisältö: " (slurp (:body kutsu)))))
+
+(defn logita-vastaus [resurssi vastaus]
+  (if (= 200 (:status vastaus))
+    (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" vastaus)
+    (log/error "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" vastaus)))
 
 (defn virhe
   "JSON virhevastauksen apuri."
@@ -33,9 +46,15 @@
   "JSON-kutsun apuri, joka ottaa vataan kutsun sekä skeeman. Validoi skeeman mukaan kutsun payloadin.
   Jos annettu data ei ole validia, palautetaan nil."
   [request skeema]
-  (let [json (:body request)
+  (let [json (slurp (:body request))
         json-validi? (json/validoi skeema json)]
     (if json-validi?
       (cheshire/decode json)
       nil)))
 
+(defn monitoroi-kasittely [resurssi request kasittele-kutsu-fn]
+  "Monitoroi yksittäisen kutsun ja vastauksen käsittelyn."
+  (logita-kutsu resurssi request)
+  (let [vastaus (kasittele-kutsu-fn)]
+    (logita-vastaus resurssi vastaus)
+    vastaus))

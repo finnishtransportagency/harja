@@ -39,7 +39,8 @@
 
    ;; Harja API
    [harja.palvelin.api.urakat :as api-urakat]
-   
+   [harja.palvelin.api.havainnot :as api-havainnot]
+
    [com.stuartsierra.component :as component]
    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
 
@@ -152,10 +153,13 @@
                       (laadunseuranta/->Laadunseuranta)
                       [:http-palvelin :db])
 
-     ;; Haja API
+     ;; Harja API
      :api-urakat (component/using
                   (api-urakat/->Urakat)
                   [:http-palvelin :db])
+     :api-havainnot (component/using
+                   (api-havainnot/->Havainnot)
+                   [:http-palvelin :db])
      
      )))
 

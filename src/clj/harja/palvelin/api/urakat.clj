@@ -9,8 +9,8 @@
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
-            [harja.palvelin.api.skeemat :as skeemat]))
+            [harja.palvelin.api.skeemat :as skeemat]
+            [taoensso.timbre :as log]))
 
 (defn muodosta-kokonaishintaiset-tyot [tyot]
   (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
