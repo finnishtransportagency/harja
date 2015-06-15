@@ -28,13 +28,14 @@
                      ;; vielä samassa kuussa, kelataan huomiseen
                      (recur (t/plus pvm (t/days 1)))))
         viikon-loppu (loop [pvm kk-loppu]
-                       (if (= 5 (t/day-of-week pvm))
+                       ;; Kelataan päivää sunnuntaihin asti eteenpäin, että saadaan täysi viikko
+                       (if (= 7 (t/day-of-week pvm))
                          pvm
                          (recur (t/plus pvm (t/days 1)))))]
     (loop [paivat []
            p viikon-alku]
       (if (t/after? p viikon-loppu)
-        (vec (partition 7 paivat))
+        (vec (partition 7 7 [] paivat))
         (recur (conj paivat p)
                (t/plus p (t/days 1)))))))
     
@@ -65,7 +66,9 @@ Seuraavat optiot ovat mahdollisia:
 
        :reagent-render
        (fn [{:keys [pvm valitse sijainti] :as optiot}]
-         (let [[vuosi kk] @nayta]
+         (let [[vuosi kk] @nayta
+               naytettava-kk (t/date-time vuosi (inc kk) 1)
+               naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
            [:table.pvm-valinta (when sijainti
                                  (let [[x y w] sijainti]
                                    {:style {:left x :top y
@@ -103,11 +106,14 @@ Seuraavat optiot ovat mahdollisia:
                [:tr
                 (for [paiva paivat]
                   ^{:key (pvm/millisekunteina paiva)}
-                  [:td.pvm-paiva.klikattava {:class (when (and pvm
-                                                               (= (t/day paiva) (t/day pvm))
-                                                               (= (t/month paiva) (t/month pvm))
-                                                               (= (t/year paiva) (t/year pvm)))
-                                                      "pvm-valittu")
+                  [:td.pvm-paiva.klikattava {:class (str
+                                                     (when (and pvm
+                                                                (= (t/day paiva) (t/day pvm))
+                                                                (= (t/month paiva) (t/month pvm))
+                                                                (= (t/year paiva) (t/year pvm)))
+                                                       "pvm-valittu ")
+                                                     (if (naytettava-kk-paiva? paiva)
+                                                       "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
                                   :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
                    (t/day paiva)])])]]))})))
