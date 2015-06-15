@@ -92,7 +92,7 @@
       (do
         (if (:poistettu tehtava)
           (do (log/info "Poistetaan tehtävä: " (pr-str tehtava))
-              (q/poista-toteuman-tehtava c (:tehtava-id tehtava)))
+              (q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
           (do (log/info "Pävitetään tehtävä: " (pr-str tehtava))
               (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava))))
         (do
