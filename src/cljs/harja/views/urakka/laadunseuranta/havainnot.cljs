@@ -25,11 +25,6 @@
 
 (defonce listaus (atom :kaikki))
 
-(defonce hoitokauden-kuukaudet
-  (reaction (some-> @tiedot-urakka/valittu-hoitokausi
-                    pvm/hoitokauden-kuukausivalit)))
-
-
 
 (defonce urakan-havainnot
   (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
