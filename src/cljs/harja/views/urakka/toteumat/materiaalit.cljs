@@ -137,7 +137,7 @@
   (let [tiedot (atom nil)
         muokattu (reaction @tiedot)
         ;tallennus-kaynnissa (atom false)
-        materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @muokattu))))
+        materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @tiedot))))
         uusi-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
         lomakkeen-virheet (atom {})
         materiaalien-virheet (atom {})]
