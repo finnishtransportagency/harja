@@ -34,8 +34,11 @@
 (defonce urakan-havainnot
   (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
                     [alku loppu] @tiedot-urakka/valittu-aikavali
+                    laadunseurannassa? @laadunseuranta/laadunseurannassa?
+                    valilehti @laadunseuranta/valittu-valilehti
                     listaus @listaus]
-                (when (and urakka-id alku loppu)
+                (when (and laadunseurannassa? (= :havainnot valilehti)
+                           urakka-id alku loppu)
                   (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu)))))
 
                     
