@@ -53,7 +53,7 @@
        :valinta-arvo  :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
        :valinnat      toimenpideinstanssit
-       :leveys "25%"
+       :leveys "30%"
        :aseta         #(assoc %1 :toimenpideinstanssi %2
                                  :tehtava nil)}
       {:otsikko       "Tehtävä" :nimi :tehtava
@@ -67,8 +67,8 @@
        :aseta         (fn [rivi arvo] (assoc rivi
                                         :tehtava arvo
                                         :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "40%"}
-      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "5%"}]
+      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%"}
+      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
      tehtavat]))
 
 (defn yksikkohintaisen-toteuman-muokkaus
