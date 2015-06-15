@@ -129,11 +129,6 @@
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
-                                                           (let [[alku loppu] @u/valittu-hoitokausi]
-                                                             [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
-            :fmt identity
-            :muokattava? (constantly false)}
            {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2
             :aseta (fn [rivi arvo]
                      (assoc
@@ -145,8 +140,7 @@
                          rivi)
                        :aloituspvm
                        arvo))
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                      [:hoitokaudella "Toteuman pitää olla hoitokaudella"]]}
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]]} ; TODO Varoita jos pvm urakan ulkopuolella
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
