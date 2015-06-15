@@ -702,7 +702,8 @@ Optiot on mappi optioita:
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
-           [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
+           [:div.panel.panel-default.livi-grid
+            {:class (clojure.string/join " " luokat)}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
@@ -714,9 +715,9 @@ Optiot on mappi optioita:
                                  (peru! muokatut))}
                  (ikonit/peru) " Kumoa"]
                 (when (not= false voi-lisata?)
-                  [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                         ;; FIXME: ohjaus piru vie sulkee vanhan "muokatut" atomin, joka ei wräpin kanssa toimi
-                                                                         (lisaa-rivi! ohjaus {}))}
+                  [:button.nappi-toissijainen.grid-lisaa
+                   {:on-click #(do (.preventDefault %)
+                                   (lisaa-rivi! ohjaus {}))}
                    (ikonit/plus-sign) (or (:lisaa-rivi opts) " Lisää rivi")])])]
             [:div.panel-body
              [:table.grid
