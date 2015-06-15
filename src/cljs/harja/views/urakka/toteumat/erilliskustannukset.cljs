@@ -103,12 +103,13 @@
    (go (<! (timeout kesto))
      (reset! korostettavan-rivin-id nil))))
 
-(def rivin-luokka (atom "korosta"))
+(def +rivin-luokka+ "korosta")
 
-(defn aseta-rivin-luokka [rivi]
-  (if (= @korostettavan-rivin-id (:id rivi))
-    "korosta"
-    ""))
+(defn aseta-rivin-luokka [korostettavan-rivin-id]
+  (fn [rivi]
+    (if (= korostettavan-rivin-id (:id rivi))
+      +rivin-luokka+
+      "")))
 
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
@@ -244,29 +245,29 @@
 
     (komp/luo
       (fn []
-        [:div.erilliskustannusten-toteumat
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-         [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
-          (ikonit/plus-sign) " Lisää kustannus"]
+        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
+          [:div.erilliskustannusten-toteumat
+           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+           [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
+            (ikonit/plus-sign) " Lisää kustannus"]
 
-         [grid/grid
-          {:otsikko       (str "Erilliskustannukset ")
-           :tyhja         (if (nil? @valitut-kustannukset)
-                            [ajax-loader "Erilliskustannuksia haetaan..."]
-                            "Ei erilliskustannuksia saatavilla.")
-           :rivi-klikattu #(reset! valittu-kustannus %)
-           ;; kutsu gridin sisällä olevaa funktiota grid/korosta (jota ei vielä ole fixme)
-           :rivin-luokka  #(aseta-rivin-luokka %)}
-          [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
-           {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
-           {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "10%"}
-           {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
-            :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-           {:otsikko "Lisätieto"  :nimi :lisatieto :leveys "45%"}
-           {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
-           ]
-          @valitut-kustannukset
-          ]]))))
+           [grid/grid
+            {:otsikko       (str "Erilliskustannukset ")
+             :tyhja         (if (nil? @valitut-kustannukset)
+                              [ajax-loader "Erilliskustannuksia haetaan..."]
+                              "Ei erilliskustannuksia saatavilla.")
+             :rivi-klikattu #(reset! valittu-kustannus %)
+             :rivin-luokka  #(aseta-rivin-luokka %)}
+            [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
+             {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
+             {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "10%"}
+             {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
+              :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
+             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "45%"}
+             {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
+             ]
+            @valitut-kustannukset
+            ]])))))
 
 
 
