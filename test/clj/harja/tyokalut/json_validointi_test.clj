@@ -5,8 +5,10 @@
             [harja.palvelin.api.skeemat :as skeemat]
             [clojure.java.io :as io]))
 
-
-
 (deftest tarkista-json-datan-validius
   (let [json-data (slurp (io/resource "api/examples/virhe-response.json"))]
     (is (json/validoi skeemat/+virhevastaus+ json-data))))
+
+(deftest tarkista-epavalidi-json-data
+  (let [json-data (clojure.string/replace (slurp (io/resource "api/examples/virhe-response.json")) "\"virhe\"" "\"rikki\"")]
+    (is (not (json/validoi skeemat/+virhevastaus+ json-data)))))
