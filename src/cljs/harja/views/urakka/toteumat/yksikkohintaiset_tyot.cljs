@@ -117,7 +117,10 @@
                                                                      :maara (js/parseInt (:maara rivi))
                                                                      :tehtava-id (:tehtava-id rivi)
                                                                      :poistettu (:poistettu rivi)})
-                                                                  (vals @lomake-tehtavat)))
+                                                                  (filter
+                                                                    (fn [tehtava] (not (and (true? (:poistettu tehtava))
+                                                                                            (neg? (:id tehtava)))))
+                                                                    (vals @lomake-tehtavat))))
                              {:luokka "nappi-ensisijainen"
                               :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
@@ -131,17 +134,19 @@
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2 :aseta (fn [rivi arvo]
-                                                                       (assoc
-                                                                         (if
-                                                                           (or
-                                                                             (not (:lopetuspvm rivi))
-                                                                             (pvm/jalkeen? arvo (:lopetuspvm rivi)))
-                                                                           (assoc rivi :lopetuspvm arvo)
-                                                                           rivi)
-                                                                         :aloituspvm
-                                                                         arvo)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                                                                         [:hoitokaudella "Toteuman pitää olla hoitokaudella"]]}
+           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2
+            :aseta (fn [rivi arvo]
+                     (assoc
+                       (if
+                         (or
+                           (not (:lopetuspvm rivi))
+                           (pvm/jalkeen? arvo (:lopetuspvm rivi)))
+                         (assoc rivi :lopetuspvm arvo)
+                         rivi)
+                       :aloituspvm
+                       arvo))
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                      [:hoitokaudella "Toteuman pitää olla hoitokaudella"]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
