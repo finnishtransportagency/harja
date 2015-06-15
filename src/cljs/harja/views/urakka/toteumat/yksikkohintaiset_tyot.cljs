@@ -114,7 +114,7 @@
                              #(tallenna-toteuma @lomake-toteuma (mapv
                                                                   (fn [rivi]
                                                                     {:toimenpidekoodi (:tehtava rivi)
-                                                                     :maara (js/parseInt (:maara rivi))
+                                                                     :maara (:maara rivi)
                                                                      :tehtava-id (:tehtava-id rivi)
                                                                      :poistettu (:poistettu rivi)})
                                                                   (filter
