@@ -94,8 +94,9 @@
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
 
    
+   [urakka-valinnat/hoitokauden-aikavali @nav/valittu-urakka]
    
-   [yleiset/pudotusvalikko
+   #_[yleiset/pudotusvalikko
     "Kuukausi"
     {:valinta @aikavali
      :valitse-fn #(reset! aikavali  %)
