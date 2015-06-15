@@ -91,6 +91,10 @@
 
                  ;; Pikkukuvien muodostamiseen 
                  [net.coobird/thumbnailator "0.4.8"]
+
+                 ;; JSON -validointi kirjastot
+                 [com.github.fge/json-schema-validator "2.2.6"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
                  
                  ]
   
