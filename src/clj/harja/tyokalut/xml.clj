@@ -1,4 +1,4 @@
-(ns harja.xml
+(ns harja.tyokalut.xml
   (:require [clojure.java.io :as io])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)

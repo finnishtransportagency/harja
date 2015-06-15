@@ -10,7 +10,7 @@
             [harja.jms :refer [feikki-sonja]]
             [harja.palvelin.komponentit.sonja :as sonja]
             [clojure.core.async :refer [<! >! go] :as async]
-            [harja.xml :as xml]))
+            [harja.tyokalut.xml :as xml]))
 
 (def +lahetysjono+ "lahetysjono")
 (def +kuittausjono+ "kuittausjono")

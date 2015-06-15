@@ -5,7 +5,7 @@
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [harja.testi :refer :all]
-            [harja.xml :as xml])
+            [harja.tyokalut.xml :as xml])
   (:import (java.text SimpleDateFormat)))
 
 (def +xsd-polku+ "test/xsd/sampo/outbound/")
