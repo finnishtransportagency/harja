@@ -9,6 +9,8 @@
 
 (defonce materiaalikoodit (atom nil))
 
+(defonce materiaalinakymassa? (atom false))
+
 (defn hae-materiaalikoodit
   "Palauttaa atomin, jossa on järjestelmän materiaalikodit.
   Jos materiaaleja ei ole vielä haettu, laukaisee niiden haun palvelimelta."

@@ -23,11 +23,12 @@
 (defonce valittu-materiaalin-kaytto (atom nil))
 
 (def urakan-materiaalin-kaytot
-  (reaction<! (when-let [ur @nav/valittu-urakka]
-                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
-                                                                     (first @u/valittu-hoitokausi)
-                                                                     (second @u/valittu-hoitokausi)
-                                                                     (first @u/valittu-sopimusnumero)))))
+  (reaction<! (when @materiaali-tiedot/materiaalinakymassa?
+                (when-let [ur @nav/valittu-urakka]
+                  (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
+                                                                       (first @u/valittu-hoitokausi)
+                                                                       (second @u/valittu-hoitokausi)
+                                                                       (first @u/valittu-sopimusnumero))))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -168,7 +169,17 @@
                               (reset! muokattu uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
-                             #(tallenna-toteuma-ja-toteumamateriaalit! (vals @materiaalitoteumat-mapissa) @muokattu)
+                             #(tallenna-toteuma-ja-toteumamateriaalit!
+                               (vals
+                                 ;; Poista rivit joissa negatiivinen id (uusi) ja poistettu = true
+                                 (filter
+                                   (fn [kartta]
+                                     (not
+                                       (and
+                                         (neg? (key kartta))
+                                         (:poistettu (val kartta))))
+                                     @materiaalitoteumat-mapissa)))
+                                 @muokattu)
                              {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
                               :kun-onnistuu
@@ -290,8 +301,11 @@
 
     (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 
-(defn materiaalit-nakyma
-  [ur]
-  (if @valittu-materiaalin-kaytto
-    [materiaalit-tiedot ur]
-    [materiaalit-paasivu ur]))
+(defn materiaalit-nakyma [ur]
+  (komp/luo
+    (komp/lippu materiaali-tiedot/materiaalinakymassa?)
+
+    (fn [ur]
+      (if @valittu-materiaalin-kaytto
+        [materiaalit-tiedot ur]
+        [materiaalit-paasivu ur]))))
