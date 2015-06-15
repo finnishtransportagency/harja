@@ -172,5 +172,7 @@
 
   Maksueralahetys
   (laheta-maksuera-sampoon [this numero]
-    {:maksuera             (laheta-maksuera (:sonja this) (:db this) lahetysjono-ulos numero)
-     :kustannussuunnitelma (laheta-kustannussuunitelma (:sonja this) (:db this) lahetysjono-ulos numero)}))
+    (let [maksueran-lahetys (laheta-maksuera (:sonja this) (:db this) lahetysjono-ulos numero)
+          kustannussuunnitelman-lahetys (laheta-kustannussuunitelma (:sonja this) (:db this) lahetysjono-ulos numero)]
+      {:maksuera             maksueran-lahetys 
+       :kustannussuunnitelma  kustannussuunnitelman-lahetys})))
