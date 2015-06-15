@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "organisaatio": {
+      "id": "http://jsonschema.net/organisaatio",
+      "type": "string"
+    },
+    "henkilo": {
+      "id": "http://jsonschema.net/henkilo",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+    }
+  }
+}

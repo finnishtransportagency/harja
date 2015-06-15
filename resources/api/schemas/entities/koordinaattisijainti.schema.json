@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "x": {
+      "id": "http://jsonschema.net/sijainti/koordinaatit/x",
+      "type": "number",
+      "required": true
+    },
+    "y": {
+      "id": "http://jsonschema.net/sijainti/koordinaatit/y",
+      "type": "number",
+      "required": true
+    },
+    "z": {
+      "id": "http://jsonschema.net/sijainti/koordinaatit/z",
+      "type": "number"
+    }
+  }
+}

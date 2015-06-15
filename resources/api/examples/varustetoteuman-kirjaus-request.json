@@ -1,0 +1,64 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "varustetoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": 3
+      },
+      "sopimusId": 123456789,
+      "selite": "Liikennemerkin korjaus",
+      "alkanut": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
+      "suorittaja": {
+        "nimi": "Tehotekijät Oy",
+        "y-tunnus": "8765432-1"
+      },
+      "tyyppi": "yksikkohintainen",
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 11220,
+            "selite": "Varuste ja laite"
+          }
+        }
+      ]
+    },
+    "varustekirjaukset": [
+      {
+        "varustekirjaus": {
+          "tunniste": "HAR123456789",
+          "tyyppi": "506",
+          "kuvaus": "Nopeusrajoituksen liikennemerkki",
+          "huomiot": "Hitsattu kasaan",
+          "sijainti": {
+            "koordinaatit": {
+              "x": 64.91292829999999,
+              "y": 25.503484200000003
+            }
+          }
+        }
+      }
+    ],
+    "liitteet": [
+      {
+        "liite": {
+          "tyyppi": "image/png",
+          "kuvaus": "Kuva liikennemerkistä",
+          "sisalto": "... sisältö base64 enkoodattuna  ..."
+        }
+      }
+    ]
+  }
+}

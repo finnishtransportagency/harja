@@ -1,0 +1,75 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "tiestotarkastus": {
+    "tunniste": {
+      "id": 123
+    },
+    "kohde": "Nelostie",
+    "kuvaus": "Oulun tiestotarkistus",
+    "paivamaara": "2016-01-30T12:00:00Z",
+    "tarkastaja": {
+      "id": 654486,
+      "etunimi": "Teija",
+      "sukunimi": "Tarkkailija"
+    },
+    "reitti": [
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 64.91292829999999,
+            "y": 25.503484200000003
+          },
+          "havainnot": [
+            {
+              "havainto": {
+                "kirjaaja": "Tarja Tarkastaja",
+                "kuvaus": "Reikä tiessä",
+                "korjattavaa": true,
+                "liitteet": [
+                  {
+                    "liite": {
+                      "tyyppi": "image/png",
+                      "kuvaus": "Kuva reijästä tiessä",
+                      "sisalto": "... sisältö base64 enkoodattuna  ..."
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 65.91292829999999,
+            "y": 25.503484200000003
+          }
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 66.91292829999999,
+            "y": 25.503484200000003
+          }
+        }
+      }
+    ]
+  }
+}

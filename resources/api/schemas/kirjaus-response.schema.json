@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "virheet": {
+      "id": "http://jsonschema.net/virheet",
+      "type": "string"
+    },
+    "varoitukset": {
+      "id": "http://jsonschema.net/varoitukset",
+      "type": "string"
+    },
+    "tiedotukset": {
+      "id": "http://jsonschema.net/tiedotukset",
+      "type": "string"
+    },
+    "huomiot": {
+      "id": "http://jsonschema.net/huomiot",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/huomiot/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tunniste": {
+            "id": "http://jsonschema.net/tunniste",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+          },
+          "varoitukset": {
+            "id": "http://jsonschema.net/huomiot/0/varoitukset",
+            "type": "array",
+            "items": {
+              "id": "http://jsonschema.net/huomiot/0/varoitukset/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "varoitus": {
+                  "id": "http://jsonschema.net/huomiot/0/varoitukset/0/varoitus",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "virheet": {
+            "id": "http://jsonschema.net/huomiot/0/virheet",
+            "type": "array",
+            "items": {
+              "id": "http://jsonschema.net/huomiot/0/virheet/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "virhe": {
+                  "id": "http://jsonschema.net/huomiot/0/virheet/0/virhe",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "tiedotukset": {
+            "id": "http://jsonschema.net/huomiot/0/tiedotukset",
+            "type": "array",
+            "items": {
+              "id": "http://jsonschema.net/huomiot/0/tiedotukset/0",
+              "type": "object",
+              "properties": {
+                "tiedotus": {
+                  "id": "http://jsonschema.net/huomiot/0/tiedotukset/0/tiedotus",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

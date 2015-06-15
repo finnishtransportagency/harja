@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "paivystaja": {
+      "id": "http://jsonschema.net/paivystys/paivystaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "alku": {
+      "id": "http://jsonschema.net/paivystys/alku",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "loppu": {
+      "id": "http://jsonschema.net/paivystys/loppu",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "vastuuhenkilo": {
+      "id": "http://jsonschema.net/paivystys/vastuuhenkilo",
+      "type": "boolean"
+    },
+    "yhteyshenkilo": {
+      "id": "http://jsonschema.net/paivystys/yhteyshenkilo",
+      "type": "boolean"
+    },
+    "varahenkilo": {
+      "id": "http://jsonschema.net/paivystys/varahenkilo",
+      "type": "boolean"
+    }
+  }
+}

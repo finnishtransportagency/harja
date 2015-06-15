@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "http://jsonschema.net/id",
+      "type": "integer",
+      "required": true
+    },
+    "nimi": {
+      "id": "http://jsonschema.net/nimi",
+      "type": "string",
+      "required": true
+    },
+    "urakoitsija": {
+      "id": "http://jsonschema.net/urakoitsija",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "ytunnus": {
+          "id": "http://jsonschema.net/urakoitsija/ytunnus",
+          "type": "string",
+          "required": true
+        },
+        "nimi": {
+          "id": "http://jsonschema.net/urakoitsija/nimi",
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "vaylamuoto": {
+      "id": "http://jsonschema.net/vaylamuoto",
+      "type": "string",
+      "required": true
+    },
+    "tyyppi": {
+      "id": "http://jsonschema.net/urakkatyyppi",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
+      "required": true
+    },
+    "alkupvm": {
+      "id": "http://jsonschema.net/alkupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "loppupvm": {
+      "id": "http://jsonschema.net/loppupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "required": true,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
+    },
+    "siltatarkastus": {
+      "id": "http://jsonschema.net/siltatarkastus",
+      "type": "object",
+      "required": true,
+      "properties": {
+        "tunniste": {
+          "id": "http://jsonschema.net/tunniste",
+          "type": "object",
+          "required": true,
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+        },
+        "siltanumero": {
+          "id": "http://jsonschema.net/siltatarkastus/sillantunniste",
+          "type": "string",
+          "required": true
+        },
+        "tarkastusaika": {
+          "id": "http://jsonschema.net/siltatarkastus/paivamaara",
+          "type": "string",
+          "format": "date-time",
+          "required": true
+        },
+        "tarkastaja": {
+          "id": "http://jsonschema.net/siltatarkastus/tarkastaja",
+          "type": "object",
+          "required": true,
+          "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+        },
+        "sillantarkastuskohteet": {
+          "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet",
+          "type": "object",
+          "required": true,
+          "properties": {
+            "alusrakenne": {
+              "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/alusrakenne",
+              "type": "object",
+              "required": true,
+              "properties": {
+                "maatukienSiisteysJaaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/alusrakenne/maatukienSiisteysJaaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "valitukienSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/alusrakenne/valitukienSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "laakeritasojenSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/alusrakenne/laakeritasojenSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                }
+              }
+            },
+            "paallysrakenne": {
+              "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne",
+              "type": "object",
+              "required": true,
+              "properties": {
+                "kansilaatta": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/kansilaatta",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "paallysteenKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/paallysteenKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "reunapalkinSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/reunapalkinSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "reunapalkinLiikuntasauma": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/reunapalkinLiikuntasauma",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "sillanpaidenSaumat": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/sillanpaidenSaumat",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "sillanJaPenkereenRaja": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/paallysrakenne/sillanJaPenkereenRaja",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                }
+              }
+            },
+            "varusteetJaLaitteet": {
+              "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet",
+              "type": "object",
+              "required": true,
+              "properties": {
+                "kaiteidenJaSuojaverkkojenVauriot": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/kaiteidenJaSuojaverkkojenVauriot",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "liikuntasaumalaitteidenSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/liikuntasaumalaitteidenSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "laakerit": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/laakerit",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "syoksytorvet": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/syoksytorvet",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "tippuputket": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/tippuputket",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "kosketussuojatJaNiidenKiinnitykset": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/kosketussuojatJaNiidenKiinnitykset",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "valaistuslaitteet": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/valaistuslaitteet",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "johdotJaKaapelit": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/johdotJaKaapelit",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "liikennemerkit": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/varusteetJaLaitteet/liikennemerkit",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                }
+              }
+            },
+            "siltapaikanRakenteet": {
+              "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet",
+              "type": "object",
+              "required": true,
+              "properties": {
+                "kuivatuslaitteidenSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/kuivatuslaitteidenSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "etuluiskienSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/etuluiskienSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "keilojenSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/keilojenSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "tieluiskienSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/tieluiskienSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                },
+                "portaidenSiisteysJaKunto": {
+                  "id": "http://jsonschema.net/siltatarkastus/sillantarkastuskohteet/siltapaikanRakenteet/portaidenSiisteysJaKunto",
+                  "type": "object",
+                  "required": true,
+                  "type": "object",
+                  "required": true,
+                  "additionalProperties": false,
+                  "$ref": "file:resources/api/schemas/entities/siltatarkastuskohde.schema.json"
+                }
+              }
+            }
+          }
+        },
+        "liitteet": {
+          "id": "http://jsonschema.net/tarkastukset/0/liitteet",
+          "type": "object",
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        }
+      }
+    }
+  }
+}

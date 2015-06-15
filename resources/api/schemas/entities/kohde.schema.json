@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "additionalProperties": false,
+  "properties": {
+    "sopimusId": {
+      "id": "http://jsonschema.net/kohde/sopimusId",
+      "type": "integer",
+      "required": true
+    },
+    "tehtavaId": {
+      "id": "http://jsonschema.net/kohde/tehtavaId",
+      "type": "integer"
+    }
+  }
+}

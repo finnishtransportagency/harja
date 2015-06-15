@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tieluvat": {
+      "id": "http://jsonschema.net/tieluvat",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/tieluvat/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tielupa": {
+            "id": "http://jsonschema.net/tieluvat/0/tielupa",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "diaarinumero": {
+                "id": "http://jsonschema.net/tieluvat/0/tielupa/diaarinumero",
+                "type": "integer",
+                "required": true
+              },
+              "tyyppi": {
+                "id": "http://jsonschema.net/tieluvat/0/tielupa/tyyppi",
+                "enum": [
+                  "kaapelien-johtojen-ja-putkien-sijoituslupa",
+                  "opasteet-ja-mainoslupa",
+                  "liittymälupa",
+                  "tiealueella-tyoskentely-lupa",
+                  "ajoneuvosiirtolupa",
+                  "vahingonkorvaukset"
+                ],
+                "required": true
+              },
+              "otsikko": {
+                "id": "http://jsonschema.net/tieluvat/0/tielupa/otsikko",
+                "type": "string"
+              },
+              "myonnetty": {
+                "id": "http://jsonschema.net/tieluvat/0/tielupa/myonnetty",
+                "type": "string",
+                "format": "date-time"
+              },
+              "voimassa": {
+                "id": "http://jsonschema.net/tieluvat/0/tielupa/voimassa",
+                "type": "object",
+                "additionalProperties": false,
+                "required": true,
+                "properties": {
+                  "alkaen": {
+                    "id": "http://jsonschema.net/tieluvat/0/tielupa/voimassa/alkaen",
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "paattyen": {
+                    "id": "http://jsonschema.net/tieluvat/0/tielupa/voimassa/paattyen",
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "sijainti": {
+                "id": "http://jsonschema.net/sijainti",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

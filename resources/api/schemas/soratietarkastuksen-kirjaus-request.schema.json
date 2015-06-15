@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "soratietarkastus": {
+      "id": "http://jsonschema.net/soratietarkastus",
+      "type": "array",
+      "required": true,
+      "items": {
+        "id": "http://jsonschema.net/soratietarkastus/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tunniste": {
+            "id": "http://jsonschema.net/soratietarkastus/0/tunniste",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+            "required": true
+          },
+          "kohde": {
+            "id": "http://jsonschema.net/soratietarkastus/0/kohde",
+            "type": "string",
+            "required": true
+          },
+          "kuvaus": {
+            "id": "http://jsonschema.net/soratietarkastus/0/kuvaus",
+            "type": "string",
+            "required": true
+          },
+          "paivamaara": {
+            "id": "http://jsonschema.net/soratietarkastus/0/paivamaara",
+            "type": "string",
+            "format": "date-time",
+            "required": true
+          },
+          "tarkastaja": {
+            "id": "http://jsonschema.net/soratietarkastus/0/tarkastaja",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+            "required": true
+          },
+          "reitti": {
+            "id": "http://jsonschema.net/toteumat/0/reitti",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/reitti.schema.json",
+            "required": true
+          }
+        }
+      }
+    }
+  }
+}

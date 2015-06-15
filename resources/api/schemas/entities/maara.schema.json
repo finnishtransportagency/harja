@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "materiaali": {
+      "id": "http://jsonschema.net/maara/materiaali",
+      "enum": [
+        "talvisuolaliuosNaCl",
+        "talvisuolaliuosCaCl2",
+        "erityisalueetNaCl",
+        "erityisalueetNaClLiuos",
+        "hiekoitushiekka",
+        "kaliumformiaatti"
+      ]
+    },
+    "yksikko": {
+      "id": "http://jsonschema.net/yksikko",
+      "required": true,
+      "enum": [
+        "t",
+        "kg",
+        "km",
+        "m",
+        "euro",
+        "kpl"
+      ]
+    },
+    "maara": {
+      "id": "http://jsonschema.net/maara",
+      "type": "number",
+      "required": true
+    }
+  }
+}

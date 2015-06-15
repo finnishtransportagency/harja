@@ -1,0 +1,27 @@
+{
+    "virheet": "Kaikkia tietoja ei voitu tallentaa, koska niistä puuttuu pakollisia tietoja",
+    "varoitukset": "",
+    "ilmoitukset": "",
+    "huomiot": [
+        {
+            "tunniste": {
+                "id": 123
+            },
+            "varoitukset": [
+                {
+                    "varoitus": "Tieto x puuttuu."
+                }
+            ],
+            "virheet": [
+                {
+                    "virhe": ""
+                }
+            ],
+            "tiedotukset": [
+                {
+                    "tiedotus": ""
+                }
+            ]
+        }
+    ]
+}

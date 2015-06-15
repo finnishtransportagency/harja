@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "http://jsonschema.net/tunniste",
+      "type": "string",
+      "required": true
+    },
+    "sijainti": {
+      "id": "http://jsonschema.net/havainnot/0/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "ajr": {
+      "id": "http://jsonschema.net/ajr",
+      "type": "number"
+    },
+    "kaista": {
+      "id": "http://jsonschema.net/kaista",
+      "type": "integer"
+    },
+    "alkupvm": {
+      "id": "http://jsonschema.net/alkupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "loppupvm": {
+      "id": "http://jsonschema.net/loppupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "karttapvm": {
+      "id": "http://jsonschema.net/karttapvm",
+      "type": "integer",
+      "format": "date-time"
+    },
+    "kuntoluokitus": {
+      "id": "http://jsonschema.net/kuntoluokitus",
+      "type": "string"
+    },
+    "ely": {
+      "id": "http://jsonschema.net/ely",
+      "type": "integer"
+    },
+    "tietolaji": {
+      "tietolaji": {
+        "id": "http://jsonschema.net/tietolaji",
+        "type": "object",
+        "additionalProperties": false,
+        "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json"
+      }
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "tunniste": {
+    "id": 123
+  },
+  "viimeksipaivitetty": "2016-01-30T12:00:00Z",
+  "toteuttaja": "Yritys Oy",
+  "tilaaja": "Paula Projektipäällikkö",
+  "turvallisuuskoordinaattori": {
+    "id":235648,
+    "etunimi": "Mikko",
+    "sukunimi": "Meikäläinen"
+  },
+  "laatija": {
+    "id" : 654486,
+    "etunimi": "Urho",
+    "sukunimi": "Urakoitisja"
+  },
+  "turvallisuuspoikkeamat": [
+    {
+      "tunniste": {
+        "id": 123
+      },
+      "kohde": {
+        "sopimusId": 123456789,
+        "tehtavaId": 123456789
+      },
+      "sijainti": {
+        "tie": {
+          "numero": 1234,
+          "nimi": "Kiviharjunlenkki",
+          "aosa": 1,
+          "losa": 73,
+          "aet": 100,
+          "let": 20
+        },
+        "koordinaatit": {
+          "x": 64.91292829999999,
+          "y": 25.503484200000003
+        }
+      },
+      "vaylamuoto": "tie",
+      "luokittelu": "tyotapaturma",
+      "ilmoittaja": {
+        "id":5468135,
+        "etunimi": "Veera",
+        "sukunimi": "Veistelijä"
+      },
+      "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
+      "paattyny": "2016-01-30T12:00:00Z",
+      "kasitelty": "2016-01-30T12:00:00Z",
+      "tyontekijanammatti": "Aura-auton kuljettaja",
+      "tyotehtava": "Auraus",
+      "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
+      "aiheutuneetVammat": "Tikattava haava otsassa",
+      "sairauspoissaolopaivat": 2,
+      "sairaalahoitovuorokaudet": 0,
+      "korjaavatToimenpiteet": [
+        {
+          "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
+          "suoritettu": "2016-01-30T12:00:00Z",
+          "vastaavahenkilo": {
+            "id" : 384698,
+            "etunimi": "Henri",
+            "sukunimi": "Hakkuri"
+          }
+        }
+      ],
+      "liitteet": [
+        {
+          "liite": {
+            "tyyppi": "image/png",
+            "kuvaus": "Kuva tilanteesta",
+            "sisalto": "... sisältö base64 enkoodattuna  ..."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "virheet": {
+      "id": "http://jsonschema.net/virheet",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/virheet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "virhe": {
+            "id": "http://jsonschema.net/virheet/0/virhe",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "koodi": {
+                "id": "http://jsonschema.net/virheet/0/virhe/koodi",
+                "type": "string"
+              },
+              "viesti": {
+                "id": "http://jsonschema.net/virheet/0/virhe/viesti",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

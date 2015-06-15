@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "array",
+  "items": [
+    {
+      "id": "http://jsonschema.net/havainnot/0",
+      "type": "object",
+      "properties": {
+        "havainto": {
+          "id": "http://jsonschema.net/havainnot/0/havainto",
+          "type": "object",
+          "properties": {
+            "kirjaaja": {
+              "id": "http://jsonschema.net/havainnot/0/havainto/kirjaaja",
+              "type": "string"
+            },
+            "kuvaus": {
+              "id": "http://jsonschema.net/havainnot/0/havainto/kuvaus",
+              "type": "string",
+              "required": true
+            },
+            "korjattavaa": {
+              "id": "http://jsonschema.net/havainnot/0/havainto/korjattavaa",
+              "type": "boolean"
+            },
+            "liitteet": {
+              "id": "http://jsonschema.net/tarkastukset/0/liitteet",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

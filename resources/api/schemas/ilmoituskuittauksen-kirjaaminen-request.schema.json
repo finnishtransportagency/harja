@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "kuittaus": {
+      "id": "http://jsonschema.net/kuittaus",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ilmoitusId": {
+          "id": "http://jsonschema.net/kuittaus/ilmoitusId",
+          "type": "string",
+          "required": true
+        },
+        "kuitattu": {
+          "id": "http://jsonschema.net/kuittaus/kuitattu",
+          "type": "string",
+          "format": "date-time",
+          "required": true
+        },
+        "kuittaustyyppi": {
+          "id": "http://jsonschema.net/kuittaus/kuittaustyyppi",
+          "required": true,
+          "enum": [
+            "vastaanotto",
+            "aloitus",
+            "muutos",
+            "lopetus",
+            "vastaus"
+          ]
+        },
+        "kuittaaja": {
+          "id": "http://jsonschema.net/kuittaus/kuittaaja",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "properties": {
+            "henkilo": {
+              "id": "http://jsonschema.net/kuittaus/kuittaaja/henkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+              "required": true
+            },
+            "organisaatio": {
+              "id": "http://jsonschema.net/kuittaus/kuittaaja/organisaatio",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+              "required": true
+            }
+          }
+        },
+        "kasittelija": {
+          "id": "http://jsonschema.net/kuittaus/kasittelija",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "properties": {
+            "henkilo": {
+              "id": "http://jsonschema.net/kuittaus/kasittelija/henkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+              "required": true
+            },
+            "organisaatio": {
+              "id": "http://jsonschema.net/kuittaus/kasittelija/organisaatio",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+              "required": true
+            }
+          }
+        },
+        "vapaateksti": {
+          "id": "http://jsonschema.net/kuittaus/vapaateksti",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

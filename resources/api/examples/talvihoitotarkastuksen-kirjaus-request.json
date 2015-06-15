@@ -1,0 +1,134 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "talvihoitotarkastus": {
+    "tunniste": {
+      "id": 123
+    },
+    "kohde": "Nelostie",
+    "kuvaus": "Oulun talvihoitotarkistus",
+    "paivamaara": "2016-01-30T12:00:00Z",
+    "tarkastaja": {
+      "id": 1321534568,
+      "etunimi": "Tarmo",
+      "sukunimi": "Tarkastaja"
+    },
+    "mittaaja": {
+      "id": 546546,
+      "etunimi": "Minna",
+      "sukunimi": "Mittaaja"
+    },
+    "reitti": [
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 64.91292829999999,
+            "y": 25.503484200000003
+          },
+          "havainnot": [
+            {
+              "havainto": {
+                "kirjaaja": "Minna Mittaaja",
+                "kuvaus": "Tie hiekoittamatta. Todella liukasta.",
+                "korjattavaa": true,
+                "liitteet": [
+                  {
+                    "liite": {
+                      "tyyppi": "image/png",
+                      "kuvaus": "Kuva hiekoittamattomasta tiestä",
+                      "sisalto": "... sisältö base64 enkoodattuna  ..."
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "mittaustulokset": {
+            "mittaaja": "Minna Mittaaja",
+            "talvihoito": {
+              "hoitoluokka": 5,
+              "lumisuus": 1.1,
+              "tasaisuus": 1.1,
+              "kitka": 1.1,
+              "lampotila": 1.1,
+              "laatuvirheet": {
+                "liukkaus": true,
+                "lumisuus": false,
+                "tasaisuus": false
+              }
+            }
+          }
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 64.91292829999999,
+            "y": 25.503484200000003
+          },
+          "mittaustulokset": {
+            "mittaaja": "Minna Mittaaja",
+            "talvihoito": {
+              "hoitoluokka": 4,
+              "lumisuus": 1.1,
+              "tasaisuus": 1.1,
+              "kitka": 1.1,
+              "lampotila": 1.1,
+              "laatuvirheet": {
+                "liukkaus": true,
+                "lumisuus": false,
+                "tasaisuus": false
+              }
+            }
+          }
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2016-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 64.91292829999999,
+            "y": 25.503484200000003
+          },
+          "havainnot": [
+            {
+              "havainto": {
+                "kirjaaja": "Minna Mittaaja",
+                "kuvaus": "Tie auraamatta.",
+                "korjattavaa": true
+              }
+            }
+          ],
+          "mittaustulokset": {
+            "mittaaja": "Minna Mittaaja",
+            "talvihoito": {
+              "hoitoluokka": 5,
+              "lumisuus": 1.1,
+              "tasaisuus": 1.1,
+              "kitka": 1.1,
+              "lampotila": 1.1,
+              "laatuvirheet": {
+                "liukkaus": false,
+                "lumisuus": true,
+                "tasaisuus": false
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

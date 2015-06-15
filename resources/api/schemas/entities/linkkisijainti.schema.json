@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net/sijainti/linkki",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "http://jsonschema.net/sijainti/linkki/id",
+      "type": "integer",
+      "required": true
+    },
+    "marvo": {
+      "id": "http://jsonschema.net/sijainti/linkki/marvo",
+      "type": "integer",
+      "required": true
+    }
+  }
+}

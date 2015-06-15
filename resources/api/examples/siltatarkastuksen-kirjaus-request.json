@@ -1,0 +1,111 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "siltatarkastus": {
+    "tunniste": {
+      "id": 34547744
+    },
+    "siltanumero": "6666",
+    "tarkastusaika": "2016-01-30T12:00:00Z",
+    "tarkastaja": {
+      "etunimi": "Teija",
+      "sukunimi": "Tarkkailija"
+    },
+    "sillantarkastuskohteet": {
+      "alusrakenne": {
+        "maatukienSiisteysJaaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "valitukienSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "laakeritasojenSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        }
+      },
+      "paallysrakenne": {
+        "kansilaatta": {
+          "ehdotettutoimenpide": "puhdistettava",
+          "lisatietoja": "Kansi likainen"
+        },
+        "paallysteenKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "reunapalkinSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "reunapalkinLiikuntasauma": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "sillanpaidenSaumat": {
+          "ehdotettutoimenpide": "urakanKunnostettava",
+          "lisatietoja": "Saumat lohkeilleet"
+        },
+        "sillanJaPenkereenRaja": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        }
+      },
+      "varusteetJaLaitteet": {
+        "kaiteidenJaSuojaverkkojenVauriot": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "liikuntasaumalaitteidenSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "laakerit": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "syoksytorvet": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "tippuputket": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "kosketussuojatJaNiidenKiinnitykset": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "valaistuslaitteet": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "johdotJaKaapelit": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "liikennemerkit": {
+          "ehdotettutoimenpide": "korjausOhjelmoitava",
+          "lisatietoja": "Korjattava"
+        }
+      },
+      "siltapaikanRakenteet": {
+        "kuivatuslaitteidenSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "etuluiskienSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "keilojenSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "tieluiskienSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        },
+        "portaidenSiisteysJaKunto": {
+          "ehdotettutoimenpide": "eiToimenpiteita"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "nimi": {
+      "id": "http://jsonschema.net/nimi",
+      "type": "string",
+      "required": false
+    },
+    "numero": {
+      "id": "http://jsonschema.net/sijainti/tie/numero",
+      "type": "integer",
+      "required": true
+    },
+    "aosa": {
+      "id": "http://jsonschema.net/sijainti/tie/aosa",
+      "type": "integer",
+      "required": true
+    },
+    "aet": {
+      "id": "http://jsonschema.net/sijainti/tie/aet",
+      "type": "integer",
+      "required": true
+    },
+    "losa": {
+      "id": "http://jsonschema.net/sijainti/tie/losa",
+      "type": "integer",
+      "required": true
+    },
+    "let": {
+      "id": "http://jsonschema.net/sijainti/tie/let",
+      "type": "integer",
+      "required": true
+    }
+  }
+}

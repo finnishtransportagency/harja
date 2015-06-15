@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "array",
+  "items": {
+    "id": "http://jsonschema.net/maarat/0/maara",
+    "type": "object",
+    "properties": {
+      "maara": {
+        "id": "http://jsonschema.net/maarat/0/maara",
+        "type": "object",
+        "additionalProperties": false,
+        "$ref": "file:resources/api/schemas/entities/maara.schema.json"
+      }
+    }
+  }
+}

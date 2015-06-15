@@ -1,0 +1,50 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2015-01-03T12:00:00Z"
+  },
+  "paivystykset": [
+    {
+      "paivystys": {
+        "paivystaja": {
+          "id": 454653434,
+          "etunimi": "Päivi",
+          "sukunimi": "Päivystäjä",
+          "email": "paivi.paivystaja@test.i",
+          "puhelinnumero": "7849885769",
+          "liviTunnus":"LX1234345"
+        },
+        "alku": "2015-01-30T12:00:00Z",
+        "loppu": "2016-01-30T12:00:00Z",
+        "vastuuhenkilo": true,
+        "yhteyshenkilo": true,
+        "varahenkilo": true
+      }
+    },
+    {
+      "paivystys": {
+        "paivystaja": {
+          "id": 1123588,
+          "etunimi": "Pertti",
+          "sukunimi": "Päivystäjä",
+          "email": "pertti.paivystaja@foo.bar",
+          "puhelinnumero": "0287445698"
+        },
+        "alku": "2015-01-30T12:00:00Z",
+        "loppu": "2016-01-30T12:00:00Z",
+        "vastuuhenkilo": false,
+        "yhteyshenkilo": false,
+        "varahenkilo": true
+      }
+    }
+  ]
+}

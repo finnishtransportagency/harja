@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "havainnot": {
+      "id": "http://jsonschema.net/havainnot",
+      "type": "array",
+      "required": true,
+      "items": {
+        "id": "http://example.com/item-schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "havainto": {
+            "id": "http://jsonschema.net/havainnot/0",
+            "type": "object",
+            "required": true,
+            "properties": {
+              "tyokone": {
+                "id": "http://jsonschema.net/havainnot/0/tyokone",
+                "type": "object",
+                "additionalProperties": false,
+                "required": true,
+                "properties": {
+                  "id": {
+                    "id": "http://jsonschema.net/havainnot/0/tyokone/id",
+                    "type": "integer",
+                    "required": true
+                  },
+                  "tyyppi": {
+                    "id": "http://jsonschema.net/havainnot/0/tyokone/tyyppi",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              },
+              "sijainti": {
+                "id": "http://jsonschema.net/havainnot/0/sijainti",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "required": true
+              },
+              "havaintoaika": {
+                "id": "http://jsonschema.net/havainnot/0/havaintoaika",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "urakkaid": {
+                "id": "http://jsonschema.net/havainnot/0/urakkaid",
+                "type": "integer"
+              },
+              "sopimusid": {
+                "id": "http://jsonschema.net/havainnot/0/sopimusid",
+                "type": "integer"
+              },
+              "suoritetavaTehtavat": {
+                "id": "http://jsonschema.net/havainnot/0/tyokonetehtava",
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "auraus ja sohjonpoisto",
+                    "suolaus",
+                    "pistehiekoitus",
+                    "linjahiekoitus",
+                    "pinnan tasaus",
+                    "liikennemerkkien puhdistus",
+                    "lumivallien madaltaminen",
+                    "sulamisveden haittojen torjunta",
+                    "tiestotarkastus",
+                    "kelintarkastus",
+                    "harjaus",
+                    "koneellinen niitto",
+                    "koneellinen vesakonraivaus",
+                    "sorateiden muokkaushoylays",
+                    "sorateiden polynsidonta",
+                    "sorateiden tasaus",
+                    "sorastus",
+                    "paallysteiden paikkaus",
+                    "paallysteiden juotostyot",
+                    "siltojen puhdistus",
+                    "l- ja p-alueiden puhdistus",
+                    "muu"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

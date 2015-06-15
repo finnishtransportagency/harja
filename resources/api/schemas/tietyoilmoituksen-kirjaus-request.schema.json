@@ -1,0 +1,308 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tietyoilmoitus": {
+      "id": "http://jsonschema.net/tietyoilmoitus",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tunniste": {
+          "id": "http://jsonschema.net/tietyoilmoitus/tunniste",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+          "required": true
+        },
+        "tyyppi": {
+          "id": "http://jsonschema.net/tietyoilmoitus/tyyppi",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "properties": {
+            "ensimmainenIlmoitus": {
+              "id": "http://jsonschema.net/tyyppi/ensimmainenIlmoitus",
+              "type": "boolean"
+            },
+            "tyovaiheIlmoitus": {
+              "id": "http://jsonschema.net/tyyppi/tyovaiheIlmoitus",
+              "type": "boolean"
+            },
+            "korjausTaiMuutosIlmoitus": {
+              "id": "http://jsonschema.net/tyyppi/korjausTaiMuutosIlmoitus",
+              "type": "boolean"
+            },
+            "paattymisIlmoitus": {
+              "id": "http://jsonschema.net/tyyppi/paattymisIlmoitus",
+              "type": "boolean"
+            }
+          }
+        },
+        "lupanumero": {
+          "id": "http://jsonschema.net/tietyoilmoitus/lupanumero",
+          "type": "string",
+          "required": true
+        },
+        "tieliikenneKeskus": {
+          "id": "http://jsonschema.net/tietyoilmoitus/tieliikenneKeskus",
+          "required": true,
+          "enum": [
+            "helsinki",
+            "tampere",
+            "turku",
+            "oulu"
+          ]
+        },
+        "urakoitsija": {
+          "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "properties": {
+            "nimi": {
+              "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija/nimi",
+              "type": "string"
+            },
+            "yhteyshenkilo": {
+              "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija/yhteyshenkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "required": true,
+              "properties": {
+                "nimi": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija/yhteyshenkilo/nimi",
+                  "type": "string",
+                  "required": true
+                },
+                "puhelinnumero": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija/yhteyshenkilo/puhelinnumero",
+                  "type": "string",
+                  "required": true
+                },
+                "sahkoposti": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/urakoitsija/yhteyshenkilo/sahkoposti",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        },
+        "tilaaja": {
+          "id": "http://jsonschema.net/tietyoilmoitus/tilaaja",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "properties": {
+            "nimi": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tilaaja/nimi",
+              "type": "string",
+              "required": true
+            },
+            "yhteyshenkilo": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tilaaja/yhteyshenkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "required": true,
+              "properties": {
+                "nimi": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tilaaja/yhteyshenkilo/nimi",
+                  "type": "string",
+                  "required": true
+                },
+                "puhelinnumero": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tilaaja/yhteyshenkilo/puhelinnumero",
+                  "type": "string",
+                  "required": true
+                },
+                "sahkoposti": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tilaaja/yhteyshenkilo/sahkoposti",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        },
+        "tyo": {
+          "id": "http://jsonschema.net/tietyoilmoitus/tyo",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "properties": {
+            "sijainti": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/sijainti",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+              "required": true
+            },
+            "alkaa": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/alkaa",
+              "type": "string",
+              "format": "date-time",
+              "required": true
+            },
+            "paattyy": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/paattyy",
+              "type": "string",
+              "format": "date-time",
+              "required": true
+            },
+            "tehtavatTyot": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/tehtavatTyot",
+              "type": "array",
+              "items": [
+                {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/tehtavatTyot/0",
+                  "type": "string"
+                },
+                {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/tehtavatTyot/1",
+                  "type": "string"
+                }
+              ]
+            },
+            "selite": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/selite",
+              "type": "string"
+            },
+            "lisatietoja": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/lisatietoja",
+              "type": "string"
+            },
+            "paivittainenTyoaika": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/paivittainenTyoaika",
+              "type": "string"
+            },
+            "vaikutuksetLiikenteelle": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "yksiAjokaistaSuljettu": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/yksiAjokaistaSuljettu",
+                  "type": "boolean"
+                },
+                "yksiAjorataSuljettu": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/yksiAjorataSuljettu",
+                  "type": "boolean"
+                },
+                "tieSuljettuLiikenteeltä": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/tieSuljettuLiikenteeltä",
+                  "type": "boolean"
+                },
+                "nopeusrajoitus": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/nopeusrajoitus",
+                  "enum": [
+                    "30",
+                    "40",
+                    "50",
+                    "60",
+                    "70",
+                    "80",
+                    "100"
+                  ]
+                },
+                "liikennevalot": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/liikennevalot",
+                  "type": "boolean"
+                },
+                "liikenteenOhjaaja": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/liikenteenOhjaaja",
+                  "enum": [
+                    "liikenne-ohjataan-vuorotellen-tapahtumapaikan-ohi",
+                    "liikenne-ohjataan-kaksisuuntaisena-toiselle-ajoradalle"
+                  ]
+                },
+                "tyokoneitaLiikenteenSeassa": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/tyokoneitaLiikenteenSeassa",
+                  "type": "boolean"
+                },
+                "satunnaisia": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/satunnaisia",
+                  "enum": [
+                    "liikenne-pysaytetaan-ajoittain",
+                    "tie-on-ajoittain-suljettu-liikenteelta"
+                  ]
+                },
+                "arvioituViivastys": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/arvioituViivastys",
+                  "type": "integer"
+                },
+                "ajoneuvonMaxKorkeus": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/ajoneuvonMaxKorkeus",
+                  "type": "number"
+                },
+                "ajoneuvonMaxLeveys": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/ajoneuvonMaxLeveys",
+                  "type": "number"
+                },
+                "ajoneuvonMaxPituus": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/ajoneuvonMaxPituus",
+                  "type": "number"
+                },
+                "painorajoitus": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/painorajoitus",
+                  "type": "integer"
+                },
+                "suunta": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/suunta",
+                  "enum": [
+                    "haittaa-molemmissa-ajosuunnissa",
+                    "tienumeron-kasvusuuntaan",
+                    "vasten-tienumeron-kasvusuuntaa"
+                  ]
+                }
+              }
+            },
+            "ilmoittaja": {
+              "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja",
+              "type": "object",
+              "additionalProperties": false,
+              "required": true,
+              "properties": {
+                "urakoitsija": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja/urakoitsija",
+                  "type": "string",
+                  "required": true
+                },
+                "yhteyshenkilo": {
+                  "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja/yhteyshenkilo",
+                  "type": "object",
+                  "required": true,
+                  "properties": {
+                    "nimi": {
+                      "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja/yhteyshenkilo/nimi",
+                      "type": "string",
+                      "required": true
+                    },
+                    "puhelinnumero": {
+                      "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja/yhteyshenkilo/puhelinnumero",
+                      "type": "string",
+                      "required": true
+                    },
+                    "sahkoposti": {
+                      "id": "http://jsonschema.net/tietyoilmoitus/tyo/ilmoittaja/yhteyshenkilo/sahkoposti",
+                      "type": "string",
+                      "required": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

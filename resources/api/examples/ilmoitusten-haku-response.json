@@ -1,0 +1,37 @@
+{
+  "ilmoitukset": [
+    {
+      "ilmoitus": {
+        "ilmoitusId": "3213123",
+        "ilmoitettu": "2015-09-29T14:49:45",
+        "ilmoitustyyppi": "toimenpidepyynto",
+        "yhteydenottopyynto": "false",
+        "ilmoittaja": {
+          "etunimi": "Matti",
+          "sukunimi": "Meikäläinen",
+          "puhelinnumero": "08023394852",
+          "email": "matti.meikalainen@palvelu.fi"
+        },
+        "lahettaja": {
+          "etunimi": "Pekka",
+          "sukunimi": "Päivystäjä",
+          "puhelinnumero": "929304449282",
+          "email": "pekka.paivystaja@livi.fi"
+        },
+        "seliteet": {
+          "selite": [
+            {"koodi": "auraustarve"},
+            {"koodi": "aurausvallitNakemaesteena"}
+          ]
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 41.40338,
+            "y": 2.17403
+          }
+        },
+        "vapaateksti": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "varuste": {
+      "id": "http://jsonschema.net/varuste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/varuste.schema.json",
+      "required": true
+    }
+  }
+}

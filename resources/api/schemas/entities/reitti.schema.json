@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "array",
+  "items": {
+    "id": "http://jsonschema.net/reitti/0",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "reittipiste": {
+        "id": "http://jsonschema.net/reitti/0/reittipiste",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "aika": {
+            "id": "http://jsonschema.net/reitti/0/aika",
+            "type": "string",
+            "format": "date-time"
+          },
+          "koordinaatit": {
+            "id": "http://jsonschema.net/reitti/0/koordinaattisijainti",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+            "required": true
+          },
+          "tehtavat": {
+            "id": "http://jsonschema.net/reitti/0/tehtavat/",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
+          },
+          "maarat": {
+            "id": "http://jsonschema.net/reitti/0/maarat/",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/maarat.schema.json"
+          },
+          "havainnot": {
+            "id": "http://jsonschema.net/reitti/0/havainnot",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/havainnot.schema.json"
+          },
+          "mittaustulokset": {
+            "id": "http://jsonschema.net/mittaustulokset",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mittaaja": {
+                "id": "http://jsonschema.net/mittaustulokset/mittaaja",
+                "type": "string",
+                "required": true
+              },
+              "talvihoito": {
+                "id": "http://jsonschema.net/mittaustulokset/talvihoito",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "hoitoluokka": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/hoitoluokka",
+                    "type": "integer",
+                    "required": true
+                  },
+                  "lumisuus": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/lumisuus",
+                    "type": "number",
+                    "required": true
+                  },
+                  "tasaisuus": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/tasaisuus",
+                    "type": "number",
+                    "required": true
+                  },
+                  "kitka": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/kitka",
+                    "type": "number",
+                    "required": true
+                  },
+                  "lampotila": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/lampotila",
+                    "type": "number",
+                    "required": true
+                  },
+                  "laatuvirheet": {
+                    "id": "http://jsonschema.net/mittaustulokset/talvihoito/laatuvirheet",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": true,
+                    "properties": {
+                      "liukkaus": {
+                        "id": "http://jsonschema.net/mittaustulokset/talvihoito/laatuvirheet/liukkaus",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "lumisuus": {
+                        "id": "http://jsonschema.net/mittaustulokset/talvihoito/laatuvirheet/lumisuus",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "tasaisuus": {
+                        "id": "http://jsonschema.net/mittaustulokset/talvihoito/laatuvirheet/tasaisuus",
+                        "type": "boolean",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "soratie": {
+                "id": "http://jsonschema.net/soratie",
+                "type": "object",
+                "properties": {
+                  "hoitoluokka": {
+                    "id": "http://jsonschema.net/soratie/hoitoluokka",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2,
+                    "required": true
+                  },
+                  "tasaisuus": {
+                    "id": "http://jsonschema.net/soratie/tasaisuus",
+                    "type": "integer",
+                    "required": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "kiinteys": {
+                    "id": "http://jsonschema.net/soratie/kiinteys",
+                    "type": "integer",
+                    "required": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "polyavuus": {
+                    "id": "http://jsonschema.net/soratie/polyavuus",
+                    "type": "integer",
+                    "required": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "sivukaltevuus": {
+                    "id": "http://jsonschema.net/soratie/sivukaltevuus",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

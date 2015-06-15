@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "http://jsonschema.net/tyyppi",
+      "type": "string",
+      "required": true
+    },
+    "tyyppi": {
+      "id": "http://jsonschema.net/tyyppi",
+      "type": "string",
+      "required": true
+    },
+    "kuvaus": {
+      "id": "http://jsonschema.net/kuvaus",
+      "type": "string",
+      "required": true
+    },
+    "huomiot": {
+      "id": "http://jsonschema.net/huomiot",
+      "type": "string",
+      "required": true
+    },
+    "sijainti": {
+      "id": "http://jsonschema.net/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    }
+  }
+}

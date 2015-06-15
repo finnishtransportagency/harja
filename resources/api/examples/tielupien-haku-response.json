@@ -1,0 +1,25 @@
+{
+  "tieluvat": [
+    {
+      "tielupa": {
+        "diaarinumero": 123456789,
+        "tyyppi": "kaapelien-johtojen-ja-putkien-sijoituslupa",
+        "otsikko": "Lupa kaapelien sijoittamiseen Nelostielle Kempeleeseen",
+        "myonnetty": "2016-01-30T12:00:00Z",
+        "voimassa": {
+          "alkaen": "2016-01-30T12:00:00Z",
+          "paattyen": "2016-01-30T12:00:00Z"
+        },
+        "sijainti": {
+          "tie": {
+            "numero": 1 ,
+            "aosa": 1,
+            "aet": 1,
+            "losa":1,
+            "let": 1
+          }
+        }
+      }
+    }
+  ]
+}

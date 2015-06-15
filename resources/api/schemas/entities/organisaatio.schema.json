@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nimi": {
+      "id": "http://jsonschema.net/nimi",
+      "type": "string"
+    },
+    "ytunnus": {
+      "id": "http://jsonschema.net/ytunnus",
+      "type": "string",
+      "required": true
+    }
+  }
+}

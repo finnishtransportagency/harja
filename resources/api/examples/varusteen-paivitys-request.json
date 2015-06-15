@@ -1,0 +1,142 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2015-01-30T12:00:00Z"
+  },
+  "paivittaja": {
+    "organisaatio": "Asfaltia Oy",
+    "ytunnus": "1234567-8",
+    "henkilo": {
+      "id" : 654896,
+      "etunimi": "Keijo",
+      "sukunimi": "Käsittelijä"
+    }
+  },
+  "varuste": {
+    "tunniste": "HARJ123456789",
+    "sijainti": {
+      "tie": {
+        "nimi":"tie",
+        "numero": 1,
+        "aosa": 1,
+        "aet": 4,
+        "losa": 1,
+        "let": 1
+      },
+      "linkki": {
+        "id": 1,
+        "marvo": 10
+      },
+      "koordinaatit": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "ajr": 10.1,
+    "kaista": 2,
+    "alkupvm": "2015-01-30T12:00:00Z",
+    "loppupvm": "2015-01-30T12:00:00Z",
+    "karttapvm": 2,
+    "kuntoluokitus": "1",
+    "ely": 1,
+    "tietolaji": {
+      "tunniste": "tl506",
+      "arvot": [
+        {
+          "kentta": {
+            "tunniste": "LMNUMERO",
+            "arvo": "9987"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "SIVUTIE",
+            "arvo": "2"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMALA",
+            "arvo": "2"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMVANHA",
+            "arvo": "0"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMTYYPPI",
+            "arvo": "1"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMKAUSI",
+            "arvo": "0"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMKIINNIT",
+            "arvo": "1"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMMATER",
+            "arvo": "1"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMTEKSTI",
+            "arvo": "Testi liikennemerkki"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "LMOMIST",
+            "arvo": "Omistaja"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "OPASTETUNN",
+            "arvo": ""
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "KUNTOLUOKK",
+            "arvo": "4"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "TUNNISTE",
+            "arvo": "123456789"
+          }
+        },
+        {
+          "kentta": {
+            "tunniste": "URAKKA",
+            "arvo": "400"
+          }
+        }
+      ]
+    }
+  }
+}

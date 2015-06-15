@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "http://jsonschema.net/id",
+      "type": "integer"
+    },
+    "etunimi": {
+      "id": "http://jsonschema.net/etunimi",
+      "type": "string",
+      "required": true
+    },
+    "sukunimi": {
+      "id": "http://jsonschema.net/sukunimi",
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "id": "http://jsonschema.net/paivystykset/0/paivystys/email",
+      "type": "string"
+    },
+    "puhelinnumero": {
+      "id": "http://jsonschema.net/paivystykset/0/paivystys/puhelinnumero",
+      "type": "string"
+    },
+    "liviTunnus": {
+      "id": "http://jsonschema.net/paivystykset/0/paivystys/puhelinnumero",
+      "type": "string"
+    }
+  }
+}

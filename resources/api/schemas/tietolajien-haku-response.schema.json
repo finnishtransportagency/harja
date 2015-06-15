@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tietolajit": {
+      "id": "http://jsonschema.net/tietolajit",
+      "type": "array",
+      "required": true,
+      "items": {
+        "id": "http://jsonschema.net/tietolajit/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tietolaji": {
+            "id": "http://jsonschema.net/tietolajit/0/tietolaji",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",
+            "required": true
+          }
+        }
+      }
+    }
+  }
+}

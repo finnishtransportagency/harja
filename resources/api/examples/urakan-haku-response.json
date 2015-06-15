@@ -1,0 +1,73 @@
+{
+  "urakka": {
+    "tiedot": {
+      "id": 123456789,
+      "nimi": "Oulun päällyysteurakka",
+      "urakoitsija": {
+        "ytunnus": "123456-8",
+        "nimi": "Asfaltia"
+      },
+      "vaylamuoto": "tie",
+      "tyyppi": "paallystys",
+      "alkupvm": "2016-01-30T12:00:00Z",
+      "loppupvm": "2016-01-30T12:00:00Z"
+    },
+    "sopimukset": [
+      {
+        "sopimus": {
+          "id": 456789132,
+          "nimi": "Kiviharjunlenkin asfaltointi",
+          "alkupvm": "2015-01-30T12:00:00Z",
+          "loppupvm": "2016-01-30T12:00:00Z",
+          "kokonaishintaisetTyot": [
+            {
+              "kokonaishintainenTyo": {
+                "id": 456468654,
+                "tehtavat": [
+                  {
+                    "tehtava": {
+                      "id": 10000,
+                      "selite": "Uus- tai laajennusinvestointi, rautatie"
+                    }
+                  }
+                ],
+                "vuosi": 2015,
+                "kuukausi": 10,
+                "summa": 3500
+              }
+            }
+          ],
+          "yksikkohintaisetTyot": [
+            {
+              "yksikkohintainenTyo": {
+                "id": 456468654,
+                "tehtava": {
+                  "id": 12341234,
+                  "selite": "Tien auraaminen"
+                },
+                "alkupvm": "2015-01-30T12:00:00Z",
+                "loppupvm": "2016-01-30T12:00:00Z",
+                "maara": 525.73,
+                "yksikko": "km",
+                "yksikkohinta": 525.5
+              }
+            }
+          ],
+          "materiaalinKaytot": [
+            {
+              "materiaalinKaytto": {
+                "maara": {
+                  "materiaali": "talvisuolaliuosNaCl",
+                  "yksikko": "t",
+                  "maara": 10.92
+                },
+                "alkupvm": "2015-01-30T12:00:00Z",
+                "loppupvm": "2016-01-30T12:00:00Z"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

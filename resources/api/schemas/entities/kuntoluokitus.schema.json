@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "additionalProperties": false,
+  "properties": {
+    "luokka": {
+      "id": "http://jsonschema.net/luokka",
+      "type": "integer",
+      "required": true
+    },
+    "huomiot": {
+      "id": "http://jsonschema.net/havainnot",
+      "type": "string"
+    }
+  }
+}

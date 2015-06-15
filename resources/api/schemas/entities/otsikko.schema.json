@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "lahettaja": {
+      "id": "http://jsonschema.net/lahettaja",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "jarjestelma": {
+          "id": "http://jsonschema.net/lahettaja/jarjestelma",
+          "type": "string",
+          "required": true
+        },
+        "organisaatio": {
+          "id": "http://jsonschema.net/koordinaattisijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+          "required": true
+        }
+      }
+    },
+    "viestintunniste": {
+      "id": "http://jsonschema.net/viestintunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "lahetysaika": {
+      "id": "http://jsonschema.net/lahetysaika",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    }
+  }
+}

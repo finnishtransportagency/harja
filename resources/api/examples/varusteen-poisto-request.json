@@ -1,0 +1,24 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2015-01-30T12:00:00Z"
+  },
+  "poistaja": {
+    "organisaatio": "Asfaltia Oy",
+    "ytunnus": "1234567-8",
+    "henkilo": {
+      "id" : 85644,
+      "etunimi": "Keijo",
+      "sukunimi": "Käsittelijä"
+    }
+  }
+}

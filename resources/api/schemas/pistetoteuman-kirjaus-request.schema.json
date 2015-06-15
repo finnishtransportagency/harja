@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "pistetoteuma": {
+      "id": "http://jsonschema.net/pistetoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required":true,
+      "properties": {
+        "toteuma": {
+          "id": "http://jsonschema.net/pistetoteuma/toteuma",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
+        },
+        "sijainti": {
+          "id": "http://jsonschema.net/pistetoteuma/sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
+        },
+        "liitteet": {
+          "id": "http://jsonschema.net/pistetoteuma/liitteet",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        }
+      }
+    }
+  }
+}

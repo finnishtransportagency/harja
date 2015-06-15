@@ -1,0 +1,249 @@
+{
+  "tietolajit": [
+    {
+      "tietolaji": {
+        "tunniste": "tl506",
+        "ominaisuudet": [
+          {
+            "ominaisuus": {
+              "tunniste": "LMNUMERO",
+              "selite": "Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto.",
+              "tietotyyppi": "teksti",
+              "pakollinen": true
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "SIVUTIE",
+              "selite": "Sivutiellä olevat, väistämisvelvollisuutta osoittavat liikennemerkit kirjataan maantien puolelle seuraavissa tapauksissa seuraavin koodein:",
+              "tietotyyppi": "koodisto",
+              "pakollinen": false,
+              "koodisto": [
+                {
+                  "koodi": {
+                    "arvo": "1",
+                    "selite": "yksityistie"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "2",
+                    "selite": "katu tai kaavatie"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "9",
+                    "selite": "em. erottelua ei ole voitu tehdä"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMALA",
+              "selite": "Muiden kuin vakioliikennemerkkien pinta-ala ilmoitetaan 1 neliömetrin tarkkuuteen pyöristettynä",
+              "tietotyyppi": "numero",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMVANHA",
+              "selite": "Liikennemerkki vanhaa tyyppiä, 1 = on",
+              "tietotyyppi": "numero",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMTYYPPI",
+              "selite": "Liikennemerkin tyyppi",
+              "tietotyyppi": "koodisto",
+              "pakollinen": false,
+              "koodisto": [
+                {
+                  "koodi": {
+                    "arvo": "1",
+                    "selite": "tavallinen"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "2",
+                    "selite": "muuttuva"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "3",
+                    "selite": "käännettävä"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "4",
+                    "selite": "kaksipuolinen"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMKAUSI",
+              "selite": "Kausiluontoinen liikennemerkki = 1 (määritellään toimistolla).",
+              "tietotyyppi": "numero",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMKIINNIT",
+              "selite": "Liikennemerkin kiinnitystapa",
+              "tietotyyppi": "koodisto",
+              "pakollinen": false,
+              "koodisto": [
+                {
+                  "koodi": {
+                    "arvo": "1",
+                    "selite": "putkivarsi"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "2",
+                    "selite": "kehys"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "3",
+                    "selite": " kiinni muussa rakenteessa (esim. sillassa)5 = kokoporttaali (vrt. tietolaji 262)"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "6",
+                    "selite": "puoliporttaali (vrt. tietolaji 262)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMMATER",
+              "selite": "Liikennemerkin materiaali",
+              "tietotyyppi": "koodisto",
+              "pakollinen": false,
+              "koodisto": [
+                {
+                  "koodi": {
+                    "arvo": "1",
+                    "selite": "alumiini"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "2",
+                    "selite": "vaneri"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "9",
+                    "selite": "muu"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMTEKSTI",
+              "selite": "Viittojen, opastusmerkkien, rajoitusten ja lisäkilpien tietosisältö (50 merkkiä) ja opastesymbolien numerot. Tähän voi tarvittaessa kirjata kausiluontoisen merkin voimassaoloajan",
+              "tietotyyppi": "teksti",
+              "pakollinen": false,
+              "pituus": 50
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "LMOMIST",
+              "selite": "Opasteen omistaja voidaan kirjoittaa tähän ellei se ole Tieviranomainen.",
+              "tietotyyppi": "teksti",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "OPASTETUNN",
+              "selite": "Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.",
+              "tietotyyppi": "teksti",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "KUNTOLUOKK",
+              "selite": "Liikennemerkin kunto ilmoitetaan virallisen kuntoluokituksen 1-5 mukaan liikennemerkkien kuntoluokitusohjetta (TIEH 2200060-v-09) nodattaen",
+              "tietotyyppi": "koodisto",
+              "pakollinen": false,
+              "koodisto": [
+                {
+                  "koodi": {
+                    "arvo": "1",
+                    "selite": "erittäin huono kunto (ohjeessa huono)"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "2",
+                    "selite": "huono (välttävä) kunto"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "3",
+                    "selite": "tyydyttävä kunto"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "4",
+                    "selite": "hyvä kunto"
+                  }
+                },
+                {
+                  "koodi": {
+                    "arvo": "5",
+                    "selite": "erittäin hyvä kunto"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "OPASTETUNN",
+              "selite": "Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.",
+              "tietotyyppi": "teksti",
+              "pakollinen": false
+            }
+          },
+          {
+            "ominaisuus": {
+              "tunniste": "URAKKA",
+              "selite": "Tässä kentässä ilmoitetaan urakan tunnus, mikäli opaste ei kuulu hoidon alueurakan vaan erillisen palvelusopimuksen piiriin (6 merkkiä). Jos hoitaja on paikallinen kunta, tunnus on 400.",
+              "tietotyyppi": "teksti",
+              "pakollinen": false,
+              "pituus": 6
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

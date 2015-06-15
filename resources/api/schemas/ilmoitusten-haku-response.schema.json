@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "ilmoitukset": {
+      "id": "http://jsonschema.net/ilmoitukset",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/ilmoitukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ilmoitus": {
+            "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ilmoitusId": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/ilmoitusId",
+                "type": "string",
+                "required": true
+              },
+              "ilmoitettu": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/ilmoitettu",
+                "type": "string",
+                "required": true
+              },
+              "ilmoitustyyppi": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/ilmoitustyyppi",
+                "required": true,
+                "enum": [
+                  "tiedoitus",
+                  "toimenpidepyynto",
+                  "kysely"
+                ]
+              },
+              "yhteydenottopyynto": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/yhteydenottopyynto",
+                "type": "string",
+                "required": true
+              },
+              "ilmoittaja": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/ilmoittaja",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+                "required": true
+              },
+              "lahettaja": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/lahettaja",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+                "required": true
+              },
+              "seliteet": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/seliteet",
+                "type": "object",
+                "additionalProperties": false,
+                "required": true,
+                "properties": {
+                  "selite": {
+                    "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/seliteet/selite",
+                    "type": "array",
+                    "items": [
+                      {
+                        "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/seliteet/selite/0",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "koodi": {
+                            "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/seliteet/selite/0/koodi",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "sijainti": {
+                "id": "http://jsonschema.net/ilmoitukset/0/sijainti",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "required": true
+              },
+              "vapaateksti": {
+                "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/vapaateksti",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

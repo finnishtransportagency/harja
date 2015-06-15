@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "http://jsonschema.net/tietolaji/tunniste",
+      "type": "string",
+      "required": true
+    },
+    "ominaisuudet": {
+      "id": "http://jsonschema.net/tietolaji/ominaisuudet",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/tietolaji/ominaisuudet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ominaisuus": {
+            "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tunniste": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/tunniste",
+                "type": "string",
+                "required": true
+              },
+              "selite": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/selite",
+                "type": "string",
+                "required": true
+              },
+              "tietotyyppi": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/tietotyyppi",
+                "type": "string",
+                "required": true
+              },
+              "pakollinen": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "type": "boolean"
+              },
+              "pituus": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/pituus",
+                "type": "integer"
+              },
+              "koodisto": {
+                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto",
+                "type": "array",
+                "items": {
+                  "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "koodi": {
+                      "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "arvo": {
+                          "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/arvo",
+                          "type": "string",
+                          "required": true
+                        },
+                        "selite": {
+                          "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/selite",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

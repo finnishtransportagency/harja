@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tunniste": {
+      "id": "http://jsonschema.net/tunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "kohde": {
+      "id": "http://jsonschema.net/kohde",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
+      "required": true
+    },
+    "sijainti": {
+      "id": "http://jsonschema.net/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "tyyppi": {
+      "id": "http://jsonschema.net/tyyppi",
+      "type": "string",
+      "required": true
+    },
+    "kuvaus": {
+      "id": "http://jsonschema.net/kuvaus",
+      "type": "string",
+      "required": true
+    },
+    "kirjaaja": {
+      "id": "http://jsonschema.net/kirjaaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "paivamaara": {
+      "id": "http://jsonschema.net/paivamaara",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "liitteet": {
+      "id": "http://jsonschema.net/liitteet",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+    }
+  }
+}

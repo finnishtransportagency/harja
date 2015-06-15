@@ -1,0 +1,88 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "tietyoilmoitus": {
+    "tunniste": {
+      "id": 123
+    },
+    "tyyppi": {
+      "ensimmainenIlmoitus": true,
+      "tyovaiheIlmoitus": false,
+      "korjausTaiMuutosIlmoitus": false,
+      "paattymisIlmoitus": false
+    },
+    "lupanumero": "1234556",
+    "tieliikenneKeskus": "oulu",
+    "urakoitsija": {
+      "nimi": "Asfaltia Oy",
+      "yhteyshenkilo": {
+        "nimi": "Yrjö Yhteyshenkilö",
+        "puhelinnumero": "09876657987",
+        "sahkoposti": "yrjo.yhteyshenkilo@asfaltia.fi"
+      }
+    },
+    "tilaaja": {
+      "nimi": "Tehotekijät Oy",
+      "yhteyshenkilo": {
+        "nimi": "Kaisa Kontakti",
+        "puhelinnumero": "8972318974",
+        "sahkoposti": "kaisa.kontakti@tehotekijat.fi"
+      }
+    },
+    "tyo": {
+      "sijainti": {
+        "tie": {
+          "numero": 1,
+          "aosa": 1,
+          "aet": 1,
+          "losa": 1,
+          "let": 1
+        }
+      },
+      "alkaa": "2016-01-30T12:00:00Z",
+      "paattyy": "2016-01-30T12:00:00Z",
+      "tehtavatTyot": [
+        "tienrakennus",
+        "valaistustyo"
+      ],
+      "selite": "",
+      "lisatietoja": "",
+      "paivittainenTyoaika": "ma-pe 08:00-16:00",
+      "vaikutuksetLiikenteelle": {
+        "yksiAjokaistaSuljettu": true,
+        "yksiAjorataSuljettu": false,
+        "tieSuljettuLiikenteeltä": false,
+        "nopeusrajoitus": "30",
+        "liikennevalot": true,
+        "liikenteenOhjaaja": "liikenne-ohjataan-vuorotellen-tapahtumapaikan-ohi",
+        "tyokoneitaLiikenteenSeassa": true,
+        "satunnaisia": "liikenne-pysaytetaan-ajoittain",
+        "arvioituViivastys": 360,
+        "ajoneuvonMaxKorkeus": 3.5,
+        "ajoneuvonMaxLeveys": 2.5,
+        "ajoneuvonMaxPituus": 6.2,
+        "painorajoitus": 10000,
+        "suunta": "haittaa-molemmissa-ajosuunnissa"
+      },
+      "ilmoittaja": {
+        "urakoitsija": "Asfaltia Oy",
+        "yhteyshenkilo": {
+          "nimi": "Yrjö Yhteyshenkilö",
+          "puhelinnumero": "09876657987",
+          "sahkoposti": "yrjo.yhteyshenkilo@asfaltia.fi"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "array",
+  "items": {
+    "id": "http://jsonschema.net/tehtavat/0",
+    "type": "object",
+    "properties": {
+      "tehtava": {
+        "id": "http://jsonschema.net/tehtavat/0/tehtava",
+        "type": "object",
+        "additionalProperties": false,
+        "$ref": "file:resources/api/schemas/entities/tehtava.schema.json"
+      }
+    }
+  }
+}

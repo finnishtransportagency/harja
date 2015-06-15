@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "ehdotettutoimenpide": {
+      "id": "http://jsonschema.net/ehdotettutoimenpide",
+      "required": true,
+      "enum": [
+        "eiToimenpiteita",
+        "puhdistettava",
+        "urakanKunnostettava",
+        "korjausOhjelmoitava"
+      ]
+    },
+    "lisatietoja": {
+      "id": "http://jsonschema.net/lisatietoja",
+      "type": "string"
+    }
+  }
+}

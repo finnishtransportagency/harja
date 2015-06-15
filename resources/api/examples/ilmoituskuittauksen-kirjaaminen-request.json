@@ -1,0 +1,45 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "kuittaus": {
+    "ilmoitusId": "3213123",
+    "kuitattu": "2016-01-30T12:00:00Z",
+    "kuittaustyyppi": "vastaanotto",
+    "kuittaaja": {
+      "henkilo": {
+        "etunimi": "Urho",
+        "sukunimi": "Urakoitsija",
+        "puhelinnumero": "923458973",
+        "email": "urho.urakoitsija@puulaaki.fi"
+      },
+      "organisaatio": {
+        "nimi": "Puulaaki Oy",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "kasittelija": {
+      "henkilo": {
+        "etunimi": "Antti",
+        "sukunimi": "Auraaja",
+        "puhelinnumero": "09823489",
+        "email": "antti.auraaja@antinauraus.fi"
+      },
+      "organisaatio": {
+        "nimi": "Antin Auraus Oy",
+        "ytunnus": "8765432-1"
+      }
+    },
+    "vapaateksti": "Antin Auraus Oy hoitaa auraustyön."
+  }
+}

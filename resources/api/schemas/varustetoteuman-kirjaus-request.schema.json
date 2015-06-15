@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "varustetoteuma": {
+      "id": "http://jsonschema.net/varustetoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required":true,
+      "properties": {
+        "toteuma": {
+          "id": "http://jsonschema.net/varustetoteuma/toteuma",
+          "type": "object",
+          "additionalProperties": false,
+          "required": true,
+          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
+        },
+        "varustekirjaukset": {
+          "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset",
+          "type": "array",
+          "items": {
+            "id": "http://jsonschema.net/toteumat/0/toteuma/varuste-kirjaukset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "varustekirjaus": {
+                "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset/0/varustekirjaus",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/varuste-kirjaus.schema.json"
+              }
+            }
+          }
+        },
+        "liitteet": {
+          "id": "http://jsonschema.net/varustetoteuma/liitteet",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        }
+      }
+    }
+  }
+}

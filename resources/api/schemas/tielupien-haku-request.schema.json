@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sijainti": {
+      "id": "http://jsonschema.net/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "alueurakkanumero": {
+      "id": "http://jsonschema.net/alueurakkanumero",
+      "type": "integer"
+    }
+  }
+}
