@@ -66,6 +66,7 @@
         :materiaalinKaytot (muodosta-materiaalin-kaytot (get materiaalit (:id sopimus)))))))
           
 (defn hae-urakka [db urakka-id]
+  ;; FIXME: mieti mekanismi urakoiden pääsynvalvontaan
   (try
     (let [id (Integer/parseInt urakka-id)
           urakka (some->> id (urakat/hae-urakka db) first
