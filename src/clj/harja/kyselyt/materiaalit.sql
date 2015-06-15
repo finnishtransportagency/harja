@@ -39,12 +39,12 @@ SELECT DISTINCT
           poistettu IS NOT TRUE)
 FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk ON m.id = mk.materiaali
-  INNER JOIN toteuma_materiaali tm ON tm.materiaalikoodi = m.id
+  LEFT JOIN toteuma_materiaali tm ON tm.materiaalikoodi = m.id
   LEFT JOIN toteuma t ON t.id = tm.toteuma
 WHERE mk.poistettu IS NOT true AND
       t.poistettu IS NOT true AND
       tm.poistettu IS NOT true AND
-      t.urakka = :urakka AND
+      (t.urakka = :urakka OR t.urakka IS NULL) AND
         (
           -- Joko materiaalilla on toteuma tällä hoitokaudella..
           (
