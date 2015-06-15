@@ -777,7 +777,7 @@ Optiot on mappi optioita:
                                 [:td.toiminnot
                                  (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
                                    [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                     (muokkaa! id assoc :poistettu true))}
+                                                                     (muokkaa! muokatut-atom id assoc :poistettu true))}
                                     (ikonit/trash)])]]
                                
                                (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
