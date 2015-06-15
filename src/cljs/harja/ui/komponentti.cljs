@@ -1,7 +1,8 @@
 (ns harja.ui.komponentti
   "Apureita, joilla voi kasata komponentteja mixin osista."
   (:require [reagent.core :as r :refer [atom]]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn luo
   "Luo uuden komponentin instanssin annetuista toteutuksista.
@@ -98,3 +99,11 @@ Callbackille annetaan samat parametrit kuin render funktiolle."
          (when (not= @arvo uusi-arvo)
            (reset! arvo uusi-arvo)
            (callback (drop 2 args)))))}))
+
+(defn klikattu-ulkopuolelle
+  "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
+  [ulkopuolella-fn]
+  (kuuntelija :body-klikkaus
+              (fn [this tapahtuma]
+                (when-not (yleiset/sisalla? this (:tapahtuma tapahtuma))
+                  (ulkopuolella-fn)))))

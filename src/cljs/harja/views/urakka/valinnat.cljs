@@ -39,14 +39,16 @@
     [:span.label-ja-aikavali
      [:span.alasvedon-otsikko "Aikaväli"]
      [:div.aikavali-valinnat
-      [tee-kentta {:tyyppi :pvm} (r/wrap (first @valittu-aikavali)
-                                         (fn [uusi-arvo]
-                                           (reset! valittu-aikavali [uusi-arvo
-                                                                     (second (pvm/kuukauden-aikavali uusi-arvo))])))]
-      [:span " - "]
-      [tee-kentta {:tyyppi :pvm} (r/wrap (second @valittu-aikavali)
-                                         (fn [uusi-arvo]
-                                           (swap! valittu-aikavali (fn [[alku _]] [alku uusi-arvo]))))]
+      [tee-kentta {:tyyppi :pvm :lomake? true}
+       (r/wrap (first @valittu-aikavali)
+               (fn [uusi-arvo]
+                 (reset! valittu-aikavali [uusi-arvo
+                                           (second (pvm/kuukauden-aikavali uusi-arvo))])))]
+      [:span " \u2014 "]
+      [tee-kentta {:tyyppi :pvm :lomake? true}
+       (r/wrap (second @valittu-aikavali)
+               (fn [uusi-arvo]
+                 (swap! valittu-aikavali (fn [[alku _]] [alku uusi-arvo]))))]
       ]]))
 
 (defn urakan-toimenpide []

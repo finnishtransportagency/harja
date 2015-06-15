@@ -73,7 +73,8 @@ Seuraavat optiot ovat mahdollisia:
                                  (let [[x y w] sijainti]
                                    {:style {:left x :top y
                                             :width w
-                                            :position "absolute"}}))
+                                            :position "absolute"
+                                            :z-index 100}}))
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava

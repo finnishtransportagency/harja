@@ -290,9 +290,10 @@
                    (reset! data d)))
 
         sijainti (atom nil)]
-    (r/create-class
+    (komp/luo
+     (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
-       (fn [this [_ {:keys [focus] :as s} data]]
+       (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
              (reset! auki false))
          (swap! teksti #(if-let [p @data]
@@ -300,16 +301,15 @@
                          %)))
 
        :component-did-mount
-       (fn [this]
-         (let [sij (some-> this
-                           r/dom-node
-                           (.getElementsByTagName "input")
-                           (aget 0)
-                           yleiset/sijainti-sailiossa)
-               [x y w h] sij]
-           (log "sij: " (pr-str sij))
-           (when x
-             (reset! sijainti [(- w) (+ y h) w]))))
+       (when lomake? (fn [this]
+                       (let [sij (some-> this
+                                         r/dom-node
+                                         (.getElementsByTagName "input")
+                                         (aget 0)
+                                         yleiset/sijainti-sailiossa)
+                             [x y w h] sij]
+                         (when x
+                           (reset! sijainti [0 0 w])))))
        
        
        :reagent-render
@@ -320,7 +320,8 @@
                naytettava-pvm (if (nil? nykyinen-pvm)
                                 (pvm-tyhjana rivi)
                                 nykyinen-pvm)]
-           [:span {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
+           [:span.pvm-kentta
+            {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
             [:input.pvm {:class (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus on-focus
@@ -349,66 +350,86 @@
                             (pvm/aika p)
                             ""))
         ;; picker auki?
-        auki (atom false)]
-    (r/create-class
-      {:component-will-receive-props
-       (fn [this [_ {:keys [focus] :as s} data]]
-         (log "PVM-AIKA sai propsit: " (pr-str data))
-         (when-not focus
-           (reset! auki false))
-         (swap! teksti #(if-let [p @data]
-                          (pvm/pvm p)
-                          %)))
+        auki (atom false)
+
+        sijainti (atom nil)
+        ]
+    (komp/luo
+     (komp/klikattu-ulkopuolelle #(reset! auki false))
+     {:component-will-receive-props
+      (fn [this _ {:keys [focus] :as s} data]
+        (log "PVM-AIKA sai propsit: " (pr-str data))
+        (when-not focus
+          (reset! auki false))
+        (swap! teksti #(if-let [p @data]
+                         (pvm/pvm p)
+                         %)))
+
+      :component-did-mount
+      (when lomake? (fn [this]
+                      (let [sij (some-> this
+                                        r/dom-node
+                                        (.getElementsByTagName "input")
+                                        (aget 0)
+                                        yleiset/sijainti-sailiossa)
+                            [x y w h] sij]
+                        (when x
+                          ;; PENDING: hardcoded 15px toimii lomakkeella ok
+                          (reset! sijainti [15 (+ y h) w])))))
        
-       :reagent-render
-       (fn [_ data]
-         (let [aseta! (fn []
-                        (let [pvm @teksti
-                              aika @aika-teksti
-                              p (pvm/->pvm-aika (str pvm " " aika))]
-                          (log "pvm: " pvm ", aika: " aika ", p: " p)
-                          (when p (reset! data p))))
+      :reagent-render
+      (fn [_ data]
+        (let [aseta! (fn []
+                       (let [pvm @teksti
+                             aika @aika-teksti
+                             p (pvm/->pvm-aika (str pvm " " aika))]
+                         (log "pvm: " pvm ", aika: " aika ", p: " p)
+                         (when p (reset! data p))))
                
-               muuta! (fn [t]
-                        (reset! teksti t)
-                        (aseta!))
+              muuta! (fn [t]
+                       (reset! teksti t)
+                       (aseta!))
                
-               muuta-aika! (fn [t]
-                             (when (or (str/blank? t)
-                                       (re-matches #"\d{1,2}(:\d*)?" t))
-                               (reset! aika-teksti t)
-                               (aseta!)))
+              muuta-aika! (fn [t]
+                            (when (or (str/blank? t)
+                                      (re-matches #"\d{1,2}(:\d*)?" t))
+                              (reset! aika-teksti t)
+                              (aseta!)))
                
-               nykyinen-pvm @data
-               nykyinen-teksti @teksti
-               nykyinen-aika-teksti @aika-teksti
-               pvm-tyhjana (or pvm-tyhjana (constantly nil))
-               naytettava-pvm (if (nil? nykyinen-pvm)
-                                (pvm-tyhjana rivi)
-                                nykyinen-pvm)]
-           [:span 
-            [:table
-             [:tbody
-              [:tr
-               [:td
-                [:input.pvm {:class (when lomake? "form-control")
-                             :placeholder "pp.kk.vvvv"
-                             :on-click #(do (reset! auki true) nil)
-                             :value     nykyinen-teksti
-                             :on-focus on-focus
-                             :on-change #(muuta! (-> % .-target .-value))}]]
-               [:td
-                [:input {:class (when lomake? "form-control")
-                         :placeholder "tt:mm"
-                         :size 5 :max-length 5
-                         :value nykyinen-aika-teksti
-                         :on-change #(muuta-aika! (-> % .-target .-value))}]]]]]
+              nykyinen-pvm @data
+              nykyinen-teksti @teksti
+              nykyinen-aika-teksti @aika-teksti
+              pvm-tyhjana (or pvm-tyhjana (constantly nil))
+              naytettava-pvm (if (nil? nykyinen-pvm)
+                               (pvm-tyhjana rivi)
+                               nykyinen-pvm)]
+          [:span 
+           [:table
+            [:tbody
+             [:tr
+              [:td
+               [:input.pvm {:class (when lomake? "form-control")
+                            :placeholder "pp.kk.vvvv"
+                            :on-click #(do (.stopPropagation %)
+                                           (.preventDefault %)
+                                           (reset! auki true)
+                                           nil)
+                            :value     nykyinen-teksti
+                            :on-focus on-focus
+                            :on-change #(muuta! (-> % .-target .-value))}]]
+              [:td
+               [:input {:class (when lomake? "form-control")
+                        :placeholder "tt:mm"
+                        :size 5 :max-length 5
+                        :value nykyinen-aika-teksti
+                        :on-change #(muuta-aika! (-> % .-target .-value))}]]]]]
             
-            (when @auki
-              [:div.aikavalinta
-               [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                               (muuta! (pvm/pvm %)))
-                                 :pvm     naytettava-pvm}]])]))})))
+           (when @auki
+             [:div.aikavalinta
+              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                              (muuta! (pvm/pvm %)))
+                                :pvm     naytettava-pvm
+                                :sijainti @sijainti}]])]))})))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   (if-let [p @data]
