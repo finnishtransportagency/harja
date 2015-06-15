@@ -273,7 +273,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen?]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -301,15 +301,21 @@
                          %)))
 
        :component-did-mount
-       (when lomake? (fn [this]
-                       (let [sij (some-> this
-                                         r/dom-node
-                                         (.getElementsByTagName "input")
-                                         (aget 0)
-                                         yleiset/sijainti-sailiossa)
-                             [x y w h] sij]
-                         (when x
-                           (reset! sijainti [0 0 w])))))
+       (when (or lomake? irrallinen?)
+          (fn [this]
+            (let [sij (some-> this
+                              r/dom-node
+                              (.getElementsByTagName "input")
+                              (aget 0)
+                              yleiset/sijainti-sailiossa)
+                  [x y w h] sij]
+              (when x
+                (if lomake?
+                  ;; asemointi, koska col-sm-* divissä
+                  (reset! sijainti [15 h w])
+
+                  ;; irrallinen suoraan sijainnin mukaan
+                  (reset! sijainti [(- w) (+ y h) w]))))))
        
        
        :reagent-render

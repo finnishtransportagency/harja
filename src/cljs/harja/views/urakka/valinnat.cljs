@@ -39,13 +39,13 @@
     [:span.label-ja-aikavali
      [:span.alasvedon-otsikko "Aikaväli"]
      [:div.aikavali-valinnat
-      [tee-kentta {:tyyppi :pvm :lomake? true}
+      [tee-kentta {:tyyppi :pvm :irrallinen? true}
        (r/wrap (first @valittu-aikavali)
                (fn [uusi-arvo]
                  (reset! valittu-aikavali [uusi-arvo
                                            (second (pvm/kuukauden-aikavali uusi-arvo))])))]
       [:span " \u2014 "]
-      [tee-kentta {:tyyppi :pvm :lomake? true}
+      [tee-kentta {:tyyppi :pvm :irrallinen? true}
        (r/wrap (second @valittu-aikavali)
                (fn [uusi-arvo]
                  (swap! valittu-aikavali (fn [[alku _]] [alku uusi-arvo]))))]
