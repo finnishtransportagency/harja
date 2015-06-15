@@ -11,7 +11,8 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Validointi
@@ -27,6 +28,16 @@
   (when (and data (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi))))
     viesti))
 
+(defmethod validoi-saanto :urakan-aikana [_ _ data _ _ & [viesti]]
+  (let [urakka @nav/valittu-urakka
+        alkupvm (:alkupvm urakka)
+        loppupvm (:loppupvm urakka)]
+    (log "VALIDOI urakan aikana? " data " väliss? " alkupvm " - " loppupvm)
+    (when (and data alkupvm loppupvm
+               (not (pvm/valissa? data alkupvm loppupvm)))
+      (or viesti
+          (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
+    
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
   (when (str/blank? data)
     viesti))

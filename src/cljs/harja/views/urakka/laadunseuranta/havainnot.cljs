@@ -337,18 +337,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                               true))))
                       :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}]}
            [
-            {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
-             :tyyppi :valinta
-             :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-             :valinta-nayta #(or (:tpi_nimi %) "- valitse toimenpide -")
-             :valinta-arvo :tpi_id
-             :leveys-col 4
-             :validoi [[:ei-tyhja "Valitse urakan toimenpide"]]}
-            
+                        
             {:otsikko "Havainnon pvm ja aika"
              :tyyppi :pvm-aika
              :nimi :aika
-             :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]}
+             :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]
+                       [:urakan-aikana]]}
             
             {:otsikko "Tekijä" :nimi :tekija
              :tyyppi :valinta
