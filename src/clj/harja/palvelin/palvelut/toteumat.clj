@@ -86,7 +86,7 @@
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
 
-(defn kasittele-toteuman-tehtavat [db user toteuma]
+(defn kasittele-toteuman-tehtavat [c user toteuma]
   (doseq [tehtava (:tehtavat toteuma)]
     (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
       (do
