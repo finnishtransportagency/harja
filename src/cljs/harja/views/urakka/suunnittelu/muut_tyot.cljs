@@ -22,7 +22,6 @@
 
 
 (defn tallenna-tyot [tyot atomi]
-  (log "tallenna-muut-tyot" (pr-str tyot))
   (go (let [ur @nav/valittu-urakka
             sopimusnumero (first @u/valittu-sopimusnumero)
             tyot (map #(assoc % :alkupvm (:alkupvm ur)

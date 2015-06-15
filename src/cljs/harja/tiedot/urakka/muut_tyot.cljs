@@ -10,15 +10,12 @@
 
 
 (defn hae-urakan-muutoshintaiset-tyot [urakka-id]
-  (log "hae-urakan-muutoshintaiset tyot" urakka-id)
   (k/post! :muutoshintaiset-tyot urakka-id))
 
 
 (defn tallenna-muutoshintaiset-tyot
   "Tallentaa muutoshintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id tyot]
-  (log "tallenna-urakan-muut-tyot, urakka: " urakka-id)
-  (log "työt" (pr-str tyot))
   (let [hyotykuorma {:urakka-id urakka-id
                      :tyot tyot}]
     (k/post! :tallenna-muutoshintaiset-tyot
