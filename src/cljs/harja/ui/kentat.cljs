@@ -403,7 +403,7 @@
               naytettava-pvm (if (nil? nykyinen-pvm)
                                (pvm-tyhjana rivi)
                                nykyinen-pvm)]
-          [:span 
+          [:span.pvm-kentta 
            [:table
             [:tbody
              [:tr
