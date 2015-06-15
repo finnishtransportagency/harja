@@ -47,6 +47,8 @@ Seuraavat optiot ovat mahdollisia:
 :vuosi    näytettävä vuosi, oletus nykyinen
 :kuukausi näytettävä kuukausi (0 - 11)
 :valitse  funktio, jota kutsutaan kun päivämäärä valitaan
+:sijainti optionaalinen [x y w] vasen ylänurkka 
+
   ...muita tarpeen mukaan..."
   [optiot]
   (let [nyt (or (:pvm optiot) (t/now))
@@ -62,9 +64,13 @@ Seuraavat optiot ovat mahdollisia:
 
 
        :reagent-render
-       (fn [{:keys [pvm valitse]} optiot]
+       (fn [{:keys [pvm valitse sijainti] :as optiot}]
          (let [[vuosi kk] @nayta]
-           [:table.pvm-valinta
+           [:table.pvm-valinta (when sijainti
+                                 (let [[x y w] sijainti]
+                                   {:style {:left x :top y
+                                            :width w
+                                            :position "absolute"}}))
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava

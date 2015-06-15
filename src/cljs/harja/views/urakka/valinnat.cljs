@@ -34,14 +34,15 @@
       hoitokaudet]]))
 
 (defn hoitokauden-aikavali [ur]
-  ; TODO Harjaa vastaava tyyli tälle
+                                        ; TODO Harjaa vastaava tyyli tälle
   (let [valittu-aikavali u/valittu-aikavali]
     [:span.label-ja-aikavali
      [:span.alasvedon-otsikko "Aikaväli"]
      [:div.aikavali-valinnat
       [tee-kentta {:tyyppi :pvm} (r/wrap (first @valittu-aikavali)
                                          (fn [uusi-arvo]
-                                           (reset! valittu-aikavali [uusi-arvo uusi-arvo])))]
+                                           (reset! valittu-aikavali [uusi-arvo
+                                                                     (second (pvm/kuukauden-aikavali uusi-arvo))])))]
       [:span " - "]
       [tee-kentta {:tyyppi :pvm} (r/wrap (second @valittu-aikavali)
                                          (fn [uusi-arvo]

@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta]]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta] :as yleiset]
             [harja.ui.protokollat :refer [hae]]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
@@ -287,7 +287,9 @@
         muuta! (fn [data t]
                  (let [d (pvm/->pvm t)]
                    (reset! teksti t)
-                   (reset! data d)))]
+                   (reset! data d)))
+
+        sijainti (atom nil)]
     (r/create-class
       {:component-will-receive-props
        (fn [this [_ {:keys [focus] :as s} data]]
@@ -296,6 +298,19 @@
          (swap! teksti #(if-let [p @data]
                          (pvm/pvm p)
                          %)))
+
+       :component-did-mount
+       (fn [this]
+         (let [sij (some-> this
+                           r/dom-node
+                           (.getElementsByTagName "input")
+                           (aget 0)
+                           yleiset/sijainti-sailiossa)
+               [x y w h] sij]
+           (log "sij: " (pr-str sij))
+           (when x
+             (reset! sijainti [(- w) (+ y h) w]))))
+       
        
        :reagent-render
        (fn [_ data]
@@ -305,17 +320,18 @@
                naytettava-pvm (if (nil? nykyinen-pvm)
                                 (pvm-tyhjana rivi)
                                 nykyinen-pvm)]
-           [:span {:on-click #(do (reset! auki true) nil)}
+           [:span {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
             [:input.pvm {:class (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus on-focus
                          :on-change #(muuta! data (-> % .-target .-value))}]
             (when @auki
-              [:div.aikavalinta
+              [:div.aikavalinta 
                [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                                (reset! data %)
                                                (reset! teksti (pvm/pvm %)))
-                                 :pvm     naytettava-pvm}]])]))})))
+                                 :pvm     naytettava-pvm
+                                 :sijainti @sijainti}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   (if-let [p @data]

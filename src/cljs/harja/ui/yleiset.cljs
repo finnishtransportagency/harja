@@ -51,6 +51,22 @@
       (when viesti
         [:div.viesti viesti])]))
 
+(defn sijainti
+  "Laskee DOM-elementin sijainnin, palauttaa [x y w h]."
+  [elt]
+  (let [r (.getBoundingClientRect elt)
+        sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
+    (log "ELEMENTIN " elt " SIJAINTI: " (pr-str sijainti))
+    sijainti))
+
+(defn sijainti-sailiossa 
+  "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
+  [elt]
+  (let [[x1 y1 w1 h1] (sijainti elt)
+        [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
+    [(- x1 x2) (- y1 y2) w1 h1]))
+
+  
 (defn ajax-loader-pisteet
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader-pisteet nil))
