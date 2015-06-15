@@ -203,10 +203,16 @@ SET tyyppi  = :tyyppi :: erilliskustannustyyppi, sopimus = :sopimus, toimenpidei
   poistettu = :poistettu
 WHERE id = :id;
 
--- name: paivita-urakan-yk-hint-toteumien-tehtavat!
--- Päivitä urakan yksikköhintaisten töiden toteumien tehtävät
+-- name: paivita-toteuman-tehtava!
+-- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
 SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu
+WHERE id = :id;
+
+-- name: poista-toteuman-tehtava!
+-- Poistaa toteuman tehtävän
+UPDATE toteuma_tehtava
+SET poistettu = :poistettu
 WHERE id = :id;
 
 -- name: merkitse-toteuman-maksuera-likaiseksi!

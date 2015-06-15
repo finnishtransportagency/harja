@@ -86,6 +86,20 @@
   (into []
         (q/hae-urakan-tehtavat db urakka-id)))
 
+(defn kasittele-toteuman-tehtavat [db user toteuma]
+  (doseq [tehtava (:tehtavat toteuma)]
+    (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
+      (do
+        (if (:poistettu tehtava)
+          (do (log/info "Poistetaan tehtävä: " (pr-str tehtava))
+              (q/poista-toteuman-tehtava c (:tehtava-id tehtava)))
+          (do (log/info "Pävitetään tehtävä: " (pr-str tehtava))
+              (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava))))
+        (do
+          (when (not (:poistettu tehtava))
+            (log/info "Luodaan uusi tehtävä.")
+            (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user))))))))
+
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman ja palauttaa sen."
   [db user toteuma]
@@ -99,19 +113,12 @@
                                               (q/paivita-toteuma! c (konv/sql-date (:aloituspvm toteuma)) (konv/sql-date (:lopetuspvm toteuma)) (:id user)
                                                                   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
                                               (log/info "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
-                                              (doseq [tehtava (:tehtavat toteuma)]
-                                                (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
-                                                  (do
-                                                    (log/info "Pävitetään tehtävä: " (pr-str tehtava))
-                                                    (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))
-                                                  (do
-                                                    (when (not (:poistettu tehtava))
-                                                      (log/info "Luodaan uusi tehtävä.")
-                                                      (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user))))))
+                                              (kasittele-toteuman-tehtavat c user toteuma)
                                               toteuma)
                                             (do
                                               (log/info "Luodaan uusi toteuma")
-                                              (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma) (:sopimus-id toteuma)
+                                              (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma)
+                                                                          (:sopimus-id toteuma)
                                                                           (konv/sql-timestamp (:aloituspvm toteuma))
                                                                           (konv/sql-timestamp (:lopetuspvm toteuma))
                                                                           (name (:tyyppi toteuma))
@@ -143,7 +150,7 @@
                                 (for [tehtava tehtavat]
                                   (do
                                     (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-                                    (q/paivita-urakan-yk-hint-toteumien-tehtavat! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))))
+                                    (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))))
 
                               (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                               (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
