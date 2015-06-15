@@ -29,12 +29,11 @@
   (reaction (some-> @tiedot-urakka/valittu-hoitokausi
                     pvm/hoitokauden-kuukausivalit)))
 
-(defonce aikavali
-  (reaction (first @hoitokauden-kuukaudet)))
+
 
 (defonce urakan-havainnot
   (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
-                    [alku loppu] @aikavali
+                    [alku loppu] @tiedot-urakka/valittu-aikavali
                     listaus @listaus]
                 (when (and urakka-id alku loppu)
                   (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu)))))
@@ -96,12 +95,6 @@
    
    [urakka-valinnat/hoitokauden-aikavali @nav/valittu-urakka]
    
-   #_[yleiset/pudotusvalikko
-    "Kuukausi"
-    {:valinta @aikavali
-     :valitse-fn #(reset! aikavali  %)
-     :format-fn (fn [[kk _]] (str (pvm/kuukauden-nimi (pvm/kuukausi kk)) " " (pvm/vuosi kk)))}
-    @hoitokauden-kuukaudet]
 
    [yleiset/pudotusvalikko
     "Näytä havainnot"
@@ -181,7 +174,7 @@
           ;; Havainto tallennettu onnistuneesti, päivitetään sen tiedot
           (let [uusi-havainto tulos
                 aika (:aika uusi-havainto)
-                [alku loppu] @aikavali]
+                [alku loppu] @tiedot-urakka/valittu-aikavali]
             (when (and (pvm/sama-tai-jalkeen? aika alku)
                        (pvm/sama-tai-ennen? aika loppu))
               ;; Kuuluu aikavälille, lisätään tai päivitetään
