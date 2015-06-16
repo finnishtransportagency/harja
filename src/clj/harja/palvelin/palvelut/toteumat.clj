@@ -60,10 +60,9 @@
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat.")
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [rivi (first (into []
-                          toteuma-xf
-                          (q/listaa-toteumien-tehtavien-summat urakka-id sopimus-id alkupvm loppupvm tyyppi)))]
-    (first (toteuman-tehtavat->map [rivi]))))
+  (into []
+        muunna-desimaaliluvut-xf
+        (q/listaa-toteumien-tehtavien-summat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)

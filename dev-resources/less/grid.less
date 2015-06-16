@@ -104,9 +104,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 	width: 20px;
     }
 
-    .has-error {
-	border-bottom: solid 2px @vaara !important;
-    }
+	.sisaltaa-virheen {
+		.sisaltaa-virheen-tai-varoituksen(@vaara);
+	}
+	.sisaltaa-varoituksen {
+		.sisaltaa-virheen-tai-varoituksen(@varoitus);
+	}
 	    
     
     .muokkaustoiminnot {

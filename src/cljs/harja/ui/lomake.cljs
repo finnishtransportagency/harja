@@ -75,11 +75,14 @@ Optioissa voi olla seuraavat avaimet:
 
   :virheet        atomi, joka sisältää mäpin kentän nimestä virheisiin, jos tätä ei
                   anneta, lomake luo sisäisesti uuden atomin.
+  :varoitukset    atomi, joka sisältää mäpin kentän nimestä varoituksiin, jos tätä ei
+                  anneta, lomake luo sisäisesti uuden atomin.
 "                   
  
-  [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
+  [{:keys [muokkaa! luokka footer virheet varoitukset] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
+        varoitukset-atom (or varoitukset (atom {}))
         kentat (into #{} (map :nimi skeema))
 
         ;; Kaikki kentät, joita käyttäjä on muokannut
@@ -91,8 +94,13 @@ Optioissa voi olla seuraavat avaimet:
             (into {}
                   (validointi/validoi-rivi nil data skeema)))
 
+    (reset! varoitukset-atom
+            (into {}
+                  (validointi/validoi-rivi nil data skeema)))
+
     (fn [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
-      (let [virheet (or virheet virheet-atom)]
+      (let [virheet (or virheet virheet-atom)
+            varoitukset (or varoitukset varoitukset-atom)]
         [:form.lomake {:class (case luokka
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
@@ -100,10 +108,13 @@ Optioissa voi olla seuraavat avaimet:
          (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
                         (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                         (let [kentan-virheet (get @virheet nimi)
+                              kentan-varoitukset (get @varoitukset nimi)
                               kentta (assoc kentta :lomake? true)
                               arvo (atomina kentta data (fn [uudet-tiedot]
                                                           (reset! virheet
-                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema))
+                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema :validoi))
+                                                          (reset! varoitukset
+                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema :varoita))
                                                           (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))]
                           ^{:key (:nimi kentta)}
@@ -118,11 +129,16 @@ Optioissa voi olla seuraavat avaimet:
                                       (muokattava? data))
                                 ;; Muokattava tieto, tehdään sille kenttä
                                 [:span {:class (str (when-not (empty? kentan-virheet)
-                                                      "has-error"))}
+                                                      "sisaltaa-virheen")
+                                                    (when-not (empty? kentan-varoitukset)
+                                                      "sisaltaa-varoituksen"))}
                                  [tee-kentta kentta arvo]
-                                 (when (and (not (empty? kentan-virheet))
+                                 (if (and (not (empty? kentan-virheet))
                                             (@muokatut nimi))
-                                   (virheen-ohje kentan-virheet))]
+                                   (virheen-ohje kentan-virheet :virhe)
+                                   (if (and (not (empty? kentan-varoitukset))
+                                            (@muokatut nimi))
+                                     (virheen-ohje kentan-varoitukset :varoitus)))]
                               
                                 ;; Ei muokattava, näytetään
                                 [:div.form-control-static

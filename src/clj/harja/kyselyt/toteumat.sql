@@ -50,8 +50,8 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 -- name: listaa-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
-  toimenpidekoodi,
-  SUM(tt.maara) AS toteutunut_maara,
+  toimenpidekoodi as tpk_id,
+  SUM(tt.maara) AS maara,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE tpk.id = tt.toimenpidekoodi)
@@ -61,9 +61,9 @@ FROM toteuma_tehtava tt
                     AND sopimus = :sopimus
                     AND alkanut >= :alkanut
                     AND paattynyt <= :paattynyt
-                    AND tyyppi = :tyyppi
+                    AND tyyppi = :tyyppi::toteumatyyppi
                     AND tt.poistettu IS NOT TRUE
-                    AND t.poistettu IS NOT TRUE;
+                    AND t.poistettu IS NOT TRUE
 GROUP BY toimenpidekoodi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat

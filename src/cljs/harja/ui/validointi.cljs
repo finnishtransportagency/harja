@@ -69,19 +69,22 @@
     saannot))
 
 (defn validoi-rivi
-  "Tekee validoinnin yhden rivin kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori."
-  [taulukko rivi skeema]
+  "Tekee validoinnin yhden rivin / lomakkeen kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori.
+  Tyyppi on joko :validoi (default) tai :varoita"
+  ([taulukko rivi skeema] (validoi-rivi taulukko rivi skeema :validoi))
+  ([taulukko rivi skeema tyyppi]
   (loop [v {}
          [s & skeema] skeema]
     (if-not s
       v
-      (let [{:keys [nimi hae validoi]} s]
+      (let [{:keys [nimi hae]} s
+            validoi (tyyppi s)]
         (if (empty? validoi)
           (recur v skeema)
           (let [virheet (validoi-saannot nimi (if hae
                                                 (hae rivi)
                                                 (get rivi nimi))
                           rivi taulukko
-                          validoi)]
+                                         validoi)]
             (recur (if (empty? virheet) v (assoc v nimi virheet))
-              skeema)))))))
+                   skeema))))))))

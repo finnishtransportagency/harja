@@ -115,14 +115,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
   
 
-(defn virheen-ohje [virheet]
-  [:div.virheet
-   [:div.virhe
+(defn virheen-ohje
+  "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu) tai :varoitus."
+  ([virheet] (virheen-ohje virheet :virhe))
+  ([virheet tyyppi]
+   (log "virheen ohje" (pr-str virheet))
+  [:div {:class (if (= tyyppi :varoitus) "varoitukset" "virheet")}
+   [:div {:class (if (= tyyppi :varoitus) "varoitus" "virhe")}
     (for [v virheet]
       ^{:key (hash v)}
       [:span
        (ikonit/warning-sign)
-       [:span (str " " v)]])]])
+       [:span (str " " v)]])]]))
+
 
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])

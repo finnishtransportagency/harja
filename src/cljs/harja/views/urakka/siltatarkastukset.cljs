@@ -340,13 +340,11 @@
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
-
-
-
            {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
-                        "Tälle päivälle on jo kirjattu tarkastus.")]}
+                        "Tälle päivälle on jo kirjattu tarkastus.")]
+            :varoita [[:urakan-aikana "Antamasi päivämäärä on urakkasopimuksen ulkopuolella."]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys-col 4
             :tyyppi  :string :pituus-max 128
