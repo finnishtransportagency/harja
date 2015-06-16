@@ -61,9 +61,9 @@ FROM toteuma_tehtava tt
                     AND sopimus = :sopimus
                     AND alkanut >= :alkanut
                     AND paattynyt <= :paattynyt
-                    AND tyyppi = :tyyppi
+                    AND tyyppi = :tyyppi::toteumatyyppi
                     AND tt.poistettu IS NOT TRUE
-                    AND t.poistettu IS NOT TRUE;
+                    AND t.poistettu IS NOT TRUE
 GROUP BY toimenpidekoodi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
