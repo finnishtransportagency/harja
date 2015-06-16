@@ -214,7 +214,7 @@
                                 ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
                                 (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
                                   (log "TOT Haetaan urakan toteumat")
-                                  (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
+                                  (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
