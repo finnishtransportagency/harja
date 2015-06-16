@@ -295,10 +295,10 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
-             (reset! auki false))
-         (swap! teksti #(if-let [p @data]
-                         (pvm/pvm p)
-                         %)))
+             (reset! auki false)
+             (swap! teksti #(if-let [p @data]
+                             (pvm/pvm p)
+                             %))))
 
        :component-did-mount
        (when (or lomake? irrallinen?)

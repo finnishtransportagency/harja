@@ -86,7 +86,9 @@ Optioissa voi olla seuraavat avaimet:
         kentat (into #{} (map :nimi skeema))
 
         ;; Kaikki kentät, joita käyttäjä on muokannut
-        muokatut (atom #{})]
+        muokatut (atom #{})
+        nykyinen-fokus (atom nil)
+        aseta-fokus! #(reset! nykyinen-fokus %)]
 
     ;; Validoidaan kaikki kentät heti lomakkeen luontivaiheessa,
     ;; koskemattomien kenttien virheitä ei kuitenkaan näytetä.
@@ -116,7 +118,8 @@ Optioissa voi olla seuraavat avaimet:
                                                           (reset! varoitukset
                                                                   (validointi/validoi-rivi nil uudet-tiedot skeema :varoita))
                                                           (swap! muokatut conj nimi)
-                                                          (muokkaa! uudet-tiedot)))]
+                                                          (muokkaa! uudet-tiedot)))
+                              kentan-tunniste nimi]
                           ^{:key (:nimi kentta)}
                           [:div.form-group
                            (if (+ei-otsikkoa+ (:tyyppi kentta))
@@ -132,7 +135,9 @@ Optioissa voi olla seuraavat avaimet:
                                                       "sisaltaa-virheen")
                                                     (when-not (empty? kentan-varoitukset)
                                                       "sisaltaa-varoituksen"))}
-                                 [tee-kentta kentta arvo]
+                                 [tee-kentta (assoc kentta
+                                               :focus (= @nykyinen-fokus kentan-tunniste)
+                                               :on-focus #(aseta-fokus! kentan-tunniste)) arvo]
                                  (if (and (not (empty? kentan-virheet))
                                             (@muokatut nimi))
                                    (virheen-ohje kentan-virheet :virhe)
