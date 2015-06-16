@@ -179,8 +179,8 @@
                                                                                                 :tehtavat         (zipmap (iterate inc 1)
                                                                                                                           (mapv (fn [tehtava]
                                                                                                                                   (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
-                                                                                                                                                                  (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                                                                @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                                                                                                                                               (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                                                                             @u/urakan-toimenpiteet-ja-tehtavat)) 3)
                                                                                                                                         emo (get (first (filter (fn [tehtavat]
                                                                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
                                                                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 2)
@@ -207,18 +207,18 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
+(defonce toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                    valittu-sivu @u/toteumat-valilehti
+                                    valittu-hoitokausi @u/valittu-hoitokausi]
+                                (when (and valittu-urakka-id valittu-sopimus-id (= valittu-sivu :yksikkohintaiset-tyot))
+                                  (log "TOT Haetaan urakan toteumat")
+                                  (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
+
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-  (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
-        toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                   sivu @u/toteumat-valilehti
-                                   aikavali @valittu-aikavali]
-                               (when (and valittu-urakka-id valittu-sopimus-id (= sivu :yksikkohintaiset-tyot))
-                                 (log "TOT Haetaan urakan toteumat")
-                                 (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id aikavali :yksikkohintainen))))
-        muodosta-nelostason-tehtavat (fn []
+  (let [muodosta-nelostason-tehtavat (fn []
                                        "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                        (map
                                          (fn [tasot] (let [kolmostaso (nth tasot 2)
@@ -267,16 +267,12 @@
                                                rivit))
         tyorivit (reaction
                    (let [rivit (muodosta-nelostason-tehtavat)
-                         valittu-urakka @nav/valittu-urakka
-                         valittu-sopimus @u/valittu-sopimusnumero
                          valittu-hoitokausi [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-                         valittu-aikavali @u/valittu-aikavali
                          toteumat @toteumat]
-
-                     (log "TOT Rakennetaan toteumarivit")
 
                      ; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
+                       (log "TOT Rakennetaan toteumarivit")
                        (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
                            (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
                            (lisaa-tyoriveille-suunnitellut-kustannukset valittu-hoitokausi)
