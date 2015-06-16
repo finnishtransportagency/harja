@@ -213,9 +213,11 @@
   (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
         toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                   sivu @u/toteumat-valilehti]
+                                   sivu @u/toteumat-valilehti
+                                   aikavali @valittu-aikavali]
                                (when (and valittu-urakka-id valittu-sopimus-id (= sivu :yksikkohintaiset-tyot))
-                                 (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali :yksikkohintainen))))
+                                 (log "TOT Haetaan urakan toteumat")
+                                 (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id aikavali :yksikkohintainen))))
         muodosta-nelostason-tehtavat (fn []
                                        "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                        (map
