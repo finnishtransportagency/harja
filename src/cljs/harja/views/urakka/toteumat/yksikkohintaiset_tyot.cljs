@@ -207,6 +207,7 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
+; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
 (defonce toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                     valittu-sivu @u/toteumat-valilehti
@@ -225,29 +226,29 @@
                                                            nelostaso (nth tasot 3)]
                                                        (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
                                          @u/urakan-toimenpiteet-ja-tehtavat))
-        lisaa-tyoriveille-yksikkohinta (fn [rivit valittu-hoitokausi] (map
-                                                                        (fn [rivi] (assoc rivi :yksikkohinta
-                                                                                               (or (:yksikkohinta (first (filter
-                                                                                                                           (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                                                          (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
-                                                                                                                           @u/urakan-yks-hint-tyot))) 0)))
-                                                                        rivit))
-        lisaa-tyoriveille-suunniteltu-maara (fn [rivit valittu-hoitokausi] (map
-                                                                             (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
-                                                                                                    (or (:maara (first (filter
-                                                                                                                         (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
-                                                                                                                         @u/urakan-yks-hint-tyot))) 0)))
-                                                                             rivit))
-        lisaa-tyoriveille-suunnitellut-kustannukset (fn [rivit valittu-hoitokausi]
+        lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
+                                                     (fn [rivi] (assoc rivi :yksikkohinta
+                                                                            (or (:yksikkohinta (first (filter
+                                                                                                        (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
+                                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                                        @u/urakan-yks-hint-tyot))) 0)))
+                                                     rivit))
+        lisaa-tyoriveille-suunniteltu-maara (fn [rivit] (map
+                                                          (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
+                                                                                 (or (:maara (first (filter
+                                                                                                      (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
+                                                                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                                      @u/urakan-yks-hint-tyot))) 0)))
+                                                          rivit))
+        lisaa-tyoriveille-suunnitellut-kustannukset (fn [rivit]
                                                       (map
                                                         (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
                                                                                (or (:yhteensa (first (filter
                                                                                                        (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
-                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first valittu-hoitokausi))))
+                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                        @u/urakan-yks-hint-tyot))) 0)))
                                                         rivit))
-        lisaa-tyoriveille-toteutunut-maara (fn [rivit toteumat]
+        lisaa-tyoriveille-toteutunut-maara (fn [rivit]
                                              (map
                                                (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
                                                                                                                 (map (fn [toteuma]
@@ -256,7 +257,7 @@
                                                                                                                                 (:maara tehtava)
                                                                                                                                 0))
                                                                                                                             (:tehtavat toteuma)))
-                                                                                                                     toteumat)))))
+                                                                                                                     @toteumat)))))
                                                rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
@@ -267,16 +268,14 @@
                                                rivit))
         tyorivit (reaction
                    (let [rivit (muodosta-nelostason-tehtavat)
-                         valittu-hoitokausi [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
                          toteumat @toteumat]
 
-                     ; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
                        (log "TOT Rakennetaan toteumarivit")
-                       (-> (lisaa-tyoriveille-yksikkohinta rivit valittu-hoitokausi)
-                           (lisaa-tyoriveille-suunniteltu-maara valittu-hoitokausi)
-                           (lisaa-tyoriveille-suunnitellut-kustannukset valittu-hoitokausi)
-                           (lisaa-tyoriveille-toteutunut-maara toteumat)
+                       (-> (lisaa-tyoriveille-yksikkohinta rivit)
+                           (lisaa-tyoriveille-suunniteltu-maara)
+                           (lisaa-tyoriveille-suunnitellut-kustannukset)
+                           (lisaa-tyoriveille-toteutunut-maara)
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
                            (lisaa-tyoriveille-erotus)))))]
 
