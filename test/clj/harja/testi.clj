@@ -19,6 +19,13 @@
                       "harjatest"
                       nil])
 
+(defn odota [ehto-fn viesti max-aika]
+  (loop [max-ts (+ max-aika (System/currentTimeMillis))]
+    (if (> (System/currentTimeMillis) max-ts)
+      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
+      (when-not (ehto-fn)
+        (recur max-ts)))))
+
 (defn luo-testitietokanta []
   (apply tietokanta/luo-tietokanta testitietokanta))
 

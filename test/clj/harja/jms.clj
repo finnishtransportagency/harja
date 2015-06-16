@@ -35,7 +35,7 @@
                                                (getJMSMessageID [_] id)
                                                (setText [_ t] (reset! txt t))
                                                (getText [_] @txt))))))]
-      (go (<! (async/timeout 100)) ;; sadan millisekunnin päästä lähetys
+      (go (<! (async/timeout (rand-int 100))) ;; sadan millisekunnin päästä lähetys
           (doseq [k (get @kuuntelijat nimi)]
             (k msg)))
       (.getJMSMessageID msg))))

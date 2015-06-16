@@ -35,12 +35,14 @@
   (is (= {:virhe :maksueran-lukitseminen-epaonnistui} (:maksuera (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 666)))))
 
 (deftest laheta-maksuera
-  (let [ch (async/chan)]
+  (let [viestit (atom [])]
     (println jarjestelma)
-    (sonja/kuuntele (:sonja jarjestelma) +lahetysjono+ #(async/put! ch (.getText %)))
+    (sonja/kuuntele (:sonja jarjestelma) +lahetysjono+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 1) "Lähetys onnistui")
-    (let [[sampoon-lahetetty-xml luettu-ch] (async/alts!! [ch (async/timeout 1000)])]
-      (is (= luettu-ch ch) "Sampo lähetys ei mennyt kanavaan sekunnissa")
-      (is (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-xml))))
+    (odota #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 1000)
+    (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))
+          sampoon-lahetetty-kustannussuunnitelma (first (filter #(.contains % "<CostPlans>") @viestit))]
+      (is (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-maksuera))
+      (is (xml/validoi +xsd-polku+ "nikuxog_costplan.xsd" sampoon-lahetetty-kustannussuunnitelma))))
   (u "UPDATE maksuera SET tila = NULL WHERE numero=1")
   (u "UPDATE kustannussuunnitelma SET tila = NULL WHERE maksuera=1"))
