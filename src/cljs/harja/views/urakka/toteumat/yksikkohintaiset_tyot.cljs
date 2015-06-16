@@ -139,7 +139,8 @@
                          rivi)
                        :aloituspvm
                        arvo))
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]]} ; TODO Varoita jos pvm urakan ulkopuolella
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                      [:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
