@@ -83,7 +83,6 @@ Optioissa voi olla seuraavat avaimet:
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
         varoitukset-atom (or varoitukset (atom {}))
-        kentat (into #{} (map :nimi skeema))
 
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
@@ -94,13 +93,13 @@ Optioissa voi olla seuraavat avaimet:
     ;; koskemattomien kenttien virheitä ei kuitenkaan näytetä.
     (reset! virheet-atom
             (into {}
-                  (validointi/validoi-rivi nil data skeema)))
+                  (validointi/validoi-rivi nil data skeema :validoi)))
 
     (reset! varoitukset-atom
             (into {}
-                  (validointi/validoi-rivi nil data skeema)))
+                  (validointi/validoi-rivi nil data skeema :varoita)))
 
-    (fn [{:keys [muokkaa! luokka footer virheet] :as opts} skeema data]
+    (fn [{:keys [muokkaa! luokka footer virheet varoitukset] :as opts} skeema data]
       (let [virheet (or virheet virheet-atom)
             varoitukset (or varoitukset varoitukset-atom)]
         [:form.lomake {:class (case luokka
