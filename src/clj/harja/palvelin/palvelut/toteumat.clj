@@ -101,11 +101,11 @@
           (do (log/info "Poistetaan tehtävä: " (pr-str tehtava))
               (q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
           (do (log/info "Pävitetään tehtävä: " (pr-str tehtava))
-              (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava))))
+              (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))))
         (do
           (when (not (:poistettu tehtava))
             (log/info "Luodaan uusi tehtävä.")
-            (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user))))))))
+            (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user)))))))
 
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman ja palauttaa sen."
@@ -145,8 +145,7 @@
                                               toteuma))))
 
 (defn paivita-yk-hint-toiden-tehtavat
-  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa urakan toteutuneet tehtävät ensimmäisen tehtävän toimenpidekoodilla.
-  Lisäksi palauttaa urakan toteumat"
+  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
@@ -168,13 +167,14 @@
                                                                       :loppupvm loppupvm
                                                                       :tyyppi tyyppi
                                                                       :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
-        paivitetyt-toteumat (hae-urakan-toteumat db user {:urakka-id urakka-id
+        paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
+                                                         {:urakka-id urakka-id
                                                          :sopimus-id sopimus-id
                                                          :alkupvm alkupvm
                                                          :loppupvm loppupvm
                                                          :tyyppi tyyppi})]
     (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetyt-tehtavat))
-    {:tehtavat paivitetyt-tehtavat :toteumat paivitetyt-toteumat}))
+    {:tehtavat paivitetyt-tehtavat :tehtavien-summat paivitetyt-summat}))
 
 (def erilliskustannus-tyyppi-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))

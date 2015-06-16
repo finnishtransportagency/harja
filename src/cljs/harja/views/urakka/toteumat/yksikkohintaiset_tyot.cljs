@@ -139,8 +139,8 @@
                          rivi)
                        :aloituspvm
                        arvo))
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                      [:urakan-aikana]]}
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+            :varoita [[:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
@@ -149,10 +149,9 @@
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
           @lomake-toteuma]]))))
 
-(defn yksiloidyt-tehtavat [rivi toteumat]
+(defn yksiloidyt-tehtavat [rivi tehtavien-summat]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
-        toteumat toteumat
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
 
@@ -164,7 +163,7 @@
          :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
                              (log "TOT Tehtävät tallennettu: " (pr-str vastaus))
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
-                             (reset! toteumat (:toteumat vastaus))))
+                             (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
          :tunniste    :tehtava_id
          :luokat ["toteumat-haitari"]}
@@ -208,14 +207,14 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
-; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
-(defonce toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+(defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                     valittu-sivu @u/toteumat-valilehti
                                     valittu-hoitokausi @u/valittu-hoitokausi]
-                                (when (and valittu-urakka-id valittu-sopimus-id (= valittu-sivu :yksikkohintaiset-tyot))
+                                ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
+                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
                                   (log "TOT Haetaan urakan toteumat")
-                                  (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
+                                  (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
@@ -244,15 +243,10 @@
                                                         rivit))
         lisaa-tyoriveille-toteutunut-maara (fn [rivit]
                                              (map
-                                               (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (reduce + (flatten
-                                                                                                                (map (fn [toteuma]
-                                                                                                                       (map (fn [tehtava]
-                                                                                                                              (if (= (:tpk-id tehtava) (:id rivi))
-                                                                                                                                (:maara tehtava)
-                                                                                                                                0))
-                                                                                                                            (:tehtavat toteuma)))
-                                                                                                                     @toteumat)))))
-                                               rivit))
+                                               (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (:maara (first (filter
+                                                                                                                     (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
+                                                                                                                     @tehtavien-summat)))))
+                                                 rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
                                                        (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
@@ -266,10 +260,12 @@
                                                    nelostaso (nth tasot 3)]
                                                (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
                                  @u/urakan-toimenpiteet-ja-tehtavat)
-                         toteumat @toteumat]
+                         tehtavien-summat @tehtavien-summat]
 
-                     (when toteumat
-                       (log "TOT Rakennetaan toteumarivit")
+                     (when tehtavien-summat
+                       (log "TOT Rivien pohja tehty: " (pr-str rivit))
+                       (log "TOT Tehtävien summat saatu: " (pr-str tehtavien-summat))
+                       (log "Rakennetaan lopulliset rivit.")
                        (-> (lisaa-tyoriveille-yksikkohinta rivit)
                            (lisaa-tyoriveille-suunniteltu-maara)
                            (lisaa-tyoriveille-suunnitellut-kustannukset)
@@ -289,7 +285,7 @@
           {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :luokat ["toteumat-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi toteumat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
