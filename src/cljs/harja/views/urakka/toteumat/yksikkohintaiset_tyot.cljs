@@ -208,12 +208,13 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
-; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
+; TODO Käytä valmista palvelu,a joka hakee tehtävien summat suoraan kannasta.
 (defonce toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                     valittu-sivu @u/toteumat-valilehti
                                     valittu-hoitokausi @u/valittu-hoitokausi]
-                                (when (and valittu-urakka-id valittu-sopimus-id (= valittu-sivu :yksikkohintaiset-tyot))
+                                ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
+                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
                                   (log "TOT Haetaan urakan toteumat")
                                   (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
 
