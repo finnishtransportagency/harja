@@ -92,11 +92,12 @@
                  ;; Pikkukuvien muodostamiseen 
                  [net.coobird/thumbnailator "0.4.8"]
 
-                 ;; JSON -validointi kirjastot
+                 ;; JSON -validointikirjastot
                  [com.github.fge/json-schema-validator "2.2.6"]
                  [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
-                 
-                 ]
+
+                 ;; JAX-RS -REST-kirjastot
+                 [javax.ws.rs/javax.ws.rs-api "2.0"]]
   
   :dev-dependencies [;; Selain REPL
                      

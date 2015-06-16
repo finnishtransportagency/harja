@@ -3,7 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.api.yleinen :refer [virhe vastaus]]
+            [harja.palvelin.api.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -79,14 +79,16 @@
                           konv/alaviiva->rakenne)]
       (if-not urakka
         ;; Jos urakkaa ei löydy, palautetaan virhe
-        (virhe "Tuntematon urakka"                          ;; FIXME: api virheet constanteina
-               (str "Urakkaa id:llä " urakka-id " ei löydy."))
-        (vastaus
+        (tee-viallinen-kutsu-virhevastaus "Tuntematon urakka" ;; FIXME: api virheet constanteina
+                                          (str "Urakkaa id:llä " urakka-id " ei löydy."))
+
+        ;; Fixme: refaktoroi käyttämään yleistä käsittelylogiikkaa
+        (tee-vastaus
           skeemat/+urakan-haku-vastaus+
           (rakenna-vastaus db id urakka))))
     (catch Exception e
       (log/warn e "Urakan haku epäonnistui.")
-      (virhe "Sisäinen käsittelyvirhe" (.getMessage e)))))
+      (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e)))))
 
 
 (defrecord Urakat []
