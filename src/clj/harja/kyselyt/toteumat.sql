@@ -231,7 +231,7 @@ WHERE id = :id;
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
 UPDATE toteuma_tehtava
-SET poistettu = :poistettu
+SET poistettu = true
 WHERE id = :id;
 
 -- name: merkitse-toteuman-maksuera-likaiseksi!
