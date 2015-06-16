@@ -154,6 +154,7 @@
         toteumat toteumat
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
         toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
+
     (fn [toteuma-rivi]
       [:div
        [grid/grid
@@ -211,8 +212,10 @@
   []
   (let [valittu-aikavali (reaction @u/valittu-hoitokausi)
         toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero]
-                               (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali :yksikkohintainen)))
+                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                   sivu @u/toteumat-valilehti]
+                               (when (and valittu-urakka-id valittu-sopimus-id (= sivu :yksikkohintaiset-tyot))
+                                 (toteumat/hae-urakan-toteumat valittu-urakka-id valittu-sopimus-id @valittu-aikavali :yksikkohintainen))))
         muodosta-nelostason-tehtavat (fn []
                                        "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
                                        (map
@@ -267,6 +270,8 @@
                          valittu-hoitokausi [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
                          valittu-aikavali @u/valittu-aikavali
                          toteumat @toteumat]
+
+                     (log "TOT Rakennetaan toteumarivit")
 
                      ; TODO Nyt back palauttaa kaikki toteumat, joista frontti laske toteuman summan jokaiselle tehtävälle. Tee mieluummin kysely, joka palauttaa summat tehtävittäin valmiiksi kannasta.
                      (when toteumat
