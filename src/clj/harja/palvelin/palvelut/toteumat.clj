@@ -101,11 +101,11 @@
           (do (log/info "Poistetaan tehtävä: " (pr-str tehtava))
               (q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
           (do (log/info "Pävitetään tehtävä: " (pr-str tehtava))
-              (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava))))
+              (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))))
         (do
           (when (not (:poistettu tehtava))
             (log/info "Luodaan uusi tehtävä.")
-            (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user))))))))
+            (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user)))))))
 
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman ja palauttaa sen."
