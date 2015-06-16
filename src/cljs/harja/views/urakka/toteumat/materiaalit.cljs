@@ -203,8 +203,8 @@
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
-           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]
-                                                                         [:urakan-aikana]]
+           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+            :varoita [[:urakan-aikana]]
             :muokattava? (constantly (not uusi-toteuma?)) :aseta (fn [rivi arvo]
                                                                    (assoc
                                                                      (if
