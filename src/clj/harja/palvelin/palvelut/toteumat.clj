@@ -57,6 +57,14 @@
                     (q/listaa-urakan-toteuma db urakka-id toteuma-id)))]
     (first (toteuman-tehtavat->map [rivi]))))
 
+(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+  (log/debug "Haetaan urakan toteuman tehtävien summat.")
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [rivi (first (into []
+                          toteuma-xf
+                          (q/listaa-toteumien-tehtavien-summat urakka-id sopimus-id alkupvm loppupvm tyyppi)))]
+    (first (toteuman-tehtavat->map [rivi]))))
+
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -307,6 +315,9 @@
       (julkaise-palvelu http :urakan-toteuma
                         (fn [user tiedot]
                           (hae-urakan-toteuma db user tiedot)))
+      (julkaise-palvelu http :urakan-toteumien-tehtavien-summat
+                        (fn [user tiedot]
+                          (hae-urakan-toteumien-tehtavien-summat db user tiedot)))
       (julkaise-palvelu http :poista-toteuma!
                         (fn [user toteuma]
                           (poista-toteuma! db user toteuma)))

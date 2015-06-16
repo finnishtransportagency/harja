@@ -36,6 +36,14 @@
             :loppupvm loppupvm
             :tyyppi tyyppi}))
 
+(defn hae-urakan-toteumien-tehtavien-summat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
+  (k/post! :urakan-toteumien-tehtavien-summat
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :tyyppi tyyppi}))
+
 (defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [urakka-id sopimus-id [alkupvm loppupvm] tyyppi toimenpidekoodi]
   (log "TOT Haetaan urakan toteutuneet tehtävät toimenpidekoodilla: " toimenpidekoodi)
   (k/post! :urakan-toteutuneet-tehtavat-toimenpidekoodilla
