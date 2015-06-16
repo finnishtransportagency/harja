@@ -43,6 +43,6 @@
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))
           sampoon-lahetetty-kustannussuunnitelma (first (filter #(.contains % "<CostPlans>") @viestit))]
       (is (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-maksuera))
-      (is (xml/validoi +xsd-polku+ "nikuxog_costplan.xsd" sampoon-lahetetty-kustannussuunnitelma))))
+      (is (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" sampoon-lahetetty-kustannussuunnitelma))))
   (u "UPDATE maksuera SET tila = NULL WHERE numero=1")
   (u "UPDATE kustannussuunnitelma SET tila = NULL WHERE maksuera=1"))
