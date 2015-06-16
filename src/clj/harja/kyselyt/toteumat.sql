@@ -51,7 +51,7 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
   toimenpidekoodi,
-  SUM(tt.maara) AS toteutunut_maara,
+  SUM(tt.maara) AS maara,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE tpk.id = tt.toimenpidekoodi)
