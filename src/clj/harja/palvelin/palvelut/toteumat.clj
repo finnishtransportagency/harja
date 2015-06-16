@@ -145,8 +145,7 @@
                                               toteuma))))
 
 (defn paivita-yk-hint-toiden-tehtavat
-  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa urakan toteutuneet tehtävät ensimmäisen tehtävän toimenpidekoodilla.
-  Lisäksi palauttaa urakan toteumat"
+  "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
@@ -168,13 +167,14 @@
                                                                       :loppupvm loppupvm
                                                                       :tyyppi tyyppi
                                                                       :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
-        paivitetyt-toteumat (hae-urakan-toteumat db user {:urakka-id urakka-id
+        paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
+                                                         {:urakka-id urakka-id
                                                          :sopimus-id sopimus-id
                                                          :alkupvm alkupvm
                                                          :loppupvm loppupvm
                                                          :tyyppi tyyppi})]
     (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetyt-tehtavat))
-    {:tehtavat paivitetyt-tehtavat :toteumat paivitetyt-toteumat}))
+    {:tehtavat paivitetyt-tehtavat :tehtavien-summat paivitetyt-summat}))
 
 (def erilliskustannus-tyyppi-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
