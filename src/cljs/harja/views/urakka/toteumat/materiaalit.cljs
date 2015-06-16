@@ -22,13 +22,16 @@
 
 (defonce valittu-materiaalin-kaytto (atom nil))
 
-(def urakan-materiaalin-kaytot
+(defonce urakan-materiaalin-kaytot
   (reaction<! (when @materiaali-tiedot/materiaalinakymassa?
-                (when-let [ur @nav/valittu-urakka]
+                (let [sopimusnumero (first @u/valittu-sopimusnumero)
+                      [alku loppu] @u/valittu-hoitokausi
+                      ur @nav/valittu-urakka]
+                  (when (and sopimusnumero alku loppu ur)
                   (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
-                                                                       (first @u/valittu-hoitokausi)
-                                                                       (second @u/valittu-hoitokausi)
-                                                                       (first @u/valittu-sopimusnumero))))))
+                                                                       alku
+                                                                       loppu
+                                                                       sopimusnumero))))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
