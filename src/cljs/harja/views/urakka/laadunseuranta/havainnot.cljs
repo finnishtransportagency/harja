@@ -32,6 +32,7 @@
                     laadunseurannassa? @laadunseuranta/laadunseurannassa?
                     valilehti @laadunseuranta/valittu-valilehti
                     listaus @listaus]
+                (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
                 (when (and laadunseurannassa? (= :havainnot valilehti)
                            urakka-id alku loppu)
                   (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu)))))
@@ -236,6 +237,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                               {:otsikko "Toimenpide"
                                                :nimi :toimenpideinstanssi
                                                :tyyppi :valinta
+                                               :valinta-arvo :tpi_id
                                                :valinta-nayta :tpi_nimi
                                                :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
                                                :leveys-col 3
@@ -282,9 +284,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
                (assoc sanktio
                  :tyyppi tyyppi
-                 :toimenpideinstanssi (first (filter #(= (:toimenpidekoodi tyyppi)
-                                                         (:id %))
-                                                     @tiedot-urakka/urakan-toimenpideinstanssit))))
+                 :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
+                                                                  (:id %))
+                                                              @tiedot-urakka/urakan-toimenpideinstanssit)))))
       :valinnat-fn #(laadunseuranta/lajin-sanktiotyypit (:laji %))
       :valinta-nayta :nimi
       :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]

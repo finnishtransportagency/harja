@@ -31,7 +31,7 @@
     {:otsikko "Sanktiot"
      :tyhja "Ei sanktioita"}
 
-    laadunseuranta/+sanktio-skeema+
+    [] ;;laadunseuranta/+sanktio-skeema+
      
     
     @urakan-sanktiot

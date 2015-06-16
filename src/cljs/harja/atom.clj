@@ -10,16 +10,18 @@ Optionaalisesti ottaa formin, jolla tulos käsitellään ennen atomin tilaksi as
   ([haku] `(reaction<! ~haku nil))
   ([haku prosessoi] 
      `(let [kaynnissa# (cljs.core/atom 0) ; käynnissä olevan reaktiohaun numero
-            arvo# (reagent.core/atom nil)] ; itse atomin arvo
-        (reagent.ratom/run!
-         (let [num# (swap! kaynnissa# inc)]
-           (let [chan# ~haku]
-             (if (nil? chan#)
-               (when (= num# @kaynnissa#)
-                 (reset! arvo# nil))
-               (cljs.core.async.macros/go
-                 (let [res# (cljs.core.async/<! chan#)]
-                   (when (= num# @kaynnissa#)
-                     (reset! arvo# ((or ~prosessoi identity) res#)))))))))
+            arvo# (reagent.core/atom nil)  ; itse atomin arvo
+            reaktio# (reagent.ratom/run!
+                      (let [num# (swap! kaynnissa# inc)]
+                        (let [chan# ~haku]
+                          (if (nil? chan#)
+                            (when (= num# @kaynnissa#)
+                              (reset! arvo# nil))
+                            (cljs.core.async.macros/go
+                              (let [res# (cljs.core.async/<! chan#)]
+                                (when (= num# @kaynnissa#)
+                                  (reset! arvo# ((or ~prosessoi identity) res#)))))))))]
+        (harja.loki/log "ASYNC REAKTIO: " reaktio#)
+        
         arvo#)))
             

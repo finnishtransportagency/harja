@@ -77,12 +77,18 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
 
 (defn array->set
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi."
-  [rivi kentta]
-  (assoc rivi
-    kentta (if-let [a (get rivi kentta)]
-             (into #{} (.getArray a))
-             #{})))
+  ([rivi kentta] (array->set rivi kentta identity))
+  ([rivi kentta muunnos]
+     (assoc rivi
+       kentta (if-let [a (get rivi kentta)]
+                (into #{} (map muunnos (.getArray a)))
+                #{}))))
 
+(defn array->keyword-set
+  "Muuntaa rivin annentun kentän JDBC array tyypistä Clojure keyword hash setiksi."
+  [rivi kentta]
+  (array->set rivi kentta keyword))
+  
 (defn sql-date
   "Luo java.sql.Date objektin annetusta java.util.Date objektista."
   [^java.util.Date dt]

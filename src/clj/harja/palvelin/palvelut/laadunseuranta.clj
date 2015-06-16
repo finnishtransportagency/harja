@@ -73,14 +73,22 @@
                                         (dissoc kommentti :liite)))))
                          (havainnot/hae-havainnon-kommentit db havainto-id))
         :sanktiot (into []
-                        (comp (map #(konv/string->keyword % :ryhma))
-                              (map #(assoc % :summa (double (:summa %)))))
+                        (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
+                              (map konv/alaviiva->rakenne)
+                              (map #(konv/string->keyword % :laji))
+                              (map #(assoc %
+                                      :sakko? (not (nil? (:summa %)))
+                                      :summa (some-> % :summa double))))
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
 
-(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm ryhma summa indeksi] :as sanktio} havainto]
+(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi] :as sanktio} havainto urakka]
+  (log/debug "TALLENNA sanktio: " sanktio " urakka: " urakka ", tyyppi: " tyyppi)
   (if (neg? id)
-    (let [id (:id (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm) (name ryhma) summa indeksi havainto))]
+    (let [id (:id (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm)
+                                          (name laji) (:id tyyppi)
+                                          toimenpideinstanssi urakka
+                                          summa indeksi havainto))]
       (sanktiot/merkitse-maksuera-likaiseksi! db havainto))
     ;; FIXME: voiko päivittää sanktiota?
     nil))
@@ -132,7 +140,7 @@
                                                                       id))
                                 (when (= :sanktio (:paatos (:paatos havainto)))
                                   (doseq [sanktio (:sanktiot havainto)]
-                                    (tallenna-havainnon-sanktio c user sanktio id))))
+                                    (tallenna-havainnon-sanktio c user sanktio id urakka))))
 
                               (hae-havainnon-tiedot c user urakka id))))
 
@@ -151,9 +159,7 @@
   [db user]
   (into []
         ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
-        (map #(let [laji (:laji (konv/array->set % :laji))]
-                (assoc %
-                  :laji (into #{} (map keyword) laji))))
+        (map #(konv/array->set % :laji keyword))
         (sanktiot/hae-sanktiotyypit db)))
   
                          

@@ -2,19 +2,25 @@
 -- Luo uuden sanktion annetulle havainnolle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, maara, indeksi, havainto)
-VALUES (:perintapvm, :ryhma :: sakkoryhma, :summa, :indeksi, :havainto);
+       (perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, havainto)
+VALUES (:perintapvm, :ryhma::sanktiolaji, :tyyppi,
+        (SELECT id FROM toimenpideinstanssi WHERE id = :toimenpideinstanssi AND urakka = :urakka),
+        :summa, :indeksi, :havainto);
 
 
 -- name: hae-havainnon-sanktiot
 -- Palauttaa kaikki annetun havainnon sanktiot
 SELECT
-  id,
-  perintapvm,
-  maara      AS summa,
-  sakkoryhma AS ryhma,
-  indeksi
-FROM sanktio
+  s.id,
+  s.perintapvm,
+  s.maara      AS summa,
+  s.sakkoryhma AS laji,
+  s.toimenpideinstanssi,
+  s.indeksi,
+  t.id as tyyppi_id, t.nimi as tyyppi_nimi, t.toimenpidekoodi as tyyppi_toimenpidekoodi,
+  t.sanktiolaji as tyyppi_sanktiolaji  
+FROM sanktio s
+     JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE havainto = :havainto;
 
 -- name: hae-urakan-sanktiot
