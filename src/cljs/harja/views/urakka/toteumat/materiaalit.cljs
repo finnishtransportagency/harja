@@ -180,8 +180,8 @@
                                      (not
                                        (and
                                          (neg? (key kartta))
-                                         (:poistettu (val kartta))))
-                                     @materiaalitoteumat-mapissa)))
+                                         (:poistettu (val kartta)))))
+                                   @materiaalitoteumat-mapissa))
                                  @muokattu)
                              {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/envelope)
