@@ -139,8 +139,8 @@
                          rivi)
                        :aloituspvm
                        arvo))
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                      [:urakan-aikana]]}
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+            :varoita [[:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
@@ -207,7 +207,7 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
-(defonce toteumat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+(defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                     [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                     valittu-sivu @u/toteumat-valilehti
                                     valittu-hoitokausi @u/valittu-hoitokausi]
