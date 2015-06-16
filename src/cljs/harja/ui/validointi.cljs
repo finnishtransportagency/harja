@@ -42,7 +42,7 @@
   (when (str/blank? data)
     viesti))
 
-(defmethod validoi-saanto :yli-nolla [_ _ data _ _ & [viesti]] ; FIXME positiivinen
+(defmethod validoi-saanto :positiivinen-luku [_ _ data _ _ & [viesti]]
   (when (not (pos? data)) viesti))
 
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]

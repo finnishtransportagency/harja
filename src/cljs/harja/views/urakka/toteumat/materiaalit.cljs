@@ -127,7 +127,7 @@
      :validoi [[:ei-tyhja "Valitse materiaali."]]
      :leveys "50%"}
 
-    {:otsikko "Määrä" :nimi :maara :tyyppi :string :validoi [[:yli-nolla "Anna käytetty määrä."]] :leveys "40%"}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :validoi [[:positiivinen-luku "Anna käytetty määrä."]] :leveys "40%"}
     {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
    materiaalit-atom])
 
@@ -201,7 +201,7 @@
             :fmt identity
             :muokattava? (constantly false)}
            {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]
-                                                                         [:hoitokaudella "Aloituksen pitää olla hoitokaudella"]]
+                                                                         [:urakan-aikana]]
             :muokattava? (constantly (not uusi-toteuma?)) :aseta (fn [rivi arvo]
                                                                    (assoc
                                                                      (if
@@ -250,7 +250,7 @@
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
-            :validoi [[:yli-nolla "Anna käytetty määrä."]]}
+            :validoi [[:positiivinen-luku "Anna käytetty määrä."]]}
            {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false)}
            {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false)}
            {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
