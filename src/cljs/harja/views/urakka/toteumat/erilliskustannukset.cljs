@@ -211,7 +211,10 @@
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :leveys-col    3}
-           {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm  :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]] :leveys-col 3}
+           {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
+            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
+            :varoita [[:urakan-aikana "Antamasi päivämäärä on urakkasopimuksen ulkopuolella."]]
+            }
            {:otsikko "Rahamäärä" :nimi :rahasumma :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str

@@ -183,7 +183,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (if (or (nil? muokattava?) (muokattava? rivi))
            ^{:key (str nimi)}
            [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
-                                             " has-error"))}
+                                             " sisaltaa-virheen"))}
             (when-not (empty? kentan-virheet)
              (virheen-ohje kentan-virheet))
 
@@ -760,7 +760,7 @@ Optiot on mappi optioita:
                                       (if (or (nil? muokattava?) (muokattava? rivi))
                                         ^{:key (str nimi)}
                                         [:td {:class (str (when-not (empty? kentan-virheet)
-                                                            "has-error"))}
+                                                            "sisaltaa-virheen"))}
                                          (when-not (empty? kentan-virheet)
                                            (virheen-ohje kentan-virheet))
                                          [tee-kentta s (r/wrap
