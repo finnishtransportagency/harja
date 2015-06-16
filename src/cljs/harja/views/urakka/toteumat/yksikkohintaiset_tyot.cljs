@@ -220,14 +220,7 @@
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
-  (let [muodosta-nelostason-tehtavat (fn []
-                                       "Hakee urakan nelostason tehtävät ja lisää niihin emon koodin."
-                                       (map
-                                         (fn [tasot] (let [kolmostaso (nth tasot 2)
-                                                           nelostaso (nth tasot 3)]
-                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                                         @u/urakan-toimenpiteet-ja-tehtavat))
-        lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
+  (let [lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
                                                      (fn [rivi] (assoc rivi :yksikkohinta
                                                                             (or (:yksikkohinta (first (filter
                                                                                                         (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
@@ -268,7 +261,11 @@
                                                (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                                rivit))
         tyorivit (reaction
-                   (let [rivit (muodosta-nelostason-tehtavat)
+                   (let [rivit (map
+                                 (fn [tasot] (let [kolmostaso (nth tasot 2)
+                                                   nelostaso (nth tasot 3)]
+                                               (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                 @u/urakan-toimenpiteet-ja-tehtavat)
                          toteumat @toteumat]
 
                      (when toteumat
