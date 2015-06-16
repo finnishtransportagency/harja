@@ -50,7 +50,7 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
 -- name: listaa-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
-  toimenpidekoodi,
+  toimenpidekoodi as tpk_id,
   SUM(tt.maara) AS maara,
   (SELECT nimi
    FROM toimenpidekoodi tpk
