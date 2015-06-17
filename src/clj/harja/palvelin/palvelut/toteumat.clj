@@ -58,7 +58,7 @@
     (first (toteuman-tehtavat->map [rivi]))))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteuman tehtävien summat.")
+  (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
@@ -145,8 +145,8 @@
                             (let [paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
                                                                                            {:urakka-id (:urakka-id toteuma)
                                                                                             :sopimus-id (:sopimus-id toteuma)
-                                                                                            :alkupvm (konv/sql-timestamp (:aloituspvm toteuma))
-                                                                                            :loppupvm (konv/sql-timestamp (:lopetuspvm toteuma))
+                                                                                            :alkupvm (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
+                                                                                            :loppupvm (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
                                                                                             :tyyppi (:tyyppi toteuma)})]
                               (log/debug "Päivitetyt summat: " paivitetyt-summat)
                               {:toteuma toteuma :tehtavien-summat paivitetyt-summat})))

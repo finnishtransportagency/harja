@@ -41,7 +41,9 @@
                                 :tyyppi :yksikkohintainen
                                 :urakka-id (:id @nav/valittu-urakka)
                                 :sopimus-id (first @u/valittu-sopimusnumero)
-                                :tehtavat lomakkeen-tehtavat))]
+                                :tehtavat lomakkeen-tehtavat
+                                :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
+                                :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
     (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
     (go (let [vastaus (<! (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma))]
           (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
