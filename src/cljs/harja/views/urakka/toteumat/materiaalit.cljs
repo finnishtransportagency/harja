@@ -130,6 +130,7 @@
   (let [;; Organisaatiotiedot voidaan esitäyttää - nämä ylikirjoitetaan jos kyseessä on olemassaoleva toteuma
         tiedot (atom {:suorittaja (:nimi @u/urakan-organisaatio) :ytunnus (:ytunnus @u/urakan-organisaatio)})
         vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
+        koneen-lisaama? false ;; TODO Hae onko koneen suorittama
         muokattu (reaction @tiedot)
         ;tallennus-kaynnissa (atom false)
         materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @tiedot))))
@@ -188,37 +189,27 @@
                   :virheet lomakkeen-virheet}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-
-           #_{:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
-                                                           (let [[alku loppu] @u/valittu-hoitokausi]
-                                                             [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
-            :fmt identity
-            :muokattava? (constantly false)}
-           {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+           {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita [[:urakan-aikana]]
-            :muokattava? (constantly (not vanha-toteuma?)) :aseta (fn [rivi arvo]
-                                                                   (assoc
-                                                                     (if
-                                                                       (or
-                                                                         (not (:paattynyt rivi))
-                                                                         (pvm/jalkeen? arvo (:paattynyt rivi)))
-                                                                       (assoc rivi :paattynyt arvo)
-                                                                       rivi)
-                                                                     :alkanut
-                                                                     arvo))
+            :muokattava? (constantly (and (not vanha-toteuma?) (not koneen-lisaama?)))
+            :aseta (fn [rivi arvo]
+                     (assoc
+                       (if (or
+                             (not (:paattynyt rivi))
+                             (pvm/jalkeen? arvo (:paattynyt rivi)))
+                         (assoc rivi :paattynyt arvo)
+                         rivi)
+                       :alkanut arvo))
             :leveys "30%"}
            {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-            :muokattava? (constantly (not vanha-toteuma?)) :leveys "30%"}
-           {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat
+            :muokattava? (constantly (and (not vanha-toteuma?) (not koneen-lisaama?))) :leveys "30%"}
+           {:otsikko "Materiaalit" :nimi :materiaalit  :komponentti [materiaalit-ja-maarat
                                                                     materiaalitoteumat-mapissa
                                                                     materiaalien-virheet] :tyyppi :komponentti}
-           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :validoi [[:ei-tyhja "Anna y-tunnus"]]}
-           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto}]
-
-          ;; Jos löytyy joko ytunnus tai suorittaja, annetaan tiedot sellaisenaan
-          ;; Jos molemmat puuttuu, kaivetaan ne organisaation tiedoista.
+           {:otsikko "Suorittaja" :tyyppi :string :muokattava? (constantly (not koneen-lisaama?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not koneen-lisaama?)) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not koneen-lisaama?))}]
           @muokattu]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
