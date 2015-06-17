@@ -113,8 +113,6 @@
                                      (not (nil? (:aloituspvm @lomake-toteuma)))
                                      (not (nil? (:lopetuspvm @lomake-toteuma)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
-                                     (not (empty? (:suorittajan-nimi @lomake-toteuma)))
-                                     (not (empty? (:suorittajan-ytunnus @lomake-toteuma)))
                                      ; Validoi tehtävät
                                      (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
@@ -161,10 +159,10 @@
             :varoita [[:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittaja"]]}
-           {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string  :validoi [[:ei-tyhja "Kirjoita suorittajan y-tunnus"]]}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}]
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
+           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string}
+           {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
           @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
