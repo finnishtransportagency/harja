@@ -67,22 +67,14 @@
                                       @(materiaali-tiedot/hae-materiaalikoodit))))
 
 (defn hae-tiedot-vetolaatikkoon
-  [tiedot urakan-id materiaali-id]
-  (go
-    (reset! tiedot
-            (filter
-              (fn [kartta]
-                (let [hoitokauden-alku (first @u/valittu-hoitokausi)
-                      hoitokauden-loppu (second @u/valittu-hoitokausi)
-                      toteuman-alku (:alkanut (:toteuma kartta))
-                      toteuman-loppu (:paattynyt (:toteuma kartta))]
-
-                  (log "Toteuman alku:" (pvm/pvm toteuman-alku))
-                  (log "Hoitokausi:" (pvm/pvm hoitokauden-alku) "-" (pvm/pvm hoitokauden-loppu))
-                  (and
-                    (pvm/sama-tai-jalkeen? toteuman-alku hoitokauden-alku)
-                    (pvm/sama-tai-ennen? toteuman-alku hoitokauden-loppu))))
-              (<!(materiaali-tiedot/hae-toteumat-materiaalille urakan-id materiaali-id))))))
+  [urakan-id materiaali-id]
+  (let [hoitokausi @u/valittu-hoitokausi
+        sopimusnumero (first @u/valittu-sopimusnumero)]
+    (materiaali-tiedot/hae-toteumat-materiaalille
+      urakan-id
+      materiaali-id
+      hoitokausi
+      sopimusnumero)))
 
 (defn tallenna-toteuma-materiaaleja
   [urakka atomi]
@@ -107,11 +99,8 @@
                                                                           @u/valittu-hoitokausi
                                                                           (first @u/valittu-sopimusnumero)))]
             (log (pr-str tulos))
-            ;; fixme: (reset! atomi uudet tiedot)
             (reset! urakan-materiaalin-kaytot tulos)
-            ;; Koska vetolaatikon kautta voidaan kerralla muokata vain yhtä materiaalia, voidaan kaivaa vaan
-            ;; materiaalikoodi ensimmäisestä materiaalitoteumasta.
-            (hae-tiedot-vetolaatikkoon atomi urakka (:materiaalikoodi (first toteumamateriaalit))))))))
+            (reset! atomi materiaalit))))))
 
 (defn materiaalit-ja-maarat
   [materiaalit-atom virheet-atom]
@@ -233,11 +222,15 @@
 
 (defn materiaalinkaytto-vetolaatikko
   [urakan-id mk]
-  (let [tiedot (atom nil)]
+  (let [tiedot (reaction<! (materiaali-tiedot/hae-toteumat-materiaalille
+                             urakan-id
+                             (:id (:materiaali mk))
+                             @u/valittu-hoitokausi
+                             (first @u/valittu-sopimusnumero)))]
     (komp/luo
       {:component-will-mount
        (fn [_]
-         (hae-tiedot-vetolaatikkoon tiedot urakan-id (:id (:materiaali mk))))}
+         #_(hae-tiedot-vetolaatikkoon urakan-id (:id (:materiaali mk))))}
 
       (fn [urakan-id vm]
         (log "Vetolaatikko tiedot:" (pr-str @tiedot))

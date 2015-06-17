@@ -28,8 +28,11 @@
   (log "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(pvm/pvm alku))
   (k/post! :hae-urakassa-kaytetyt-materiaalit {:urakka-id urakka-id :hk-alku alku :hk-loppu loppu :sopimus sopimus-id}))
 
-(defn hae-toteumat-materiaalille [urakka-id materiaali-id]
-  (k/post! :hae-urakan-toteumat-materiaalille {:urakka-id urakka-id :materiaali-id materiaali-id}))
+(defn hae-toteumat-materiaalille [urakka-id materiaali-id hoitokausi sopimus]
+  (k/post! :hae-urakan-toteumat-materiaalille {:urakka-id urakka-id
+                                               :materiaali-id materiaali-id
+                                               :hoitokausi hoitokausi
+                                               :sopimus sopimus}))
 
 (defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
   (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))

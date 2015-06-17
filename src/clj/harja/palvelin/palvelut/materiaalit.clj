@@ -38,7 +38,7 @@
         (q/hae-urakassa-kaytetyt-materiaalit db urakka-id (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
 (defn hae-urakan-toteumat-materiaalille
-  [db user urakka-id materiaali-id]
+  [db user urakka-id materiaali-id hoitokausi sopimus]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
@@ -46,7 +46,9 @@
                      %
                      (dissoc % :pohjavesialue)))
               (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
-        (let [tulos (q/hae-urakan-toteumat-materiaalille db urakka-id materiaali-id)]
+        (let [tulos (q/hae-urakan-toteumat-materiaalille db urakka-id materiaali-id
+                                                         (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))
+                                                         sopimus)]
           (log/info "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE")
           (log/info tulos)
           tulos)))
@@ -187,7 +189,8 @@
                       :hae-urakan-toteumat-materiaalille
                       (fn [user tiedot]
                         (hae-urakan-toteumat-materiaalille
-                          (:db this) user (:urakka-id tiedot) (:materiaali-id tiedot))))
+                          (:db this) user (:urakka-id tiedot) (:materiaali-id tiedot)
+                          (:hoitokausi tiedot) (:sopimus tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-toteuman-materiaalitiedot
                       (fn [user tiedot]
