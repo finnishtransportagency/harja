@@ -331,6 +331,7 @@
             [:input.pvm {:class (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus on-focus
+                         :on-blur #(muuta! data (-> % .-target .-value))
                          :on-change #(muuta! data (-> % .-target .-value))}]
             (when @auki
               [:div.aikavalinta 
