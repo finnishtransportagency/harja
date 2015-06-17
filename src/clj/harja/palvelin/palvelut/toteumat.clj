@@ -209,17 +209,13 @@
                             #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id ek))
   (jdbc/with-db-transaction [c db]
-                            (if (not (:id ek))
-                              (q/luo-erilliskustannus<! c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
-                                                        (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user))
+                            (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
+                                              (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
+                              (if (not (:id ek))
+                                (apply q/luo-erilliskustannus<! parametrit)
 
-                              (q/paivita-erilliskustannus! c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
-                                                           (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)
-                                                           (or (:poistettu ek) false) (:id ek)))
-
-                            (log/debug "Merkitään kustannussuunnitelma likaiseksi erilliskustannuksen toimenpideinstanssille: " (:toimenpideinstanssi ek))
+                                (apply q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false) (:id ek)]))))
                             (q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
-
                             (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
                                                                     :alkupvm   (:alkupvm ek)
                                                                     :loppupvm  (:loppupvm ek)})))
