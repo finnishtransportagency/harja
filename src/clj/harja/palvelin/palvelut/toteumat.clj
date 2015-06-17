@@ -142,7 +142,7 @@
                                     (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
                                   true)))
 
-                            (let [paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
+                            (let [paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
                                                                                            {:urakka-id (:urakka-id toteuma)
                                                                                             :sopimus-id (:sopimus-id toteuma)
                                                                                             :alkupvm (konv/sql-timestamp (:aloituspvm toteuma))
