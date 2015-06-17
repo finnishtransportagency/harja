@@ -8,6 +8,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm])
 
@@ -151,6 +152,10 @@ ja viimeinen voivat olla vajaat)."
 (defonce urakan-toimenpiteet-ja-tehtavat
   (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
                   (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+
+(defonce urakan-organisaatio
+  (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
+    (organisaatio/hae-urakan-organisaatio ur))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! (let [ur (:id @nav/valittu-urakka)

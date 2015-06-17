@@ -16,7 +16,7 @@ SELECT u.id, u.nimi, u.sampoid, u.alue,
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
-SELECT * FROM organisaatio o
+SELECT o.nimi, o.ytunnus FROM organisaatio o
 JOIN urakka u ON o.id = u.urakoitsija
 where u.id = :urakka;
 

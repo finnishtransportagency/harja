@@ -99,9 +99,9 @@
 
 (defn hae-urakan-organisaatio [db user urakka-id]
   (log/debug "Haetaan organisaatio urakalle: " urakka-id)
-  []
-  (into []
-        (q/hae-urakan-organisaatio db urakka-id)))
+  (let [organisaatio (first (into []
+        (q/hae-urakan-organisaatio db urakka-id)))]
+    (log/debug "Urakan organisaatio saatu: " (pr-str organisaatio))))
 
 (defn hae-urakan-sopimustyyppi [db user urakka-id]
   (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
