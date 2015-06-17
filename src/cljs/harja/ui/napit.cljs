@@ -76,7 +76,7 @@
                                (reset! nayta-virheviesti? true)
                                (when kun-virhe (kun-virhe tulos)))))))}
 
-        (if @kysely-kaynnissa? [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
+        (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
        (when @nayta-virheviesti?
          (do
            (log "Näytetään virheviesti")
