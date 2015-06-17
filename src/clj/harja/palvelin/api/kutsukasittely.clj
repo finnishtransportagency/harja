@@ -4,14 +4,14 @@
   (:require [cheshire.core :as cheshire]
             [harja.tyokalut.json_validointi :as json]
             [taoensso.timbre :as log])
-  (:import (javax.ws.rs BadRequestException)))
+  (:import (javax.ws.rs BadRequestException)
+           (com.google.gson JsonParseException)))
 
 
-(defn logita-kutsu [resurssi request]
+(defn logita-kutsu [resurssi request body]
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi)
-  (log/debug "Kutsu" request)
-  (when (= :post (:request-method request))
-    (log/debug "POST-kutsun sisältö: " (slurp (:body request)))))
+  (log/debug "Kutsu:" request)
+  (log/debug "Sisältö:" body))
 
 (defn logita-vastaus [resurssi response]
   (if (= 200 (:status response))
@@ -20,7 +20,8 @@
 
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
-  [status & koodit-ja-viestit]
+  [status koodit-ja-viestit]
+  (log/debug "koodit ja viestit:" koodit-ja-viestit)
   {:status  status
    :headers {"Content-Type" "application/json"}
    :body    (cheshire/encode {:virheet
@@ -28,7 +29,6 @@
                                 {:virhe
                                  {:koodi  koodi
                                   :viesti viesti}})})})
-
 
 (defn tee-sisainen-kasittelyvirhevastaus
   "Luo sisäisen käsittelyvirhevastauksen (Status 500) ja asettaa vastauksen bodyksi JSON muodossa virheet."
@@ -46,23 +46,26 @@
   palautetaan status 500 (sisäinen käsittelyvirhe)."
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
-   (let [json (cheshire/encode payload)
-         json-validi? (json/validoi skeema json)]
-     (if json-validi?
-       {:status  status
-        :headers {"Content-Type" "application/json"}
-        :body    json}
-       (tee-sisainen-kasittelyvirhevastaus "Sisainen käsittelyvirhe")))))
+   (let [json (cheshire/encode payload)]
+     (json/validoi skeema json)
+     {:status  status
+      :headers {"Content-Type" "application/json"}
+      :body    json}
+     )))
 
 (defn lue-kutsu
-  "Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
+  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-kutsu. Muille kutsuille palauttaa arvon nil.
+  Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
-  [skeema request]
-  (let [json (slurp (:body request))
-        json-validi? (json/validoi skeema json)]
-    (if json-validi?
-      (cheshire/decode json)
-      nil)))
+  [skeema request body]
+
+  (when (= :post (:request-method request))
+    (let [json body
+          json-validi? (json/validoi skeema json)]
+      (if json-validi?
+        (cheshire/decode json)
+        nil))))
+
 
 (defn kasittele-kutsu [resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
@@ -75,20 +78,22 @@
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 =
   kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
 
-  (logita-kutsu resurssi request)
 
-  (let [vastaus (atom nil)]
-    (try (->
-           (let
-             [parametrit (:params request)
-              kutsun-data (lue-kutsu kutsun-skeema request)
-              vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data)]
-             (reset! vastaus (tee-vastaus vastauksen-skeema vastauksen-data))))
-
-         (catch BadRequestException e
-           (reset! vastaus (tee-viallinen-kutsu-virhevastaus "Viallinen kutsu" (.getMessage e))))
-         (catch Exception e
-           (reset! vastaus (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e)))))
-
-    (logita-vastaus resurssi @vastaus)
-    @vastaus))
+  (let [body (if (:body request)
+               (slurp (:body request))
+               nil)]
+    (logita-kutsu resurssi request body)
+    (let [vastaus (try
+                    (let
+                      [parametrit (:params request)
+                       kutsun-data (lue-kutsu kutsun-skeema request body)
+                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data)]
+                      (tee-vastaus vastauksen-skeema vastauksen-data))
+                    (catch JsonParseException e
+                      (tee-viallinen-kutsu-virhevastaus "Viallinen kutsu. Vastaanotettu JSON ei ole validi. " (.getMessage e)))
+                    (catch BadRequestException e
+                      (tee-viallinen-kutsu-virhevastaus "Viallinen kutsu" (.getMessage e)))
+                    (catch Exception e
+                      (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e))))]
+      (logita-vastaus resurssi vastaus)
+      vastaus)))

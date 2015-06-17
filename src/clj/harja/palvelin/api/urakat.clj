@@ -10,7 +10,10 @@
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.api.skeemat :as skeemat]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.api.kutsukasittely :refer [kasittele-kutsu]]
+            [taoensso.timbre :as log])
+  (:import
+    (javax.ws.rs BadRequestException)))
 
 (defn muodosta-kokonaishintaiset-tyot [tyot]
   (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
@@ -65,27 +68,20 @@
                   :yksikkohintaisetTyot (muodosta-yksikkohintaiset-tyot (get yksikkohintaiset (:id sopimus)))
                   :materiaalinKaytot (muodosta-materiaalin-kaytot (get materiaalit (:id sopimus))))})))
 
-(defn rakenna-vastaus [db id urakka]
+(defn muodosta-vastaus [db id urakka]
   {:urakka                                                  ;; URAKAN tiedot
    {:tiedot     (assoc urakka                               ; perustiedot (pl. väylämuoto) tulevat suoraan hae-urakka kyselystä
                   :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn hae-urakka [db urakka-id]
+(defn hae-urakka [db {urakka-id :id}]
   ;; FIXME: mieti mekanismi urakoiden pääsynvalvontaan
   (try
     (let [id (Integer/parseInt urakka-id)
-          urakka (some->> id (urakat/hae-urakka db) first
-                          konv/alaviiva->rakenne)]
+          urakka (some->> id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (if-not urakka
-        ;; Jos urakkaa ei löydy, palautetaan virhe
-        (tee-viallinen-kutsu-virhevastaus "Tuntematon urakka" ;; FIXME: api virheet constanteina
-                                          (str "Urakkaa id:llä " urakka-id " ei löydy."))
-
-        ;; Fixme: refaktoroi käyttämään yleistä käsittelylogiikkaa
-        (tee-vastaus
-          skeemat/+urakan-haku-vastaus+
-          (rakenna-vastaus db id urakka))))
+        (throw (BadRequestException. "Tuntematon urakka" (str "Urakkaa id:llä " urakka-id " ei löydy.")))
+        (muodosta-vastaus db id urakka)))
     (catch Exception e
       (log/warn e "Urakan haku epäonnistui.")
       (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e)))))
@@ -96,8 +92,9 @@
   (start [{http :http-palvelin db :db :as this}]
     (julkaise-reitti
       http :api-hae-urakka
-      (GET "/api/urakat/:id" [id]
-        (hae-urakka db id)))
+      (GET "/api/urakat/:id" request
+        (kasittele-kutsu :api-hae-urakka request nil skeemat/+urakan-haku-vastaus+
+                         (fn [parametit data] (hae-urakka db parametit)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo-test
+(ns harja.palvelin.integraatiot.sampo.sampo-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.palvelin.integraatiot.sampo :refer [->Sampo] :as sampo]
             [hiccup.core :refer [html]]
