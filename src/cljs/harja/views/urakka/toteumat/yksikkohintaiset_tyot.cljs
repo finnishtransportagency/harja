@@ -25,17 +25,28 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce lomakkeessa-muokattava-toteuma (atom nil))
+(defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                            [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                            valittu-sivu @u/toteumat-valilehti
+                                            valittu-hoitokausi @u/valittu-hoitokausi]
+                                        ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
+                                        (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
+                                          (log "TOT Haetaan urakan toteumat")
+                                          (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
+
 
 (defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
-  (let [schema-toteuma (->
-                         (assoc lomakkeen-toteuma
-                           :tyyppi :yksikkohintainen
-                           :urakka-id (:id @nav/valittu-urakka)
-                           :sopimus-id (first @u/valittu-sopimusnumero)
-                           :tehtavat lomakkeen-tehtavat))]
-    (log "TOT Tallennetaan toteuma: " (pr-str schema-toteuma))
-    (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat schema-toteuma)))
+  (let [lahetettava-toteuma (->
+                              (assoc lomakkeen-toteuma
+                                :tyyppi :yksikkohintainen
+                                :urakka-id (:id @nav/valittu-urakka)
+                                :sopimus-id (first @u/valittu-sopimusnumero)
+                                :tehtavat lomakkeen-tehtavat))]
+    (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
+    (go (let [vastaus (<! (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma))]
+          (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
+          (if vastaus
+            (reset! tehtavien-summat (:tehtavien-summat vastaus)))))))
 
 (defn tehtavat-ja-maarat [tehtavat]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
@@ -70,6 +81,8 @@
       {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%"}
       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
      tehtavat]))
+
+(defonce lomakkeessa-muokattava-toteuma (atom nil))
 
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
@@ -115,7 +128,8 @@
                                                                     {:toimenpidekoodi (:tehtava rivi)
                                                                      :maara (:maara rivi)
                                                                      :tehtava-id (:tehtava-id rivi)
-                                                                     :poistettu (:poistettu rivi)})
+                                                                     :poistettu (:poistettu rivi)
+                                                                     })
                                                                   (filter
                                                                     (fn [tehtava] (not (and (true? (:poistettu tehtava))
                                                                                             (neg? (:id tehtava)))))
@@ -207,15 +221,6 @@
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
-(defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                    valittu-sivu @u/toteumat-valilehti
-                                    valittu-hoitokausi @u/valittu-hoitokausi]
-                                ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
-                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
-                                  (log "TOT Haetaan urakan toteumat")
-                                  (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
-
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat"
   []
@@ -243,10 +248,11 @@
                                                         rivit))
         lisaa-tyoriveille-toteutunut-maara (fn [rivit]
                                              (map
-                                               (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (:maara (first (filter
-                                                                                                                     (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
-                                                                                                                     @tehtavien-summat)))))
-                                                 rivit))
+                                               (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (or (:maara (first (filter
+                                                                                                                         (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
+                                                                                                                         @tehtavien-summat)))
+                                                                                                        0)))
+                                               rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
                                                        (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
