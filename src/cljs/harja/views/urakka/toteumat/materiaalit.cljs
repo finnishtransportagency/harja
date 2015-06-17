@@ -191,7 +191,7 @@
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita [[:urakan-aikana]]
-            :muokattava? (constantly (and (not vanha-toteuma?) (not koneen-lisaama?)))
+            :muokattava? (constantly (not koneen-lisaama?))
             :aseta (fn [rivi arvo]
                      (assoc
                        (if (or
@@ -203,7 +203,7 @@
             :leveys "30%"}
            {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-            :muokattava? (constantly (and (not vanha-toteuma?) (not koneen-lisaama?))) :leveys "30%"}
+            :muokattava? (constantly (not koneen-lisaama?)) :leveys "30%"}
            {:otsikko "Materiaalit" :nimi :materiaalit  :komponentti [materiaalit-ja-maarat
                                                                     materiaalitoteumat-mapissa
                                                                     materiaalien-virheet] :tyyppi :komponentti}
