@@ -101,7 +101,12 @@
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
-  (let [lomake-toteuma (atom @lomakkeessa-muokattava-toteuma)
+  (let [lomake-toteuma (atom (if (empty? @lomakkeessa-muokattava-toteuma)
+                               (if @u/urakan-organisaatio
+                                 (-> (assoc @lomakkeessa-muokattava-toteuma :suorittajan-nimi (:nimi @u/urakan-organisaatio))
+                                      (assoc :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)))
+                                 @lomakkeessa-muokattava-toteuma)
+                               @lomakkeessa-muokattava-toteuma))
         lomake-tehtavat (atom (into {}
                                     (map (fn [[id tehtava]]
                                            [id (assoc tehtava :tehtava
