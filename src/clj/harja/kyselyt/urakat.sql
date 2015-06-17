@@ -14,6 +14,12 @@ SELECT u.id, u.nimi, u.sampoid, u.alue,
        LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
  WHERE hallintayksikko = :hallintayksikko
 
+-- name: hae-urakan-organisaatio
+-- Hakee urakan organisaation urakka-id:llä.
+SELECT * FROM organisaatio o
+JOIN urakka u ON o.id = u.urakoitsija
+where u.id = :urakka;
+
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT u.id, u.nimi, u.sampoid, u.alue::POLYGON,

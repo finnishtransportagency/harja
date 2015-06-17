@@ -11,6 +11,7 @@
 (declare hallintayksikon-urakat
          urakan-tiedot
          hae-urakoita
+         hae-urakan-organisaatio
          hae-organisaation-urakat
          tallenna-urakan-sopimustyyppi)
 
@@ -28,6 +29,9 @@
       (julkaise-palvelu http :hae-organisaation-urakat
                         (fn [user organisaatio-id]
                           (hae-organisaation-urakat (:db this) user organisaatio-id)))
+      (julkaise-palvelu http :hae-urakan-organisaatio
+                        (fn [user urakka-id]
+                          (hae-urakan-organisaatio (:db this) user urakka-id)))
       (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
                         (fn [user tiedot]
                           (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
@@ -92,6 +96,12 @@
   (into []
         urakka-xf
         (q/hae-organisaation-urakat db organisaatio-id)))
+
+(defn hae-urakan-organisaatio [db user urakka-id]
+  (log/debug "Haetaan organisaatio urakalle: " urakka-id)
+  []
+  (into []
+        (q/hae-urakan-organisaatio db urakka-id)))
 
 (defn hae-urakan-sopimustyyppi [db user urakka-id]
   (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
