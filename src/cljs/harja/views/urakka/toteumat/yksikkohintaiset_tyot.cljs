@@ -35,13 +35,25 @@
                                           (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
 
 
-(defn tallenna-toteuma [lomakkeen-toteuma lomakkeen-tehtavat]
+(defn tallenna-toteuma
+  "Ottaa lomakkeen ja  tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
+  [lomakkeen-toteuma lomakkeen-tehtavat]
   (let [lahetettava-toteuma (->
                               (assoc lomakkeen-toteuma
                                 :tyyppi :yksikkohintainen
                                 :urakka-id (:id @nav/valittu-urakka)
                                 :sopimus-id (first @u/valittu-sopimusnumero)
-                                :tehtavat lomakkeen-tehtavat
+                                :tehtavat (mapv
+                                            (fn [rivi]
+                                              {:toimenpidekoodi (:tehtava rivi)
+                                               :maara (:maara rivi)
+                                               :tehtava-id (:tehtava-id rivi)
+                                               :poistettu (:poistettu rivi)
+                                               })
+                                            (filter
+                                              (fn [tehtava] (not (and (true? (:poistettu tehtava))
+                                                                      (neg? (:id tehtava)))))
+                                              (vals lomakkeen-tehtavat)))
                                 :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
                                 :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
     (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
@@ -125,17 +137,7 @@
                               (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
-                             #(tallenna-toteuma @lomake-toteuma (mapv
-                                                                  (fn [rivi]
-                                                                    {:toimenpidekoodi (:tehtava rivi)
-                                                                     :maara (:maara rivi)
-                                                                     :tehtava-id (:tehtava-id rivi)
-                                                                     :poistettu (:poistettu rivi)
-                                                                     })
-                                                                  (filter
-                                                                    (fn [tehtava] (not (and (true? (:poistettu tehtava))
-                                                                                            (neg? (:id tehtava)))))
-                                                                    (vals @lomake-tehtavat))))
+                             #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
                              {:luokka "nappi-ensisijainen"
                               :disabled (false? @valmis-tallennettavaksi?)
                               :kun-onnistuu #(do
