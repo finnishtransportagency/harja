@@ -127,11 +127,12 @@
   [ur]
   "Valitun toteuman tietojen näkymä"
   [ur]
-  (let [tiedot (atom nil)
+  (let [;; Organisaatiotiedot voidaan esitäyttää - nämä ylikirjoitetaan jos kyseessä on olemassaoleva toteuma
+        tiedot (atom {:suorittaja (:nimi @u/urakan-organisaatio) :ytunnus (:ytunnus @u/urakan-organisaatio)})
+        vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
         muokattu (reaction @tiedot)
         ;tallennus-kaynnissa (atom false)
         materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @tiedot))))
-        uusi-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
         lomakkeen-virheet (atom {})
         materiaalien-virheet (atom {})]
 
@@ -147,11 +148,12 @@
 
       (fn [ur]
         (log "Lomake, muokattu: " (pr-str @muokattu))
-        (log "Uusi toteuma?" uusi-toteuma?)
+        (log "Uusi toteuma?" vanha-toteuma?)
+        (log (pr-str @u/urakan-organisaatio))
         [:div.toteuman-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! valittu-materiaalin-kaytto nil)}
           (ikonit/chevron-left) " Takaisin materiaaliluetteloon"]
-         (if uusi-toteuma?
+         (if vanha-toteuma?
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
 
@@ -187,14 +189,14 @@
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
 
-           {:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
+           #_{:otsikko "Hoitokausi" :nimi :hoitokausi :hae (fn [_]
                                                            (let [[alku loppu] @u/valittu-hoitokausi]
                                                              [:span (pvm/pvm alku) " \u2014 " (pvm/pvm loppu)]))
             :fmt identity
             :muokattava? (constantly false)}
            {:otsikko     "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita [[:urakan-aikana]]
-            :muokattava? (constantly (not uusi-toteuma?)) :aseta (fn [rivi arvo]
+            :muokattava? (constantly (not vanha-toteuma?)) :aseta (fn [rivi arvo]
                                                                    (assoc
                                                                      (if
                                                                        (or
@@ -207,14 +209,16 @@
             :leveys "30%"}
            {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-            :muokattava? (constantly (not uusi-toteuma?)) :leveys "30%"}
-           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :validoi [[:ei-tyhja "Anna y-tunnus"]]}
-           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto}
+            :muokattava? (constantly (not vanha-toteuma?)) :leveys "30%"}
            {:otsikko "Materiaalit" :nimi :materiaalit :komponentti [materiaalit-ja-maarat
                                                                     materiaalitoteumat-mapissa
-                                                                    materiaalien-virheet] :tyyppi :komponentti}]
+                                                                    materiaalien-virheet] :tyyppi :komponentti}
+           {:otsikko "Suorittaja" :tyyppi :string :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto}]
 
+          ;; Jos löytyy joko ytunnus tai suorittaja, annetaan tiedot sellaisenaan
+          ;; Jos molemmat puuttuu, kaivetaan ne organisaation tiedoista.
           @muokattu]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
