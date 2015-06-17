@@ -27,11 +27,11 @@
 
 (defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                             [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                            valittu-sivu @u/toteumat-valilehti
+                                            valittu-urakan-valilehti @u/urakan-valittu-valilehti
+                                            valittu-toteuman-valilehti @u/toteumat-valilehti
                                             valittu-hoitokausi @u/valittu-hoitokausi]
-                                        ; FIXME Valittu sivu on :yksikkohintaiset-tyot myös silloin kun ylemmän tason välilehti on muu.
-                                        (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-sivu :yksikkohintaiset-tyot))
-                                          (log "TOT Haetaan urakan toteumat")
+                                        (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-toteuman-valilehti :yksikkohintaiset-tyot) (= valittu-urakan-valilehti :toteumat))
+                                          (log "TOT Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi valittu-toteuman-valilehti valittu-urakan-valilehti)
                                           (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
 
 
