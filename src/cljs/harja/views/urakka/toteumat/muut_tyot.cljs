@@ -16,10 +16,11 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
 
             [harja.ui.visualisointi :as vis]
-            [harja.ui.lomake :refer [lomake]]
+            [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
@@ -55,7 +56,7 @@
     +valitse-tyyppi+))
 
 (def +muun-tyon-tyypit+
-  [[:muutostyo "Muutostyö"] [:akillinen-hoitotyo "Äkillinen hoitotyö"] [:lisatyo "Lisätyö"]])
+  [:muutostyo :akillinen-hoitotyo :lisatyo])
 
 
 (def korostettavan-rivin-id (atom nil))
@@ -88,22 +89,28 @@
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
                                              (not (and
-                                                    (:toimenpideinstanssi m)
+                                                    (get-in m [:tehtava :toimenpidekoodi])
                                                     (:tyyppi m)
-                                                    (:pvm m)
-                                                    (:rahasumma m)))))
-        tallennus-kaynnissa (atom false)]
+                                                    (:alkanut m)
+                                                    (or (get-in m [:tehtava :paivanhinta])
+                                                        (:maara m))))))
+        tallennus-kaynnissa (atom false)
+        tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit
+        jarjestelman-lisaama-toteuma? false                 ;FIXME: tähän haettava arvo
+        ]
 
     (komp/luo
       (fn []
         [:div.muun-tyon-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
           (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
-         (if (:id @valittu-toteuma)
+         (if (get-in @valittu-toteuma [:tehtava :id])
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
 
          [lomake {:luokka   :horizontal
+                  :voi-muokata? true ;fixme: ei voi jos koneen lisäämä toteuma. Katso ysk.hint. töiden tot. esimerkkitoteutus
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
@@ -164,18 +171,60 @@
             :leveys-col    3}
            {:otsikko       "Tyyppi" :nimi :tyyppi
             :tyyppi        :valinta
-            :valinta-arvo  first
-            :valinta-nayta #(if (nil? %) +valitse-tyyppi+ second)
+            :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (muun-tyon-tyypin-teksti %))
             :valinnat      +muun-tyon-tyypit+
-            :fmt           #(muun-tyon-tyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :leveys-col    3}
-           {:otsikko "Alkanut pvm" :nimi :alkanut :tyyppi :pvm  :validoi [[:ei-tyhja "Anna toteuman aloituksen päivämäärä"]] :leveys-col 3}
-           {:otsikko "Lopetus pvm" :nimi :paattynyt :tyyppi :pvm  :validoi [[:ei-tyhja "Anna toteuman lopetuksen päivämäärä"]] :leveys-col 3}
-           ;; FIXME: lisää hinnoittelutyyppi päivän hinta tai muutoshintainen
-           {:otsikko "Päivän hinta" :nimi :paivanhinta :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
-            :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
+           {:otsikko       "Tehtävä" :nimi :tehtava
+            :hae #(get-in % [:tehtava :toimenpidekoodi])
+            :valinta-arvo  #(:id (nth % 3))
+            :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+            :tyyppi        :valinta
+            :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                             (get-in @muokattu [:toimenpideinstanssi :tpi_id])
+                             toimenpideinstanssit tehtavat-tasoineen)
+            :fmt           #(muun-tyon-tyypin-teksti %)
+            :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
+            :aseta        (fn [rivi arvo] (assoc-in rivi
+                                            [:tehtava :toimenpidekoodi] arvo))
+            :leveys-col    3}
+           (when (get-in @muokattu [:tehtava :toimenpidekoodi])
+             (lomake/ryhma
+              "Tehtävän tarkemmat tiedot"
+              ;; FIXME: lisää hinnoittelutyyppi päivän hinta tai muutoshintainen
+              {:otsikko "Määrä" :nimi :maara :tyyppi :numero :varoita [[:ei-tyhja "Haluatko jättää määrän antamatta?"]] :leveys-col 3}
+              {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
+               :tyyppi        :valinta
+               :valinta-arvo  first
+               :valinta-nayta second
+               :valinnat      [[:yksikkohinta "Yksikköhinta"] [:paivanhinta "Päivän hinta"]]
+               :leveys-col    3}
+              (when (= (:hinnoittelu @muokattu) :paivanhinta)
+                {:otsikko "Päivän hinta" :nimi :paivanhinta :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3})
+              {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+               :aseta (fn [rivi arvo]
+                        (assoc
+                          (if
+                            (or
+                              (not (:paattynyt rivi))
+                              (pvm/jalkeen? arvo (:paattynyt rivi)))
+                            (assoc rivi :paattynyt arvo)
+                            rivi)
+                          :alkanut
+                          arvo))
+               :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+               :varoita [[:urakan-aikana]]}
+              {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm
+               :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+               :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                         [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
+               :leveys-col 2}
+              {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+              {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+              {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
+               :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
+              ))
+
            ]
 
           @muokattu]]))))
@@ -197,10 +246,11 @@
                                         (= (:tehtava muutoshinta)
                                            (get-in muu-tyo [:tehtava :toimenpidekoodi]))) @u/muutoshintaiset-tyot))]
                    (assoc muu-tyo
+                     :hinnoittelu (if (get-in muu-tyo [:tehtava :paivanhinta]) :paivanhinta :yksikkohinta)
                      :yksikko (:yksikko muutoshintainen-tyo)
                      :yksikkohinta (:yksikkohinta muutoshintainen-tyo))))
                @valitut-muut-tyot))]
-
+(tarkkaile! "työrivit" tyorivit)
     (komp/luo
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
