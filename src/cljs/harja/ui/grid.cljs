@@ -638,7 +638,7 @@ Optiot on mappi optioita:
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
-  :luokat           Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
            voi-muokata? voi-lisata? jarjesta

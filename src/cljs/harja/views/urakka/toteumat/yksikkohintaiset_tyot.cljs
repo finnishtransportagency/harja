@@ -62,7 +62,7 @@
           (if vastaus
             (reset! tehtavien-summat (:tehtavien-summat vastaus)))))))
 
-(defn tehtavat-ja-maarat [tehtavat]
+(defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit]
@@ -71,7 +71,8 @@
     (log "TOT Toimenpideinstanssit " (pr-str toimenpideinstanssit))
 
     [grid/muokkaus-grid
-     {:tyhja "Ei töitä."}
+     {:tyhja "Ei töitä."
+      :voi-muokata? (not jarjestelman-lisaama-toteuma?)} ; FIXME Ei toimi?
      [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
        :tyyppi        :valinta
        :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
@@ -122,7 +123,7 @@
                                      (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))
-        jarjestelman-lisaama-toteuma? false] ; TODO Järjestelmän lisäämää toteumaa ei saa muokata
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelman_lisaama lomake-toteuma))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
