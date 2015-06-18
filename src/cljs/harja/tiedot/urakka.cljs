@@ -8,6 +8,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm])
@@ -146,7 +147,7 @@ ja viimeinen voivat olla vajaat)."
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
 
 (defonce urakan-valittu-valilehti (atom :yleiset))
-
+(defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
@@ -156,6 +157,12 @@ ja viimeinen voivat olla vajaat)."
 (defonce urakan-organisaatio
   (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
     (organisaatio/hae-urakan-organisaatio ur))))
+
+(defonce muutoshintaiset-tyot
+ (reaction<! (let [ur (:id @nav/valittu-urakka)
+                   sivu @suunnittelun-valittu-valilehti]
+               (when (and ur (= :muut sivu))
+                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur)))))
 
 (defonce muut-tyot-hoitokaudella
   (reaction<! (let [ur (:id @nav/valittu-urakka)
@@ -172,5 +179,3 @@ ja viimeinen voivat olla vajaat)."
                        (when (and ur aikavali (= :erilliskustannukset sivu))
                          (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
 
-
-(def suunnittelun-valittu-valilehti "Suunnitteluosion valittu välilehti" (atom :kokonaishintaiset))

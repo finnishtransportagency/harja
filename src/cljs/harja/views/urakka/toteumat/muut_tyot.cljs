@@ -20,7 +20,7 @@
 
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
@@ -184,13 +184,13 @@
   "Muiden töiden toteumat"
   []
   (let [urakka @nav/valittu-urakka
-        valitut-kustannukset
-        (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
-                        toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
-                    (reverse (sort-by :alkanut (filter #(and
-                                                     (= sopimus-id (:sopimus %))
-                                                     (= (:toimenpideinstanssi %) toimenpideinstanssi))
-                                                   @u/muut-tyot-hoitokaudella)))))]
+
+        valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi]
+                    (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
+                                                           (:id toimenpideinstanssi))
+                                                       @u/muut-tyot-hoitokaudella)))))]
+
+    (tarkkaile! "valitut-muut-tyot" valitut-muut-tyot)
 
     (komp/luo
       (fn []
@@ -202,22 +202,41 @@
 
            [grid/grid
             {:otsikko       (str "Muutos-, lisä- ja äkilliset hoitotyöt ")
-             :tyhja         (if (nil? @valitut-kustannukset)
+             :tyhja         (if (nil? @valitut-muut-tyot)
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
              :rivi-klikattu #(reset! valittu-toteuma %)
-             :rivin-luokka  #(aseta-rivin-luokka %)}
-            [{:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "20%"}
-             {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
-             {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %))
-              :fmt fmt/euro-opt :leveys "10%" :validoi [[:ei-tyhja "Anna hinta."]]}
-             {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
-              :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "45%"}
-             {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
+             :rivin-luokka  #(aseta-rivin-luokka %)
+             :tunniste      #(get-in % [:tehtava :id])}
+            [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
+             {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
+             {:otsikko "Tehtävä" :tyyppi :string :nimi :tehtavan_nimi
+              :hae     #(get-in % [:tehtava :nimi]) :leveys "25%"}
+             {:otsikko "Määrä" :tyyppi :string :nimi :maara
+              :leveys "10%"}
+             {:otsikko "Yksikkö"
+              :hae (constantly "ei vielä tehty")
+              :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
+             {:otsikko "Yksikköhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+                       :hae #(if (get-in % [:tehtava :paivanhinta])
+                                nil
+                                10)               ;;fixme: hae oikeasti yksikkö ja -hinta
+                        :muokattava? (constantly false)
+              :fmt fmt/euro-opt :leveys "10%"}
+
+             {:otsikko "Hinnoittelu" :tyyppi :string :nimi :hinnoittelu
+              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Sopimushinta") :leveys "10%"}
+             {:otsikko "Kustannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
+              :hae     #(if (get-in % [:tehtava :paivanhinta])
+                         (get-in % [:tehtava :paivanhinta])
+                         ;; fixme: alas haettava muutoshintainen_tyo taulusta yksikköhinta ja laskettava kustannus!
+                         (* (:maara %) 10))
+              :fmt     fmt/euro-opt :leveys "10%"}
+
              ]
-            @valitut-kustannukset
-            ]])))))
+            @valitut-muut-tyot
+             ]])
+        ))))
 
 
 

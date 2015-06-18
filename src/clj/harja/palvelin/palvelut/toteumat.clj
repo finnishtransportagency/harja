@@ -220,14 +220,22 @@
 
 
 (def muut-tyot-rahasumma-xf
-  (map #(if (:rahasumma %)
-         (assoc % :rahasumma (double (:rahasumma %)))
+  (map #(if (:tehtava_paivanhinta %)
+         (assoc % :tehtava_paivanhinta (double (:tehtava_paivanhinta %)))
+         (identity %))))
+
+(def muut-tyot-tyyppi-xf
+  (map #(if (:tyyppi %)
+         (assoc % :tyyppi (keyword (:tyyppi %)))
          (identity %))))
 
 
 (def muut-tyot-xf
   (comp
-    muut-tyot-rahasumma-xf))
+    muut-tyot-rahasumma-xf
+    (map konv/alaviiva->rakenne)
+    muunna-desimaaliluvut-xf
+    muut-tyot-tyyppi-xf))
 
 (defn hae-urakan-muut-tyot [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)

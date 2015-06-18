@@ -4,8 +4,7 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka.suunnittelu :as s])
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 

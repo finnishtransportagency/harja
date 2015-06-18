@@ -136,7 +136,7 @@ FROM toteuma_tehtava tt
 SELECT
   tt.id                           AS tehtava_id,
   tt.toteuma                      AS toteuma_id,
-  tt.toimenpidekoodi,
+  tt.toimenpidekoodi             AS tehtava_toimenpidekoodi,
   tt.maara,
   tt.lisatieto                    AS tehtava_lisatieto,
   tt.paivan_hinta                 AS tehtava_paivanhinta,
@@ -146,11 +146,11 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide
+  tpk.emo                         AS tehtava_emo,
+  tpk.nimi AS tehtava_nimi
 FROM toteuma_tehtava tt
-  INNER JOIN toteuma t ON tt.toteuma = t.id
+    JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
+    INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm

@@ -48,15 +48,10 @@
       (seq otsikon-mukaan))))
 
 (defn muut-tyot []
-  (let [muutoshintaiset-tyot
-        (reaction<! (let [ur (:id @nav/valittu-urakka)
-                          sivu @u/suunnittelun-valittu-valilehti]
-                      (when (and ur (= :muut sivu))
-                        (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
-        tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+  (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        ryhmitellyt-muutoshintaiset-tyot (reaction (ryhmittele-tehtavat tehtavat-tasoineen @muutoshintaiset-tyot))
+        ryhmitellyt-muutoshintaiset-tyot (reaction (ryhmittele-tehtavat tehtavat-tasoineen @u/muutoshintaiset-tyot))
         g (grid/grid-ohjaus)
         jo-valitut-tehtavat (atom nil)]
     (komp/luo
@@ -64,11 +59,13 @@
         [:div.muut-tyot
          [grid/grid
           {:otsikko      "Muutos- ja lisätyöhinnat"
-           :tyhja        (if (nil? @muutoshintaiset-tyot) [ajax-loader "Muutoshintaisia töitä haetaan..."] "Ei muutoshintaisia töitä")
+           :tyhja        (if (nil? @u/muutoshintaiset-tyot)
+                           [ajax-loader "Muutoshintaisia töitä haetaan..."]
+                           "Ei muutoshintaisia töitä")
            :tallenna     (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
                                                      (:id @nav/valittu-urakka)
                                                      #(tallenna-tyot
-                                                       % muutoshintaiset-tyot)
+                                                       % u/muutoshintaiset-tyot)
                                                      :ei-mahdollinen)
            :ohjaus       g
            :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
