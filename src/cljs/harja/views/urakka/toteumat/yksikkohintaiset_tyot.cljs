@@ -36,7 +36,7 @@
 
 
 (defn tallenna-toteuma
-  "Ottaa lomakkeen ja  tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
+  "Ottaa lomakkeen ja tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
   [lomakkeen-toteuma lomakkeen-tehtavat]
   (let [lahetettava-toteuma (->
                               (assoc lomakkeen-toteuma
@@ -72,7 +72,7 @@
 
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."
-      :voi-muokata? (not jarjestelman-lisaama-toteuma?)} ; FIXME Ei toimi?
+      :voi-muokata? (not jarjestelman-lisaama-toteuma?)} ; FIXME :voi-muokata false disabloi napit, mutta pitäisi disabloida myös kentät
      [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
        :tyyppi        :valinta
        :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
@@ -113,17 +113,18 @@
                                            [id (assoc tehtava :tehtava
                                                               (:id (:tehtava tehtava)))])
                                          (:tehtavat @lomakkeessa-muokattava-toteuma))))
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelman_lisaama lomake-toteuma))
         valmis-tallennettavaksi? (reaction
                                    (and
                                      ; Validoi toteuma
+                                     (not jarjestelman-lisaama-toteuma?)
                                      (not (nil? (:aloituspvm @lomake-toteuma)))
                                      (not (nil? (:lopetuspvm @lomake-toteuma)))
                                      (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
                                      ; Validoi tehtävät
                                      (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
-                                     (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))
-        jarjestelman-lisaama-toteuma? (true? (:jarjestelman_lisaama lomake-toteuma))]
+                                     (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))]
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
@@ -166,7 +167,7 @@
             :varoita [[:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
+           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma?]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
