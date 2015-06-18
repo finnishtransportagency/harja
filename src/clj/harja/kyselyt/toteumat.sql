@@ -298,6 +298,3 @@ WHERE
   toimenpideinstanssi IN (SELECT id
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi);
-
-
-listaa-urakan-hoitokauden-toteumat-muut-tyot
