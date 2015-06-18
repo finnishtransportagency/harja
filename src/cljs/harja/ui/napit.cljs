@@ -87,3 +87,7 @@
            :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
            )))
        ])))
+
+(defn takaisin [teksti takaisin-fn]
+  [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
+   (ikonit/chevron-left) " " teksti])

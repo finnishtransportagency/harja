@@ -145,17 +145,22 @@
         (reset! teksti (str @data)))
       
       :reagent-render
-      (fn [{:keys [lomake?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
         (let [nykyinen-teksti @teksti]
           [:input {:class (when lomake? "form-control")
                    :type "text"
+                   :placeholder (:placeholder kentta)
                    :on-focus (:on-focus kentta)
                    :value nykyinen-teksti
                    :on-change #(let [v (-> % .-target .-value)]
                                  (when (or (= v "") 
-                                           (re-matches #"\d{1,10}((\.|,)\d{0,2})?" v))
+                                           (re-matches (if kokonaisluku?
+                                                         #"\d{1,10}"
+                                                         #"\d{1,10}((\.|,)\d{0,2})?") v))
                                    (reset! teksti v)
-                                   (let [numero (js/parseFloat (str/replace v #"," "."))]
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
                                      (reset! data
                                              (when (not (js/isNaN numero))
                                                numero)))))}]))})))
