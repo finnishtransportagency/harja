@@ -8,7 +8,8 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
-
+            [harja.kyselyt.tarkastukset :as tarkastukset]
+            
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -162,7 +163,13 @@
         (map #(konv/array->set % :laji keyword))
         (sanktiot/hae-sanktiotyypit db)))
   
-                         
+
+(defn hae-urakan-tarkastukset
+  "Palauttaa urakan tarkastukset annetulle aikavälille."
+  [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (into []
+        (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -182,6 +189,9 @@
     (julkaise-palvelu http-palvelin :hae-sanktiotyypit
                       (fn [user]
                         (hae-sanktiotyypit db user)))
+    (julkaise-palvelu http-palvelin :hae-urakan-tarkastukset
+                      (fn [user tiedot]
+                        (hae-urakan-tarkastukset db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -190,6 +200,7 @@
                      :tallenna-havainto
                      :hae-havainnon-tiedot
                      :hae-urakan-sanktiot
-                     :hae-sanktiotyypit)
+                     :hae-sanktiotyypit
+                     :hae-urakan-tarkastukset)
     this))
             
