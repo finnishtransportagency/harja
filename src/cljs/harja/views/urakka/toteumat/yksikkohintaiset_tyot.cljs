@@ -121,7 +121,8 @@
                                      ; Validoi tehtävät
                                      (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
-                                     (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))]
+                                     (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))
+        jarjestelman-lisaama-toteuma? false] ; TODO Järjestelmän lisäämää toteumaa ei saa muokata
 
     (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
@@ -149,7 +150,7 @@
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2
+           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta (fn [rivi arvo]
                      (assoc
                        (if
@@ -162,12 +163,12 @@
                        arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :varoita [[:urakan-aikana]]}
-           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :validoi [[:ei-tyhja "Valitse päivämäärä"]
+           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat]}
-           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string}
-           {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :koko [80 :auto]}]
+           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+           {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
           @lomake-toteuma]]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
