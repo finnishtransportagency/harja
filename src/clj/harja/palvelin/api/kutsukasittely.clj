@@ -62,12 +62,11 @@
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
 
+  (log/debug "Luetaan kutsua")
   (when (= :post (:request-method request))
-    (let [json body
-          json-validi? (json/validoi skeema json)]
-      (if json-validi?
-        (cheshire/decode json)
-        nil))))
+    (json/validoi skeema body)
+    ;; FIXME: Varmista, että tämä toimii
+    (cheshire/decode body true)))
 
 
 (defn kasittele-kutsu [resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
@@ -80,7 +79,6 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 =
   kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
-
 
   (let [body (if (:body request)
                (slurp (:body request))

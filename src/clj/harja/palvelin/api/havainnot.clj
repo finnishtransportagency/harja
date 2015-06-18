@@ -5,19 +5,41 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.api.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.api.skeemat :as skeemat]))
+            [harja.palvelin.api.skeemat :as skeemat]
+            [harja.kyselyt.urakat :as qu]
+            [harja.kyselyt.havainnot :as qh]
+            [clojure.java.jdbc :as jdbc])
+  (:import
+    (javax.ws.rs BadRequestException)))
 
+(defn tee-virhevastaus []
+  )
 
+(defn tee-onnistunut-vastaus []
+  )
 
-(defn kirjaa-havainto [db {urakan-id :id} data]
-  (log/debug "Kirjataan uusi havainto urakalle id:" urakan-id)
+(defn tallenna-havainto [db urakka-id data]
+  (log/debug "Data on:" data)
+  (log/debug "Päivämäärä on " (:paivamaara data))
 
-  ;; fixme: validoi että vastaanotettua dataa voidaan käyttää
-  ;; fixme: lapioi data kyselyyn ja tallenna
-  ;; fixme: tee response
+  (jdbc/with-db-transaction [transaktio db]
+                            (qh/luo-havainto<! db urakka-id nil nil nil true nil))
+  true)
 
-  (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
-    vastauksen-data))
+(defn kirjaa-havainto [db {id :id} data]
+  (let [urakka-id (read-string id)]
+    (log/debug "Kirjataan uusi havainto urakalle id:" urakka-id)
+    (if (qu/onko-olemassa? db urakka-id)
+      (let [kirjaus-onnistunut? (tallenna-havainto db urakka-id data)]
+        (if kirjaus-onnistunut?
+          (tee-onnistunut-vastaus)
+          (tee-virhevastaus)))
+      (do
+        (log/warn "Urakkaa id:llä " urakka-id " ei löydy.")
+        (throw (BadRequestException. (str "Tuntematon urakka. Urakkaa id:llä " urakka-id " ei löydy.")))))
+
+    (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
+      vastauksen-data)))
 
 (defrecord Havainnot []
   component/Lifecycle

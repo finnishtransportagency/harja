@@ -13,7 +13,7 @@
             [harja.palvelin.api.kutsukasittely :refer [kasittele-kutsu]]
             [taoensso.timbre :as log])
   (:import
-    (javax.ws.rs BadRequestException InternalServerErrorException)))
+    (javax.ws.rs BadRequestException)))
 
 (defn muodosta-kokonaishintaiset-tyot [tyot]
   (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
