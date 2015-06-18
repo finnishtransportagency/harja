@@ -11,4 +11,4 @@
         vastaus (kutsukasittely/kasittele-kutsu "testi" {:body kutsun-data :request-method :post} skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+ (fn [parametit data]))]
     (println vastaus)
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Viallinen kutsu. Vastaanotettu JSON ei ole validi"))))
+    (is (.contains (:body vastaus) "Viallinen kutsu. Vastaanotettu JSON-data ei ole validia"))))
