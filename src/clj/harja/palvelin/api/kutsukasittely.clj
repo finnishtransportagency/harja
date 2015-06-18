@@ -7,6 +7,9 @@
   (:import (javax.ws.rs BadRequestException)
            (com.google.gson JsonParseException)))
 
+(def +virhe-ei-validi-json+ "Viallinen kutsu. Vastaanotettu JSON-data ei ole validia:")
+(def +virhe-viallinen-kutsu+ "Viallinen kutsu:")
+(def +sisainen-kasittelyvirhe+ "Sisäinen käsittelyvirhe:")
 
 (defn logita-kutsu [resurssi request body]
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi)
@@ -89,11 +92,18 @@
                        kutsun-data (lue-kutsu kutsun-skeema request body)
                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data)]
                       (tee-vastaus vastauksen-skeema vastauksen-data))
+                    ;; FIXME: Mieti järkevä tapa miten välittää virhekoodi ja selite erikseen poikkeuksessa
                     (catch JsonParseException e
-                      (tee-viallinen-kutsu-virhevastaus "Viallinen kutsu. Vastaanotettu JSON ei ole validi. " (.getMessage e)))
+                      (do
+                        (log/warn +virhe-ei-validi-json+ e)
+                        (tee-viallinen-kutsu-virhevastaus +virhe-ei-validi-json+ (.getMessage e))))
                     (catch BadRequestException e
-                      (tee-viallinen-kutsu-virhevastaus "Viallinen kutsu" (.getMessage e)))
+                      (do
+                        (log/warn +virhe-viallinen-kutsu+ e)
+                        (tee-viallinen-kutsu-virhevastaus +virhe-viallinen-kutsu+ (.getMessage e))))
                     (catch Exception e
-                      (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e))))]
+                      (do
+                        (log/error +sisainen-kasittelyvirhe+ e)
+                        (tee-sisainen-kasittelyvirhevastaus +sisainen-kasittelyvirhe+ (.getMessage e)))))]
       (logita-vastaus resurssi vastaus)
       vastaus)))

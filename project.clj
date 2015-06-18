@@ -97,7 +97,9 @@
                  [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
 
                  ;; JAX-RS -REST-kirjastot
-                 [javax.ws.rs/javax.ws.rs-api "2.0"]]
+                 [javax.ws.rs/javax.ws.rs-api "2.0"]
+                 [org.glassfish.jersey.core/jersey-common "2.18"]]
+
   
   :dev-dependencies [;; Selain REPL
                      

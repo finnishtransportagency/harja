@@ -13,7 +13,7 @@
             [harja.palvelin.api.kutsukasittely :refer [kasittele-kutsu]]
             [taoensso.timbre :as log])
   (:import
-    (javax.ws.rs BadRequestException)))
+    (javax.ws.rs BadRequestException InternalServerErrorException)))
 
 (defn muodosta-kokonaishintaiset-tyot [tyot]
   (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
@@ -80,12 +80,10 @@
     (let [id (Integer/parseInt urakka-id)
           urakka (some->> id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (if-not urakka
-        (throw (BadRequestException. "Tuntematon urakka" (str "Urakkaa id:llä " urakka-id " ei löydy.")))
-        (muodosta-vastaus db id urakka)))
-    (catch Exception e
-      (log/warn e "Urakan haku epäonnistui.")
-      (tee-sisainen-kasittelyvirhevastaus "Sisäinen käsittelyvirhe" (.getMessage e)))))
-
+        (do
+          (log/warn "Urakkaa id:llä " urakka-id " ei löydy.")
+          (throw (BadRequestException. (str "Tuntematon urakka. Urakkaa id:llä " urakka-id " ei löydy."))))
+        (muodosta-vastaus db id urakka)))))
 
 (defrecord Urakat []
   component/Lifecycle
