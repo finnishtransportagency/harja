@@ -343,8 +343,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             {:otsikko "Havainnon pvm ja aika"
              :tyyppi :pvm-aika
              :nimi :aika
-             :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]
-                       [:urakan-aikana]]
+             :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+             :varoita [[:urakan-aikana]]
              :leveys-col 5}
             
             {:otsikko "Tekijä" :nimi :tekija
