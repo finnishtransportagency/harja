@@ -30,7 +30,6 @@
 (defn hae-urakassa-kaytetyt-materiaalit
   [db user urakka-id hk-alkanut hk-paattynyt sopimus]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/info "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(konv/sql-date hk-alkanut))
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))

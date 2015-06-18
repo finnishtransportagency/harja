@@ -16,7 +16,7 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
-
+            [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             
@@ -43,6 +43,9 @@
 
    "Yksikköhintaiset työt" :yksikkohintaiset-tyot
    [yks-hint-tyot/yksikkohintaisten-toteumat]
+
+   "Muut työt" :muut-tyot
+   [muut-tyot/muut-tyot-toteumat]
 
    "Materiaalit" :materiaalit
    [materiaalit-nakyma ur]

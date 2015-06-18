@@ -42,7 +42,6 @@
     mapattu))
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteumat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
                     toteuma-xf
@@ -198,7 +197,6 @@
     erilliskustannus-rahasumma-xf))
 
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan erilliskustannukset: " urakka-id " ajalta " alkupvm "-" loppupvm)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         erilliskustannus-xf
@@ -219,6 +217,25 @@
                             (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
                                                                     :alkupvm   (:alkupvm ek)
                                                                     :loppupvm  (:loppupvm ek)})))
+
+
+(def muut-tyot-rahasumma-xf
+  (map #(if (:rahasumma %)
+         (assoc % :rahasumma (double (:rahasumma %)))
+         (identity %))))
+
+
+(def muut-tyot-xf
+  (comp
+    muut-tyot-rahasumma-xf))
+
+(defn hae-urakan-muut-tyot [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
+  (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        muut-tyot-xf
+        (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
+
 
 (defn tallenna-toteuma-ja-toteumamateriaalit
   "Tallentaa toteuman ja toteuma-materiaalin, ja palauttaa lopuksi kaikki urakassa käytetyt materiaalit (yksi rivi per materiaali).
@@ -351,6 +368,9 @@
       (julkaise-palvelu http :tallenna-erilliskustannus
                         (fn [user toteuma]
                           (tallenna-erilliskustannus db user toteuma)))
+      (julkaise-palvelu http :urakan-muut-tyot
+                        (fn [user tiedot]
+                          (hae-urakan-muut-tyot db user tiedot)))
       (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
                         (fn [user tiedot]
                           (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
@@ -367,6 +387,7 @@
       :hae-urakan-tehtavat
       :tallenna-urakan-toteuma
       :urakan-erilliskustannukset
+      :urakan-muut-tyot
       :paivita-yk-hint-toteumien-tehtavat
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit

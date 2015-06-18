@@ -125,6 +125,35 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
 
+-- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
+-- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
+SELECT
+  tt.id                           AS tehtava_id,
+  tt.toteuma                      AS toteuma_id,
+  tt.toimenpidekoodi,
+  tt.maara,
+  tt.lisatieto                    AS tehtava_lisatieto,
+  tt.paivan_hinta                 AS tehtava_paivanhinta,
+  t.tyyppi,
+  t.alkanut,
+  t.paattynyt,
+  t.suorittajan_nimi,
+  t.suorittajan_ytunnus,
+  t.lisatieto,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpide
+FROM toteuma_tehtava tt
+  INNER JOIN toteuma t ON tt.toteuma = t.id
+                          AND urakka = :urakka
+                          AND sopimus = :sopimus
+                          AND alkanut >= :alkupvm
+                          AND paattynyt <= :loppupvm
+                          AND tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi,
+                                         'lisatyo'::toteumatyyppi, 'muutostyo'::toteumatyyppi)
+                          AND tt.poistettu IS NOT TRUE
+                          AND t.poistettu IS NOT TRUE;
+
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät tietyllä toimenpidekoodilla
 SELECT
@@ -269,3 +298,6 @@ WHERE
   toimenpideinstanssi IN (SELECT id
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi);
+
+
+listaa-urakan-hoitokauden-toteumat-muut-tyot

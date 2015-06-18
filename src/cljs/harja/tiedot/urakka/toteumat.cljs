@@ -86,3 +86,12 @@
                                                     :toteumamateriaalit toteumamateriaalit
                                                     :hoitokausi hoitokausi
                                                     :sopimus sopimus-id}))
+
+
+(defn hae-urakan-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]
+  (log "tiedot: hae urakan muut työt" urakka-id sopimus-id alkupvm loppupvm)
+  (k/post! :urakan-muut-tyot
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))

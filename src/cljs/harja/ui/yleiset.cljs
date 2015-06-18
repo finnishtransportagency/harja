@@ -119,7 +119,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu) tai :varoitus."
   ([virheet] (virheen-ohje virheet :virhe))
   ([virheet tyyppi]
-   (log "virheen ohje" (pr-str virheet))
   [:div {:class (if (= tyyppi :varoitus) "varoitukset" "virheet")}
    [:div {:class (if (= tyyppi :varoitus) "varoitus" "virhe")}
     (for [v virheet]

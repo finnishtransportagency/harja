@@ -157,11 +157,20 @@ ja viimeinen voivat olla vajaat)."
   (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
     (organisaatio/hae-urakan-organisaatio ur))))
 
-(defonce erilliskustannukset-hoitokaudella
+(defonce muut-tyot-hoitokaudella
   (reaction<! (let [ur (:id @nav/valittu-urakka)
+                    sopimus-id (first @valittu-sopimusnumero)
                     aikavali @valittu-hoitokausi
                     sivu @toteumat-valilehti]
-                (when (and ur aikavali (= :erilliskustannukset sivu))
-                  (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
+                (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+                  (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali)))))
+
+(defonce erilliskustannukset-hoitokaudella
+         (reaction<! (let [ur (:id @nav/valittu-urakka)
+                           aikavali @valittu-hoitokausi
+                           sivu @toteumat-valilehti]
+                       (when (and ur aikavali (= :erilliskustannukset sivu))
+                         (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
+
 
 (def suunnittelun-valittu-valilehti "Suunnitteluosion valittu välilehti" (atom :kokonaishintaiset))

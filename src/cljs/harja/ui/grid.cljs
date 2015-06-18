@@ -45,6 +45,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (hae-virheet [g] "Hakee tämänhetkisen muokkaustilan mukaiset validointivirheet.")
 
+  (hae-varoitukset [g] "Hakee tämänhetkisen muokkaustilan mukaiset validointivaroitukset.")
+
   (nollaa-historia! [g] "Nollaa muokkaushistorian, tämä on lähinnä muokkaus-grid versiota varten. Tällä voi kertoa gridille, että data on täysin muuttunut eikä muokkaushistoria ole enää relevantti.")
   ;; PENDING: oisko "jemmaa muokkaushistoria", jolla sen saisi avaimella talteen ja otettua takaisin?
   (hae-viimeisin-muokattu-id [g] "Hakee viimeisimmän muokatun id:n")
@@ -78,6 +80,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (hae-virheet [_]
         (hae-virheet @gridi))
+
+      (hae-varoitukset [_]
+        (hae-varoitukset @gridi))
 
       (nollaa-historia! [_]
         (nollaa-historia! @gridi))
@@ -164,7 +169,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   
 
 
-(defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet voi-poistaa?
+(defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset voi-poistaa?
                               fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
   [:tr.muokataan {:class luokka}
    (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi] :as s} skeema]
@@ -177,15 +182,20 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                      #(get % nimi))
              arvo (hae rivi)
              kentan-virheet (get rivin-virheet nimi)
+             kentan-varoitukset (get rivin-varoitukset nimi)
              tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")
              fokus-id [id nimi]]
               
          (if (or (nil? muokattava?) (muokattava? rivi))
            ^{:key (str nimi)}
-           [:td {:class (str tasaus-luokka (when-not (empty? kentan-virheet)
-                                             " sisaltaa-virheen"))}
-            (when-not (empty? kentan-virheet)
-             (virheen-ohje kentan-virheet))
+           [:td {:class (str tasaus-luokka (if-not (empty? kentan-virheet)
+                                             " sisaltaa-virheen")
+                             (when-not (empty? kentan-varoitukset)
+                               " sisaltaa-varoituksen"))}
+            (if-not (empty? kentan-virheet)
+              (virheen-ohje kentan-virheet)
+              (if-not (empty? kentan-varoitukset)
+                (virheen-ohje kentan-varoitukset :varoitus)))
 
 
             ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
@@ -299,6 +309,7 @@ Optiot on mappi optioita:
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
+        varoitukset (atom {}) ;; validointivaroitukset: (:id rivi) => [varoitukset]
         viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
 
@@ -306,24 +317,36 @@ Optiot on mappi optioita:
 
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
-        
+        validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
+                                      (into {}
+                                            (keep (fn [rivi]
+                                                    (if (::poistettu rivi)
+                                                      nil
+                                                      (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
+                                                        (if (empty? virheet)
+                                                          nil
+                                                          [((or tunniste :id) rivi) virheet]))))
+                                                  (vals uudet-tiedot))))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
                               (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
                                     vanhat-tiedot @muokatut
                                     vanhat-virheet @virheet
+                                    vanhat-varoitukset @varoitukset
                                     vanha-jarjestys @jarjestys
                                     uudet-tiedot (swap! muokatut assoc id
                                                         ((or uusi-rivi identity)
                                                          (merge rivin-tiedot {:id id :koskematon true})))
                                     uusi-jarjestys (swap! jarjestys conj id)]
-                                (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
+                                (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
                                 (when muutos
                                   (muutos this))))
                  (hae-muokkaustila [_]
                    @muokatut)
                  (hae-virheet [_]
                    @virheet)
+                 (hae-varoitukset [_]
+                   @varoitukset)
                  (nollaa-historia! [_]
                    (reset! historia []))
                  (hae-viimeisin-muokattu-id [_]
@@ -332,6 +355,7 @@ Optiot on mappi optioita:
                  (muokkaa-rivit! [this funktio args]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
+                         vanhat-varoitukset @varoitukset
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut (fn [muokatut]
                                                         (let [muokatut-jarjestyksessa (map (fn [id]
@@ -342,17 +366,11 @@ Optiot on mappi optioita:
                                                                 (apply funktio muokatut-jarjestyksessa args)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (reset! viimeisin-muokattu-id nil) ;; bulk muutoksesta ei jätetä viimeisintä muokkausta
-                       (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
+                       (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
                        (swap! virheet (fn [virheet]
-                                        (into {}
-                                              (keep (fn [rivi]
-                                                      (if (::poistettu rivi)
-                                                        nil
-                                                        (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema)]
-                                                          (if (empty? virheet)
-                                                            nil
-                                                            [((or tunniste :id) rivi) virheet]))))
-                                                    (vals uudet-tiedot))))))
+                                        (validoi-ja-anna-virheet virheet uudet-tiedot :validoi)))
+                       (swap! varoitukset (fn [varoitukset]
+                                            (validoi-ja-anna-virheet varoitukset uudet-tiedot :varoita))))
                      
                      (when muutos
                        (muutos this))))
@@ -371,6 +389,7 @@ Optiot on mappi optioita:
         muokkaa! (fn [id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
+                         vanhat-varoitukset @varoitukset
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut
                                              (fn [muokatut]
@@ -380,14 +399,21 @@ Optiot on mappi optioita:
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (reset! viimeisin-muokattu-id id)
-                       (swap! historia conj [vanhat-tiedot vanhat-virheet vanha-jarjestys])
+                       (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)
                                               rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema))]
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :validoi))]
                                           (if (empty? rivin-virheet)
                                             (dissoc virheet id)
-                                            (assoc virheet id rivin-virheet))))))
+                                            (assoc virheet id rivin-virheet)))))
+                       (swap! varoitukset (fn [varoitukset]
+                                        (let [uusi-rivi (get uudet-tiedot id)
+                                              rivin-varoitukset (when-not (:poistettu uusi-rivi)
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :varoita))]
+                                          (if (empty? rivin-varoitukset)
+                                            (dissoc varoitukset id)
+                                            (assoc varoitukset id rivin-varoitukset))))))
                      (when muutos
                        (muutos ohjaus))))
 
@@ -397,9 +423,10 @@ Optiot on mappi optioita:
 
         ;; Peruu yhden muokkauksen
         peru! (fn []
-                (let [[muok virh jarj] (peek @historia)]
+                (let [[muok virh var jarj] (peek @historia)]
                   (reset! muokatut muok)
                   (reset! virheet virh)
+                  (reset! varoitukset var)
                   (reset! jarjestys jarj))
                 (swap! historia pop)
                 (when muutos
@@ -407,6 +434,7 @@ Optiot on mappi optioita:
 
         nollaa-muokkaustiedot! (fn []
                                  (reset! virheet {})
+                                 (reset! varoitukset {})
                                  (reset! muokatut nil)
                                  (reset! jarjestys nil)
                                  (reset! historia nil)
@@ -532,6 +560,7 @@ Optiot on mappi optioita:
                      (if (empty? muokatut)
                        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
                        (let [kaikki-virheet @virheet
+                             kaikki-varoitukset @varoitukset
                              nykyinen-fokus @fokus]
                          (mapcat #(keep identity %)
                                  (map-indexed
@@ -543,7 +572,8 @@ Optiot on mappi optioita:
                                           [:td {:colSpan colspan}
                                            [:h5 teksti]]]])
                                       (let [rivi (get muokatut id)
-                                            rivin-virheet (get kaikki-virheet id)]
+                                            rivin-virheet (get kaikki-virheet id)
+                                            rivin-varoitukset (get kaikki-varoitukset id)]
                                         (when-not (:poistettu rivi)
                                           [^{:key id}
                                            [muokkaus-rivi {:ohjaus        ohjaus
@@ -554,6 +584,7 @@ Optiot on mappi optioita:
                                                                                  "pariton"))
                                                            :id            id
                                                            :rivin-virheet rivin-virheet
+                                                           :rivin-varoitukset rivin-varoitukset
                                                            :voi-poistaa?  voi-poistaa?
                                                            :fokus         nykyinen-fokus
                                                            :aseta-fokus!  #(reset! fokus %)

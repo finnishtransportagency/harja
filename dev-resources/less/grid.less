@@ -5,6 +5,14 @@ font: #191919
 border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa background-even: #e1e1e1
 */
 
+.virhe-tai-varoitus (@taustavari, @vari) {
+	background-color: @taustavari;
+	bottom: 5px;
+	color: @vari;
+	padding: 5px;
+	position: absolute;
+	width: 100%;
+}
 @livi-taulukon-padding: 5px;
 .livi-taulukon-reunat {
 	border: 1px solid @harmaa7;
@@ -51,29 +59,27 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 		margin-top: 0;
 	    }
 
-
-	    .virheet {
-		display: none;
-		position: relative;
+		.varoitukset,
+		.virheet {
+			display: none;
+			position: relative;
 	    }
-
-	    .virhe {
-			background-color: @vaara;
-			bottom: 5px;
-			color: @valkoinen;
-			padding: 5px;
-			position: absolute;
-			width: 100%;
-	    }
+		.varoitus {
+			.virhe-tai-varoitus(@varoitus, @valkoinen);
+		}
+		.virhe {
+			.virhe-tai-varoitus(@vaara, @valkoinen);
+		}
 	}
 
 	td:hover {
 	    // jotta pulldown valinnat näkyvät
 	    overflow: visible;
 
-	    .virheet {
-		display: block;
-	    }
+	    .varoitukset,
+		.virheet {
+			display: block;
+		}
 	}
 
 	width: 100%;
