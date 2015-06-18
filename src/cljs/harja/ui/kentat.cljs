@@ -142,7 +142,15 @@
     (r/create-class
      {:component-will-receive-props
       (fn [_ [_ _ data]]
-        (reset! teksti (str @data)))
+        (swap! teksti
+               (fn [olemassaoleva-teksti]
+                 ;; Korvataan teksti vain, jos se on tyhjä
+                 ;; wrap tilanteessa, props muuttuu joka renderillä
+                 ;; ja virheellinen (esim. "4," arvo ennen desimaalin kirjoittamista
+                 ;; ylikirjoittuu.
+                 (if (str/blank? olemassaoleva-teksti)
+                   (str @data)
+                   olemassaoleva-teksti))))
       
       :reagent-render
       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
@@ -151,6 +159,7 @@
                    :type "text"
                    :placeholder (:placeholder kentta)
                    :on-focus (:on-focus kentta)
+                   :on-blur #(reset! teksti (str @data))
                    :value nykyinen-teksti
                    :on-change #(let [v (-> % .-target .-value)]
                                  (when (or (= v "") 
@@ -158,6 +167,7 @@
                                                          #"\d{1,10}"
                                                          #"\d{1,10}((\.|,)\d{0,2})?") v))
                                    (reset! teksti v)
+                                   
                                    (let [numero (if kokonaisluku?
                                                   (js/parseInt v)
                                                   (js/parseFloat (str/replace v #"," ".")))]
