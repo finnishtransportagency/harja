@@ -19,3 +19,8 @@
                      :tyot tyot}]
     (k/post! :tallenna-muutoshintaiset-tyot
              hyotykuorma)))
+
+(defn tallenna-muiden-toiden-toteuma
+  [toteuma]
+  (k/post! :tallenna-muiden-toiden-toteuma
+           toteuma ))

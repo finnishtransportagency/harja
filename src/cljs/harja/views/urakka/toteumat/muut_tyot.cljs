@@ -15,6 +15,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.muut-tyot :as muut-tyot]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
@@ -38,8 +39,14 @@
 
 
 (defn tallenna-muu-tyo [muokattu]
-  (log "tallenna-muu-tyo" (pr-str muokattu))
-  (go (let [_ nil]
+  (log "front: tallenna-muu-tyo" (pr-str muokattu))
+  (go (let [ur (:id @nav/valittu-urakka)
+            [sop _] @u/valittu-sopimusnumero
+            toteuma (assoc muokattu
+                      :urakka-id ur
+                      :sopimus-id sop)
+            res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))]
+        (log "tallennettu, palvelu vastasi: " (pr-str res))
         ;(reset! u/muut-tyot-hoitokaudella res)
         )))
 
@@ -199,6 +206,9 @@
                :valinta-nayta second
                :valinnat      [[:yksikkohinta "Yksikköhinta"] [:paivanhinta "Päivän hinta"]]
                :leveys-col    3}
+              ;; FIXME: jos on valittu :yksikkohinta-hinnoittelu, täytetään näkyviin suunnitelupuolelta
+              ;; yksikköhinta. Jos sitä ei ole vielä syötetty, implisiittisesti syötetään se tässä näkymässä
+              ;; ja tallennetaan muutoshintainen_tyo-tauluun, mistä se on jatkossa käytössä toteumille.
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
                 {:otsikko "Päivän hinta" :nimi :paivanhinta :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3})
               {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))

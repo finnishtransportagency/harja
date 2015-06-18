@@ -244,6 +244,53 @@
         muut-tyot-xf
         (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
+(defn tallenna-muiden-toiden-toteuma
+  [db user toteuma]
+  (oik/vaadi-rooli-urakassa user
+                            #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
+                            (:urakka-id toteuma))
+  (log/debug "tallenna-muiden-toiden-toteuma: " (pr-str toteuma))
+  ;; FIXME: tästä alaspäin en vielä toimi!
+  ;; käytä olemassa olevia toteuma_tehtavan päivityskyselyitä jos pystyt. Refaktoroi
+  ;; kyselyjä tarpeen mukaan niin että mm. ottavat :tyyppi parametrin toteumaan (yksikkohintainen, muutostyo, jne)
+  (jdbc/with-db-transaction [c db]
+                            (if (get-in toteuma [:tehtava :id])
+                              (do
+                                (log/info "Pävitetään toteuma.")
+                                (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                                                    (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
+                                (log/info "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
+                                (kasittele-toteuman-tehtavat c user toteuma))
+                              (do
+                                (log/info "Luodaan uusi toteuma")
+                                (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma)
+                                                            (:sopimus-id toteuma)
+                                                            (konv/sql-timestamp (:alkanut toteuma))
+                                                            (konv/sql-timestamp (:paattynyt toteuma))
+                                                            (name (:tyyppi toteuma))
+                                                            (:id user)
+                                                            (:suorittajan-nimi toteuma)
+                                                            (:suorittajan-ytunnus toteuma)
+                                                            (:lisatieto toteuma))
+                                      id (:id uusi)
+                                      toteumatyyppi (name (:tyyppi toteuma))]
+                                  (log/info "Luodaan uudelle toteumalle tehtävät")
+                                  (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
+                                    (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
+
+                                    (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
+                                    (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
+                                  true)))
+
+                            (let [paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
+                                                                                           {:urakka-id (:urakka-id toteuma)
+                                                                                            :sopimus-id (:sopimus-id toteuma)
+                                                                                            :alkupvm (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
+                                                                                            :loppupvm (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
+                                                                                            :tyyppi (:tyyppi toteuma)})]
+                              (log/debug "Päivitetyt summat: " paivitetyt-summat)
+                              {:toteuma toteuma :tehtavien-summat paivitetyt-summat})))
+
 
 (defn tallenna-toteuma-ja-toteumamateriaalit
   "Tallentaa toteuman ja toteuma-materiaalin, ja palauttaa lopuksi kaikki urakassa käytetyt materiaalit (yksi rivi per materiaali).
@@ -379,6 +426,9 @@
       (julkaise-palvelu http :urakan-muut-tyot
                         (fn [user tiedot]
                           (hae-urakan-muut-tyot db user tiedot)))
+      (julkaise-palvelu http  :tallenna-muiden-toiden-toteuma
+                        (fn [user toteuma]
+                          (tallenna-muiden-toiden-toteuma db user toteuma)))
       (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
                         (fn [user tiedot]
                           (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
@@ -396,6 +446,7 @@
       :tallenna-urakan-toteuma
       :urakan-erilliskustannukset
       :urakan-muut-tyot
+      :tallenna-muiden-toiden-toteuma
       :paivita-yk-hint-toteumien-tehtavat
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
