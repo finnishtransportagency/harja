@@ -8,6 +8,9 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
+  t.luoja as luoja_id,
+  (SELECT kayttajanimi as luoja_kayttajanimi FROM kayttaja k WHERE k.id = t.luoja),
+  (SELECT jarjestelma as jarjestelman_lisaama FROM kayttaja k WHERE k.id = t.luoja),
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -34,6 +37,9 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
+  t.luoja as luoja_id,
+  (SELECT kayttajanimi as luoja_kayttajanimi FROM kayttaja k WHERE k.id = t.luoja),
+  (SELECT jarjestelma as jarjestelman_lisaama FROM kayttaja k WHERE k.id = t.luoja),
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id

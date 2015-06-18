@@ -113,7 +113,7 @@
                                            [id (assoc tehtava :tehtava
                                                               (:id (:tehtava tehtava)))])
                                          (:tehtavat @lomakkeessa-muokattava-toteuma))))
-        jarjestelman-lisaama-toteuma? (true? (:jarjestelman_lisaama lomake-toteuma))
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelman-lisaama @lomake-toteuma))
         valmis-tallennettavaksi? (reaction
                                    (and
                                      ; Validoi toteuma
@@ -223,7 +223,9 @@
                                                                                                 :lopetuspvm       (:paattynyt toteuma)
                                                                                                 :lisatieto        (:lisatieto toteuma)
                                                                                                 :suorittajan-nimi (:suorittajan_nimi toteuma)
-                                                                                                :suorittajan-ytunnus (:suorittajan_ytunnus toteuma)}]
+                                                                                                :suorittajan-ytunnus (:suorittajan_ytunnus toteuma)
+                                                                                                :jarjestelman-lisaama (:jarjestelman_lisaama toteuma)
+                                                                                                :luoja (:luoja_kayttajanimi toteuma)}]
                                                                              (log "Toteuma-data lomakkeelle: " (pr-str lomakkeessa-muokattava-toteuma))
                                                                              (reset! lomakkeessa-muokattava-toteuma lomake-tiedot)))))}
                                    (ikonit/eye-open) " Toteuma"])}]
