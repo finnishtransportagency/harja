@@ -188,25 +188,35 @@
         valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi]
                     (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
                                                            (:id toimenpideinstanssi))
-                                                       @u/muut-tyot-hoitokaudella)))))]
-
-    (tarkkaile! "valitut-muut-tyot" valitut-muut-tyot)
+                                                       @u/muut-tyot-hoitokaudella)))))
+        tyorivit
+        (reaction
+          (map (fn [muu-tyo]
+                 (let [muutoshintainen-tyo
+                       (first (filter (fn [muutoshinta]
+                                        (= (:tehtava muutoshinta)
+                                           (get-in muu-tyo [:tehtava :toimenpidekoodi]))) @u/muutoshintaiset-tyot))]
+                   (assoc muu-tyo
+                     :yksikko (:yksikko muutoshintainen-tyo)
+                     :yksikkohinta (:yksikkohinta muutoshintainen-tyo))))
+               @valitut-muut-tyot))]
 
     (komp/luo
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
+           [:div "Ominaisuus kehityksen alla - ethän raportoi bugeja, kiitos."]
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
             (ikonit/plus-sign) " Lisää toteuma"]
 
            [grid/grid
-            {:otsikko       (str "Muutos-, lisä- ja äkilliset hoitotyöt ")
+            {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt ")
              :tyhja         (if (nil? @valitut-muut-tyot)
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
              :rivi-klikattu #(reset! valittu-toteuma %)
-             :rivin-luokka  #(aseta-rivin-luokka %)
+             ;:rivin-luokka  #(aseta-rivin-luokka %)
              :tunniste      #(get-in % [:tehtava :id])}
             [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
              {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
@@ -215,26 +225,24 @@
              {:otsikko "Määrä" :tyyppi :string :nimi :maara
               :leveys "10%"}
              {:otsikko "Yksikkö"
-              :hae (constantly "ei vielä tehty")
               :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
              {:otsikko "Yksikköhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
-                       :hae #(if (get-in % [:tehtava :paivanhinta])
-                                nil
-                                10)               ;;fixme: hae oikeasti yksikkö ja -hinta
-                        :muokattava? (constantly false)
-              :fmt fmt/euro-opt :leveys "10%"}
-
+              :hae #(if (get-in % [:tehtava :paivanhinta])
+                     nil
+                     (:yksikkohinta %))
+              :muokattava? (constantly false) :fmt fmt/euro-opt :leveys "10%"}
              {:otsikko "Hinnoittelu" :tyyppi :string :nimi :hinnoittelu
-              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Sopimushinta") :leveys "10%"}
+              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Yksikköhinta") :leveys "10%"}
              {:otsikko "Kustannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
               :hae     #(if (get-in % [:tehtava :paivanhinta])
                          (get-in % [:tehtava :paivanhinta])
-                         ;; fixme: alas haettava muutoshintainen_tyo taulusta yksikköhinta ja laskettava kustannus!
-                         (* (:maara %) 10))
+                         (if (and (:maara %) (:yksikkohinta %))
+                           (* (:maara %) (:yksikkohinta %))
+                           "Ei voi laskea"))
               :fmt     fmt/euro-opt :leveys "10%"}
 
              ]
-            @valitut-muut-tyot
+            @tyorivit
              ]])
         ))))
 
