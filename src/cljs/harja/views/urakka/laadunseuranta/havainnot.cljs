@@ -108,9 +108,7 @@
     [:kaikki :selvitys :kasitellyt :omat]]
 
 
-   [:button.nappi-ensisijainen {:on-click #(reset! valittu-havainto-id :uusi)}
-    (ikonit/plus-sign)
-    " Uusi havainto"]
+   [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)]
     
      
    [grid/grid
