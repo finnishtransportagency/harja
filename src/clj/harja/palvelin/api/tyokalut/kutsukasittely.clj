@@ -1,47 +1,49 @@
-(ns harja.palvelin.api.kutsukasittely
+(ns harja.palvelin.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
 
-  (:require [cheshire.core :as cheshire]
-            [harja.tyokalut.json_validointi :as json]
+  (:require [harja.tyokalut.json_validointi :as json]
+            [harja.palvelin.api.tyokalut.virheet :as virheet]
+            [cheshire.core :as cheshire]
             [taoensso.timbre :as log])
-  (:import (javax.ws.rs BadRequestException)
-           (com.google.gson JsonParseException)))
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(def +virhe-ei-validi-json+ "Viallinen kutsu. Vastaanotettu JSON-data ei ole validia:")
-(def +virhe-viallinen-kutsu+ "Viallinen kutsu:")
-(def +sisainen-kasittelyvirhe+ "Sisäinen käsittelyvirhe:")
 
 (defn logita-kutsu [resurssi request body]
+  ;; fixme: lisää monitorointikutsu
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi)
   (log/debug "Kutsu:" request)
   (log/debug "Sisältö:" body))
 
 (defn logita-vastaus [resurssi response]
+  ;; fixme: lisää monitorointikutsu
   (if (= 200 (:status response))
     (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
     (log/error "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" response)))
 
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
-  [status koodit-ja-viestit]
-  (log/debug "koodit ja viestit:" koodit-ja-viestit)
-  {:status  status
-   :headers {"Content-Type" "application/json"}
-   :body    (cheshire/encode {:virheet
-                              (for [[koodi viesti] (partition 2 koodit-ja-viestit)]
-                                {:virhe
-                                 {:koodi  koodi
-                                  :viesti viesti}})})})
+  [status virheet]
+  (log/debug "Virheet:" virheet)
+
+  (let [body (cheshire/encode
+               {:virheet
+                (mapv (fn [virhe]
+                        {:virhe
+                         {:koodi  (:koodi virhe)
+                          :viesti (:viesti virhe)}})
+                      virheet)})]
+    (log/debug "Body on:" body)
+    {:status  status
+     :headers {"Content-Type" "application/json"}
+     :body    body}))
 
 (defn tee-sisainen-kasittelyvirhevastaus
-  "Luo sisäisen käsittelyvirhevastauksen (Status 500) ja asettaa vastauksen bodyksi JSON muodossa virheet."
-  [& koodit-ja-viestit]
-  (tee-virhevastaus 500 koodit-ja-viestit))
+  [virheet]
+  (tee-virhevastaus 500 virheet))
 
 (defn tee-viallinen-kutsu-virhevastaus
-  "Luo viallinen kutsu virhevastauksen (Status 400) ja asettaa vastauksen bodyksi JSON muodossa virheet."
-  [& koodit-ja-viestit]
-  (tee-virhevastaus 400 koodit-ja-viestit))
+  [virheet]
+  (tee-virhevastaus 400 virheet))
 
 (defn tee-vastaus
   "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok). Payload on Clojure dataa, joka
@@ -56,52 +58,53 @@
       :body    json}
      )))
 
+(defn kasittele-invalidi-json [virheet]
+  (log/warn virheet/+invalidi-json-koodi+ virheet)
+  (tee-viallinen-kutsu-virhevastaus virheet))
+
+(defn kasittele-viallinen-kutsu [virheet]
+  (log/warn "Tehty kutsu on viallinen: " virheet)
+  (tee-viallinen-kutsu-virhevastaus virheet))
+
+(defn kasittele-sisainen-kasittelyvirhe [virheet]
+  (log/warn "Tapahtui sisäinen käsittelyvirhe: " virheet)
+  (tee-viallinen-kutsu-virhevastaus virheet))
+
 (defn lue-kutsu
   "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-kutsu. Muille kutsuille palauttaa arvon nil.
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
-
   (log/debug "Luetaan kutsua")
   (when (= :post (:request-method request))
     (json/validoi skeema body)
-    ;; FIXME: Varmista, että tämä toimii
     (cheshire/decode body true)))
-
 
 (defn kasittele-kutsu [resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
   validoidaan käyttäen annettuja JSON-skeemoja.
 
-  Mikäli vastaanotettu data on viallista tai käsittelyssä tapahtuu virhe, oletetaan käsittelyfunktion heittävän, joko
-  BadRequestException => HTTP status 400 tai InternalServerErrorException => HTTP status 500
-
-  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 =
-  kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
 
   (let [body (if (:body request)
                (slurp (:body request))
                nil)]
     (logita-kutsu resurssi request body)
-    (let [vastaus (try
+    (let [vastaus (try+
                     (let
                       [parametrit (:params request)
                        kutsun-data (lue-kutsu kutsun-skeema request body)
                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data)]
                       (tee-vastaus vastauksen-skeema vastauksen-data))
-                    ;; FIXME: Mieti järkevä tapa miten välittää virhekoodi ja selite erikseen poikkeuksessa
-                    (catch JsonParseException e
-                      (do
-                        (log/warn +virhe-ei-validi-json+ e)
-                        (tee-viallinen-kutsu-virhevastaus +virhe-ei-validi-json+ (.getMessage e))))
-                    (catch BadRequestException e
-                      (do
-                        (log/warn +virhe-viallinen-kutsu+ e)
-                        (tee-viallinen-kutsu-virhevastaus +virhe-viallinen-kutsu+ (.getMessage e))))
+                    (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+                      (kasittele-invalidi-json virheet))
+                    (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
+                      (kasittele-viallinen-kutsu virheet))
+                    (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
+                      (kasittele-sisainen-kasittelyvirhe virheet))
                     (catch Exception e
-                      (do
-                        (log/error +sisainen-kasittelyvirhe+ e)
-                        (tee-sisainen-kasittelyvirhevastaus +sisainen-kasittelyvirhe+ (.getMessage e)))))]
+                      (kasittele-sisainen-kasittelyvirhe [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                                                           :viesti (.getMessage e)}])))]
       (logita-vastaus resurssi vastaus)
       vastaus)))

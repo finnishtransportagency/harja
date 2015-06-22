@@ -1,4 +1,4 @@
-(ns harja.palvelin.api.skeemat)
+(ns harja.palvelin.api.tyokalut.skeemat)
 
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
 

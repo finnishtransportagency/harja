@@ -1,6 +1,6 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
-  
+
   :dependencies [[org.clojure/clojure "1.7.0-RC1"] ; siirrytään 1.7.0 heti kun valmis
                  [org.clojure/clojurescript "0.0-3297"]
 
@@ -11,12 +11,12 @@
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.215"]
                  [com.cognitect/transit-clj "0.8.271"]
-                 
+
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
                  [com.stuartsierra/component "0.2.3"]
-                 
+
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
@@ -32,9 +32,9 @@
                  ;; API: RAML speksi ja JSON schema (FIXME: nämä vain, jos API kutsuja implementoidaan)
                  [org.raml/raml-parser "0.8.11"]
                  [bigml/closchema "0.6"]
-                 
+
                  [org.clojure/core.cache "0.6.4"]
-                 
+
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
@@ -58,28 +58,28 @@
                  [progress/sonic-xmessage "7.6.2"]
                  ;; ActiveMQ testejä varten
                  [org.apache.activemq/activemq-client "5.11.1"]
-                 
+
                  ;; Sähköposti lähetys
                  [com.draines/postal "1.11.3"]
-                 
+
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
                  [binaryage/devtools "0.2.0"] ;; cljs data chrome inspectoriin
-                 
+
                  [cljs-ajax "0.3.11"]
                  ;;[lively "0.2.0"]
                  [figwheel "0.3.3"]
-                 
+
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.1-0"]
-                 
+
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  [com.andrewmcveigh/cljs-time "0.3.3"]
 
                  [cljsjs/openlayers "3.3.0-0"]
-                 
+
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
                  [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
@@ -89,38 +89,37 @@
                  ;; Chime -ajastuskirjasto
                  [jarohen/chime "0.1.6"]
 
-                 ;; Pikkukuvien muodostamiseen 
+                 ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
                  [com.github.fge/json-schema-validator "2.2.6"]
                  [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
 
-                 ;; JAX-RS -REST-kirjastot
-                 [javax.ws.rs/javax.ws.rs-api "2.0"]
-                 [org.glassfish.jersey.core/jersey-common "2.18"]]
+                 ;; Slingshot -kirjasto poikkeusten käsittelyyn
+                 [slingshot "0.12.2"]]
 
-  
+
   :dev-dependencies [;; Selain REPL
-                     
+
                      ;; Testaus
-                     
+
 
                      ]
-  
-  
+
+
   :profiles {:dev {:dependencies []
                    :plugins [[com.jakemccrary/lein-test-refresh "0.9.0"]
                              [test2junit "1.1.0"]]}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
-    
+
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]  ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
                  ]
 
-  
+
   :plugins [[lein-cljsbuild "1.0.5"]
             [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
@@ -139,7 +138,7 @@
                                    :output-to "dev-resources/js/harja.js"
                                    :output-dir "dev-resources/js/out"
 
-                                   
+
                                    }}
                        {:id "test"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
@@ -149,13 +148,13 @@
                                    :pretty-print true
                                    :source-map "target/cljs/test/test.js.map"}
                         :notify-command ["./run-karma.sh"]}
-                       ;;:warning-handlers [utils.cljs-warning-handler/handle]} 
-                       
-                       
+                       ;;:warning-handlers [utils.cljs-warning-handler/handle]}
+
+
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                         :compiler {:optimizations :advanced
-                                   
+
                                    ;;:preamble ["reagent/react.min.js"]
                                    :output-to "resources/public/js/harja.js"
                                    :closure-extra-annotations #{"api" "observable"}
@@ -164,7 +163,7 @@
                                    :source-map "resources/public/js/harja.js.map"
                                    :output-dir "resources/public/js/"
                                    }}
-                                   
+
                        ]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
@@ -184,7 +183,7 @@
   :auto-clean false ;; for uberjar
 
   :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
-  
+
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)
@@ -208,5 +207,5 @@
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             }
 
-  
+
   )

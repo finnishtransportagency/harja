@@ -3,17 +3,17 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.api.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+            [harja.palvelin.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+            [harja.palvelin.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.api.skeemat :as skeemat]
-            [harja.palvelin.api.kutsukasittely :refer [kasittele-kutsu]]
             [taoensso.timbre :as log])
-  (:import
-    (javax.ws.rs BadRequestException)))
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muodosta-kokonaishintaiset-tyot [tyot]
   (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
@@ -69,21 +69,16 @@
                   :materiaalinKaytot (muodosta-materiaalin-kaytot (get materiaalit (:id sopimus))))})))
 
 (defn muodosta-vastaus [db id urakka]
-  {:urakka                                                  ;; URAKAN tiedot
+  {:urakka
    {:tiedot     (assoc urakka                               ; perustiedot (pl. väylämuoto) tulevat suoraan hae-urakka kyselystä
                   :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn hae-urakka [db {urakka-id :id}]
-  ;; FIXME: mieti mekanismi urakoiden pääsynvalvontaan
-  (try
-    (let [id (Integer/parseInt urakka-id)
-          urakka (some->> id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
-      (if-not urakka
-        (do
-          (log/warn "Urakkaa id:llä " urakka-id " ei löydy.")
-          (throw (BadRequestException. (str "Tuntematon urakka. Urakkaa id:llä " urakka-id " ei löydy."))))
-        (muodosta-vastaus db id urakka)))))
+(defn hae-urakka [db {id :id}]
+  (let [urakka-id (read-string id)]
+    (validointi/tarkista-urakka db urakka-id)
+    (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
+      (muodosta-vastaus db urakka-id urakka))))
 
 (defrecord Urakat []
   component/Lifecycle
@@ -98,7 +93,3 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :api-hae-urakka)
     this))
-
-
-  
-

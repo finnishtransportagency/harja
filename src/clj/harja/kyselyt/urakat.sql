@@ -146,7 +146,7 @@ SELECT
 FROM sopimus s
 WHERE s.urakka = :urakka;
 
--- name: onko-olemassa?
+-- name: onko-olemassa
 -- Tarkistaa onko id:n mukaista urakkaa olemassa tietokannassa
 SELECT EXISTS(SELECT id
               FROM urakka
