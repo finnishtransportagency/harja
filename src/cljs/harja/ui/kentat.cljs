@@ -457,3 +457,40 @@
   (if-let [p @data]
     (pvm/pvm-aika p)
     ""))
+
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake?]} data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+        muuta! (fn [kentta]
+                 #(let [v (-> % .-target .-value)]
+                    (when (re-matches #"\d*" v)
+                      (swap! data assoc kentta (-> % .-target .-value)))))]
+    [:span.tierekisteriosoite-kentta
+     [:table
+      [:tbody
+       [:tr
+        [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                   :size 5 :max-length 10
+                                   :placeholder "Tie#"
+                                   :value numero
+                                   :on-change (muuta! :numero)}]]
+        [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                   :size 5 :max-length 10
+                                   :placeholder "aosa"
+                                   :value alkuosa
+                                   :on-change (muuta! :alkuosa)}]]
+        [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                   :size 5 :max-length 10
+                                   :placeholder "aet"
+                                   :value alkuetaisyys
+                                   :on-change (muuta! :alkuetaisyys)}]]
+        [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                   :size 5 :max-length 10
+                                   :placeholder "losa"
+                                   :value loppuosa
+                                   :on-change (muuta! :loppuosa)}]]
+        [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                   :size 5 :max-length 10
+                                   :placeholder "let"
+                                   :value loppuetaisyys
+                                   :on-change (muuta! :loppuetaisyys)}]]]]]]))
+         
