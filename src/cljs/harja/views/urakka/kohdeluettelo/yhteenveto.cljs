@@ -36,7 +36,7 @@
          [grid/grid
           {:otsikko "Kohteet"
            :tyhja (if (nil? @kohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-           :luokat ["toteumat-paasisalto"]
+           :luokat ["paallysteurakka-kohteet-paasisalto"]
            ; FIXME Tämä rivi on kesken :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))
            }
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
