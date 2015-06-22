@@ -26,8 +26,18 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def lomake-paallystysilmoitus (atom nil))
 
-(defn toteumat
+(defn paallystysilmoituslomake
+  []
+  (let []
+
+    (komp/luo
+      (fn [ur]
+        [:div
+        [:p "TODO Tähän tulee päällystysilmoituslomake :)"]]))))
+
+(defn toteumaluettelo
   []
   (let [toteumarivit (reaction {})]
 
@@ -42,3 +52,8 @@
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"}
            {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"}]
           @toteumarivit]]))))
+
+(defn toteumat []
+  (if @lomake-paallystysilmoitus
+    [paallystysilmoituslomake]
+    [toteumaluettelo]))
