@@ -50,11 +50,11 @@
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "15%"}
-           {:otsikko "Sop. muk. työt" :nimi :sopimuksen-mukaiset-tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Sop. muk. työt" :nimi :sopimuksen_mukaiset_tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Lisätyöt" :nimi :lisatyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Muutostyöt" :nimi :muutostyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Bit ind." :nimi :bitumi-indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Laskutettu" :nimi :laskutettu :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}]

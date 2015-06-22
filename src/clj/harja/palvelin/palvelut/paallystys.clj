@@ -14,11 +14,24 @@
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]))
 
+(def muunna-desimaaliluvut-xf
+  (map #(-> %
+            (assoc-in [:bitumi_indeksi]
+                      (or (some-> % :bitumi_indeksi double) 0))
+            (assoc-in [:sopimuksen_mukaiset_tyot]
+                      (or (some-> % :sopimuksen_mukaiset_tyot double) 0))
+            (assoc-in [:arvonvahennykset]
+                      (or (some-> % :arvonvahennykset double) 0))
+            (assoc-in [:lisatyot]
+                      (or (some-> % :lisatyot double) 0))
+            (assoc-in [:kaasuindeksi]
+                      (or (some-> % :kaasuindeksi double) 0)))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
+                      muunna-desimaaliluvut-xf
                       (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
