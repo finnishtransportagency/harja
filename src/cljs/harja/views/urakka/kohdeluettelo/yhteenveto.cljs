@@ -56,6 +56,10 @@
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Laskutettu" :nimi :laskutettu :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}]
+           {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
+                                                                                                                 (:lisatyot rivi)
+                                                                                                                 (:muutostyot rivi)
+                                                                                                                 (:arvonvahennykset rivi)
+                                                                                                                 (:bitumi_indeksi rivi)
+                                                                                                                 (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
             @kohderivit]])))
