@@ -27,43 +27,48 @@
   (let [hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
-   (hae-urakan-tyot ur)
-   [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
-   "Yleiset"
-   :yleiset
-   ^{:key "yleiset"}
-   [urakka-yleiset/yleiset ur]
+    (hae-urakan-tyot ur)
+    [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
+     "Yleiset"
+     :yleiset
+     ^{:key "yleiset"}
+     [urakka-yleiset/yleiset ur]
 
-   "Suunnittelu"
-   :suunnittelu
-   ^{:key "suunnittelu"}
-   [suunnittelu/suunnittelu ur]
+     "Suunnittelu"
+     :suunnittelu
+     ^{:key "suunnittelu"}
+     [suunnittelu/suunnittelu ur]
 
-   "Toteumat"
-   :toteumat
-   ^{:key "toteumat"}
-   [toteumat/toteumat ur]
+     "Toteumat"
+     :toteumat
+     ^{:key "toteumat"}
+     [toteumat/toteumat ur]
 
-   "Laadunseuranta"
-   :laadunseuranta
-   ^{:key "laadunseuranta"}
-   [laadunseuranta/laadunseuranta]
+     "Kohdeluettelo"
+     :kohdeluettelo
+     (when (= :paallystys (:tyyppi ur))
+       ^{:key "kohdeluettelo"}
+       [])
 
+     "Laadunseuranta"
+     :laadunseuranta
+     ^{:key "laadunseuranta"}
+     [laadunseuranta/laadunseuranta]
 
-   "Siltatarkastukset"
-   :siltatarkastukset
-   (when (= :hoito (:tyyppi ur))
-     ^{:key "siltatarkastukset"}
-     [siltatarkastukset/siltatarkastukset ur])
+     "Siltatarkastukset"
+     :siltatarkastukset
+     (when (= :hoito (:tyyppi ur))
+       ^{:key "siltatarkastukset"}
+       [siltatarkastukset/siltatarkastukset ur])
 
-   "Välitavoitteet"
-   :valitavoitteet
-   (when-not (= :hoito (:tyyppi ur))
+     "Välitavoitteet"
+     :valitavoitteet
+     (when-not (= :hoito (:tyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
-   "Maksuerät"
-   :maksuerat
-   ^{:key "maksuerat"}
-    [maksuerat/maksuerat-listaus ur]
-   ]))
+     "Maksuerät"
+     :maksuerat
+     ^{:key "maksuerat"}
+     [maksuerat/maksuerat-listaus ur]
+     ]))
