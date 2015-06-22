@@ -65,14 +65,11 @@
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit
+        tehtavat (if jarjestelman-lisaama-toteuma? (vals @tehtavat) tehtavat)]
 
-    (tarkkaile! "TOT Tehtävät-atomi:" tehtavat)
-    (log "TOT Toimenpideinstanssit " (pr-str toimenpideinstanssit))
-
-    [grid/muokkaus-grid
-     {:tyhja "Ei töitä."
-      :voi-muokata? (not jarjestelman-lisaama-toteuma?)} ; FIXME :voi-muokata false disabloi napit, mutta pitäisi disabloida myös kentät
+    [(if jarjestelman-lisaama-toteuma? grid/grid grid/muokkaus-grid)
+     {:tyhja "Ei töitä."}
      [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
        :tyyppi        :valinta
        :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
