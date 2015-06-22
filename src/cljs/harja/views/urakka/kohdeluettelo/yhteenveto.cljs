@@ -7,6 +7,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
+            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+                                      livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -26,9 +28,26 @@
 
 (defn yhteenveto
   []
-  (let []
+  (let [kohderivit (reaction {})]
 
     (komp/luo
       (fn []
         [:div
-         [:p "TODO Yhteenveto"]]))))
+         [grid/grid
+          {:otsikko "Kohteet"
+           :tyhja (if (nil? @kohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+           :luokat ["toteumat-paasisalto"]
+           ; FIXME Tämä rivi on kesken :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))
+           }
+          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+           {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
+           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "15%"}
+           {:otsikko "Sop. muk. työt" :nimi :sopimuksen-mukaiset-tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Lisätyöt" :nimi :lisatyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Muutostyöt" :nimi :muutostyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Bit ind." :nimi :bitumi-indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           {:otsikko "Laskutettu" :nimi :laskutettu :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}]
+            @kohderivit]]))))
