@@ -7,6 +7,7 @@
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
+            [harja.views.urakka.kohdeluettelo :as kohdeluettelo]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.tiedot.urakka.yhteystiedot :as yht]
@@ -48,7 +49,7 @@
      :kohdeluettelo
      (when (= :paallystys (:tyyppi ur))
        ^{:key "kohdeluettelo"}
-       [])
+       [kohdeluettelo/kohdeluettelo])
 
      "Laadunseuranta"
      :laadunseuranta
