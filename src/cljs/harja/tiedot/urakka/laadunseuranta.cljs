@@ -6,7 +6,7 @@
 
 (defonce laadunseurannassa? (atom false)) ; jos true, laadunseurantaosio nyt käytössä
 
-(defonce valittu-valilehti (atom :havainnot))
+(defonce valittu-valilehti (atom :tarkastukset))
 
 (defonce sanktiotyypit
   (reaction<! (when @laadunseurannassa?

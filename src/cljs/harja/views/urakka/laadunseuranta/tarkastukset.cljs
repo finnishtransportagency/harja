@@ -70,7 +70,7 @@
 
          @urakan-tarkastukset]]))))
 
-(defn talvihoitomittaus [mittaus]
+(defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
                  :nimi :lumimaara :leveys-col 1}
@@ -81,6 +81,31 @@
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :nimi :lampotila :leveys-col 1}))
 
+(defn soratiemittaus []
+  (let [kuntoluokka (fn [arvo _]
+                      (when (and arvo (not (<= 1 arvo 5)))
+                               "Anna arvo 1 - 5"))]
+    (lomake/ryhma "Soratietarkastus"
+                  {:otsikko "Tasaisuus" :tyyppi :numero
+                   :nimi :tasaisuus :leveys-col 1
+                   :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
+                   :validoi [kuntoluokka]}
+
+                  {:otsikko "Kiinteys" :tyyppi :numero
+                   :nimi :kiinteys :leveys-col 1
+                   :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
+                   :validoi [kuntoluokka]}
+
+                  {:otsikko "Pölyävyys" :tyyppi :numero
+                   :nimi :polyavyys :leveys-col 1
+                   :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
+                   :validoi [kuntoluokka]}
+
+                  {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
+                   :nimi :sivukaltevuus :leveys-col 1
+                   :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
+                   :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]})))
+                 
 (defn tarkastus [tarkastus]
   [:div.tarkastus
    [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus nil)]
@@ -109,8 +134,8 @@
       :leveys-col 2}
 
      (case (:tyyppi @tarkastus)
-       :talvihoito (talvihoitomittaus (r/wrap (:talvihoitomittaus @tarkastus)
-                                              #(swap! tarkastus assoc :talvihoitomittaus %)))
+       :talvihoito (talvihoitomittaus)
+       :soratie (soratiemittaus)
        nil)
      ]
 

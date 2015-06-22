@@ -19,7 +19,6 @@
     (r/wrap
      (hae data)
      (fn [uusi]
-       ;(log "DATA: " (pr-str data) "; UUSI ARVO KENTÄLLE " nimi ": " (pr-str uusi))
        (if aseta
          (vaihda! (aseta data uusi))
          (vaihda! (assoc data nimi uusi)))))))
