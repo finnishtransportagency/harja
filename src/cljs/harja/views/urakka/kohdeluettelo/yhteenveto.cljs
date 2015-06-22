@@ -11,6 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -20,15 +21,22 @@
             [harja.ui.napit :as napit]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.tiedot.urakka :as u])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 
+(defonce kohderivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                      valittu-urakan-valilehti @u/urakan-valittu-valilehti]
+                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
+                                    (log "PÄÄ Haetaan päällystyskohteet.")
+                                    (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)))))
+
 (defn yhteenveto
   []
-  (let [kohderivit (reaction {})]
 
     (komp/luo
       (fn []
@@ -50,4 +58,4 @@
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Laskutettu" :nimi :laskutettu :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}]
-            @kohderivit]]))))
+            @kohderivit]])))
