@@ -91,3 +91,19 @@
 (defn takaisin [teksti takaisin-fn]
   [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
    (ikonit/chevron-left) " " teksti])
+
+(defn uusi
+  "Nappi 'uuden asian' luonnille. 
+Asetukset on optionaalinen mäppi ja voi sisältää:
+  :disabled  jos true, nappi on disabloitu"
+  
+  ([teksti uusi-fn] (uusi teksti uusi-fn {}))
+  ([teksti uusi-fn {:keys [disabled]}]
+     [:button.nappi-ensisijainen
+      {:class (when disabled "disabled")
+       :disabled disabled
+       :on-click #(uusi-fn)}
+      (ikonit/plus-sign)
+      " " teksti]))
+
+
