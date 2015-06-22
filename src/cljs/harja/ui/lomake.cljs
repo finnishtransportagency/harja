@@ -50,7 +50,15 @@
 
 (defmethod tyhja-otsikko :default [_]
   [:span])
-  
+
+(defmulti kentan-yksikko (fn [luokka _] luokka))
+
+(defmethod kentan-yksikko :default [_ _]
+  nil)
+
+(defmethod kentan-yksikko :horizontal [_ {yks :yksikko}]
+  (when yks [:div.inline-block.yksikko yks]))
+   
 (def +ei-otsikkoa+ #{:boolean})
 
 
@@ -148,7 +156,8 @@ Optioissa voi olla seuraavat avaimet:
                                 [:div.form-control-static
                                  (if fmt
                                    (fmt ((or hae #(get % nimi)) data))
-                                   (nayta-arvo kentta arvo))]))]]))]
+                                   (nayta-arvo kentta arvo))]))]
+                           [kentan-yksikko luokka kentta]]))]
            (doall
             (for [skeema (keep identity skeema)]
               (if-let [ryhma (and (ryhma? skeema) skeema)]
