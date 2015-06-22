@@ -49,7 +49,7 @@
     (toteuman-tehtavat->map rivit)))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
-  (log/debug "Haetaan urakan toteuman id:llä: " toteuma-id)
+  (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivi (first (into []
                           toteuma-xf

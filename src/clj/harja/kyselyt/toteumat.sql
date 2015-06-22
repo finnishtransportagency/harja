@@ -9,8 +9,9 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   t.luoja as luoja_id,
-  (SELECT kayttajanimi as luoja_kayttajanimi FROM kayttaja k WHERE k.id = t.luoja),
-  (SELECT jarjestelma as jarjestelman_lisaama FROM kayttaja k WHERE k.id = t.luoja),
+  o.nimi as organisaatio,
+  k.kayttajanimi,
+  k.jarjestelma as jarjestelman_lisaama,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -18,14 +19,16 @@ SELECT
          AND tt.poistettu IS NOT TRUE)
     AS tehtavat
 FROM toteuma t
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN organisaatio o ON o.id = k.organisaatio
 WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
-  AND alkanut >= :alkupvm
-  AND paattynyt <= :loppupvm
-  AND tyyppi = :tyyppi::toteumatyyppi
+  t.urakka = :urakka
+  AND t.sopimus = :sopimus
+  AND t.alkanut >= :alkupvm
+  AND t.paattynyt <= :loppupvm
+  AND t.tyyppi = :tyyppi::toteumatyyppi
   AND t.poistettu IS NOT TRUE
-GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
+GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
 
 -- name: listaa-urakan-toteuma
 -- Listaa urakan toteuman id:llä
@@ -38,8 +41,9 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   t.luoja as luoja_id,
-  (SELECT kayttajanimi as luoja_kayttajanimi FROM kayttaja k WHERE k.id = t.luoja),
-  (SELECT jarjestelma as jarjestelman_lisaama FROM kayttaja k WHERE k.id = t.luoja),
+  o.nimi as organisaatio,
+  k.kayttajanimi,
+  k.jarjestelma as jarjestelman_lisaama,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -47,11 +51,13 @@ SELECT
          AND tt.poistettu IS NOT TRUE)
     AS tehtavat
 FROM toteuma t
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN organisaatio o ON o.id = k.organisaatio
 WHERE
-  urakka = :urakka
-  AND id = :toteuma
+  t.urakka = :urakka
+  AND t.id = :toteuma
   AND t.poistettu IS NOT TRUE
-GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi;
+GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
 
 -- name: listaa-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
