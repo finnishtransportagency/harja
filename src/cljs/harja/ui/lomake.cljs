@@ -114,16 +114,18 @@ Optioissa voi olla seuraavat avaimet:
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
                                 :default "")}
-         (let [kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
+         (let [kaikki-skeemat (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema)
+               kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
                         (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                         (let [kentan-virheet (get @virheet nimi)
                               kentan-varoitukset (get @varoitukset nimi)
                               kentta (assoc kentta :lomake? true)
                               arvo (atomina kentta data (fn [uudet-tiedot]
                                                           (reset! virheet
-                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema :validoi))
+                                                                  (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi))
                                                           (reset! varoitukset
-                                                                  (validointi/validoi-rivi nil uudet-tiedot skeema :varoita))
+                                                                  (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita))
+                                                          (log "VIRHEITÄ: " (pr-str @virheet))
                                                           (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))
                               kentan-tunniste nimi]
