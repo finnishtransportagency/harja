@@ -68,7 +68,7 @@
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
         tehtavat (if jarjestelman-lisaama-toteuma? (vals @tehtavat) tehtavat)]
 
-    [(if jarjestelman-lisaama-toteuma? grid/grid grid/muokkaus-grid)
+    [(if jarjestelman-lisaama-toteuma? grid/grid grid/muokkaus-grid) ; FIXME Voisi olla aina muokkaus-grid, mutta muokattava? false ei disabloi kenttiä.
      {:tyhja "Ei töitä."}
      [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
        :tyyppi        :valinta
@@ -79,10 +79,10 @@
        :leveys "30%"
        :aseta         #(assoc %1 :toimenpideinstanssi %2
                                  :tehtava nil)}
-      {:otsikko       "Tehtävä" :nimi :tehtava
+      {:otsikko       "Tehtävä" :nimi :tehtava ; FIXME Readonly-tilassa näkyy id, pitäisi näkyä nimi
+       :tyyppi        :valinta
        :valinta-arvo  #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-       :tyyppi        :valinta
        :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                         (:toimenpideinstanssi %)
                         toimenpideinstanssit tehtavat-tasoineen)
