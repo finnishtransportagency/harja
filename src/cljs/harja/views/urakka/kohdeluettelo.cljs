@@ -19,6 +19,8 @@
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
+            [harja.views.urakka.kohdeluettelo.yhteenveto :as yhteenveto]
+            [harja.views.urakka.kohdeluettelo.toteumat :as kohdeluettelo-toteumat]
             
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
@@ -34,16 +36,16 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-
+(defonce kohdeluettelo-valilehti (atom :yhteenveto))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
   [ur]
-  [bs/tabs {:active u/toteumat-valilehti}
+  [bs/tabs {:active kohdeluettelo-valilehti}
 
    "Yhteenveto" :yhteenveto
-   []
+   [yhteenveto/yhteenveto]
 
-   "Päällystysilmoitukset" :paallystysilmoitukset
-   []])
+   "Toteumat" :paallystysilmoitukset
+   [kohdeluettelo-toteumat/toteumat]])
 
