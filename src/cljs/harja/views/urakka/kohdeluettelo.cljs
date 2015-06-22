@@ -44,7 +44,7 @@
   [bs/tabs {:active kohdeluettelo-valilehti}
 
    "Yhteenveto" :yhteenveto
-   [yhteenveto/yhteenveto]
+   [yhteenveto/paallystyskohteet]
 
    "Toteumat" :paallystysilmoitukset
    [kohdeluettelo-toteumat/toteumat]])

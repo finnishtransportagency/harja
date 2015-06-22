@@ -35,7 +35,28 @@
                                     (log "PÄÄ Haetaan päällystyskohteet.")
                                     (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)))))
 
-(defn yhteenveto
+(defn paallystyskohdeosat [rivi]
+  (let [paallystyskohdeosat (atom [])]
+  (fn [rivi]
+    [:div
+     [grid/grid
+      {:otsikko     "Päällystyskohdeosat"
+       :tyhja       (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Päällystyskohdeosia ei löydy")
+       :tunniste    :id
+       :luokat ["paallystyskohdeosat-haitari"]}
+      [{:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
+       {:otsikko "Tieosa" :nimi :tr_numero :muokattava? (constantly true) :tyyppi :numero :leveys "10%"}
+       {:otsikko "Aot" :nimi :tr_alkuosa :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+       {:otsikko "Aet" :nimi :tr_alkuetaisyys :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Losa" :nimi :tr_loppuosa :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Let" :nimi :tr_loppuetaisyys :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Kvl" :nimi :kvl :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
+       {:otsikko "Toimenpide" :nimi :toimenpide :muokattava? (constantly false) :tyyppi :string :leveys "20%"}]
+      @paallystyskohdeosat]])))
+
+(defn paallystyskohteet
   []
 
     (komp/luo
