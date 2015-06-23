@@ -116,7 +116,7 @@
           (log/debug "Luodaan uusi tehtävä.")
           (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user) nil))))))
 
-(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat ; FIXME Tallenna luoja & muokattu
+(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat ; FIXME Tallenna luoja, muokattu & muokkaaja
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
   [db user toteuma]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ; FIXME Oikea rooli?
@@ -163,7 +163,7 @@
                               (log/debug "Päivitetyt summat: " paivitetyt-summat)
                               {:toteuma toteuma :tehtavien-summat paivitetyt-summat})))
 
-(defn paivita-yk-hint-toiden-tehtavat  ; FIXME Tallenna luoja & muokattu
+(defn paivita-yk-hint-toiden-tehtavat  ; FIXME Tallenna muokattu & muokkaajja
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)

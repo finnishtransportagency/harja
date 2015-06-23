@@ -36,6 +36,15 @@
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
 
+(defn hae-urakan-paallystystoteumat [db user {:keys [urakka-id sopimus-id]}]
+  (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [vastaus (into []
+                      muunna-desimaaliluvut-xf
+                      (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
+    (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
+    vastaus))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -44,6 +53,9 @@
       (julkaise-palvelu http :urakan-paallystyskohteet
                         (fn [user tiedot]
                           (hae-urakan-paallystyskohteet db user tiedot)))
+      (julkaise-palvelu http :urakan-paallystystoteumat
+                        (fn [user tiedot]
+                          (hae-urakan-paallystystoteumat db user tiedot)))
       this))
 
   (stop [this]

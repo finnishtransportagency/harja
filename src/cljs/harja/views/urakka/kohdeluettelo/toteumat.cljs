@@ -21,7 +21,9 @@
             [harja.ui.napit :as napit]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -35,11 +37,18 @@
     (komp/luo
       (fn [ur]
         [:div
-        [:p "TODO Tähän tulee päällystysilmoituslomake :)"]]))))
+        [:p "TODO Tähän tulee tosi iso ja monimutkainen päällystysilmoituslomake :)"]]))))
+
+(defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
+                                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                      valittu-urakan-valilehti @u/urakan-valittu-valilehti]
+                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
+                                    (log "PÄÄ Haetaan päällystystoteumat.")
+                                    (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id)))))
 
 (defn toteumaluettelo
   []
-  (let [toteumarivit (reaction {})]
+  (let []
 
     (komp/luo
       (fn []
@@ -49,8 +58,10 @@
            :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
           [{:otsikko "#" :nimi :numero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"}
-           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"}]
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
+           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+            :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click #(go ())}
+                                     (ikonit/eye-open) " Päällystysilmoitus"])}]
           @toteumarivit]]))))
 
 (defn toteumat []
