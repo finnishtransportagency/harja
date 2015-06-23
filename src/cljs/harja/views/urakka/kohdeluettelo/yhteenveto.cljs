@@ -31,7 +31,7 @@
 (defonce kohderivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                       valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
+                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
                                     (log "PÄÄ Haetaan päällystyskohteet.")
                                     (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)))))
 

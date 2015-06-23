@@ -42,7 +42,7 @@
 (defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                       valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
+                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
                                     (log "PÄÄ Haetaan päällystystoteumat.")
                                     (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id)))))
 
@@ -56,7 +56,7 @@
          [grid/grid
           {:otsikko "Toteumat"
            :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
-          [{:otsikko "#" :nimi :numero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+          [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
            {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
