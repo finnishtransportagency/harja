@@ -43,7 +43,7 @@
   (fn [rivi]
     [:div
      [grid/grid
-      {:otsikko     "Päällystyskohdeosat"
+      {:otsikko     "Tierekisterikohteet"
        :tyhja       (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Päällystyskohdeosia ei löydy")
        :tunniste    :tr_numero
        :luokat ["paallystyskohdeosat-haitari"]}

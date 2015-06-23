@@ -28,7 +28,55 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+
 (def lomake-paallystysilmoitus (atom nil))
+
+(def lomaketestidata
+  {:kohde 308
+   :valmispvm "2005-11-14 00:00:00+02"
+   :hinta 5000
+
+   :osoitteet [{:tie 2846 :aosa 5 :aet 22 :losa 5 :let 9377
+                :ajorata 0 :suunta 0 :kaista 1}
+               {:tie 2848 :aosa 5 :aet 22 :losa 5 :let 9377
+                :ajorata 0 :suunta 0 :kaista 1}]
+
+   :toimenpiteet [{:paallystetyyppi 21
+                   :raekoko 16
+                   :massa 100
+                   :rc% 0
+                   :tyomenetelma 12
+                   :leveys 6.5
+                   :massamaara 1781
+                   :edellinen-paallystetyyppi 12
+                   }
+                  {:paallystetyyppi 21
+                   :raekoko 10
+                   :massa 512
+                   :rc% 0
+                   :tyomenetelma 12
+                   :leveys 4
+                   :massamaara 1345
+                   :edellinen-paallystetyyppi 11
+                   }]
+
+   :kiviaines [{:esiintymä "KAM Leppäsenoja"
+                :km-arvo "An 14"
+                :muotoarvo "Fi 20"
+                :sideaine {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
+
+   :alustatoimet [{:tie 5 :aosa 22 :aet 3 :losa 5 :let 4785
+                   :kasittelymenetelma {:nimi "Remix-stabilointi"        :lyhenne "REST" :koodi 13}
+                   :paksuus 30
+                   :verkkotyyppi {:nimi "Lasikuituverkko" :koodi 2}
+                   :tekninen-toimenpide {:nimi "Suuntauksen parantaminen" :koodi 2}
+                   }]
+
+   :tyot [{:tyyppi :ajoradan-paallyste
+           :toimenpidekoodi 1350
+           :tilattu-maara 1000
+           :toteutunut-maara 5800
+           :yksikkohinta 20}]})
 
 (defn paallystysilmoituslomake
   []
@@ -37,14 +85,14 @@
     (komp/luo
       (fn [ur]
         [:div
-        [:p "TODO Tähän tulee tosi iso ja monimutkainen päällystysilmoituslomake :)"]]))))
+         [:p "TODO Tähän tulee tosi iso ja monimutkainen päällystysilmoituslomake :)"]]))))
 
 (defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                      valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
-                                    (log "PÄÄ Haetaan päällystystoteumat.")
-                                    (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id)))))
+                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                        valittu-urakan-valilehti @u/urakan-valittu-valilehti]
+                                    (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
+                                      (log "PÄÄ Haetaan päällystystoteumat.")
+                                      (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id)))))
 
 (defn toteumaluettelo
   []
@@ -53,6 +101,13 @@
     (komp/luo
       (fn []
         [:div
+
+         [:button.nappi-ensisijainen {:on-click
+                                      ;#(reset! lomake-paallystysilmoitus {}) ; FIXME Käytä tätä kun testidataa ei tarvita
+                                      #(reset! lomake-paallystysilmoitus lomaketestidata)
+                                      }
+          (ikonit/plus-sign) " Lisää päällystysilmoitus"]
+
          [grid/grid
           {:otsikko "Toteumat"
            :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
