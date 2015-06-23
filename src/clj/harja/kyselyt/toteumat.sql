@@ -205,7 +205,7 @@ INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja,
         FALSE, :suorittaja, :tunnus, :lisatieto);
 
 -- name: poista-toteuma!
@@ -217,8 +217,8 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 -- Luo uuden tehtävän toteumalle
 INSERT
 INTO toteuma_tehtava
-(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu)
-VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE);
+(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta)
+VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta);
 
 -- name: poista-tehtava!
 UPDATE toteuma_tehtava

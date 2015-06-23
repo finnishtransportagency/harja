@@ -41,6 +41,16 @@
     (log/debug "Mappaus valmis: " (pr-str mapattu))
     mapattu))
 
+(defn toteuman-parametrit [toteuma kayttaja]
+  [(:urakka-id toteuma) (:sopimus-id toteuma)
+   (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
+   (name (:tyyppi toteuma)) (:id kayttaja)
+   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma)])
+
+(defn toteumatehtavan-parametrit [toteuma kayttaja]
+  [(get-in toteuma [:tehtava :toimenpidekoodi]) (:maara toteuma) (:id kayttaja) (:paivanhinta toteuma)])
+
+
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [rivit (into []
@@ -97,14 +107,14 @@
     (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
       (do
         (if (:poistettu tehtava)
-          (do (log/info "Poistetaan tehtävä: " (pr-str tehtava))
+          (do (log/debug "Poistetaan tehtävä: " (pr-str tehtava))
               (q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
-          (do (log/info "Pävitetään tehtävä: " (pr-str tehtava))
+          (do (log/debug "Pävitetään tehtävä: " (pr-str tehtava))
               (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false) (:tehtava-id tehtava)))))
       (do
         (when (not (:poistettu tehtava))
-          (log/info "Luodaan uusi tehtävä.")
-          (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user)))))))
+          (log/debug "Luodaan uusi tehtävä.")
+          (q/luo-tehtava<! c (:toteuma-id toteuma) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user) nil))))))
 
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat ; FIXME Tallenna luoja & muokattu
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
@@ -115,14 +125,17 @@
   (jdbc/with-db-transaction [c db]
                             (if (:toteuma-id toteuma)
                               (do
-                                (log/info "Pävitetään toteuma.")
+                                (log/debug "Pävitetään toteuma.")
                                 (q/paivita-toteuma! c (konv/sql-date (:aloituspvm toteuma)) (konv/sql-date (:lopetuspvm toteuma)) (:id user)
                                                     (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
-                                (log/info "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
+                                (log/debug "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
                                 (kasittele-toteuman-tehtavat c user toteuma))
                               (do
-                                (log/info "Luodaan uusi toteuma")
-                                (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma)
+                                (log/debug "Luodaan uusi toteuma")
+                                ;; FIXME: Jari: ota käyttöön toteuman-parametrit funktio?
+                                ;; Täytyy enää uudelleen nimetä frontissa kentät :aloituspvm --> :alkanut ja :lopetuspvm --> :paattynyt
+                                (let [toteuman-parametrit (into [] (concat [c] (toteuman-parametrit toteuma user)))
+                                      uusi (q/luo-toteuma<! c (:urakka-id toteuma)
                                                             (:sopimus-id toteuma)
                                                             (konv/sql-timestamp (:aloituspvm toteuma))
                                                             (konv/sql-timestamp (:lopetuspvm toteuma))
@@ -133,9 +146,9 @@
                                                             (:lisatieto toteuma))
                                       id (:id uusi)
                                       toteumatyyppi (name (:tyyppi toteuma))]
-                                  (log/info "Luodaan uudelle toteumalle tehtävät")
+                                  (log/debug "Luodaan uudelle toteumalle tehtävät")
                                   (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-                                    (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
+                                    (q/luo-tehtava<! c id toimenpidekoodi maara (:id user) nil)
 
                                     (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
                                     (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
@@ -204,7 +217,7 @@
 
 (defn tallenna-erilliskustannus [db user ek]
   (oik/vaadi-rooli-urakassa user
-                            #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
+                            roolit/toteumien-kirjaus
                             (:urakka-id ek))
   (jdbc/with-db-transaction [c db]
                             (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
@@ -243,51 +256,49 @@
   (into []
         muut-tyot-xf
         (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
-
 (defn tallenna-muiden-toiden-toteuma
   [db user toteuma]
   (oik/vaadi-rooli-urakassa user
                             #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
                             (:urakka-id toteuma))
   (log/debug "tallenna-muiden-toiden-toteuma: " (pr-str toteuma))
-  ;; FIXME: tästä alaspäin en vielä toimi!
+  ;; FIXME: tästä alaspäin en vielä kokonaan toimi!
   ;; käytä olemassa olevia toteuma_tehtavan päivityskyselyitä jos pystyt. Refaktoroi
   ;; kyselyjä tarpeen mukaan niin että mm. ottavat :tyyppi parametrin toteumaan (yksikkohintainen, muutostyo, jne)
   (jdbc/with-db-transaction [c db]
-                            (if (get-in toteuma [:tehtava :id])
-                              (do
-                                (log/info "Pävitetään toteuma.")
-                                (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                                                    (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
-                                (log/info "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
-                                (kasittele-toteuman-tehtavat c user toteuma))
-                              (do
-                                (log/info "Luodaan uusi toteuma")
-                                (let [uusi (q/luo-toteuma<! c (:urakka-id toteuma)
-                                                            (:sopimus-id toteuma)
-                                                            (konv/sql-timestamp (:alkanut toteuma))
-                                                            (konv/sql-timestamp (:paattynyt toteuma))
-                                                            (name (:tyyppi toteuma))
-                                                            (:id user)
-                                                            (:suorittajan-nimi toteuma)
-                                                            (:suorittajan-ytunnus toteuma)
-                                                            (:lisatieto toteuma))
-                                      id (:id uusi)
-                                      toteumatyyppi (name (:tyyppi toteuma))]
-                                  (log/info "Luodaan uudelle toteumalle tehtävät")
-                                  (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-                                    (q/luo-tehtava<! c id toimenpidekoodi maara (:id user))
+                           (let [toteuman-parametrit (into [] (concat [c] (toteuman-parametrit toteuma user)))]
+                             (log/debug "Toteuman parametrit: " toteuman-parametrit)
+                             (if (get-in toteuma [:tehtava :id])
+                               (do
+                                 (log/debug "Päiväitä toteuma")
+                                 (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                                                     (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
+                                 (log/debug "Käsitellään toteuman tehtävät: " (pr-str (:tehtavat toteuma)))
+                                 (kasittele-toteuman-tehtavat c user toteuma))
+                               (do
+                                 (log/debug "Luodaan uusi toteuma")
+                                 (let [uusi (apply q/luo-toteuma<! toteuman-parametrit)
+                                       id (:id uusi)
+                                       toteumatyyppi (name (:tyyppi toteuma))
+                                       maksueratyyppi (if (or (= toteumatyyppi "muutostyo")
+                                                              (= (toteumatyyppi "akillinen-hoitotyo"))
+                                                              (= (toteumatyyppi "lisatyo")))
+                                                        "lisatyo"
+                                                        "muu")
+                                       toteumatehtavan-parametrit
+                                       (into [] (concat [ c id] (toteumatehtavan-parametrit toteuma user)))
+                                       {:keys [toimenpidekoodi]} (:tehtava toteuma)]     ;fixme: maksuerätyypit mäpättävä muutos-, lisä- ja äkilliset työt -tyyppien kanssa
+                                   (log/debug (str "Luodaan uudelle toteumalle id " id " tehtävä" toteumatehtavan-parametrit))
+                                     (apply q/luo-tehtava<! toteumatehtavan-parametrit)
+                                     (log/debug "Merkitään maksuera likaiseksi maksuerätyypin: " maksueratyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
+                                     (q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi toimenpidekoodi)
+                                   true))))
 
-                                    (log/debug "Merkitään maksuera likaiseksi tyypin: " toteumatyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
-                                    (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
-                                  true)))
-
-                            (let [paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
+                            (let [paivitetyt-summat (hae-urakan-muut-tyot c user
                                                                                            {:urakka-id (:urakka-id toteuma)
                                                                                             :sopimus-id (:sopimus-id toteuma)
                                                                                             :alkupvm (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
-                                                                                            :loppupvm (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
-                                                                                            :tyyppi (:tyyppi toteuma)})]
+                                                                                            :loppupvm (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))})]
                               (log/debug "Päivitetyt summat: " paivitetyt-summat)
                               {:toteuma toteuma :tehtavien-summat paivitetyt-summat})))
 
@@ -300,7 +311,7 @@
   [db user t toteumamateriaalit hoitokausi sopimus]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
                             (:urakka t))
-  (log/info "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
+  (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
                             ;; Jos toteumalla on positiivinen id, toteuma on olemassa
                             (let [toteuma (if (and (:id t) (pos? (:id t)))
@@ -308,25 +319,25 @@
                                             ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
                                             (if (:poistettu t)
                                               (do
-                                                (log/info "Poistetaan toteuma " (:id t))
+                                                (log/debug "Poistetaan toteuma " (:id t))
                                                 (q/poista-toteuma! c (:id user) (:id t))
                                                 t)
                                               (do
-                                                (log/info "Pävitetään toteumaa " (:id t))
+                                                (log/debug "Pävitetään toteumaa " (:id t))
                                                 (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
                                                                     (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
                                                 t))
                                             ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                                             ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
                                             (do
-                                              (log/info "Luodaan uusi toteuma")
+                                              (log/debug "Luodaan uusi toteuma")
                                               (q/luo-toteuma<!
                                                 c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
                                                 (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
                                                 (:suorittajan-nimi t)
                                                 (:suorittajan-ytunnus t)
                                                 (:lisatieto t))))]
-                              (log/info "Toteuman tallentamisen tulos:" (pr-str toteuma))
+                              (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
                               (doall
                                 (for [tm toteumamateriaalit]
@@ -334,15 +345,15 @@
                                   (if (and (:id tm) (pos? (:id tm)))
                                     (if (:poistettu tm)
                                       (do
-                                        (log/info "Poistetaan materiaalitoteuma " (:id tm))
+                                        (log/debug "Poistetaan materiaalitoteuma " (:id tm))
                                         (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
                                       (do
-                                        (log/info "Päivitä materiaalitoteuma "
+                                        (log/debug "Päivitä materiaalitoteuma "
                                                   (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
                                         (materiaalit-q/paivita-toteuma-materiaali!
                                           c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
                                     (do
-                                      (log/info "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
+                                      (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
                                       (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
                               ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä

@@ -56,7 +56,6 @@
   [elt]
   (let [r (.getBoundingClientRect elt)
         sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
-    (log "ELEMENTIN " elt " SIJAINTI: " (pr-str sijainti))
     sijainti))
 
 (defn sijainti-sailiossa 

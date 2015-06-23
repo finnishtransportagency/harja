@@ -42,9 +42,13 @@
   (log "front: tallenna-muu-tyo" (pr-str muokattu))
   (go (let [ur (:id @nav/valittu-urakka)
             [sop _] @u/valittu-sopimusnumero
+            [hk-alkupvm hk-loppupvm] @u/valittu-hoitokausi
+
             toteuma (assoc muokattu
                       :urakka-id ur
-                      :sopimus-id sop)
+                      :sopimus-id sop
+                      :hoitokausi-aloituspvm hk-alkupvm
+                      :hoitokausi-lopetuspvm hk-loppupvm)
             res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))]
         (log "tallennettu, palvelu vastasi: " (pr-str res))
         ;(reset! u/muut-tyot-hoitokaudella res)
@@ -200,6 +204,8 @@
               "Tehtävän tarkemmat tiedot"
               ;; FIXME: lisää hinnoittelutyyppi päivän hinta tai muutoshintainen
               {:otsikko "Määrä" :nimi :maara :tyyppi :numero :varoita [[:ei-tyhja "Haluatko jättää määrän antamatta?"]] :leveys-col 3}
+              {:otsikko "Yksikkö" :nimi :yksikko
+               :tyyppi :string  :muokattava? (constantly false) :leveys-col 3}
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
                :tyyppi        :valinta
                :valinta-arvo  first
@@ -210,7 +216,14 @@
               ;; yksikköhinta. Jos sitä ei ole vielä syötetty, implisiittisesti syötetään se tässä näkymässä
               ;; ja tallennetaan muutoshintainen_tyo-tauluun, mistä se on jatkossa käytössä toteumille.
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
-                {:otsikko "Päivän hinta" :nimi :paivanhinta :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3})
+                {:otsikko "Päivän hinta" :nimi :paivanhinta
+                 :hae #(get-in % [:tehtava :paivanhinta])
+                 :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3})
+              (when (= (:hinnoittelu @muokattu) :yksikkohinta)
+                {:otsikko "Yksikköhinta" :nimi :yksikkohinta
+                 :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                 :muokattava? #(nil? (:yksikkohinta %))
+                 :leveys-col 3})
               {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :aseta (fn [rivi arvo]
                         (assoc
@@ -229,8 +242,12 @@
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
                          [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
                :leveys-col 2}
-              {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-              {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+              {:otsikko "Suorittaja" :nimi :suorittajan-nimi
+               :hae #(get-in @muokattu [:suorittajan :nimi])
+               :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+              {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus
+               :hae #(get-in @muokattu [:suorittajan :ytunnus])
+               :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
                :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
               ))
@@ -299,7 +316,8 @@
                          (if (and (:maara %) (:yksikkohinta %))
                            (* (:maara %) (:yksikkohinta %))
                            "Ei voi laskea"))
-              :fmt     fmt/euro-opt :leveys "10%"}
+              :fmt     #(if (number? %) (fmt/euro-opt %) (str %))
+              :leveys  "10%"}
 
              ]
             @tyorivit

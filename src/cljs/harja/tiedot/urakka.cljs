@@ -160,8 +160,11 @@ ja viimeinen voivat olla vajaat)."
 
 (defonce muutoshintaiset-tyot
  (reaction<! (let [ur (:id @nav/valittu-urakka)
-                   sivu @suunnittelun-valittu-valilehti]
-               (when (and ur (= :muut sivu))
+                   suunnittelun-sivu @suunnittelun-valittu-valilehti
+                   toteuman-sivu @toteumat-valilehti]
+               (when (and ur (or
+                               (= :muut suunnittelun-sivu)
+                               (= :muut-tyot toteuman-sivu)))
                  (muut-tyot/hae-urakan-muutoshintaiset-tyot ur)))))
 
 (defonce muut-tyot-hoitokaudella
