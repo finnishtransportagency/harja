@@ -3,5 +3,5 @@
   "id": "http://jsonschema.net",
   "type": "object",
   "additionalProperties": false,
-  "$ref": "file:src/main/resources/api/schemas/entities/urakka.schema.json"
+  "$ref": "file:resources/api/schemas//entities/urakka.schema.json"
 }

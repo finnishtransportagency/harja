@@ -112,8 +112,8 @@ UPDATE havainto
 -- voi antaa päätöstietoja.
 INSERT
   INTO havainto
-       (urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu)
-VALUES (:urakka, :aika, :tekija::osapuoli, :kohde, :selvitys, :luoja, current_timestamp)
+       (urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero,  tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys)
+VALUES (:urakka, :aika, :tekija::osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus, POINT(:x_koordinaatti, :y_koordinaatti), :tr_numero,  :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys, :tr_loppuetaisyys)
 
 -- name: kirjaa-havainnon-paatos!
 -- Kirjaa havainnolle päätöksen.

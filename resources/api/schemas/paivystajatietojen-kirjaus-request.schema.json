@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
       "required": true
     },
     "paivystykset": {
@@ -24,7 +24,7 @@
             "id": "http://jsonschema.net/paivystykset/0/paivystys",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:src/main/resources/api/schemas/entities/paivystys.schema.json",
+            "$ref": "file:resources/api/schemas//entities/paivystys.schema.json",
             "required": true
           }
         }

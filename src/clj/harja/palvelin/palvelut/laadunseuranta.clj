@@ -9,7 +9,7 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            
+
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -43,7 +43,7 @@
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
   [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty] :as havainto}]
   (if id
-    (do (havainnot/paivita-havainnon-perustiedot! db 
+    (do (havainnot/paivita-havainnon-perustiedot! db
                                                   (konv/sql-timestamp aika) (name tekija) kohde
                                                   (if selvitys-pyydetty true false)
                                                   (:id user)
@@ -51,7 +51,7 @@
         id)
 
     (:id (havainnot/luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
-                                   (if selvitys-pyydetty true false) (:id user)))))
+                                   (if selvitys-pyydetty true false) (:id user) nil nil nil nil nil nil nil nil))))
 
 
 (defn hae-havainnon-tiedot
@@ -78,8 +78,8 @@
                               (map konv/alaviiva->rakenne)
                               (map #(konv/string->keyword % :laji))
                               (map #(assoc %
-                                      :sakko? (not (nil? (:summa %)))
-                                      :summa (some-> % :summa double))))
+                                     :sakko? (not (nil? (:summa %)))
+                                     :summa (some-> % :summa double))))
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
 
@@ -162,7 +162,7 @@
         ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
         (map #(konv/array->set % :laji keyword))
         (sanktiot/hae-sanktiotyypit db)))
-  
+
 
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."

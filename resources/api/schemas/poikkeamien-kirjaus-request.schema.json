@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
       "required": true
     },
     "poikkeamat": {
@@ -28,7 +28,7 @@
                 "id": "http://jsonschema.net/tunniste",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
+                "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
                 "required": true
               },
               "raportointi-aika": {
@@ -40,7 +40,7 @@
                 "id": "http://jsonschema.net/poikkeamat/0/poikkeama/laatija",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json",
+                "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
                 "required": true
               },
               "raporttinumero": {
@@ -62,14 +62,14 @@
                 "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/sijainti",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+                "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
                 "required": true
               },
               "liitteet": {
                 "id": "http://jsonschema.net/urakat/0/sopimukset/0/tyot/liitteet",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
+                "$ref": "file:resources/api/schemas//entities/liitteet.schema.json"
               }
             }
           }

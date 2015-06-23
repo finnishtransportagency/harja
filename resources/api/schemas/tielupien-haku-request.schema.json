@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+      "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
       "required": true
     },
     "alueurakkanumero": {

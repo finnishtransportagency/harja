@@ -24,7 +24,7 @@
 
   (jdbc/with-db-transaction [transaktio db]
                             ;; fixme: täytyä oikeat arvot
-                            (qh/luo-havainto<! db urakka-id nil nil nil true nil))
+                            (qh/luo-havainto<! db urakka-id nil nil nil true nil nil nil nil nil nil nil nil nil ))
   true)
 
 (defn kirjaa-havainto [db {id :id} data]

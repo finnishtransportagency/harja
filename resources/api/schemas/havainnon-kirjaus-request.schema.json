@@ -8,21 +8,21 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
       "required": true
     },
     "tunniste": {
       "id": "http://jsonschema.net/tunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
+      "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
       "required": true
     },
     "sijainti": {
       "id": "http://jsonschema.net/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+      "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
       "required": false
     },
     "kohde": {
@@ -39,7 +39,7 @@
       "id": "http://jsonschema.net/kirjaaja",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json",
+      "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
       "required": true
     },
     "paivamaara": {
@@ -52,7 +52,7 @@
       "id": "http://jsonschema.net/liitteet",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
+      "$ref": "file:resources/api/schemas//entities/liitteet.schema.json"
     },
     "kommentit": {
       "id": "http://jsonschema.net/kommentit",

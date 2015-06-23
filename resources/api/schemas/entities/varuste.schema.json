@@ -13,7 +13,7 @@
       "id": "http://jsonschema.net/havainnot/0/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+      "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
       "required": true
     },
     "ajr": {
@@ -52,7 +52,7 @@
         "id": "http://jsonschema.net/tietolaji",
         "type": "object",
         "additionalProperties": false,
-        "$ref": "file:src/main/resources/api/schemas/entities/tietolaji.schema.json"
+        "$ref": "file:resources/api/schemas//entities/tietolaji.schema.json"
       }
     }
   }

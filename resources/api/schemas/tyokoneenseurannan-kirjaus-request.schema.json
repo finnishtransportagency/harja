@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
       "required": true
     },
     "havainnot": {
@@ -47,7 +47,7 @@
                 "id": "http://jsonschema.net/havainnot/0/sijainti",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+                "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
                 "required": true
               },
               "havaintoaika": {

@@ -19,7 +19,7 @@
           "id": "http://jsonschema.net/koordinaattisijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:src/main/resources/api/schemas/entities/organisaatio.schema.json",
+          "$ref": "file:resources/api/schemas//entities/organisaatio.schema.json",
           "required": true
         }
       }
@@ -28,7 +28,7 @@
       "id": "http://jsonschema.net/viestintunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
+      "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
       "required": true
     },
     "lahetysaika": {
