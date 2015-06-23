@@ -82,7 +82,8 @@
   []
   (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomake-paallystysilmoitus)))
         paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))
-        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomake-paallystysilmoitus)))]
+        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomake-paallystysilmoitus)))
+        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomake-paallystysilmoitus)))]
 
     (komp/luo
       (fn [ur]
@@ -104,8 +105,7 @@
           toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
-          {:otsikko "Päällystystoimenpiteen tiedot"
-           :tunniste :tie}
+          {:otsikko "Päällystystoimenpiteen tiedot"}
           [{:otsikko "Päällystetyyppi" :nimi :paallystetyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
            {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
            {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%"}
@@ -120,8 +120,7 @@
          ; TODO Kiviaines ja sideaine, yksi gridi vai monta? Kiviaineksella on sidesaine.
 
          [grid/muokkaus-grid
-          {:otsikko "Alustalle tehdyt toimet"
-           :tunniste :tie}
+          {:otsikko "Alustalle tehdyt toimet"}
           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%"}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
@@ -132,7 +131,16 @@
            {:otsikko "Tekn. tp." :nimi :tekninen-toimenpide :leveys "20%" :tyyppi :numero}] ; FIXME Pudostusvalikko
           alustalle-tehdyt-toimet]
 
-         ; TODO Toteutuneet määrät
+         [grid/muokkaus-grid
+          {:otsikko "Toteutuneet määrät"}
+          [{:otsikko "Ajoradan päällyste" :nimi :tyyppi :tyyppi :string :leveys "20%"}
+           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%"}
+           {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
+           {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
+           {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero}
+           {:otsikko "Yksikköhinta" :yksikkohinta :kasittelymenetelma :leveys "10%" :tyyppi :numero}
+           {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tyyppi :numero}]
+          toteutuneet-maarat]
 
          ]))))
 
