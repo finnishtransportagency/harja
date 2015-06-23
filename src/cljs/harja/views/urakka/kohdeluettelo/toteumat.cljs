@@ -66,10 +66,10 @@
                 :sideaine {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
 
    :alustatoimet [{:tie 5 :aosa 22 :aet 3 :losa 5 :let 4785
-                   :kasittelymenetelma {:nimi "Remix-stabilointi"        :lyhenne "REST" :koodi 13}
+                   :kasittelymenetelma 13
                    :paksuus 30
-                   :verkkotyyppi {:nimi "Lasikuituverkko" :koodi 2}
-                   :tekninen-toimenpide {:nimi "Suuntauksen parantaminen" :koodi 2}
+                   :verkkotyyppi 2
+                   :tekninen-toimenpide 2
                    }]
 
    :tyot [{:tyyppi :ajoradan-paallyste
@@ -84,8 +84,21 @@
 
     (komp/luo
       (fn [ur]
-        [:div
-         [:p "TODO Tähän tulee tosi iso ja monimutkainen päällystysilmoituslomake :)"]]))))
+        [:div.paallystysilmoituslomake
+         [:p "TODO Kohteen tiedot tähän..."]
+         [grid/muokkaus-grid
+          {:otsikko "Toteutuneet osoitteet"
+           :tyhja (if (nil? @lomake-paallystysilmoitus) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
+          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
+           {:otsikko "Rata" :nimi :ajorata :tyyppi :string :leveys "20%"}
+           {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"}
+           {:otsikko "Kaista" :nimi :kaista :leveys "10%" :tyyppi :numero}
+           {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero}
+           {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero}
+           {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
+           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero}]
+          (:osoitteet @lomake-paallystysilmoitus)]]))))
 
 (defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
