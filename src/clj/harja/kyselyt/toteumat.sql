@@ -142,8 +142,8 @@ FROM toteuma_tehtava tt
 SELECT
   tt.id                           AS tehtava_id,
   tt.toteuma                      AS toteuma_id,
-  tt.toimenpidekoodi             AS tehtava_toimenpidekoodi,
-  tt.maara,
+  tt.toimenpidekoodi              AS tehtava_toimenpidekoodi,
+  tt.maara                        AS tehtava_maara,
   tt.lisatieto                    AS tehtava_lisatieto,
   tt.paivan_hinta                 AS tehtava_paivanhinta,
   t.tyyppi,
@@ -266,7 +266,7 @@ WHERE id = :id;
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu
+SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu, paivan_hinta = :paivanhinta
 WHERE id = :id;
 
 -- name: poista-toteuman-tehtava!

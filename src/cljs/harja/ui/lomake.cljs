@@ -57,7 +57,7 @@
   nil)
 
 (defmethod kentan-yksikko :horizontal [_ {yks :yksikko}]
-  (when yks [:div.inline-block.yksikko yks]))
+  (when yks [:div.inline-block.lomake-yksikko yks]))
    
 (def +ei-otsikkoa+ #{:boolean})
 
