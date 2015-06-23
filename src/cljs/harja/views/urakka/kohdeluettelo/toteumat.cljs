@@ -81,7 +81,8 @@
 (defn paallystysilmoituslomake
   []
   (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomake-paallystysilmoitus)))
-        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))]
+        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))
+        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomake-paallystysilmoitus)))]
 
     (komp/luo
       (fn [ur]
@@ -118,7 +119,18 @@
 
          ; TODO Kiviaines ja sideaine, yksi gridi vai monta? Kiviaineksella on sidesaine.
 
-         ; TODO Alustalle tehdyt toimet
+         [grid/muokkaus-grid
+          {:otsikko "Alustalle tehdyt toimet"
+           :tunniste :tie}
+          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%"}
+           {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
+           {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
+           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
+           {:otsikko "Pituus" :nimi :pituus :leveys "10%" :tyyppi :string}
+           {:otsikko "Käsittelymenetelmä" :nimi :kasittelymenetelma :leveys "20%" :tyyppi :numero} ; FIXME Pudostusvalikko
+           {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero}
+           {:otsikko "Tekn. tp." :nimi :tekninen-toimenpide :leveys "20%" :tyyppi :numero}] ; FIXME Pudostusvalikko
+          alustalle-tehdyt-toimet]
 
          ; TODO Toteutuneet määrät
 
