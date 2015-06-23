@@ -53,7 +53,10 @@
        {:otsikko "Aet" :nimi :tr_alkuetaisyys :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
        {:otsikko "Losa" :nimi :tr_loppuosa :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
        {:otsikko "Let" :nimi :tr_loppuetaisyys :muokattava? (constantly false) :tyyppi :numero  :leveys "10%"}
-       {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+       {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (if (= (:tr_alkuosa rivi) (:tr_loppuosa rivi))
+                                                                                                    (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))
+                                                                                                    "-")) ; FIXME Onko oikein päätelty?
+        :leveys "10%"}
        {:otsikko "Kvl" :nimi :kvl :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
        {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%"}
        {:otsikko "Toimenpide" :nimi :toimenpide :muokattava? (constantly false) :tyyppi :string :leveys "20%"}]
