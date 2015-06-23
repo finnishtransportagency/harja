@@ -21,6 +21,11 @@
    {:nimi "Soratien pintaus"         :lyhenne "SOP"   :koodi 31}
    {:nimi "Sora"                     :lyhenne "SORA"  :koodi 41}])
 
+(defn hae-paallyste-koodilla
+  "Hakee päällysteen nimen koodilla"
+  [koodi]
+  (:nimi (first (filter #(= (:koodi %) koodi) +paallystetyypit+))))
+
 (def +paallystetyyppi+ "Päällystetyypin valinta koodilla"
   (apply s/enum (map :koodi +paallystetyypit+)))
 
