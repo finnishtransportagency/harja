@@ -27,31 +27,30 @@
 
 
 (defonce urakan-havainnot
-  (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
-                    [alku loppu] @tiedot-urakka/valittu-aikavali
-                    laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                    valilehti @laadunseuranta/valittu-valilehti
-                    listaus @listaus]
-                (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
-                (when (and laadunseurannassa? (= :havainnot valilehti)
-                           urakka-id alku loppu)
-                  (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu)))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               [alku loppu] @tiedot-urakka/valittu-aikavali
+               laadunseurannassa? @laadunseuranta/laadunseurannassa?
+               valilehti @laadunseuranta/valittu-valilehti
+               listaus @listaus]
+              (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
+              (when (and laadunseurannassa? (= :havainnot valilehti)
+                         urakka-id alku loppu)
+                (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu))))
 
                     
 (defonce valittu-havainto-id (atom nil))
 
 (defonce valittu-havainto
-  (reaction<!
-   (when-let [id @valittu-havainto-id]
-     (if (= :uusi id)
-       (go {})
-       (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))
-   (fn [havainto]
-     (-> havainto
-         ;; Tarvitsemme urakan liitteen linkitystä varten
-         (assoc :urakka (:id @nav/valittu-urakka))
-         (assoc :sanktiot (into {}
-                                (map (juxt :id identity) (:sanktiot havainto))))))))
+  (reaction<! [id @valittu-havainto-id]
+              (when id
+                (go (let [havainto (if (= :uusi id)
+                                     {}
+                                     (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
+                      (-> havainto
+                          ;; Tarvitsemme urakan liitteen linkitystä varten
+                          (assoc :urakka (:id @nav/valittu-urakka))
+                          (assoc :sanktiot (into {}
+                                                 (map (juxt :id identity) (:sanktiot havainto))))))))))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
@@ -296,54 +295,58 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                  
     sanktiot-atom]])))
   
-(defn havainto [havainto]
-  (let [havainto (atom havainto)
-        sanktio-virheet (atom {})]
+(defn havainto [asetukset havainto]
+  (let [sanktio-virheet (atom {})
+        alkuperainen @havainto]
     (tarkkaile! "Havainto: " havainto)
     (komp/luo
      {:component-will-receive-props
       (fn [this uusi-havainto]
         (reset! havainto uusi-havainto))}
      
-     (fn [alkuperainen]
+     (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
        (let [muokattava? (constantly (not (paatos? alkuperainen)))
              uusi? (not (:id alkuperainen))]
+         
          [:div.havainto
-          [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
-           (ikonit/chevron-left) " Takaisin havaintoluetteloon"]
+          (when-not osa-tarkastusta?
+            [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
+             (ikonit/chevron-left) " Takaisin havaintoluetteloon"])
 
-          [:h3 "Havainnon tiedot"]
+          (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
           [lomake/lomake
            {:muokkaa! #(reset! havainto %)
             :luokka :horizontal
-            :footer [napit/palvelinkutsu-nappi
-                     ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
-                     ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
-                     (cond
-                      (and (not (paatos? alkuperainen))
-                           (paatos? @havainto))
-                      "Tallenna ja lukitse havainto"
+            :footer (when-not osa-tarkastusta?
+                      [napit/palvelinkutsu-nappi
+                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
+                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
+                       (cond
+                        (and (not (paatos? alkuperainen))
+                             (paatos? @havainto))
+                        "Tallenna ja lukitse havainto"
                       
-                      :default
-                      "Tallenna havainto")
+                        :default
+                        "Tallenna havainto")
                      
-                     #(tallenna-havainto @havainto)
-                     {:ikoni (ikonit/check)
-                      :disabled (let [h @havainto]
-                                  (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
-                                  (not (and (:aika h)
-                                            (if (paatos? h)
-                                              (every? empty? (vals @sanktio-virheet))
-                                              true))))
-                      :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}]}
+                       #(tallenna-havainto @havainto)
+                       {:ikoni (ikonit/check)
+                        :disabled (let [h @havainto]
+                                    (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
+                                    (not (and (:aika h)
+                                              (if (paatos? h)
+                                                (every? empty? (vals @sanktio-virheet))
+                                                true))))
+                        :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
            [
-                        
-            {:otsikko "Havainnon pvm ja aika"
-             :tyyppi :pvm-aika
-             :nimi :aika
-             :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
-             :varoita [[:urakan-aikana]]
-             :leveys-col 5}
+
+            (when-not osa-tarkastusta?
+              {:otsikko "Havainnon pvm ja aika"
+               :tyyppi :pvm-aika
+               :nimi :aika
+               :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+               :varoita [[:urakan-aikana]]
+               :leveys-col 5})
             
             {:otsikko "Tekijä" :nimi :tekija
              :tyyppi :valinta
@@ -362,20 +365,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                :nimi :selvitys-pyydetty
                :tyyppi :boolean})
 
-            {:otsikko "Kohde" :tyyppi :string :nimi :kohde
-             :leveys-col 4
-             :muokattava? muokattava?
-             :validoi [[:ei-tyhja "Anna havainnon kohde"]]}
+            (when-not osa-tarkastusta?
+              {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+               :leveys-col 4
+               :muokattava? muokattava?
+               :validoi [[:ei-tyhja "Anna havainnon kohde"]]})
 
-            {:otsikko "Kuvaus ja kommentit" :nimi :kommentit
-             :komponentti [kommentit {:voi-kommentoida? true
-                                      :placeholder (if uusi?
-                                                     "Kirjoita kuvaus..."
-                                                     "Kirjoita kommentti...")
-                                      :uusi-kommentti (r/wrap (:uusi-kommentti @havainto)
-                                                              #(swap! havainto assoc :uusi-kommentti %))}
-                           (:kommentit @havainto)]
-             }
+            {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text
+             :placeholder "Kirjoita kuvaus..."}
+
+            (when-not uusi?
+              {:otsikko "Kommentit" :nimi :kommentit
+               :komponentti [kommentit {:voi-kommentoida? true
+                                        :placeholder "Kirjoita kommentti..."
+                                        :uusi-kommentti (r/wrap (:uusi-kommentti @havainto)
+                                                                #(swap! havainto assoc :uusi-kommentti %))}
+                             (:kommentit @havainto)]})
 
             ;; Päätös
             (when (:id alkuperainen)
@@ -444,8 +449,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   
 
 (defn havainnot []
-  (if-let [valittu @valittu-havainto]
-    [havainto valittu]
+  (if @valittu-havainto
+    [havainto {} @valittu-havainto]
     [havaintolistaus]))
   
   

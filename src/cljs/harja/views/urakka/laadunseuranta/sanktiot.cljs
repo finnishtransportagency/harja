@@ -10,15 +10,15 @@
 
 
 (def urakan-sanktiot
-  (reaction<! (let [urakka (:id @nav/valittu-urakka)
-                    hoitokausi @urakka/valittu-hoitokausi
-                    laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                    valilehti @laadunseuranta/valittu-valilehti]
-                ;; Jos urakka ja hoitokausi on valittu ja käyttäjä on laadunseurannassa tällä välilehdellä,
-                ;; haetaan urakalle sanktiot
-                (when (and laadunseurannassa? (= :sanktiot valilehti)
-                           hoitokausi urakka)
-                  (laadunseuranta/hae-urakan-sanktiot urakka hoitokausi)))))
+  (reaction<! [urakka (:id @nav/valittu-urakka)
+               hoitokausi @urakka/valittu-hoitokausi
+               laadunseurannassa? @laadunseuranta/laadunseurannassa?
+               valilehti @laadunseuranta/valittu-valilehti]
+              ;; Jos urakka ja hoitokausi on valittu ja käyttäjä on laadunseurannassa tällä välilehdellä,
+              ;; haetaan urakalle sanktiot
+              (when (and laadunseurannassa? (= :sanktiot valilehti)
+                         hoitokausi urakka)
+                (laadunseuranta/hae-urakan-sanktiot urakka hoitokausi))))
                   
                 
 (defn sanktiot

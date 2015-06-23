@@ -13,7 +13,9 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :refer [tee-kentta]])
+            [harja.ui.kentat :refer [tee-kentta]]
+
+            [harja.views.urakka.laadunseuranta.havainnot :as havainnot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
 
@@ -25,13 +27,14 @@
 (defonce valittu-tarkastus (atom nil))
 
 (defonce urakan-tarkastukset
-  (reaction<! (let [urakka-id (:id @nav/valittu-urakka)
-                    [alku loppu] @tiedot-urakka/valittu-aikavali
-                    laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                    valilehti @laadunseuranta/valittu-valilehti]
-                (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                           urakka-id alku loppu)
-                  (laadunseuranta/hae-urakan-tarkastukset urakka-id alku loppu)))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               [alku loppu] @tiedot-urakka/valittu-aikavali
+               laadunseurannassa? @laadunseuranta/laadunseurannassa?
+               valilehti @laadunseuranta/valittu-valilehti]
+              
+              (when (and laadunseurannassa? (= :tarkastukset valilehti)
+                         urakka-id alku loppu)
+                (laadunseuranta/hae-urakan-tarkastukset urakka-id alku loppu))))
                 
 
 (defn uusi-tarkastus []
@@ -73,13 +76,17 @@
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
-                 :nimi :lumimaara :leveys-col 1}
+                 :nimi :lumimaara :leveys-col 1
+                 :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
                 {:otsikko "Epätasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :epatasaisuus :leveys-col 1}
+                 :nimi :epatasaisuus :leveys-col 1
+                 :hae (comp :epatasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :epatasaisuus] %2)}
                 {:otsikko "Kitka" :tyyppi :numero
-                 :nimi :kitka :leveys-col 1}
+                 :nimi :kitka :leveys-col 1
+                 :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
-                 :nimi :lampotila :leveys-col 1}))
+                 :nimi :lampotila :leveys-col 1
+                 :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
 
 (defn soratiemittaus []
   (let [kuntoluokka (fn [arvo _]
@@ -139,7 +146,12 @@
        nil)
      ]
 
-    @tarkastus]])
+    @tarkastus]
+
+   [havainnot/havainto {:osa-tarkastusta? true}
+    (r/wrap (:havainto @tarkastus)
+            #(swap! tarkastus assoc :havainto %))]
+   ])
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"

@@ -9,7 +9,8 @@
 (defonce valittu-valilehti (atom :tarkastukset))
 
 (defonce sanktiotyypit
-  (reaction<! (when @laadunseurannassa?
+  (reaction<! [laadunseurannassa? @laadunseurannassa?]
+              (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
 
 (defn lajin-sanktiotyypit

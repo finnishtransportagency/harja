@@ -96,7 +96,7 @@
       {:component-will-receive-props
        (fn [_ & [_ urakka l]]
          (aseta-lampotila l))}
-
+      
       (fn [urakka lampotilat]
         [lomake {:luokka :horizontal
                  :muokkaa! (fn [uusi]

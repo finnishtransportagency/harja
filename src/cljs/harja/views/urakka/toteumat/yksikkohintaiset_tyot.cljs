@@ -25,14 +25,14 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce tehtavien-summat (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                            [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                            valittu-urakan-valilehti @u/urakan-valittu-valilehti
-                                            valittu-toteuman-valilehti @u/toteumat-valilehti
-                                            valittu-hoitokausi @u/valittu-hoitokausi]
-                                        (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-toteuman-valilehti :yksikkohintaiset-tyot) (= valittu-urakan-valilehti :toteumat))
-                                          (log "TOT Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi valittu-toteuman-valilehti valittu-urakan-valilehti)
-                                          (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen)))))
+(defonce tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                       valittu-urakan-valilehti @u/urakan-valittu-valilehti
+                                       valittu-toteuman-valilehti @u/toteumat-valilehti
+                                       valittu-hoitokausi @u/valittu-hoitokausi]
+                                      (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-toteuman-valilehti :yksikkohintaiset-tyot) (= valittu-urakan-valilehti :toteumat))
+                                        (log "TOT Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi valittu-toteuman-valilehti valittu-urakan-valilehti)
+                                        (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
 
 
 (defn tallenna-toteuma
@@ -175,7 +175,10 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
-        toteutuneet-tehtavat (reaction<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali :yksikkohintainen (:id rivi)))]
+        toteutuneet-tehtavat (atom nil)]
+    (go (reset! toteutuneet-tehtavat
+                (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
+                                                                                 :yksikkohintainen (:id rivi)))))
 
     (fn [toteuma-rivi]
       [:div

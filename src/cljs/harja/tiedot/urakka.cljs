@@ -151,34 +151,37 @@ ja viimeinen voivat olla vajaat)."
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
-                  (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              (when ur
+                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-organisaatio
-  (reaction<! (when-let [ur (:id @nav/valittu-urakka)]
-    (organisaatio/hae-urakan-organisaatio ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              (when ur 
+                (organisaatio/hae-urakan-organisaatio ur))))
 
 (defonce muutoshintaiset-tyot
- (reaction<! (let [ur (:id @nav/valittu-urakka)
-                   suunnittelun-sivu @suunnittelun-valittu-valilehti
-                   toteuman-sivu @toteumat-valilehti]
-               (when (and ur (or
-                               (= :muut suunnittelun-sivu)
-                               (= :muut-tyot toteuman-sivu)))
-                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur)))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               suunnittelun-sivu @suunnittelun-valittu-valilehti
+               toteuman-sivu @toteumat-valilehti]
+              (when (and ur (or
+                             (= :muut suunnittelun-sivu)
+                             (= :muut-tyot toteuman-sivu)))
+                (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
+
 
 (defonce muut-tyot-hoitokaudella
-  (reaction<! (let [ur (:id @nav/valittu-urakka)
-                    sopimus-id (first @valittu-sopimusnumero)
-                    aikavali @valittu-hoitokausi
-                    sivu @toteumat-valilehti]
-                (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                  (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali)))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               sopimus-id (first @valittu-sopimusnumero)
+               aikavali @valittu-hoitokausi
+               sivu @toteumat-valilehti]
+              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
-         (reaction<! (let [ur (:id @nav/valittu-urakka)
-                           aikavali @valittu-hoitokausi
-                           sivu @toteumat-valilehti]
-                       (when (and ur aikavali (= :erilliskustannukset sivu))
-                         (toteumat/hae-urakan-erilliskustannukset ur aikavali)))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               aikavali @valittu-hoitokausi
+               sivu @toteumat-valilehti]
+              (when (and ur aikavali (= :erilliskustannukset sivu))
+                (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 

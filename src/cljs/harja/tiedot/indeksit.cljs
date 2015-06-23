@@ -27,5 +27,6 @@
             :indeksit indeksit}))
 
 (defonce indeksien-nimet
-  (reaction<!
-    (k/get! :indeksien-nimet)))
+  (let [a (atom nil)]
+    (go (reset! a (<! (k/get! :indeksien-nimet))))
+    a))

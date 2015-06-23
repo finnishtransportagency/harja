@@ -23,15 +23,15 @@
 (defonce valittu-materiaalin-kaytto (atom nil))
 
 (defonce urakan-materiaalin-kaytot
-  (reaction<! (when @materiaali-tiedot/materiaalinakymassa?
-                (let [sopimusnumero (first @u/valittu-sopimusnumero)
-                      [alku loppu] @u/valittu-hoitokausi
-                      ur @nav/valittu-urakka]
-                  (when (and sopimusnumero alku loppu ur)
-                  (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
-                                                                       alku
-                                                                       loppu
-                                                                       sopimusnumero))))))
+  (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
+               sopimusnumero (first @u/valittu-sopimusnumero)
+               [alku loppu] @u/valittu-hoitokausi
+               ur @nav/valittu-urakka]
+              (when (and nakymassa? sopimusnumero alku loppu ur)
+                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
+                                                                     alku
+                                                                     loppu
+                                                                     sopimusnumero))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -217,11 +217,13 @@
 
 (defn materiaalinkaytto-vetolaatikko
   [urakan-id mk]
-  (let [tiedot (reaction<! (materiaali-tiedot/hae-toteumat-materiaalille
-                             urakan-id
-                             (:id (:materiaali mk))
-                             @u/valittu-hoitokausi
-                             (first @u/valittu-sopimusnumero)))]
+  (let [tiedot (reaction<! [hk @u/valittu-hoitokausi
+                            sop @u/valittu-sopimusnumero]
+                           (materiaali-tiedot/hae-toteumat-materiaalille
+                            urakan-id
+                            (:id (:materiaali mk))
+                            hk
+                            (first sop)))]
     (komp/luo
       {:component-will-mount
        (fn [_]

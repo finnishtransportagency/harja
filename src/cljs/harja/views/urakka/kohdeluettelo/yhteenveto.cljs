@@ -29,12 +29,13 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defonce kohderivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                      valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
-                                    (log "PÄÄ Haetaan päällystyskohteet.")
-                                    (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)))))
+(defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                 valittu-urakan-valilehti @u/urakan-valittu-valilehti]
+                                (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
+                                  (log "PÄÄ Haetaan päällystyskohteet.")
+                                  (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
+
 
 (defn paallystyskohdeosat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
