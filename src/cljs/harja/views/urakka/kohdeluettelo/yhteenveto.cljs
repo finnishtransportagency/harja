@@ -36,13 +36,15 @@
                                     (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)))))
 
 (defn paallystyskohdeosat [rivi]
-  (let [paallystyskohdeosat (atom [])]
+  (let [urakka-id (:id @nav/valittu-urakka)
+        [sopimus-id _] @u/valittu-sopimusnumero
+        paallystyskohdeosat (reaction<! (paallystys/hae-paallystyskohdeosat urakka-id sopimus-id (:id rivi)))]
   (fn [rivi]
     [:div
      [grid/grid
       {:otsikko     "Päällystyskohdeosat"
        :tyhja       (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Päällystyskohdeosia ei löydy")
-       :tunniste    :id
+       :tunniste    :tr_numero
        :luokat ["paallystyskohdeosat-haitari"]}
       [{:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
        {:otsikko "Tieosa" :nimi :tr_numero :muokattava? (constantly true) :tyyppi :numero :leveys "10%"}
@@ -66,7 +68,8 @@
           {:otsikko "Kohteet"
            :tyhja (if (nil? @kohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat ["paallysteurakka-kohteet-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @kohderivit))}
+           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @kohderivit))
+           :tunniste :kohdenumero}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "15%"}

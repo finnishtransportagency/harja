@@ -14,3 +14,21 @@ FROM paallystysilmoitus
 JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
 AND pk.urakka = :urakka
 AND pk.sopimus = :sopimus;
+
+-- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
+-- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
+SELECT
+  paallystyskohdeosa.nimi,
+  tr_numero,
+  tr_alkuosa,
+  tr_alkuetaisyys,
+  tr_loppuosa,
+  tr_loppuetaisyys,
+  kvl,
+  nykyinen_paallyste,
+  toimenpide
+FROM paallystyskohdeosa
+JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+AND urakka = :urakka
+AND sopimus = :sopimus
+WHERE paallystyskohde = :paallystyskohde;

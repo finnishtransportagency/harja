@@ -36,6 +36,15 @@
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
 
+(defn hae-urakan-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
+  (log/debug "Haetaan urakan päällystyskohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
+  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [vastaus (into []
+                      muunna-desimaaliluvut-xf
+                      (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+    (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
+    vastaus))
+
 (defn hae-urakan-paallystystoteumat [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -53,6 +62,9 @@
       (julkaise-palvelu http :urakan-paallystyskohteet
                         (fn [user tiedot]
                           (hae-urakan-paallystyskohteet db user tiedot)))
+      (julkaise-palvelu http :urakan-paallystyskohdeosat
+                        (fn [user tiedot]
+                          (hae-urakan-paallystyskohdeosat db user tiedot)))
       (julkaise-palvelu http :urakan-paallystystoteumat
                         (fn [user tiedot]
                           (hae-urakan-paallystystoteumat db user tiedot)))
