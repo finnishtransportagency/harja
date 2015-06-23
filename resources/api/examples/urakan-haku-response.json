@@ -44,7 +44,8 @@
                 "tehtava": {
                   "id": 12341234,
                   "selite": "Tien auraaminen"
-                },op
+                },
+                "alkupvm": "2015-01-30T12:00:00Z",
                 "loppupvm": "2016-01-30T12:00:00Z",
                 "maara": 525.73,
                 "yksikko": "km",

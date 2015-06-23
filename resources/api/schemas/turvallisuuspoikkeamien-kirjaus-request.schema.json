@@ -8,14 +8,14 @@
       "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tunniste": {
       "id": "http://jsonschema.net/tunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "viimeksipaivitetty": {
@@ -34,13 +34,13 @@
       "id": "http://jsonschema.net/turvallisuuskoordinaattori",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json"
     },
     "laatija": {
       "id": "http://jsonschema.net/laatija",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json"
     },
     "turvallisuuspoikkeamat": {
       "id": "http://jsonschema.net/turvallisuuspoikkeamat",
@@ -54,21 +54,21 @@
             "id": "http://jsonschema.net/tunniste",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+            "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
             "required": true
           },
           "kohde": {
             "id": "http://jsonschema.net/toteumat/0/kohde",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
+            "$ref": "file:src/main/resources/api/schemas/entities/kohde.schema.json",
             "required": true
           },
           "sijainti": {
             "id": "http://jsonschema.net/toteumat/0/sijainti",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+            "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
             "required": true
           },
           "vaylamuoto": {
@@ -84,7 +84,7 @@
             "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/ilmoittaja",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+            "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json"
           },
           "tapahtumapaivamaara": {
             "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/tapahtumapaivamaara",
@@ -147,7 +147,7 @@
                   "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/vastaavahenkilo",
                   "type": "object",
                   "additionalProperties": false,
-                  "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+                  "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json"
                 }
               }
             }
@@ -156,7 +156,7 @@
             "id": "http://jsonschema.net/toteumat/0/liitteet",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+            "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
           }
         }
       }

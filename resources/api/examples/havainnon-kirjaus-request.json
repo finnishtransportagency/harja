@@ -15,10 +15,6 @@
   "tunniste": {
     "id": 123
   },
-  "kohde": {
-    "sopimusId": 123456789,
-    "tehtavaId": 123456789
-  },
   "sijainti": {
     "tie": {
       "numero": 1234,
@@ -33,10 +29,10 @@
       "y": 25.503484200000003
     }
   },
-  "tyyppi": "vaaratilanne",
   "kuvaus": "Aura-auto osui pysäköityyn autoon.",
+  "kohde": "Kiviharjunlenkin risteys",
   "kirjaaja": {
-    "id":54697481,
+    "id": 54697481,
     "etunimi": "Ville",
     "sukunimi": "Vaara"
   },
@@ -48,6 +44,11 @@
         "kuvaus": "Kuva",
         "sisalto": "... sisältö base64 enkoodattuna  ..."
       }
+    }
+  ],
+  "kommentit": [
+    {
+      "kommentti": "Kolari johtui siitä, että paikalla ei oltu hiekoitettu tietä."
     }
   ]
 }

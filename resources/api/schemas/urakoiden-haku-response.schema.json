@@ -22,7 +22,7 @@
                 "id": "http://jsonschema.net/urakat/0/urakka/tiedot",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
+                "$ref": "file:src/main/resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
               }
             }

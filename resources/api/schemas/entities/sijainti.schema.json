@@ -8,19 +8,19 @@
       "id": "http://jsonschema.net/koordinaattisijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/koordinaattisijainti.schema.json"
     },
     "tie": {
       "id": "http://jsonschema.net/tiesijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/tiesijainti.schema.json"
     },
     "linkki": {
       "id": "http://jsonschema.net/tiesijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/linkkisijainti.schema.json"
     }
   }
 }

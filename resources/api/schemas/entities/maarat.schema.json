@@ -10,7 +10,7 @@
         "id": "http://jsonschema.net/maarat/0/maara",
         "type": "object",
         "additionalProperties": false,
-        "$ref": "file:resources/api/schemas/entities/maara.schema.json"
+        "$ref": "file:src/main/resources/api/schemas/entities/maara.schema.json"
       }
     }
   }

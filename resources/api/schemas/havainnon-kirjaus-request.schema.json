@@ -8,31 +8,24 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tunniste": {
       "id": "http://jsonschema.net/tunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
-    },
-    "kohde": {
-      "id": "http://jsonschema.net/kohde",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "sijainti": {
       "id": "http://jsonschema.net/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": true
+      "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
+      "required": false
     },
-    "tyyppi": {
+    "kohde": {
       "id": "http://jsonschema.net/tyyppi",
       "type": "string",
       "required": true
@@ -46,7 +39,7 @@
       "id": "http://jsonschema.net/kirjaaja",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
     "paivamaara": {
@@ -59,7 +52,22 @@
       "id": "http://jsonschema.net/liitteet",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+      "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
+    },
+    "kommentit": {
+      "id": "http://jsonschema.net/kommentit",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/kommentit/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kommentti": {
+            "id": "http://jsonschema.net/kommentit/0/kommentti",
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

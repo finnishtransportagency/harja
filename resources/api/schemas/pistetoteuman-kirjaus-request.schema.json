@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "pistetoteuma": {
@@ -22,20 +22,20 @@
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/toteuma.schema.json"
         },
         "sijainti": {
           "id": "http://jsonschema.net/pistetoteuma/sijainti",
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json"
         },
         "liitteet": {
           "id": "http://jsonschema.net/pistetoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     }

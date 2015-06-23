@@ -27,7 +27,7 @@
             "id": "http://jsonschema.net/tunniste",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+            "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json"
           },
           "varoitukset": {
             "id": "http://jsonschema.net/huomiot/0/varoitukset",

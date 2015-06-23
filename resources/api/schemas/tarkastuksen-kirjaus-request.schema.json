@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "$ref": "file:src/main/resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tarkastus": {
@@ -20,27 +20,27 @@
           "id": "http://jsonschema.net/tunniste",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+          "$ref": "file:src/main/resources/api/schemas/entities/tunniste.schema.json",
           "required": true
         },
         "kohde": {
           "id": "http://jsonschema.net/kohde",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
+          "$ref": "file:src/main/resources/api/schemas/entities/kohde.schema.json",
           "required": true
         },
         "sijainti": {
           "id": "http://jsonschema.net/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "$ref": "file:src/main/resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "reitti": {
           "id": "http://jsonschema.net/reitti",
           "type": "object",
-          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/reitti.schema.json"
         },
         "tyyppi": {
           "id": "http://jsonschema.net/tarkastus/tyyppi",
@@ -62,19 +62,19 @@
           "id": "http://jsonschema.net/tarkastus/tarkastaja",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+          "$ref": "file:src/main/resources/api/schemas/entities/henkilo.schema.json",
           "required": true
         },
         "havainnot": {
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/havainnot.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/havainnot.schema.json"
         },
         "liitteet": {
           "id": "http://jsonschema.net/tarkastukset/0/liitteet/",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+          "$ref": "file:src/main/resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     }
