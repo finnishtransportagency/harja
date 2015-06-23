@@ -143,13 +143,14 @@
       (fn [_ [_ _ data]]
         (swap! teksti
                (fn [olemassaoleva-teksti]
-                 ;; Korvataan teksti vain, jos se on tyhjä
-                 ;; wrap tilanteessa, props muuttuu joka renderillä
-                 ;; ja virheellinen (esim. "4," arvo ennen desimaalin kirjoittamista
-                 ;; ylikirjoittuu.
-                 (if (str/blank? olemassaoleva-teksti)
-                   (str @data)
-                   olemassaoleva-teksti))))
+                 ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ei korvata.
+                 ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
+                 ;; numeron syöttö (esim. "4," arvo ennen desimaalin kirjoittamista ylikirjoittuu
+                 (let [uusi (str @data)]
+                   (if (or (= olemassaoleva-teksti (str uusi ","))
+                           (= olemassaoleva-teksti (str uusi ".")))
+                     olemassaoleva-teksti
+                     uusi)))))
       
       :reagent-render
       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
