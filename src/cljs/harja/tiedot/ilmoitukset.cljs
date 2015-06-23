@@ -12,13 +12,14 @@
 
 (defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
-(defonce valitut-tilat (atom []))
-(defonce valittu-aikavali (atom nil))
-(defonce valitut-ilmoitusten-tyypit (atom []))
+(defonce valitut-tilat (atom {:vastatut true :avoimet true}))
+(defonce valittu-alkuaika (atom nil))
+(defonce valittu-loppuaika (atom nil))
+(defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :ilmoitus true}))
 
 (defonce hakuehto (atom nil))
 
-(defonce haetut-ilmoitukset (atom nil))
+(defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
 
 (def viimeksi-haettu (atom (pvm/nyt)))
 
@@ -26,7 +27,8 @@
                                   @valittu-hallintayksikko
                                   @valittu-urakka
                                   @valitut-tilat
-                                  @valittu-aikavali
+                                  @valittu-loppuaika
+                                  @valittu-alkuaika
                                   @valitut-ilmoitusten-tyypit
                                   @hakuehto
                                   true))
@@ -55,3 +57,7 @@
   []
   (when @pollaus-id (lopeta-pollaus))
   (reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))
+
+(defn hae-ilmoitukset-ja-aloita-pollaus []
+  (hae-ilmoitukset)
+  (aloita-pollaus))
