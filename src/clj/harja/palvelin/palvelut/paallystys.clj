@@ -24,6 +24,8 @@
                       (or (some-> % :arvonvahennykset double) 0))
             (assoc-in [:lisatyot]
                       (or (some-> % :lisatyot double) 0))
+            (assoc-in [:muutoshinta]
+                      (or (some-> % :muutoshinta double) 0))
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 

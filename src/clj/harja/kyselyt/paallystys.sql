@@ -1,8 +1,20 @@
 -- name: hae-urakan-paallystyskohteet
 -- Hakee urakan kaikki paallystyskohteet
-SELECT * FROM paallystyskohde WHERE
-urakka = :urakka
-AND sopimus = :sopimus
+SELECT
+  id,
+  kohdenumero,
+  paallystyskohde.nimi,
+  sopimuksen_mukaiset_tyot,
+  lisatyot,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi,
+  muutoshinta
+FROM paallystyskohde
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+WHERE
+  urakka = :urakka
+  AND sopimus = :sopimus;
 
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
