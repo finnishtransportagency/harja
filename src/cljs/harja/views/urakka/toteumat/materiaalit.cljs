@@ -213,7 +213,7 @@
           @muokattu]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
-  [:button.nappi-toissijainen {:on-click #(reset! valittu-materiaalin-kaytto rivi)} (ikonit/eye-open) " Toteuma"])
+  [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! valittu-materiaalin-kaytto rivi)} (ikonit/eye-open) " Toteuma"])
 
 (defn materiaalinkaytto-vetolaatikko
   [urakan-id mk]
