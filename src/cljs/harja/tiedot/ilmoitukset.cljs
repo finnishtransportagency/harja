@@ -2,26 +2,28 @@
   (:require [reagent.core :refer [atom]]
 
             [harja.tiedot.navigaatio :as nav]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.asiakas.kommunikaatio :as k])
 
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]))
+                   [cljs.core.async.macros :refer [go]]))
 
+;; FILTTERIT
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
-
 (defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
 (defonce valitut-tilat (atom {:vastatut true :avoimet true}))
 (defonce valittu-alkuaika (atom nil))
 (defonce valittu-loppuaika (atom nil))
 (defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :ilmoitus true}))
-
 (defonce hakuehto (atom nil))
 
-(defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
-
-(def viimeksi-haettu (atom (pvm/nyt)))
+;; POLLAUS
+(def pollaus-id (atom nil))
+(def +sekuntti+ 1000)
+(def +minuutti+ (* 60 +sekuntti+))
+(def +intervalli+ +minuutti+)
 
 (defonce filttereita-vaihdettu? (reaction
                                   @valittu-hallintayksikko
@@ -33,25 +35,31 @@
                                   @hakuehto
                                   true))
 
+(defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
+
 (defn hae-ilmoitukset
   []
-  ; 1.  Tee haku
-  ; 2a. Jos filttereitä vaihdettu, resettaa ilmoitukset
-  ; 2b. Jos ei, täydennä ilmoituksia
-  (reset! viimeksi-haettu (pvm/nyt))
-  (reset! filttereita-vaihdettu? false))
+  (go
+    (let [tulos (k/post! :hae-ilmoitukset
+                         {:hallintayksikko @valittu-hallintayksikko
+                          :urakka @valittu-urakka
+                          :tilat (vec (keep #(when (val %) (key %)) @valitut-tilat))
+                          :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
+                          :aikavali [@valittu-alkuaika @valittu-loppuaika]})]
 
-(def pollaus-id (atom nil))
 
-(def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
+      (reset! haetut-ilmoitukset tulos)
+      (reset! filttereita-vaihdettu? false)
 
-(def +intervalli+ +minuutti+)
+      tulos)))
 
 (defn lopeta-pollaus
   []
-  (js/clearInterval @pollaus-id)
-  (reset! pollaus-id nil))
+  (when @pollaus-id
+    (js/clearInterval @pollaus-id)
+    (reset! pollaus-id nil)))
+
+(reaction (when @filttereita-vaihdettu?) (lopeta-pollaus))
 
 (defn aloita-pollaus
   []
