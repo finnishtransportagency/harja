@@ -80,15 +80,17 @@
 
 (defn paallystysilmoituslomake
   []
-  (let []
+  (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomake-paallystysilmoitus)))
+        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))]
 
     (komp/luo
       (fn [ur]
         [:div.paallystysilmoituslomake
          [:p "TODO Kohteen tiedot tähän..."]
+
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet osoitteet"
-           :tyhja (if (nil? @lomake-paallystysilmoitus) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
+           :tunniste :tie}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
            {:otsikko "Rata" :nimi :ajorata :tyyppi :string :leveys "20%"}
            {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"}
@@ -98,7 +100,29 @@
            {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero}]
-          (:osoitteet @lomake-paallystysilmoitus)]]))))
+          toteutuneet-osoitteet]
+
+         [grid/muokkaus-grid
+          {:otsikko "Päällystystoimenpiteen tiedot"
+           :tunniste :tie}
+          [{:otsikko "Päällystetyyppi" :nimi :paallystetyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
+           {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
+           {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%"}
+           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
+           {:otsikko "Pääll.työmenetelmä" :nimi :tyomenetelma :leveys "20%" :tyyppi :string} ; FIXME Pudotusvalikko
+           {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero}
+           {:otsikko "Massamäärä (mt)" :nimi :massamaara :leveys "10%" :tyyppi :numero}
+           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero}
+           {:otsikko "Edellinen päällyste" :nimi :edellinen-paallystettyyppi :leveys "20%" :tyyppi :string}] ; FIXME Pudostusvalikko
+          paallystystoimenpide]
+
+         ; TODO Kiviaines ja sideaine, yksi gridi vai monta? Kiviaineksella on sidesaine.
+
+         ; TODO Alustalle tehdyt toimet
+
+         ; TODO Toteutuneet määrät
+
+         ]))))
 
 (defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
@@ -123,7 +147,8 @@
 
          [grid/grid
           {:otsikko "Toteumat"
-           :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")}
+           :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
+           :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
