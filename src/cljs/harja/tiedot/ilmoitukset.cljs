@@ -12,6 +12,7 @@
 ;; FILTTERIT
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
+
 (defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
 (defonce valitut-tilat (atom {:vastatut true :avoimet true}))
@@ -44,7 +45,8 @@
                           :urakka @valittu-urakka
                           :tilat (vec (keep #(when (val %) (key %)) @valitut-tilat))
                           :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
-                          :aikavali @valittu-aikavali})]
+                          :aikavali @valittu-aikavali
+                          :hakuehto @hakuehto})]
 
 
       (reset! haetut-ilmoitukset tulos)
