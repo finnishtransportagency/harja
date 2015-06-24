@@ -29,7 +29,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(def lomake-paallystysilmoitus (atom nil))
+(def lomakedata (atom nil))
 
 (def lomaketestidata
   {:kohde 308
@@ -80,15 +80,19 @@
 
 (defn paallystysilmoituslomake
   []
-  (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomake-paallystysilmoitus)))
-        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))
-        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomake-paallystysilmoitus)))
-        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomake-paallystysilmoitus)))
-        kiviaines (atom (zipmap (iterate inc 1) (:kiviaines @lomake-paallystysilmoitus)))]
+  (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomakedata)))
+        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)))
+        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomakedata)))
+        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomakedata)))
+        kiviaines (atom (zipmap (iterate inc 1) (:kiviaines @lomakedata)))]
 
     (komp/luo
       (fn [ur]
         [:div.paallystysilmoituslomake
+
+         [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
+          (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
+
          [:p "TODO Kohteen tiedot tähän..."] ; TODO
 
          [grid/muokkaus-grid
@@ -183,7 +187,7 @@
 
          [:button.nappi-ensisijainen {:on-click
                                       ;#(reset! lomake-paallystysilmoitus {}) ; FIXME Käytä tätä kun testidataa ei tarvita
-                                      #(reset! lomake-paallystysilmoitus lomaketestidata)
+                                      #(reset! lomakedata lomaketestidata)
                                       }
           (ikonit/plus-sign) " Lisää päällystysilmoitus"]
 
@@ -200,6 +204,6 @@
           @toteumarivit]]))))
 
 (defn toteumat []
-  (if @lomake-paallystysilmoitus
+  (if @lomakedata
     [paallystysilmoituslomake]
     [toteumaluettelo]))
