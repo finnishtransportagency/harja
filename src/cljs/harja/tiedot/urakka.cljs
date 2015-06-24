@@ -11,11 +11,12 @@
             [harja.tiedot.urakka.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.atom :refer-macros [reaction<!]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   ))
 
 (defonce valittu-sopimusnumero (let [val (atom nil)]
                                  (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))

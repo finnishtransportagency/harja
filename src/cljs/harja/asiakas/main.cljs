@@ -1,9 +1,11 @@
 (ns harja.asiakas.main
-  (:require [harja.asiakas.ymparisto :as ymparisto]
+  (:require [harja.atom]
+            [harja.asiakas.ymparisto :as ymparisto]
             [harja.views.main :as main-view]
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
 
+            
     ;; Tässä voidaan vaatia tiedonhallinnan juttuja, jotka kytkeytyvät app eventeihin
     ;; ja hakevat tietoa tarpeen mukaan
             [harja.tiedot.hallintayksikot :as hal]

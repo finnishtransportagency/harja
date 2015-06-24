@@ -6,10 +6,11 @@
             [harja.tiedot.navigaatio :as nav]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
-            [harja.loki :refer [log logt tarkkaile!]])
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.atom :refer-macros [reaction<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   ))
 
 
 (defn hae-sillan-tarkastukset [silta-id]

@@ -3,8 +3,9 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
-            [harja.tiedot.navigaatio :as nav])
-  (:require-macros [harja.atom :refer [reaction<!]]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.atom :refer-macros [reaction<!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def taso-sillat (atom false))
 
