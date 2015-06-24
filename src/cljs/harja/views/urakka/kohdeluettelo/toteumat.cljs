@@ -20,6 +20,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [clojure.string :as str]
+            [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
@@ -32,73 +33,81 @@
 (def lomakedata (atom nil))
 
 (def lomaketestidata
-  {:kohde 308
-   :kohdenimi "Leppäkorven rampit"
-   :valmispvm "2005-11-14 00:00:00+02"
-   :hinta 5000
+  {:kohde        308
+   :kohdenimi    "Leppäkorven rampit"
+   :valmispvm    (pvm/luo-pvm 2015 10 10)
+   :hinta        5000
 
-   :osoitteet [{:tie 2846 :aosa 5 :aet 22 :losa 5 :let 9377
-                :ajorata 0 :suunta 0 :kaista 1}
-               {:tie 2848 :aosa 5 :aet 22 :losa 5 :let 9377
-                :ajorata 0 :suunta 0 :kaista 1}]
+   :osoitteet    [{:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
+                   :ajorata 0 :suunta 0 :kaista 1}
+                  {:tie     2848 :aosa 5 :aet 22 :losa 5 :let 9377
+                   :ajorata 0 :suunta 0 :kaista 1}]
 
-   :toimenpiteet [{:paallystetyyppi 21
-                   :raekoko 16
-                   :massa 100
-                   :rc% 0
-                   :tyomenetelma 12
-                   :leveys 6.5
-                   :massamaara 1781
+   :toimenpiteet [{:paallystetyyppi           21
+                   :raekoko                   16
+                   :massa                     100
+                   :rc%                       0
+                   :tyomenetelma              12
+                   :leveys                    6.5
+                   :massamaara                1781
                    :edellinen-paallystetyyppi 12
                    }
-                  {:paallystetyyppi 21
-                   :raekoko 10
-                   :massa 512
-                   :rc% 0
-                   :tyomenetelma 12
-                   :leveys 4
-                   :massamaara 1345
+                  {:paallystetyyppi           21
+                   :raekoko                   10
+                   :massa                     512
+                   :rc%                       0
+                   :tyomenetelma              12
+                   :leveys                    4
+                   :massamaara                1345
                    :edellinen-paallystetyyppi 11
                    }]
 
-   :kiviaines [{:esiintyma "KAM Leppäsenoja"
-                :km-arvo "An 14"
-                :muotoarvo "Fi 20"
-                :sideaine {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
+   :kiviaines    [{:esiintyma "KAM Leppäsenoja"
+                   :km-arvo   "An 14"
+                   :muotoarvo "Fi 20"
+                   :sideaine  {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
 
-   :alustatoimet [{:tie 5 :aosa 22 :aet 3 :losa 5 :let 4785
-                   :kasittelymenetelma 13
-                   :paksuus 30
-                   :verkkotyyppi 2
+   :alustatoimet [{:tie 5
+                   :aosa 22
+                   :aet 3
+                   :losa 5
+                   :let 4785
+                   :kasittelymenetelma  13
+                   :paksuus             30
+                   :verkkotyyppi        2
                    :tekninen-toimenpide 2
                    }]
 
-   :tyot [{:tyyppi :ajoradan-paallyste
-           :toimenpidekoodi 1350
-           :tilattu-maara 1000
-           :toteutunut-maara 5800
-           :yksikkohinta 20}]})
+   :tyot         [{:tyyppi           :ajoradan-paallyste
+                   :toimenpidekoodi  1350
+                   :tilattu-maara    1000
+                   :toteutunut-maara 5800
+                   :yksikkohinta     20}]})
 
 (defn kohteen-tiedot []
   [:div.paallystysilmoitus-kohteen-tiedot
    [:h6 "Kohteen tiedot"]
    [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span(:valmispvm @lomakedata)]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span (:takuupvm @lomakedata)]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span (:hinta @lomakedata)] [:span"€"]])
+   ;; FIXME Käytä tyyliin (r/wrap (:valmispvm @lomakedata) (fn [uusi-arvo] (assoc-in lomake-data (:avain uusi-arvo)))
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} (atom (:valmispvm @lomakedata))]]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} (atom (:takuupvm @lomakedata))]]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} (atom (:hinta @lomakedata))]] [:span " €"]])
 
 (defn yhteenveto []
+  (let [urakkasopimuksen-mukainen-kokonaishinta (atom 0) ; TODO Laske, miten?
+        muutokset-kokonaishintaan (atom 0) ; Laske TODO Toteutuneet määrät -> Summaa muutos hintaan (joka on (tilattu - toteutunut) * yksikkohinta)
+        yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))]
   [:div.paallystysilmoitus-yhteenveto
    [:table
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-     [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]] ; TODO Laske
+     [:td.paallystysilmoitus-yhteenveto-summa [:span (str @urakkasopimuksen-mukainen-kokonaishinta " €")]]]
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-     [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]] ; TODO Laske
+     [:td.paallystysilmoitus-yhteenveto-summa [:span (str @muutokset-kokonaishintaan " €")]]]
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Yhteensä: "]]
-     [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]]]) ; TODO Laske
+     [:td.paallystysilmoitus-yhteenveto-summa [:span (str @yhteensa " €")]]]]]))
 
 (defn paallystysilmoituslomake
   []
@@ -118,7 +127,7 @@
          (kohteen-tiedot)
 
          [grid/muokkaus-grid
-          {:otsikko "Alikohteet"
+          {:otsikko  "Alikohteet"
            :tunniste :tie}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
            {:otsikko "Ajorata" :nimi :ajorata :tyyppi :string :leveys "20%"}
@@ -206,13 +215,13 @@
           (ikonit/plus-sign) " Lisää päällystysilmoitus"]
 
          [grid/grid
-          {:otsikko "Toteumat"
-           :tyhja (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
+          {:otsikko  "Toteumat"
+           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+           {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click #(go ())}
                                      (ikonit/eye-open) " Päällystysilmoitus"])}]
           @toteumarivit]]))))
