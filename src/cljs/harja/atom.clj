@@ -21,7 +21,8 @@
         nimi-symbolit (vec (take (count bindings) (repeatedly #(gensym "ARG"))))
         nimet (mapv first bindings)]
     `(let [arvo# (reagent.core/atom nil)
-           parametrit-ch# (cljs.core.async/chan)]
+           parametrit-ch# (cljs.core.async/chan)
+           paivita# (reagent.core/atom 0)]
        (cljs.core.async.macros/go
          (loop [haku-ch# nil ;; käynnissä olevan haun kanava
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
@@ -70,9 +71,12 @@
 
        (reagent.ratom/run!
         (let [~@(interleave nimi-symbolit (map second bindings))]
+          @paivita#
           (cljs.core.async.macros/go
             (cljs.core.async/>! parametrit-ch#
                                 [~@nimi-symbolit]))))
+
+       (swap! harja.atom/+reaktiot+ assoc arvo# {:paivita #(swap! paivita# inc)})
        arvo#)))
            
 (comment
