@@ -38,6 +38,12 @@
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+(defn urakan-hoitokausi-ja-aikavali [ur]
+  (valinnat/urakan-hoitokausi-ja-aikavali
+    ur
+    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/valittu-aikavali))
+
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
     ur

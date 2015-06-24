@@ -98,6 +98,21 @@
    [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
 
 
+(defn urakan-hoitokausi-ja-aikavali
+  [ur
+   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn                                ;; urakan-hoitokausi
+   valittu-aikavali-atom                                                                    ;; hoitokauden-aikavali
+   ]
+
+  [:span
+
+   [urakan-sopimus-ja-hoitokausi
+    ur
+    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+
+   [hoitokauden-aikavali valittu-aikavali-atom]])
+
+
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
   [ur
