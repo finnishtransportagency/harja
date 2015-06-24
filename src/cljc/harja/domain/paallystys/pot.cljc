@@ -124,6 +124,7 @@
 
 (def +paallystysilmoitus+
   {:kohde s/Int      ;; viittaus kohteeseen
+   :kohdenimi s/Str
    :valmispvm skeema/pvm-tyyppi ;; valmistumispvm
    :hinta s/Num   ;; toteutunut hinta
 

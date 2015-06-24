@@ -33,6 +33,7 @@
 
 (def lomaketestidata
   {:kohde 308
+   :kohdenimi "Leppäkorven rampit"
    :valmispvm "2005-11-14 00:00:00+02"
    :hinta 5000
 
@@ -81,10 +82,10 @@
 (defn kohteen-tiedot []
   [:div.paallystysilmoitus-kohteen-tiedot
    [:h6 "Kohteen tiedot"]
-   [:span "Kohde"] [:span (:kohde @lomakedata)]
-   [:span "Valmistumispvm"] [:span(:valmispvm @lomakedata)]
-   [:span "Takuupvm"] [:span (:takuupvm @lomakedata)]
-   [:span "Toteutunut hinta"] [:span (:hinta @lomakedata)] [:span"€"]])
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span(:valmispvm @lomakedata)]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span (:takuupvm @lomakedata)]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span (:hinta @lomakedata)] [:span"€"]])
 
 (defn yhteenveto []
   [:div.paallystysilmoitus-yhteenveto
