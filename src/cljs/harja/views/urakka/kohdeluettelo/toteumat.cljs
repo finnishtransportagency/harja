@@ -99,7 +99,7 @@
           {:otsikko "Toteutuneet osoitteet"
            :tunniste :tie}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
-           {:otsikko "Rata" :nimi :ajorata :tyyppi :string :leveys "20%"}
+           {:otsikko "Ajorata" :nimi :ajorata :tyyppi :string :leveys "20%"}
            {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"}
            {:otsikko "Kaista" :nimi :kaista :leveys "10%" :tyyppi :numero}
            {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero}
