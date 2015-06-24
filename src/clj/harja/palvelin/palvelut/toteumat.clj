@@ -147,9 +147,9 @@
                                                             (konv/sql-timestamp (:lopetuspvm toteuma))
                                                             (name (:tyyppi toteuma))
                                                             (:id user)
-                                                            (:suorittajan-nimi toteuma)
-                                                            (:suorittajan-ytunnus toteuma)
-                                                            (:lisatieto toteuma))
+                                                            (or (:suorittajan-nimi toteuma) "")
+                                                            (or (:suorittajan-ytunnus toteuma) "")
+                                                            (or (:lisatieto toteuma) ""))
                                       id (:id uusi)
                                       toteumatyyppi (name (:tyyppi toteuma))]
                                   (log/debug "Luodaan uudelle toteumalle tehtävät")
