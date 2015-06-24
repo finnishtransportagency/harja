@@ -106,7 +106,7 @@
 
   [:span
 
-   [urakan-sopimus-ja-hoitokausi
+   [urakan-hoitokausi
     ur
     hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
 
