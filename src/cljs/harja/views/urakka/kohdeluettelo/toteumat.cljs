@@ -159,14 +159,14 @@
          [:div.paallystysilmoitus-yhteenveto
           [:table
            [:tr
-            [:td [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-            [:td [:span "X €"]]]
+            [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]
            [:tr
-            [:td [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-            [:td [:span "X €"]]]
+            [:td.paallystysilmoitus-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]
            [:tr
-            [:td [:span "Yhteensä: "]]
-            [:td [:span "X €"]]]]]
+            [:td.paallystysilmoitus-yhteenveto-nimi [:span "Yhteensä: "]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]]]
 
          ]))))
 
