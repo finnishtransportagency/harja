@@ -172,7 +172,7 @@
                                 (for [tehtava tehtavat]
                                   (do
                                     (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-                                    (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:tehtava_id tehtava)))))
+                                    (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (or (:paivanhinta tehtava) nil) (:tehtava_id tehtava)))))
 
                               (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                               (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
