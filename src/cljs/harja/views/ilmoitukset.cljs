@@ -9,6 +9,9 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log]]
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
+            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
+
+            [harja.tiedot.urakka :as u]
 
             [bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]))
@@ -45,9 +48,24 @@
 
         [:label "Hae ilmoituksia: "[tee-kentta {:tyyppi :string} tiedot/hakuehto]]
 
-        [:div
-          [:label "Saapunut:" [tee-kentta {:tyyppi :pvm :otsikko "Saapunut"} tiedot/valittu-alkuaika]]
-          [:label " - " [tee-kentta {:tyyppi :pvm} tiedot/valittu-loppuaika]]]
+        (if @tiedot/valittu-urakka
+          [urakan-hoitokausi-ja-aikavali
+           @tiedot/valittu-urakka
+           (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
+           tiedot/valittu-aikavali]
+
+          [:div
+           [:label "Saapunut:" [tee-kentta {:tyyppi :pvm :otsikko "Saapunut"} (r/wrap
+                                                                                (first @tiedot/valittu-aikavali)
+                                                                                (fn [uusi-arvo]
+                                                                                  (reset! tiedot/valittu-aikavali
+                                                                                          [uusi-arvo (second @tiedot/valittu-aikavali)])))]]
+           [:label " \u2014 " [tee-kentta {:tyyppi :pvm} (r/wrap
+                                                           (second @tiedot/valittu-aikavali)
+                                                           (fn [uusi-arvo]
+                                                             (swap! tiedot/valittu-aikavali
+                                                                    (fn [[alku _]]
+                                                                      [alku uusi-arvo]))))]]])
 
         [:div
          [:label "Tilat"

@@ -3,7 +3,8 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka :as u])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -14,8 +15,7 @@
 (defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
 (defonce valitut-tilat (atom {:vastatut true :avoimet true}))
-(defonce valittu-alkuaika (atom nil))
-(defonce valittu-loppuaika (atom nil))
+(defonce valittu-aikavali (reaction [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]))
 (defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :ilmoitus true}))
 (defonce hakuehto (atom nil))
 
@@ -29,8 +29,7 @@
                                   @valittu-hallintayksikko
                                   @valittu-urakka
                                   @valitut-tilat
-                                  @valittu-loppuaika
-                                  @valittu-alkuaika
+                                  @valittu-aikavali
                                   @valitut-ilmoitusten-tyypit
                                   @hakuehto
                                   true))
@@ -45,7 +44,7 @@
                           :urakka @valittu-urakka
                           :tilat (vec (keep #(when (val %) (key %)) @valitut-tilat))
                           :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
-                          :aikavali [@valittu-alkuaika @valittu-loppuaika]})]
+                          :aikavali @valittu-aikavali})]
 
 
       (reset! haetut-ilmoitukset tulos)
