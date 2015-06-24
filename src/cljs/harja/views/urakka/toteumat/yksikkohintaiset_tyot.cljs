@@ -59,8 +59,9 @@
     (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
     (go (let [vastaus (<! (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma))]
           (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
-          (if vastaus
-            (reset! tehtavien-summat (:tehtavien-summat vastaus)))))))
+          (when vastaus
+            (reset! tehtavien-summat (:tehtavien-summat vastaus)))
+          vastaus))))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
