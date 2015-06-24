@@ -93,7 +93,11 @@
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
 
-         [:p "TODO Kohteen tiedot tähän..."] ; TODO
+         [:div.paallystysilmoitus-kohteen-tiedot
+            [:h6 "Kohteen tiedot"]
+            [:span "Kohde"] [:span (:kohde @lomakedata)]
+            [:span "Valmistumispvm"] [:span(:valmispvm @lomakedata)]
+            [:span "Toteutunut hinta"] [:span (:hinta @lomakedata)] [:span"€"]]
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet osoitteet"
@@ -156,17 +160,17 @@
            {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tyyppi :numero}]
           toteutuneet-maarat]
 
-         [:div.paallystysilmoitus-yhteenveto
+         [:div.paallystysilmoitus-yhteenveto ; FIXME Saisiko tästä komponentin?
           [:table
            [:tr
             [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]] ; TODO Laske
            [:tr
             [:td.paallystysilmoitus-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]] ; TODO Laske
            [:tr
             [:td.paallystysilmoitus-yhteenveto-nimi [:span "Yhteensä: "]]
-            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]]]
+            [:td.paallystysilmoitus-yhteenveto-summa [:span "X €"]]]]] ; TODO Laske
 
          ]))))
 
