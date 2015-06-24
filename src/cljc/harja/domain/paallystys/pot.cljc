@@ -61,11 +61,13 @@
    {:nimi "Kantavan kerroksen AB"    :lyhenne "ABK"  :koodi 21}
    {:nimi "Sidekerroksen AB"         :lyhenne "ABS"  :koodi 22}
    {:nimi "Murske"                   :lyhenne "MS"   :koodi 23}
-   {:nimi "Kuumennustasus"           :lyhenne "TASK" :koodi 31}
+   {:nimi "Kuumennustasaus"          :lyhenne "TASK" :koodi 31}
    {:nimi "Massatasaus"              :lyhenne "TAS"  :koodi 32}
    {:nimi "Tasausjyrsintä"           :lyhenne "TJYR" :koodi 41}
    {:nimi "Laatikkojyrsintä"         :lyhenne "LJYR" :koodi 42}
-   {:nimi "Reunajyrsintä"            :lyhenne "RJYR" :koodi 43}])
+   {:nimi "Reunajyrsintä"            :lyhenne "RJYR" :koodi 43}
+   ;;FIXME: puuttuu sekoitusjyrsintä SJYR
+   ])
   
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
   (apply s/enum (map :koodi +alustamenetelmat+)))
