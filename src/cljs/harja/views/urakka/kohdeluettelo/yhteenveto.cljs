@@ -40,7 +40,10 @@
 (defn paallystyskohdeosat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
-        paallystyskohdeosat (reaction<! (paallystys/hae-paallystyskohdeosat urakka-id sopimus-id (:id rivi)))]
+        paallystyskohdeosat (atom nil)]
+
+  (go (reset! paallystyskohdeosat (<! (paallystys/hae-paallystyskohdeosat urakka-id sopimus-id (:id rivi)))))
+
   (fn [rivi]
     [:div
      [grid/grid

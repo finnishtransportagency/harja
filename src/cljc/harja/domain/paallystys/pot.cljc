@@ -143,7 +143,7 @@
                   }]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
-   :kiviaines [{:esiintymä s/Str 
+   :kiviaines [{:esiintyma s/Str
                 :km-arvo s/Str
                 :muotoarvo s/Str
                 :sideaine {:tyyppi s/Str :pitoisuus s/Num :lisaaineet s/Str}}]

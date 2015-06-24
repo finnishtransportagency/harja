@@ -60,7 +60,7 @@
                    :edellinen-paallystetyyppi 11
                    }]
 
-   :kiviaines [{:esiintymä "KAM Leppäsenoja"
+   :kiviaines [{:esiintyma "KAM Leppäsenoja"
                 :km-arvo "An 14"
                 :muotoarvo "Fi 20"
                 :sideaine {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
@@ -83,12 +83,13 @@
   (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomake-paallystysilmoitus)))
         paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomake-paallystysilmoitus)))
         alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomake-paallystysilmoitus)))
-        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomake-paallystysilmoitus)))]
+        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomake-paallystysilmoitus)))
+        kiviaines (atom (zipmap (iterate inc 1) (:kiviaines @lomake-paallystysilmoitus)))]
 
     (komp/luo
       (fn [ur]
         [:div.paallystysilmoituslomake
-         [:p "TODO Kohteen tiedot tähän..."]
+         [:p "TODO Kohteen tiedot tähän..."] ; TODO
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet osoitteet"
@@ -117,7 +118,16 @@
            {:otsikko "Edellinen päällyste" :nimi :edellinen-paallystettyyppi :leveys "20%" :tyyppi :string}] ; FIXME Pudostusvalikko
           paallystystoimenpide]
 
-         ; TODO Kiviaines ja sideaine, yksi gridi vai monta? Kiviaineksella on sidesaine.
+         [grid/muokkaus-grid
+          {:otsikko "Kiviaines ja sideaine"}
+          [{:otsikko "Esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :numero :leveys "20%"}
+           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :numero :leveys "20%"}
+           ; FIXME Otsikointi?
+           {:otsikko "Tyyppi" :nimi :tyyppi :leveys "20%" :tyyppi :numero} ; FIXME Miten nämä haetaan?
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :string}
+           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :numero}]
+          kiviaines]
 
          [grid/muokkaus-grid
           {:otsikko "Alustalle tehdyt toimet"}
@@ -142,14 +152,26 @@
            {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tyyppi :numero}]
           toteutuneet-maarat]
 
+         [:div.paallystysilmoitus-yhteenveto
+          [:table
+           [:tr
+            [:td [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
+            [:td [:span "X €"]]]
+           [:tr
+            [:td [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
+            [:td [:span "X €"]]]
+           [:tr
+            [:td [:span "Yhteensä: "]]
+            [:td [:span "X €"]]]]]
+
          ]))))
 
-(defonce toteumarivit (reaction<! (let [valittu-urakka-id (:id @nav/valittu-urakka)
-                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                        valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                    (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
-                                      (log "PÄÄ Haetaan päällystystoteumat.")
-                                      (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id)))))
+(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                   valittu-urakan-valilehti @u/urakan-valittu-valilehti]
+                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
+                                    (log "PÄÄ Haetaan päällystystoteumat.")
+                                    (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defn toteumaluettelo
   []
