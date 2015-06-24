@@ -2,6 +2,8 @@
   "Urakan 'Toteumat' välilehden 'Muut työt' osio"
   (:require [reagent.core :refer [atom] :as r]
             [bootstrap :as bs]
+
+            [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
@@ -32,8 +34,7 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 (defonce valittu-toteuma (atom nil))
 
@@ -43,15 +44,27 @@
                  @u/muutoshintaiset-tyot)))
 
 (defn tallenna-muu-tyo [muokattu]
-  (go (let [ur (:id @nav/valittu-urakka)
+  (go (let [urakka @nav/valittu-urakka
+            urakka-id (:id urakka)
+            urakan-alkupvm (:alkupvm urakka)
+            urakan-loppupvm (:loppupvm urakka)
             [sop _] @u/valittu-sopimusnumero
             [hk-alkupvm hk-loppupvm] @u/valittu-hoitokausi
             toteuma (assoc-in
                       (assoc muokattu
-                        :urakka-id ur
+                        :urakka-id urakka-id
+                        :urakan-alkupvm urakan-alkupvm
+                        :urakan-loppupvm urakan-loppupvm
                         :sopimus-id sop
                         :hoitokausi-aloituspvm hk-alkupvm
                         :hoitokausi-lopetuspvm hk-loppupvm
+                        ;; jos käyttäjä syöttää yksikköhinnan, eikä sitsä vielä ollut suunnittelupuolelle syötetty,
+                        ;; tallennetaan tässä yhteydessä hinta implisiittisesti myös suunnittelupuolelle (muutoshintainen_tyo-tauluun)
+                        :uusi-muutoshintainen-tyo (if (and (not (:yksikkohinta-suunniteltu? muokattu))
+                                                      (:yksikkohinta muokattu)
+                                                      (get-in muokattu [:tehtava :toimenpidekoodi]))
+                                               (get-in muokattu [:tehtava :toimenpidekoodi])
+                                               nil)
                         :suorittajan-nimi (get-in muokattu [:suorittajan :nimi])
                         :suorittajan-ytunnus (get-in muokattu [:suorittajan :ytunnus]))
                       [:tehtava :paivanhinta]
@@ -61,12 +74,12 @@
             _ (log "tallenna-muu-tyo-toteuma" (pr-str toteuma))
             res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))]
         (log "tallennettu, palvelu vastasi: " (pr-str res))
-        (reset! u/muut-tyot-hoitokaudella res))))
+        (reset! u/muut-tyot-hoitokaudella res)
+        (paivita! u/muutoshintaiset-tyot))))
 
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
 
-;; Fixme: tee tarpeettomaksi avainarvoparivektorin avulla
 (defn muun-tyon-tyypin-teksti [avainsana]
   "Muun työn tyypin teksti avainsanaa vastaan"
   (case avainsana
@@ -227,9 +240,6 @@
                :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :varoita [[:ei-tyhja "Haluatko jättää määrän antamatta?"]]
                :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
-              (when (nil? (:yksikko @muokattu))
-                {:otsikko "Yksikkö" :nimi :yksikko
-                 :tyyppi  :string :muokattava? (constantly false) :leveys-col 3})
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
                :tyyppi        :valinta
                :valinta-arvo  first
@@ -289,25 +299,31 @@
   []
   (let [urakka @nav/valittu-urakka
 
-        valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi]
-                    (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
-                                                           (:id toimenpideinstanssi))
-                                                       @u/muut-tyot-hoitokaudella)))))
+        valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                                          muut-tyot-hoitokaudella @u/muut-tyot-hoitokaudella]
+                                      (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
+                                                                             (:id toimenpideinstanssi))
+                                                                         muut-tyot-hoitokaudella)))))
         tyorivit
         (reaction
-          (map (fn [muu-tyo]
-                 (let [muutoshintainen-tyo
-                       (first (filter (fn [muutoshinta]
-                                        (= (:tehtava muutoshinta)
-                                           (get-in muu-tyo [:tehtava :toimenpidekoodi]))) @u/muutoshintaiset-tyot))
-                       yksikkohinta (:yksikkohinta muutoshintainen-tyo)]
-                   (assoc muu-tyo
-                     :hinnoittelu (if (get-in muu-tyo [:tehtava :paivanhinta]) :paivanhinta :yksikkohinta)
-                     :yksikko (:yksikko muutoshintainen-tyo)
-                     :yksikkohinta yksikkohinta
-                     :yksikkohinta-suunniteltu? yksikkohinta)))
-               @valitut-muut-tyot))]
-(tarkkaile! "työrivit" tyorivit)
+          (let [muutoshintaiset-tyot @u/muutoshintaiset-tyot
+                valitut-muut-tyot @valitut-muut-tyot]
+            (map (fn [muu-tyo]
+                   (let [muutoshintainen-tyo
+                         (first (filter (fn [muutoshinta]
+                                          (= (:tehtava muutoshinta)
+                                             (get-in muu-tyo [:tehtava :toimenpidekoodi]))) muutoshintaiset-tyot))
+                         yksikkohinta (:yksikkohinta muutoshintainen-tyo)
+                         _ (log "muutoshintainen työ" (pr-str muutoshintainen-tyo))]
+                     (assoc muu-tyo
+                       :hinnoittelu (if (get-in muu-tyo [:tehtava :paivanhinta]) :paivanhinta :yksikkohinta)
+                       :yksikko (:yksikko muutoshintainen-tyo)
+                       :yksikkohinta yksikkohinta
+                       :yksikkohinta-suunniteltu? yksikkohinta)))
+                 valitut-muut-tyot)))]
+
+    (tarkkaile! "työrivit" tyorivit)
+    (tarkkaile! "valitut muut" valitut-muut-tyot)
     (komp/luo
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]

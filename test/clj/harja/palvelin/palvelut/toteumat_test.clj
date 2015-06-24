@@ -78,3 +78,44 @@
            (u
              (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))
+
+
+;;tallenna-muiden-toiden-toteuma:  {:hinnoittelu :yksikkohinta, :suorittajan {:nimi "on"}, :suorittajan-nimi "on",
+;; :suorittajan-ytunnus nil, :urakka-id 1, :yksikko "tiekm", :urakan-loppupvm #inst "2010-09-29T21:00:00.000-00:00",
+;; :alkanut #inst "2006-02-01T22:00:00.000-00:00", :urakan-alkupvm #inst "2005-09-30T21:00:00.000-00:00",
+;; :tehtava {:paivanhinta nil, :maara 2, :toimenpidekoodi 1368}, :hoitokausi-aloituspvm #inst "2005-09-30T21:00:00.000-00:00",
+;; :paattynyt #inst "2006-02-01T22:00:00.000-00:00", :hoitokausi-lopetuspvm #inst "2006-09-29T21:00:00.000-00:00", :yksikkohinta 31,
+;; :toimenpideinstanssi {:t3_nimi "Laaja toimenpide",
+;; :t3_emo 907, :t1_koodi "23000", :t3_koodi "23104", :t2_nimi "Talvihoito", :t2_emo 906, :t1_nimi "Hoito, tie",
+;; :tpi_nimi "Oulu Talvihoito TP", :id 911, :t2_koodi "23100", :tpi_id 1}, :sopimus [1 "1H05228/01"], :sopimus-id 1,
+;; :tyyppi :muutostyo, :uusi-muutoshintainen-tyo 1368}
+
+#_(deftest tallenna-muut-tyot-toteuma-testi
+  (let [tyon-pvm (java.sql.Date. 105 9 1) ;;1.10.2005
+        toteuman-pvm (java.sql.Date. 105 11 12)
+        toteuman-lisatieto "Testikeissin lisätieto2"
+        tyo {:urakka-id @oulun-alueurakan-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
+             :alkanut tyon-pvm :paattynyt tyon-pvm
+             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi :muutostyo
+             :lisatieto toteuman-lisatieto
+             :tehtava {:paivanhinta 456, :maara 2, :toimenpidekoodi 1368}}
+        ;select * from toteuma where tyyppi in ('muutostyo', 'lisatyo', 'akillinen-hoitotyo');
+;        select * from toteuma_tehtava tt where tt.toteuma in (SELECT id from toteuma where tyyppi in ('muutostyo', 'lisatyo', 'akillinen-hoitotyo')) and poistettu is NOT  true;
+
+        maara-ennen-lisaysta (ffirst (q
+                                       (str "SELECT count(*)
+                                                       FROM toteuma
+                                                      WHERE urakka = " @oulun-alueurakan-id "
+                                                      AND tyyppi IN ('muutostyo') AND alkanut = '" tyon-pvm "';")))
+        res (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
+        lisatty (first (filter #(and
+                                 (= (:alkanut %) tyon-pvm)
+                                 (= (:lisatieto %) toteuman-lisatieto)) res))]
+    (is (= (:alkanut lisatty) tyon-pvm) "Tallennetun muun työn alkanut pvm")
+    (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
+    (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
+    (u
+      (str "DELETE FROM toteuma
+                    WHERE pvm = '" tyon-pvm "' AND lisatieto = '" toteuman-lisatieto "'"))))

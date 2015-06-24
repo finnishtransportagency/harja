@@ -20,7 +20,6 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-
 (defn tallenna-tyot [tyot atomi]
   (go (let [ur @nav/valittu-urakka
             sopimusnumero (first @u/valittu-sopimusnumero)

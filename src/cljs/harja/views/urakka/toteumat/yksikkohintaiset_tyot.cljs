@@ -115,9 +115,9 @@
                                    (and
                                      ; Validoi toteuma
                                      (not jarjestelman-lisaama-toteuma?)
-                                     (not (nil? (:aloituspvm @lomake-toteuma)))
-                                     (not (nil? (:lopetuspvm @lomake-toteuma)))
-                                     (not (pvm/ennen? (:lopetuspvm @lomake-toteuma) (:aloituspvm @lomake-toteuma)))
+                                     (not (nil? (:alkanut @lomake-toteuma)))
+                                     (not (nil? (:paattynyt @lomake-toteuma)))
+                                     (not (pvm/ennen? (:paattynyt @lomake-toteuma) (:alkanut @lomake-toteuma)))
                                      ; Validoi tehtävät
                                      (not (empty? (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
@@ -149,21 +149,21 @@
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :aloituspvm :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+           {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta (fn [rivi arvo]
                      (assoc
                        (if
                          (or
-                           (not (:lopetuspvm rivi))
-                           (pvm/jalkeen? arvo (:lopetuspvm rivi)))
-                         (assoc rivi :lopetuspvm arvo)
+                           (not (:paattynyt rivi))
+                           (pvm/jalkeen? arvo (:paattynyt rivi)))
+                         (assoc rivi :paattynyt arvo)
                          rivi)
-                       :aloituspvm
+                       :alkanut
                        arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :varoita [[:urakan-aikana]]}
-           {:otsikko "Lopetus" :nimi :lopetuspvm :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                                                        [:pvm-kentan-jalkeen :aloituspvm "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
+           {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            (if  jarjestelman-lisaama-toteuma? {:otsikko "Lähde" :nimi :luoja :tyyppi :string :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma?]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
@@ -220,8 +220,8 @@
                                                                                                                                      :yksikko (:yksikko tehtava-urakassa)
                                                                                                                                      }))
                                                                                                                                 (:tehtavat toteuma)))
-                                                                                                :aloituspvm       (:alkanut toteuma)
-                                                                                                :lopetuspvm       (:paattynyt toteuma)
+                                                                                                :alkanut       (:alkanut toteuma)
+                                                                                                :paattynyt       (:paattynyt toteuma)
                                                                                                 :lisatieto        (:lisatieto toteuma)
                                                                                                 :suorittajan-nimi (:suorittajan_nimi toteuma)
                                                                                                 :suorittajan-ytunnus (:suorittajan_ytunnus toteuma)
@@ -290,7 +290,8 @@
                            (lisaa-tyoriveille-suunnitellut-kustannukset)
                            (lisaa-tyoriveille-toteutunut-maara)
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
-                           (lisaa-tyoriveille-erotus)))))]
+                           (lisaa-tyoriveille-erotus)))))
+        valittu-tpi @u/valittu-toimenpideinstanssi]
 
     (komp/luo
       (fn []
@@ -301,11 +302,12 @@
           (ikonit/plus-sign) " Lisää toteuma"]
 
          [grid/grid
-          {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
-           :tyhja (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
-           :luokat ["toteumat-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))}
-          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+          {:otsikko (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi valittu-tpi) " / " (:t3_nimi valittu-tpi) " / " (:tpi_nimi valittu-tpi))
+           :tyhja   (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
+           :luokat  ["toteumat-paasisalto"]
+           ;:vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))
+           }
+          [                                                 ;{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -317,12 +319,12 @@
                      (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                                   [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "20%"}]
-          (filter
-            (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi @u/valittu-toimenpideinstanssi))
-                            (or
-                              (> (:hoitokauden-toteutunut-maara rivi) 0)
-                              (> (:hoitokauden-suunniteltu-maara rivi) 0))))
-            @tyorivit)]]))))
+          (doall (filter
+                   (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
+                                   (or
+                                     (> (:hoitokauden-toteutunut-maara rivi) 0)
+                                     (> (:hoitokauden-suunniteltu-maara rivi) 0))))
+                   @tyorivit))]]))))
 
 (defn yksikkohintaisten-toteumat []
   (if @lomakkeessa-muokattava-toteuma

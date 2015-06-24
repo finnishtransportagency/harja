@@ -39,9 +39,11 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (if (= :kokonaishintaiset @u/suunnittelun-valittu-valilehti)
-            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
-            [valinnat/urakan-sopimus-ja-hoitokausi ur])
+          (if (= :muut @u/suunnittelun-valittu-valilehti)
+            [valinnat/urakan-sopimus ur]
+            (if (= :kokonaishintaiset @u/suunnittelun-valittu-valilehti)
+              [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+              [valinnat/urakan-sopimus-ja-hoitokausi ur]))
           ;; suunnittelun välilehdet
           [bs/tabs {:style :tabs :active u/suunnittelun-valittu-valilehti}
 
