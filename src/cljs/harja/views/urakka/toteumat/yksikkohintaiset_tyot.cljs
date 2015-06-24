@@ -57,11 +57,7 @@
                                 :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
                                 :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
     (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
-    (go (let [vastaus (<! (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma))]
-          (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
-          (when vastaus
-            (reset! tehtavien-summat (:tehtavien-summat vastaus)))
-          vastaus))))
+    (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
@@ -144,7 +140,9 @@
                              #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
                              {:luokka "nappi-ensisijainen"
                               :disabled (false? @valmis-tallennettavaksi?)
-                              :kun-onnistuu #(do
+                              :kun-onnistuu (fn [vastaus]
+                                              (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
+                                              (reset! tehtavien-summat (:tehtavien-summat vastaus))
                                               (reset! lomake-tehtavat nil)
                                               (reset! lomake-toteuma nil)
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
