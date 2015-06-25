@@ -43,7 +43,7 @@
 
    :osoitteet    [{:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
                    :ajorata 0 :suunta 0 :kaista 1}
-                  {:tie     2848 :aosa 5 :aet 22 :losa 5 :let 9377
+                  {:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
                    :ajorata 0 :suunta 0 :kaista 1}]
 
    :toimenpiteet [{:paallystetyyppi           21
@@ -142,9 +142,9 @@
           {:otsikko  "Alikohteet"
            :tunniste :tie}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
-           {:otsikko "Ajorata" :nimi :ajorata :tyyppi :string :leveys "20%"}
-           {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kaista" :nimi :kaista :leveys "10%" :tyyppi :numero}
+           {:otsikko "Ajorata" :nimi :ajorata :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
+           {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"} ; FIXME Pudotusvalikko
+           {:otsikko "Kaista" :nimi :kaista :leveys "10%" :tyyppi :numero} ; FIXME Pudotusvalikko
            {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero}
            {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero}
            {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
@@ -172,7 +172,7 @@
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
-           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string} ; FIXME Miten nämä haetaan?
+           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string} ; FIXME Pudostusvalikko
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
            {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
           kiviaines]
@@ -191,13 +191,13 @@
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"}
-          [{:otsikko "Ajoradan päällyste" :nimi :tyyppi :tyyppi :string :leveys "20%"}
+          [{:otsikko "Ajoradan päällyste" :nimi :tyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudostusvalikko
            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%"}
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
-           {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero}
-           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero}
-           {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tyyppi :numero}]
+           {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
+           {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero}
+           {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
           toteutuneet-maarat]
 
          (yhteenveto)

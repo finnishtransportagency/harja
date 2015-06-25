@@ -142,7 +142,7 @@
                    :tyomenetelma s/Int ;; koodisto "työmenetelmä" FIXME: tai skeemalla
                    :leveys s/Num  ;; metriä, esim. 4,2
                    :massamaara s/Num ;; tonnia
-                   :edellinen-paallystetyyppi s/Int ;; koodisto tai skeema
+                   :edellinen-paallystetyyppi s/Int ;; koodisto FIXME: tai skeemalla
                   }]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
