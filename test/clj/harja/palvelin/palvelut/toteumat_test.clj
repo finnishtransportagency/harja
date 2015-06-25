@@ -99,23 +99,17 @@
              :tyyppi :muutostyo
              :lisatieto toteuman-lisatieto
              :tehtava {:paivanhinta 456, :maara 2, :toimenpidekoodi 1368}}
-        ;select * from toteuma where tyyppi in ('muutostyo', 'lisatyo', 'akillinen-hoitotyo');
-;        select * from toteuma_tehtava tt where tt.toteuma in (SELECT id from toteuma where tyyppi in ('muutostyo', 'lisatyo', 'akillinen-hoitotyo')) and poistettu is NOT  true;
-
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
-                                                       FROM toteuma
-                                                      WHERE urakka = " @oulun-alueurakan-id "
-                                                      AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
-                                                      AND tyyppi IN ('muutostyo') AND lisatieto = '" toteuman-lisatieto "';")))
-        _ (log/debug "määrä ennen lisäystä" maara-ennen-lisaysta)
+                                               FROM toteuma
+                                              WHERE urakka = " @oulun-alueurakan-id "
+                                                    AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
+                                                    AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo');")))
         res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
-        _ (log/debug "res " res)
         lisatty (first (filter #(and
-                                 (= (:lisatieto %) toteuman-lisatieto)) res))
-        _ (log/debug "lisatty " lisatty)]
-    ; FIXME: korjaa harjatest kannan sisältöä vastaavaksi (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
+                                 (= (:lisatieto %) toteuman-lisatieto)) res))]
+    (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
     (is (= (:alkanut lisatty) tyon-pvm) "Tallennetun muun työn alkanut pvm")
     (is (= (:paattynyt lisatty) tyon-pvm) "Tallennetun muun työn paattynyt pvm")
     (is (= (:tyyppi lisatty) :muutostyo) "Tallennetun muun työn tyyppi")
