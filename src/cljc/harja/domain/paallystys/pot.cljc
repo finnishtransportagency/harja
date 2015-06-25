@@ -126,6 +126,7 @@
   {:kohde s/Int      ;; viittaus kohteeseen
    :kohdenimi s/Str
    :valmispvm skeema/pvm-tyyppi ;; valmistumispvm
+   :takuupvm skeema/pvm-tyyppi ;; takuupvm
    :hinta s/Num   ;; toteutunut hinta
 
    ;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.

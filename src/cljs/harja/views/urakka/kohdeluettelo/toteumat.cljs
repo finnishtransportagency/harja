@@ -36,6 +36,7 @@
   {:kohde        308
    :kohdenimi    "Leppäkorven rampit"
    :valmispvm    (pvm/luo-pvm 2015 10 10)
+   :takuupvm     (pvm/luo-pvm 2016 05 11)
    :hinta        5000
 
    :osoitteet    [{:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
@@ -85,13 +86,18 @@
                    :yksikkohinta     20}]})
 
 (defn kohteen-tiedot []
+  (let [valmispvm (r/wrap (:valmispvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :valmispvm uusi-arvo))))
+        takuupvm (r/wrap (:takuupvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :takuupvm uusi-arvo))))
+        toteutunut-hinta (r/wrap (:hinta @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :hinta uusi-arvo))))]
+
   [:div.paallystysilmoitus-kohteen-tiedot
    [:h6 "Kohteen tiedot"]
    [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
-   ;; FIXME Käytä tyyliin (r/wrap (:valmispvm @lomakedata) (fn [uusi-arvo] (assoc-in lomake-data (:avain uusi-arvo)))
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} (atom (:valmispvm @lomakedata))]]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} (atom (:takuupvm @lomakedata))]]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} (atom (:hinta @lomakedata))]] [:span " €"]])
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
+   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]))
+
+(tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
 (defn yhteenveto []
   (let [urakkasopimuksen-mukainen-kokonaishinta (atom 0) ; TODO Laske, miten?
