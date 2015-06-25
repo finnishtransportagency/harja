@@ -11,6 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
+            [harja.domain.paallystys.pot :as pot]
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -44,7 +45,7 @@
    :osoitteet    [{:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
                    :ajorata 0 :suunta 0 :kaista 1}
                   {:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
-                   :ajorata 0 :suunta 0 :kaista 1}]
+                   :ajorata 1 :suunta 0 :kaista 1}]
 
    :toimenpiteet [{:paallystetyyppi           21
                    :raekoko                   16
@@ -142,14 +143,32 @@
           {:otsikko  "Alikohteet"
            :tunniste :tie}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
-           {:otsikko "Ajorata" :nimi :ajorata :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
-           {:otsikko "Suunta" :nimi :suunta :tyyppi :numero :leveys "10%"} ; FIXME Pudotusvalikko
-           {:otsikko "Kaista" :nimi :kaista :leveys "10%" :tyyppi :numero} ; FIXME Pudotusvalikko
+           {:otsikko       "Ajorata"
+            :nimi          :ajorata
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
+            :valinnat      pot/+ajoradat+
+            :leveys "20%"}
+           {:otsikko       "Suunta"
+            :nimi          :suunta
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse suunta -")
+            :valinnat      pot/+suunnat+
+            :leveys "20%"}
+           {:otsikko       "Kaista"
+            :nimi          :kaista
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
+            :valinnat      pot/+kaistat+
+            :leveys "20%"}
            {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero}
            {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero}
            {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero}]
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))}] ; FIXME Onko oikein laskettu?
           toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
