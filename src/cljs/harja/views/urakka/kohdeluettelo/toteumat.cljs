@@ -33,8 +33,10 @@
 (def lomakedata (atom nil))
 
 (def lomaketestidata
+  "Oletetaan, että tieto tulee kannasta tässä muodossa (joinataan SQL-kyselyssä ainakin kohdennimi ja tarjoushinta.)"
   {:kohde        308
    :kohdenimi    "Leppäkorven rampit"
+   :tarjoushinta 90000
    :valmispvm    (pvm/luo-pvm 2015 10 10)
    :takuupvm     (pvm/luo-pvm 2016 05 11)
    :hinta        5000
@@ -81,8 +83,8 @@
 
    :tyot         [{:tyyppi           :ajoradan-paallyste
                    :toimenpidekoodi  1350
-                   :tilattu-maara    1000
-                   :toteutunut-maara 5800
+                   :tilattu-maara    10000
+                   :toteutunut-maara 10100
                    :yksikkohinta     20}]})
 
 (defn kohteen-tiedot []
@@ -100,10 +102,14 @@
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
 (defn yhteenveto []
-  (let [urakkasopimuksen-mukainen-kokonaishinta (atom 0) ; TODO Laske, miten?
-        muutokset-kokonaishintaan (atom 0) ; Laske TODO Toteutuneet määrät -> Summaa muutos hintaan (joka on (tilattu - toteutunut) * yksikkohinta)
+  (let [urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata))
+        muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+        (reaction (reduce + (mapv
+                              (fn [tyo]
+                                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
+                              (:tyot @lomakedata))))
         yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))]
-  [:div.paallystysilmoitus-yhteenveto
+    [:div.paallystysilmoitus-yhteenveto
    [:table
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
@@ -161,11 +167,10 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"}
-          [{:otsikko "Esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
+          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
-           ; FIXME Otsikointi?
-           {:otsikko "Tyyppi" :nimi :tyyppi :leveys "20%" :tyyppi :string} ; FIXME Miten nämä haetaan?
+           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string} ; FIXME Miten nämä haetaan?
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
            {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
           kiviaines]
@@ -189,7 +194,7 @@
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero}
-           {:otsikko "Yksikköhinta" :yksikkohinta :kasittelymenetelma :leveys "10%" :tyyppi :numero}
+           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero}
            {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tyyppi :numero}]
           toteutuneet-maarat]
 
