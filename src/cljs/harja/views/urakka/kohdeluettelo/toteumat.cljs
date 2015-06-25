@@ -209,7 +209,7 @@
           paallystystoimenpide]
 
          [grid/muokkaus-grid
-          {:otsikko "Kiviaines ja sideaine"} ; FIXME Miten nämä saadaan mapista?
+          {:otsikko "Kiviaines ja sideaine"}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
@@ -279,6 +279,8 @@
                                     (log "PÄÄ Haetaan päällystystoteumat.")
                                     (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
+(tarkkaile! "PÄÄ Toteumarivit" toteumarivit)
+
 (defn toteumaluettelo
   []
   (let []
@@ -300,8 +302,12 @@
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-           {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-            :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click #(go ())}
+           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+            :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click #(go
+                                                                                        (let [urakka-id (:id @nav/valittu-urakka)
+                                                                                              [sopimus-id _] @u/valittu-sopimusnumero
+                                                                                              ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                          (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
                                      (ikonit/eye-open) " Päällystysilmoitus"])}]
           @toteumarivit]]))))
 

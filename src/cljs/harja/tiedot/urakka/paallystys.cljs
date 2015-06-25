@@ -21,3 +21,8 @@
 (defn hae-paallystystoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paallystystoteumat {:urakka-id urakka-id
                                       :sopimus-id sopimus-id}))
+
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
+  (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id
+                                       :paallystyskohde-id paallystyskohde-id}))
