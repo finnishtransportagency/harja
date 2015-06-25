@@ -132,6 +132,39 @@
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Yhteensä: "]]
      [:td.paallystysilmoitus-yhteenveto-summa [:span (str @yhteensa " €")]]]]]))
 
+(defn toiminnot [valmis-tallennettavaksi?]
+  [:div.paallystysilmoitus-toiminnot
+   [harja.ui.napit/palvelinkutsu-nappi
+    "Lähetä tilaajalle"
+    #(let [urakka-id (:id @nav/valittu-urakka)
+           [sopimus-id _] @u/valittu-sopimusnumero]
+      (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id @lomakedata))
+    {:luokka "nappi-ensisijainen"
+     :disabled (false? @valmis-tallennettavaksi?)
+     :kun-onnistuu (fn [vastaus]
+                     (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
+                     (reset! lomakedata nil))}]
+
+   [harja.ui.napit/palvelinkutsu-nappi
+    "Hyväksy"
+    #(let [urakka-id (:id @nav/valittu-urakka)
+           [sopimus-id _] @u/valittu-sopimusnumero])
+    {:luokka "nappi-ensisijainen"
+     :disabled (constantly false) ; FIXME Kelle näytetään?
+     :kun-onnistuu (fn [vastaus]
+                     ; TODO
+                     )}]
+
+   [harja.ui.napit/palvelinkutsu-nappi
+    "Palauta urakoitsijalle"
+    #(let [urakka-id (:id @nav/valittu-urakka)
+           [sopimus-id _] @u/valittu-sopimusnumero])
+    {:luokka "nappi-ensisijainen"
+     :disabled (constantly false) ; FIXME Kelle näytetään?
+     :kun-onnistuu (fn [vastaus]
+                     ; TODO
+                     )}]])
+
 (defn paallystysilmoituslomake
   []
   (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
@@ -156,7 +189,8 @@
          [grid/muokkaus-grid
           {:otsikko  "Alikohteet"
            :tunniste :tie}
-          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"}
+          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"} ; TODO Nice to have: Lisää rivi -nappi voisi esitäyttää tienumeron ekalta riviltä (jos sellainen on). Miten?
+                                                                      ; FIXME Lisää rivi myös päällystystoimenpiteen tiedot -gridiin. Miten?
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
@@ -277,20 +311,7 @@
           toteutuneet-maarat]
 
          (yhteenveto)
-
-         [harja.ui.napit/palvelinkutsu-nappi
-          "Lähetä ilmoitus"
-          #(let [urakka-id (:id @nav/valittu-urakka)
-                 [sopimus-id _] @u/valittu-sopimusnumero]
-            (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id @lomakedata))
-          {:luokka "nappi-ensisijainen"
-           :disabled (false? @valmis-tallennettavaksi?)
-           :kun-onnistuu (fn [vastaus]
-                           (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
-                           (reset! lomakedata nil))}]
-
-         ]))))
-
+         (toiminnot valmis-tallennettavaksi?)]))))
 
 (defn toteumaluettelo
   []
