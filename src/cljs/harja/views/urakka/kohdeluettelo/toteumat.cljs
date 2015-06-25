@@ -71,7 +71,9 @@
    :kiviaines    [{:esiintyma "KAM Leppäsenoja"
                    :km-arvo   "An 14"
                    :muotoarvo "Fi 20"
-                   :sideaine  {:tyyppi "B650/900" :pitoisuus 4.3 :lisaaineet "Tartuke"}}]
+                   :sideainetyyppi "B650/900"
+                   :pitoisuus 4.3
+                   :lisaaineet "Tartuke"}]
 
    :alustatoimet [{:tie 5
                    :aosa 22
@@ -211,7 +213,7 @@
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
-           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string}
+           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
            {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
           kiviaines]
@@ -249,8 +251,14 @@
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"}
-          [{:otsikko "Ajoradan päällyste" :nimi :tyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudostusvalikko
-           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%"}
+          [{:otsikko       "Ajoradan päällyste" ; FIXME Miten enumeja käytetään pudotusvalikossa?
+            :nimi          :tyyppi
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (pot/+paallystystyon-tyyppi+->string %) "- Valitse päällyste -")
+            :valinnat      pot/+paallystystyon-tyyppi+
+            :leveys "30%"}
+           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%"} ; FIXME Mistä saadaan?
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}

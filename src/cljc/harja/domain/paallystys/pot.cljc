@@ -120,6 +120,15 @@
   "Kaistavalinta koodilla"
   (apply s/enum (map :koodi +kaistat+)))
 
+(defn +paallystystyon-tyyppi+->string [tyyppi-enum]
+  (case tyyppi-enum
+    :ajoradan-paallyste "Ajoradan päällyste"
+    :pienaluetyot "Pienaluetyöt"
+    :tasaukset "Tasaukset"
+    :jyrsinnat "Jyrsinnät"
+    :muut "Muut"
+    "-"))
+
 (def +paallystystyon-tyyppi+ (s/enum :ajoradan-paallyste :pienaluetyot :tasaukset :jyrsinnat :muut))
 
 (def +paallystysilmoitus+
@@ -150,7 +159,9 @@
    :kiviaines [{:esiintyma s/Str
                 :km-arvo s/Str
                 :muotoarvo s/Str
-                :sideaine {:tyyppi s/Str :pitoisuus s/Num :lisaaineet s/Str}}]
+                :sideainetyyppi s/Str
+                :pitoisuus s/Num
+                :lisaaineet s/Str}]
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
