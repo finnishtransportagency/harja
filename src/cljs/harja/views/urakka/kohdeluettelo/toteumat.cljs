@@ -97,12 +97,18 @@
         takuupvm (r/wrap (:takuupvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :takuupvm uusi-arvo))))
         toteutunut-hinta (r/wrap (:hinta @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :hinta uusi-arvo))))]
 
-  [:div.paallystysilmoitus-kohteen-tiedot
-   [:h6 "Kohteen tiedot"]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
-   [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]))
+    [:div.paallystysilmoitus-kohteen-tiedot
+     [:h6 "Kohteen tiedot"]
+     [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
+     ; FIXME Tämä päällytyskohteen valinta pudotusvalikosta ei toimi :( Lisäksi pitäisi filtteröidä ne, joille on ilmoitus. Ja tähän ei tosiaan saa vaihtaa jälkikäteen, oletettavasti
+     ;[:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [tee-kentta {:tyyppi :valinta}
+     ;                                                           {:valinta-arvo  :id
+     ;                                                            :valinta-nayta #(if % (:nimi %) "- Valitse kohde -")
+     ;                                                            :valinnat      @paallystys/paallystyskohteet
+     ;                                                            :leveys "20%"}]
+     [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
+     [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
+     [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]))
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -272,14 +278,6 @@
 
          ]))))
 
-(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                   valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                  (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo)) ; FIXME Alivälilehti myös valittuna
-                                    (log "PÄÄ Haetaan päällystystoteumat.")
-                                    (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
-
-(tarkkaile! "PÄÄ Toteumarivit" toteumarivit)
 
 (defn toteumaluettelo
   []
@@ -290,14 +288,14 @@
         [:div
 
          [:button.nappi-ensisijainen {:on-click
-                                      ;#(reset! lomake-paallystysilmoitus {}) ; FIXME Käytä tätä kun testidataa ei tarvita
+                                      ;(reset! lomakedata {}) ; FIXME Käytä tätä kun testidataa ei tarvita
                                       #(reset! lomakedata lomaketestidata)
                                       }
           (ikonit/plus-sign) " Lisää päällystysilmoitus"]
 
          [grid/grid
           {:otsikko  "Toteumat"
-           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
+           :tyhja    (if (nil? @paallystys/paallystystoteumat) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
@@ -309,7 +307,7 @@
                                                                                               ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
                                      (ikonit/eye-open) " Päällystysilmoitus"])}]
-          @toteumarivit]]))))
+          @paallystys/paallystystoteumat]]))))
 
 (defn toteumat []
   (if @lomakedata

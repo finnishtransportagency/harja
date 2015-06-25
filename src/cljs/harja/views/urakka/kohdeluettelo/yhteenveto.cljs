@@ -29,13 +29,6 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
-                                  (log "PÄÄ Haetaan päällystyskohteet.")
-                                  (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
-
 
 (defn paallystyskohdeosat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
@@ -72,9 +65,9 @@
         [:div
          [grid/grid
           {:otsikko "Kohteet"
-           :tyhja (if (nil? @kohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+           :tyhja (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat ["paallysteurakka-kohteet-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @kohderivit))
+           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystys/paallystyskohteet))
            :tunniste :kohdenumero}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
@@ -91,4 +84,4 @@
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)
                                                                                                                  (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-            @kohderivit]])))
+            @paallystys/paallystyskohteet]])))
