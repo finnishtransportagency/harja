@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.kyselyt.konversio :as konv]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -15,11 +16,17 @@
           :db (apply tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :urakan-erilliskustannukset (component/using
-                                   (->Toteumat)
-                                   [:http-palvelin :db])
+                                        (->Toteumat)
+                                        [:http-palvelin :db])
           :tallenna-erilliskustannus (component/using
-                                           (->Toteumat)
-                                           [:http-palvelin :db])))))
+                                       (->Toteumat)
+                                       [:http-palvelin :db])
+          :tallenna-muiden-toiden-toteuma (component/using
+                                            (->Toteumat)
+                                            [:http-palvelin :db])
+          :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat (component/using
+                                                                  (->Toteumat)
+                                                                  [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -80,22 +87,14 @@
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))
 
 
-;;tallenna-muiden-toiden-toteuma:  {:hinnoittelu :yksikkohinta, :suorittajan {:nimi "on"}, :suorittajan-nimi "on",
-;; :suorittajan-ytunnus nil, :urakka-id 1, :yksikko "tiekm", :urakan-loppupvm #inst "2010-09-29T21:00:00.000-00:00",
-;; :alkanut #inst "2006-02-01T22:00:00.000-00:00", :urakan-alkupvm #inst "2005-09-30T21:00:00.000-00:00",
-;; :tehtava {:paivanhinta nil, :maara 2, :toimenpidekoodi 1368}, :hoitokausi-aloituspvm #inst "2005-09-30T21:00:00.000-00:00",
-;; :paattynyt #inst "2006-02-01T22:00:00.000-00:00", :hoitokausi-lopetuspvm #inst "2006-09-29T21:00:00.000-00:00", :yksikkohinta 31,
-;; :toimenpideinstanssi {:t3_nimi "Laaja toimenpide",
-;; :t3_emo 907, :t1_koodi "23000", :t3_koodi "23104", :t2_nimi "Talvihoito", :t2_emo 906, :t1_nimi "Hoito, tie",
-;; :tpi_nimi "Oulu Talvihoito TP", :id 911, :t2_koodi "23100", :tpi_id 1}, :sopimus [1 "1H05228/01"], :sopimus-id 1,
-;; :tyyppi :muutostyo, :uusi-muutoshintainen-tyo 1368}
-
-#_(deftest tallenna-muut-tyot-toteuma-testi
-  (let [tyon-pvm (java.sql.Date. 105 9 1) ;;1.10.2005
-        toteuman-pvm (java.sql.Date. 105 11 12)
+(deftest tallenna-muut-tyot-toteuma-testi
+  (let [tyon-pvm (konv/sql-timestamp (java.util.Date. 105 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
+        hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto2"
         tyo {:urakka-id @oulun-alueurakan-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
              :alkanut tyon-pvm :paattynyt tyon-pvm
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
              :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
              :tyyppi :muutostyo
              :lisatieto toteuman-lisatieto
@@ -107,15 +106,68 @@
                                        (str "SELECT count(*)
                                                        FROM toteuma
                                                       WHERE urakka = " @oulun-alueurakan-id "
-                                                      AND tyyppi IN ('muutostyo') AND alkanut = '" tyon-pvm "';")))
+                                                      AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
+                                                      AND tyyppi IN ('muutostyo') AND lisatieto = '" toteuman-lisatieto "';")))
+        _ (log/debug "määrä ennen lisäystä" maara-ennen-lisaysta)
         res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
+        _ (log/debug "res " res)
         lisatty (first (filter #(and
-                                 (= (:alkanut %) tyon-pvm)
-                                 (= (:lisatieto %) toteuman-lisatieto)) res))]
-    (is (= (:alkanut lisatty) tyon-pvm) "Tallennetun muun työn alkanut pvm")
-    (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
+                                 (= (:lisatieto %) toteuman-lisatieto)) res))
+        _ (log/debug "lisatty " lisatty)]
     (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
+    (is (= (:alkanut lisatty) tyon-pvm) "Tallennetun muun työn alkanut pvm")
+    (is (= (:paattynyt lisatty) tyon-pvm) "Tallennetun muun työn paattynyt pvm")
+    (is (= (:tyyppi lisatty) :muutostyo) "Tallennetun muun työn tyyppi")
+    (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
+    (is (= (get-in lisatty [:tehtava :paivanhinta]) 456.0) "Tallennetun muun työn päivänhinta")
+    (is (= (get-in lisatty [:tehtava :maara]) 2.0) "Tallennetun muun työn määrä")
+    (is (= (get-in lisatty [:tehtava :toimenpidekoodi]) 1368) "Tallennetun muun työn toimenpidekoodi")
+
+    ;; siivotaan lisätyt rivit pois
+    (u
+      (str "DELETE FROM toteuma_tehtava
+                    WHERE toteuma = " (get-in lisatty [:toteuma :id])))
     (u
       (str "DELETE FROM toteuma
-                    WHERE pvm = '" tyon-pvm "' AND lisatieto = '" toteuman-lisatieto "'"))))
+                    WHERE id = "(get-in lisatty [:toteuma :id])))))
+
+
+(deftest tallenna-yksikkohintainen-toteuma-testi
+  (let [tyon-pvm (konv/sql-timestamp (java.util.Date. 105 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
+        hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
+        toteuman-lisatieto "Testikeissin lisätieto4"
+        tyo {:urakka-id @oulun-alueurakan-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
+             :alkanut tyon-pvm :paattynyt tyon-pvm
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi :yksikkohintainen
+             :toteuma-id nil
+             :lisatieto toteuman-lisatieto
+             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        maara-ennen-lisaysta (ffirst (q
+                                       (str "SELECT count(*)
+                                               FROM toteuma
+                                              WHERE urakka = " @oulun-alueurakan-id "
+                                                    AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
+                                                    AND tyyppi IN ('yksikkohintainen') AND lisatieto = '" toteuman-lisatieto "';")))
+        lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat +kayttaja-jvh+ tyo)
+        ;;FIXME: tässä testissä voitaisiin testata myös hakupalvelu, ja varmistaa
+        ;; että määrä lisäyksen jälkeen on yhden suurempi kuin ennen lisäystä
+        #_maara-lisayksen-jalkeen #_(kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :urakan-toteutuneet-tehtavat +kayttaja-jvh+ {:urakka-id @oulun-alueurakan-id
+                                                                                             :sopimus-id @oulun-alueurakan-paasopimuksen-id
+                                                                                             :alkupvm hoitokausi-aloituspvm
+                                                                                             :loppupvm hoitokausi-lopetuspvm
+                                                                                             :tyyppi :yksikkohintainen})]
+    (is (= (get-in lisatty [:toteuma :alkanut]) tyon-pvm) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:toteuma :lisatieto]) toteuman-lisatieto) "Tallennetun työn lisätieto")
+
+    (u
+      (str "DELETE FROM toteuma_tehtava
+                    WHERE toteuma = " (get-in lisatty [:toteuma :toteuma-id]) ";"))
+    (u
+      (str "DELETE FROM toteuma
+                    WHERE id = "(get-in lisatty [:toteuma :toteuma-id])))))
