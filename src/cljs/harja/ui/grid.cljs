@@ -637,6 +637,7 @@ Optiot on mappi optioita:
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
+  :voi-poistaa?    funktio, joka palauttaa true tai false.
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   "

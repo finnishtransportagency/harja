@@ -153,7 +153,9 @@
           toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
-          {:otsikko "Päällystystoimenpiteen tiedot"}
+          {:otsikko "Päällystystoimenpiteen tiedot"
+           :voi-lisata? false
+           :voi-poistaa? (constantly false)}
           [{:otsikko "Päällystetyyppi" :nimi :paallystetyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
            {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
            {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%"}
