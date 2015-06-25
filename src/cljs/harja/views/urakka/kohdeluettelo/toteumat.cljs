@@ -217,17 +217,17 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"}
-          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
-           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
-           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
-           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string}
+          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
+           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%"}
+           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string :pituus-max 256}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
-           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
+           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string :pituus-max 256}]
           kiviaines]
 
          [grid/muokkaus-grid
           {:otsikko "Alustalle tehdyt toimet"}
-          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%"}
+          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%" :pituus-max 256}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
@@ -265,7 +265,7 @@
             :valinta-nayta #(if % (pot/+paallystystyon-tyyppi+->string %) "- Valitse päällyste -")
             :valinnat      pot/+paallystystyon-tyyppi+
             :leveys "30%"}
-           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%"} ; FIXME Mistä saadaan?
+           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256} ; FIXME Mistä saadaan?
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
