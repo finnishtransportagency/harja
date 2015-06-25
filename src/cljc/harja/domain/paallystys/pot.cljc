@@ -120,16 +120,17 @@
   "Kaistavalinta koodilla"
   (apply s/enum (map :koodi +kaistat+)))
 
-(defn +paallystystyon-tyyppi+->string [tyyppi-enum]
-  (case tyyppi-enum
-    :ajoradan-paallyste "Ajoradan päällyste"
-    :pienaluetyot "Pienaluetyöt"
-    :tasaukset "Tasaukset"
-    :jyrsinnat "Jyrsinnät"
-    :muut "Muut"
-    "-"))
+(def +paallystystyon-tyypit+
+  "Päällystystyön tyypit"
+  [{:avain :ajoradan-paallyste :nimi "Ajoradan päällyste"}
+   {:avain :pienaluetyot :nimi "Pienaluetyöt"}
+   {:avain :tasaukset :nimi "Tasaukset"}
+   {:avain :jyrsinnat :nimi "Jyrsinnät"}
+   {:avain :muut :nimi "Muut"}])
 
-(def +paallystystyon-tyyppi+ (s/enum :ajoradan-paallyste :pienaluetyot :tasaukset :jyrsinnat :muut))
+(def +paallystystyon-tyyppi+
+  "Päällystystyön valinta avaimella"
+  (apply s/enum (map :avain +paallystystyon-tyypit+)))
 
 (def +paallystysilmoitus+
   {:kohde s/Int      ;; viittaus kohteeseen

@@ -298,9 +298,9 @@
           [{:otsikko       "Ajoradan päällyste" ; FIXME Miten enumeja käytetään pudotusvalikossa?
             :nimi          :tyyppi
             :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (pot/+paallystystyon-tyyppi+->string %) "- Valitse päällyste -")
-            :valinnat      pot/+paallystystyon-tyyppi+
+            :valinta-arvo  :avain
+            :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+            :valinnat      pot/+paallystystyon-tyypit+
             :leveys "30%"}
            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256} ; FIXME Mistä saadaan?
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
