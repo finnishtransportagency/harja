@@ -117,11 +117,11 @@
 
 (defn paallystysilmoituslomake
   []
-  (let [toteutuneet-osoitteet (atom (zipmap (iterate inc 1) (:osoitteet @lomakedata)))
-        paallystystoimenpide (atom (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)))
-        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (:alustatoimet @lomakedata)))
-        toteutuneet-maarat (atom (zipmap (iterate inc 1) (:tyot @lomakedata)))
-        kiviaines (atom (zipmap (iterate inc 1) (:kiviaines @lomakedata)))]
+  (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
+        paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
+        alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
+        toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
+        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))]
 
     (komp/luo
       (fn [ur]
@@ -162,12 +162,12 @@
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"}
           [{:otsikko "Esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
-           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :numero :leveys "20%"}
-           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :numero :leveys "20%"}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
+           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
            ; FIXME Otsikointi?
-           {:otsikko "Tyyppi" :nimi :tyyppi :leveys "20%" :tyyppi :numero} ; FIXME Miten nämä haetaan?
-           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :string}
-           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :numero}]
+           {:otsikko "Tyyppi" :nimi :tyyppi :leveys "20%" :tyyppi :string} ; FIXME Miten nämä haetaan?
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
+           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
           kiviaines]
 
          [grid/muokkaus-grid
