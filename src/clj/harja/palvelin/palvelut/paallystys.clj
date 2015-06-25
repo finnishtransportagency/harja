@@ -12,7 +12,8 @@
             [harja.kyselyt.paallystys :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
 
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]))
+            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [cheshire.core :as cheshire]))
 
 (def muunna-desimaaliluvut-xf
   (map #(-> %
@@ -28,6 +29,11 @@
                       (or (some-> % :muutoshinta double) 0))
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
+
+(def jsonb->clojuremap
+  (map #(-> %
+            (assoc-in [:ilmoitustiedot]
+                      (or (some-> % :ilmoitustiedot (cheshire/decode (:ilmoitustiedot %))) "")))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -60,10 +66,18 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      muunna-desimaaliluvut-xf
+                      jsonb->clojuremap  ; FIXME Ei toimi
                       (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
+
+(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallytyskohde-id lomakedata]}]
+  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
+  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Onko rooli oikein?
+  ; FIXME Vaadi skeema
+  (let [muutoshinta 0] ; FIXME Laske lomakedatasta tämä
+    ; FIXME Kanta ei huoli JSON-stringiä vaikka normaalisti huolii?
+    (q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/generate-string lomakedata) muutoshinta (:id user))))
 
 (defrecord Paallystys []
   component/Lifecycle
@@ -82,6 +96,9 @@
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystysilmoitus
+                        (fn [user tiedot]
+                          (tallenna-paallystysilmoitus db user tiedot)))
       this))
 
   (stop [this]

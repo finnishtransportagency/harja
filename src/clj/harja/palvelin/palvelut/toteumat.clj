@@ -141,7 +141,7 @@
         (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
       id)))
 
-(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat ; FIXME Tallenna luoja, muokattu & muokkaaja
+(defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
   [db user toteuma]
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus (:urakka toteuma))
@@ -162,7 +162,7 @@
                               {:toteuma (assoc toteuma :toteuma-id id)
                                :tehtavien-summat paivitetyt-summat})))
 
-(defn paivita-yk-hint-toiden-tehtavat  ; FIXME Tallenna muokattu & muokkaajja
+(defn paivita-yk-hint-toiden-tehtavat
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
   (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)

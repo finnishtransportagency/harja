@@ -138,7 +138,8 @@
         paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
         alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
         toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
-        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))]
+        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
+        valmis-tallennettavaksi? (reaction true)] ; FIXME Validointi kun muokkaus ja tallennus muuten ok
 
     (komp/luo
       (fn [ur]
@@ -274,7 +275,16 @@
 
          (yhteenveto)
 
-         [:button.nappi-ensisijainen.laheta-paallystysilmoitus {:on-click #(do (.preventDefault %))} "Lähetä ilmoitus"]
+         [harja.ui.napit/palvelinkutsu-nappi
+          "Lähetä ilmoitus"
+          #(let [urakka-id (:id @nav/valittu-urakka)
+                 [sopimus-id _] @u/valittu-sopimusnumero]
+            (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id @lomakedata))
+          {:luokka "nappi-ensisijainen"
+           :disabled (false? @valmis-tallennettavaksi?)
+           :kun-onnistuu (fn [vastaus]
+                           (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
+                           (reset! lomakedata nil))}]
 
          ]))))
 
