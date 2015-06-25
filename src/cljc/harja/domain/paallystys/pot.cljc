@@ -139,10 +139,11 @@
                    :raekoko s/Int
                    :massa s/Num ;; kg/m2
                    :rc% s/Int 
-                   :tyomenetelma s/Int ;; koodisto "työmenetelmä" FIXME: tai skeemalla
+                   :tyomenetelma +tyomenetelmat+ ;; koodisto "työmenetelmä"
                    :leveys s/Num  ;; metriä, esim. 4,2
                    :massamaara s/Num ;; tonnia
-                   :edellinen-paallystetyyppi s/Int ;; koodisto FIXME: tai skeemalla
+                   :pinta-ala s/Num ;; m2
+                   :edellinen-paallystetyyppi +paallystetyyppi+
                   }]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)

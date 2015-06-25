@@ -55,6 +55,7 @@
                    :leveys                    6.5
                    :massamaara                1781
                    :edellinen-paallystetyyppi 12
+                   :pinta-ala                 15
                    }
                   {:paallystetyyppi           21
                    :raekoko                   10
@@ -64,6 +65,7 @@
                    :leveys                    4
                    :massamaara                1345
                    :edellinen-paallystetyyppi 11
+                   :pinta-ala                 9
                    }]
 
    :kiviaines    [{:esiintyma "KAM Leppäsenoja"
@@ -168,22 +170,40 @@
            {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero}
            {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))}] ; FIXME Onko oikein laskettu?
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}] ; FIXME Onko oikein laskettu?
           toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
            :voi-lisata? false
            :voi-poistaa? (constantly false)}
-          [{:otsikko "Päällystetyyppi" :nimi :paallystetyyppi :tyyppi :string :leveys "20%"} ; FIXME Pudotusvalikko
+          [{:otsikko       "Päällyste"
+            :nimi          :paallystetyyppi
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+            :valinnat      pot/+paallystetyypit+
+            :leveys "30%"}
            {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
            {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%"}
            {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
-           {:otsikko "Pääll.työmenetelmä" :nimi :tyomenetelma :leveys "20%" :tyyppi :string} ; FIXME Pudotusvalikko
+           {:otsikko       "Pääl. työmenetelmä"
+            :nimi          :tyomenetelma
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse menetelmä -")
+            :valinnat      pot/+tyomenetelmat+
+            :leveys "30%"}
            {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero}
-           {:otsikko "Massamäärä (mt)" :nimi :massamaara :leveys "10%" :tyyppi :numero}
+           {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero}
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero}
-           {:otsikko "Edellinen päällyste" :nimi :edellinen-paallystettyyppi :leveys "20%" :tyyppi :string}] ; FIXME Pudostusvalikko
+           {:otsikko       "Edellinen päällyste"
+            :nimi          :edellinen-paallystetyyppi
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+            :valinnat      pot/+paallystetyypit+
+            :leveys "30%"}]
           paallystystoimenpide]
 
          [grid/muokkaus-grid
