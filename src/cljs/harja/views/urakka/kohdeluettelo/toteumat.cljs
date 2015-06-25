@@ -80,7 +80,7 @@
                    :let 4785
                    :kasittelymenetelma  13
                    :paksuus             30
-                   :verkkotyyppi        2
+                   :verkkotyyppi        1
                    :tekninen-toimenpide 2
                    }]
 
@@ -207,11 +207,11 @@
           paallystystoimenpide]
 
          [grid/muokkaus-grid
-          {:otsikko "Kiviaines ja sideaine"}
+          {:otsikko "Kiviaines ja sideaine"} ; FIXME Miten nämä saadaan mapista?
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :leveys "20%"}
-           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string} ; FIXME Pudostusvalikko
+           {:otsikko "Sideaine-tyyppi" :nimi :tyyppi :leveys "30%" :tyyppi :string}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
            {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string}]
           kiviaines]
@@ -222,11 +222,30 @@
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
-           {:otsikko "Pituus" :nimi :pituus :leveys "10%" :tyyppi :string}
-           {:otsikko "Käsittelymenetelmä" :nimi :kasittelymenetelma :leveys "20%" :tyyppi :numero} ; FIXME Pudostusvalikko
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))} ; FIXME Onko oikein laskettu?
+           {:otsikko       "Käsittelymenetelmä"
+            :nimi          :kasittelymenetelma
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse menetelmä -")
+            :valinnat      pot/+alustamenetelmat+
+            :leveys "30%"}
            {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero}
-           {:otsikko "Tekn. tp." :nimi :tekninen-toimenpide :leveys "20%" :tyyppi :numero}] ; FIXME Pudostusvalikko
-          alustalle-tehdyt-toimet]
+           {:otsikko       "Verkkotyyppi"
+            :nimi          :verkkotyyppi
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
+            :valinnat      pot/+verkkotyypit+
+            :leveys "30%"}
+           {:otsikko       "Tekninen toimenpide"
+            :nimi          :tekninen-toimenpide
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
+            :valinnat      pot/+tekniset-toimenpiteet+
+            :leveys "30%"}]
+        alustalle-tehdyt-toimet]
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"}
