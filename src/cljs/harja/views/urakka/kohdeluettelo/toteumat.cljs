@@ -181,11 +181,11 @@
 
          (kohteen-tiedot)
 
+         ; TODO Nice to have: Lisää rivi -nappi voisi esitäyttää tienumeron ekalta riviltä (jos sellainen on). Miten?
          [grid/muokkaus-grid
           {:otsikko  "Alikohteet"
            :tunniste :tie}
-          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%"} ; TODO Nice to have: Lisää rivi -nappi voisi esitäyttää tienumeron ekalta riviltä (jos sellainen on). Miten?
-                                                                      ; FIXME Lisää rivi myös päällystystoimenpiteen tiedot -gridiin. Miten?
+          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]}
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
