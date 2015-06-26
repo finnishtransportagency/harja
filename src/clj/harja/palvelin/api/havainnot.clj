@@ -7,8 +7,10 @@
             [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.api.tyokalut.validointi :as validointi]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.havainnot :as qh]
             [clojure.java.jdbc :as jdbc])
+  (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-virhevastaus []
@@ -18,14 +20,37 @@
   (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn tallenna-havainto [db urakka-id data]
-  ;; fixme: nämä pois
-  (log/debug "Data on:" data)
+(defn parsi-aika [paivamaara]
+  (konversio/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
 
-  (jdbc/with-db-transaction [transaktio db]
-                            ;; fixme: täytyä oikeat arvot
-                            (qh/luo-havainto<! db urakka-id nil nil nil true nil nil nil nil nil nil nil nil nil ))
-  true)
+(defn tallenna-havainto [db urakka-id data]
+  (let [{:keys [sijainti kuvaus kommentit kirjaaja otsikko kohde liitteet paivamaara]} data
+        tie (:tie sijainti)
+        koordinaatit (:koodinaatit sijainti)]
+
+    ;; todo: päättele luoja / päivittäjä
+    ;; todo: hanskaa liitteet
+    ;; todo: tallenna kommentit
+    ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
+
+    (jdbc/with-db-transaction [transaktio db]
+                              ;; fixme: täytyä oikeat arvot
+                              (qh/luo-havainto<! db
+                                                 urakka-id
+                                                 (parsi-aika paivamaara)
+                                                 "urakoitsija"
+                                                 kohde
+                                                 true
+                                                 nil
+                                                 kuvaus
+                                                 (:x koordinaatit)
+                                                 (:y koordinaatit)
+                                                 (:numero tie)
+                                                 (:aosa tie)
+                                                 (:losa tie)
+                                                 (:aet tie)
+                                                 (:let tie)))
+    true))
 
 (defn kirjaa-havainto [db {id :id} data]
   (let [urakka-id (read-string id)]
