@@ -80,7 +80,7 @@
   [urakka atomi]
   "Tätä funktiota käytetään, kun materiaalitoteuman tietoja muutetaan suoraan pääsivulla,
   kun vetolaatikko on aukaistu. Parametrina saatava atomi sisältää vetolaatikossa näytettävät tiedot,
-  ja se päivitetään kun tallennus on saatu tehtyä - eli joudutaan tekemään kaksi kyselyä."
+  ja se päivitetään kun tallennus on saatu tehtyä."
   (fn [materiaalit]
     (let [toteumamateriaalit (into []
                                    (comp
@@ -100,7 +100,15 @@
                                                                           (first @u/valittu-sopimusnumero)))]
             (log (pr-str tulos))
             (reset! urakan-materiaalin-kaytot tulos)
-            (reset! atomi materiaalit))))))
+            (log "Atomin sisältö: " (pr-str @atomi))
+            (log "Muutokset: " (pr-str materiaalit))
+            ;(concat (filter (fn [kartta] (nil? (some (fn [uusi-id] (= (:tmid kartta) uusi-id)) (map :tmid uusi)))) vanha) uusi)
+            (reset!
+              atomi
+              (sort-by
+                #(:alkanut (:toteuma %))
+                pvm/ennen?
+                (concat (filter (fn [kartta] (nil? (some (fn [uusi-id] (= (:tmid kartta) uusi-id)) (map :tmid materiaalit)))) @atomi) materiaalit))))))))
 
 (defn materiaalit-ja-maarat
   [materiaalit-atom virheet-atom koneen-lisaama?]
