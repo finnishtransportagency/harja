@@ -265,7 +265,7 @@
              {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "10%"}
              {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
               :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "45%"}
+             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "45%" :pituus-max 1024}
              {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
              ]
             @valitut-kustannukset
