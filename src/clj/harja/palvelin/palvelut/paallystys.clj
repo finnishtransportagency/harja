@@ -8,12 +8,14 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
+            [harja.domain.paallystys.pot :as pot]
 
             [harja.kyselyt.paallystys :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.domain.skeema :as skeema]))
 
 (def muunna-desimaaliluvut-xf
   (map #(-> %
@@ -81,11 +83,11 @@
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallytyskohde-id lomakedata]}]
   (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Onko rooli oikein?
-  ; FIXME Vaadi skeema
-  (let [muutoshinta 0] ; FIXME Laske lomakedatasta tämä
-    ; FIXME Kanta ei huoli JSON-stringiä vaikka normaalisti huolii?
-    ;(q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/encode lomakedata) muutoshinta (:id user))))
-    ))
+  (skeema/validoi lomakedata pot/+paallystysilmoitus+)
+  (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))]
+    (log/debug "Muutoshinta " muutoshinta)
+    ;FIXME Kanta ei huoli JSON-stringiä vaikka normaalisti huolii?
+    (q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/encode lomakedata) muutoshinta (:id user))))
 
 (defrecord Paallystys []
   component/Lifecycle
@@ -103,9 +105,11 @@
                           (hae-urakan-paallystystoteumat db user tiedot)))
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
                         (fn [user tiedot]
+                          (log/debug "Vastaanotettu pyyntö: Hae päällystysilmoitus päällystyskohteella")
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
+                          (log/debug "Vastaanotettu pyyntö: päällystysilmoituksen tallennus")
                           (tallenna-paallystysilmoitus db user tiedot)))
       this))
 

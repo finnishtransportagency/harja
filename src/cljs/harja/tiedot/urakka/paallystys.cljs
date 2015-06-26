@@ -32,8 +32,8 @@
 
 (defn tallenna-paallystysilmoitus [urakka-id sopimus-id lomakedata]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
-                                                           :sopimus-id sopimus-id
-                                                           :lomakedata lomakedata}))
+                                         :sopimus-id sopimus-id
+                                         :lomakedata lomakedata}))
 
 (defonce paallystyskohteet (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
