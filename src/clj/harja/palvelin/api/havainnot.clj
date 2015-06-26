@@ -8,55 +8,70 @@
             [harja.palvelin.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.havainnot :as qh]
+            [harja.kyselyt.havainnot :as havainnot]
+            [harja.kyselyt.kommentit :as kommentit]
             [clojure.java.jdbc :as jdbc])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn parsi-aika [paivamaara]
+  (konversio/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
+
 (defn tee-virhevastaus []
+  ;; todo: toteuta
   )
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn parsi-aika [paivamaara]
-  (konversio/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
-
 (defn tallenna-havainto [db urakka-id data]
-  (let [{:keys [sijainti kuvaus kommentit kirjaaja otsikko kohde liitteet paivamaara]} data
+
+  ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
+  ;; todo: selvitä tarviiko kirjaajaa tallentaa
+  ;; fixme: sijaintipisteen tallennus ei toimi jostain syystä
+  ;; todo: päättele luoja / päivittäjä
+
+  (let [{:keys [sijainti kuvaus kirjaaja otsikko kohde liitteet paivamaara]} data
         tie (:tie sijainti)
-        koordinaatit (:koodinaatit sijainti)]
+        koordinaatit (:koodinaatit sijainti)
+        havainto (havainnot/luo-havainto<! db
+                                           urakka-id
+                                           (parsi-aika paivamaara)
+                                           "urakoitsija"
+                                           kohde
+                                           true
+                                           nil
+                                           kuvaus
+                                           (:x koordinaatit)
+                                           (:y koordinaatit)
+                                           (:numero tie)
+                                           (:aosa tie)
+                                           (:losa tie)
+                                           (:aet tie)
+                                           (:let tie))]
+    (:id havainto)))
 
-    ;; todo: päättele luoja / päivittäjä
-    ;; todo: hanskaa liitteet
-    ;; todo: tallenna kommentit
-    ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
+(defn tallenna-kommentit [db havainto-id kommentit]
+  (doseq [kommentti kommentit]
+    ;; fixme: tallenna loput arvot
+    (let [kommentti (kommentit/luo-kommentti<! db nil (:kommentti kommentti) nil nil)
+          kommentti-id (:id kommentti)]
+      (havainnot/liita-kommentti<! db havainto-id kommentti-id))))
 
-    (jdbc/with-db-transaction [transaktio db]
-                              ;; fixme: täytyä oikeat arvot
-                              (qh/luo-havainto<! db
-                                                 urakka-id
-                                                 (parsi-aika paivamaara)
-                                                 "urakoitsija"
-                                                 kohde
-                                                 true
-                                                 nil
-                                                 kuvaus
-                                                 (:x koordinaatit)
-                                                 (:y koordinaatit)
-                                                 (:numero tie)
-                                                 (:aosa tie)
-                                                 (:losa tie)
-                                                 (:aet tie)
-                                                 (:let tie)))
-    true))
+(defn tallenna [db urakka-id data]
+  (jdbc/with-db-transaction [transaktio db]
+                            (let [havainto-id (tallenna-havainto transaktio urakka-id data)]
+                              (tallenna-kommentit transaktio havainto-id (:kommentit data))
+                              ;; todo: hanskaa liitteet
+                              ))
+  true)
 
 (defn kirjaa-havainto [db {id :id} data]
   (let [urakka-id (read-string id)]
     (log/debug "Kirjataan uusi havainto urakalle id:" urakka-id)
     (validointi/tarkista-urakka db urakka-id)
-    (let [kirjaus-onnistunut? (tallenna-havainto db urakka-id data)]
+    (let [kirjaus-onnistunut? (tallenna db urakka-id data)]
       (if kirjaus-onnistunut?
         (tee-onnistunut-vastaus)
         (tee-virhevastaus)))))
