@@ -30,6 +30,18 @@
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 
+
+(def jsonb->clojuremap
+  (map #(-> %
+            (assoc-in [:ilmoitustiedot]
+                      (let [ilmoitustiedot (:ilmoitustiedot %)]
+                        (log/debug "Ilmoitustiedot on:" ilmoitustiedot)
+                        (or ilmoitustiedot
+                              (let [json (.getValue ilmoitustiedot)] ; FIXME Tämä kaatuu jostain kummasta syystä :(
+                                (log/debug "JSON on:" json)
+                                (cheshire/decode json))
+                            ""))))))
+
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -61,6 +73,7 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
+                      jsonb->clojuremap
                       (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
