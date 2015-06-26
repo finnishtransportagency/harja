@@ -31,7 +31,7 @@
                  :tuotenumero          111})
 
 (deftest tarkista-kustannussuunnitelman-validius
-  (let [maksuera (html (kustannussuunnitelma/muodosta-kustannussuunnitelma-xml +maksuera+))
+  (let [maksuera (html (kustannussuunnitelma/muodosta-kustannussuunnitelma-sanoma +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 

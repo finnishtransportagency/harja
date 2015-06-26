@@ -9,10 +9,14 @@
             [harja.palvelin.integraatiot.sampo.kustannussuunnitelma :as kustannussuunitelma]
             [harja.palvelin.integraatiot.sampo.kuittaus :as kuittaus]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.core :as t]))
+            [hiccup.core :refer [html]]
+            [clj-time.core :as t]
+            [harja.tyokalut.xml :as xml]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
+
+(def +xsd-polku+ "test/xsd/sampo/outbound/")
 
 (defn hae-maksuera [db numero]
   (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero))))
@@ -22,6 +26,9 @@
 
 (defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
   (:maksuera (first (qk/hae-maksuera-lahetys-idlla db lahetys-id))))
+
+(defn tee-xml-sanoma [sisalto]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn lukitse-maksuera [db numero]
   (let [lukko (str (java.util.UUID/randomUUID))]
@@ -62,15 +69,19 @@
 (defn muodosta-maksuera [db numero]
   (if (lukitse-maksuera db numero)
     (let [maksueran-tiedot (hae-maksuera db numero)
-          maksuera-xml (maksuera/muodosta-maksuera-xml maksueran-tiedot)]
-      maksuera-xml)
+          maksuera-xml (tee-xml-sanoma (maksuera/muodosta-maksuera-sanoma maksueran-tiedot))]
+      (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
+        maksuera-xml
+        nil))
     nil))
 
 (defn muodosta-kustannussuunnitelma [db numero]
   (if (lukitse-kustannussuunnitelma db numero)
     (let [maksueran-tiedot (hae-maksuera db numero)
-          kustannussuunnitelma-xml (kustannussuunitelma/muodosta-kustannussuunnitelma-xml maksueran-tiedot)]
-      kustannussuunnitelma-xml)
+          kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma/muodosta-kustannussuunnitelma-sanoma maksueran-tiedot))]
+      (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
+        kustannussuunnitelma-xml
+        nil))
     nil))
 
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
@@ -174,5 +185,5 @@
   (laheta-maksuera-sampoon [this numero]
     (let [maksueran-lahetys (laheta-maksuera (:sonja this) (:db this) lahetysjono-ulos numero)
           kustannussuunnitelman-lahetys (laheta-kustannussuunitelma (:sonja this) (:db this) lahetysjono-ulos numero)]
-      {:maksuera             maksueran-lahetys 
-       :kustannussuunnitelma  kustannussuunnitelman-lahetys})))
+      {:maksuera             maksueran-lahetys
+       :kustannussuunnitelma kustannussuunnitelman-lahetys})))

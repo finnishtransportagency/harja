@@ -50,7 +50,7 @@
           (log/error viesti)
           (throw (RuntimeException. viesti)))))))
 
-(defn muodosta-kustannussuunnitelma-xml [maksuera]
+(defn muodosta-kustannussuunnitelma-sanoma [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
         {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
         tuotenumero (:tuotenumero maksuera)
@@ -69,9 +69,9 @@
         :periodType     "ANNUALLY"
         :investmentType "PRODUCT"
         :investmentCode maksueranumero
-        :name           (:nimi (:maksuera maksuera))
-        :code           kustannussuunnitelmanumero
-        :isPlanOfRecord "true"}
+        :name           (apply str (take 80 (:nimi (:maksuera maksuera))))
+                               :code kustannussuunnitelmanumero
+                               :isPlanOfRecord "true"}
        [:Description ""]
        [:GroupingAttributes
         [:GroupingAttribute "role_id"]

@@ -24,27 +24,29 @@
                                        :loppupvm      (parsi-paivamaara "1.1.2017")
                                        :vastuuhenkilo "A009717"
                                        :talousosasto  "talousosasto"
-                                       :tuotepolku    "polku/tuote"}
+                                       :talousosastopolku  "polku/talousosasto"
+                                       :tuotepolku    "polku/tuote"
+                                       :sampoid       "SAMPOID"}
                  :urakka              {:sampoid "PR00020606"}
                  :sopimus             {:sampoid "00LZM-0033600"}})
 
 (deftest tarkista-maksueran-validius
-  (let [maksuera (html (maksuera/muodosta-maksuera-xml +maksuera+))
+  (let [maksuera (html (maksuera/muodosta-maksuera-sanoma +maksuera+))
         xsd "nikuxog_product.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-maksueran-sisalto
-  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera/muodosta-maksuera-xml +maksuera+)) "UTF-8"))))]
+  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera/muodosta-maksuera-sanoma +maksuera+)) "UTF-8"))))]
     (is (= "2015-12-12T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-01-01T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
     (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product (z/attr :name))))
     (is (= "HA123456789" (z/xml1-> maksuera-xml :Products :Product (z/attr :objectID))))
-    (is (= "PR00020606" (z/xml1-> maksuera-xml :Products :Product :InvestmentAssociations :Allocations :ParentInvestment (z/attr :InvestmentID))))
+    (is (= "SAMPOID" (z/xml1-> maksuera-xml :Products :Product :InvestmentAssociations :Allocations :ParentInvestment (z/attr :InvestmentID))))
     (is (= "kulu2015" (z/xml1-> maksuera-xml :Products :Product :InvestmentResources :Resource (z/attr :resourceID))))
     (is (= "kulu2015" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task :Assignments :TaskLabor (z/attr :resourceID))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task (z/attr :name))))
-    (is (= "polku/tuote" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "LiiviKP") (z/attr :unitPath))))
+    (is (= "polku/talousosasto" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "LiiviKP") (z/attr :unitPath))))
     (is (= "polku/tuote" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "tuote2013") (z/attr :unitPath))))
     (is (= "00LZM-0033600" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_tilaus") z/text)))
     (is (= "2" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_me_type") z/text)))

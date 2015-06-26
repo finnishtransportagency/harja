@@ -1,5 +1,6 @@
 (ns harja.tyokalut.xml
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [taoensso.timbre :as log])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -11,6 +12,7 @@
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
   String, joka on sisältö."
   [xsd-polku xsd xml]
+  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisätö on:" xml)
   (let
     [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
 
@@ -32,5 +34,5 @@
              (.validate (StreamSource. (ByteArrayInputStream. (.getBytes xml)))))
          true
          (catch SAXParseException e
-           (println "Invalidi XML: " e)
+           (log/error "Invalidi XML: " e)
            false))))

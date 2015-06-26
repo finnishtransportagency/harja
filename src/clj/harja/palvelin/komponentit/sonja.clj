@@ -26,7 +26,7 @@
 ;; (def m (.receive c))
 
 
-(defprotocol Sonja 
+(defprotocol Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
     "Lisää uuden kuuntelijan annetulle jonolle. Jos jonolla on monta kuuntelijaa, viestit välitetään jokaiselle kuuntelijalle.
 Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blokkaa käsittelyn ajan, joten samasta jonosta voidaan lukea vain yksi viesti kerrallaan. Jos käsittelijä haluaa tehdä jotain pitkäaikaista, täytyy sen hoitaa se uudessa säikeessä.")
@@ -40,7 +40,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
               (doto (QueueConnectionFactory. url)
                 (.setFaultTolerant true)
                 (.setFaultTolerantReconnectTimeout (int 30))))
-        conn (.createConnection qcf  kayttaja salasana)]
+        conn (.createConnection qcf kayttaja salasana)]
     (.start conn)
     conn))
 
@@ -51,7 +51,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (let [jono (.createQueue istunto jonon-nimi)
         consumer (.createConsumer istunto jono)]
     (thread
-      (try 
+      (try
         (loop [v (.receive consumer)]
           (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
           (try
@@ -71,9 +71,9 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (let [q (.createQueue istunto jonon-nimi)]
       (swap! jonot assoc-in [jonon-nimi :queue] q)
       q)))
-    
+
 (defn- varmista-producer
-  "Varmistaa, että nimetylle jonolle on luotu producer viestien lähettämistä varten. Palauttaa producerin." 
+  "Varmistaa, että nimetylle jonolle on luotu producer viestien lähettämistä varten. Palauttaa producerin."
   [istunto jonot jonon-nimi]
   (if-let [producer (get-in @jonot [jonon-nimi :producer])]
     producer
@@ -93,12 +93,10 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (.setText s)))
 
   clojure.lang.PersistentVector
-  (luo-viesti [hiccup istunto]
-    (luo-viesti (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                     (html hiccup))
-                istunto)))
-  
-    
+  (luo-viesti [viesti istunto]
+    (luo-viesti viesti istunto)))
+
+
 (defrecord SonjaYhteys [asetukset istunto yhteys jonot]
   component/Lifecycle
   (start [this]
@@ -120,7 +118,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       :yhteys nil
       :istunto nil
       :jonot nil))
-  
+
   Sonja
   (kuuntele [{:keys [istunto jonot]} jonon-nimi kuuntelija-fn]
     (let [jono (get @jonot jonon-nimi)]
@@ -132,15 +130,15 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
         (do (log/info "Ensimmäinen kuuntelija jonolle " jonon-nimi ", luodaan consumer.")
             (let [consumer (jonon-kuuntelija istunto jonon-nimi
                                              #(doseq [k (get-in @jonot [jonon-nimi :kuuntelijat])]
-                                                (k %)))]
+                                               (k %)))]
               (swap! jonot update-in [jonon-nimi] assoc
                      :consumer consumer
                      :kuuntelijat #{kuuntelija-fn}))))
       ;; palauta funktio, jolla kuuntelu voidaan lopettaa
       #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn)))
-  
+
   (laheta [{:keys [istunto jonot]} jonon-nimi viesti]
-    (try 
+    (try
       (let [producer (varmista-producer istunto jonot jonon-nimi)
             msg (luo-viesti viesti istunto)]
         (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
@@ -149,8 +147,8 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 
       (catch Exception e
         (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
-    
-    
+
+
 (defn luo-sonja [asetukset]
   (if (and asetukset (not (str/blank? (:url asetukset))))
     (->SonjaYhteys asetukset nil nil nil)
@@ -158,7 +156,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       component/Lifecycle
       (start [this] this)
       (stop [this] this)
-      
+
       Sonja
       (kuuntele [this jonon-nimi kuuntelija-fn]
         (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
@@ -166,7 +164,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (laheta [this jonon-nimi viesti]
         (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
         (str "ID:" (System/currentTimeMillis))))))
-  
+
 
 ;;(def +sampo-to-harja+ "Harja13-16.SampoToHarja.Msg") ;; SAMPO -> Harja (SAMPOn hankkeet,urakat, jne)
 ;;(def +sampo-to-harja-ack+ "Harja13-16.HarjaToSampo.Ack") ;; Harjan vastausviestit edellisiin

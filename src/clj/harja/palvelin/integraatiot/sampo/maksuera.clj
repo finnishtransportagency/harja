@@ -37,8 +37,8 @@
     "akillinen-hoitotyo" 10
     99))
 
-(defn muodosta-maksuera-xml [maksuera]
-  (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto tuotepolku]} (:toimenpideinstanssi maksuera)
+(defn muodosta-maksuera-sanoma [maksuera]
+  (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
         instance-code (muodosta-instance-code (:numero maksuera))]
@@ -46,7 +46,7 @@
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
-      [:Product {:name                  (or (:nimi (:maksuera maksuera)) "N/A")
+      [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
                  :start                 (formatoi-paivamaara alkupvm)
                  :finish                (formatoi-paivamaara loppupvm)
@@ -59,7 +59,7 @@
         [:Allocations
          [:ParentInvestment {:defaultAllocationPercent "1.0"
                              :InvestmentType           "project"
-                             :InvestmentID             (:sampoid (:urakka maksuera))}]]]
+                             :InvestmentID             sampoid}]]]
        [:InvestmentResources
         [:Resource {:resourceID kulu-id}]]
        [:InvestmentTasks
@@ -69,7 +69,7 @@
          [:Assignments
           [:TaskLabor {:resourceID kulu-id}]]]]
        [:OBSAssocs {:completed "false"}
-        [:OBSAssoc#LiiviKP {:unitPath tuotepolku
+        [:OBSAssoc#LiiviKP {:unitPath talousosastopolku
                             :name     "Kustannuspaikat"}]
         [:OBSAssoc#LiiviSIJ {:unitPath "/Kirjanpito"
                              :name     "Sijainti"}]
