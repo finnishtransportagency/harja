@@ -24,7 +24,7 @@ SELECT
   pk.nimi,
   pk.kohdenumero
 FROM paallystysilmoitus
-JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
+RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
 AND pk.urakka = :urakka
 AND pk.sopimus = :sopimus
 WHERE poistettu IS NOT TRUE;

@@ -71,14 +71,14 @@
            :tunniste :kohdenumero}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
-           {:otsikko "Kohde" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "15%"}
+           {:otsikko "Kohde" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "25%"}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                 (:lisatyot rivi) ; FIXME Lisätyöiden hinta tulee nyt muualta?
+                                                                                                                 (:lisatyot rivi) ; FIXME Lasketaanko lisätöitä enää tähän? Lisätyöiden hinta tulee nyt muualta?
                                                                                                                  (:muutostyot rivi)
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)

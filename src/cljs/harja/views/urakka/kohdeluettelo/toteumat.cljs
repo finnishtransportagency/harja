@@ -320,28 +320,25 @@
     (komp/luo
       (fn []
         [:div
-
-         [:button.nappi-ensisijainen {:on-click
-                                      ;(reset! lomakedata {}) ; FIXME Käytä tätä kun testidataa ei tarvita
-                                      #(reset! lomakedata lomaketestidata)
-                                      }
-          (ikonit/plus-sign) " Lisää päällystysilmoitus"]
-
          [grid/grid
           {:otsikko  "Toteumat"
            :tyhja    (if (nil? @paallystys/paallystystoteumat) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi] (if (:tila rivi) (:tila rivi) "-"))}
            {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-            :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click #(go
+            :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                         (let [urakka-id (:id @nav/valittu-urakka)
                                                                                               [sopimus-id _] @u/valittu-sopimusnumero
                                                                                               ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
-                                     (ikonit/eye-open) " Päällystysilmoitus"])}]
-          @paallystys/paallystystoteumat]]))))
+                                                      [:span (ikonit/eye-open) " Päällystysilmoitus"]]
+                                                     [:button.nappi-toissijainen.nappi-grid {:on-click   ;(reset! lomakedata {}) ; FIXME Käytä tätä kun testidataa ei tarvita
+                                                                                                         #(reset! lomakedata lomaketestidata
+                                                                                                                  )}
+                                                      [:span " Tee päällystysilmoitus"]]))}]
+          (sort (fn [toteuma] (if (:tila toteuma) 0 1)) @paallystys/paallystystoteumat)]]))))
 
 (defn toteumat []
   (if @lomakedata
