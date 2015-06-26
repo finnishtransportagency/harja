@@ -103,12 +103,13 @@
             (reset! atomi materiaalit))))))
 
 (defn materiaalit-ja-maarat
-  [materiaalit-atom virheet-atom]
+  [materiaalit-atom virheet-atom koneen-lisaama?]
 
 
   (log "Materiaalit-ja-maarat, tiedot: " (pr-str @materiaalit-atom))
   (log "Materiaalikoodit:" (pr-str @materiaalikoodit))
 
+  ;; fixme Jarilla on yksikkohintaisissa töissä tässä if, mutta tässä ei toimi?
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
     :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))}
@@ -130,7 +131,6 @@
   (let [;; Organisaatiotiedot voidaan esitäyttää - nämä ylikirjoitetaan jos kyseessä on olemassaoleva toteuma
         tiedot (atom {:suorittaja (:nimi @u/urakan-organisaatio) :ytunnus (:ytunnus @u/urakan-organisaatio)})
         vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)
-        koneen-lisaama? false ;; TODO Hae onko koneen suorittama
         muokattu (reaction @tiedot)
         ;tallennus-kaynnissa (atom false)
         materiaalitoteumat-mapissa (reaction (into {} (map (juxt :tmid identity) (:toteumamateriaalit @tiedot))))
@@ -191,7 +191,7 @@
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita [[:urakan-aikana]]
-            :muokattava? (constantly (not koneen-lisaama?))
+            :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))
             :aseta (fn [rivi arvo]
                      (assoc
                        (if (or
@@ -203,13 +203,17 @@
             :leveys "30%"}
            {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-            :muokattava? (constantly (not koneen-lisaama?)) :leveys "30%"}
+            :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :leveys "30%"}
+           (when  (:jarjestelmanlisaama @muokattu)
+             {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+              :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
            {:otsikko "Materiaalit" :nimi :materiaalit  :komponentti [materiaalit-ja-maarat
-                                                                    materiaalitoteumat-mapissa
-                                                                    materiaalien-virheet] :tyyppi :komponentti}
-           {:otsikko "Suorittaja" :tyyppi :string :muokattava? (constantly (not koneen-lisaama?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not koneen-lisaama?)) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
-           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not koneen-lisaama?))}]
+                                                                     materiaalitoteumat-mapissa
+                                                                     materiaalien-virheet
+                                                                     (:jarjestelmanlisaama @muokattu)] :tyyppi :komponentti}
+           {:otsikko "Suorittaja" :tyyppi :string :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}]
           @muokattu]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
