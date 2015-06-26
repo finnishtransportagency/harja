@@ -164,13 +164,27 @@
   []
   (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
         paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
+        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
         alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
         toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
-        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
-        valmis-tallennettavaksi? (reaction (and ; FIXME Lisää validointeja kun homma toimii muuten
-                                               (every? ; Kaikki tieosoitteet samoja
-                                                 #(= (:tie %) (:tie (first (:osoitteet @lomakedata))))
-                                                 (:osoitteet @lomakedata))))]
+
+        alikohteet-virheet (atom {})
+        paallystystoimenpide-virheet (atom {})
+        alustalle-tehdyt-toimet-virheet (atom {})
+        toteutuneet-maarat-virheet (atom {})
+        kivaines-virheet (atom {})
+
+        valmis-tallennettavaksi? (reaction (and ; FIXME Validoi myös kohteen tiedot -kohdassa olevat kentät.
+                                             ; FIXME Nämä ei ilmeisesti toimi?
+                                             ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @toteutuneet-osoitteet))))
+                                             ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @paallystystoimenpide)))) FIXME Validoi kun toimii yhteen alikohteiden kanssa
+                                             ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @toteutuneet-maarat))))
+
+                                             (empty? @alikohteet-virheet)
+                                             (empty? @paallystystoimenpide-virheet)
+                                             (empty? @alustalle-tehdyt-toimet-virheet)
+                                             (empty? @toteutuneet-maarat-virheet)
+                                             (empty? @kivaines-virheet)))]
 
     (komp/luo
       (fn [ur]
@@ -184,8 +198,10 @@
          ; TODO Nice to have: Lisää rivi -nappi voisi esitäyttää tienumeron ekalta riviltä (jos sellainen on). Miten?
          [grid/muokkaus-grid
           {:otsikko  "Alikohteet"
-           :tunniste :tie}
-          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]}
+           :tunniste :tie
+           :muutos #(reset! alikohteet-virheet (grid/hae-virheet %))}
+          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
+                                                                               [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]}
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
@@ -220,7 +236,8 @@
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
            :voi-lisata? false
-           :voi-poistaa? (constantly false)}
+           :voi-poistaa? (constantly false)
+           :muutos #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällyste"
             :nimi          :paallystetyyppi
             :tyyppi        :valinta
@@ -253,7 +270,8 @@
           paallystystoimenpide]
 
          [grid/muokkaus-grid
-          {:otsikko "Kiviaines ja sideaine"}
+          {:otsikko "Kiviaines ja sideaine"
+           :muutos #(reset! kivaines-virheet (grid/hae-virheet %))}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -263,7 +281,8 @@
           kiviaines]
 
          [grid/muokkaus-grid
-          {:otsikko "Alustalle tehdyt toimet"}
+          {:otsikko "Alustalle tehdyt toimet"
+           :muutos #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%" :pituus-max 256}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
@@ -294,7 +313,8 @@
         alustalle-tehdyt-toimet]
 
          [grid/muokkaus-grid
-          {:otsikko "Toteutuneet määrät"}
+          {:otsikko "Toteutuneet määrät"
+           :muutos #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
           [{:otsikko       "Ajoradan päällyste" ; FIXME Miten enumeja käytetään pudotusvalikossa?
             :nimi          :tyyppi
             :tyyppi        :valinta

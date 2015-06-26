@@ -40,7 +40,6 @@
 
 ; FIXME Toimii vain muokkausgridissä, koska vals. Voidaanko yleistää?
 (defmethod validoi-saanto :samat-tienumerot [_ _ data rivi taulukko & [viesti]]
-  (log "PÄÄ VALIDOIDAAN " (pr-str taulukko))
   (when (not (every?
                #(= (:tie %) (:tie (first (vals taulukko))))
                (vals taulukko)))
