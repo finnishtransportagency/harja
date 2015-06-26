@@ -100,12 +100,6 @@
     [:div.paallystysilmoitus-kohteen-tiedot
      [:h6 "Kohteen tiedot"]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
-     ; FIXME Tämä päällytyskohteen valinta pudotusvalikosta ei toimi :( Lisäksi pitäisi filtteröidä ne, joille on ilmoitus. Ja tähän ei tosiaan saa vaihtaa jälkikäteen, oletettavasti
-     ;[:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [tee-kentta {:tyyppi :valinta}
-     ;                                                           {:valinta-arvo  :id
-     ;                                                            :valinta-nayta #(if % (:nimi %) "- Valitse kohde -")
-     ;                                                            :valinnat      @paallystys/paallystyskohteet
-     ;                                                            :leveys "20%"}]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]))
@@ -334,9 +328,10 @@
                                                                                               ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                                                     [:button.nappi-toissijainen.nappi-grid {:on-click   ;(reset! lomakedata {}) ; FIXME Käytä tätä kun testidataa ei tarvita
-                                                                                                         #(reset! lomakedata lomaketestidata
-                                                                                                                  )}
+                                                     [:button.nappi-toissijainen.nappi-grid {:on-click   #(reset! lomakedata {:kohde        (:kohdenumero rivi)
+                                                                                                                              :kohdenimi    (:nimi rivi)})
+                                                                                                         ;#(reset! lomakedata lomaketestidata) FIXME Tätä voi kokeilla siihen asti kunnes lomake toimii.
+                                                                                             }
                                                       [:span " Tee päällystysilmoitus"]]))}]
           (sort (fn [toteuma] (if (:tila toteuma) 0 1)) @paallystys/paallystystoteumat)]]))))
 
