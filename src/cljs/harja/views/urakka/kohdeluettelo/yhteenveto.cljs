@@ -73,15 +73,25 @@
            {:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
            {:otsikko "Kohde" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "15%"}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Lisätyöt" :nimi :lisatyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                 (:lisatyot rivi)
+                                                                                                                 (:lisatyot rivi) ; FIXME Lisätyöiden hinta tulee nyt muualta?
                                                                                                                  (:muutostyot rivi)
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)
                                                                                                                  (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-            @paallystys/paallystyskohteet]])))
+            @paallystys/paallystyskohteet]
+
+         [grid/grid
+          {:otsikko "Lisätyöt"
+           :tyhja (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei lisätöitä")
+           :luokat ["paallysteurakka-kohteet-lisatyot"]
+           :tunniste :numero}
+          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+           {:otsikko "#" :nimi :numero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
+           {:otsikko "Tarjoushinta" :nimi :tarjoushinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "50%"}
+           {:otsikko "Muutoshinta" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "50%"}]
+          {}]]))) ; TODO Mistä data tähän?
