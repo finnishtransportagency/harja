@@ -30,11 +30,6 @@
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 
-(def jsonb->clojuremap
-  (map #(-> %
-            (assoc-in [:ilmoitustiedot]
-                      (or (some-> % :ilmoitustiedot (cheshire/decode (:ilmoitustiedot %))) "")))))
-
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -66,7 +61,6 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      jsonb->clojuremap  ; FIXME Ei toimi
                       (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
@@ -77,7 +71,8 @@
   ; FIXME Vaadi skeema
   (let [muutoshinta 0] ; FIXME Laske lomakedatasta tämä
     ; FIXME Kanta ei huoli JSON-stringiä vaikka normaalisti huolii?
-    (q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/generate-string lomakedata) muutoshinta (:id user))))
+    ;(q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/encode lomakedata) muutoshinta (:id user))))
+    ))
 
 (defrecord Paallystys []
   component/Lifecycle
