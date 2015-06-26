@@ -22,7 +22,8 @@ SELECT
   pk.id as paallystyskohde_id,
   tila,
   pk.nimi,
-  pk.kohdenumero
+  pk.kohdenumero,
+  pk.sopimuksen_mukaiset_tyot
 FROM paallystysilmoitus
 RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
 AND pk.urakka = :urakka

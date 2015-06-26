@@ -192,25 +192,28 @@
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
             :valinnat      pot/+ajoradat+
-            :leveys "20%"}
+            :leveys "20%"
+            :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Suunta"
             :nimi          :suunta
             :tyyppi        :valinta
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse suunta -")
             :valinnat      pot/+suunnat+
-            :leveys "20%"}
+            :leveys "20%"
+            :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Kaista"
             :nimi          :kaista
             :tyyppi        :valinta
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
             :valinnat      pot/+kaistat+
-            :leveys "20%"}
-           {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero}
-           {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero}
-           {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero}
-           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
+            :leveys "20%"
+            :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}] ; FIXME Onko oikein laskettu?
           toteutuneet-osoitteet]
 
@@ -224,20 +227,22 @@
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
             :valinnat      pot/+paallystetyypit+
-            :leveys "30%"}
-           {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
-           {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%"}
-           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
+            :leveys "30%"
+            :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Pääl. työmenetelmä"
             :nimi          :tyomenetelma
             :tyyppi        :valinta
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse menetelmä -")
             :valinnat      pot/+tyomenetelmat+
-            :leveys "30%"}
-           {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero}
-           {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero}
-           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero}
+            :leveys "30%"
+            :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Edellinen päällyste"
             :nimi          :edellinen-paallystetyyppi
             :tyyppi        :valinta
@@ -298,10 +303,10 @@
             :valinnat      pot/+paallystystyon-tyypit+
             :leveys "30%"}
            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256} ; FIXME Mistä saadaan?
-           {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%"}
-           {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero}
+           {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-           {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero}
+           {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
           toteutuneet-maarat]
 
@@ -331,7 +336,8 @@
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click   #(reset! lomakedata {:kohde              (:kohdenumero rivi)
                                                                                                                               :kohdenimi          (:nimi rivi)
-                                                                                                                              :paallystyskohde-id (:paallystyskohde_id rivi)})
+                                                                                                                              :paallystyskohde-id (:paallystyskohde_id rivi)
+                                                                                                                              :tarjoushinta (:sopimuksen_mukaiset_tyot rivi)})
                                                                                                          ;#(reset! lomakedata lomaketestidata) FIXME Tätä voi kokeilla siihen asti kunnes lomake toimii.
                                                                                              }
                                                       [:span " Tee päällystysilmoitus"]]))}]
