@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.sampo.kustannussuunnitelma
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc])
   (:import (java.text SimpleDateFormat)))
 
 (defn formatoi-paivamaara [date]
@@ -50,6 +52,14 @@
           (log/error viesti)
           (throw (RuntimeException. viesti)))))))
 
+(defn tee-kustannussuunnitelman-alku [alkupvm]
+  (let [vuosi (time/year (tc/from-sql-date alkupvm))]
+    (tc/to-sql-date (time/first-day-of-the-month vuosi 1))))
+
+(defn tee-kustannussuunnitelman-loppu [loppupvm]
+  (let [vuosi (time/year (tc/from-sql-date loppupvm))]
+    (tc/to-sql-date (time/last-day-of-the-month vuosi 12))))
+
 (defn muodosta-kustannussuunnitelma-sanoma [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
         {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
@@ -64,14 +74,14 @@
        :version        "13.1.0.0248"}]
      [:CostPlans
       [:CostPlan
-       {:finishPeriod   (formatoi-paivamaara loppupvm)
-        :startPeriod    (formatoi-paivamaara alkupvm)
+       {:finishPeriod   (tee-kustannussuunnitelman-loppu loppupvm)
+        :startPeriod    (tee-kustannussuunnitelman-alku alkupvm)
         :periodType     "ANNUALLY"
         :investmentType "PRODUCT"
         :investmentCode maksueranumero
         :name           (apply str (take 80 (:nimi (:maksuera maksuera))))
-                               :code kustannussuunnitelmanumero
-                               :isPlanOfRecord "true"}
+        :code           kustannussuunnitelmanumero
+        :isPlanOfRecord "true"}
        [:Description ""]
        [:GroupingAttributes
         [:GroupingAttribute "role_id"]

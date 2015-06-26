@@ -72,7 +72,9 @@
           maksuera-xml (tee-xml-sanoma (maksuera/muodosta-maksuera-sanoma maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
         maksuera-xml
-        nil))
+        (do
+          (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
+          nil)))
     nil))
 
 (defn muodosta-kustannussuunnitelma [db numero]
@@ -81,7 +83,9 @@
           kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma/muodosta-kustannussuunnitelma-sanoma maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
         kustannussuunnitelma-xml
-        nil))
+        (do
+          (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
+          nil)))
     nil))
 
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
