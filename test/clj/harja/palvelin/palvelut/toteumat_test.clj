@@ -165,3 +165,7 @@
     (u
       (str "DELETE FROM toteuma
                     WHERE id = "(get-in lisatty [:toteuma :toteuma-id])))))
+
+;; TODO implementoi..
+(deftest tallenna-toteuma-ja-toteumamateriaalit-test
+  (is true))
