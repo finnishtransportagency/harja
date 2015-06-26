@@ -118,10 +118,10 @@
    [:table
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-     [:td.paallystysilmoitus-yhteenveto-summa [:span (str @urakkasopimuksen-mukainen-kokonaishinta " €")]]]
+     [:td.paallystysilmoitus-yhteenveto-summa [:span (str (or @urakkasopimuksen-mukainen-kokonaishinta 0)" €")]]]
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-     [:td.paallystysilmoitus-yhteenveto-summa [:span (str @muutokset-kokonaishintaan " €")]]]
+     [:td.paallystysilmoitus-yhteenveto-summa [:span (str (or @muutokset-kokonaishintaan 0) " €")]]]
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Yhteensä: "]]
      [:td.paallystysilmoitus-yhteenveto-summa [:span (str @yhteensa " €")]]]]]))
@@ -328,8 +328,9 @@
                                                                                               ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                                                     [:button.nappi-toissijainen.nappi-grid {:on-click   #(reset! lomakedata {:kohde        (:kohdenumero rivi)
-                                                                                                                              :kohdenimi    (:nimi rivi)})
+                                                     [:button.nappi-toissijainen.nappi-grid {:on-click   #(reset! lomakedata {:kohde              (:kohdenumero rivi)
+                                                                                                                              :kohdenimi          (:nimi rivi)
+                                                                                                                              :paallystyskohde-id (:paallystyskohde_id rivi)})
                                                                                                          ;#(reset! lomakedata lomaketestidata) FIXME Tätä voi kokeilla siihen asti kunnes lomake toimii.
                                                                                              }
                                                       [:span " Tee päällystysilmoitus"]]))}]
