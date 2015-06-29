@@ -153,12 +153,83 @@
              :sopimus sopimus}))
         tunnisteet)))))
 
-;; TODO: Testit näille puuttuu, mutta jätin tähän muistutukseksi. Lisätään joku sunnuntai..
+;; TODO: Joku joka käyttää tätä palvelua voisi tehdä testinkin..? Teemu
 (deftest tallenna-urakan-materiaalit-test
-  (is true))
+  (let [] (is true)))
 
 (deftest tallenna-toteuma-materiaaleja-test
-  (is true))
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-id" LIMIT 1")))
+        vanha-maara 12398751
+        uusi-maara 12
+        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1} {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
+        parametrit {:toteumamateriaalit @toteumamateriaalit :urakka-id @oulun-alueurakan-id :sopimus sopimus}
+        hae-materiaalitoteumien-maara (fn [id] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali
+                                                                WHERE poistettu IS NOT TRUE AND toteuma="id))))
+        vanhat-materiaalitoteumat-lukumaara (hae-materiaalitoteumien-maara toteuma_id)
+        hae-tm-idt (fn [] (flatten (q (str"SELECT id FROM toteuma_materiaali WHERE maara="vanha-maara" AND materiaalikoodi=1
+                                           AND poistettu IS NOT TRUE AND toteuma="toteuma_id))))
+
+        tmid (atom nil)]
+
+    ;; Luo kaksi uutta materiaalitoteumaa ja varmista että palvelu vastaa nil
+    ;; (palauttaa urakassa käytetyt materiaalit jos hoitokausi on annettu)
+    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-materiaaleja! +kayttaja-jvh+ parametrit))
+        "Palvelun ei pitäisi palauttaa mitään jos hoitokautta ei ole annettu")
+    (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 2 vanhat-materiaalitoteumat-lukumaara))
+        "Tallentaminen epäonnistui?")
+
+    ;; Lisätyille materiaalitoteumille pitää hakea id:t. Koska palvelu on vähän purkkaa, niin pitää vaan hakea ne mätsäämällä
+    ;; toteumaan ja määrään. Jos siis tulee eri määrä kuin kaksi, niin ei testiä voi oikein jatkaa.
+    (is (= (count (hae-tm-idt)) 2) "Testissä on ongelma? Kannasta pitäisi löytyä vain kaksi ehtoihin sopivaa materiaalitoteumaa")
+
+    ;; Lisää id:t parametreihin. Hard koodattu, mutta eipä se testissä haittaa
+    (reset! toteumamateriaalit
+            [(-> (assoc (first @toteumamateriaalit) :id (first (hae-tm-idt)))
+                 (assoc :poistettu true))
+             (-> (assoc (second @toteumamateriaalit) :id (second (hae-tm-idt)))
+                 (assoc :maara uusi-maara))])
+
+    ;; Otetaan päivtettävän materiaalitoteuman id talteen
+    (reset! tmid (second (hae-tm-idt)))
+
+
+    ;; Nyt palvelun pitäisi palauttaa *jotain*, koska hoitokausi menee mukaan
+    (is (not (nil?
+               (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-materiaaleja! +kayttaja-jvh+
+                               (-> (assoc parametrit :toteumamateriaalit @toteumamateriaalit)
+                                   (assoc :hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]))))))
+
+    (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 1 vanhat-materiaalitoteumat-lukumaara)))
+    (is (= uusi-maara (int (ffirst (q (str "SELECT maara FROM toteuma_materiaali WHERE id="@tmid)))))
+        "Toteumamateriaalin määrän olisi pitänyt päivittyä.")
+
+    (u ("DELETE FROM toteuma_materiaali WHERE id="@tmid))))
 
 (deftest poista-toteuma-materiaali-test
-  (is true))
+  (let [maara 874625
+        [urakka sopimus] (first (q "SELECT urakka, sopimus FROM toteuma WHERE id=1"))
+        hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+        lisaa-materiaalitoteuma (fn [] (ffirst (q "INSERT INTO toteuma_materiaali
+                                          (toteuma, materiaalikoodi, maara, luotu, luoja, poistettu)
+                                          VALUES (1, 1, "maara", NOW(), "(:id +kayttaja-jvh+)", false) RETURNING id;" )))
+        hae-lkm (fn [] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE poistettu IS NOT TRUE and toteuma=1;"))))
+        alkuperainen-lkm (hae-lkm)
+        lisatyt (doall (repeatedly 3 lisaa-materiaalitoteuma))]
+    (log/debug (pr-str lisatyt))
+
+    (is (= (hae-lkm) (+ 3 alkuperainen-lkm)))
+
+    ;; Poistamisen pitäisi palauttaa urakassa käytetyt materiaalit jos hoitokausi annetaan
+    (is (-> (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
+                    {:urakka urakka
+                     :sopimus sopimus
+                     :id (vec lisatyt)
+                     :hk-alku (first hoitokausi)
+                     :hk-loppu (second hoitokausi)})
+            (first)
+            (:kokonaismaara)))
+
+    (is (= alkuperainen-lkm (hae-lkm)))
+
+    (log/debug (vec lisatyt))
+    (u (str "DELETE FROM toteuma_materiaali WHERE id in ("(clojure.string/join "," lisatyt)")"))))

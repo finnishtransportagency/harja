@@ -26,7 +26,10 @@
                                             [:http-palvelin :db])
           :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat (component/using
                                                                   (->Toteumat)
-                                                                  [:http-palvelin :db])))))
+                                                                  [:http-palvelin :db])
+          :tallenna-toteuma-ja-toteumamateriaalit (component/using
+                                                    (->Toteumat)
+                                                    [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -176,4 +179,47 @@
 
 ;; TODO implementoi..
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
-  (is true))
+  (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka="@oulun-alueurakan-id)))
+        toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (java.util.Date. 105 11 24) :paattynyt (java.util.Date. 105 11 24)
+                 :tyyppi nil, :suorittajan-nimi "UNIT TEST" :suorittajan-ytunnus 1234 :lisatieto "Unit test teki tämän"})
+        tmt (atom [{:id -1 :materiaalikoodi 1 :maara 192837} {:materiaalikoodi 1 :maara 192837}])]
+
+    (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS NOT TRUE"))))
+    (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
+    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+                              {:toteuma @toteuma
+                               :toteumamateriaalit @tmt
+                               ;:hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+                               :sopimus sopimus})))
+
+    (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
+          tid (ffirst (q "SELECT id from toteuma WHERE suorittajan_nimi='UNIT TEST'"))
+          uusi-lisatieto "NYT PITÄIS OLLA MUUTTUNUT."]
+
+      (is (= 2 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS NOT TRUE"))))
+      (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
+
+      (reset! tmt
+              [(-> (assoc (first @tmt) :id (first tmidt))
+                   (assoc :poistettu true))
+               (-> (assoc (second @tmt) :id (second tmidt))
+                   (assoc :maara 8712))])
+
+      (reset! toteuma (-> (assoc @toteuma :id tid)
+                          (assoc :lisatieto uusi-lisatieto)))
+
+      (is (not (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+                                     {:toteuma @toteuma
+                                      :toteumamateriaalit @tmt
+                                      :hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+                                      :sopimus sopimus}))))
+
+      (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
+      (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS TRUE"))))
+      (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=8712 AND poistettu IS NOT TRUE"))))
+
+      (is (= uusi-lisatieto (ffirst (q "SELECT lisatieto FROM toteuma WHERE id="tid))))
+      (is (= 8712 (int (ffirst (q "SELECT maara FROM toteuma_materiaali WHERE id="(second tmidt))))))
+
+      (u "DELETE FROM toteuma_materiaali WHERE id in ("(clojure.string/join "," tmidt )")")
+      (u "DELETE FROM toteuma WHERE id="tid))))
