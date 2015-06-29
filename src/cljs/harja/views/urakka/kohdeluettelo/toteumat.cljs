@@ -132,7 +132,7 @@
     "Lähetä tilaajalle"
     #(let [urakka-id (:id @nav/valittu-urakka)
            [sopimus-id _] @u/valittu-sopimusnumero]
-      (log "Lähetetään lomake: " (pr-str @lomakedata))
+      (log "PÄÄ Lähetetään lomake: " (pr-str @lomakedata))
       (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id @lomakedata))
     {:luokka "nappi-ensisijainen"
      :disabled (false? @valmis-tallennettavaksi?)

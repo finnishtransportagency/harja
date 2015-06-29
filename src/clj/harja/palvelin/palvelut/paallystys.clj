@@ -77,17 +77,17 @@
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallytyskohde-id lomakedata]}]
-  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" paallytyskohde-id)
-  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Onko rooli oikein?
+(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
+  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" (:paallystyskohde-id lomakedata)
+  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Vaadi skeema kun yhteys toimii muuten (sallitaan frontilta muutama optional argument tai frontti poistaa ne)
   (jdbc/with-db-transaction [c db]
+                            ; FIXME Luo uuden, tarkista onko jo olemassa ja jos on niin päivitä
                             (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
                                   ilmoitus (cheshire/encode lomakedata)
-                                  vastaus (q/luo-paallystysilmoitus<! db paallytyskohde-id ilmoitus muutoshinta (:id user))]
+                                  vastaus (q/luo-paallystysilmoitus<! db (:paallytyskohde-id lomakedata) ilmoitus muutoshinta (:id user))]
                               (log/debug "Muutoshinta " muutoshinta)
                               (log/debug "enkoodattu ilmoitusdata"  ilmoitus)
-                              ; FIXME Frontti ei lähetä id:tä?
                               (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
                                                               :sopimus-id sopimus-id}))))
 
@@ -107,11 +107,9 @@
                           (hae-urakan-paallystystoteumat db user tiedot)))
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
                         (fn [user tiedot]
-                          (log/debug "Vastaanotettu pyyntö: Hae päällystysilmoitus päällystyskohteella")
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
-                          (log/debug "Vastaanotettu pyyntö: päällystysilmoituksen tallennus")
                           (tallenna-paallystysilmoitus db user tiedot)))
       this))
 
