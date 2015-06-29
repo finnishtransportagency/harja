@@ -1,7 +1,6 @@
 (ns harja.views.urakka.toteumat.muut-tyot
   "Urakan 'Toteumat' välilehden 'Muut työt' osio"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
 
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
@@ -22,7 +21,6 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
 
-            [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
@@ -58,7 +56,7 @@
                         :sopimus-id sop
                         :hoitokausi-aloituspvm hk-alkupvm
                         :hoitokausi-lopetuspvm hk-loppupvm
-                        ;; jos käyttäjä syöttää yksikköhinnan, eikä sitsä vielä ollut suunnittelupuolelle syötetty,
+                        ;; jos käyttäjä syöttää yksikköhinnan, eikä sitä vielä ollut suunnittelupuolelle syötetty,
                         ;; tallennetaan tässä yhteydessä hinta implisiittisesti myös suunnittelupuolelle (muutoshintainen_tyo-tauluun)
                         :uusi-muutoshintainen-tyo (if (and (not (:yksikkohinta-suunniteltu? muokattu))
                                                       (:yksikkohinta muokattu)
@@ -113,12 +111,13 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   []
-  (let [muokattu (atom (if (get-in @valittu-toteuma [:toteuma :id])
-                         (assoc @valittu-toteuma
+  (let [toteuma @valittu-toteuma
+        muokattu (atom (if (get-in toteuma [:toteuma :id])
+                         (assoc toteuma
                            :sopimus @u/valittu-sopimusnumero
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
                          ;; alustetaan arvoja uudelle toteumalle
-                         (assoc @valittu-toteuma
+                         (assoc toteuma
                            :sopimus @u/valittu-sopimusnumero
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi
                            :tyyppi :muutostyo
@@ -221,16 +220,17 @@
                              (get-in @muokattu [:toimenpideinstanssi :tpi_id])
                              toimenpideinstanssit tehtavat-tasoineen)
             :fmt           #(muun-tyon-tyypin-teksti %)
-            :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
-            :aseta         (fn [rivi arvo] (assoc
-                                             (assoc-in rivi
-                                                       [:tehtava :toimenpidekoodi] arvo)
-                                             :yksikko (if (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat))
-                                                        (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat))
-                                                        nil)
-                                             :yksikkohinta (if (:yksikkohinta (hae-muutoshintainen-tyo-tpklla arvo))
-                                                        (:yksikkohinta (hae-muutoshintainen-tyo-tpklla arvo))
-                                                        nil)))
+            :validoi       [[:ei-tyhja "Valitse tehtävä"]]
+            :aseta         (fn [rivi arvo] (let [jo-suunniteltu-yksikko
+                                                 (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat))
+                                                 jo-suunniteltu-yksikkohinta
+                                                 (:yksikkohinta (hae-muutoshintainen-tyo-tpklla arvo))]
+                                             (assoc
+                                               (assoc-in rivi
+                                                         [:tehtava :toimenpidekoodi] arvo)
+                                               :yksikko jo-suunniteltu-yksikko
+                                               :yksikkohinta jo-suunniteltu-yksikkohinta
+                                               :yksikkohinta-suunniteltu? jo-suunniteltu-yksikkohinta)))
             :leveys-col    3}
            (when (get-in @muokattu [:tehtava :toimenpidekoodi])
              (lomake/ryhma
@@ -313,8 +313,7 @@
                          (first (filter (fn [muutoshinta]
                                           (= (:tehtava muutoshinta)
                                              (get-in muu-tyo [:tehtava :toimenpidekoodi]))) muutoshintaiset-tyot))
-                         yksikkohinta (:yksikkohinta muutoshintainen-tyo)
-                         _ (log "muutoshintainen työ" (pr-str muutoshintainen-tyo))]
+                         yksikkohinta (:yksikkohinta muutoshintainen-tyo)]
                      (assoc muu-tyo
                        :hinnoittelu (if (get-in muu-tyo [:tehtava :paivanhinta]) :paivanhinta :yksikkohinta)
                        :yksikko (:yksikko muutoshintainen-tyo)
@@ -322,8 +321,6 @@
                        :yksikkohinta-suunniteltu? yksikkohinta)))
                  valitut-muut-tyot)))]
 
-    (tarkkaile! "työrivit" tyorivit)
-    (tarkkaile! "valitut muut" valitut-muut-tyot)
     (komp/luo
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]

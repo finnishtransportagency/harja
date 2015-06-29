@@ -157,7 +157,15 @@
                                                                                              :loppupvm hoitokausi-lopetuspvm
                                                                                              :tyyppi :yksikkohintainen})]
     (is (= (get-in lisatty [:toteuma :alkanut]) tyon-pvm) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:toteuma :paattynyt]) tyon-pvm) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:toteuma :lisatieto]) toteuman-lisatieto) "Tallennetun työn lisätieto")
+    (is (= (get-in lisatty [:toteuma :suorittajan-nimi]) "Alihankkijapaja Ky") "Tallennetun työn suorittajan nimi")
+    (is (= (get-in lisatty [:toteuma :suorittajan-ytunnus]) "123456-Y") "Tallennetun työn suorittajan y-tunnus")
+    (is (= (get-in lisatty [:toteuma :urakka-id]) @oulun-alueurakan-id) "Tallennetun työn urakan id")
+    (is (= (get-in lisatty [:toteuma :urakka-id]) @oulun-alueurakan-paasopimuksen-id) "Tallennetun työn pääsopimuksen id")
+    (is (= (get-in lisatty [:toteuma :tehtavat 0 :toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:toteuma :tehtavat 0 :maara]) 333) "Tallennetun työn tehtävän määrä")
+    (is (= (get-in lisatty [:toteuma :tyyppi]) :yksikkohintainen) "Tallennetun työn toteuman tyyppi")
 
     (u
       (str "DELETE FROM toteuma_tehtava
