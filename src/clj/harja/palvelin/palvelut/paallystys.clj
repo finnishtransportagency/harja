@@ -78,7 +78,7 @@
     vastaus))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
-  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" (:paallystyskohde-id lomakedata)
+  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Vaadi skeema kun yhteys toimii muuten (sallitaan frontilta muutama optional argument tai frontti poistaa ne)
   (jdbc/with-db-transaction [c db]
