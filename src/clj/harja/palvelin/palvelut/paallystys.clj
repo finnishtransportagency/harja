@@ -39,7 +39,7 @@
                       (let [ilmoitustiedot (:ilmoitustiedot %)]
                         (log/debug "Ilmoitustiedot on:" ilmoitustiedot)
                         (or ilmoitustiedot
-                              (let [json (.getValue ilmoitustiedot)] ; FIXME Tämä kaatuu jostain kummasta syystä :(
+                              (let [json (.getValue ilmoitustiedot)] ; FIXME Tämä kaatuu jostain kummasta syystä, vaikka toimii replissä hyvin :(
                                 (log/debug "JSON on:" json)
                                 (cheshire/decode json))
                             ""))))))

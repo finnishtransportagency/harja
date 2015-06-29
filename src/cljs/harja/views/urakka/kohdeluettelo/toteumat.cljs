@@ -172,7 +172,7 @@
         paallystystoimenpide-virheet (atom {})
         alustalle-tehdyt-toimet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})
-        kivaines-virheet (atom {})
+        kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi? (reaction (and ; FIXME Validoi myös kohteen tiedot -kohdassa olevat kentät.
                                              ; FIXME Nämä ei ilmeisesti toimi?
@@ -184,7 +184,7 @@
                                              (empty? @paallystystoimenpide-virheet)
                                              (empty? @alustalle-tehdyt-toimet-virheet)
                                              (empty? @toteutuneet-maarat-virheet)
-                                             (empty? @kivaines-virheet)))]
+                                             (empty? @kiviaines-virheet)))]
 
     (komp/luo
       (fn [ur]
@@ -195,7 +195,7 @@
 
          (kohteen-tiedot)
 
-         ; TODO Nice to have: Lisää rivi -nappi voisi esitäyttää tienumeron ekalta riviltä (jos sellainen on). Miten?
+         ; TODO Nice to have: Tienumero annetaan ekalle riville, kopioituu lopuille riveille jotka eivät ole muokattavia.
          [grid/muokkaus-grid
           {:otsikko  "Alikohteet"
            :tunniste :tie
@@ -271,7 +271,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
-           :muutos #(reset! kivaines-virheet (grid/hae-virheet %))}
+           :muutos #(reset! kiviaines-virheet (grid/hae-virheet %))}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
            {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -315,7 +315,7 @@
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
            :muutos #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
-          [{:otsikko       "Ajoradan päällyste" ; FIXME Miten enumeja käytetään pudotusvalikossa?
+          [{:otsikko       "Ajoradan päällyste"
             :nimi          :tyyppi
             :tyyppi        :valinta
             :valinta-arvo  :avain
