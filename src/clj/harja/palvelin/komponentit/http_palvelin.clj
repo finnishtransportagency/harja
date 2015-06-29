@@ -33,10 +33,6 @@
                               java.math.BigDecimal (t/write-handler (constantly "bd") double)}})
 (def read-optiot {:handlers {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}})
 
-;; FIXME:
-;; - decimal number tuki
-;; - 
- 
 (defn clj->transit
   "Muuntaa Clojure tietorakenteen Transit+JSON merkkijonoksi."
   [data]
