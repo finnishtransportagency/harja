@@ -98,7 +98,7 @@
         toteutunut-hinta (r/wrap (:hinta @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :hinta uusi-arvo))))]
 
     [:div.paallystysilmoitus-kohteen-tiedot
-     [:h6 "Kohteen tiedot"]
+     [:h6 "Kohteen tiedot"] ; FIXME Inline lomake
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
      [:span.paallystysilmoitus-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
@@ -114,7 +114,7 @@
                                 (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
                               (:tyot @lomakedata))))
         yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))]
-    [:div.paallystysilmoitus-yhteenveto
+    [:div.paallystysilmoitus-yhteenveto ; FIXME Nimi POT
    [:table
     [:tr
      [:td.paallystysilmoitus-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
@@ -138,14 +138,14 @@
      :disabled (false? @valmis-tallennettavaksi?)
      :kun-onnistuu (fn [vastaus]
                      (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
-                     (reset! lomakedata nil))}]
+                     (reset! lomakedata nil))}] ; FIXME Palataan toteumat-välilehdelle, Reset pot-toteumat
 
    [harja.ui.napit/palvelinkutsu-nappi
     "Hyväksy"
     #(let [urakka-id (:id @nav/valittu-urakka)
            [sopimus-id _] @u/valittu-sopimusnumero])
     {:luokka "nappi-ensisijainen"
-     :disabled (constantly false) ; FIXME Kelle näytetään?
+     :disabled (constantly false) ; FIXME Kelle näytetään? --> frontissa käytä jos-roolissa?
      :kun-onnistuu (fn [vastaus]
                      ; TODO
                      )}]
@@ -162,11 +162,16 @@
 
 (defn paallystysilmoituslomake
   []
-  (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
-        paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
-        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
-        alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
-        toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata)) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
+  (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata))
+                                      (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
+        paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata))
+                                     (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
+        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata))
+                          (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
+        alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata))
+                                        (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
+        toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata))
+                                   (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
@@ -175,7 +180,7 @@
         kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi? (reaction (and ; FIXME Validoi myös kohteen tiedot -kohdassa olevat kentät.
-                                             ; FIXME Nämä ei ilmeisesti toimi?
+                                             ; FIXME Nämä ei ilmeisesti toimi? --> filter palauttaa laiskan sekvenssin --> filterv rules. Lue mieluummin lettiin suoraan
                                              ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @toteutuneet-osoitteet))))
                                              ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @paallystystoimenpide)))) FIXME Validoi kun toimii yhteen alikohteiden kanssa
                                              ;(not (empty? (filter #(not (true? (:poistettu %))) (vals @toteutuneet-maarat))))

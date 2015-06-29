@@ -22,7 +22,7 @@
 
 (def muunna-desimaaliluvut-xf
   (map #(-> %
-            (assoc-in [:maara]
+            (assoc :maara
                       (or (some-> % :maara double) 0)))))
 
 (defn toteuman-tehtavat->map [toteumat]

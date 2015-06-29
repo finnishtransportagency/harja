@@ -35,14 +35,11 @@
 
 (def jsonb->clojuremap
   (map #(-> %
-            (assoc-in [:ilmoitustiedot]
-                      (let [ilmoitustiedot (:ilmoitustiedot %)]
-                        (log/debug "Ilmoitustiedot on:" ilmoitustiedot)
-                        (or ilmoitustiedot
-                              (let [json (.getValue ilmoitustiedot)] ; FIXME Tämä kaatuu jostain kummasta syystä, vaikka toimii replissä hyvin :(
-                                (log/debug "JSON on:" json)
-                                (cheshire/decode json))
-                            ""))))))
+            (assoc :ilmoitustiedot
+                   (some-> %
+                           :ilmoitustiedot
+                           .getValue
+                           (cheshire/decode true))))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -81,13 +78,18 @@
     vastaus))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallytyskohde-id lomakedata]}]
-  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
+  (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" paallytyskohde-id)
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Onko rooli oikein?
-  (skeema/validoi lomakedata pot/+paallystysilmoitus+)
-  (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))]
-    (log/debug "Muutoshinta " muutoshinta)
-    ;FIXME Kanta ei huoli JSON-stringiä vaikka normaalisti huolii?
-    (q/luo-paallystysilmoitus<! db paallytyskohde-id (cheshire/encode lomakedata) muutoshinta (:id user))))
+  ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Vaadi skeema kun yhteys toimii muuten (sallitaan frontilta muutama optional argument tai frontti poistaa ne)
+  (jdbc/with-db-transaction [c db]
+                            (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
+                                  ilmoitus (cheshire/encode lomakedata)
+                                  vastaus (q/luo-paallystysilmoitus<! db paallytyskohde-id ilmoitus muutoshinta (:id user))]
+                              (log/debug "Muutoshinta " muutoshinta)
+                              (log/debug "enkoodattu ilmoitusdata"  ilmoitus)
+                              ; FIXME Frontti ei lähetä id:tä?
+                              (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle

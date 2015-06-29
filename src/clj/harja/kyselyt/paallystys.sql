@@ -65,6 +65,5 @@ WHERE paallystyskohde = :paallystyskohde;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
--- FIXME Tila puuttuu! Mikä se on kun luodaan uusi? Mistä saadaan aloituspvm? Tarvitaanko valmistumispvm:ää taulussa kun se on jo JSONissa?
 INSERT INTO paallystysilmoitus (paallystyskohde, ilmoitustiedot, muutoshinta, luotu, luoja, poistettu)
-VALUES (:paallystyskohde, :ilmoitustiedot, :muutoshinta, NOW(), :kayttaja, FALSE);
+VALUES (:paallystyskohde, :ilmoitustiedot::jsonb, :muutoshinta, NOW(), :kayttaja, FALSE);
