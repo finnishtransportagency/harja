@@ -27,7 +27,11 @@
 
 (def transit-response-optiot {:handlers
                               {"dt" (fn [v]
-                                      (pvm/->pvm-aika-sek v))}})
+                                      (pvm/->pvm-aika-sek v))
+
+                               ;; Serveri lähettää java.math.BigDecimal typen doubleksi
+                               ;; muunnettuna, joten tässä kelpaa identity
+                               "bd" identity}})
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)

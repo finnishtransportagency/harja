@@ -35,18 +35,12 @@
             (assoc-in [:maksuera :tyyppi] (keyword (:tyyppi (:maksuera %))))
             (assoc-in [:maksuera :tila] (keyword (:tila (:maksuera %)))))))
 
-(def muunna-desimaaliluvut-xf
-  (map #(-> %
-            (assoc-in [:maksuera :summa]
-                      (or (some-> % :maksuera :summa double) 0))
-            (assoc-in [:kustannussuunnitelma :summa]
-                      (or (some-> % :kustannussuunnitelma :summa double) 0)))))
+
 
 (def maksuera-xf
   (comp (map konversio/alaviiva->rakenne)
         aseta-kustannussuunnitelman-tila-xf
-        aseta-tyyppi-ja-tila-xf
-        muunna-desimaaliluvut-xf))
+        aseta-tyyppi-ja-tila-xf))
 
 (defn hae-maksueran-ja-kustannussuunnitelman-tilat [db maksueranumero]
   (let [tilat (q/hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)
