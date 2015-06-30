@@ -99,8 +99,8 @@ Optioissa voi olla seuraavat avaimet:
                   anneta, lomake luo sisäisesti uuden atomin.
   :varoitukset    atomi, joka sisältää mäpin kentän nimestä varoituksiin, jos tätä ei
                   anneta, lomake luo sisäisesti uuden atomin.
-"                   
- 
+"
+
   [{:keys [muokkaa! luokka footer virheet varoitukset] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
@@ -128,7 +128,7 @@ Optioissa voi olla seuraavat avaimet:
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
                                 :default "")}
-         (let [kaikki-skeemat (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema)
+         (let [kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
                kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
                         (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                         (let [kentan-virheet (get @virheet nimi)
@@ -140,6 +140,7 @@ Optioissa voi olla seuraavat avaimet:
                                                           (reset! varoitukset
                                                                   (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita))
                                                           (log "VIRHEITÄ: " (pr-str @virheet))
+                                                          (log "VAROITUKSIA: " (pr-str @varoitukset))
                                                           (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))
                               kentan-tunniste nimi]
@@ -183,9 +184,9 @@ Optioissa voi olla seuraavat avaimet:
                 [:fieldset
                  [:legend (:otsikko ryhma)]
                  (doall (map kentta (keep identity (:skeemat ryhma))))]
-              
+
                 (kentta skeema)))))
-       
+
          (when footer
            [lomake-footer luokka footer])]))))
 

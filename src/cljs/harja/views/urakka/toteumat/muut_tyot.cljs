@@ -235,21 +235,22 @@
            (when (get-in @muokattu [:tehtava :toimenpidekoodi])
              (lomake/ryhma
               "Toteutuneen työn tiedot"
-              {:otsikko "Määrä" :nimi :maara :tyyppi :numero
-               :hae #(get-in % [:tehtava :maara])
-               :vihje         (if (= :paivanhinta (:hinnoittelu @muokattu))
-                                "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
-                                ei vaikuta kokonaishintaan."
-                                "Käytät sopimushintaa. Kokonaiskustannus tulee olemaan yksikköhinta kerrottuna tehdyn työn määrällä.")
-               :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
-               :varoita [[:ei-tyhja "Haluatko jättää määrän antamatta?"]]
-               :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
                :tyyppi        :valinta
                :valinta-arvo  first
                :valinta-nayta second
                :valinnat      [[:yksikkohinta "Sopimushinta"] [:paivanhinta "Päivän hinta"]]
-                                :leveys-col 3}
+               :leveys-col 3}
+              {:otsikko "Määrä" :nimi :maara :tyyppi :numero
+               :hae     #(get-in % [:tehtava :maara])
+               :vihje   (if (= :paivanhinta (:hinnoittelu @muokattu))
+                          "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
+                          ei vaikuta kokonaishintaan."
+                          "Käytät sopimushintaa. Kokonaiskustannus tulee olemaan yksikköhinta kerrottuna tehdyn työn määrällä.")
+               :aseta   (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
+               :validoi (when (= (:hinnoittelu @muokattu) :yksikkohinta)
+                          [[:ei-tyhja "Määrä antamatta."]])
+               :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
                 {:otsikko "Päivän hinta" :nimi :paivanhinta
                  :hae #(get-in % [:tehtava :paivanhinta])
@@ -266,6 +267,13 @@
                  :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                  :yksikko     (str "€ / " (:yksikko @muokattu))
                  :leveys-col  3})
+              (when (= (:hinnoittelu @muokattu) :yksikkohinta)
+                {:otsikko     "Kustannus" :nimi :kustannus
+                 :muokattava? (constantly false)
+                 :tyyppi :numero
+                 :hae     #(* (get-in % [:tehtava :maara]) (:yksikkohinta %))
+                 :fmt   fmt/euro-opt
+                 :leveys-col  3})
               {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :aseta (fn [rivi arvo]
                         (assoc
@@ -281,9 +289,9 @@
                :varoita [[:urakan-aikana]]}
               {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+               :leveys-col 2
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                         [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-               :leveys-col 2}
+                         [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
               {:otsikko "Suorittaja" :nimi :suorittajan-nimi
                :hae #(get-in @muokattu [:suorittajan :nimi])
                :aseta (fn [rivi arvo] (assoc-in rivi [:suorittajan :nimi] arvo))
