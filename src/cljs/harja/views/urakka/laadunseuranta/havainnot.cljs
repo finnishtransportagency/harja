@@ -295,7 +295,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                  
     sanktiot-atom]])))
   
-(defn havainto [asetukset havainto]
+(defn havainto[asetukset havainto]
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
     (komp/luo
@@ -446,7 +446,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn havainnot []
   (if @valittu-havainto
-    [havainto {} @valittu-havainto]
+    [havainto {} valittu-havainto]
     [havaintolistaus]))
   
   

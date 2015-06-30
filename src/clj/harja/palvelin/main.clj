@@ -167,7 +167,7 @@
                     [:http-palvelin :db])
       :api-havainnot (component/using
                        (api-havainnot/->Havainnot)
-                       [:http-palvelin :db])
+                       [:http-palvelin :db :liitteiden-hallinta])
 
       )))
 

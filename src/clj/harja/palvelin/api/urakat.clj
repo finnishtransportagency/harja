@@ -75,7 +75,7 @@
     :sopimukset (hae-urakan-sopimukset db id)}})
 
 (defn hae-urakka [db {id :id}]
-  (let [urakka-id (read-string id)]
+  (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka db urakka-id)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus db urakka-id urakka))))

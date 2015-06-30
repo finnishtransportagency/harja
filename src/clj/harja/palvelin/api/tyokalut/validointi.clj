@@ -11,7 +11,7 @@
     (do
       (log/warn "Urakkaa id:llä " urakkaid " ei löydy.")
       (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-               :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
+               :virheet [{:koodi  virheet/+tuntematon-urakka-koodi+
                           :viesti (str "Urakkaa id:llä " urakkaid " ei löydy.")}]})))
   ;; todo: lisää luku- ja kirjoitusoikeuksien tarkistukset
   )

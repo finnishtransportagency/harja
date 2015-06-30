@@ -33,6 +33,8 @@
         luettu-liite (liitteet/lataa-liite liitteiden-hallinta liite-id)
         liitteen-sisalto-tekstina (slurp (:data luettu-liite))]
 
+    (println luotu-liite)
+
     (is (= tiedoston-sisalto-tekstina liitteen-sisalto-tekstina) "Luetun liitteen sisältö on sama kuin mitä lähdetiedoston.")
     (is (not (:pikkukuva luettu-liite)) "XML-tiedostolla ei saa olla pikkukuvaa.")
 

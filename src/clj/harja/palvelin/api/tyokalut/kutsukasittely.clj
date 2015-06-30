@@ -3,10 +3,17 @@
 
   (:require [harja.tyokalut.json_validointi :as json]
             [harja.palvelin.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.kayttajat :as kayttajat]
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+
+(defn hae-kirjaajan-id [db otsikko]
+  (let [jarjestelma (:lahettaja (:jarjestelma otsikko))
+        ytunnus (:lahettaja (:organisaatio (:ytunnus otsikko)))]
+    ;; todo: pitääkö aiheuttaa poikkeus jos ei löydy?
+    (:id (first (kayttajat/hae-jarjestelmakayttajan-id-ytunnuksella db jarjestelma ytunnus)))))
 
 (defn logita-kutsu [resurssi request body]
   ;; fixme: lisää monitorointikutsu
@@ -68,7 +75,7 @@
 
 (defn kasittele-sisainen-kasittelyvirhe [virheet]
   (log/warn "Tapahtui sisäinen käsittelyvirhe: " virheet)
-  (tee-viallinen-kutsu-virhevastaus virheet))
+  (tee-sisainen-kasittelyvirhevastaus virheet))
 
 (defn lue-kutsu
   "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-kutsu. Muille kutsuille palauttaa arvon nil.
@@ -104,7 +111,9 @@
                     (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
                       (kasittele-sisainen-kasittelyvirhe virheet))
                     (catch Exception e
-                      (kasittele-sisainen-kasittelyvirhe [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                      (log/error "Tapahtui poikkeus: " e)
+                      (kasittele-sisainen-kasittelyvirhe
+                        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                                                            :viesti (.getMessage e)}])))]
       (logita-vastaus resurssi vastaus)
       vastaus)))

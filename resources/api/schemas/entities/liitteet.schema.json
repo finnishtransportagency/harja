@@ -12,6 +12,11 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "nimi": {
+            "id": "http://jsonschema.net/0/liite/tyyppi",
+            "type": "string",
+            "required": true
+          },
           "tyyppi": {
             "id": "http://jsonschema.net/0/liite/tyyppi",
             "type": "string",

@@ -130,3 +130,12 @@ SELECT k.id, k.kayttajanimi, k.etunimi, k.sukunimi,
  WHERE k.kayttajanimi ILIKE :koka
     OR o.nimi ILIKE :koka
    AND k.poistettu = false
+
+-- name: hae-jarjestelmakayttajan-id-ytunnuksella
+-- Hakee järjestelmäkäyttäjän järjestelmän ja organisaation y-tunnuksen avulla
+SELECT k.id
+FROM kayttaja k
+  JOIN organisaatio o ON k.organisaatio = o.id
+WHERE k.kayttajanimi = :jarjestelma AND
+      k.jarjestelma = TRUE AND
+      o.ytunnus = :ytunnus;

@@ -40,6 +40,7 @@
   "liitteet": [
     {
       "liite": {
+        "nimi": "kolari.png",
         "tyyppi": "image/png",
         "kuvaus": "Kuva",
         "sisalto": "... sisältö base64 enkoodattuna  ..."
