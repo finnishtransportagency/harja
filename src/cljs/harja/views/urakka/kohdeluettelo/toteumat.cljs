@@ -129,22 +129,12 @@
         kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi? (reaction
-                                   ; FIXME Validoi eri tavalla sen mukaan onko ilmoitus valmis (valmistumispvm annettu)
-                                   ; FIXME Validoi myös kohteen tiedot -kohdassa olevat kentät.
-                                   (let [toteutuneet-osoitteet (vals @toteutuneet-osoitteet)
-                                         paallystystoimenpide (vals @paallystystoimenpide)
-                                         toteutuneet-maarat (vals @toteutuneet-maarat)
-
-                                         alikohteet-virheet @alikohteet-virheet
+                                   (let [alikohteet-virheet @alikohteet-virheet
                                          paallystystoimenpide-virheet @paallystystoimenpide-virheet
                                          alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          kiviaines-virheet @kiviaines-virheet]
                                      (and
-                                       (not (empty? (filter #(not (true? (:poistettu %))) toteutuneet-osoitteet)))
-                                       ;(not (empty? (filter #(not (true? (:poistettu %))) paallystystoimenpide))) FIXME Validoi kun toimii alikohteiden kanssa
-                                       (not (empty? (filter #(not (true? (:poistettu %))) toteutuneet-maarat)))
-
                                        (empty? alikohteet-virheet)
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
