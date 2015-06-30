@@ -17,6 +17,12 @@
   (-equiv [o other]
     (and (instance? DateTime other)
          (= (tc/to-long o) (tc/to-long other))))
+
+  IComparable
+  (-compare [x y]
+    (if (instance? DateTime y)
+      (compare (tc/to-long x) (tc/to-long y))
+      (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))
   )
 
 (defn millisekunteina [pvm]
