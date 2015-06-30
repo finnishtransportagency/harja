@@ -76,9 +76,11 @@
    [harja.ui.napit/palvelinkutsu-nappi
     "Lähetä tilaajalle"
     #(let [urakka-id (:id @nav/valittu-urakka)
-           [sopimus-id _] @u/valittu-sopimusnumero]
+           [sopimus-id _] @u/valittu-sopimusnumero
+           paallystyskohde-id (:paallystyskohde-id @lomakedata)
+           lahetettava-lomakedata (dissoc @lomakedata :paallystyskohde-id)]
       (log "PÄÄ Lähetetään lomake: " (pr-str @lomakedata))
-      (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id @lomakedata))
+      (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-lomakedata))
     {:luokka       "nappi-ensisijainen"
      :disabled     (false? @valmis-tallennettavaksi?)
      :kun-onnistuu (fn [vastaus]

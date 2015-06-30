@@ -91,19 +91,31 @@
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
+(defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id]
+  (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
+  ; FIXME TODO
+  )
+
+(defn luo-paallystysilmoitus [db user lomakedata paallystyskohde-id]
+  (log/debug "Luodaan uusi päällystysilmoitus, jonka päällystyskohde-id: " paallystyskohde-id)
+  (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))]
+    (q/luo-paallystysilmoitus<! db paallystyskohde-id lomakedata muutoshinta (:id user))))
+
+(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystyskohde-id lomakedata]}]
   (log/debug "Käsitellään päällystysilmoitus: " lomakedata ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
-  ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Vaadi skeema kun yhteys toimii muuten (sallitaan frontilta muutama optional argument tai frontti poistaa ne)
-  (jdbc/with-db-transaction [c db]
-    ; FIXME Luo uuden, tarkista onko jo olemassa ja jos on niin päivitä
-    (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
-          ilmoitus (cheshire/encode lomakedata)
-          vastaus (q/luo-paallystysilmoitus<! db (:paallytyskohde-id lomakedata) ilmoitus muutoshinta (:id user))]
-      (log/debug "Muutoshinta " muutoshinta)
-      (log/debug "enkoodattu ilmoitusdata" ilmoitus)
-      (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
-                                             :sopimus-id sopimus-id}))))
+  ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Validoi kun toimii
+  (let [encoodattu-lomakedata (cheshire/encode lomakedata)]
+    (jdbc/with-db-transaction [c db]
+      (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
+                                                                                                   :sopimus-id         sopimus-id
+                                                                                                   :paallystyskohde-id paallystyskohde-id})]
+        (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
+        (if paallystysilmoitus-kannassa
+          (paivita-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id)
+          (luo-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id))
+        (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
+                                               :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
   component/Lifecycle
