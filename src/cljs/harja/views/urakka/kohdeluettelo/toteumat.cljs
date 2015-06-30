@@ -84,6 +84,8 @@
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))]
     [:div.pot-toiminnot
      [:div.pot-huomaus @huomautusteksti]
+
+     (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
       #(let [urakka-id (:id @nav/valittu-urakka)
@@ -103,7 +105,7 @@
        :kun-onnistuu (fn [vastaus]
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (reset! paallystys/paallystystoteumat vastaus)
-                       (reset! lomakedata nil))}]
+                       (reset! lomakedata nil))}])
 
      (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
