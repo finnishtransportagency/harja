@@ -44,7 +44,7 @@
   (-> json
       (assoc-in avainpolku
                 (when-let [dt (some-> json (get-in avainpolku))]
-                  (clj-time.format/parse (clj-time.format/formatters :date-time) dt)))))
+                  (clj-time.coerce/to-date (clj-time.format/parse (clj-time.format/formatters :date-time) dt))))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -78,7 +78,8 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
-                                   (map #(parsi-pvm % [:ilmoitustiedot :valmispvm])))
+                                   (map #(parsi-pvm % [:ilmoitustiedot :valmispvm]))
+                                   (map #(parsi-pvm % [:ilmoitustiedot :takuupvm])))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
