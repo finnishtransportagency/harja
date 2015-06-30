@@ -8,115 +8,66 @@
             [ring.middleware.params :refer [wrap-params]]
             [harja.kyselyt.liitteet :as q]
             [taoensso.timbre :as log]
-            [harja.palvelin.oikeudet :as oik])
-  (:import (java.io InputStream ByteArrayInputStream ByteArrayOutputStream)
-           (org.postgresql PGConnection)
-           (org.postgresql.largeobject LargeObject LargeObjectManager
-                                       BlobInputStream BlobOutputStream)
-           (com.mchange.v2.c3p0 C3P0ProxyConnection)
-           (net.coobird.thumbnailator Thumbnailator)))
+            [harja.palvelin.oikeudet :as oik]
+            [harja.palvelin.komponentit.liitteet :as liitteet])
+  (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
-(def get-large-object-api (->> (Class/forName "org.postgresql.PGConnection")
-                               .getMethods
-                               (filter #(= (.getName %) "getLargeObjectAPI"))
-                               first))
 
-(defn- large-object-api [c]
-  (.rawConnectionOperation c
-                           get-large-object-api
-                           C3P0ProxyConnection/RAW_CONNECTION
-                           (into-array Object [])))
 
-                         
-(defn tallenna-lob [db ^InputStream in]
-  (with-open [c (doto (.getConnection (:datasource db))
-                  (.setAutoCommit false))]
-    (let [lom (large-object-api c)
-          oid (.create lom LargeObjectManager/READWRITE)]
-      (try
-        (with-open [obj (.open lom oid LargeObjectManager/WRITE)
-                    out (.getOutputStream obj)]
-          (io/copy in out)
-          oid)
-        (finally
-          (.commit c))))))
-
-(defn lue-lob [db oid]
-  (with-open  [c (doto (.getConnection (:datasource db))
-                   (.setAutoCommit false))]
-    (let [lom (large-object-api c)]
-      (with-open [obj (.open lom oid LargeObjectManager/READ)
-                  in (.getInputStream obj)
-                  out (ByteArrayOutputStream.)]
-        (io/copy in out)
-        (.toByteArray out)))))
-    
-(defn muodosta-pikkukuva
-  "Ottaa ison kuvan (tiedosto) ja palauttaa pikkukuvan byte[] muodossa. Pikkukuva on aina png."
-  [isokuva]
-  (with-open [out (ByteArrayOutputStream.)]
-    (Thumbnailator/createThumbnail (io/input-stream isokuva) out "png" 64 64)
-    (.toByteArray out)))
-    
-    
-
-(defn tallenna-liite [db req]
+(defn tallenna-liite [liitteet req]
   (println "LIITEHÄN SIELTÄ TULI: " (:params req))
 
   (let [parametrit (:params req)
         liite (get parametrit "liite")
-        urakka (Integer/parseInt (get parametrit "urakka"))] 
-        
+        urakka (Integer/parseInt (get parametrit "urakka"))]
+
     (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
-    (if liite 
+    (if liite
       (let [{:keys [filename content-type tempfile size]} liite
-            pikkukuva (muodosta-pikkukuva tempfile)
-            oid (tallenna-lob db (io/input-stream tempfile))
-            liite (q/tallenna-liite<! db filename content-type size oid pikkukuva (:id (:kayttaja req)) urakka)]
+            uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile)]
         (log/debug "Tallennettu liite " filename " (" size " tavua)")
-        (transit-vastaus (-> liite
+        (transit-vastaus (-> uusi-liite
                              (dissoc :liite_oid :pikkukuva :luoja :luotu))))
-
       {:status 400
-       :body "Ei liitettä"})))
+       :body   "Ei liitettä"})))
 
 
-(defn lataa-liite [db req]
+(defn lataa-liite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        {:keys [liite_oid tyyppi koko urakka]} (first (q/hae-liite-lataukseen db id))]
+        {:keys [tyyppi koko urakka data]} (liitteet/lataa-liite liitteet id)]
     (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
-    {:status 200
-     :headers {"Content-Type" tyyppi
+    {:status  200
+     :headers {"Content-Type"   tyyppi
                "Content-Length" koko}
-     :body (java.io.ByteArrayInputStream. (lue-lob db liite_oid))}))
+     :body    (ByteArrayInputStream. data)}))
 
-(defn lataa-pikkukuva [db req]
+(defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        {:keys [pikkukuva urakka]} (first (q/hae-pikkukuva-lataukseen db id))]
+        {:keys [pikkukuva urakka]} (liitteet/lataa-pikkukuva liitteet id)]
     (oik/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
     (log/debug "Ladataan pikkukuva " id)
     (if pikkukuva
-      {:status 200
-       :headers {"Content-Type" "image/png"
+      {:status  200
+       :headers {"Content-Type"   "image/png"
                  "Content-Length" (count pikkukuva)}
-       :body (java.io.ByteArrayInputStream. pikkukuva)}
+       :body    (ByteArrayInputStream. pikkukuva)}
       {:status 404
-       :body "Annetulle liittelle ei pikkukuvaa."})))
-    
-  
+       :body   "Annetulle liittelle ei pikkukuvaa."})))
+
+
 (defrecord Liitteet []
   component/Lifecycle
   (start [{:keys [http-palvelin] :as this}]
     (julkaise-palvelu http-palvelin :tallenna-liite
-                      (wrap-multipart-params (fn [req] (tallenna-liite (:db this) req)))
+                      (wrap-multipart-params (fn [req] (tallenna-liite (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
     (julkaise-palvelu http-palvelin :lataa-liite
                       (wrap-params (fn [req]
-                                     (lataa-liite (:db this) req)))
+                                     (lataa-liite (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
     (julkaise-palvelu http-palvelin :lataa-pikkukuva
                       (wrap-params (fn [req]
-                                     (lataa-pikkukuva (:db this) req)))
+                                     (lataa-pikkukuva (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
     this)
 

@@ -69,6 +69,10 @@
                                                         kehitysmoodi)
                        [:todennus])
 
+      :liitteiden-hallinta (component/using
+                             (harja.palvelin.komponentit.liitteet/->Liitteet)
+                             [:db])
+
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (sonja/luo-sonja (:sonja asetukset))
 
@@ -116,8 +120,8 @@
                   (toteumat/->Toteumat)
                   [:http-palvelin :db])
       :paallystys (component/using
-                  (paallystys/->Paallystys)
-                  [:http-palvelin :db])
+                    (paallystys/->Paallystys)
+                    [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
                         [:http-palvelin :db])
@@ -151,7 +155,7 @@
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
-                  [:http-palvelin :db])
+                  [:http-palvelin :liitteiden-hallinta])
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
