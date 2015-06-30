@@ -65,6 +65,19 @@ AND urakka = :urakka
 AND sopimus = :sopimus
 WHERE paallystyskohde = :paallystyskohde;
 
+-- name: paivita-paallystysilmoitus!
+-- Päivittää päällystysilmoituksen
+UPDATE paallystysilmoitus SET
+  tila = :tila,
+  ilmoitustiedot = :ilmoitustiedot::jsonb,
+  aloituspvm = :aloituspvm,
+  valmistumispvm = :valmistumispvm,
+  muutoshinta = :muutoshinta,
+  muokattu = NOW(),
+  muokkaaja = :muokkaaja,
+  poistettu = FALSE,
+WHERE paallystyskohde = :id;
+
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmistumispvm, muutoshinta, luotu, luoja, poistettu)

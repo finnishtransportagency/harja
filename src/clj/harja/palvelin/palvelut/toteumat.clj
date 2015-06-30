@@ -374,7 +374,7 @@
 
 (defn poista-toteuma!
   [db user t]
-  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixmepaivita roolit??
                             (:urakka t))
   (jdbc/with-db-transaction [c db]
                             (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))

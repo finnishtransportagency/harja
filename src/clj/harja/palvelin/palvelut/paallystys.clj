@@ -15,7 +15,9 @@
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [cheshire.core :as cheshire]
-            [harja.domain.skeema :as skeema]))
+            [harja.domain.skeema :as skeema]
+            [clj-time.format :as format]
+            [clj-time.coerce :as coerce]))
 
 (def muunna-desimaaliluvut-xf
   (map #(-> %
@@ -50,7 +52,7 @@
   (-> json
       (assoc-in avainpolku
                 (when-let [dt (some-> json (get-in avainpolku))]
-                  (clj-time.coerce/to-date (clj-time.format/parse (clj-time.format/formatters :date-time) dt))))))
+                  (coerce/to-date (format/parse (format/formatters :date-time) dt))))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -89,14 +91,19 @@
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
 
-(defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id]
+(defn laske-muutoshinta [lomakedata]
+  (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
+
+(defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
-  ; FIXME TODO
-  )
+  (let [muutoshinta (laske-muutoshinta lomakedata)
+        tila (if valmistumispvm "valmis" "aloitettu")]
+    (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
+    (q/paivita-paallystysilmoitus! db tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user) paallystyskohde-id)))
 
 (defn luo-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm]
   (log/debug "Luodaan uusi päällystysilmoitus, jonka päällystyskohde-id: " paallystyskohde-id)
-  (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
+  (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
     (q/luo-paallystysilmoitus<! db paallystyskohde-id tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user))))
