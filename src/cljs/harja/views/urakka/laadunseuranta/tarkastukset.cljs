@@ -15,7 +15,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
 
-            [harja.views.urakka.laadunseuranta.havainnot :as havainnot])
+            [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
+            
+            [harja.domain.laadunseuranta :refer [Tarkastus]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
 
@@ -85,6 +87,8 @@
                  :nimi :kitka :leveys-col 1
                  :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
+                 :validoi [#(when-not (<= -55 %1 55)
+                              "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
                  :nimi :lampotila :leveys-col 1
                  :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
 
@@ -119,13 +123,7 @@
 
    [lomake/lomake
     {:luokka :horizontal
-     :muokkaa! #(reset! tarkastus %)
-     :footer (fn [g]
-               [napit/palvelinkutsu-nappi
-                "Tallenna tarkastus"
-                (fn []
-                  (log "jotain pitää kysellä"))
-                {:disabled true}])}
+     :muokkaa! #(reset! tarkastus %)}
 
     [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika}
      {:otsikko "Tierekisteriosoite" :nimi :tr
@@ -151,6 +149,15 @@
    [havainnot/havainto {:osa-tarkastusta? true}
     (r/wrap (:havainto @tarkastus)
             #(swap! tarkastus assoc :havainto %))]
+
+   [:div.row
+    [:div.col-sm-2]
+    [:div.col-sm-2
+     [napit/palvelinkutsu-nappi
+      "Tallenna tarkastus"
+      (fn []
+        (log "jotain pitää kysellä"))
+      {:disabled true}]]]
    ])
 
 (defn tarkastukset

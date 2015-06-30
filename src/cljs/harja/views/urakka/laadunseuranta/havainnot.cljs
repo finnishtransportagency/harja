@@ -299,9 +299,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
     (komp/luo
-     {:component-will-receive-props
-      (fn [this uusi-havainto]
-        (reset! havainto uusi-havainto))}
      
      (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
        (let [muokattava? (constantly (not (paatos? alkuperainen)))
