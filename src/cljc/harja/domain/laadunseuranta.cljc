@@ -2,9 +2,14 @@
   "Validin tarkastuksen skeema"
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
-            [harja.domain.yleiset :refer [Tierekisteriosoite]]))
+            [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti]]))
 
+(def Havainto
+  {:kuvaus Teksti
+   :tekija Osapuoli
+   :selvitys-pyydetty s/Bool})
 
+  
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie))
 
 (def Talvihoitomittaus
@@ -29,6 +34,8 @@
    (s/optional-key :soratiemittais) Soratiemittaus
    (s/optional-key :havainto) Havainto})
 
+(defn validoi-tarkastus [data]
+  (skeema/tarkista Tarkastus data))
 
 (defn validi-tarkastus? [data]
-  (skeema/validoi Tarkastus data))
+  (nil? (validoi-tarkastus data)))

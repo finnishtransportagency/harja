@@ -17,7 +17,7 @@
 
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
             
-            [harja.domain.laadunseuranta :refer [Tarkastus]])
+            [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
 
@@ -40,7 +40,7 @@
                 
 
 (defn uusi-tarkastus []
-  {::uusi? true
+  {:uusi? true
    :aika (pvm/nyt)})
 
 (defn tarkastuslistaus
@@ -67,10 +67,7 @@
          
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika 
-           :nimi :aika}
-         
-
-
+           :nimi :aika}         
           ]
 
          @urakan-tarkastukset]]))))
@@ -157,7 +154,7 @@
       "Tallenna tarkastus"
       (fn []
         (log "jotain pitää kysellä"))
-      {:disabled true}]]]
+      {:disabled (not (validi-tarkastus? @tarkastus))}]]]
    ])
 
 (defn tarkastukset
