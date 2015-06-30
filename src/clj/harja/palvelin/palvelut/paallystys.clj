@@ -71,9 +71,9 @@
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into []
-                      jsonb->clojuremap
-                      (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))]
+  (let [vastaus (first (into []
+                             jsonb->clojuremap
+                             (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
 

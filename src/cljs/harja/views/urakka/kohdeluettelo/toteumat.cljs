@@ -367,8 +367,10 @@
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               ilmoitus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
-                                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str ilmoitus))))}
+                                                                                                               vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus))
+                                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str (:ilmoitustiedot vastaus)))
+                                                                                                           (reset! lomakedata (:ilmoitustiedot vastaus))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohde              (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
