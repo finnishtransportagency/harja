@@ -90,11 +90,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   java.lang.String
   (luo-viesti [s istunto]
     (doto (.createTextMessage istunto)
-      (.setText s)))
-
-  clojure.lang.PersistentVector
-  (luo-viesti [viesti istunto]
-    (luo-viesti viesti istunto)))
+      (.setText s))))
 
 
 (defrecord SonjaYhteys [asetukset istunto yhteys jonot]

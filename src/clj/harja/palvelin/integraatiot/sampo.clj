@@ -11,7 +11,8 @@
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
             [clj-time.core :as t]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml])
+  (:import (java.util UUID)))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -31,13 +32,13 @@
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn lukitse-maksuera [db numero]
-  (let [lukko (str (java.util.UUID/randomUUID))]
+  (let [lukko (str (UUID/randomUUID))]
     (log/debug "Lukitaan maksuera:" numero ", lukolla:" lukko)
     (let [onnistuiko? (= 1 (qm/lukitse-maksuera! db lukko numero))]
       onnistuiko?)))
 
 (defn lukitse-kustannussuunnitelma [db numero]
-  (let [lukko (str (java.util.UUID/randomUUID))]
+  (let [lukko (str (UUID/randomUUID))]
     (log/debug "Lukitaan kustannussuunnitelma:" numero ", lukolla:" lukko)
     (let [onnistuiko? (= 1 (qk/lukitse-kustannussuunnitelma! db lukko numero))]
       onnistuiko?)))
@@ -93,23 +94,23 @@
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [transaktio db]
-                            (if-let [maksueranumero (hae-maksueranumero transaktio viesti-id)]
-                              (if (contains? kuittaus :virhe)
-                                (do
-                                  (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-                                  (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
-                                (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
-                              (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+    (if-let [maksueranumero (hae-maksueranumero transaktio viesti-id)]
+      (if (contains? kuittaus :virhe)
+        (do
+          (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+          (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
+        (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
+      (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [transaktio db]
-                            (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
-                              (if (contains? kuittaus :virhe)
-                                (do
-                                  (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
-                                  (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
-                                (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
-                              (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
+    (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
+      (if (contains? kuittaus :virhe)
+        (do
+          (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
+        (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
+      (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
 
 (defn laheta-maksuera [sonja db lahetysjono-ulos numero]

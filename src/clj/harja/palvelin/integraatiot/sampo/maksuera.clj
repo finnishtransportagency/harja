@@ -89,7 +89,7 @@
                                 (luo-custom-information {"code"                 instance-code
                                                          ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
                                                          ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
-                                                         "vv_payment_date"      (formatoi-paivamaara (java.util.Date.))
+                                                         "vv_payment_date"      (formatoi-paivamaara (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))
