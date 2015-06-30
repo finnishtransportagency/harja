@@ -298,7 +298,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 (defn havainto [asetukset havainto]
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
-    (tarkkaile! "Havainto: " havainto)
     (komp/luo
      {:component-will-receive-props
       (fn [this uusi-havainto]
