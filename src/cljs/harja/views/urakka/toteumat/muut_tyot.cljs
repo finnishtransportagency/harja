@@ -70,10 +70,14 @@
                         (get-in muokattu [:tehtava :paivanhinta])
                         nil))
             _ (log "tallenna-muu-tyo-toteuma" (pr-str toteuma))
-            res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))]
+            vanhat-idt (into #{} (map #(get-in % [:toteuma :id]) @u/muut-tyot-hoitokaudella))
+            res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))
+            uuden-id (get-in (first (filter #(not (vanhat-idt (get-in % [:toteuma :id])))
+                                         res))[:toteuma :id])]
         (log "tallennettu, palvelu vastasi: " (pr-str res))
         (reset! u/muut-tyot-hoitokaudella res)
-        (paivita! u/muutoshintaiset-tyot))))
+        (paivita! u/muutoshintaiset-tyot)
+        (or uuden-id true))))
 
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
@@ -102,9 +106,9 @@
 
 (def +rivin-luokka+ "korosta")
 
-(defn aseta-rivin-luokka [korostettavan-rivin-id]
+(defn aseta-rivin-luokka [korostettavan-rivin-toteuman-id]
   (fn [rivi]
-    (if (= korostettavan-rivin-id (:id rivi))
+    (if (= korostettavan-rivin-toteuman-id (get-in rivi [:toteuma :id]))
       +rivin-luokka+
       "")))
 
@@ -156,7 +160,7 @@
                               #(tallenna-muu-tyo @muokattu)
                               {:luokka "nappi-ensisijainen"
                                :disabled @valmis-tallennettavaksi?
-                               :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
+                               :kun-onnistuu #(let [muokatun-id (or (get-in @muokattu [:toteuma :id]) %)]
                                                (do
                                                  (korosta-rivia muokatun-id)
                                                  (reset! tallennus-kaynnissa false)
@@ -350,8 +354,8 @@
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
              :rivi-klikattu #(reset! valittu-toteuma %)
-             ;:rivin-luokka  #(aseta-rivin-luokka %)
-             :tunniste      #(get-in % [:tehtava :id])}
+             :rivin-luokka  #(aseta-rivin-luokka %)
+             :tunniste      #(get-in % [:toteuma :id])}
             [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
              {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
              {:otsikko "Tehtävä" :tyyppi :string :nimi :tehtavan_nimi
