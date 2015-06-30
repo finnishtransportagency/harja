@@ -207,7 +207,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                     {:ring-kasittelija? true
                      :tarkista-polku? false}))
 
-                    
+
+(defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]
+  (doseq [[nimi funktio] (partition 2 palveluiden-nimet-ja-funktiot)]
+    (julkaise-palvelu http nimi funktio)))
+
 (defn poista-palvelut [http & palvelut]
   (doseq [p palvelut]
     (poista-palvelu http p)))
