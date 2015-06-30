@@ -21,6 +21,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [clojure.string :as str]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
@@ -35,22 +36,22 @@
 (def lomakedata (atom nil))
 
 (defn kohteen-tiedot []
-  (let [kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm @lomakedata)
-                                :valmistumispvm (:valmistumispvm @lomakedata)
-                                :takuupvm (:takuupvm @lomakedata)
-                                :hinta (:hinta @lomakedata)}
-                               (fn [uusi-arvo]
-                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
-                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
-                                                        (assoc :hinta (:hinta uusi-arvo))))))]
-    [lomake {:luokka :horizontal} ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+  (let [kohteen-tiedot (atom {:aloituspvm     (:aloituspvm @lomakedata)
+                              :valmistumispvm (:valmistumispvm @lomakedata)
+                              :takuupvm       (:takuupvm @lomakedata)
+                              :hinta          (:hinta @lomakedata)}
+                             (fn [uusi-arvo]
+                               (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
+                                                      (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
+                                                      (assoc :takuupvm (:takuupvm uusi-arvo))
+                                                      (assoc :hinta (:hinta uusi-arvo))))))]
+    [lomake {:luokka :horizontal}                           ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
      [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi @lomakedata)) :muokattava? (constantly false)}
       {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
       {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
       {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
       {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero}]
-     @kohteen-tiedot])) ; FIXME Tietoja ei voi muokata??
+     @kohteen-tiedot]))                                     ; FIXME Tietoja ei voi muokata??
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -88,8 +89,8 @@
              aloituspvm (:aloiotuspvm @lomakedata)
              valmispvm (:valmistumispvm @lomakedata)
              lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
-                                        (dissoc @lomakedata :valmistumispvm)
-                                        (dissoc @lomakedata :aloituspvm))]
+                                  (dissoc @lomakedata :valmistumispvm)
+                                  (dissoc @lomakedata :aloituspvm))]
         (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm))
       {:luokka       "nappi-ensisijainen"
@@ -98,25 +99,26 @@
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (reset! paallystys/paallystystoteumat vastaus)
                        (reset! lomakedata nil))}]
-     [harja.ui.napit/palvelinkutsu-nappi
-      "Hyväksy"
-      #(let [urakka-id (:id @nav/valittu-urakka)
-             [sopimus-id _] @u/valittu-sopimusnumero])
-      {:luokka       "nappi-ensisijainen"
-       :disabled     (constantly false) ; FIXME Rooli.
-       :kun-onnistuu (fn [vastaus]
-                       ; TODO
-                       )}]
 
-     [harja.ui.napit/palvelinkutsu-nappi
-      "Palauta urakoitsijalle"
-      #(let [urakka-id (:id @nav/valittu-urakka)
-             [sopimus-id _] @u/valittu-sopimusnumero])
-      {:luokka       "nappi-ensisijainen"
-       :disabled     (constantly false) ; FIXME Rooli.
-       :kun-onnistuu (fn [vastaus]
-                       ; TODO
-                       )}]]))
+     (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
+                                 [harja.ui.napit/palvelinkutsu-nappi
+                                  "Hyväksy"
+                                  #(let [urakka-id (:id @nav/valittu-urakka)
+                                         [sopimus-id _] @u/valittu-sopimusnumero])
+                                  {:luokka       "nappi-ensisijainen"
+                                   :kun-onnistuu (fn [vastaus]
+                                                   ; TODO
+                                                   )}])
+
+     (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
+                                 [harja.ui.napit/palvelinkutsu-nappi
+                                  "Palauta urakoitsijalle"
+                                  #(let [urakka-id (:id @nav/valittu-urakka)
+                                         [sopimus-id _] @u/valittu-sopimusnumero])
+                                  {:luokka       "nappi-ensisijainen"
+                                   :kun-onnistuu (fn [vastaus]
+                                                   ; TODO
+                                                   )}])]))
 
 (defn paallystysilmoituslomake
   []

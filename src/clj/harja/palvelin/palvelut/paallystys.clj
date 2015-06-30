@@ -99,7 +99,7 @@
   (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paallystysilmoitus! db tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user) paallystyskohde-id)))
+    (q/paivita-paallystysilmoitus! db tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user) paallystyskohde-id))) ; FIXME Tämäkään ei toimi
 
 (defn luo-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm]
   (log/debug "Luodaan uusi päällystysilmoitus, jonka päällystyskohde-id: " paallystyskohde-id)
