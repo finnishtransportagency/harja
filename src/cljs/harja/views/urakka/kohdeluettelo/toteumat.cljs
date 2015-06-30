@@ -86,7 +86,7 @@
       #(let [urakka-id (:id @nav/valittu-urakka)
              [sopimus-id _] @u/valittu-sopimusnumero
              paallystyskohde-id (:paallystyskohde-id @lomakedata)
-             aloituspvm (:aloiotuspvm @lomakedata)
+             aloituspvm (:aloituspvm @lomakedata)
              valmispvm (:valmistumispvm @lomakedata)
              takuupvm (:takuupvm @lomakedata)
              lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)

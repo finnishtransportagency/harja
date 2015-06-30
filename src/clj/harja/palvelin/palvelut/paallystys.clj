@@ -95,18 +95,18 @@
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
 
 (defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm]
-  (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
+  (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id ", aloituspvm " aloituspvm ", valmistumispvm " valmistumispvm)
   (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paallystysilmoitus! db tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user) paallystyskohde-id))) ; FIXME Tämäkään ei toimi
+    (q/paivita-paallystysilmoitus! db tila lomakedata (konv/sql-date aloituspvm) (konv/sql-date valmistumispvm) muutoshinta (:id user) paallystyskohde-id))) ; FIXME Tämäkään ei toimi
 
 (defn luo-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm]
   (log/debug "Luodaan uusi päällystysilmoitus, jonka päällystyskohde-id: " paallystyskohde-id)
   (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila lomakedata aloituspvm valmistumispvm muutoshinta (:id user))))
+    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila lomakedata (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) muutoshinta (:id user))))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystyskohde-id lomakedata aloituspvm valmistumispvm]}]
   (log/debug "Käsitellään päällystysilmoitus: " lomakedata
@@ -123,7 +123,7 @@
                                                                                                    :sopimus-id         sopimus-id
                                                                                                    :paallystyskohde-id paallystyskohde-id})]
         (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
-        (if paallystysilmoitus-kannassa ;FIXME takuupvm puuttuu
+        (if paallystysilmoitus-kannassa ; FIXME takuupvm puuttuu
           (paivita-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm)
           (luo-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm))
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
