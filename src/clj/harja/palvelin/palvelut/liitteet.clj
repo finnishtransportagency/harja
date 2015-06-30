@@ -74,6 +74,3 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin :tallenna-liite :lataa-liite :lataa-pikkukuva)))
 
-  
-                        
-  
