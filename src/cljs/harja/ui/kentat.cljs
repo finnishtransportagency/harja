@@ -148,7 +148,8 @@
                  ;; numeron syöttö (esim. "4," arvo ennen desimaalin kirjoittamista ylikirjoittuu
                  (let [uusi (str @data)]
                    (if (or (= olemassaoleva-teksti (str uusi ","))
-                           (= olemassaoleva-teksti (str uusi ".")))
+                           (= olemassaoleva-teksti (str uusi "."))
+                           (= olemassaoleva-teksti "-") (str "-" uusi))
                      olemassaoleva-teksti
                      uusi)))))
       
@@ -162,10 +163,11 @@
                    :on-blur #(reset! teksti (str @data))
                    :value nykyinen-teksti
                    :on-change #(let [v (-> % .-target .-value)]
-                                 (when (or (= v "") 
+                                 (when (or (= v "")
+                                           (= v "-")
                                            (re-matches (if kokonaisluku?
-                                                         #"\d{1,10}"
-                                                         #"\d{1,10}((\.|,)\d{0,2})?") v))
+                                                         #"-?\d{1,10}"
+                                                         #"-?\d{1,10}((\.|,)\d{0,2})?") v))
                                    (reset! teksti v)
                                    
                                    (let [numero (if kokonaisluku?
@@ -380,7 +382,6 @@
      (komp/klikattu-ulkopuolelle #(reset! auki false))
      {:component-will-receive-props
       (fn [this _ {:keys [focus] :as s} data]
-        (log "PVM-AIKA sai propsit: " (pr-str data))
         (when-not focus
           (reset! auki false))
         (swap! teksti #(if-let [p @data]

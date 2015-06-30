@@ -139,8 +139,6 @@ Optioissa voi olla seuraavat avaimet:
                                                                   (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi))
                                                           (reset! varoitukset
                                                                   (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita))
-                                                          (log "VIRHEITÄ: " (pr-str @virheet))
-                                                          (log "VAROITUKSIA: " (pr-str @varoitukset))
                                                           (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))
                               kentan-tunniste nimi]
