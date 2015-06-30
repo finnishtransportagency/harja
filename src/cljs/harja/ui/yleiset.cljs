@@ -174,43 +174,46 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                          nil)
           :on-focus    on-focus
           :on-key-down #(let [kc (.-keyCode %)]
-                         (.preventDefault %)
-                         (.stopPropagation %)
-                         (if (or (= kc 38)
-                                 (= kc 40)
-                                 (= kc 13))
-                           (do
-                             (when-not (empty? vaihtoehdot)
-                               (let [nykyinen-valittu-idx (loop [i 0]
-                                                            (if (= i (count vaihtoehdot))
-                                                              nil
-                                                              (if (= (nth vaihtoehdot i) valinta)
-                                                                i
-                                                                (recur (inc i)))))]
-                                 (case kc
-                                   38 ;; nuoli ylös
-                                   (if (or (nil? nykyinen-valittu-idx)
-                                           (= 0 nykyinen-valittu-idx))
-                                     (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
-                                     (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+                          ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
+                          ;; välillä liikkumista ei estetä
+                          (when-not (= kc 9) 
+                            (.preventDefault %)
+                            (.stopPropagation %)
+                            (if (or (= kc 38)
+                                    (= kc 40)
+                                    (= kc 13))
+                              (do
+                                (when-not (empty? vaihtoehdot)
+                                  (let [nykyinen-valittu-idx (loop [i 0]
+                                                               (if (= i (count vaihtoehdot))
+                                                                 nil
+                                                                 (if (= (nth vaihtoehdot i) valinta)
+                                                                   i
+                                                                   (recur (inc i)))))]
+                                    (case kc
+                                      38 ;; nuoli ylös
+                                      (if (or (nil? nykyinen-valittu-idx)
+                                              (= 0 nykyinen-valittu-idx))
+                                        (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                        (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
 
-                                   40 ;; nuoli alas
-                                   (if (or (nil? nykyinen-valittu-idx)
-                                           (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
-                                     (valitse-fn (nth vaihtoehdot 0))
-                                     (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+                                      40 ;; nuoli alas
+                                      (if (or (nil? nykyinen-valittu-idx)
+                                              (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                        (valitse-fn (nth vaihtoehdot 0))
+                                        (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
-                                   13 ;; enter
-                                   (reset! auki false)))))
+                                      13 ;; enter
+                                      (reset! auki false)))))
 
-                           (do
-                             (reset! term (char kc))
-                             (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                               (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
-                                                                            (.toLowerCase @term)) 0))
-                                                             vaihtoehdot))]
-                               (valitse-fn itemi)
-                               (reset! auki false)))) nil)}
+                              (do
+                                (reset! term (char kc))
+                                (when-let [itemi (first (filter (fn [vaihtoehto]
+                                                                  (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
+                                                                               (.toLowerCase @term)) 0))
+                                                                vaihtoehdot))]
+                                  (valitse-fn itemi)
+                                  (reset! auki false)))) nil))}
 
          [:div.valittu (format-fn valinta)]
          [:span.caret]]
