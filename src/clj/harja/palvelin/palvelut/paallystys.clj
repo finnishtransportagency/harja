@@ -84,8 +84,6 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
-                                   (map #(parsi-pvm % [:ilmoitustiedot :valmispvm]))
-                                   (map #(parsi-pvm % [:ilmoitustiedot :takuupvm]))
                                    (map #(tyot-string->avain % [:ilmoitustiedot :tyot])))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))

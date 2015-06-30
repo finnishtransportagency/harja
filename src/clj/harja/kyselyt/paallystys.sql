@@ -34,6 +34,8 @@ WHERE poistettu IS NOT TRUE;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   tila,
+  aloituspvm,
+  valmistumispvm,
   pk.nimi,
   pk.kohdenumero,
   muutoshinta,

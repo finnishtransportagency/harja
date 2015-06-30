@@ -133,10 +133,7 @@
   (apply s/enum (map :avain +paallystystyon-tyypit+)))
 
 (def +paallystysilmoitus+
-  {:kohde s/Int      ;; viittaus kohteeseen
-   :valmispvm skeema/pvm-tyyppi ;; valmistumispvm
-   :takuupvm skeema/pvm-tyyppi ;; takuupvm
-   :hinta s/Num   ;; toteutunut hinta
+  {:hinta s/Num   ;; toteutunut hinta
 
    ;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet [{:tie s/Int :aosa s/Int :aet s/Int :losa s/Int :let s/Int

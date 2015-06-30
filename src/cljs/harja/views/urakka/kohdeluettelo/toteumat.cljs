@@ -35,18 +35,13 @@
 (def lomakedata (atom nil))
 
 (defn kohteen-tiedot []
-  (let [valmispvm (r/wrap (:valmispvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :valmispvm uusi-arvo))))
-        takuupvm (r/wrap (:takuupvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :takuupvm uusi-arvo))))
-        toteutunut-hinta (r/wrap (:hinta @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :hinta uusi-arvo))))]
-
-    [:div.pot-kohteen-tiedot
-     [:h6 "Kohteen tiedot"]                                 ; FIXME Inline lomake
-     [:span.pot-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
-     [:span.pot-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
-     [:span.pot-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
-     [:span.pot-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]
-
-    ))
+    [lomake {:luokka :horizontal} ; FIXME Luokka inline ei toimi kovin hyvin, pitää korjata
+     [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi @lomakedata)) :muokattava? (constantly false)}
+      {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
+      {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
+      {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
+      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero}]
+     @lomakedata]) ; FIXME Muokkaus ei toimi
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -71,7 +66,7 @@
        [:td.pot-yhteenveto-summa [:span (str @yhteensa " €")]]]]]))
 
 (defn toiminnot [valmis-tallennettavaksi?]
-  (let [huomautusteksti (reaction (let [valmispvm (:valmispvm @lomakedata)]
+  (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
                                     (if (not valmispvm)
                                       "Valmistusmispäivämäärää ei annettu, joten ilmoitus tallennetaan keskeneräisenä.")))]
     [:div.pot-toiminnot
@@ -82,12 +77,12 @@
              [sopimus-id _] @u/valittu-sopimusnumero
              paallystyskohde-id (:paallystyskohde-id @lomakedata)
              aloituspvm (:aloiotuspvm @lomakedata)
-             valmispvm (:valmispvm @lomakedata)
-             lahetettava-lomakedata (-> (dissoc @lomakedata :paallystyskohde-id)
-                                        (dissoc @lomakedata :valmis-pvm)
+             valmispvm (:valmistumispvm @lomakedata)
+             lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
+                                        (dissoc @lomakedata :valmistumispvm)
                                         (dissoc @lomakedata :aloituspvm))]
-        (log "PÄÄ Lähetetään lomake: " (pr-str @lomakedata))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-lomakedata aloituspvm valmispvm))
+        (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
+        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :kun-onnistuu (fn [vastaus]
@@ -322,9 +317,13 @@
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))
-                                                                                                               ilmoitustiedot (:ilmoitustiedot vastaus)]
+                                                                                                               ilmoitustiedot (:ilmoitustiedot vastaus)
+                                                                                                               data-lomakkeelle (-> (assoc ilmoitustiedot :paallystyskohde-id (:paallystyskohde_id rivi))
+                                                                                                                                    (assoc :valmistumispvm (:valmistumispvm vastaus))
+                                                                                                                                    (assoc :aloituspvm (:aloituspvm vastaus)))]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
-                                                                                                           (reset! lomakedata (assoc ilmoitustiedot :paallystyskohde-id (:paallystyskohde_id rivi)))))}
+                                                                                                           (log "PÄÄ data lomakkeelle: " (pr-str data-lomakkeelle))
+                                                                                                           (reset! lomakedata data-lomakkeelle)))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohde              (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
