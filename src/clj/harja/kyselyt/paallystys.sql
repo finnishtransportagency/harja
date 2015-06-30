@@ -70,7 +70,7 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Päivittää päällystysilmoituksen
 UPDATE paallystysilmoitus
 SET
-  tila           = :tila,
+  tila           = :tila::paallystystila,
   ilmoitustiedot = :ilmoitustiedot :: JSONB,
   aloituspvm     = :aloituspvm,
   valmistumispvm = :valmistumispvm,
