@@ -49,20 +49,35 @@ FROM materiaalikoodi m
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
 
 WHERE (t.urakka = :urakka OR t.urakka IS NULL) AND
+
+      -- Valitaan rivit joilla:
+      --  on joko toteuma tai mk, tai molemmat
+      --  toteuman alun pitää olla aikarajojen sisällä
+      --  mk:n alun JA lopun pitää olla aikarajojen sisällä
+      --  !! Jos t JA mk on rivillä, MOLEMPIEN pitää sopia aikaan
+      (
+        (t.id IS NOT NULL OR mk.id IS NOT NULL) AND
         (
-          -- Joko materiaalilla on toteuma tällä hoitokaudella..
+          (mk.id IS NULL AND
+           (t.alkanut :: DATE BETWEEN :alku AND :loppu)
+          ) OR
+          (t.id IS NULL AND
+            (
+              mk.alkupvm::DATE BETWEEN :alku AND :loppu
+              AND
+              mk.loppupvm::DATE BETWEEN :alku AND :loppu
+            )
+          ) OR
           (
-            t.alkanut::DATE >= :alku AND
-            t.alkanut::DATE <= :loppu
+            (
+              mk.alkupvm::DATE BETWEEN :alku AND :loppu
+              AND
+              mk.loppupvm::DATE BETWEEN :alku AND :loppu
+            ) AND
+            (t.alkanut :: DATE BETWEEN :alku AND :loppu)
           )
-          OR
-          -- Tai materiaalille on materiaalin_kaytto tälle hoitokaudelle
-          (
-            mk.id IS NOT NULL AND
-            mk.alkupvm::DATE >= :alku AND
-            mk.alkupvm::DATE <= :loppu
-          )
-        ) AND
+        )
+      ) AND
       (t.sopimus = :sopimus OR mk.sopimus = :sopimus);
 
 -- name: hae-urakan-toteumat-materiaalille
