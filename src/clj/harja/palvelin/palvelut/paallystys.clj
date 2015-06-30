@@ -124,7 +124,7 @@
                                                                                                    :paallystyskohde-id paallystyskohde-id})]
         (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
         (if paallystysilmoitus-kannassa
-          (paivita-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id)
+          (paivita-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm)
           (luo-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm))
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
