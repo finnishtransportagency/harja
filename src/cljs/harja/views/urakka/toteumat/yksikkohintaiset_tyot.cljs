@@ -135,7 +135,7 @@
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
-                              (log "TOT Muokataan toteumaa: " (pr-str uusi))
+                              (log "TOT Muokataan toteumaa: " ('r-str uusi))
                               (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"

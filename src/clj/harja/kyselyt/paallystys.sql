@@ -19,15 +19,15 @@ WHERE
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
 SELECT
-  pk.id as paallystyskohde_id,
+  pk.id AS paallystyskohde_id,
   tila,
   pk.nimi,
   pk.kohdenumero,
   pk.sopimuksen_mukaiset_tyot
 FROM paallystysilmoitus
-RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
-AND pk.urakka = :urakka
-AND pk.sopimus = :sopimus
+  RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
+                                   AND pk.urakka = :urakka
+                                   AND pk.sopimus = :sopimus
 WHERE poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
@@ -42,11 +42,11 @@ SELECT
   muutoshinta,
   ilmoitustiedot
 FROM paallystysilmoitus
-JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
-AND pk.urakka = :urakka
-AND pk.sopimus = :sopimus
+  JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
+                             AND pk.urakka = :urakka
+                             AND pk.sopimus = :sopimus
 WHERE paallystyskohde = :paallystyskohde
-AND poistettu IS NOT TRUE;
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
 -- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
@@ -61,25 +61,27 @@ SELECT
   nykyinen_paallyste,
   toimenpide
 FROM paallystyskohdeosa
-JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
-AND urakka = :urakka
-AND sopimus = :sopimus
+  JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+                          AND urakka = :urakka
+                          AND sopimus = :sopimus
 WHERE paallystyskohde = :paallystyskohde;
 
 -- name: paivita-paallystysilmoitus!
 -- Päivittää päällystysilmoituksen
-UPDATE paallystysilmoitus SET
-  tila = :tila,
-  ilmoitustiedot = :ilmoitustiedot::jsonb,
-  aloituspvm = :aloituspvm,
+UPDATE paallystysilmoitus
+SET
+  tila           = :tila,
+  ilmoitustiedot = :ilmoitustiedot :: JSONB,
+  aloituspvm     = :aloituspvm,
   valmistumispvm = :valmistumispvm,
-  muutoshinta = :muutoshinta,
-  muokattu = NOW(),
-  muokkaaja = :muokkaaja,
-  poistettu = FALSE,
-WHERE paallystyskohde = :id;
+  muutoshinta    = :muutoshinta,
+  muokattu       = NOW(),
+  muokkaaja      = :muokkaaja,
+  poistettu      = FALSE
+  WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmistumispvm, muutoshinta, luotu, luoja, poistettu)
-VALUES (:paallystyskohde, :tila::paallystystila, :ilmoitustiedot::jsonb, :aloituspvm, :valmistumispvm, :muutoshinta, NOW(), :kayttaja, FALSE);
+VALUES (:paallystyskohde, :tila :: paallystystila, :ilmoitustiedot :: JSONB, :aloituspvm, :valmistumispvm, :muutoshinta,
+        NOW(), :kayttaja, FALSE);
