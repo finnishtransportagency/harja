@@ -463,8 +463,10 @@
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
         muuta! (fn [kentta]
                  #(let [v (-> % .-target .-value)]
-                    (when (re-matches #"\d*" v)
-                      (swap! data assoc kentta (-> % .-target .-value)))))]
+                    (if (and (not (= "" v))
+                             (re-matches #"\d*" v))
+                      (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
+                      (swap! data assoc kentta nil))))]
     [:span.tierekisteriosoite-kentta
      [:table
       [:tbody
