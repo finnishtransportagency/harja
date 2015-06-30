@@ -35,13 +35,22 @@
 (def lomakedata (atom nil))
 
 (defn kohteen-tiedot []
-    [lomake {:luokka :horizontal} ; FIXME Luokka inline ei toimi kovin hyvin, pitää korjata
+  (let [kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm @lomakedata)
+                                :valmistumispvm (:valmistumispvm @lomakedata)
+                                :takuupvm (:takuupvm @lomakedata)
+                                :hinta (:hinta @lomakedata)}
+                               (fn [uusi-arvo]
+                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
+                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
+                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
+                                                        (assoc :hinta (:hinta uusi-arvo))))))]
+    [lomake {:luokka :horizontal} ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
      [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi @lomakedata)) :muokattava? (constantly false)}
       {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
       {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
       {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
       {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero}]
-     @lomakedata]) ; FIXME Muokkaus ei toimi
+     @kohteen-tiedot])) ; FIXME Tietoja ei voi muokata??
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
