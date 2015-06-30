@@ -123,7 +123,7 @@
                                                                                                    :sopimus-id         sopimus-id
                                                                                                    :paallystyskohde-id paallystyskohde-id})]
         (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
-        (if paallystysilmoitus-kannassa
+        (if paallystysilmoitus-kannassa ;FIXME takuupvm puuttuu
           (paivita-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm)
           (luo-paallystysilmoitus c user encoodattu-lomakedata paallystyskohde-id aloituspvm valmistumispvm))
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id

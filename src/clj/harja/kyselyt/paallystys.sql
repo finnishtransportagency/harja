@@ -36,6 +36,7 @@ SELECT
   tila,
   aloituspvm,
   valmistumispvm,
+  takuupvm,
   pk.nimi,
   pk.kohdenumero,
   muutoshinta,

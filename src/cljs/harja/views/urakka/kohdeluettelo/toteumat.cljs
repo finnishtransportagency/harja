@@ -78,7 +78,7 @@
 (defn toiminnot [valmis-tallennettavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
                                     (if (not valmispvm)
-                                      "Valmistusmispäivämäärää ei annettu, joten ilmoitus tallennetaan keskeneräisenä.")))]
+                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))]
     [:div.pot-toiminnot
      [:div.pot-huomaus @huomautusteksti]
      [harja.ui.napit/palvelinkutsu-nappi
@@ -88,11 +88,13 @@
              paallystyskohde-id (:paallystyskohde-id @lomakedata)
              aloituspvm (:aloiotuspvm @lomakedata)
              valmispvm (:valmistumispvm @lomakedata)
+             takuupvm (:takuupvm @lomakedata)
              lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
                                   (dissoc @lomakedata :valmistumispvm)
-                                  (dissoc @lomakedata :aloituspvm))]
+                                  (dissoc @lomakedata :aloituspvm)
+                                  (dissoc @lomakedata :takuupvmpvm))]
         (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm))
+        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm takuupvm))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :kun-onnistuu (fn [vastaus]
@@ -321,7 +323,8 @@
                                                                                                                ilmoitustiedot (:ilmoitustiedot vastaus)
                                                                                                                data-lomakkeelle (-> (assoc ilmoitustiedot :paallystyskohde-id (:paallystyskohde_id rivi))
                                                                                                                                     (assoc :valmistumispvm (:valmistumispvm vastaus))
-                                                                                                                                    (assoc :aloituspvm (:aloituspvm vastaus)))]
+                                                                                                                                    (assoc :aloituspvm (:aloituspvm vastaus))
+                                                                                                                                    (assoc :takuupvm (:takuupvm vastaus)))]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
                                                                                                            (log "PÄÄ data lomakkeelle: " (pr-str data-lomakkeelle))
                                                                                                            (reset! lomakedata data-lomakkeelle)))}
