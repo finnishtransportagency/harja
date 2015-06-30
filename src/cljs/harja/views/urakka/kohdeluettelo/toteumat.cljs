@@ -81,9 +81,13 @@
       #(let [urakka-id (:id @nav/valittu-urakka)
              [sopimus-id _] @u/valittu-sopimusnumero
              paallystyskohde-id (:paallystyskohde-id @lomakedata)
-             lahetettava-lomakedata (dissoc @lomakedata :paallystyskohde-id)]
+             aloituspvm (:aloiotuspvm @lomakedata)
+             valmispvm (:valmispvm @lomakedata)
+             lahetettava-lomakedata (-> (dissoc @lomakedata :paallystyskohde-id)
+                                        (dissoc @lomakedata :valmis-pvm)
+                                        (dissoc @lomakedata :aloituspvm))]
         (log "PÄÄ Lähetetään lomake: " (pr-str @lomakedata))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-lomakedata))
+        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-lomakedata aloituspvm valmispvm))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :kun-onnistuu (fn [vastaus]
@@ -95,7 +99,7 @@
       #(let [urakka-id (:id @nav/valittu-urakka)
              [sopimus-id _] @u/valittu-sopimusnumero])
       {:luokka       "nappi-ensisijainen"
-       :disabled     (constantly false)                     ; FIXME Kelle näytetään? --> frontissa käytä jos-roolissa?
+       :disabled     (constantly false) ; FIXME Rooli.
        :kun-onnistuu (fn [vastaus]
                        ; TODO
                        )}]
@@ -105,7 +109,7 @@
       #(let [urakka-id (:id @nav/valittu-urakka)
              [sopimus-id _] @u/valittu-sopimusnumero])
       {:luokka       "nappi-ensisijainen"
-       :disabled     (constantly false)                     ; FIXME Kelle näytetään?
+       :disabled     (constantly false) ; FIXME Rooli.
        :kun-onnistuu (fn [vastaus]
                        ; TODO
                        )}]]))
@@ -130,6 +134,7 @@
         kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi? (reaction
+                                   ; FIXME Validoi eri tavalla sen mukaan onko ilmoitus valmis (valmistumispvm annettu)
                                    ; FIXME Validoi myös kohteen tiedot -kohdassa olevat kentät.
                                    (let [toteutuneet-osoitteet (vals @toteutuneet-osoitteet)
                                          paallystystoimenpide (vals @paallystystoimenpide)

@@ -65,5 +65,5 @@ WHERE paallystyskohde = :paallystyskohde;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, ilmoitustiedot, muutoshinta, luotu, luoja, poistettu)
-VALUES (:paallystyskohde, :ilmoitustiedot::jsonb, :muutoshinta, NOW(), :kayttaja, FALSE);
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmistumispvm, muutoshinta, luotu, luoja, poistettu)
+VALUES (:paallystyskohde, :tila::paallystystila, :ilmoitustiedot::jsonb, :aloituspvm, :valmistumispvm, :muutoshinta, NOW(), :kayttaja, FALSE);
