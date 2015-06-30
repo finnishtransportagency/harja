@@ -74,7 +74,7 @@
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
-                 [com.andrewmcveigh/cljs-time "0.3.3"]
+                 [com.andrewmcveigh/cljs-time "0.3.3"] ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
                  [cljsjs/openlayers "3.5.0-1"]
 
