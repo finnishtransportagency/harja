@@ -1,16 +1,16 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.7.0-RC1"] ; siirrytään 1.7.0 heti kun valmis
-                 [org.clojure/clojurescript "0.0-3297"]
+  :dependencies [[org.clojure/clojure "1.7.0-RC2"] ; siirrytään 1.7.0 heti kun valmis
+                 [org.clojure/clojurescript "0.0-3308"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "0.4.2"]
+                 [prismatic/schema "0.4.3"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.215"]
-                 [com.cognitect/transit-clj "0.8.271"]
+                 [com.cognitect/transit-cljs "0.8.220"]
+                 [com.cognitect/transit-clj "0.8.275"]
 
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -20,19 +20,17 @@
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
-                 [com.taoensso/timbre "3.4.0"]
+                 [com.taoensso/timbre "3.4.0"] ;; FIXME: päivitä v4, jossa myös CLJS tuki
+                 
                  [com.narkisr/gelfino-client "0.7.0"]
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.3.3"]
+                 [compojure "1.3.4"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
-                 ;; API: RAML speksi ja JSON schema (FIXME: nämä vain, jos API kutsuja implementoidaan)
-                 [org.raml/raml-parser "0.8.11"]
-                 [bigml/closchema "0.6"]
-
+                 
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -40,8 +38,8 @@
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
-                 [yesql "0.4.0" :exclusions [[instaparse :classifier "*"]]]
-                 [instaparse "1.3.6"]
+                 [yesql "0.4.2" :exclusions [[instaparse :classifier "*"]]]
+                 [instaparse "1.4.1"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]
@@ -65,25 +63,25 @@
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
-                 [binaryage/devtools "0.2.0"] ;; cljs data chrome inspectoriin
+                 [binaryage/devtools "0.3.0"] ;; cljs data chrome inspectoriin
 
-                 [cljs-ajax "0.3.11"]
+                 [cljs-ajax "0.3.13"]
                  ;;[lively "0.2.0"]
-                 [figwheel "0.3.3"]
+                 [figwheel "0.3.5"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "0.13.1-0"]
+                 [cljsjs/react-with-addons "0.13.3-0"]
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
-                 [com.andrewmcveigh/cljs-time "0.3.3"]
+                 [com.andrewmcveigh/cljs-time "0.3.10"]
 
-                 [cljsjs/openlayers "3.3.0-0"]
+                 [cljsjs/openlayers "3.5.0-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.11"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
-                 [org.apache.poi/poi-scratchpad "3.11"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.11"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.12"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
+                 [org.apache.poi/poi-scratchpad "3.12"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.12"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -94,7 +92,7 @@
 
                  ;; JSON -validointikirjastot
                  [com.github.fge/json-schema-validator "2.2.6"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.5.3"]
 
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]]
