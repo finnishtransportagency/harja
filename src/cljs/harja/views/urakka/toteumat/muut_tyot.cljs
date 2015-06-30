@@ -237,6 +237,10 @@
               "Toteutuneen työn tiedot"
               {:otsikko "Määrä" :nimi :maara :tyyppi :numero
                :hae #(get-in % [:tehtava :maara])
+               :vihje         (if (= :paivanhinta (:hinnoittelu @muokattu))
+                                "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
+                                ei vaikuta kokonaishintaan."
+                                "Käytät sopimushintaa. Kokonaiskustannus tulee olemaan yksikköhinta kerrottuna tehdyn työn määrällä.")
                :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :varoita [[:ei-tyhja "Haluatko jättää määrän antamatta?"]]
                :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
@@ -244,21 +248,23 @@
                :tyyppi        :valinta
                :valinta-arvo  first
                :valinta-nayta second
-               :valinnat      [[:yksikkohinta "Yksikköhinta"] [:paivanhinta "Päivän hinta"]]
-               :leveys-col    3}
-              ;; FIXME: jos on valittu :yksikkohinta-hinnoittelu, täytetään näkyviin suunnitelupuolelta
-              ;; yksikköhinta. Jos sitä ei ole vielä syötetty, implisiittisesti syötetään se tässä näkymässä
-              ;; ja tallennetaan muutoshintainen_tyo-tauluun, mistä se on jatkossa käytössä toteumille.
+               :valinnat      [[:yksikkohinta "Sopimushinta"] [:paivanhinta "Päivän hinta"]]
+                                :leveys-col 3}
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
                 {:otsikko "Päivän hinta" :nimi :paivanhinta
                  :hae #(get-in % [:tehtava :paivanhinta])
+                 :yksikko     "€"
                  :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
                  :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3})
               (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                {:otsikko     "Yksikköhinta" :nimi :yksikkohinta
+                {:otsikko     "Sopimushinta" :nimi :yksikkohinta
                  :tyyppi      :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                 :vihje       (if (:yksikkohinta-suunniteltu? @muokattu)
+                                "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelu > Muut työt -osiosta."
+                                "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
+                                varten Suunnittelu > Muut työt -osioon.")
                  :muokattava? #(not (:yksikkohinta-suunniteltu? %))
-                 :yksikko "€"
+                 :yksikko     (str "€ / " (:yksikko @muokattu))
                  :leveys-col  3})
               {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :aseta (fn [rivi arvo]

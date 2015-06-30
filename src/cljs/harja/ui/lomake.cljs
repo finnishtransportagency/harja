@@ -58,7 +58,21 @@
 
 (defmethod kentan-yksikko :horizontal [_ {yks :yksikko}]
   (when yks [:div.inline-block.lomake-yksikko yks]))
-   
+
+(defmulti kentan-vihje (fn [luokka _] luokka))
+
+(defmethod kentan-vihje :default [_ _]
+  nil)
+
+(defmethod kentan-vihje :horizontal [_ {vihje :vihje}]
+  (when vihje [:div.row
+               [:div.col-sm-2]
+                [:div {:class
+                       (str "inline-block lomake-vihje col-sm-10")}
+                 [:div.vihjeen-sisalto
+                  (harja.ui.ikonit/info-sign)
+                  (str " " vihje)]]]))
+
 (def +ei-otsikkoa+ #{:boolean})
 
 
@@ -131,35 +145,37 @@ Optioissa voi olla seuraavat avaimet:
                               kentan-tunniste nimi]
                           ^{:key (:nimi kentta)}
                           [:div.form-group
-                           (if (+ei-otsikkoa+ (:tyyppi kentta))
-                             [tyhja-otsikko luokka]
-                             [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
-                           [kentan-komponentti luokka kentta
-                            (if-let [komponentti (:komponentti kentta)]
-                              komponentti
-                              (if (or (nil? muokattava?)
-                                      (muokattava? data))
-                                ;; Muokattava tieto, tehdään sille kenttä
-                                [:span {:class (str (when-not (empty? kentan-virheet)
-                                                      "sisaltaa-virheen")
-                                                    (when-not (empty? kentan-varoitukset)
-                                                      "sisaltaa-varoituksen"))}
-                                 [tee-kentta (assoc kentta
-                                               :focus (= @nykyinen-fokus kentan-tunniste)
-                                               :on-focus #(aseta-fokus! kentan-tunniste)) arvo]
-                                 (if (and (not (empty? kentan-virheet))
-                                            (@muokatut nimi))
-                                   (virheen-ohje kentan-virheet :virhe)
-                                   (if (and (not (empty? kentan-varoitukset))
-                                            (@muokatut nimi))
-                                     (virheen-ohje kentan-varoitukset :varoitus)))]
-                              
-                                ;; Ei muokattava, näytetään
-                                [:div.form-control-static
-                                 (if fmt
-                                   (fmt ((or hae #(get % nimi)) data))
-                                   (nayta-arvo kentta arvo))]))]
-                           [kentan-yksikko luokka kentta]]))]
+                           [:div.row
+                            (if (+ei-otsikkoa+ (:tyyppi kentta))
+                              [tyhja-otsikko luokka]
+                              [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
+                            [kentan-komponentti luokka kentta
+                             (if-let [komponentti (:komponentti kentta)]
+                               komponentti
+                               (if (or (nil? muokattava?)
+                                       (muokattava? data))
+                                 ;; Muokattava tieto, tehdään sille kenttä
+                                 [:span {:class (str (when-not (empty? kentan-virheet)
+                                                       "sisaltaa-virheen")
+                                                     (when-not (empty? kentan-varoitukset)
+                                                       "sisaltaa-varoituksen"))}
+                                  [tee-kentta (assoc kentta
+                                                :focus (= @nykyinen-fokus kentan-tunniste)
+                                                :on-focus #(aseta-fokus! kentan-tunniste)) arvo]
+                                  (if (and (not (empty? kentan-virheet))
+                                           (@muokatut nimi))
+                                    (virheen-ohje kentan-virheet :virhe)
+                                    (if (and (not (empty? kentan-varoitukset))
+                                             (@muokatut nimi))
+                                      (virheen-ohje kentan-varoitukset :varoitus)))]
+
+                                 ;; Ei muokattava, näytetään
+                                 [:div.form-control-static
+                                  (if fmt
+                                    (fmt ((or hae #(get % nimi)) data))
+                                    (nayta-arvo kentta arvo))]))]
+                            [kentan-yksikko luokka kentta]]
+                           [kentan-vihje luokka kentta]]))]
            (doall
             (for [skeema (keep identity skeema)]
               (if-let [ryhma (and (ryhma? skeema) skeema)]
