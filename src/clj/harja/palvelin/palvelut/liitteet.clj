@@ -15,8 +15,6 @@
 
 
 (defn tallenna-liite [liitteet req]
-  (println "LIITEHÄN SIELTÄ TULI: " (:params req))
-
   (let [parametrit (:params req)
         liite (get parametrit "liite")
         urakka (Integer/parseInt (get parametrit "urakka"))]
