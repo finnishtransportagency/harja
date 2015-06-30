@@ -43,7 +43,7 @@
     (let [tulos (k/post! :hae-ilmoitukset
                          {:hallintayksikko @valittu-hallintayksikko
                           :urakka @valittu-urakka
-                          :tilat (vec (keep #(when (val %) (key %)) @valitut-tilat))
+                          :tilat @valitut-tilat
                           :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
                           :aikavali @valittu-aikavali
                           :hakuehto @hakuehto})]

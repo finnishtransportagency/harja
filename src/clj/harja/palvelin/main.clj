@@ -37,6 +37,7 @@
     [harja.palvelin.palvelut.maksuerat :as maksuerat]
     [harja.palvelin.palvelut.liitteet :as liitteet]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+    [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
 
     ;; Harja API
     [harja.palvelin.api.urakat :as api-urakat]
@@ -168,6 +169,10 @@
       :api-havainnot (component/using
                        (api-havainnot/->Havainnot)
                        [:http-palvelin :db :liitteiden-hallinta])
+
+      :ilmoitukset (component/using
+                     (ilmoitukset/->Ilmoitukset)
+                     [:http-palvelin :db])
 
       )))
 
