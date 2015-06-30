@@ -2,7 +2,7 @@
   "Laadunseuranta: Tarkastukset, Havainnot ja Sanktiot"
 
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
 
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
@@ -170,28 +170,43 @@
   (into []
         (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
 
+(defn tallenna-tarkastus [db user urakka-id tarkastus]
+  (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
-    (julkaise-palvelu http-palvelin :hae-urakan-havainnot
-                      (fn [user tiedot]
-                        (hae-urakan-havainnot db user tiedot)))
-    (julkaise-palvelu http-palvelin :tallenna-havainto
-                      (fn [user havainto]
-                        (tallenna-havainto db user havainto)))
-    (julkaise-palvelu http-palvelin :hae-havainnon-tiedot
-                      (fn [user {:keys [urakka-id havainto-id]}]
-                        (hae-havainnon-tiedot db user urakka-id havainto-id)))
-    (julkaise-palvelu http-palvelin :hae-urakan-sanktiot
-                      (fn [user tiedot]
-                        (hae-urakan-sanktiot db user tiedot)))
 
-    (julkaise-palvelu http-palvelin :hae-sanktiotyypit
-                      (fn [user]
-                        (hae-sanktiotyypit db user)))
-    (julkaise-palvelu http-palvelin :hae-urakan-tarkastukset
-                      (fn [user tiedot]
-                        (hae-urakan-tarkastukset db user tiedot)))
+    (julkaise-palvelut
+     http-palvelin
+     
+     :hae-urakan-havainnot
+     (fn [user tiedot]
+       (hae-urakan-havainnot db user tiedot))
+     
+     :tallenna-havainto
+     (fn [user havainto]
+       (tallenna-havainto db user havainto))
+     
+     :hae-havainnon-tiedot
+     (fn [user {:keys [urakka-id havainto-id]}]
+       (hae-havainnon-tiedot db user urakka-id havainto-id))
+     
+     :hae-urakan-sanktiot
+     (fn [user tiedot]
+       (hae-urakan-sanktiot db user tiedot))
+     
+     :hae-sanktiotyypit
+     (fn [user]
+       (hae-sanktiotyypit db user))
+     
+     :hae-urakan-tarkastukset
+     (fn [user tiedot]
+       (hae-urakan-tarkastukset db user tiedot))
+
+     :tallenna-tarkastus
+     (fn [user {:keys [urakka-id tarkastus]}]
+       (tallenna-tarkastus db user urakka-id tarkastus)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

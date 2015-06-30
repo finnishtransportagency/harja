@@ -59,3 +59,9 @@
                                  :alku alku
                                  :loppu loppu}))
 
+(defn tallenna-tarkastus
+  "Tallentaa tarkastuksen urakalle."
+  [urakka-id tarkastus]
+  (k/post! :tallenna-tarkastus {:urakka-id urakka-id
+                                :tarkastus tarkastus}))
+

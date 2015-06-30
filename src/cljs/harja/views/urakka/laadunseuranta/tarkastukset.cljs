@@ -153,7 +153,7 @@
      [napit/palvelinkutsu-nappi
       "Tallenna tarkastus"
       (fn []
-        (log "jotain pitää kysellä"))
+        (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka) @tarkastus))
       {:disabled (not (validi-tarkastus? @tarkastus))}]]]
    ])
 
