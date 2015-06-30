@@ -32,14 +32,19 @@
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 
+(defn jsonb->clojuremap [json avain]
+  (-> json
+      (assoc avain
+             (some-> json
+                     avain
+                     .getValue
+                     (cheshire/decode true)))))
 
-(def jsonb->clojuremap
-  (map #(-> %
-            (assoc :ilmoitustiedot
-                   (some-> %
-                           :ilmoitustiedot
-                           .getValue
-                           (cheshire/decode true))))))
+(defn parsi-pvm [json avainpolku]
+  (-> json
+      (assoc-in avainpolku
+                (when-let [dt (some-> json (get-in avainpolku))]
+                  (clj-time.format/parse (clj-time.format/formatters :date-time) dt)))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -72,7 +77,8 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
-                             jsonb->clojuremap
+                             (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
+                                   (map #(parsi-pvm % [:ilmoitustiedot :valmispvm])))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))

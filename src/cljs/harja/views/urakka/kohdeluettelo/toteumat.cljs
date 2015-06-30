@@ -25,6 +25,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
+            [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -33,76 +34,20 @@
 
 (def lomakedata (atom nil))
 
-(def lomaketestidata
-  "Oletetaan, että tieto tulee kannasta tässä muodossa (joinataan SQL-kyselyssä ainakin kohdennimi ja tarjoushinta.)"
-  {:kohde        308
-   :kohdenimi    "Leppäkorven rampit"
-   :tarjoushinta 90000
-   :valmispvm    (pvm/luo-pvm 2015 10 10)
-   :takuupvm     (pvm/luo-pvm 2016 05 11)
-   :hinta        5000
-
-   :osoitteet    [{:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
-                   :ajorata 0 :suunta 0 :kaista 1}
-                  {:tie     2846 :aosa 5 :aet 22 :losa 5 :let 9377
-                   :ajorata 1 :suunta 0 :kaista 1}]
-
-   :toimenpiteet [{:paallystetyyppi           21
-                   :raekoko                   16
-                   :massa                     100
-                   :rc%                       0
-                   :tyomenetelma              12
-                   :leveys                    6.5
-                   :massamaara                1781
-                   :edellinen-paallystetyyppi 12
-                   :pinta-ala                 15
-                   }
-                  {:paallystetyyppi           21
-                   :raekoko                   10
-                   :massa                     512
-                   :rc%                       0
-                   :tyomenetelma              12
-                   :leveys                    4
-                   :massamaara                1345
-                   :edellinen-paallystetyyppi 11
-                   :pinta-ala                 9
-                   }]
-
-   :kiviaines    [{:esiintyma      "KAM Leppäsenoja"
-                   :km-arvo        "An 14"
-                   :muotoarvo      "Fi 20"
-                   :sideainetyyppi "B650/900"
-                   :pitoisuus      4.3
-                   :lisaaineet     "Tartuke"}]
-
-   :alustatoimet [{:tie                 5
-                   :aosa                22
-                   :aet                 3
-                   :losa                5
-                   :let                 4785
-                   :kasittelymenetelma  13
-                   :paksuus             30
-                   :verkkotyyppi        1
-                   :tekninen-toimenpide 2
-                   }]
-
-   :tyot         [{:tyyppi           :ajoradan-paallyste
-                   :toimenpidekoodi  1350
-                   :tilattu-maara    10000
-                   :toteutunut-maara 10100
-                   :yksikkohinta     20}]})
-
 (defn kohteen-tiedot []
   (let [valmispvm (r/wrap (:valmispvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :valmispvm uusi-arvo))))
         takuupvm (r/wrap (:takuupvm @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :takuupvm uusi-arvo))))
         toteutunut-hinta (r/wrap (:hinta @lomakedata) (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :hinta uusi-arvo))))]
 
     [:div.pot-kohteen-tiedot
-     [:h6 "Kohteen tiedot"]                                 ; FIXME Inline lomake
+     [:h6 "Kohteen tiedot"]; FIXME Inline lomake
      [:span.pot-kohteen-tiedot-otsikko "Kohde"] [:span (:kohde @lomakedata) " " (:kohdenimi @lomakedata)]
      [:span.pot-kohteen-tiedot-otsikko "Valmistumispvm"] [:span [tee-kentta {:tyyppi :pvm} valmispvm]]
-     [:span.pot-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
-     [:span.pot-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]))
+     ;[:span.pot-kohteen-tiedot-otsikko "Takuupvm"] [:span [tee-kentta {:tyyppi :pvm} takuupvm]]
+     [:span.pot-kohteen-tiedot-otsikko "Toteutunut hinta"] [:span [tee-kentta {:tyyppi :numero} toteutunut-hinta]] [:span " €"]]
+
+
+    ))
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -367,17 +312,15 @@
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                                               vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))
+                                                                                                               ilmoitustiedot (:ilmoitustiedot vastaus)]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
-                                                                                                           (log "PÄÄ Päällystysilmoitus: " (pr-str (:ilmoitustiedot vastaus)))
-                                                                                                           (reset! lomakedata (:ilmoitustiedot vastaus))))}
+                                                                                                           (reset! lomakedata ilmoitustiedot)))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohde              (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
                                                                                                                             :paallystyskohde-id (:paallystyskohde_id rivi)
-                                                                                                                            :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})
-                                                                                             ;#(reset! lomakedata lomaketestidata) FIXME Tätä voi kokeilla siihen asti kunnes lomake toimii.
-                                                                                             }
+                                                                                                                            :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})}
                                                       [:span " Tee päällystysilmoitus"]]))}]
           (sort (fn [toteuma] (if (:tila toteuma) 0 1)) @paallystys/paallystystoteumat)]]))))
 
