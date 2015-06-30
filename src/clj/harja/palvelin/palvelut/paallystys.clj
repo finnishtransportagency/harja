@@ -32,6 +32,12 @@
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 
+(defn tyot-string->avain [json avainpolku]
+  (-> json
+      (assoc-in avainpolku
+                (when-let [tyot (some-> json (get-in avainpolku))]
+                  (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
+
 (defn jsonb->clojuremap [json avain]
   (-> json
       (assoc avain
@@ -79,7 +85,8 @@
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
                                    (map #(parsi-pvm % [:ilmoitustiedot :valmispvm]))
-                                   (map #(parsi-pvm % [:ilmoitustiedot :takuupvm])))
+                                   (map #(parsi-pvm % [:ilmoitustiedot :takuupvm]))
+                                   (map #(tyot-string->avain % [:ilmoitustiedot :tyot])))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))

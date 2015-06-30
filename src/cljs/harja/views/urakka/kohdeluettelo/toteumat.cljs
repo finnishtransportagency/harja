@@ -276,11 +276,11 @@
        [grid/muokkaus-grid
         {:otsikko "Toteutuneet määrät"
          :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
-        [{:otsikko       "Ajoradan päällyste"
+        [{:otsikko       "Päällystetyön tyyppi"
           :nimi          :tyyppi
           :tyyppi        :valinta
           :valinta-arvo  :avain
-          :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+          :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
           :valinnat      pot/+paallystystyon-tyypit+
           :leveys        "30%"}
          {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
@@ -315,7 +315,7 @@
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))
                                                                                                                ilmoitustiedot (:ilmoitustiedot vastaus)]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
-                                                                                                           (reset! lomakedata ilmoitustiedot)))}
+                                                                                                           (reset! lomakedata (assoc ilmoitustiedot :paallystyskohde-id (:paallystyskohde_id rivi)))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohde              (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
