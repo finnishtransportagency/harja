@@ -82,14 +82,14 @@
   (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   ;(skeema/validoi pot/+paallystysilmoitus+ lomakedata) FIXME Vaadi skeema kun yhteys toimii muuten (sallitaan frontilta muutama optional argument tai frontti poistaa ne)
   (jdbc/with-db-transaction [c db]
-                            ; FIXME Luo uuden, tarkista onko jo olemassa ja jos on niin päivitä
-                            (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
-                                  ilmoitus (cheshire/encode lomakedata)
-                                  vastaus (q/luo-paallystysilmoitus<! db (:paallytyskohde-id lomakedata) ilmoitus muutoshinta (:id user))]
-                              (log/debug "Muutoshinta " muutoshinta)
-                              (log/debug "enkoodattu ilmoitusdata"  ilmoitus)
-                              (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
-                                                              :sopimus-id sopimus-id}))))
+    ; FIXME Luo uuden, tarkista onko jo olemassa ja jos on niin päivitä
+    (let [muutoshinta (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata)))
+          ilmoitus (cheshire/encode lomakedata)
+          vastaus (q/luo-paallystysilmoitus<! db (:paallytyskohde-id lomakedata) ilmoitus muutoshinta (:id user))]
+      (log/debug "Muutoshinta " muutoshinta)
+      (log/debug "enkoodattu ilmoitusdata" ilmoitus)
+      (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
+                                             :sopimus-id sopimus-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle
