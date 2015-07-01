@@ -13,6 +13,8 @@
             [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
+            [harja.geo :as geo]
+             
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]))
 
@@ -172,16 +174,23 @@
 
 (defn luo-tarkastus
   "Luo uuden tarkastuksen, palauttaa id:n"
-  [db user urakka-id {:keys [aika tr tyyppi tarkastaja mittaaja]}]
-  #_(tarkastukset/luo-tarkastus<! db
+  [db user urakka-id {:keys [aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
+  (tarkastukset/luo-tarkastus<! db
                                 urakka-id aika
                                 (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                                nil ;; sijainti pitää VKM:stä hakea frontilla
-                                
-                                ))
+                                (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
+                                tarkastaja mittaaja (name tyyppi) havainto (:id user)))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus))
+  (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
+  (jdbc/with-db-transaction [c db]
+    (let [id (if (:id tarkastus)
+               tarkastus ;FIXME: päivitä olemassaoleva
+               (luo-tarkastus c user urakka-id tarkastus
+                              (luo-tai-paivita-havainto c user (:havainto tarkastus))))]
+      (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
+      tarkastus ;; FIXME: hae uudet tiedot
+      )))
 
 (defrecord Laadunseuranta []
   component/Lifecycle

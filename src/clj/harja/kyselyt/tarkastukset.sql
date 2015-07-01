@@ -16,5 +16,5 @@ INSERT
        (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
         sijainti, tarkastaja, mittaaja, tyyppi, havainto, luoja)
 VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
-        :sijainti, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja)
+        :sijainti::point, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja)
 	

@@ -62,6 +62,9 @@
   nil
   (pg->clj [_] nil))
 
+(defn luo-point [[x y]]
+  (PGpoint. x y))
+
 (defmacro muunna-pg-tulokset
   "Palauttaa transducerin, joka muuntaa jokaisen SQL tulosrivin annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
   [& sarakkeet]
