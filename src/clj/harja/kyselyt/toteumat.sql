@@ -153,7 +153,10 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   tpk.emo                         AS tehtava_emo,
-  tpk.nimi AS tehtava_nimi
+  tpk.nimi AS tehtava_nimi,
+  o.nimi as organisaatio,
+  k.kayttajanimi,
+  k.jarjestelma as jarjestelmasta
 FROM toteuma_tehtava tt
     JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
     INNER JOIN toteuma t ON tt.toteuma = t.id
@@ -164,7 +167,9 @@ FROM toteuma_tehtava tt
                           AND tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi,
                                          'lisatyo'::toteumatyyppi, 'muutostyo'::toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
-                          AND t.poistettu IS NOT TRUE;
+                          AND t.poistettu IS NOT TRUE
+          JOIN kayttaja k ON k.id = t.luoja
+          JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät tietyllä toimenpidekoodilla

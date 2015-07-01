@@ -242,7 +242,6 @@
   (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))]
-    ;; FIXME: on-focus alasvetovalintaan?
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
                           :valinta (if valinta-arvo
                                      (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
@@ -255,8 +254,13 @@
                           :format-fn (or valinta-nayta str)}
      valinnat]))
 
-(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo]} data]
-  ((or valinta-nayta str) @data))
+(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo valinnat valinnat-fn rivi hae]} data]
+  (let [nykyinen-arvo @data
+        valinnat (or valinnat (valinnat-fn rivi))
+        valinta (if valinta-arvo
+                  (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                  nykyinen-arvo)]
+    (or ((or valinta-nayta str) valinta) valinta)))
 
 
 

@@ -130,7 +130,9 @@
          [:button.nappi-toissijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
          (if (:toteuma-id @lomakkeessa-muokattava-toteuma)
-           [:h3 "Muokkaa toteumaa"]
+           (if jarjestelman-lisaama-toteuma?
+             [:h3 "Tarkastele toteumaa"]
+             [:h3 "Muokkaa toteumaa"])
            [:h3 "Luo uusi toteuma"])
 
          [lomake {:luokka :horizontal
@@ -149,7 +151,12 @@
                                               (reset! lomake-toteuma nil)
                                               (reset! lomakkeessa-muokattava-toteuma nil))}]
                   }
-          [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
+          [(when jarjestelman-lisaama-toteuma?
+             {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+              :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
+              :muokattava? (constantly false)
+              :vihje "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu."})
+           {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta (fn [rivi arvo]
                      (assoc
@@ -165,7 +172,6 @@
             :varoita [[:urakan-aikana]]}
            {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                         [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           (if  jarjestelman-lisaama-toteuma? {:otsikko "Lähde" :nimi :luoja :tyyppi :string :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma?]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256  :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}

@@ -99,13 +99,16 @@ Optioissa voi olla seuraavat avaimet:
                   anneta, lomake luo sisäisesti uuden atomin.
   :varoitukset    atomi, joka sisältää mäpin kentän nimestä varoituksiin, jos tätä ei
                   anneta, lomake luo sisäisesti uuden atomin.
+  :voi-muokata?   voiko lomaketta muokata, oletuksena true
 "
 
-  [{:keys [muokkaa! luokka footer virheet varoitukset] :as opts} skeema data]
+  [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata?] :as opts} skeema data]
   (let [luokka (or luokka :default)
         virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
         varoitukset-atom (or varoitukset (atom {}))
-
+        voi-muokata? (if (some? voi-muokata?)
+                       voi-muokata?
+                       true)
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
         nykyinen-fokus (atom nil)
@@ -151,8 +154,9 @@ Optioissa voi olla seuraavat avaimet:
                             [kentan-komponentti luokka kentta
                              (if-let [komponentti (:komponentti kentta)]
                                komponentti
-                               (if (or (nil? muokattava?)
-                                       (muokattava? data))
+                               (if (and voi-muokata?
+                                        (or (nil? muokattava?)
+                                            (muokattava? data)))
                                  ;; Muokattava tieto, tehdään sille kenttä
                                  [:span {:class (str (when-not (empty? kentan-virheet)
                                                        "sisaltaa-virheen")

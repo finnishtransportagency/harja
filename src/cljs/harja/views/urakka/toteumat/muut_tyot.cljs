@@ -127,18 +127,19 @@
                            :tyyppi :muutostyo
                            :hinnoittelu :yksikkohinta)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
-                                             (not (and
-                                                    (get-in m [:tehtava :toimenpidekoodi])
-                                                    (:tyyppi m)
-                                                    (:alkanut m)
-                                                    (or (get-in m [:tehtava :paivanhinta])
-                                                        (get-in m [:tehtava :maara]))))))
+                                             (and
+                                               (get-in m [:tehtava :toimenpidekoodi])
+                                               (:tyyppi m)
+                                               (:alkanut m)
+                                               (:paattynyt m)
+                                               (or (get-in m [:tehtava :paivanhinta])
+                                                   (get-in m [:tehtava :maara])))))
         tallennus-kaynnissa (atom false)
         tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        jarjestelman-lisaama-toteuma? false                 ;FIXME: tähän haettava arvo
-        ]
+        jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
+        lomaketta-voi-muokata? (not jarjestelman-lisaama-toteuma?)]
 
     (komp/luo
       (fn []
@@ -146,58 +147,66 @@
          [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
           (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
          (if (get-in @valittu-toteuma [:tehtava :id])
-           [:h3 "Muokkaa toteumaa"]
+           (if lomaketta-voi-muokata?
+             [:h3 "Muokkaa toteumaa"]
+             [:h3 "Tarkastele toteumaa"])
            [:h3 "Luo uusi toteuma"])
 
-         [lomake {:luokka   :horizontal
-                  :voi-muokata? true ;fixme: ei voi jos koneen lisäämä toteuma. Katso yks.hint. töiden tot. esimerkkitoteutus
-                  :muokkaa! (fn [uusi]
-                              (log "MUOKATAAN " (pr-str uusi))
-                              (reset! muokattu uusi))
-                  :footer   [:span
-                             [napit/palvelinkutsu-nappi
-                              " Tallenna toteuma"
-                              #(tallenna-muu-tyo @muokattu)
-                              {:luokka "nappi-ensisijainen"
-                               :disabled @valmis-tallennettavaksi?
-                               :kun-onnistuu #(let [muokatun-id (or (get-in @muokattu [:toteuma :id]) %)]
-                                               (do
-                                                 (korosta-rivia muokatun-id)
-                                                 (reset! tallennus-kaynnissa false)
-                                                 (reset! valittu-toteuma nil)))
-                               :kun-virhe  (reset! tallennus-kaynnissa false)}]
-                             (when (:id @muokattu)
-                               [:button.nappi-kielteinen
-                                {:class (when @tallennus-kaynnissa "disabled")
-                                 :on-click
-                                        (fn []
-                                          (modal/nayta! {:otsikko "Toteuman poistaminen"
-                                                         :footer  [:span
-                                                                   [:button.nappi-toissijainen {:type     "button"
-                                                                                                :on-click #(do (.preventDefault %)
-                                                                                                               (modal/piilota!))}
-                                                                    "Peruuta"]
-                                                                   [:button.nappi-kielteinen {:type     "button"
-                                                                                              :on-click #(do (.preventDefault %)
-                                                                                                             (modal/piilota!)
-                                                                                                             (reset! tallennus-kaynnissa true)
-                                                                                                             (go (let [res (tallenna-muu-tyo
-                                                                                                                             (assoc @muokattu :poistettu true))]
-                                                                                                                   (if res
-                                                                                                                     ;; Tallennus ok
-                                                                                                                     (do (viesti/nayta! "Toteuma poistettu")
-                                                                                                                         (reset! tallennus-kaynnissa false)
-                                                                                                                         (reset! valittu-toteuma nil))
+         [lomake {:luokka       :horizontal
+                  :voi-muokata? lomaketta-voi-muokata?
+                  :muokkaa!     (fn [uusi]
+                                  (log "MUOKATAAN " (pr-str uusi))
+                                  (reset! muokattu uusi))
+                  :footer       [:span
+                                 [napit/palvelinkutsu-nappi
+                                  " Tallenna toteuma"
+                                  #(tallenna-muu-tyo @muokattu)
+                                  {:luokka   "nappi-ensisijainen"
+                                   :disabled (or (not lomaketta-voi-muokata?)
+                                                 (not @valmis-tallennettavaksi?))
+                                   :kun-onnistuu #(let [muokatun-id (or (get-in @muokattu [:toteuma :id]) %)]
+                                                   (do
+                                                     (korosta-rivia muokatun-id)
+                                                     (reset! tallennus-kaynnissa false)
+                                                     (reset! valittu-toteuma nil)))
+                                   :kun-virhe    (reset! tallennus-kaynnissa false)}]
+                                 (when (:id @muokattu)
+                                   [:button.nappi-kielteinen
+                                    {:class (when @tallennus-kaynnissa "disabled")
+                                     :on-click
+                                            (fn []
+                                              (modal/nayta! {:otsikko "Toteuman poistaminen"
+                                                             :footer  [:span
+                                                                       [:button.nappi-toissijainen {:type     "button"
+                                                                                                    :on-click #(do (.preventDefault %)
+                                                                                                                   (modal/piilota!))}
+                                                                        "Peruuta"]
+                                                                       [:button.nappi-kielteinen {:type     "button"
+                                                                                                  :on-click #(do (.preventDefault %)
+                                                                                                                 (modal/piilota!)
+                                                                                                                 (reset! tallennus-kaynnissa true)
+                                                                                                                 (go (let [res (tallenna-muu-tyo
+                                                                                                                                 (assoc @muokattu :poistettu true))]
+                                                                                                                       (if res
+                                                                                                                         ;; Tallennus ok
+                                                                                                                         (do (viesti/nayta! "Toteuma poistettu")
+                                                                                                                             (reset! tallennus-kaynnissa false)
+                                                                                                                             (reset! valittu-toteuma nil))
 
-                                                                                                                     ;; Epäonnistui jostain syystä
-                                                                                                                     (reset! tallennus-kaynnissa false)))))}
-                                                                    "Poista toteuma"]]}
-                                                        [:div (str "Haluatko varmasti poistaa toteuman "
-                                                                   (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
-                                                                   (pvm/pvm (:pvm @muokattu)) "?")]))}
-                                (ikonit/trash) " Poista kustannus"])]}
+                                                                                                                         ;; Epäonnistui jostain syystä
+                                                                                                                         (reset! tallennus-kaynnissa false)))))}
+                                                                        "Poista toteuma"]]}
+                                                            [:div (str "Haluatko varmasti poistaa toteuman "
+                                                                       (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                                       (pvm/pvm (:pvm @muokattu)) "?")]))}
+                                    (ikonit/trash) " Poista kustannus"])]}
 
-          [{:otsikko       "Sopimusnumero" :nimi :sopimus
+          [(when jarjestelman-lisaama-toteuma?
+             {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+              :vihje "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu."
+              :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
+              :muokattava? (constantly false)})
+           {:otsikko       "Sopimusnumero" :nimi :sopimus
             :tyyppi        :valinta
             :valinta-nayta second
             :valinnat      (:sopimukset @nav/valittu-urakka)
@@ -223,7 +232,6 @@
             :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                              (get-in @muokattu [:toimenpideinstanssi :tpi_id])
                              toimenpideinstanssit tehtavat-tasoineen)
-            :fmt           #(muun-tyon-tyypin-teksti %)
             :validoi       [[:ei-tyhja "Valitse tehtävä"]]
             :aseta         (fn [rivi arvo] (let [jo-suunniteltu-yksikko
                                                  (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat))
@@ -250,7 +258,7 @@
                :vihje   (if (= :paivanhinta (:hinnoittelu @muokattu))
                           "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
                           ei vaikuta kokonaishintaan."
-                          "Käytät sopimushintaa. Kokonaiskustannus tulee olemaan yksikköhinta kerrottuna tehdyn työn määrällä.")
+                          "Käytät sopimushintaa. Kokonaiskustannus on yksikköhinta kerrottuna tehdyn työn määrällä.")
                :aseta   (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :validoi (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                           [[:ei-tyhja "Määrä antamatta."]])
@@ -297,16 +305,19 @@
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
                          [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
               {:otsikko "Suorittaja" :nimi :suorittajan-nimi
-               :hae #(get-in @muokattu [:suorittajan :nimi])
-               :aseta (fn [rivi arvo] (assoc-in rivi [:suorittajan :nimi] arvo))
-               :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+               :hae     #(if (get-in @muokattu [:suorittajan :nimi])
+                          (get-in @muokattu [:suorittajan :nimi])
+                          (:nimi @u/urakan-organisaatio))
+               :aseta   (fn [rivi arvo] (assoc-in rivi [:suorittajan :nimi] arvo))
+               :tyyppi  :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus
-               :hae #(get-in @muokattu [:suorittajan :ytunnus])
-               :aseta (fn [rivi arvo] (assoc-in rivi [:suorittajan :ytunnus] arvo))
-               :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+               :hae     #(if (get-in @muokattu [:suorittajan :ytunnus])
+                          (get-in @muokattu [:suorittajan :ytunnus])
+                          (:ytunnus @u/urakan-organisaatio))
+               :aseta   (fn [rivi arvo] (assoc-in rivi [:suorittajan :ytunnus] arvo))
+               :tyyppi  :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
-               :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
-              ))
+               :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}))
 
            ]
 
@@ -381,8 +392,12 @@
                            "Ei voi laskea"))
               :fmt     #(if (number? %) (fmt/euro-opt %) (str %))
               :leveys  "10%"}
-
-             ]
+             {:otsikko "Lähde"
+              :nimi :lahde
+              :hae #(if (:jarjestelmasta %)
+                     "Urak. järj."
+                     "Harja")
+              :tyyppi :string :muokattava? (constantly false) :leveys "10%"}]
             @tyorivit
              ]])
         ))))
