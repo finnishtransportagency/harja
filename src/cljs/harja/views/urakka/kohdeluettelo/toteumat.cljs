@@ -53,7 +53,7 @@
       {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
       {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
       {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero}]
+      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2}]
      @kohteen-tiedot]))
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
@@ -181,9 +181,10 @@
 
          ; TODO Nice to have: Tienumero annetaan ekalle riville, kopioituu lopuille riveille jotka eivät ole muokattavia.
          [grid/muokkaus-grid
-          {:otsikko  "Alikohteet"
-           :tunniste :tie
-           :muutos   #(reset! alikohteet-virheet (grid/hae-virheet %))}
+          {:otsikko      "Alikohteet"
+           :tunniste     :tie
+           :rivinumerot? true
+           :muutos       #(reset! alikohteet-virheet (grid/hae-virheet %))}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
                                                                                [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]}
            {:otsikko       "Ajorata"
@@ -221,6 +222,7 @@
           {:otsikko      "Päällystystoimenpiteen tiedot"
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
+           :rivinumerot? true
            :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällyste"
             :nimi          :paallystetyyppi

@@ -638,10 +638,11 @@ Optiot on mappi optioita:
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
   :voi-poistaa?    funktio, joka palauttaa true tai false.
+  :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   "
-  [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu
+  [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot?
            voi-muokata? voi-lisata? jarjesta
            muokkaa-footer muutos uusi-rivi luokat] :as opts} skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -726,7 +727,7 @@ Optiot on mappi optioita:
          )
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu
+       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu rivinumerot?
                     muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot] :as opts} skeema muokatut]
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
@@ -755,6 +756,7 @@ Optiot on mappi optioita:
              [:table.grid
               [:thead
                [:tr
+                (if rivinumerot? [:th {:width "5%"} " "])
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
                   [:th {:width leveys} otsikko])
@@ -779,7 +781,7 @@ Optiot on mappi optioita:
                                [:tr.muokataan {:class (str (if (even? (+ i 1))
                                                              "parillinen"
                                                              "pariton"))}
-                                    
+                                (if rivinumerot? [:td (+ i 1)])
                                 (for [{:keys [nimi hae aseta fmt muokattava? tyyppi] :as s} skeema]
                                   (if (= :vetolaatikon-tila tyyppi)
                                     ^{:key (str "vetolaatikontila" id)}
