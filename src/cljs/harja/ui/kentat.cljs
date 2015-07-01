@@ -8,7 +8,10 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [clojure.string :as str]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<! >!] :as async]
+
+            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+            [harja.tyokalut.vkm :as vkm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -459,41 +462,85 @@
     (pvm/pvm-aika p)
     ""))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake?]} data]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
-        muuta! (fn [kentta]
-                 #(let [v (-> % .-target .-value)]
-                    (if (and (not (= "" v))
-                             (re-matches #"\d*" v))
-                      (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
-                      (swap! data assoc kentta nil))))]
-    [:span.tierekisteriosoite-kentta
-     [:table
-      [:tbody
-       [:tr
-        [:td [:input.tierekisteri {:class (when lomake? "form-control")
-                                   :size 5 :max-length 10
-                                   :placeholder "Tie#"
-                                   :value numero
-                                   :on-change (muuta! :numero)}]]
-        [:td [:input.tierekisteri {:class (when lomake? "form-control")
-                                   :size 5 :max-length 10
-                                   :placeholder "aosa"
-                                   :value alkuosa
-                                   :on-change (muuta! :alkuosa)}]]
-        [:td [:input.tierekisteri {:class (when lomake? "form-control")
-                                   :size 5 :max-length 10
-                                   :placeholder "aet"
-                                   :value alkuetaisyys
-                                   :on-change (muuta! :alkuetaisyys)}]]
-        [:td [:input.tierekisteri {:class (when lomake? "form-control")
-                                   :size 5 :max-length 10
-                                   :placeholder "losa"
-                                   :value loppuosa
-                                   :on-change (muuta! :loppuosa)}]]
-        [:td [:input.tierekisteri {:class (when lomake? "form-control")
-                                   :size 5 :max-length 10
-                                   :placeholder "let"
-                                   :value loppuetaisyys
-                                   :on-change (muuta! :loppuetaisyys)}]]]]]]))
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
+  (let [osoite-ch (async/chan)
+        osoite-alussa @data
+        sijainti-haku (atom false)
+        hae-sijainti (not (nil? sijainti))]
+
+    (when hae-sijainti
+      (go (loop [osoite osoite-alussa
+                 vkm-ch nil]
+            (let [[arvo kanava] (alts! (if vkm-ch
+                                         [osoite-ch vkm-ch]
+                                         [osoite-ch]))]
+              (if (= kanava osoite-ch)
+                ;; Saatiin uusi osoite, hylätään mahdollinen vkm-haku ja tehdään uusi
+                ;; jos osoite on eri kuin aiempi
+                (if (not= osoite arvo)
+                  (do
+                    (reset! sijainti nil) ;; haun ajan sijainti nil
+                    (reset! sijainti-haku true)
+                    (recur arvo
+                           (vkm/tieosoite->sijainti arvo)))
+                    (recur osoite vkm-ch))
+
+                ;; Luettiin vkm-kanavasta, asetetaan sijainti
+                (do (reset! sijainti arvo)
+                    (reset! sijainti-haku false)
+                    (recur osoite nil)))))))
+    
+    (komp/luo
+
+     {:component-will-receive-props
+      (fn [this & [_ _ data]]
+        (when hae-sijainti
+          (go (>! osoite-ch @data))))}
+     
+     (fn [{:keys [lomake? sijainti]} data]
+       (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+             muuta! (fn [kentta]
+                      #(let [v (-> % .-target .-value)]
+                         (if (and (not (= "" v))
+                                  (re-matches #"\d*" v))
+                           (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
+                           (swap! data assoc kentta nil))))]
+         [:span.tierekisteriosoite-kentta
+          [:table
+           [:tbody
+            [:tr
+             [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                        :size 5 :max-length 10
+                                        :placeholder "Tie#"
+                                        :value numero
+                                        :on-change (muuta! :numero)}]]
+             [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                        :size 5 :max-length 10
+                                        :placeholder "aosa"
+                                        :value alkuosa
+                                        :on-change (muuta! :alkuosa)}]]
+             [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                        :size 5 :max-length 10
+                                        :placeholder "aet"
+                                        :value alkuetaisyys
+                                        :on-change (muuta! :alkuetaisyys)}]]
+             [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                        :size 5 :max-length 10
+                                        :placeholder "losa"
+                                        :value loppuosa
+                                        :on-change (muuta! :loppuosa)}]]
+             [:td [:input.tierekisteri {:class (when lomake? "form-control")
+                                        :size 5 :max-length 10
+                                        :placeholder "let"
+                                        :value loppuetaisyys
+                                        :on-change (muuta! :loppuetaisyys)}]]
+             (when hae-sijainti
+               (let [[x y] @sijainti]
+                 (if @sijainti-haku
+                   [:td [yleiset/ajax-loader-pisteet " Haetaan sijaintia"]]
+                   (when (and x y)
+                     [:td [:div.sijainti
+                           [:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)] " "
+                           [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))
+             ]]]])))))
          
