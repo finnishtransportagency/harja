@@ -1,23 +1,15 @@
 (ns harja.asiakas.ymparisto
   "Dev ympäristön spesifisiä asioita."
-  (:require
-   ;;[lively.core :as lively]
-   [figwheel.client :as fw]
-   [harja.ui.viesti :as viesti]
-   ;; require kaikki testit
-   [harja.asiakas.test-runner :as test-runner]))
-
+  (:require [figwheel.client :as fw]
+            [harja.ui.viesti :as viesti]
+            ;; require kaikki testit
+            [harja.asiakas.test-runner :as test-runner]))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
   [options]
   (.log js/console "Alustetaan koodin uudelleenlataus")
-  ;;(lively/start "/js/harja.js"
-  ;;              {:polling-rate 1000
-  ;;               :on-reload (fn []
-  ;;                           (.log js/console "Koodia ladattu uudelleen.")
-  ;;                            (when-let [on-reload (:on-reload options)]
-  ;;                              (on-reload)))})
+  
   (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
                           (when-let [on-reload (:on-reload options)]

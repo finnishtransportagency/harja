@@ -1,8 +1,6 @@
 (ns harja.loki
-  "Apufunktioita lokittamiseen."
-  (:require [devtools.core :as devtools]))
+  "Apufunktioita lokittamiseen.")
 
-(devtools/install!)
 
 (defn log [& things]
   (.apply js/console.log js/console (apply array things)))
