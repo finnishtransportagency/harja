@@ -35,11 +35,20 @@
 
 (def lomakedata (atom nil))
 
+(def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
+(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+(reaction (reduce + (mapv
+                      (fn [tyo]
+                        (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
+                      (:tyot @lomakedata)))))
+
+(def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
+
 (defn kohteen-tiedot []
   (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
                                 :valmistumispvm (:valmistumispvm @lomakedata)
                                 :takuupvm       (:takuupvm @lomakedata)
-                                :hinta          (:hinta @lomakedata)}
+                                :hinta          (fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))}
                                (fn [uusi-arvo]
                                  (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
                                                         (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
@@ -53,30 +62,25 @@
       {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
       {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
       {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2}]
+      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}]
      @kohteen-tiedot]))
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
+
 (defn yhteenveto []
-  (let [urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata))
-        muutokset-kokonaishintaan                           ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
-        (reaction (reduce + (mapv
-                              (fn [tyo]
-                                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-                              (:tyot @lomakedata))))
-        yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))]
+  (let []
     [:div.pot-yhteenveto
      [:table
       [:tr
        [:td.pot-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-       [:td.pot-yhteenveto-summa [:span (str (or @urakkasopimuksen-mukainen-kokonaishinta 0) " €")]]]
+       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))]]]
       [:tr
        [:td.pot-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-       [:td.pot-yhteenveto-summa [:span (str (or @muutokset-kokonaishintaan 0) " €")]]]
+       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt (or @muutokset-kokonaishintaan 0))]]]
       [:tr
        [:td.pot-yhteenveto-nimi [:span "Yhteensä: "]]
-       [:td.pot-yhteenveto-summa [:span (str @yhteensa " €")]]]]]))
+       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt @yhteensa)]]]]]))
 
 (defn toiminnot [valmis-tallennettavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
