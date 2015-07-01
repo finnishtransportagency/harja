@@ -161,10 +161,10 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO havainto
-(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys)
+(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
         POINT(:x_koordinaatti, :y_koordinaatti), :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
-        :tr_loppuetaisyys);
+        :tr_loppuetaisyys, :ulkoinen_id);
 
 -- name: kirjaa-havainnon-paatos!
 -- Kirjaa havainnolle päätöksen.
@@ -185,3 +185,49 @@ INSERT INTO havainto_kommentti (havainto, kommentti) VALUES (:havainto, :komment
 -- name: liita-havainto<!
 -- Liittää havaintoon uuden liitteen
 INSERT INTO havainto_liite (havainto, liite) VALUES (:havainto, :liite);
+
+-- name: onko-olemassa-ulkoisella-idlla
+-- Tarkistaa löytyykö havaintoa ulkoisella id:llä
+SELECT exists(
+    SELECT havainto.id
+    FROM havainto
+    WHERE ulkoinen_id = :ulkoinen_id);
+
+-- name: poista-havainto-ulkoisella-idlla!
+-- Poistaa havainnon sekä siihen liittyvät kommentit ja liitteet ulkoisella id:llä
+WITH havainto_idt AS (
+    SELECT id
+    FROM havainto
+    WHERE ulkoinen_id = :ulkoinen_id),
+    liitteet AS (
+      SELECT liite
+      FROM havainto_liite
+      WHERE havainto IN (
+        SELECT id
+        FROM havainto_idt)),
+    kommentit AS (
+      SELECT kommentti
+      FROM havainto_kommentti
+      WHERE havainto IN (
+        SELECT id
+        FROM havainto_idt)),
+    havainto_liitteet_poisto AS (
+    DELETE FROM havainto_liite
+    WHERE havainto IN (SELECT id
+                       FROM havainto_idt)),
+    havainto_kommentit_poisto AS (
+    DELETE FROM havainto_kommentti
+    WHERE havainto IN (SELECT id
+                       FROM havainto_idt)),
+    kommentien_poisto AS (
+    DELETE FROM kommentti
+    WHERE id IN (SELECT id
+                 FROM kommentit)),
+    liitteiden_poisto AS (
+    DELETE FROM liite
+    WHERE id IN (SELECT id
+                 FROM liitteet))
+DELETE FROM havainto
+WHERE id IN (SELECT id
+             FROM havainto_idt);
+

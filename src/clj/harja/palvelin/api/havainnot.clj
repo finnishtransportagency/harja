@@ -25,31 +25,30 @@
     vastauksen-data))
 
 (defn tallenna-havainto [db urakka-id kirjaaja data]
-
-  ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
-
-  (let [{:keys [sijainti kuvaus kohde paivamaara]} data
+  (let [{:keys [tunniste sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
-        koordinaatit (:koordinaatit sijainti)
-        havainto (havainnot/luo-havainto<!
-                   db
-                   urakka-id
-                   (parsi-aika paivamaara)
-                   "urakoitsija"
-                   kohde
-                   true
-                   (:id kirjaaja)
-                   kuvaus
-                   (:x koordinaatit)
-                   (:y koordinaatit)
-                   (:numero tie)
-                   (:aosa tie)
-                   (:losa tie)
-                   (:aet tie)
-                   (:let tie))
-        havainnon-id (:id havainto)]
-    (log/debug "Koordinaatit ovat:" koordinaatit)
-    havainnon-id))
+        koordinaatit (:koordinaatit sijainti)]
+    (when (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste))
+      (havainnot/poista-havainto-ulkoisella-idlla! db (:id tunniste)))
+    (let [havainto (havainnot/luo-havainto<!
+                     db
+                     urakka-id
+                     (parsi-aika paivamaara)
+                     "urakoitsija"
+                     kohde
+                     true
+                     (:id kirjaaja)
+                     kuvaus
+                     (:x koordinaatit)
+                     (:y koordinaatit)
+                     (:numero tie)
+                     (:aosa tie)
+                     (:losa tie)
+                     (:aet tie)
+                     (:let tie)
+                     (:id tunniste))
+          havainnon-id (:id havainto)]
+      havainnon-id)))
 
 (defn tallenna-kommentit [db havainto-id kirjaaja kommentit]
   (doseq [kommentin-data kommentit]
