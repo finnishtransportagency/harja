@@ -19,7 +19,7 @@
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
 (defonce valitut-tilat (atom {:suljetut true :avoimet true}))
 (defonce valittu-aikavali (reaction [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]))
-(defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :ilmoitus true}))
+(defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :tiedoitus true}))
 (defonce hakuehto (atom nil))
 
 ;; POLLAUS
@@ -40,10 +40,12 @@
 (defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
 
 (defn kasaa-parametrit []
-  (let [ret {:hallintayksikko (:id @valittu-hallintayksikko)
+  (let [valitut (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))    ;; Jos ei yhtäkään valittuna,
+        tyypit (if (empty? valitut) (keep key @valitut-ilmoitusten-tyypit) valitut) ;; lähetetään kaikki tyypit.
+        ret {:hallintayksikko (:id @valittu-hallintayksikko)
              :urakka (:id @valittu-urakka)
              :tilat @valitut-tilat
-             :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
+             :tyypit tyypit
              :aikavali @valittu-aikavali
              :hakuehto @hakuehto}]
     (log (pr-str ret))

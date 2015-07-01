@@ -9,16 +9,42 @@
 
             [harja.kyselyt.ilmoitukset :as q]))
 
+(defn annettu? [p]
+  (if (nil? p)
+    false
+    (do
+      (if (string? p)
+        (not (empty? p))
+
+        (if (vector? p)
+          (do
+            (if (empty? p)
+              false
+              (mapv annettu? p)))
+
+          (if (map? p)
+            (do
+              (if (empty? p)
+                false
+                (mapv #(annettu? (val %)) p)))
+
+            true))))))
+
 (defn hae-ilmoitukset
   [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
-  (log/debug (pr-str hallintayksikko))
-  (log/debug (class hallintayksikko))
-  (log/debug (pr-str urakka))
-  (log/debug (pr-str aikavali))
-  (log/debug (pr-str (map name tyypit)))
-  (log/debug (pr-str hakuehto))
-  (log/debug (pr-str tilat))
-  (let [mankeloitava (into []
+  (let [aikavali-alku (when (first aikavali)
+                        (konv/sql-timestamp (first aikavali)))
+        aikavali-loppu (when (second aikavali)
+                         (konv/sql-timestamp (second aikavali)))
+        tyypit (mapv name tyypit)
+        _ (log/debug "HY ja urakka annettu? " (annettu? hallintayksikko) (annettu? urakka))
+        _ (log/debug "HY ja urakka: " hallintayksikko urakka)
+        _ (log/debug "Aikavälit annettu? " (annettu? aikavali-alku) (annettu? aikavali-loppu))
+        _ (log/debug "Aikavälit: " aikavali-alku aikavali-loppu)
+        _ (log/debug "Tyypit annettu ja tyypit: " (not (nil? (some true? (annettu? tyypit)))) tyypit)
+        _ (log/debug "Hakuehto annettu ja hakuehto:" (annettu? hakuehto) (str "%" hakuehto "%"))
+        _ (log/debug "Suljetut ja/tai avoimet?" (if (:suljetut tilat) true false) (if (:avoimet tilat) true false))
+        mankeloitava (into []
                            (comp
                              (map konv/alaviiva->rakenne)
                              (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
@@ -27,16 +53,14 @@
                              (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
                              (map #(assoc % :ilmoittajatyyppi (keyword (:ilmoittajatyyppi %)))))
                            (q/hae-ilmoitukset db
-                                              hallintayksikko
-                                              urakka
-                                              (when (first aikavali)
-                                                (konv/sql-timestamp (first aikavali)))
-                                              (when (second aikavali)
-                                                (konv/sql-timestamp (second aikavali)))
-                                              (mapv name tyypit)
-                                              hakuehto
-                                              (:suljetut tilat)
-                                              (:avoimet tilat)
+                                              (annettu? hallintayksikko) (annettu? urakka)
+                                              hallintayksikko urakka
+                                              (annettu? aikavali-alku) (annettu? aikavali-loppu)
+                                              aikavali-alku aikavali-loppu
+                                              (not (nil? (some true? (annettu? tyypit)))) tyypit
+                                              (annettu? hakuehto) (str "%" hakuehto "%")
+                                              (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
+                                              (if (:avoimet tilat) true false) ;; falseksi
                                               ))]
 
     (log/debug mankeloitava)))

@@ -36,10 +36,10 @@ FROM ilmoitus i
     -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
     (
       -- Joko haetaan koko maasta
-      (:hallintayksikko IS NULL AND :urakka IS NULL) OR
+      (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
 
       -- Tai hallintayksikön tasolla
-      (:urakka IS NULL AND
+      (:urakka_annettu IS FALSE AND
         st_contains(
           (SELECT alue FROM organisaatio WHERE id=:hallintayksikko),
           i.sijainti::GEOMETRY)) OR
@@ -50,20 +50,21 @@ FROM ilmoitus i
 
     -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
     (
-      (:alku IS NULL AND :loppu IS NULL) OR
-      (:alku IS NULL AND i.ilmoitettu::DATE <= :loppu) OR
-      (:loppu IS NULL AND i.ilmoitettu::DATE >= :alku) OR
+      (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+      (:alku_annettu IS FALSE AND i.ilmoitettu::DATE <= :loppu) OR
+      (:loppu_annettu IS FALSE AND i.ilmoitettu::DATE >= :alku) OR
       (i.ilmoitettu BETWEEN :alku AND :loppu)
     ) AND
 
     -- Tarkasta ilmoituksen tyypit
     (
+      :tyypit_annettu IS FALSE OR
       i.ilmoitustyyppi::TEXT IN (:tyypit)
     ) AND
 
     -- Tarkasta vapaatekstihakuehto
     (
-      :teksti IS NULL OR
+      :teksti_annettu IS FALSE OR
       i.vapaateksti LIKE :teksti
     ) AND
 
