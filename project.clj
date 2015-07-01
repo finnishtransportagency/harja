@@ -124,6 +124,7 @@
             [cider/cider-nrepl "0.9.1"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
+            [lein-auto "0.1.2"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
