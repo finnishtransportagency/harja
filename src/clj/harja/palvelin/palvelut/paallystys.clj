@@ -40,6 +40,10 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
+(defn tila-string->avain [data]
+  (-> data
+      (assoc :tila (keyword (:tila data)))))
+
 (defn jsonb->clojuremap [json avain]
   (-> json
       (assoc avain
@@ -86,7 +90,8 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
-                                   (map #(tyot-string->avain % [:ilmoitustiedot :tyot])))
+                                   (map #(tyot-string->avain % [:ilmoitustiedot :tyot]))
+                                   (map #(tila-string->avain %)))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
@@ -96,6 +101,7 @@
 
 (defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm takuupvm]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id ", aloituspvm " aloituspvm ", valmistumispvm " valmistumispvm)
+  ; FIXME Tarkista ettei tila ole lukittu
   (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
@@ -132,6 +138,7 @@
 (defn vaihda-paallystysilmoituksen-tila [db user {:keys [urakka-id sopimus-id paallystyskohde-id uusi-tila]}]
   (log/debug "Vaihdetaan päällystysilmoituksen (id: " paallystyskohde-id ") tilaksi " uusi-tila)
   (oik/vaadi-rooli-urakassa user roolit/tilaajan-kayttaja urakka-id)
+  ; FIXME Tarkista ettei tila ole lukittu
   (jdbc/with-db-transaction [c db]
     (q/vaihda-paallystysilmoituksen-tila! db (name uusi-tila) (:id user) paallystyskohde-id)
     (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id

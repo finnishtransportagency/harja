@@ -170,8 +170,11 @@
                                          paallystystoimenpide-virheet @paallystystoimenpide-virheet
                                          alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
-                                         kiviaines-virheet @kiviaines-virheet]
+                                         kiviaines-virheet @kiviaines-virheet
+                                         tila (:tila @lomakedata)]
                                      (and
+                                       (not (= tila :lukittu))
+                                       (not (= tila :valmis))
                                        (empty? alikohteet-virheet)
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
@@ -179,8 +182,11 @@
                                        (empty? kiviaines-virheet))))
         valmis-kasiteltavaksi? (reaction (let [valmispvm (:valmistumispvm @lomakedata)
                                                toteutuneet-osoitteet (:osoitteet @lomakedata)
-                                               toteutuneet-maarat (:tyot @lomakedata)]
-                                           (and (not (nil? valmispvm))
+                                               toteutuneet-maarat (:tyot @lomakedata)
+                                               tila (:tila @lomakedata)]
+                                           (and (not (= tila :palautettu))
+                                                (not (= tila :lukittu))
+                                                (not (nil? valmispvm))
                                                 (not (empty? toteutuneet-osoitteet))
                                                 (not (empty? toteutuneet-maarat)))))]
     (komp/luo
@@ -196,7 +202,7 @@
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       (fn [g]                            ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
+           :muutos       (fn [g] ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
                              (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
                              (reset! alikohteet-virheet (grid/hae-virheet g))))}
@@ -355,10 +361,16 @@
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))
                                                                                                                ilmoitustiedot (:ilmoitustiedot vastaus)
+                                                                                                               ; Lomakkeessa näytettävä data on ilmoitustiedot (JSON:n clojure-map) assocattuna muutamalla keywordilla (jotka saatiin itse taulusta)
+                                                                                                               ; FIXME Miksi tämä vastaavan asian helpommin tekevä toteutus ei toimi (merge aiheuttaa oudon virheen):
+                                                                                                               ;data-lomakkeelle (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
+                                                                                                               ;                     (dissoc :ilmoitustiedot)
+                                                                                                               ;                     (merge ilmoitustiedot))]
                                                                                                                data-lomakkeelle (-> (assoc ilmoitustiedot :paallystyskohde-id (:paallystyskohde_id rivi))
                                                                                                                                     (assoc :valmistumispvm (:valmistumispvm vastaus))
                                                                                                                                     (assoc :aloituspvm (:aloituspvm vastaus))
-                                                                                                                                    (assoc :takuupvm (:takuupvm vastaus)))]
+                                                                                                                                    (assoc :takuupvm (:takuupvm vastaus))
+                                                                                                                                    (assoc :tila (:tila vastaus)))]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
                                                                                                            (log "PÄÄ data lomakkeelle: " (pr-str data-lomakkeelle))
                                                                                                            (reset! lomakedata data-lomakkeelle)))}

@@ -137,7 +137,7 @@
 
          [lomake {:luokka :horizontal
                   :muokkaa! (fn [uusi]
-                              (log "TOT Muokataan toteumaa: " ('r-str uusi))
+                              (log "TOT Muokataan toteumaa: " (pr-str uusi))
                               (reset! lomake-toteuma uusi))
                   :footer   [harja.ui.napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -326,7 +326,7 @@
                      (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                                   [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "20%"}]
-          (doall (filter
+          (doall (filter ; FIXME Ei toimi ennen kuin sivua vaihtaa (mahdollinen ratkaisu: tee reaction, dereffaa valittu-tpi, anna gridille.
                    (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
                                    (or
                                      (> (:hoitokauden-toteutunut-maara rivi) 0)
