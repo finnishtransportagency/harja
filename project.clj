@@ -1,7 +1,7 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.7.0-RC2"] ; siirrytään 1.7.0 heti kun valmis
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "0.0-3308"]
 
                  ;;;;;;; Yleiset ;;;;;;;
@@ -62,8 +62,7 @@
 
                  ;; Asiakas
                  [spyscope "0.1.5"]
-                 [spellhouse/clairvoyant "0.0-48-gf5e59d3"]
-                 [binaryage/devtools "0.3.0"] ;; cljs data chrome inspectoriin
+                 ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.3.13"]
                  ;;[lively "0.2.0"]
@@ -119,10 +118,10 @@
 
 
   :plugins [[lein-cljsbuild "1.0.5"]
-            [cider/cider-nrepl "0.8.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.3.3"]
+            [cider/cider-nrepl "0.9.1"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
