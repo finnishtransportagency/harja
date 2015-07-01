@@ -3,18 +3,9 @@
 
   (:require [harja.tyokalut.json_validointi :as json]
             [harja.palvelin.api.tyokalut.virheet :as virheet]
-            [harja.kyselyt.kayttajat :as kayttajat]
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-
-(defn hae-kirjaajan-id [db otsikko]
-  (let [jarjestelma (:jarjestelma  (:lahettaja otsikko))
-        ytunnus (:ytunnus (:organisaatio (:lahettaja otsikko)))]
-    ;; todo: pitääkö aiheuttaa poikkeus jos ei löydy?
-    (log/debug "Järjestelmä: " jarjestelma " ytunnus:" ytunnus)
-    (:id (first (kayttajat/hae-jarjestelmakayttajan-id-ytunnuksella db jarjestelma ytunnus)))))
 
 (defn logita-kutsu [resurssi request body]
   ;; fixme: lisää monitorointikutsu
@@ -115,6 +106,6 @@
                       (log/error "Tapahtui poikkeus: " e)
                       (kasittele-sisainen-kasittelyvirhe
                         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                                                           :viesti (.getMessage e)}])))]
+                          :viesti (.getMessage e)}])))]
       (logita-vastaus resurssi vastaus)
       vastaus)))

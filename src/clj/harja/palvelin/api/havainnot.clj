@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu hae-kirjaajan-id]]
+            [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.konversio :as konversio]
@@ -76,7 +76,7 @@
 
 (defn tallenna [liitteiden-hallinta db urakka-id data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [kirjaaja (hae-kirjaajan-id db (:otsikko data))
+    (let [kirjaaja (validointi/hae-kirjaajan-id db (:otsikko data))
           havainto-id (tallenna-havainto transaktio urakka-id kirjaaja data)
           kommentit (:kommentit data)
           liitteet (:liitteet data)]
