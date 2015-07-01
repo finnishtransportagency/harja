@@ -36,11 +36,11 @@
 (def lomakedata (atom nil))
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
-(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
-(reaction (reduce + (mapv
-                      (fn [tyo]
-                        (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-                      (:tyot @lomakedata)))))
+(def muutokset-kokonaishintaan                              ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+  (reaction (reduce + (mapv
+                        (fn [tyo]
+                          (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
+                        (:tyot @lomakedata)))))
 
 (def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
 
@@ -54,7 +54,7 @@
                                                         (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
                                                         (assoc :takuupvm (:takuupvm uusi-arvo))
                                                         (assoc :hinta (:hinta uusi-arvo))))))]
-    [lomake {:luokka   :horizontal ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+    [lomake {:luokka   :horizontal                          ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
              :muokkaa! (fn [uusi]
                          (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                          (reset! kohteen-tiedot uusi))}
@@ -85,16 +85,16 @@
 (defn toiminnot [valmis-tallennettavaksi? valmis-kasiteltavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
                                     (if (not valmispvm)
-                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))]
+                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
+        urakka-id (:id @nav/valittu-urakka)
+        [sopimus-id _] @u/valittu-sopimusnumero]
     [:div.pot-toiminnot
      [:div.pot-huomaus @huomautusteksti]
 
      (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
                                   "Tallenna"
-                                  #(let [urakka-id (:id @nav/valittu-urakka)
-                                         [sopimus-id _] @u/valittu-sopimusnumero
-                                         paallystyskohde-id (:paallystyskohde-id @lomakedata)
+                                  #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)
                                          aloituspvm (:aloituspvm @lomakedata)
                                          valmispvm (:valmistumispvm @lomakedata)
                                          takuupvm (:takuupvm @lomakedata)
@@ -114,24 +114,26 @@
      (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
                                   "Hyväksy"
-                                  #(let [urakka-id (:id @nav/valittu-urakka)
-                                         [sopimus-id _] @u/valittu-sopimusnumero])
+                                  #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
+                                    (paallystys/hyvaksy-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
                                   {:luokka       "nappi-ensisijainen"
                                    :disabled     (false? @valmis-kasiteltavaksi?)
                                    :kun-onnistuu (fn [vastaus]
-                                                   ; TODO
-                                                   )}])
+                                                   (log "PÄÄ Lomake hyväksytty, vastaus: " (pr-str vastaus))
+                                                   (reset! paallystys/paallystystoteumat vastaus)
+                                                   (reset! lomakedata nil))}])
 
      (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
                                   "Palauta urakoitsijalle"
-                                  #(let [urakka-id (:id @nav/valittu-urakka)
-                                         [sopimus-id _] @u/valittu-sopimusnumero])
+                                  #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
+                                    (paallystys/hylkaa-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
                                   {:luokka       "nappi-ensisijainen"
                                    :disabled     (false? @valmis-kasiteltavaksi?)
                                    :kun-onnistuu (fn [vastaus]
-                                                   ; TODO
-                                                   )}])]))
+                                                   (log "PÄÄ Lomake hylätty, vastaus: " (pr-str vastaus))
+                                                   (reset! paallystys/paallystystoteumat vastaus)
+                                                   (reset! lomakedata nil))}])]))
 
 (defn paallystysilmoituslomake
   []
@@ -194,12 +196,12 @@
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       (fn [g] ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
+           :muutos       (fn [g]                            ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
-                           (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
-                           (reset! alikohteet-virheet (grid/hae-virheet g))))}
-          [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
-                                                                               [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]
+                             (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
+                             (reset! alikohteet-virheet (grid/hae-virheet g))))}
+          [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
+                                                                                   [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]
             :muokattava? (fn [rivi index] (if (> index 0) false true))}
            {:otsikko       "Ajorata"
             :nimi          :ajorata

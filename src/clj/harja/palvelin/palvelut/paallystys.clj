@@ -133,7 +133,7 @@
   (log/debug "Vaihdetaan päällystysilmoituksen (id: " paallystyskohde-id ") tilaksi " uusi-tila)
   (oik/vaadi-rooli-urakassa user roolit/tilaajan-kayttaja urakka-id)
   (jdbc/with-db-transaction [c db]
-    (q/vaihda-paallystysilmoituksen-tila! db uusi-tila (:id user) paallystyskohde-id)
+    (q/vaihda-paallystysilmoituksen-tila! db (name uusi-tila) (:id user) paallystyskohde-id)
     (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                            :sopimus-id sopimus-id})))
 
