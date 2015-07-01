@@ -6,9 +6,14 @@
             
             [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
  
 (def kayttaja (atom nil))
+
+(def kayttajan-nimi
+  (reaction (when-let [k @kayttaja]
+              (str (:etunimi k) " " (:sukunimi k)))))
 
 (def istunto-alkoi (atom nil))
 

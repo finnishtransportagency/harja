@@ -2,19 +2,22 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan]]
 
-            [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.views.urakka.valinnat :as valinnat]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
+            
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.istunto :as istunto]
+            
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.komponentti :as komp]
 
+            [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
             
             [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]])
@@ -41,7 +44,8 @@
 
 (defn uusi-tarkastus []
   {:uusi? true
-   :aika (pvm/nyt)})
+   :aika (pvm/nyt)
+   :tarkastaja @istunto/kayttajan-nimi})
 
 (defn tarkastuslistaus
   "Tarkastuksien pääkomponentti"
@@ -114,48 +118,61 @@
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
                    :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]})))
                  
-(defn tarkastus [tarkastus]
-  [:div.tarkastus
-   [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus nil)]
+(defn tarkastus [tarkastus-atom]
+  (let [tarkastus @tarkastus-atom]
+    [:div.tarkastus
+     [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus nil)]
 
-   [lomake/lomake
-    {:luokka :horizontal
-     :muokkaa! #(reset! tarkastus %)}
+     [lomake/lomake
+      {:luokka :horizontal
+       :muokkaa! #(reset! tarkastus-atom %)}
 
-    [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika}
-     {:otsikko "Tierekisteriosoite" :nimi :tr
-      :tyyppi :tierekisteriosoite}
-     {:otsikko "Tarkastus" :nimi :tyyppi
-      :tyyppi :valinta
-      :valinnat +tarkastystyyppi+
-      :valinta-nayta #(case %
-                        :tiesto "Tiestötarkastus"
-                        :talvihoito "Talvihoitotarkastus"
-                        :soratie "Soratien tarkastus"
-                        "- valitse -")
-      :leveys-col 2}
+      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika}
+       {:otsikko "Tierekisteriosoite" :nimi :tr
+        :tyyppi :tierekisteriosoite
+        :sijainti (r/wrap (:sijainti tarkastus)
+                          #(swap! tarkastus-atom assoc :sijainti %))}
+       {:otsikko "Tarkastus" :nimi :tyyppi
+        :tyyppi :valinta
+        :valinnat +tarkastystyyppi+
+        :valinta-nayta #(case %
+                          :tiesto "Tiestötarkastus"
+                          :talvihoito "Talvihoitotarkastus"
+                          :soratie "Soratien tarkastus"
+                          "- valitse -")
+        :leveys-col 2}
+       
+       {:otsikko "Tarkastaja" :nimi :tarkastaja
+        :tyyppi :string :pituus-max 256
+        :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
+        :leveys-col 4}
 
-     (case (:tyyppi @tarkastus)
-       :talvihoito (talvihoitomittaus)
-       :soratie (soratiemittaus)
-       nil)
-     ]
+       (case (:tyyppi tarkastus)
+         :talvihoito (talvihoitomittaus)
+         :soratie (soratiemittaus)
+         nil)
+       
+       (when-not (= :soratie (:tyyppi tarkastus))
+         {:otsikko "Mittaaja" :nimi :mittaaja
+          :tyyppi :string :pituus-max 256
+          :leveys-col 4})
+       ]
+      
+      tarkastus]
 
-    @tarkastus]
+     [havainnot/havainto {:osa-tarkastusta? true}
+      (r/wrap (:havainto tarkastus)
+              #(swap! tarkastus-atom assoc :havainto %))]
 
-   [havainnot/havainto {:osa-tarkastusta? true}
-    (r/wrap (:havainto @tarkastus)
-            #(swap! tarkastus assoc :havainto %))]
-
-   [:div.row
-    [:div.col-sm-2]
-    [:div.col-sm-2
-     [napit/palvelinkutsu-nappi
-      "Tallenna tarkastus"
-      (fn []
-        (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka) @tarkastus))
-      {:disabled (not (validi-tarkastus? @tarkastus))}]]]
-   ])
+     [:div.row
+      [:div.col-sm-2]
+      [:div.col-sm-2
+       [napit/palvelinkutsu-nappi
+        "Tallenna tarkastus"
+        (fn []
+          (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+        {:disabled (not (validi-tarkastus? tarkastus))}]]]
+     ]))
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"

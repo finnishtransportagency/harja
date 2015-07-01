@@ -2,7 +2,8 @@
   "Validin tarkastuksen skeema"
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
-            [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti]]))
+            [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
+            #?(:cljs [harja.loki :refer [log]])))
 
 (def Havainto
   {:kuvaus Teksti
@@ -29,7 +30,10 @@
   {(s/optional-key :uusi?) s/Bool
    :aika pvm-tyyppi
    :tr Tierekisteriosoite
+   (s/optional-key :sijainti) Sijainti
    :tyyppi Tarkastustyyppi
+   :tarkastaja Teksti
+   (s/optional-key :mittaaja) Teksti
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittais) Soratiemittaus
    (s/optional-key :havainto) Havainto})
@@ -38,4 +42,7 @@
   (skeema/tarkista Tarkastus data))
 
 (defn validi-tarkastus? [data]
-  (nil? (validoi-tarkastus data)))
+  (let [virheet (validoi-tarkastus data)]
+    #?(:cljs (log "virheet: " (pr-str virheet)))
+    (nil? virheet)))
+  

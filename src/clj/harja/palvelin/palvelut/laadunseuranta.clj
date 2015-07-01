@@ -170,6 +170,16 @@
   (into []
         (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
 
+(defn luo-tarkastus
+  "Luo uuden tarkastuksen, palauttaa id:n"
+  [db user urakka-id {:keys [aika tr tyyppi tarkastaja mittaaja]}]
+  (tarkastukset/luo-tarkastus<! db
+                                urakka-id aika
+                                (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
+                                nil ;; sijainti pitää VKM:stä hakea frontilla
+                                
+  )
+
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus))
 

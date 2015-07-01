@@ -12,4 +12,7 @@
    :loppuosa s/Int
    :loppuetaisyys s/Int})
 
+;; Sijainti on tarkalleen 2 koordinaattia, x ja y
+(def Sijainti [s/Num])
+
 (def Teksti (s/both s/Str (s/pred (comp not str/blank?))))
