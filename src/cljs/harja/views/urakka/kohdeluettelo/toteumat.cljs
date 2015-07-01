@@ -37,15 +37,15 @@
 
 (defn kohteen-tiedot []
   (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
-                              :valmistumispvm (:valmistumispvm @lomakedata)
-                              :takuupvm       (:takuupvm @lomakedata)
-                              :hinta          (:hinta @lomakedata)}
-                             (fn [uusi-arvo]
-                               (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                      (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
-                                                      (assoc :takuupvm (:takuupvm uusi-arvo))
-                                                      (assoc :hinta (:hinta uusi-arvo))))))]
-    [lomake {:luokka :horizontal ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+                                :valmistumispvm (:valmistumispvm @lomakedata)
+                                :takuupvm       (:takuupvm @lomakedata)
+                                :hinta          (:hinta @lomakedata)}
+                               (fn [uusi-arvo]
+                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
+                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
+                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
+                                                        (assoc :hinta (:hinta uusi-arvo))))))]
+    [lomake {:luokka   :horizontal                          ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
              :muokkaa! (fn [uusi]
                          (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                          (reset! kohteen-tiedot uusi))}
@@ -86,26 +86,26 @@
      [:div.pot-huomaus @huomautusteksti]
 
      (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
-     [harja.ui.napit/palvelinkutsu-nappi
-      "Tallenna"
-      #(let [urakka-id (:id @nav/valittu-urakka)
-             [sopimus-id _] @u/valittu-sopimusnumero
-             paallystyskohde-id (:paallystyskohde-id @lomakedata)
-             aloituspvm (:aloituspvm @lomakedata)
-             valmispvm (:valmistumispvm @lomakedata)
-             takuupvm (:takuupvm @lomakedata)
-             lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
-                                  (dissoc @lomakedata :valmistumispvm)
-                                  (dissoc @lomakedata :aloituspvm)
-                                  (dissoc @lomakedata :takuupvmpvm))]
-        (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm takuupvm))
-      {:luokka       "nappi-ensisijainen"
-       :disabled     (false? @valmis-tallennettavaksi?)
-       :kun-onnistuu (fn [vastaus]
-                       (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
-                       (reset! paallystys/paallystystoteumat vastaus)
-                       (reset! lomakedata nil))}])
+                                 [harja.ui.napit/palvelinkutsu-nappi
+                                  "Tallenna"
+                                  #(let [urakka-id (:id @nav/valittu-urakka)
+                                         [sopimus-id _] @u/valittu-sopimusnumero
+                                         paallystyskohde-id (:paallystyskohde-id @lomakedata)
+                                         aloituspvm (:aloituspvm @lomakedata)
+                                         valmispvm (:valmistumispvm @lomakedata)
+                                         takuupvm (:takuupvm @lomakedata)
+                                         lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
+                                                              (dissoc @lomakedata :valmistumispvm)
+                                                              (dissoc @lomakedata :aloituspvm)
+                                                              (dissoc @lomakedata :takuupvmpvm))]
+                                    (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
+                                    (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm takuupvm))
+                                  {:luokka       "nappi-ensisijainen"
+                                   :disabled     (false? @valmis-tallennettavaksi?)
+                                   :kun-onnistuu (fn [vastaus]
+                                                   (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
+                                                   (reset! paallystys/paallystystoteumat vastaus)
+                                                   (reset! lomakedata nil))}])
 
      (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
@@ -339,7 +339,12 @@
                                                                                                                             :paallystyskohde-id (:paallystyskohde_id rivi)
                                                                                                                             :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})}
                                                       [:span " Tee päällystysilmoitus"]]))}]
-          (sort (fn [toteuma] (if (:tila toteuma) 0 1)) @paallystys/paallystystoteumat)]]))))
+          (sort
+            (fn [toteuma] (case (:tila toteuma)
+                            "valmis" 0
+                            "aloitettu" 1
+                            nil 2))
+            @paallystys/paallystystoteumat)]]))))
 
 (defn toteumat []
   (if @lomakedata
