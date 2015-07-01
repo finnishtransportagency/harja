@@ -75,7 +75,8 @@
              (r/wrap
                (second ehto)
                (fn [uusi-tila]
-                 (assoc tiedot/valitut-tilat (first ehto) uusi-tila)))])]]
+                 (reset! tiedot/valitut-tilat
+                         (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]]
 
         [:div
          [:label "Ilmoituksen tyyppi"
@@ -85,7 +86,8 @@
              (r/wrap
                (second ehto)
                (fn [uusi-tila]
-                 (assoc tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila)))])]]]
+                 (reset! tiedot/valitut-ilmoitusten-tyypit
+                         (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]]
 
        [palvelinkutsu-nappi
         "Hae ilmoitukset"
