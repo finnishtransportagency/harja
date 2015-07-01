@@ -41,7 +41,7 @@
       "id": "http://jsonschema.net/urakkatyyppi",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/urakkatyyppi.schema.json",
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
       "required": true
     },
     "alkupvm": {

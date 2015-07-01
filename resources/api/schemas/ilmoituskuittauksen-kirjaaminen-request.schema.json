@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "kuittaus": {
@@ -48,14 +48,14 @@
               "id": "http://jsonschema.net/kuittaus/kuittaaja/henkilo",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
               "required": true
             },
             "organisaatio": {
               "id": "http://jsonschema.net/kuittaus/kuittaaja/organisaatio",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/organisaatio.schema.json",
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
               "required": true
             }
           }
@@ -70,14 +70,14 @@
               "id": "http://jsonschema.net/kuittaus/kasittelija/henkilo",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
               "required": true
             },
             "organisaatio": {
               "id": "http://jsonschema.net/kuittaus/kasittelija/organisaatio",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/organisaatio.schema.json",
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
               "required": true
             }
           }

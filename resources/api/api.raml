@@ -1,0 +1,692 @@
+#%RAML 0.8
+title: Harja API
+version: 0.1
+baseUri: https://harja/api/{version}
+protocols: [HTTPS]
+mediaType: application/json
+
+schemas:
+ - kirjaus-response: !include schemas/kirjaus-response.schema.json
+ - urakoiden-haku-response: !include schemas/urakoiden-haku-response.schema.json
+ - urakan-haku-response: !include schemas/urakan-haku-response.schema.json
+ - reittitoteuman-kirjaus-request: !include schemas/reittitoteuman-kirjaus-request.schema.json
+ - pistetoteuman-kirjaus-request: !include schemas/pistetoteuman-kirjaus-request.schema.json
+ - varustetoteuman-kirjaus-request: !include schemas/varustetoteuman-kirjaus-request.schema.json
+ - poikkeamien-kirjaus-request: !include schemas/poikkeamien-kirjaus-request.schema.json
+ - turvallisuuspoikkeamien-kirjaus-request: !include schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json
+ - tarkastuksen-kirjaus-request: !include schemas/tarkastuksen-kirjaus-request.schema.json
+ - tiestotarkastuksen-kirjaus-request: !include schemas/tiestotarkastuksen-kirjaus-request.schema.json
+ - talvihoitotarkastuksen-kirjaus-request: !include schemas/talvihoitotarkastuksen-kirjaus-request.schema.json
+ - soratietarkastuksen-kirjaus-request.schema: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
+ - siltatarkastuksen-kirjaus-request.schema: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
+ - havainnon-kirjaus-request: !include schemas/havainnon-kirjaus-request.schema.json
+ - varusteiden-haku-response: !include schemas/varusteiden-haku-response.schema.json
+ - varusteen-haku-response: !include schemas/varusteen-haku-response.schema.json
+ - varusteen-lisays-request: !include schemas/varusteen-lisays-request.schema.json
+ - varusteen-paivitys-request: !include schemas/varusteen-paivitys-request.schema.json
+ - varusteen-poisto-request: !include schemas/varusteen-poisto-request.schema.json
+ - tyokoneenseurannan-kirjaus-request: !include schemas/tyokoneenseurannan-kirjaus-request.schema.json
+ - ilmoitusten-haku-response: !include schemas/ilmoitusten-haku-response.schema.json
+ - ilmoituskuittauksen-kirjaaminen-request: !include schemas/ilmoituskuittauksen-kirjaaminen-request.schema.json
+ - paivystajatietojen-kirjaus-request: !include schemas/paivystajatietojen-kirjaus-request.schema.json
+ - paivystajatietojen-haku-request: !include schemas/paivystajatietojen-haku-request.schema.json
+ - paivystajatietojen-haku-response: !include schemas/paivystajatietojen-haku-response.schema.json
+ - tietolajien-haku-response: !include schemas/tietolajien-haku-response.schema.json
+ - virhe-response: !include schemas/virhe-response.schema.json
+ - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
+ - tielupien-haku-response: !include schemas/tielupien-haku-response.schema.json
+ - tietyoilmoituksen-kirjaus-request: !include schemas/tietyoilmoituksen-kirjaus-request.schema.json
+
+securitySchemes:
+ - basic:
+    type: Basic Authentication
+    
+traits:
+  - secured:
+      description: Vaatii Basic HTTP autentikaation
+      
+documentation:
+ - title: Versiohistoria
+   content: !include documentation/harja-api-versiohistoria.md
+ - title: Kuvaus
+   content: !include documentation/harja-api-kuvaus.md
+ - title: Tekninen kuvaus
+   content: !include documentation/harja-api-tekninen-kuvaus.md
+
+
+/urakat:
+  is: [secured]
+  description: Urakoiden tietojen hallinta.
+  /haku:
+    is: [secured]
+    description: Urakoiden massahaku.
+    /{ytunnus}:
+      get:
+        is: [secured]
+        description: Palauttaa kaikki urakoitsijan Y-tunnuksen mukaisen urakoitsijan urakoiden otsikkotason tiedot. Urakan täydet tiedot haetaan erikseen urakan id:n avulla (/urakka/id).
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/urakoiden-haku-response.json
+                schema: urakoiden-haku-response
+          400:
+             body:
+               application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+             body:
+               application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+  /{id}:
+    get:
+      is: [secured]
+      description: Palauttaa id:n mukaisen urakan tiedot sopimus ja työtietoineen. Käytetään mahdollistamaan tietojen kirjaaminen kirjaustasolla urakka, sopimus ja työ.
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/urakan-haku-response.json
+              schema: urakan-haku-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+    /toteumat:
+      /reitti:
+        post:
+          is: [secured]
+          description: Toteumien kirjaaminen urakalle.
+          body:
+            application/json:
+              example: !include examples/reittitoteuman-kirjaus-request.json
+              schema: reittitoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+      /piste:
+        post:
+          is: [secured]
+          description: Toteumien kirjaaminen urakalle.
+          body:
+            application/json:
+              example: !include examples/pistetoteuman-kirjaus-request.json
+              schema: pistetoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+      /varuste:
+        post:
+          is: [secured]
+          description: Toteumien kirjaaminen urakalle.
+          body:
+            application/json:
+              example: !include examples/varustetoteuman-kirjaus-request.json
+              schema: varustetoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: kirjaus-response
+    /poikkeamat:
+      post:
+        is: [secured]
+        description: Poikkeamien kirjaaminen urakalle.
+        body:
+          application/json:
+            example: !include examples/poikkeamien-kirjaus-request.json
+            schema: poikkeamien-kirjaus-request
+        responses:
+         200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+         400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+         500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: kirjaus-response    
+      /turvallisuuspoikkeamat:
+          post:
+            is: [secured]
+            description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen.
+            body:
+              application/json:
+                example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
+                schema: turvallisuuspoikkeamien-kirjaus-request
+            responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+    /tarkastus:
+      description: Tarkastusten kirjaaminen
+      /tiestotarkastus:
+        post:
+          is: [secured]
+          description: Uuden tiestötarkastuksen kirjaaminen.
+          body:
+            application/json:
+              example: !include examples/tiestotarkastuksen-kirjaus-request.json
+              schema: tiestotarkastuksen-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+      /talvihoitotarkastus:
+        post:
+          is: [secured]
+          description: Uuden talvihoitotarkastuksen kirjaaminen.
+          body:
+            application/json:
+              example: !include examples/talvihoitotarkastuksen-kirjaus-request.json
+              schema: talvihoitotarkastuksen-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
+      /soratietarkastus:
+        post:
+          is: [secured]
+          description: Uuden soratietarkastuksen kirjaaminen.
+          body:
+            application/json:
+              example: !include examples/soratietarkastuksen-kirjaus-request.json
+              schema: soratietarkastuksen-kirjaus-request.schema
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+
+      /siltatarkastus:
+        post:
+          is: [secured]
+          description: Uuden siltatarkastuksen kirjaaminen.
+          body:
+            application/json:
+              example: !include examples/siltatarkastuksen-kirjaus-request.json
+              schema: siltatarkastuksen-kirjaus-request.schema
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+    /havainto:
+      post:
+        is: [secured]
+        description: Yleisten havaintojen kirjaaminen urakalle.
+        body:
+          application/json:
+            example: !include examples/havainnon-kirjaus-request.json
+            schema: havainnon-kirjaus-request
+        responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+    /paivystajatiedot:
+      post:
+        is: [secured]
+        description: Päivystäjätietojen lähetys. Tiedot lähetetään aina koko urakalle kerrallaan, jolloin urakan vanhat päivystäjätiedot poistetaan ja vastaanotetut tallennetaan päälle.
+        body:
+          application/json:
+            example: !include examples/paivystajatietojen-kirjaus-request.json
+            schema: paivystajatietojen-kirjaus-request
+        responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+    /tietyoilmoitus:
+        description: Tietyöilmoituksen kirjaus
+        post:
+          is: [secured]
+          description: Tietyöilmoituksen kirjaaminen urakalle.
+          body:
+            application/json:
+              example: !include examples/tietyoilmoituksen-kirjaus-request.json
+              schema: tietyoilmoituksen-kirjaus-request
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+/varusteet:
+  is: [secured]
+  /haku:
+    description: Varusteiden massahaku.
+    get:
+      is: [secured]
+      description: Palauttaa kaikki varusteet annetulla tievälillä. Voidaan rajata vaihtoehtoisesti myös palauttamaan varusteet, joita on muutettu annetun päivämäärän jälkeen..
+      queryParameters:
+        tie:
+          description: Haettava tie
+          type: integer
+          required: true
+          example: 1
+        alkuosa:
+          description: Alkuosa 
+          type: integer
+          required: true
+          example: 12
+        alkuetaisyys:
+          description: Alkuetaisyys 
+          type: integer
+          required: true
+          example: 12
+        loppuosa:
+          description: Loppuosa 
+          type: integer
+          required: true
+          example: 12
+        loppuetaisyys:
+          description: Loppuetaisyys
+          type: integer
+          required: true
+          example: 12
+        muutospaivamaara:
+          description: Muutospaivamaara
+          type: integer
+          required: false
+          example: 12
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/varusteiden-haku-response.json
+              schema: varusteiden-haku-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+  /tietolajit:
+    description: Tietolajien haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
+    get:
+      queryParameters:
+        tunnisteet:
+          description: Haettavien tietolajien tunnisteet pilkulla erotettuina
+          type: string
+          example: tl506, tl507
+      responses:
+         200:
+          body:
+            application/json:
+              example: !include examples/tietolajien-haku-response.json
+              schema: tietolajien-haku-response
+         400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+         500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+  /{id}:
+    description: Yksittäisen varusteen hallinta.
+    get:
+      is: [secured]
+      description: Varusteen tietojen haku. Hakee viimeisimmät tiedot tierekisteristä.
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/varusteen-haku-response.json
+              schema: varusteen-haku-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+    post:
+      is: [secured]
+      description: Uuden varusteen lisääminen. Päivittää tiedon tierekisteriin.
+      body:
+        application/json: 
+          example: !include examples/varusteen-lisays-request.json
+          schema: varusteen-lisays-request
+      responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+    put:
+      is: [secured]
+      description: Varusteen tietojen päivitys. Päivittää tiedon tierekisteriin.
+      body:
+        application/json:
+          example: !include examples/varusteen-paivitys-request.json
+          schema: varusteen-paivitys-request
+      responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+    delete:
+      is: [secured]
+      description: Varusteen poistaminen. Tarkoitettu poistamaan virheellisesti lisätty varuste. Fyysisesti käytöstä poistetun varusteen käsittelemiseen käytetään varusteen päivitystä. Poistaa tiedon tierekisteristä.
+      body:
+        application/json:
+          example: !include examples/varusteen-poisto-request.json
+          schema: varusteen-poisto-request
+      responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+/seuranta:
+  is: [secured]
+  description: Reaaliaikaisten tapahtumien kirjaus.
+  /tyokone:
+    post:
+      is: [secured]
+      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä sekä urakka, johon tehtävä liittyy. Rajapintaan lähetettävä datan otostiheys, lähetysväli ja puskurointi täytyy olla konfiguroitavissa lähetettävässä järjestelmässä. Esimerkiksi yksittäisen laitteen sijainti lähetetään 1 minuutin otosvälillä ja yksittäinen järjestelmä lähettää kaikki keräämänsä sijaintitiedot kerran 10 minuutissa.
+      body:
+        application/json:
+          example: !include examples/tyokoneenseurannan-kirjaus-request.json     
+          schema: tyokoneenseurannan-kirjaus-request
+          
+/ilmoitukset:
+  is: [secured]
+  description: Ilmoitusten massahaku.
+  get:
+    is: [secured]
+    description: Ilmoitusten haku urakoitsijan id:n avulla. Palauttaa listan nimetylle urakoitsijalle listattuja ilmoituksia. Tämän lisäksi voidaan antaa viimeisimmän onnistuneesti haetun ilmoituksen id, jolloin palautetaan kaikki ilmoitukset, jotka ovat kirjattu tämän jälkeen. Muussa tapauksessa palautetaan kaikki urakoitsijalle kirjatut ilmoitukset. 
+    queryParameters:
+      urakoitsijaId: 
+        description: Urakoitsijan id, jolle haetaan ilmoituset
+        type: integer
+        required: true
+        example: 1
+      viimeisinHaettuId: 
+        description: Viimeisen onnistuneesti haetun ilmoituksen id
+        type: integer
+        required: false
+        example: 12
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/ilmoitusten-haku-response.json      
+            schema: ilmoitusten-haku-response
+      400:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+  /{id}:
+      description: Yksittäisen ilmoituksen hallinta.
+      put:
+        is: [secured]
+        description: Ilmoituksen kuittaaminen. Käytetään kirjaamaan eri kuittaukset ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
+        body:
+          application/json:
+            example: !include examples/ilmoituskuittauksen-kirjaaminen-request.json
+            schema: ilmoituskuittauksen-kirjaaminen-request
+        responses:
+         200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+         500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+         400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+/tieluvat:
+  description: Tielupien haku
+  get:
+    is: [secured]
+    description: Tielupien haku alueurakan tai sijainnin perusteella.
+    body:
+      application/json:
+        example: !include examples/tielupien-haku-request.json
+        schema: tielupien-haku-request
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/tielupien-haku-response.json
+            schema: tielupien-haku-response
+      400:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+      500:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+  /{diaarinumero}:   
+    get:
+      is: [secured]
+      description: Yksittäisen tieluvan haku diaarinumeron avulla.
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/tielupien-haku-response.json
+              schema: tielupien-haku-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+/paivystajatiedot:
+  get:
+    is: [secured]
+    description: Päivystäjätietojen haku.
+    body:
+      application/json:
+        example: !include examples/paivystajatietojen-haku-request.json
+        schema: paivystajatietojen-haku-request
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/paivystajatietojen-haku-response.json
+            schema: paivystajatietojen-haku-response
+      400:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+      500:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response

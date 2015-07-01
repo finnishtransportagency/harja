@@ -17,7 +17,7 @@
             "id": "http://jsonschema.net/tietolajit/0/tietolaji",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas//entities/tietolaji.schema.json",
+            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",
             "required": true
           }
         }

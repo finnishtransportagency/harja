@@ -8,14 +8,13 @@
       "id": "http://jsonschema.net/urakat",
       "type": "array",
       "items": {
-        "id": "http://example.com/item-schema",
+        "id": "http://jsonschema.net/urakat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "urakka": {
             "id": "http://jsonschema.net/urakat/0/urakka",
             "type": "object",
-            "additionalProperties": false,
             "required": true,
             "properties": {
               "tiedot": {
@@ -24,6 +23,21 @@
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
+              }
+            }
+          },
+          "paivystykset": {
+            "id": "http://jsonschema.net/urakat/0/urakka/paivystykset",
+            "type": "array",
+            "items": {
+              "id": "http://jsonschema.net/urakat/0/urakka/paivystykset/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "paivystys": {
+                  "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
+                  "required": true
+                }
               }
             }
           }

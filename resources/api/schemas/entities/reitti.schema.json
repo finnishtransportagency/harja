@@ -21,26 +21,26 @@
             "id": "http://jsonschema.net/reitti/0/koordinaattisijainti",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas//entities/koordinaattisijainti.schema.json",
+            "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
             "required": true
           },
           "tehtavat": {
             "id": "http://jsonschema.net/reitti/0/tehtavat/",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas//entities/tehtavat.schema.json"
+            "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
           },
           "maarat": {
             "id": "http://jsonschema.net/reitti/0/maarat/",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas//entities/maarat.schema.json"
+            "$ref": "file:resources/api/schemas/entities/maarat.schema.json"
           },
           "havainnot": {
             "id": "http://jsonschema.net/reitti/0/havainnot",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas//entities/havainnot.schema.json"
+            "$ref": "file:resources/api/schemas/entities/havainnot.schema.json"
           },
           "mittaustulokset": {
             "id": "http://jsonschema.net/mittaustulokset",

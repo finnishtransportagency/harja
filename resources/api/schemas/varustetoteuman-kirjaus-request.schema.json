@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "varustetoteuma": {
@@ -22,7 +22,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas//entities/reitti.schema.json"
+          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "varustekirjaukset": {
           "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset",
@@ -36,7 +36,7 @@
                 "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset/0/varustekirjaus",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas//entities/varuste-kirjaus.schema.json"
+                "$ref": "file:resources/api/schemas/entities/varuste-kirjaus.schema.json"
               }
             }
           }
@@ -45,7 +45,7 @@
           "id": "http://jsonschema.net/varustetoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/liitteet.schema.json"
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     }

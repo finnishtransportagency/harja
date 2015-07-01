@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/toteumat/0/toteuma/tunniste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "sopimusId": {
@@ -60,13 +60,13 @@
       "id": "http://jsonschema.net/toteumat/0/toteuma/tehtavat/",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/tehtavat.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
     },
     "maarat": {
       "id": "http://jsonschema.net/toteumat/0/toteuma/maarat/",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/maarat.schema.json"
+      "$ref": "file:resources/api/schemas/entities/maarat.schema.json"
     }
   }
 }

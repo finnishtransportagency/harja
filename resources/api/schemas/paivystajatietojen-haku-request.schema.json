@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "urakkatyyppi": {
+      "id": "http://jsonschema.net/urakkatyyppi",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
+      "required": true
+    },
+    "alkaen": {
+      "id": "http://jsonschema.net/alkaen",
+      "type": "string"
+    },
+    "paattyen": {
+      "id": "http://jsonschema.net/paattyen",
+      "type": "string"
+    },
+    "koordinaatit": {
+      "id": "http://jsonschema.net/koordinaatit",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "required": true
+    }
+  }
+}

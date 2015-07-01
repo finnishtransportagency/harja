@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/paivystys/paivystaja",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
     "alku": {

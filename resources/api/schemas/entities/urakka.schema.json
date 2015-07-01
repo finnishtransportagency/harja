@@ -13,7 +13,7 @@
           "id": "http://jsonschema.net/urakka/otsikko",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/urakka-otsikko.schema.json",
+          "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
           "required": true
         },
         "sopimukset": {
@@ -81,7 +81,7 @@
                                   "tehtava": {
                                     "id": "http://jsonschema.net/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/tehtavat/0/tehtava",
                                     "type": "object",
-                                    "$ref": "file:resources/api/schemas//entities/tehtava.schema.json"
+                                    "$ref": "file:resources/api/schemas/entities/tehtava.schema.json"
                                   }
                                 }
                               }
@@ -125,7 +125,7 @@
                               "id": "http://jsonschema.net/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/tehtava",
                               "type": "object",
                               "additionalProperties": false,
-                              "$ref": "file:resources/api/schemas//entities/tehtava.schema.json",
+                              "$ref": "file:resources/api/schemas/entities/tehtava.schema.json",
                               "required": true
                             },
                             "alkupvm": {
@@ -173,7 +173,7 @@
                               "id": "http://jsonschema.net/materiaalinKaytot/0/materiaalinKaytto/maara",
                               "type": "object",
                               "additionalProperties": false,
-                              "$ref": "file:resources/api/schemas//entities/maara.schema.json"
+                              "$ref": "file:resources/api/schemas/entities/maara.schema.json"
                             },
                             "alkupvm": {
                               "id": "http://jsonschema.net/materiaalinKaytot/0/materiaalinKaytto/alkupvm",

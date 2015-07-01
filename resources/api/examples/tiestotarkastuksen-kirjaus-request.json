@@ -41,6 +41,7 @@
                 "liitteet": [
                   {
                     "liite": {
+                      "nimi": "reikatiessa.png",
                       "tyyppi": "image/png",
                       "kuvaus": "Kuva reijästä tiessä",
                       "sisalto": "... sisältö base64 enkoodattuna  ..."

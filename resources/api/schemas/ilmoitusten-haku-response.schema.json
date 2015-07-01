@@ -45,14 +45,14 @@
                 "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/ilmoittaja",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
                 "required": true
               },
               "lahettaja": {
                 "id": "http://jsonschema.net/ilmoitukset/0/ilmoitus/lahettaja",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
                 "required": true
               },
               "seliteet": {
@@ -84,7 +84,7 @@
                 "id": "http://jsonschema.net/ilmoitukset/0/sijainti",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
+                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
               "vapaateksti": {

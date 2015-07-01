@@ -13,7 +13,7 @@
         "additionalProperties": false,
         "properties": {
           "nimi": {
-            "id": "http://jsonschema.net/0/liite/tyyppi",
+            "id": "http://jsonschema.net/0/liite/nimi",
             "type": "string",
             "required": true
           },
@@ -24,8 +24,7 @@
           },
           "kuvaus": {
             "id": "http://jsonschema.net/0/liite/kuvaus",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "sisalto": {
             "id": "http://jsonschema.net/0/liite/sisalto",

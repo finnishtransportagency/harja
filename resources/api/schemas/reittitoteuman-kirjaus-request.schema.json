@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "reittitoteuma": {
@@ -22,20 +22,20 @@
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas//entities/toteuma.schema.json"
+          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
         "reitti": {
           "id": "http://jsonschema.net/reittitoteuma/reitti",
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas//entities/reitti.schema.json"
+          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "liitteet": {
           "id": "http://jsonschema.net/reittitoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/liitteet.schema.json"
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     }

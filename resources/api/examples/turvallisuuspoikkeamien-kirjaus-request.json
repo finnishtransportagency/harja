@@ -81,6 +81,7 @@
       "liitteet": [
         {
           "liite": {
+            "nimi": "tilanne.png",
             "tyyppi": "image/png",
             "kuvaus": "Kuva tilanteesta",
             "sisalto": "... sisältö base64 enkoodattuna  ..."

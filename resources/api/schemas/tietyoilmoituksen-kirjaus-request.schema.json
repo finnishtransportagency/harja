@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tietyoilmoitus": {
@@ -20,7 +20,7 @@
           "id": "http://jsonschema.net/tietyoilmoitus/tunniste",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
           "required": true
         },
         "tyyppi": {
@@ -143,7 +143,7 @@
               "id": "http://jsonschema.net/tietyoilmoitus/tyo/sijainti",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/sijainti.schema.json",
+              "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
               "required": true
             },
             "alkaa": {

@@ -8,7 +8,7 @@
       "id": "http://jsonschema.net/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas//entities/otsikko.schema.json",
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tiestotarkastus": {
@@ -21,7 +21,7 @@
           "id": "http://jsonschema.net/tunniste",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/tunniste.schema.json",
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
           "required": true
         },
         "kohde": {
@@ -44,14 +44,14 @@
           "id": "http://jsonschema.net/tiestotarkastus/tarkastaja",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/henkilo.schema.json",
+          "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
           "required": true
         },
         "reitti": {
           "id": "http://jsonschema.net/toteumat/0/reitti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas//entities/reitti.schema.json",
+          "$ref": "file:resources/api/schemas/entities/reitti.schema.json",
           "required": true
         }
       }

@@ -28,7 +28,7 @@
               "id": "http://jsonschema.net/tarkastukset/0/liitteet",
               "type": "object",
               "additionalProperties": false,
-              "$ref": "file:resources/api/schemas//entities/liitteet.schema.json"
+              "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
             }
           }
         }

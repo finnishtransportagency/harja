@@ -10,7 +10,7 @@
         "id": "http://jsonschema.net/tehtavat/0/tehtava",
         "type": "object",
         "additionalProperties": false,
-        "$ref": "file:resources/api/schemas//entities/tehtava.schema.json"
+        "$ref": "file:resources/api/schemas/entities/tehtava.schema.json"
       }
     }
   }

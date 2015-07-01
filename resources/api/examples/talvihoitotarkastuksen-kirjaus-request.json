@@ -46,6 +46,7 @@
                 "liitteet": [
                   {
                     "liite": {
+                      "nimi": "tie.png",
                       "tyyppi": "image/png",
                       "kuvaus": "Kuva hiekoittamattomasta tiestä",
                       "sisalto": "... sisältö base64 enkoodattuna  ..."
