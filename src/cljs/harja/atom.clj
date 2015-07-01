@@ -10,13 +10,21 @@
 
   Ottaa sisään let-bindings vektorin, [arvo1 @riippuvuusatomi1 ...] jossa kaikki atomit, joihin
   reaktion halutaan riippuvan, tulee määritellä. Arvoja voi käyttää bodyssa hyödyksi.
-  Reaktiossa on 20ms kuristus, eli ennen kuin reaktio ajetaan, odotetaan 20ms jos riippuvuudet
-  muuttuvat uudelleen. Kun riippuvuudet eivät ole muuttuneet 20ms aikana, ajetaan reaktio 
+  Reaktiossa on oletuksena 20ms odotus, eli ennen kuin reaktio ajetaan, odotetaan 20ms jos riippuvuudet
+  muuttuvat uudelleen. Kun riippuvuudet eivät ole muuttuneet odotusaikana, ajetaan reaktio 
   viimeisimmillä arvoilla.
+
+  Bodyn alkuun voi laittaa optionaalisen asetukset mäpin, jossa voi olla seuraavat avaimet:
+  :odota   millisekuntimäärä parametrien arvojen muuttumisen odottamiselle (oletus 20ms)
 
   Reaktion tulee palauttaa kanava, josta tuloksen voi lukea."
   [let-bindings & body]
-  (let [bindings (mapv vec (partition 2 let-bindings))
+  (let [asetukset (when (map? (first body))
+                    (first body))
+        body (if asetukset
+               (rest body)
+               body)
+        bindings (mapv vec (partition 2 let-bindings))
         nimi-symbolit (vec (take (count bindings) (repeatedly #(gensym "ARG"))))
         nimet (mapv first bindings)]
     `(let [arvo# (reagent.core/atom nil)
@@ -27,7 +35,7 @@
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
 
            ;; Jos parametrit on, katsotaan muuttuvatko ne kurista ajan sisällä
-           (let [timeout-ch# (when parametrit# (cljs.core.async/timeout 20))
+           (let [timeout-ch# (when parametrit# (cljs.core.async/timeout ~(or (get asetukset :odota) 20)))
                  kanavat# (if timeout-ch#
                             [parametrit-ch# timeout-ch#]
                             [parametrit-ch#])
