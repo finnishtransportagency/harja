@@ -79,7 +79,15 @@ SET
   muokattu       = NOW(),
   muokkaaja      = :muokkaaja,
   poistettu      = FALSE
-  WHERE paallystyskohde = :id;
+WHERE paallystyskohde = :id;
+
+-- name: vaihda-paallystysilmoituksen-tila!
+-- Päivittää päällystysilmoituksen
+UPDATE paallystysilmoitus
+SET
+  tila           = :tila::paallystystila,
+  muokkaaja      = :muokkaaja
+WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen

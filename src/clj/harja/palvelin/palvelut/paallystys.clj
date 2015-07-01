@@ -129,6 +129,14 @@
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
 
+(defn vaihda-paallystysilmoituksen-tila [db user {:keys [urakka-id sopimus-id paallystyskohde-id uusi-tila]}]
+  (log/debug "Vaihdetaan päällystysilmoituksen (id: " paallystyskohde-id ") tilaksi " uusi-tila)
+  (oik/vaadi-rooli-urakassa user roolit/tilaajan-kayttaja urakka-id)
+  (jdbc/with-db-transaction [c db]
+    (q/vaihda-paallystysilmoituksen-tila! db uusi-tila (:id user) paallystyskohde-id)
+    (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
+                                           :sopimus-id sopimus-id})))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -149,6 +157,12 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :hyvaksy-paallystysilmoitus
+                        (fn [user tiedot]
+                          (vaihda-paallystysilmoituksen-tila db user (assoc tiedot :uusi-tila :lukittu))))
+      (julkaise-palvelu http :hylkaa-paallystysilmoitus
+                        (fn [user tiedot]
+                          (vaihda-paallystysilmoituksen-tila db user (assoc tiedot :uusi-tila :palautettu))))
       this))
 
   (stop [this]

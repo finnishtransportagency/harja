@@ -54,7 +54,7 @@
                                                         (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
                                                         (assoc :takuupvm (:takuupvm uusi-arvo))
                                                         (assoc :hinta (:hinta uusi-arvo))))))]
-    [lomake {:luokka   :horizontal                          ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+    [lomake {:luokka   :horizontal ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
              :muokkaa! (fn [uusi]
                          (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                          (reset! kohteen-tiedot uusi))}
@@ -190,14 +190,17 @@
 
          (kohteen-tiedot)
 
-         ; TODO Nice to have: Tienumero annetaan ekalle riville, kopioituu lopuille riveille jotka eivät ole muokattavia.
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       #(reset! alikohteet-virheet (grid/hae-virheet %))}
+           :muutos       (fn [g] ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
+                           (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
+                           (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
+                           (reset! alikohteet-virheet (grid/hae-virheet g))))}
           [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
-                                                                               [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]}
+                                                                               [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]
+            :muokattava? (fn [rivi index] (if (> index 0) false true))}
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
@@ -366,8 +369,9 @@
           (sort
             (fn [toteuma] (case (:tila toteuma)
                             "valmis" 0
-                            "aloitettu" 1
-                            nil 2))
+                            "palautettu" 1
+                            "aloitettu" 2
+                            3))
             @paallystys/paallystystoteumat)]]))))
 
 (defn toteumat []

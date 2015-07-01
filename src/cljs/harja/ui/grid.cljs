@@ -791,7 +791,7 @@ Optiot on mappi optioita:
                                                  (hae rivi)
                                                  (get rivi nimi))
                                           kentan-virheet (get rivin-virheet nimi)]
-                                      (if (or (nil? muokattava?) (muokattava? rivi))
+                                      (if (or (nil? muokattava?) (muokattava? rivi i))
                                         ^{:key (str nimi)}
                                         [:td {:class (str (when-not (empty? kentan-virheet)
                                                             "sisaltaa-virheen"))}
