@@ -107,7 +107,9 @@
                                                FROM toteuma
                                               WHERE urakka = " @oulun-alueurakan-id "
                                                     AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
-                                                    AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo');")))
+                                                    AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo')
+                                                    AND alkanut >= to_date('1-10-2005', 'DD-MM-YYYY')
+                                                    AND paattynyt <= to_date('30-09-2006', 'DD-MM-YYYY');;")))
         res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
         lisatty (first (filter #(and

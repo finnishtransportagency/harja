@@ -168,8 +168,8 @@ FROM toteuma_tehtava tt
                                          'lisatyo'::toteumatyyppi, 'muutostyo'::toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
-          JOIN kayttaja k ON k.id = t.luoja
-          JOIN organisaatio o ON o.id = k.organisaatio;
+          LEFT JOIN kayttaja k ON k.id = t.luoja
+          LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät tietyllä toimenpidekoodilla
