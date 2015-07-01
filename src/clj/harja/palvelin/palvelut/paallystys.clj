@@ -80,7 +80,7 @@
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      muunna-desimaaliluvut-xf
+                      (map #(tila-string->avain %))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))

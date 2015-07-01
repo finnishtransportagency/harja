@@ -32,6 +32,13 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn tila-keyword->string [tila]
+  (case tila
+    :aloitettu "Aloitettu"
+    :valmis "Valmis"
+    :lukittu "Hyväksytty"
+    :palautettu "Palautettu"
+    "-"))
 
 (def lomakedata (atom nil))
 
@@ -354,7 +361,7 @@
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi] (if (:tila rivi) (:tila rivi) "-"))}
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi] (tila-keyword->string (:tila rivi)))}
            {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
@@ -382,10 +389,11 @@
                                                       [:span " Tee päällystysilmoitus"]]))}]
           (sort
             (fn [toteuma] (case (:tila toteuma)
-                            "valmis" 0
-                            "palautettu" 1
-                            "aloitettu" 2
-                            3))
+                            :lukittu 0
+                            :valmis 1
+                            :palautettu 2
+                            :aloitettu 3
+                            4))
             @paallystys/paallystystoteumat)]]))))
 
 (defn toteumat []
