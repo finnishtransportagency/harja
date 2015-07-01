@@ -5,3 +5,6 @@
 ;; käyttäjät on suoraan linkattu omiin organisaaioihinsa, joten ei tarvita sitä.
 
 (defqueries "harja/kyselyt/kayttajat.sql")
+
+(defn onko-kayttaja-urakan-organisaatiossa? [db urakka-id kayttaja-id]
+  (:exists (first (harja.kyselyt.kayttajat/onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))

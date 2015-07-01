@@ -3,8 +3,7 @@
   (:require [harja.palvelin.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.urakat :as q]
             [taoensso.timbre :as log]
-            [harja.palvelin.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.kayttajat :as kayttajat])
+            [harja.kyselyt.kayttajat :as kayttajat])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakkaid]
@@ -16,27 +15,12 @@
                :virheet [{:koodi  virheet/+tuntematon-urakka-koodi+
                           :viesti (str "Urakkaa id:llä " urakkaid " ei löydy.")}]}))))
 
+(defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
+  (when (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
+                        :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: " urakka-id)}]})))
 
-(defn tarkista-kayttajan-rooli-urakkaan [urakka-id kayttaja rooli]
-  (try+
-    (oikeudet/vaadi-rooli-urakassa kayttaja rooli urakka-id)
-    (catch RuntimeException e
-      (throw+ {:type    virheet/+viallinen-kutsu+
-               :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
-                          :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) "ei ole roolia:" rooli " urakkaan: " urakka-id)}]}))))
-
-(defn tarkista-lukuoikeus-urakkaan [urakka-id kayttaja]
-  (try+
-    (oikeudet/vaadi-lukuoikeus-urakkaan kayttaja urakka-id)
-    (catch RuntimeException e
-      (throw+ {:type    virheet/+viallinen-kutsu+
-               :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
-                          :viesti (str "Käyttäjällä lukuoikeutta urakkaan: " urakka-id)}]}))))
-
-(defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja-id rooli]
+(defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
   (tarkista-urakka db urakka-id)
-  (tarkista-kayttajan-rooli-urakkaan urakka-id kayttaja-id rooli))
-
-(defn tarkista-urakka-ja-lukuoikeus [db urakka-id kayttaja-id]
-  (tarkista-urakka db urakka-id)
-  (tarkista-lukuoikeus-urakkaan urakka-id kayttaja-id))
+  (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))

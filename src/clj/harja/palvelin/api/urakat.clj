@@ -74,9 +74,9 @@
                   :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn hae-urakka [db {id :id} kayttaja-id]
+(defn hae-urakka [db {id :id} kayttaja]
   (let [urakka-id (Integer/parseInt id)]
-    (validointi/tarkista-urakka-ja-lukuoikeus db urakka-id kayttaja-id)
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus db urakka-id urakka))))
 

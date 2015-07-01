@@ -80,7 +80,7 @@
 (defn kirjaa-havainto [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi havainto urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja roolit/havaintojen-kirjaus)
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna liitteiden-hallinta db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

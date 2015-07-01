@@ -269,3 +269,12 @@ FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE
       AND k.kayttajanimi = :kaytajanimi;
+
+-- name: onko-kayttaja-urakan-organisaatiossa
+-- Tarkistaa onko käyttäjä urakan urakoitsijaorganisaation jäsen
+SELECT exists(
+    SELECT u.id
+    FROM urakka u
+      JOIN kayttaja k ON k.organisaatio = u.urakoitsija
+    WHERE u.id = :urakka_id AND
+          k.id = :kayttaja_id);
