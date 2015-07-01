@@ -12,16 +12,13 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.roolit :as roolit])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn parsi-aika [paivamaara]
   (konversio/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
-
-(defn tee-virhevastaus []
-  ;; todo: toteuta
-  )
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
@@ -30,7 +27,6 @@
 (defn tallenna-havainto [db urakka-id kirjaaja data]
 
   ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
-  ;; fixme: sijaintipisteen tallennus ei toimi jostain syystä
 
   (let [{:keys [sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
@@ -42,7 +38,7 @@
                    "urakoitsija"
                    kohde
                    true
-                   kirjaaja
+                   (:id kirjaaja)
                    kuvaus
                    (:x koordinaatit)
                    (:y koordinaatit)
@@ -57,7 +53,7 @@
 
 (defn tallenna-kommentit [db havainto-id kirjaaja kommentit]
   (doseq [kommentin-data kommentit]
-    (let [kommentti (kommentit/luo-kommentti<! db "urakoitsija" (:kommentti kommentin-data) nil kirjaaja)
+    (let [kommentti (kommentit/luo-kommentti<! db "urakoitsija" (:kommentti kommentin-data) nil (:id kirjaaja))
           kommentti-id (:id kommentti)]
       (havainnot/liita-kommentti<! db havainto-id kommentti-id))))
 
@@ -69,29 +65,24 @@
             tiedostonimi (:nimi liite)
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
-            liite-id (:id (liitteet/luo-liite liitteiden-hallinta kirjaaja urakan-id tiedostonimi tyyppi koko data))]
+            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
         (println (liitteet/lataa-liite liitteiden-hallinta liite-id))
         (havainnot/liita-havainto<! db havainto-id liite-id)))))
 
-(defn tallenna [liitteiden-hallinta db urakka-id data]
+(defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [kirjaaja (validointi/hae-kirjaajan-id db (:otsikko data))
-          havainto-id (tallenna-havainto transaktio urakka-id kirjaaja data)
+    (let [havainto-id (tallenna-havainto transaktio urakka-id kirjaaja data)
           kommentit (:kommentit data)
           liitteet (:liitteet data)]
-      (log/debug "Kirjaaja on:" kirjaaja)
       (tallenna-kommentit transaktio havainto-id kirjaaja kommentit)
-      (tallenna-liitteet transaktio liitteiden-hallinta urakka-id havainto-id kirjaaja liitteet)))
-  true)
+      (tallenna-liitteet transaktio liitteiden-hallinta urakka-id havainto-id kirjaaja liitteet))))
 
-(defn kirjaa-havainto [liitteiden-hallinta db {id :id} data]
+(defn kirjaa-havainto [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
-    (log/debug "Kirjataan uusi havainto urakalle id:" urakka-id)
-    (validointi/tarkista-urakka db urakka-id)
-    (let [kirjaus-onnistunut? (tallenna liitteiden-hallinta db urakka-id data)]
-      (if kirjaus-onnistunut?
-        (tee-onnistunut-vastaus)
-        (tee-virhevastaus)))))
+    (log/debug "Kirjataan uusi havainto urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja roolit/havaintojen-kirjaus)
+    (tallenna liitteiden-hallinta db urakka-id kirjaaja data)
+    (tee-onnistunut-vastaus)))
 
 (defrecord Havainnot []
   component/Lifecycle
@@ -99,8 +90,8 @@
     (julkaise-reitti
       http :api-lisaa-havainto
       (POST "/api/urakat/:id/havainto" request
-        (kasittele-kutsu :api-lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
-                         (fn [parametit data] (kirjaa-havainto liitteiden-hallinta db parametit data)))))
+        (kasittele-kutsu db :api-lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
+                         (fn [parametit data kayttaja] (kirjaa-havainto liitteiden-hallinta db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :api-lisaa-havainto)

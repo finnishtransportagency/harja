@@ -4,7 +4,8 @@
   (:require [harja.tyokalut.json_validointi :as json]
             [harja.palvelin.api.tyokalut.virheet :as virheet]
             [cheshire.core :as cheshire]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.kayttajat :as q])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn logita-kutsu [resurssi request body]
@@ -79,7 +80,17 @@
     (json/validoi skeema body)
     (cheshire/decode body true)))
 
-(defn kasittele-kutsu [resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+(defn hae-kayttaja [db kayttajanimi]
+  (let [kayttaja (q/hae-kayttaja-kayttajanimella db kayttajanimi)]
+    (if kayttaja
+      kayttaja
+      (do
+        (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
+        (throw+ {:type    virheet/+viallinen-kutsu+
+                 :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+                            :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
+
+(defn kasittele-kutsu [db resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
   validoidaan käyttäen annettuja JSON-skeemoja.
@@ -93,8 +104,9 @@
     (let [vastaus (try+
                     (let
                       [parametrit (:params request)
+                       kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                        kutsun-data (lue-kutsu kutsun-skeema request body)
-                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data)]
+                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja)]
                       (tee-vastaus vastauksen-skeema vastauksen-data))
                     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
                       (kasittele-invalidi-json virheet))

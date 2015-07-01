@@ -74,9 +74,9 @@
                   :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn hae-urakka [db {id :id}]
+(defn hae-urakka [db {id :id} kayttaja-id]
   (let [urakka-id (Integer/parseInt id)]
-    (validointi/tarkista-urakka db urakka-id)
+    (validointi/tarkista-urakka-ja-lukuoikeus db urakka-id kayttaja-id)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus db urakka-id urakka))))
 
@@ -86,8 +86,8 @@
     (julkaise-reitti
       http :api-hae-urakka
       (GET "/api/urakat/:id" request
-        (kasittele-kutsu :api-hae-urakka request nil skeemat/+urakan-haku-vastaus+
-                         (fn [parametit data] (hae-urakka db parametit)))))
+        (kasittele-kutsu db :api-hae-urakka request nil skeemat/+urakan-haku-vastaus+
+                         (fn [parametit data kayttaja-id] (hae-urakka db parametit kayttaja-id)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -8,3 +8,4 @@
 (def +sisainen-kasittelyvirhe-koodi+ "sisainen-kasittelyvirhe")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
+(def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")

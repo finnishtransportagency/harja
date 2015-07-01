@@ -77,6 +77,11 @@
     (when k
       (konv/array->set (konv/organisaatio k) :roolit))))
 
+(defn hae-kayttaja-kayttajanimella [db kayttajanimi]
+  (let [k (first (q/hae-kayttaja-kayttajanimella db kayttajanimi))]
+    (when k
+      (konv/array->set (konv/organisaatio k) :roolit))))
+
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
   [db user kayttaja-id]
