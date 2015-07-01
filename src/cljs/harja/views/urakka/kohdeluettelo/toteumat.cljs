@@ -130,15 +130,26 @@
 (defn paallystysilmoituslomake
   []
   (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata))
-                                      (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (vals uusi-arvo)))))
+                                      (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (filter
+                                                                                                         #(not (and (true? (:poistettu %))
+                                                                                                                    (neg? (:id %)))) (vals uusi-arvo))))))
         paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet @lomakedata))
-                                     (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (vals uusi-arvo)))))
+                                     (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :toimenpiteet (filter
+                                                                                                           #(not (and (true? (:poistettu %))
+                                                                                                                      (neg? (:id %)))) (vals uusi-arvo))))))
         kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines @lomakedata))
-                          (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (vals uusi-arvo)))))
+                          (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kiviaines (filter
+                                                                                             #(not (and (true? (:poistettu %))
+                                                                                                        (neg? (:id %)))) (vals uusi-arvo))))))
         alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet @lomakedata))
-                                        (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (vals uusi-arvo)))))
+                                        (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :alustatoimet (filter
+                                                                                                              #(not (and (true? (:poistettu %))
+                                                                                                                         (neg? (:id %)))) (vals uusi-arvo))))))
         toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot @lomakedata))
-                                   (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (vals uusi-arvo)))))
+                                   (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :tyot (filter
+                                                                                                 #(not (and (true? (:poistettu %))
+                                                                                                            (neg? (:id %))))
+                                                                                                 (vals uusi-arvo))))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
