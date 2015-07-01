@@ -44,9 +44,7 @@
     [harja.palvelin.api.havainnot :as api-havainnot]
 
     [com.stuartsierra.component :as component]
-    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]]
-
-    [clojure.tools.namespace.repl :refer [refresh]])
+    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -199,10 +197,7 @@
   (dev-stop)
   (-main))
 
-(defn dev-refresh []
-  (dev-stop)
-  (clojure.tools.namespace.repl/set-refresh-dirs "src/clj")
-  (refresh :after 'harja.palvelin.main/-main))
+
 
 (defn dev-julkaise
   "REPL käyttöön: julkaise uusi palvelu (poistaa ensin vanhan samalla nimellä)."
