@@ -11,7 +11,8 @@
             [cljs.core.async :refer [<! >!] :as async]
 
             ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.atom :refer [paivittaja]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -467,39 +468,21 @@
     ""))
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
-  (let [osoite-ch (async/chan)
-        osoite-alussa @data
+  (let [osoite-alussa @data
         sijainti-haku (atom false)
-        hae-sijainti (not (nil? sijainti))]
-
-    (when hae-sijainti
-      (go (loop [osoite osoite-alussa
-                 vkm-ch nil]
-            (let [[arvo kanava] (alts! (if vkm-ch
-                                         [osoite-ch vkm-ch]
-                                         [osoite-ch]))]
-              (if (= kanava osoite-ch)
-                ;; Saatiin uusi osoite, hylätään mahdollinen vkm-haku ja tehdään uusi
-                ;; jos osoite on eri kuin aiempi
-                (if (not= osoite arvo)
-                  (do
-                    (reset! sijainti nil) ;; haun ajan sijainti nil
-                    (reset! sijainti-haku true)
-                    (recur arvo
-                           (vkm/tieosoite->sijainti arvo)))
-                    (recur osoite vkm-ch))
-
-                ;; Luettiin vkm-kanavasta, asetetaan sijainti
-                (do (reset! sijainti arvo)
-                    (reset! sijainti-haku false)
-                    (recur osoite nil)))))))
-    
+        hae-sijainti (not (nil? sijainti))
+        paivita-sijainti! (if-not hae-sijainti
+                            (constantly nil)
+                            (paivittaja 500 sijainti-haku 
+                                        (fn [osoite]
+                                          (go
+                                            (reset! sijainti (<! (vkm/tieosoite->sijainti osoite)))))))]
     (komp/luo
 
      {:component-will-receive-props
       (fn [this & [_ _ data]]
         (when hae-sijainti
-          (go (>! osoite-ch @data))))}
+          (paivita-sijainti! @data)))}
      
      (fn [{:keys [lomake? sijainti]} data]
        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

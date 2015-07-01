@@ -36,4 +36,43 @@
                    (recur (<! parametrit-ch)))))))
      (fn [& parametrit]
        (put! parametrit-ch parametrit)))))
+
+(defn haku-lippu
+  "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn.
+   Kun funktiota kutsutaan, se asettaa lippuna annetun atomin true ja asettaa
+   sen takaisin falseksi kun paivitys-fn palauttamasta kanavasta luetaan arvo."
+  [lippu paivitys-fn]
+  (fn [& parametrit]
+    (reset! lippu true)
+    (go (let [k (apply paivitys-fn parametrit)]
+          (when k
+            (<! k))
+          (reset! lippu false)))))
+
+(defn paivita-jos-muuttunut
+  "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn, mutta 
+   ei kutsu funktiota jos parametrit ovat täysin samat kuin edellisellä kerralla.
+   Optionaalisesti ottaa arvon, joka palautetaan kun samoilla parametreillä kutsutaan
+   (oletus nil).
+
+   Tämä on tarkoitettu lähinnä kanavia palauttaville funktioille, eikä siis vastaa
+   memoize funktiota, koska samoille parametreilla ei palauteta samaa tulosta."
+  ([paivitys-fn] (paivita-jos-muuttunut paivitys-fn nil))
+  ([paivitys-fn paluuarvo-jos-sama]
+   (let [edelliset-parametrit (atom ::ensimmainen-kutsu)]
+     (fn [& parametrit]
+       (let [edelliset @edelliset-parametrit]
+         (if (= edelliset parametrit)
+           paluuarvo-jos-sama
+           (do (reset! edelliset-parametrit parametrit)
+               (apply paivitys-fn parametrit))))))))
+            
+(defn paivittaja
+  "Koostaa haku-lippu, kuristin ja paivita-jos-muuttunut funktioiden 
+   toiminnallisuuden käteväksi kokonaisuudeksi."
+  [kurista-ms haku-lippu-atom paivita-fn]
+  (->> paivita-fn
+       paivita-jos-muuttunut
+       (haku-lippu haku-lippu-atom)
+       (kuristin kurista-ms)))
   
