@@ -35,8 +35,7 @@ SELECT
   h.kohde      AS havainto_kohde
 FROM sanktio s
   JOIN havainto h ON s.havainto = h.id
-  JOIN toimenpideinstanssi tpi ON h.toimenpideinstanssi = tpi.id
-WHERE tpi.urakka = :urakka
+WHERE h.urakka = :urakka
       AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
 
 -- name: merkitse-maksuera-likaiseksi!
