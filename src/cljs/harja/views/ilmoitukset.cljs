@@ -89,8 +89,9 @@
 
        [palvelinkutsu-nappi
         "Hae ilmoitukset"
-        #(tiedot/hae-ilmoitukset-ja-aloita-pollaus)
-        {:ikoni (harja.ui.ikonit/search)}]
+        #(tiedot/hae-ilmoitukset)
+        {:ikoni (harja.ui.ikonit/search)
+         :kun-onnistuu #(tiedot/aloita-pollaus)}]
 
 
        [grid

@@ -4,7 +4,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.loki :refer [log]]
+            [cljs.core.async :refer [<!]])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -15,7 +17,7 @@
 
 (defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
 (defonce valittu-urakka (reaction @nav/valittu-urakka))
-(defonce valitut-tilat (atom {:vastatut true :avoimet true}))
+(defonce valitut-tilat (atom {:suljetut true :avoimet true}))
 (defonce valittu-aikavali (reaction [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]))
 (defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :ilmoitus true}))
 (defonce hakuehto (atom nil))
@@ -37,25 +39,35 @@
 
 (defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
 
+(defn kasaa-parametrit []
+  (let [ret {:hallintayksikko (:id @valittu-hallintayksikko)
+             :urakka (:id @valittu-urakka)
+             :tilat @valitut-tilat
+             :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
+             :aikavali @valittu-aikavali
+             :hakuehto @hakuehto}]
+    (log (pr-str ret))
+    ret))
+
 (defn hae-ilmoitukset
   []
   (go
-    (let [tulos (k/post! :hae-ilmoitukset
-                         {:hallintayksikko @valittu-hallintayksikko
-                          :urakka @valittu-urakka
-                          :tilat @valitut-tilat
-                          :tyypit (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))
-                          :aikavali @valittu-aikavali
-                          :hakuehto @hakuehto})]
+    (log "Post! :hae-ilmoitukset")
+    (let [tulos (<! (k/post! :hae-ilmoitukset (kasaa-parametrit)))]
+
+      (log ":hae-ilmoitukset")
+      (log (pr-str tulos))
 
 
-      (reset! haetut-ilmoitukset tulos)
+      (when-not (k/virhe? tulos)
+        (reset! haetut-ilmoitukset tulos))
       (reset! filttereita-vaihdettu? false)
 
       tulos)))
 
 (defn lopeta-pollaus
   []
+  (log "Lopetetaan pollaus!")
   (when @pollaus-id
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
@@ -64,9 +76,6 @@
 
 (defn aloita-pollaus
   []
+  (log "Aloitetaan pollaus!")
   (when @pollaus-id (lopeta-pollaus))
-  (reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))
-
-(defn hae-ilmoitukset-ja-aloita-pollaus []
-  (hae-ilmoitukset)
-  (aloita-pollaus))
+  #_(reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))
