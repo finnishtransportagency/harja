@@ -82,7 +82,7 @@
        [:td.pot-yhteenveto-nimi [:span "Yhteensä: "]]
        [:td.pot-yhteenveto-summa [:span (fmt/euro-opt @yhteensa)]]]]]))
 
-(defn toiminnot [valmis-tallennettavaksi?]
+(defn toiminnot [valmis-tallennettavaksi? valmis-kasiteltavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
                                     (if (not valmispvm)
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))]
@@ -117,6 +117,7 @@
                                   #(let [urakka-id (:id @nav/valittu-urakka)
                                          [sopimus-id _] @u/valittu-sopimusnumero])
                                   {:luokka       "nappi-ensisijainen"
+                                   :disabled     (false? @valmis-kasiteltavaksi?)
                                    :kun-onnistuu (fn [vastaus]
                                                    ; TODO
                                                    )}])
@@ -127,6 +128,7 @@
                                   #(let [urakka-id (:id @nav/valittu-urakka)
                                          [sopimus-id _] @u/valittu-sopimusnumero])
                                   {:luokka       "nappi-ensisijainen"
+                                   :disabled     (false? @valmis-kasiteltavaksi?)
                                    :kun-onnistuu (fn [vastaus]
                                                    ; TODO
                                                    )}])]))
@@ -172,8 +174,13 @@
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
-                                       (empty? kiviaines-virheet))))]
-
+                                       (empty? kiviaines-virheet))))
+        valmis-kasiteltavaksi? (reaction (let [valmispvm (:valmistumispvm @lomakedata)
+                                               toteutuneet-osoitteet (:osoitteet @lomakedata)
+                                               toteutuneet-maarat (:tyot @lomakedata)]
+                                           (and (not (nil? valmispvm))
+                                                (not (empty? toteutuneet-osoitteet))
+                                                (not (empty? toteutuneet-maarat)))))]
     (komp/luo
       (fn [ur]
         [:div.paallystysilmoituslomake
@@ -185,7 +192,7 @@
 
          ; TODO Nice to have: Tienumero annetaan ekalle riville, kopioituu lopuille riveille jotka eivät ole muokattavia.
          [grid/muokkaus-grid
-          {:otsikko      "Alikohteet"
+          {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
            :muutos       #(reset! alikohteet-virheet (grid/hae-virheet %))}
@@ -321,7 +328,7 @@
           toteutuneet-maarat]
 
          (yhteenveto)
-         (toiminnot valmis-tallennettavaksi?)]))))
+         (toiminnot valmis-tallennettavaksi? valmis-kasiteltavaksi?)]))))
 
 (defn toteumaluettelo
   []
