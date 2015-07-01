@@ -10,9 +10,10 @@
 
 
 (defn hae-kirjaajan-id [db otsikko]
-  (let [jarjestelma (:lahettaja (:jarjestelma otsikko))
-        ytunnus (:lahettaja (:organisaatio (:ytunnus otsikko)))]
+  (let [jarjestelma (:jarjestelma  (:lahettaja otsikko))
+        ytunnus (:ytunnus (:organisaatio (:lahettaja otsikko)))]
     ;; todo: pitääkö aiheuttaa poikkeus jos ei löydy?
+    (log/debug "Järjestelmä: " jarjestelma " ytunnus:" ytunnus)
     (:id (first (kayttajat/hae-jarjestelmakayttajan-id-ytunnuksella db jarjestelma ytunnus)))))
 
 (defn logita-kutsu [resurssi request body]
