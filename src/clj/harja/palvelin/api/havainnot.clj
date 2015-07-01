@@ -30,13 +30,11 @@
 (defn tallenna-havainto [db urakka-id kirjaaja data]
 
   ;; todo: tarkista annettu tunnus, jos olemassa, päivitä
-  ;; todo: selvitä tarviiko kirjaajaa tallentaa
   ;; fixme: sijaintipisteen tallennus ei toimi jostain syystä
-  ;; todo: päättele luoja / päivittäjä
 
   (let [{:keys [sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
-        koordinaatit (:koodinaatit sijainti)
+        koordinaatit (:koordinaatit sijainti)
         havainto (havainnot/luo-havainto<!
                    db
                    urakka-id
@@ -54,6 +52,7 @@
                    (:aet tie)
                    (:let tie))
         havainnon-id (:id havainto)]
+    (log/debug "Koordinaatit ovat:" koordinaatit)
     havainnon-id))
 
 (defn tallenna-kommentit [db havainto-id kirjaaja kommentit]
