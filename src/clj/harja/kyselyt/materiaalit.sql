@@ -23,39 +23,38 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 SELECT DISTINCT
   m.nimi as materiaali_nimi, mk.maara, m.yksikko as materiaali_yksikko, m.id as materiaali_id,
-
   (
-    SELECT SUM(maara) as kokonaismaara
-    FROM toteuma_materiaali
-    WHERE materiaalikoodi = m.id AND
-          toteuma IN
+  SELECT SUM(maara) as kokonaismaara
+  FROM toteuma_materiaali
+  WHERE materiaalikoodi = m.id AND
+        toteuma IN
           (
             SELECT id FROM toteuma WHERE
-            urakka=:urakka AND
-            alkanut::DATE >= :alku AND
-            alkanut::DATE <= :loppu AND
-            sopimus = :sopimus AND
-            poistettu IS NOT TRUE) AND
-          poistettu IS NOT TRUE)
+              urakka=:urakka AND
+              alkanut::DATE >= :alku AND
+              alkanut::DATE <= :loppu AND
+              sopimus = :sopimus AND
+              poistettu IS NOT TRUE) AND
+        poistettu IS NOT TRUE
+  )
 
 FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk
     ON m.id = mk.materiaali
-    AND mk.poistettu IS NOT TRUE
-    AND mk.alkupvm::DATE BETWEEN :alku AND :loppu
-    AND mk.loppupvm::DATE BETWEEN :alku AND :loppu
+      AND mk.poistettu IS NOT TRUE
+      AND mk.alkupvm::DATE BETWEEN :alku AND :loppu
+      AND mk.loppupvm::DATE BETWEEN :alku AND :loppu
+      AND mk.sopimus = :urakka
 
 
   LEFT JOIN toteuma_materiaali tm
-    ON tm.materiaalikoodi = m.id and tm.poistettu IS NOT TRUE
+    ON tm.materiaalikoodi = m.id
+      AND tm.poistettu IS NOT TRUE
 
   LEFT JOIN toteuma t
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
-    AND t.alkanut::DATE BETWEEN :alku AND :loppu
-
-WHERE
-  (t.urakka = :urakka OR t.urakka IS NULL) AND
-  (t.sopimus = :sopimus OR mk.sopimus = :sopimus);
+      AND t.alkanut::DATE BETWEEN :alku AND :loppu
+      AND t.sopimus = :urakka;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
