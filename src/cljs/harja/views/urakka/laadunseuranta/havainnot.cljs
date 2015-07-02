@@ -7,6 +7,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
+            [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -122,32 +123,6 @@
 
     @urakan-havainnot
     ]])
-
-(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
-  [:div.kommentit
-   (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
-     ^{:key (pvm/millisekunteina aika)}
-     [:div.kommentti {:class (when tekija (name tekija))}
-      [:span.kommentin-tekija tekijanimi]
-      [:span.kommentin-aika (pvm/pvm-aika aika)]
-      [:div.kommentin-teksti kommentti]
-      (when liite
-        [liitteet/liitetiedosto liite])])
-   (when voi-kommentoida?
-     [:div.uusi-kommentti
-      [:div.uusi-kommentti-teksti
-       [kentat/tee-kentta {:tyyppi :text :nimi :teksti
-                           :placeholder (or placeholder "Kirjoita uusi kommentti...")
-                           :koko [80 :auto]}
-        (r/wrap (:kommentti @uusi-kommentti) #(swap! uusi-kommentti assoc :kommentti %))]]
-      (when kommentoi!
-        [:button.nappi-ensisijainen.uusi-kommentti-tallenna
-         {:on-click #(kommentoi! @uusi-kommentti)
-          :disabled (str/blank? (:kommentti @uusi-kommentti))}
-         "Tallenna kommentti"])
-      [liitteet/liite {:urakka-id (:id @nav/valittu-urakka)
-                       :liite-ladattu #(swap! uusi-kommentti assoc :liite %)}]])])
-
 
 (defn paatos?
   "Onko annetussa havainnossa päätös?"
@@ -372,7 +347,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
             (when-not uusi?
               {:otsikko "Kommentit" :nimi :kommentit
-               :komponentti [kommentit {:voi-kommentoida? true
+               :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                         :placeholder "Kirjoita kommentti..."
                                         :uusi-kommentti (r/wrap (:uusi-kommentti @havainto)
                                                                 #(swap! havainto assoc :uusi-kommentti %))}
