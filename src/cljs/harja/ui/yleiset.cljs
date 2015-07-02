@@ -287,8 +287,8 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
 
 (defn kuvaus-ja-avainarvopareja
   [kuvaus & avaimet-ja-arvot]
-  [:div.poistodialogi
-   [:div.poistodialogin-otsikko kuvaus]
+  [:div
+   [:div.kuvaus kuvaus]
    (vec (concat [tietoja {}] avaimet-ja-arvot))])
 
 
