@@ -112,8 +112,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          13 ;; enter
          (enter)))))
 
-  
-
 (defn virheen-ohje
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu) tai :varoitus."
   ([virheet] (virheen-ohje virheet :virhe))
@@ -286,6 +284,13 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
      [:div.tietorivi
       [:span.tietokentta otsikko]
       [:span.tietoarvo arvo]])])
+
+(defn kuvaus-ja-avainarvopareja
+  [kuvaus & avaimet-ja-arvot]
+  [:div.poistodialogi
+   [:div.poistodialogin-otsikko kuvaus]
+   (vec (concat [tietoja {}] avaimet-ja-arvot))])
+
 
 ;; Yleinen tietopaneeleissa käytettävä tietueen koko.
 ;; Suurella näytöllä, 4 elementtiä vierekkäin, pienimmällä vain 1 per rivi.

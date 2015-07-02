@@ -225,10 +225,15 @@ INTO toteuma_tehtava
 (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta);
 
+-- name: poista-toteuman-tehtavat!
+UPDATE toteuma_tehtava
+   SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+ WHERE toteuma =:id AND poistettu IS NOT TRUE;
+
 -- name: poista-tehtava!
 UPDATE toteuma_tehtava
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id IN (:id) AND poistettu IS NOT TRUE;
+   SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset

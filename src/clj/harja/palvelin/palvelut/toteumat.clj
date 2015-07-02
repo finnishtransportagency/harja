@@ -261,12 +261,16 @@
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
   (log/debug "Päivitä toteuma" toteuma)
-  (let [toteumatehtava (assoc (:tehtava toteuma)
-                         :tehtava-id (get-in toteuma [:tehtava :id]))]
-    (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                        (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma)
-                        (:toteuma-id toteuma) (:urakka-id toteuma))
-    (kasittele-toteumatehtava c user toteuma toteumatehtava)))
+  (if (:poistettu toteuma)
+    (let [params [c (:id user) (get-in toteuma [:toteuma :id])]]
+      (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
+      (apply q/poista-toteuman-tehtavat! params)
+      (apply q/poista-toteuma! params))
+    (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma)
+                            (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
+        (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
+                                                   :tehtava-id (get-in toteuma [:tehtava :id]))))))
 
 (defn luo-muun-tyon-toteuma
   [c user toteuma]
