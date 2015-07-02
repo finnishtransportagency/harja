@@ -31,7 +31,6 @@
                 :tyyppi   :activemq}
 
  :sampo        {
-
                 :lahetysjono-sisaan       "Harja13-16.SampoToHarja.Msg"
                 :kuittausjono-sisaan      "Harja13-16.HarjaToSampo.Ack"
                 :lahetysjono-ulos         "Harja17.HarjaToSampo.Msg"
