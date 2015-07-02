@@ -30,7 +30,9 @@
                             :kayttaja s/Str
                             :salasana s/Str
                             (s/optional-key :tyyppi) s/Keyword}
-   (s/optional-key :sampo) {:lahetysjono-ulos s/Str
+   (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
+                            :kuittausjono-sisaan s/Str
+                            :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
    }) 
