@@ -23,6 +23,7 @@ SELECT
   tila,
   pk.nimi,
   pk.kohdenumero,
+  paatos,
   pk.sopimuksen_mukaiset_tyot
 FROM paallystysilmoitus
   RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde

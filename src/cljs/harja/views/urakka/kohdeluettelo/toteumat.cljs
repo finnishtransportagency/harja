@@ -42,6 +42,12 @@
     :palautettu "Palautettu"
     "-"))
 
+(defn paatos-keyword->string [tila]
+  (case tila
+    :hyvaksytty "hyväksytty"
+    :hylatty "palautettu urakoitsijalle"
+    ""))
+
 (def lomakedata (atom nil))
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
@@ -186,7 +192,7 @@
         toteutuneet-maarat-virheet (atom {})
         kiviaines-virheet (atom {})
 
-        valmis-tallennettavaksi? (reaction
+        valmis-tallennettavaksi? (reaction ; Tallenna-napin tila riippuu siitä, kuka näkymää käyttää
                                    (let [alikohteet-virheet @alikohteet-virheet
                                          paallystystoimenpide-virheet @paallystystoimenpide-virheet
                                          alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
@@ -204,15 +210,16 @@
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
                                        (empty? kiviaines-virheet)))))
-        valmis-kasiteltavaksi? (reaction (let [valmispvm (:valmistumispvm @lomakedata)
-                                               toteutuneet-osoitteet (:osoitteet @lomakedata)
-                                               toteutuneet-maarat (:tyot @lomakedata)
-                                               tila (:tila @lomakedata)]
-                                           (and (not (= tila :palautettu))
-                                                (not (= tila :lukittu))
-                                                (not (nil? valmispvm))
-                                                (not (empty? toteutuneet-osoitteet))
-                                                (not (empty? toteutuneet-maarat)))))]
+        valmis-kasiteltavaksi? (reaction
+                                 (let [valmispvm (:valmistumispvm @lomakedata)
+                                       toteutuneet-osoitteet (:osoitteet @lomakedata)
+                                       toteutuneet-maarat (:tyot @lomakedata)
+                                       tila (:tila @lomakedata)]
+                                   (and (not (= tila :palautettu))
+                                        (not (= tila :lukittu))
+                                        (not (nil? valmispvm))
+                                        (not (empty? toteutuneet-osoitteet))
+                                        (not (empty? toteutuneet-maarat)))))]
 
     (komp/luo
       (fn []
@@ -398,7 +405,12 @@
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi] (tila-keyword->string (:tila rivi)))}
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                             (if (nil? (:tila rivi))
+                                                                                                               "-"
+                                                                                                               (if (nil? (:paatos rivi))
+                                                                                                                 (str (tila-keyword->string (:tila rivi)) ", odottaa käsittelyä")
+                                                                                                                 (str (tila-keyword->string (:tila rivi)) ", " (paatos-keyword->string (:paatos rivi))))))}
            {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)

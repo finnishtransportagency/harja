@@ -34,7 +34,7 @@
             (assoc-in [:kaasuindeksi]
                       (or (some-> % :kaasuindeksi double) 0)))))
 
-(defn tyot-string->avain [json avainpolku]
+(defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json
       (assoc-in avainpolku
                 (when-let [tyot (some-> json (get-in avainpolku))]
@@ -43,6 +43,10 @@
 (defn tila-string->avain [data]
   (-> data
       (assoc :tila (keyword (:tila data)))))
+
+(defn paatos-string->avain [data]
+  (-> data
+      (assoc :paatos (keyword (:paatos data)))))
 
 (defn jsonb->clojuremap [json avain]
   (-> json
@@ -80,7 +84,8 @@
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (map #(tila-string->avain %))
+                      (comp (map #(paatos-string->avain %))
+                            (map #(tila-string->avain %)))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -90,8 +95,9 @@
   (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
-                                   (map #(tyot-string->avain % [:ilmoitustiedot :tyot]))
-                                   (map #(tila-string->avain %)))
+                                   (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                   (map #(tila-string->avain %))
+                                   (map #(paatos-string->avain %)))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
