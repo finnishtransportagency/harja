@@ -13,6 +13,7 @@
             [harja.ui.liitteet :as liitteet]
             [harja.domain.paallystys.pot :as pot]
 
+            [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -78,12 +79,9 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi? paatostiedot]
-  (let [urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero
-        muokattava? (if valmis-kasiteltavaksi? (constantly false)
-                                               (constantly true))] ; FIXME Tarkista rooli, tilaaja voi muokata
+  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-tilaajan-kayttaja))]
 
-    (when (not (= :aloitettu (:tila @lomakedata)))
+    (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely ja päätös"]
        [lomake/lomake
@@ -125,7 +123,7 @@
      [:div.pot-huomaus @huomautusteksti]
 
      [harja.ui.napit/palvelinkutsu-nappi
-      "Tallenna" ; FIXME Jos tilaajan käyttäjä, tallenna myös päätöstiedot, muuten dissoccaa ne pois. Backend tallentaa päätöstiedot jos ne tulee, muuten säilyy kannassa olevat
+      "Tallenna" ; FIXME Jos tilaajan käyttäjä, tallenna vain päätöstiedot (oletettavasti tilaajan ei tarvitse pystyä muokkaamaan koko lomaketta?)
       #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)
              aloituspvm (:aloituspvm @lomakedata)
              valmispvm (:valmistumispvm @lomakedata)
@@ -197,7 +195,6 @@
                                          tila (:tila @lomakedata)]
                                      (and
                                        (not (= tila :lukittu))
-                                       (not (= tila :valmis))
                                        (empty? alikohteet-virheet)
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
