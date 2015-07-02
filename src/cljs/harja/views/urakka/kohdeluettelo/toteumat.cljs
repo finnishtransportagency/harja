@@ -61,7 +61,6 @@
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
-
 (defn yhteenveto []
   (let []
     [:div.pot-yhteenveto
@@ -79,7 +78,7 @@
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
     :hyvaksytty "Hyväksytty"
-    :palauta "Palauta urakoitsijalle"))
+    :hylatty "Palauta urakoitsijalle"))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -101,7 +100,7 @@
          {:otsikko       "Päätös"
           :nimi          :paatos
           :tyyppi        :valinta
-          :valinnat      [:hyvaksytty :palauta]
+          :valinnat      [:hyvaksytty :hylatty]
           :muokattava? muokattava?
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- Valitse päätös -")
           :leveys-col    4}
@@ -425,7 +424,10 @@
                                                                                                                                     (assoc :valmistumispvm (:valmistumispvm vastaus))
                                                                                                                                     (assoc :aloituspvm (:aloituspvm vastaus))
                                                                                                                                     (assoc :takuupvm (:takuupvm vastaus))
-                                                                                                                                    (assoc :tila (:tila vastaus)))]
+                                                                                                                                    (assoc :tila (:tila vastaus))
+                                                                                                                                    (assoc :paatos (:paatos vastaus))
+                                                                                                                                    (assoc :perustelu (:perustelu vastaus))
+                                                                                                                                    (assoc :kasittelyaika (:kasittelyaika vastaus)))]
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
                                                                                                            (log "PÄÄ data lomakkeelle: " (pr-str data-lomakkeelle))
                                                                                                            (reset! lomakedata data-lomakkeelle)))}

@@ -41,7 +41,10 @@ SELECT
   pk.nimi,
   pk.kohdenumero,
   muutoshinta,
-  ilmoitustiedot
+  ilmoitustiedot,
+  paatos,
+  perustelu,
+  kasittelyaika
 FROM paallystysilmoitus
   JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                              AND pk.urakka = :urakka
