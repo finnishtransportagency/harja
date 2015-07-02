@@ -127,12 +127,13 @@
       {:luokka :horizontal
        :muokkaa! #(reset! tarkastus-atom %)}
 
-      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika}
+      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true}
        {:otsikko "Tierekisteriosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
        {:otsikko "Tarkastus" :nimi :tyyppi
+        :pakollinen? true
         :tyyppi :valinta
         :valinnat +tarkastystyyppi+
         :valinta-nayta #(case %
