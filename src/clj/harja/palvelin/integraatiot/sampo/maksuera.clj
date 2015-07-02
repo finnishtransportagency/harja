@@ -2,15 +2,13 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
-            [clj-time.core :as t]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma])
   (:import (java.util UUID)))
 
-(def +xsd-polku+ "test/xsd/sampo/outbound/")
+(def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))

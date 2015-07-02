@@ -3,10 +3,17 @@
             [hiccup.core :refer [html]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
+
+(defn tee-sonja-viestikuuntelija [this lahetysjono-sisaan kuittausjono-sisaan]
+  (log/debug "Käynnistetään Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
+  (sonja/kuuntele (:sonja this) kuittausjono-sisaan
+                  (fn [viesti]
+                    (tuonti/kasittele-viesti (:db this) kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [this kuittausjono-ulos]
   (log/debug "Käynnistetään Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
@@ -23,15 +30,18 @@
         (fn [_] (vienti/aja-paivittainen-lahetys (:sonja this) (:db this) lahetysjono-ulos))))
     (fn [] ())))
 
-(defrecord Sampo [lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
+(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   com.stuartsierra.component/Lifecycle
   (start [this]
-    (assoc this :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
+    (assoc this :sonja-viestikuuntelija (tee-sonja-viestikuuntelija this lahetysjono-sisaan kuittausjono-sisaan)
+                :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
                 :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika lahetysjono-ulos)))
   (stop [this]
-    (let [poista-kuuntelija (:sonja-kuittauskuuntelija this)
+    (let [poista-viestikuuntelija (:sonja-viestikuuntelija this)
+          poista-kuittauskuuntelija (:sonja-kuittauskuuntelija this)
           poista-paivittainen-lahetys-tehtava (:paivittainen-lahetys-tehtava this)]
-      (poista-kuuntelija)
+      (poista-viestikuuntelija)
+      (poista-kuittauskuuntelija)
       (poista-paivittainen-lahetys-tehtava))
     this)
 

@@ -79,7 +79,9 @@
       :fim (fim/->FIM (:url (:fim asetukset)))
 
       ;; Sampo rajapinta
-      :sampo (component/using (sampo/->Sampo (:lahetysjono-ulos (:sampo asetukset))
+      :sampo (component/using (sampo/->Sampo (:lahetysjono-sisaan (:sampo asetukset))
+                                             (:kuittausjono-sisaan (:sampo asetukset))
+                                             (:lahetysjono-ulos (:sampo asetukset))
                                              (:kuittausjono-ulos (:sampo asetukset))
                                              (:paivittainen-lahetysaika (:sampo asetukset)))
                               [:sonja :db])

@@ -9,7 +9,7 @@
             [harja.tyokalut.xml :as xml])
   (:import (java.util UUID)))
 
-(def +xsd-polku+ "test/xsd/sampo/outbound/")
+(def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))

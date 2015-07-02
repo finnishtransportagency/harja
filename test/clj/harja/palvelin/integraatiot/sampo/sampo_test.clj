@@ -12,8 +12,10 @@
             [clojure.core.async :refer [<! >! go] :as async]
             [harja.tyokalut.xml :as xml]))
 
-(def +lahetysjono+ "lahetysjono")
-(def +kuittausjono+ "kuittausjono")
+(def +lahetysjono-sisaan+ "lahetysjono-sisaan")
+(def +kuittausjono-sisaan+ "kuittausjono-sisaan")
+(def +lahetysjono-ulos+ "lahetysjono-ulos")
+(def +kuittausjono-ulos+ "kuittausjono-ulos")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -22,13 +24,13 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :sonja (feikki-sonja)
-                        :sampo (component/using (->Sampo +lahetysjono+ +kuittausjono+ nil) [:db :sonja])))))
+                        :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 
-(def +xsd-polku+ "test/xsd/sampo/outbound/")
+(def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
 
 (deftest yrita-laheta-maksuera-jota-ei-ole-olemassa
@@ -37,7 +39,7 @@
 (deftest laheta-maksuera
   (let [viestit (atom [])]
     (println jarjestelma)
-    (sonja/kuuntele (:sonja jarjestelma) +lahetysjono+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 1) "Lähetys onnistui")
     (odota #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 1000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))

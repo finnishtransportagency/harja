@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 sp1 (x64) (http://www.altova.com) by self (self) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<!-- Changed to allow 0-n objects and adjusted order to really allow sending multiple objects per
+		message. If you just send one per message, that's ok anyway. -->
+	<xs:element name="Sampo2harja">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Company" type="CompanyType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="Resource" type="ResourceType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="Project" type="ProjectType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="Operation" type="OperationType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="Order" type="OrderType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="Program" type="ProgramType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="DocumentLinksType">
+		<xs:sequence>
+			<xs:element name="DocumentLink" type="DocumentLinkType" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentLinkType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required"/>
+				<xs:attribute name="link" type="xs:string" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<!-- Merged Program_Info type here -->
+	<xs:complexType name="ProgramType">
+		<xs:sequence>
+			<xs:element name="documentLinks" type="DocumentLinksType" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="message_Id" type="xs:string" use="required"/>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="vv_alueurakkanro" type="xs:string" use="required"/>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
+		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
+		<xs:attribute name="manager_User_Name" type="xs:string" use="required"/>
+		<xs:attribute name="manager_Id" type="xs:string" use="required"/>
+		<xs:attribute name="vv_code" type="xs:string" use="required"/>
+		<!-- Attributes that Harja uses -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+	<!-- Removed Project_Info type and merged content here -->
+	<xs:complexType name="ProjectType">
+		<xs:sequence>
+			<xs:element name="documentLinks" type="DocumentLinksType" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="message_Id" type="xs:string" use="required"/>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="resourceId" type="xs:string" use="required"/>
+		<xs:attribute name="programId" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
+		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
+		<!-- Attributes that Harja uses -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+	<xs:complexType name="OrderType">
+		<xs:sequence>
+			<xs:element name="documentLinks" type="DocumentLinksType" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="messageId" type="xs:string" use="required"/>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="vv_code" type="xs:string" use="required"/>
+		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
+		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
+		<xs:attribute name="projectId" type="xs:string" use="required"/>
+		<xs:attribute name="contractPartyId" type="xs:string" use="required"/>
+		<xs:attribute name="contactId" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<xs:attribute name="vv_dno" type="xs:string" use="required"/>
+		<!-- Attributes that Harja uses -->
+		<!-- Tilauksen tunnus -->
+		<!-- Viittaus projektiin -->
+		<!-- Viittaus sidosryhmään -->
+		<!-- Viittaus sidosryhmän yhteyshenkilöön -->
+		<!-- XXX: We are missing "tilauksen tunnus / viitetunnus": declared as //customObjectInstances/instance/CustomInformation/ColumnValue[@name="vv_code"], this is ok as Harja doesn't use it -->
+		<!-- Extra attributes -->
+		<!-- Diarionumerointi -->
+	</xs:complexType>
+	<!-- Merged OperationInfo here -->
+	<xs:complexType name="OperationType">
+		<xs:sequence>
+			<!-- Harja doesn't use these -->
+			<xs:element name="documentLinks" type="DocumentLinksType" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="messageId" type="xs:string" use="required"/>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
+		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
+		<xs:attribute name="projectId" type="xs:string" use="required"/>
+		<xs:attribute name="vv_operation" type="xs:string" use="required"/>
+		<xs:attribute name="financialDepartmentHash" type="xs:string" use="required"/>
+		<xs:attribute name="financialDepartmentOBS" type="xs:string" use="required"/>
+		<xs:attribute name="productOBS" type="xs:string" use="required"/>
+		<xs:attribute name="productHash" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<xs:attribute name="vv_code" type="xs:string" use="required"/>
+		<xs:attribute name="managerId" type="xs:string" use="required"/>
+		<!-- Attributes used by Harja -->
+		<!-- Toimenpidetyypin koodi, 3. taso -->
+		<!-- Extra fields -->
+		<!-- Viitetunnus -->
+	</xs:complexType>
+	<xs:complexType name="ResourceContactInformationType">
+		<xs:attribute name="email" type="xs:string" use="required"/>
+		<xs:attribute name="address1" type="xs:string" use="required"/>
+		<xs:attribute name="city" type="xs:string" use="required"/>
+		<xs:attribute name="postal_Code" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<xs:attribute name="res_obs_path" type="xs:string"/>
+		<!-- Attributes that Harja uses -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+	<xs:complexType name="ResourceType">
+		<xs:sequence>
+			<xs:element name="contactInformation" type="ResourceContactInformationType" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="message_Id" type="xs:string" use="required"/>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="user_Name" type="xs:string" use="required"/>
+		<xs:attribute name="last_name" type="xs:string" use="required"/>
+		<xs:attribute name="first_name" type="xs:string" use="required"/>
+		<xs:attribute name="department_obs_path" type="xs:string" use="required"/>
+	
+		<!-- Attributes that Harja uses (moved from ResourceContactInformationType) -->
+	</xs:complexType>
+	<xs:complexType name="CompanyContactInformationType">
+		<xs:attribute name="address" type="xs:string" use="required"/>
+		<xs:attribute name="city" type="xs:string" use="required"/>
+		<xs:attribute name="postal_Code" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="xs:string" use="required"/>
+		<!-- Atributes used by Harja -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+	<!-- Renamed from Mailcontact -->
+	<xs:complexType name="ContactPersonType">
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="first_name" type="xs:string" use="required"/>
+		<xs:attribute name="family_name" type="xs:string" use="required"/>
+		<xs:attribute name="yhthlo_puh" type="xs:string" use="required"/>
+		<xs:attribute name="yht_sposti" type="xs:string" use="required"/>
+		<!--                                                   These attributes are not available in the contactperson object in Clarity<xs:attribute name="address" type="xs:string" use="required"/>
+		<xs:attribute name="city" type="xs:string" use="required"/>
+		<xs:attribute name="postal_Code" type="xs:string" use="required"/> -->
+		<!-- Attributes used by Harja -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+	<xs:complexType name="CompanyType">
+		<xs:sequence>
+			<xs:element name="contactInformation" type="CompanyContactInformationType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="contactPersons" type="ContactPersonType" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="messageId" type="xs:string" use="required"/>
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="vv_corporate_id" type="xs:string" use="required"/>
+		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
+		<!-- Attributes used by Harja -->
+		<!-- Y-tunnus -->
+		<!-- Extra attributes -->
+	</xs:complexType>
+</xs:schema>

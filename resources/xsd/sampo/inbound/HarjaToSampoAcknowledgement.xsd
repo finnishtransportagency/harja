@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:element name="Harja2SampoAck">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Ack" type="AckType" minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+	        <xs:attribute name="ProcessingFailure" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation>Tells if there was a generic failure in handling of the
+					message. In practice, this means there was a network error, bug, or something
+					else that caused Harja to fail in processing the message. This means Harja
+					has received message but couldn't really process it. Harja might, or might
+					not be able to send this message (depends on fatality of the issue/bug),
+					so Sampo shouldn't do anything special with this - it just indicates that
+					we failed and are trying to recover from it. Harja will send a new reply
+					once the problem is fixed.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+	        <xs:attribute name="ErrorCode">
+				<xs:annotation>
+					<xs:documentation>Indicates a failure when processing the received message.
+					Message might have been malformed, or didn't validate. This indicates that
+					Harja couldn't process the message due to invalid XML or thing like that.
+					This indicates that the sender should re-check the message they sent and fix it.
+					</xs:documentation>
+				</xs:annotation>
+	            <xs:simpleType>
+	                <xs:restriction base="xs:string">
+	                    <xs:enumeration value="INVALID_XML" />
+	                </xs:restriction>
+	            </xs:simpleType>
+	        </xs:attribute>
+	        <xs:attribute name="ErrorMessage" type="xs:string" />
+	        <xs:attribute name="JMSMessageID" type="xs:string" />
+		</xs:complexType>
+	</xs:element>
+
+	<xs:complexType name="AckType">
+		<xs:attribute name="Date" use="required" type="xs:dateTime" />
+		<xs:attribute name="ObjectType" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Program"/>
+					<xs:enumeration value="Project"/>
+					<xs:enumeration value="Company"/>
+					<xs:enumeration value="Resource"/>
+					<xs:enumeration value="Operation"/>
+                    <xs:enumeration value="Order"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="MessageId" use="required" type="xs:string" />
+        <xs:attribute name="ErrorCode">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="INVALID_XML" />
+                    <xs:enumeration value="MISSING_RELATION" />
+                    <xs:enumeration value="CUSTOM" />
+                    <xs:enumeration value="NA" />
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ErrorMessage" type="xs:string" />
+	</xs:complexType>
+	
+</xs:schema>
