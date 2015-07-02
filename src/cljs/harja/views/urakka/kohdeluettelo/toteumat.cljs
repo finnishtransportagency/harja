@@ -111,7 +111,7 @@
                                  [:h3 "Hyväksyminen"]
 
                                  [lomake {:luokka   :horizontal
-                                          :muokkaa! (fn [uusi] ; FIXME Kommentit ei näy UI:ssa mutta toimii muuten?
+                                          :muokkaa! (fn [uusi] ; FIXME Jotain resetoituu atomiin, mutta ei toimi oikein eikä näy UI:ssa
                                                       (reset! hyvaksyminen uusi))
                                           :footer [:div
                                                    [harja.ui.napit/palvelinkutsu-nappi
@@ -214,7 +214,7 @@
 
          [:h3 "Kohteen tiedot"]
 
-         [lomake {:luokka   :horizontal                     ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+         [lomake {:luokka   :horizontal
                   :muokkaa! (fn [uusi]
                               (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                               (reset! kohteen-tiedot uusi))}
@@ -231,13 +231,14 @@
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       (fn [g]                            ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
+           :muutos       (fn [g] ; FIXME Nice to have ominaisuus: salli vain 1. rivin muokkaus ja kopioi 1. rivin tienro muille riveille. Tässä pohjatoteutus, miksei toimi?
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
-                             (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
+                             ;(reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
                              (reset! alikohteet-virheet (grid/hae-virheet g))))}
           [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
                                                                                    [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]
-            :muokattava? (fn [rivi index] (if (> index 0) false true))}
+            ;:muokattava? (fn [rivi index] (if (> index 0) false true)) ; FIXME Ei sallita muiden kuin 1. rivin muokkausta sitten kun tietojen kopiointi muille riveille toimii
+            }
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
