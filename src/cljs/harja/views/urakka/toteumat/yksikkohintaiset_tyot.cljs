@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat.yksikkohintaiset-tyot
   "Urakan 'Toteumat' välilehden Yksikköhintaist työt osio"
   (:require [reagent.core :refer [atom]]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
@@ -135,21 +136,24 @@
              [:h3 "Muokkaa toteumaa"])
            [:h3 "Luo uusi toteuma"])
 
-         [lomake {:luokka :horizontal
-                  :muokkaa! (fn [uusi]
-                              (log "TOT Muokataan toteumaa: " (pr-str uusi))
-                              (reset! lomake-toteuma uusi))
-                  :footer   [harja.ui.napit/palvelinkutsu-nappi
-                             "Tallenna toteuma"
-                             #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
-                             {:luokka "nappi-ensisijainen"
-                              :disabled (false? @valmis-tallennettavaksi?)
-                              :kun-onnistuu (fn [vastaus]
-                                              (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
-                                              (reset! tehtavien-summat (:tehtavien-summat vastaus))
-                                              (reset! lomake-tehtavat nil)
-                                              (reset! lomake-toteuma nil)
-                                              (reset! lomakkeessa-muokattava-toteuma nil))}]}
+         [lomake {:luokka       :horizontal
+                  :voi-muokata? (and (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                     (not jarjestelman-lisaama-toteuma?))
+                  :muokkaa!     (fn [uusi]
+                                  (log "TOT Muokataan toteumaa: " (pr-str uusi))
+                                  (reset! lomake-toteuma uusi))
+                  :footer       (when  (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                  [harja.ui.napit/palvelinkutsu-nappi
+                                   "Tallenna toteuma"
+                                   #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
+                                   {:luokka       "nappi-ensisijainen"
+                                    :disabled     (false? @valmis-tallennettavaksi?)
+                                    :kun-onnistuu (fn [vastaus]
+                                                    (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
+                                                    (reset! tehtavien-summat (:tehtavien-summat vastaus))
+                                                    (reset! lomake-tehtavat nil)
+                                                    (reset! lomake-toteuma nil)
+                                                    (reset! lomakkeessa-muokattava-toteuma nil))}])}
           [(when jarjestelman-lisaama-toteuma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
@@ -175,7 +179,9 @@
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256  :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
-          @lomake-toteuma]]))))
+          @lomake-toteuma]
+         (when-not  (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+           "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
   (let [urakka-id (:id @nav/valittu-urakka)
@@ -312,7 +318,8 @@
         [:div
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
-         [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})}
+         [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})
+                                      :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
           (ikonit/plus-sign) " Lisää toteuma"]
 
          [grid/grid

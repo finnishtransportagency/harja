@@ -1,5 +1,9 @@
 (ns harja.domain.roolit
-  "Harjan käyttäjäroolit")
+  "Harjan käyttäjäroolit"
+
+  (:require
+    [clojure.set :refer [intersection]]
+    #?(:cljs [harja.tiedot.istunto :as istunto])))
 
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
@@ -52,3 +56,41 @@
   "Antaa roolin ihmisen luettavan kuvauksen käyttöliittymää varten."
   [rooli]
   (get +rooli->kuvaus+ rooli))
+
+
+(defn urakkaroolit
+  "Palauttaa setin rooleja, joita käyttäjällä on annetussa urakassa."
+  #?(:cljs ([urakka-id] (urakkaroolit @istunto/kayttaja urakka-id)))
+  ([kayttaja urakka-id]
+  (some->> (:urakkaroolit kayttaja)
+           (filter #(= (:id (:urakka %)) urakka-id))
+           (map :rooli)
+           (into #{}))))
+
+(defn roolissa?
+  "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
+tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
+rooleista."
+  #?(:cljs ([rooli] (roolissa? @istunto/kayttaja rooli)))
+  ([kayttaja rooli]
+  ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
+    (if (contains? (:roolit kayttaja) jarjestelmavastuuhenkilo)
+    true
+    (if (some (if (set? rooli)
+                rooli
+                #{rooli}) (:roolit kayttaja))
+      true
+      false))))
+
+(defn rooli-urakassa?
+  "Tarkistaa onko käyttäjällä tietty rooli urakassa."
+  #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
+  ([kayttaja rooli urakka-id]
+    (if (roolissa? kayttaja jarjestelmavastuuhenkilo)
+      true
+      (if-let [urakkaroolit (urakkaroolit kayttaja urakka-id)]
+        (cond
+          (string? rooli) (if (urakkaroolit rooli) true false)
+          (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
+          :default false)
+        false))))

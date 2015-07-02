@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
 
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
@@ -145,7 +146,9 @@
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
         jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
-        lomaketta-voi-muokata? (not jarjestelman-lisaama-toteuma?)]
+        lomaketta-voi-muokata? (and
+                                 (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                 (not jarjestelman-lisaama-toteuma?))]
 
     (komp/luo
       (fn []
@@ -157,64 +160,64 @@
              [:h3 "Muokkaa toteumaa"]
              [:h3 "Tarkastele toteumaa"])
            [:h3 "Luo uusi toteuma"])
-
          [lomake {:luokka       :horizontal
                   :voi-muokata? lomaketta-voi-muokata?
                   :muokkaa!     (fn [uusi]
                                   (log "MUOKATAAN " (pr-str uusi))
                                   (reset! muokattu uusi))
-                  :footer       [:span
-                                 [napit/palvelinkutsu-nappi
-                                  " Tallenna toteuma"
-                                  #(tallenna-muu-tyo @muokattu)
-                                  {:luokka       "nappi-ensisijainen"
-                                   :disabled     (or (not lomaketta-voi-muokata?)
-                                                     (not @valmis-tallennettavaksi?))
-                                   :kun-onnistuu #(let [muokatun-id (or (get-in @muokattu [:toteuma :id]) %)]
-                                                   (do
-                                                     (korosta-rivia muokatun-id)
-                                                     (reset! tallennus-kaynnissa false)
-                                                     (reset! valittu-toteuma nil)))
-                                   :kun-virhe    (reset! tallennus-kaynnissa false)}]
-                                 (when (and (not jarjestelman-lisaama-toteuma?)
-                                            (get-in @muokattu [:toteuma :id]))
+                  :footer       (when  (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                  [:span
+                                  [napit/palvelinkutsu-nappi
+                                   " Tallenna toteuma"
+                                   #(tallenna-muu-tyo @muokattu)
+                                   {:luokka       "nappi-ensisijainen"
+                                    :disabled     (or (not lomaketta-voi-muokata?)
+                                                      (not @valmis-tallennettavaksi?))
+                                    :kun-onnistuu #(let [muokatun-id (or (get-in @muokattu [:toteuma :id]) %)]
+                                                    (do
+                                                      (korosta-rivia muokatun-id)
+                                                      (reset! tallennus-kaynnissa false)
+                                                      (reset! valittu-toteuma nil)))
+                                    :kun-virhe    (reset! tallennus-kaynnissa false)}]
+                                  (when (and (not jarjestelman-lisaama-toteuma?)
+                                             (get-in @muokattu [:toteuma :id]))
 
-                                   (let [m @muokattu]
-                                     [:button.nappi-kielteinen
-                                      {:class (when @tallennus-kaynnissa "disabled")
-                                       :on-click
-                                              (fn []
-                                                (modal/nayta! {:otsikko "Toteuman poistaminen"
-                                                               :footer  [:span
-                                                                         [:button.nappi-toissijainen {:type     "button"
-                                                                                                      :on-click #(do (.preventDefault %)
-                                                                                                                     (modal/piilota!))}
-                                                                          "Peruuta"]
-                                                                         [:button.nappi-kielteinen {:type     "button"
-                                                                                                    :on-click #(do (.preventDefault %)
-                                                                                                                   (modal/piilota!)
-                                                                                                                   (reset! tallennus-kaynnissa true)
-                                                                                                                   (go (let [res (tallenna-muu-tyo
-                                                                                                                                   (assoc m :poistettu true))]
-                                                                                                                         (if res
-                                                                                                                           ;; Tallennus ok
-                                                                                                                           (do (viesti/nayta! "Toteuma poistettu")
-                                                                                                                               (reset! tallennus-kaynnissa false)
-                                                                                                                               (reset! valittu-toteuma nil))
+                                    (let [m @muokattu]
+                                      [:button.nappi-kielteinen
+                                       {:class (when @tallennus-kaynnissa "disabled")
+                                        :on-click
+                                               (fn []
+                                                 (modal/nayta! {:otsikko "Toteuman poistaminen"
+                                                                :footer  [:span
+                                                                          [:button.nappi-toissijainen {:type     "button"
+                                                                                                       :on-click #(do (.preventDefault %)
+                                                                                                                      (modal/piilota!))}
+                                                                           "Peruuta"]
+                                                                          [:button.nappi-kielteinen {:type     "button"
+                                                                                                     :on-click #(do (.preventDefault %)
+                                                                                                                    (modal/piilota!)
+                                                                                                                    (reset! tallennus-kaynnissa true)
+                                                                                                                    (go (let [res (tallenna-muu-tyo
+                                                                                                                                    (assoc m :poistettu true))]
+                                                                                                                          (if res
+                                                                                                                            ;; Tallennus ok
+                                                                                                                            (do (viesti/nayta! "Toteuma poistettu")
+                                                                                                                                (reset! tallennus-kaynnissa false)
+                                                                                                                                (reset! valittu-toteuma nil))
 
-                                                                                                                           ;; Epäonnistui jostain syystä
-                                                                                                                           (reset! tallennus-kaynnissa false)))))}
-                                                                          "Poista toteuma"]]}
-                                                              [kuvaus-ja-avainarvopareja
-                                                               (str "Haluatko varmasti poistaa " (muun-tyon-tyypin-teksti-genetiivissa (:tyyppi m)) "?")
-                                                               "Pvm:" (pvm/pvm (:alkanut m))
-                                                               "Tehtävä:" (get-in m [:tehtava :nimi])
-                                                               "Kustannus:" (fmt/euro-opt
-                                                                              (if (= (:hinnoittelu m) :yksikkohinta)
-                                                                                (* (get-in m [:tehtava :maara]) (:yksikkohinta m))
-                                                                                (get-in m [:tehtava :paivanhinta]))
-                                                                              )]))}
-                                      (ikonit/trash) " Poista toteuma"]))]}
+                                                                                                                            ;; Epäonnistui jostain syystä
+                                                                                                                            (reset! tallennus-kaynnissa false)))))}
+                                                                           "Poista toteuma"]]}
+                                                               [kuvaus-ja-avainarvopareja
+                                                                (str "Haluatko varmasti poistaa " (muun-tyon-tyypin-teksti-genetiivissa (:tyyppi m)) "?")
+                                                                "Pvm:" (pvm/pvm (:alkanut m))
+                                                                "Tehtävä:" (get-in m [:tehtava :nimi])
+                                                                "Kustannus:" (fmt/euro-opt
+                                                                               (if (= (:hinnoittelu m) :yksikkohinta)
+                                                                                 (* (get-in m [:tehtava :maara]) (:yksikkohinta m))
+                                                                                 (get-in m [:tehtava :paivanhinta]))
+                                                                               )]))}
+                                       (ikonit/trash) " Poista toteuma"]))])}
 
           [(when jarjestelman-lisaama-toteuma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
@@ -336,7 +339,9 @@
 
            ]
 
-          @muokattu]]))))
+          @muokattu]
+         (when-not  (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+           "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
 
 (defn muut-tyot-toteumalistaus
   "Muiden töiden toteumat"
@@ -369,9 +374,10 @@
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
-           [:div "Ominaisuus kehityksen alla - ethän raportoi bugeja, kiitos."]
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})}
+           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})
+                                        :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus
+                                                                               (:id @nav/valittu-urakka)))}
             (ikonit/plus-sign) " Lisää toteuma"]
 
            [grid/grid
