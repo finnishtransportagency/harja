@@ -297,6 +297,14 @@
                            (lisaa-tyoriveille-toteutunut-maara)
                            (lisaa-tyoriveille-toteutuneet-kustannukset)
                            (lisaa-tyoriveille-erotus)))))
+        filteroidyt-tyorivit (reaction
+                               (let [valittu-tpi @u/valittu-toimenpideinstanssi]
+                               (filter
+                                         (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
+                                                         (or
+                                                           (> (:hoitokauden-toteutunut-maara rivi) 0)
+                                                           (> (:hoitokauden-suunniteltu-maara rivi) 0))))
+                                         @tyorivit)))
         valittu-tpi @u/valittu-toimenpideinstanssi]
 
     (komp/luo
@@ -325,12 +333,7 @@
                      (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                                   [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
                                   [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "20%"}]
-          (doall (filter ; FIXME Ei toimi ennen kuin sivua vaihtaa (mahdollinen ratkaisu: tee reaction, dereffaa valittu-tpi, anna gridille.
-                   (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
-                                   (or
-                                     (> (:hoitokauden-toteutunut-maara rivi) 0)
-                                     (> (:hoitokauden-suunniteltu-maara rivi) 0))))
-                   @tyorivit))]]))))
+          @filteroidyt-tyorivit]]))))
 
 (defn yksikkohintaisten-toteumat []
   (if @lomakkeessa-muokattava-toteuma
