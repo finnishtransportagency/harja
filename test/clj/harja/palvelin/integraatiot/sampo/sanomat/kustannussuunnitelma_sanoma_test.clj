@@ -1,6 +1,6 @@
-(ns harja.palvelin.integraatiot.sampo.kustannussuunnitelmat-test
+(ns harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo.kustannussuunnitelma :as kustannussuunnitelma]
+            [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunnitelma-sanoma]
             [hiccup.core :refer [html]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
@@ -31,16 +31,16 @@
                  :tuotenumero          111})
 
 (deftest tarkista-kustannussuunnitelman-validius
-  (let [maksuera (html (kustannussuunnitelma/muodosta-kustannussuunnitelma-sanoma +maksuera+))
+  (let [maksuera (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 112)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "43021" (kustannussuunnitelma/valitse-lkp-tilinumero nil 536)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 30)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 242)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "12981" (kustannussuunnitelma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
-  (is (thrown? RuntimeException (kustannussuunnitelma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 112)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 536)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 30)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 242)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
+  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))

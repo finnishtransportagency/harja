@@ -1,95 +1,62 @@
 (ns harja.palvelin.integraatiot.sampo.maksuera
-  (:require [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [clojure.string :as str])
-  (:import (java.text SimpleDateFormat)
-           (java.util Date Calendar)))
+  (:require [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+            [hiccup.core :refer [html]]
+            [clj-time.core :as t]
+            [harja.tyokalut.xml :as xml]
+            [harja.kyselyt.maksuerat :as qm]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
+            [harja.palvelin.komponentit.sonja :as sonja])
+  (:import (java.util UUID)))
 
-(defn muodosta-kulu-id []
-  (str/join "" ["kulu"
-                (let [calendar (Calendar/getInstance)]
-                  (.setTime calendar (Date.))
-                  (.get calendar Calendar/YEAR))]))
+(def +xsd-polku+ "test/xsd/sampo/outbound/")
 
-(defn muodosta-maksueranumero [numero]
-  (str/join "" ["HA" numero]))
+(defn tee-xml-sanoma [sisalto]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
-(defn muodosta-instance-code [numero]
-  (str/join "" ["AL" numero]))
+(defn hae-maksuera [db numero]
+  (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero))))
 
-(defn luo-custom-information [values & content]
-  [:CustomInformation
-   (for [[key value] values]
-     [:ColumnValue {:name key} value])
-   content])
+(defn hae-maksueranumero [db lahetys-id]
+  (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
 
-(defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
+(defn lukitse-maksuera [db numero]
+  (let [lukko (str (UUID/randomUUID))]
+    (log/debug "Lukitaan maksuera:" numero ", lukolla:" lukko)
+    (let [onnistuiko? (= 1 (qm/lukitse-maksuera! db lukko numero))]
+      onnistuiko?)))
 
-(defn paattele-tyyppi [tyyppi]
-  (case tyyppi
-    "lisatyo" 1
-    "kokonaishintainen" 2
-    "yksikköhintainen" 6
-    "indeksi" 7
-    "bonus" 8
-    "sakko" 9
-    "akillinen-hoitotyo" 10
-    99))
+(defn merkitse-maksuera-odottamaan-vastausta [db numero lahetys-id]
+  (log/debug "Merkitään maksuerä: " numero " odottamaan vastausta ja avataan lukko. ")
+  (= 1 (qm/merkitse-maksuera-odottamaan-vastausta! db lahetys-id numero)))
 
-(defn muodosta-maksuera-sanoma [maksuera]
-  (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero maksuera))
-        kulu-id (muodosta-kulu-id)
-        instance-code (muodosta-instance-code (:numero maksuera))]
+(defn merkitse-maksueralle-lahetysvirhe [db numero]
+  (log/debug "Merkitään lähetysvirhe maksuerälle (numero:" numero ").")
+  (= 1 (qm/merkitse-maksueralle-lahetysvirhe! db numero)))
 
-    [:NikuDataBus
-     [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
-     [:Products
-      [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
-                 :financialProjectClass "INVCLASS"
-                 :start                 (formatoi-paivamaara alkupvm)
-                 :finish                (formatoi-paivamaara loppupvm)
-                 :financialWipClass     "WIPCLASS"
-                 :financialDepartment   talousosasto
-                 :managerUserName       vastuuhenkilo
-                 :objectID              maksueranumero
-                 :financialLocation     "Kpito"}
-       [:InvestmentAssociations
-        [:Allocations
-         [:ParentInvestment {:defaultAllocationPercent "1.0"
-                             :InvestmentType           "project"
-                             :InvestmentID             sampoid}]]]
-       [:InvestmentResources
-        [:Resource {:resourceID kulu-id}]]
-       [:InvestmentTasks
-        [:Task {:outlineLevel "1"
-                :name         (:nimi (:maksuera maksuera))
-                :taskID       "~rmw"}
-         [:Assignments
-          [:TaskLabor {:resourceID kulu-id}]]]]
-       [:OBSAssocs {:completed "false"}
-        [:OBSAssoc#LiiviKP {:unitPath talousosastopolku
-                            :name     "Kustannuspaikat"}]
-        [:OBSAssoc#LiiviSIJ {:unitPath "/Kirjanpito"
-                             :name     "Sijainti"}]
-        [:OBSAssoc#tuote2013 {:unitPath tuotepolku
-                              :name     "Tuoteryhma/Tuote"}]]
-       (luo-custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
-                                "vv_inst_no"     (:numero maksuera)
-                                "vv_code"        maksueranumero
-                                "vv_me_type"     (paattele-tyyppi (:tyyppi (:maksuera maksuera)))
-                                "vv_type"        "me"
-                                "vv_status"      "2"
-                                "travel_cost_ok" "false"}
-                               [:instance {:parentInstanceCode maksueranumero
-                                           :parentObjectCode   "Product"
-                                           :objectCode         "vv_invoice_receipt"
-                                           :instanceCode       instance-code}
-                                (luo-custom-information {"code"                 instance-code
-                                                         ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
-                                                         ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
-                                                         "vv_payment_date"      (formatoi-paivamaara (Date.))
-                                                         "vv_paym_sum"          (:summa (:maksuera maksuera))
-                                                         "vv_paym_sum_currency" "EUR"
-                                                         "name"                 "Laskutus- ja maksutiedot"})])]]]))
+(defn merkitse-maksuera-lahetetyksi [db numero]
+  (log/debug "Merkitään maksuerä (numero:" numero ") lähetetyksi.")
+  (= 1 (qm/merkitse-maksuera-lahetetyksi! db numero)))
+
+(defn muodosta-maksuera [db numero]
+  (if (lukitse-maksuera db numero)
+    (let [maksueran-tiedot (hae-maksuera db numero)
+          maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
+      (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
+        maksuera-xml
+        (do
+          (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
+          nil)))
+    nil))
+
+(defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
+  (jdbc/with-db-transaction [transaktio db]
+    (if-let [maksueranumero (hae-maksueranumero transaktio viesti-id)]
+      (if (contains? kuittaus :virhe)
+        (do
+          (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+          (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
+        (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
+      (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+

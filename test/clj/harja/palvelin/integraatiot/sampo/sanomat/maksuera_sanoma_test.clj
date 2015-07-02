@@ -1,6 +1,6 @@
-(ns harja.palvelin.integraatiot.sampo.maksuerat-test
+(ns harja.palvelin.integraatiot.sampo.sanomat.maksuera-sanoma-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
+            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera_sanoma]
             [hiccup.core :refer [html]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
@@ -31,12 +31,12 @@
                  :sopimus             {:sampoid "00LZM-0033600"}})
 
 (deftest tarkista-maksueran-validius
-  (let [maksuera (html (maksuera/muodosta-maksuera-sanoma +maksuera+))
+  (let [maksuera (html (maksuera_sanoma/muodosta +maksuera+))
         xsd "nikuxog_product.xsd"]
     (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-maksueran-sisalto
-  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera/muodosta-maksuera-sanoma +maksuera+)) "UTF-8"))))]
+  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/muodosta +maksuera+)) "UTF-8"))))]
     (is (= "2015-12-12T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-01-01T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
     (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))

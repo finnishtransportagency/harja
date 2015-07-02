@@ -1,17 +1,17 @@
-(ns harja.palvelin.integraatiot.sampo.kuittaukset_test
+(ns harja.palvelin.integraatiot.sampo.sanomat.kuittaukset_test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo.kuittaus :as kuittaukset]))
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sisaan-sanoma :as kuittaus-sisaan-sanoma]))
 
 (deftest lue-onnistunut-kuittaus
   (let [xml (slurp "test/resurssit/sampo/maksuera_ack.xml")]
-    (let [vastaus (kuittaukset/lue-kuittaus xml)]
+    (let [vastaus (kuittaus-sisaan-sanoma/lue-kuittaus xml)]
       (is (= "ID:6c321b59:1460814e5:14AE0F721BF" (:viesti-id vastaus))
           "Kuittaus tulkittiin onnistuneeksi ja siltä saatiin luettua oikea viesti id")
       (is (= :kustannussuunnitelma (:viesti-tyyppi vastaus)) "Vastauksen tyyppi pääteltiin oikein"))))
 
 (deftest lue-epaonnistunut-kuittaus
   (let [xml (slurp "test/resurssit/sampo/maksuera_nack.xml")]
-    (let [vastaus (kuittaukset/lue-kuittaus xml)]
+    (let [vastaus (kuittaus-sisaan-sanoma/lue-kuittaus xml)]
       (let [virhe (first (:virheet vastaus))
             varoitus (second (:virheet vastaus))]
         (is (= :sampo-raportoi-virheita (:virhe vastaus)) "Virhe ilmoitus on oikea")

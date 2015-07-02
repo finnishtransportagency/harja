@@ -1,96 +1,59 @@
 (ns harja.palvelin.integraatiot.sampo.kustannussuunnitelma
-  (:require [hiccup.core :refer [html]]
+  (:require [harja.kyselyt.kustannussuunnitelmat :as qk]
+            [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
+            [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
             [taoensso.timbre :as log]
-            [clojure.string :as str]
-            [clj-time.core :as time]
-            [clj-time.coerce :as tc])
-  (:import (java.text SimpleDateFormat)))
+            [clojure.java.jdbc :as jdbc]
+            [hiccup.core :refer [html]]
+            [clj-time.core :as t]
+            [harja.tyokalut.xml :as xml])
+  (:import (java.util UUID)))
 
-(defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
+(def +xsd-polku+ "test/xsd/sampo/outbound/")
 
-(defn muodosta-maksueranumero [numero]
-  (str/join "" ["HA" numero]))
+(defn tee-xml-sanoma [sisalto]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
-(defn muodosta-kustannussuunnitelmanumero [numero]
-  (str/join "" ["AK" numero]))
+(defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
+  (:maksuera (first (qk/hae-maksuera-lahetys-idlla db lahetys-id))))
 
-(defn luo-summat [alkupvm loppupvm maksuera]
-  [:Cost
-   [:segment
-    {:value  (:summa (:maksuera maksuera))
-     :finish alkupvm
-     :start  loppupvm}]])
+(defn lukitse-kustannussuunnitelma [db numero]
+  (let [lukko (str (UUID/randomUUID))]
+    (log/debug "Lukitaan kustannussuunnitelma:" numero ", lukolla:" lukko)
+    (let [onnistuiko? (= 1 (qk/lukitse-kustannussuunnitelma! db lukko numero))]
+      onnistuiko?)))
 
-(defn muodosta-custom-information [nimi arvo]
-  [:CustomInformation
-   [:ColumnValue
-    {:name nimi}
-    arvo]])
+(defn merkitse-kustannussuunnitelma-odottamaan-vastausta [db numero lahetys-id]
+  (log/debug "Merkitään kustannussuuunnitelma: " numero " odottamaan vastausta ja avataan lukko. ")
+  (= 1 (qk/merkitse-kustannussuunnitelma-odottamaan-vastausta! db lahetys-id numero)))
 
-(defn muodosta-grouping-attribute [koodi arvo]
-  [:GroupingAttribute
-   {:value arvo
-    :code  koodi}])
+(defn merkitse-kustannussuunnitelmalle-lahetysvirhe [db numero]
+  (log/debug "Merkitään lähetysvirhe kustannussuunnitelmalle (numero:" numero ").")
+  (= 1 (qk/merkitse-kustannussuunnitelmalle-lahetysvirhe! db numero)))
 
-(defn valitse-lkp-tilinumero [toimenpidekoodi, tuotenumero]
-  (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
-    "43021"
-    ; Hoitotuotteet 110 - 150, 536
-    (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
-            (= tuotenumero 536)
-            (= tuotenumero 31))
-      "43021"
-      ; Ostotuotteet: 210, 240-271 ja 310-321
-      (if (or (= tuotenumero 21)
-              (= tuotenumero 30)
-              (= tuotenumero 210)
-              (and (>= tuotenumero 240) (<= tuotenumero 271))
-              (and (>= tuotenumero 310) (<= tuotenumero 321)))
-        "12981"
-        (let [viesti (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle", toimenpidekoodi tuotenumero)]
-          (log/error viesti)
-          (throw (RuntimeException. viesti)))))))
+(defn merkitse-kustannussuunnitelma-lahetetyksi [db numero]
+  (log/debug "Merkitään kustannussuunnitelma (numero:" numero ") lähetetyksi.")
+  (= 1 (qk/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
-(defn tee-kustannussuunnitelman-alku [alkupvm]
-  (let [vuosi (time/year (tc/from-sql-date alkupvm))]
-    (tc/to-sql-date (time/first-day-of-the-month vuosi 1))))
+(defn muodosta-kustannussuunnitelma [db numero]
+  (if (lukitse-kustannussuunnitelma db numero)
+    (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
+          kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
+      (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
+        kustannussuunnitelma-xml
+        (do
+          (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
+          nil)))
+    nil))
 
-(defn tee-kustannussuunnitelman-loppu [loppupvm]
-  (let [vuosi (time/year (tc/from-sql-date loppupvm))]
-    (tc/to-sql-date (time/last-day-of-the-month vuosi 12))))
+(defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
+  (jdbc/with-db-transaction [transaktio db]
+    (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
+      (if (contains? kuittaus :virhe)
+        (do
+          (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
+        (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
+      (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
-(defn muodosta-kustannussuunnitelma-sanoma [maksuera]
-  (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
-        {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
-        tuotenumero (:tuotenumero maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero maksuera))
-        kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
-    [:NikuDataBus
-     [:Header
-      {:objectType     "costPlan"
-       :action         "write"
-       :externalSource "NIKU"
-       :version        "13.1.0.0248"}]
-     [:CostPlans
-      [:CostPlan
-       {:finishPeriod   (tee-kustannussuunnitelman-loppu loppupvm)
-        :startPeriod    (tee-kustannussuunnitelman-alku alkupvm)
-        :periodType     "ANNUALLY"
-        :investmentType "PRODUCT"
-        :investmentCode maksueranumero
-        :name           (apply str (take 80 (:nimi (:maksuera maksuera))))
-        :code           kustannussuunnitelmanumero
-        :isPlanOfRecord "true"}
-       [:Description ""]
-       [:GroupingAttributes
-        [:GroupingAttribute "role_id"]
-        [:GroupingAttribute "lov1_id"]]
-       [:Details
-        [:Detail
-         (luo-summat (formatoi-paivamaara alkupvm) (formatoi-paivamaara loppupvm) maksuera)
-         [:GroupingAttributes
-          (muodosta-grouping-attribute "lov1_id" "3110201")
-          (muodosta-grouping-attribute "role_id" (valitse-lkp-tilinumero koodi tuotenumero))]
-         (muodosta-custom-information "vv_vat_code" "L024")]]
-       (muodosta-custom-information "vv_purpose" "5")]]]))
+
