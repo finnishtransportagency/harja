@@ -153,7 +153,7 @@
                  (let [uusi (str @data)]
                    (if (or (= olemassaoleva-teksti (str uusi ","))
                            (= olemassaoleva-teksti (str uusi "."))
-                           (= olemassaoleva-teksti "-") (str "-" uusi))
+                           (= olemassaoleva-teksti (str "-" uusi)))
                      olemassaoleva-teksti
                      uusi)))))
       
@@ -302,6 +302,7 @@
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
+        
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
@@ -310,8 +311,8 @@
         auki (atom false)
 
         muuta! (fn [data t]
-                 (let [d (pvm/->pvm t)]
-                   (reset! teksti t)
+                 (reset! teksti t)
+                 (if-let [d (pvm/->pvm t)]
                    (reset! data d)))
 
         sijainti (atom nil)]
@@ -319,11 +320,10 @@
      (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
-         (when-not focus
-             (reset! auki false)
-             (swap! teksti #(if-let [p @data]
-                             (pvm/pvm p)
-                             %))))
+         (let [p @data]
+           (reset! teksti (if p
+                            (pvm/pvm p)
+                            ""))))
 
        :component-did-mount
        (when (or lomake? irrallinen?)

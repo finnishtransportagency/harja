@@ -1,7 +1,7 @@
 (ns harja.ui.grid
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log tarkkaile! logt]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta]]
