@@ -37,15 +37,14 @@
 (defn tila-keyword->string [tila]
   (case tila
     :aloitettu "Aloitettu"
-    :valmis "Valmis"
+    :valmis "Valmis, odottaa käsittelyä"
     :lukittu "Hyväksytty"
-    :palautettu "Palautettu"
     "-"))
 
 (defn paatos-keyword->string [tila]
   (case tila
-    :hyvaksytty "hyväksytty"
-    :hylatty "palautettu urakoitsijalle"
+    :hyvaksytty "Hyväksytty"
+    :hylatty "Palautettu urakoitsijalle"
     ""))
 
 (def lomakedata (atom nil))
@@ -409,8 +408,8 @@
                                                                                                              (if (nil? (:tila rivi))
                                                                                                                "-"
                                                                                                                (if (nil? (:paatos rivi))
-                                                                                                                 (str (tila-keyword->string (:tila rivi)) ", odottaa käsittelyä")
-                                                                                                                 (str (tila-keyword->string (:tila rivi)) ", " (paatos-keyword->string (:paatos rivi))))))}
+                                                                                                                 (str (tila-keyword->string (:tila rivi)))
+                                                                                                                 (paatos-keyword->string (:paatos rivi)))))}
            {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
