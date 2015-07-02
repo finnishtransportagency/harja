@@ -192,14 +192,18 @@
                                          alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          kiviaines-virheet @kiviaines-virheet
-                                         tila (:tila @lomakedata)]
+                                         tila (:tila @lomakedata)
+                                         paatos (:paatos @lomakedata)]
+                                     (if (istunto/roolissa? istunto/rooli-tilaajan-kayttaja)
+                                       (and (not (nil? paatos))
+                                            (not (= tila :lukittu)))
                                      (and
                                        (not (= tila :lukittu))
                                        (empty? alikohteet-virheet)
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
-                                       (empty? kiviaines-virheet))))
+                                       (empty? kiviaines-virheet)))))
         valmis-kasiteltavaksi? (reaction (let [valmispvm (:valmistumispvm @lomakedata)
                                                toteutuneet-osoitteet (:osoitteet @lomakedata)
                                                toteutuneet-maarat (:tyot @lomakedata)
