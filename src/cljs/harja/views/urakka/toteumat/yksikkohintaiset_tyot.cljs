@@ -149,8 +149,7 @@
                                               (reset! tehtavien-summat (:tehtavien-summat vastaus))
                                               (reset! lomake-tehtavat nil)
                                               (reset! lomake-toteuma nil)
-                                              (reset! lomakkeessa-muokattava-toteuma nil))}]
-                  }
+                                              (reset! lomakkeessa-muokattava-toteuma nil))}]}
           [(when jarjestelman-lisaama-toteuma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))

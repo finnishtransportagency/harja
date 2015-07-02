@@ -43,7 +43,7 @@
 (def lomakedata (atom nil))
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
-(def muutokset-kokonaishintaan                              ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
   (reaction (reduce + (mapv
                         (fn [tyo]
                           (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
@@ -51,8 +51,6 @@
 
 (def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
 
-(defn kohteen-tiedot []
-  )
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -77,10 +75,12 @@
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
         urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
-    [:div.pot-tallennus
-     [:div.pot-huomaus @huomautusteksti]
 
-     (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
+    (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
+                                [:div.pot-tallennus
+                                 [:div.pot-huomaus @huomautusteksti]
+
+
                                  [harja.ui.napit/palvelinkutsu-nappi
                                   "Tallenna"
                                   #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)
@@ -98,41 +98,46 @@
                                    :kun-onnistuu (fn [vastaus]
                                                    (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
                                                    (reset! paallystys/paallystystoteumat vastaus)
-                                                   (reset! lomakedata nil))}])]))
+                                                   (reset! lomakedata nil))}]])))
 
-(defn kasittely [valmis-kasiteltavaksi?]
-  (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
-                                    (if (not valmispvm)
-                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
-        urakka-id (:id @nav/valittu-urakka)
+(defn kasittely [valmis-kasiteltavaksi? hyvaksyminen]
+  (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
-    [:div.pot-kasittely
-     [:h3 "Hyväksyminen"]
-     [:div.pot-huomaus @huomautusteksti]
 
-     (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
-                                 [harja.ui.napit/palvelinkutsu-nappi
-                                  "Hyväksy"
-                                  #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
-                                    (paallystys/hyvaksy-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
-                                  {:luokka       "nappi-ensisijainen"
-                                   :disabled     (false? @valmis-kasiteltavaksi?)
-                                   :kun-onnistuu (fn [vastaus]
-                                                   (log "PÄÄ Lomake hyväksytty, vastaus: " (pr-str vastaus))
-                                                   (reset! paallystys/paallystystoteumat vastaus)
-                                                   (reset! lomakedata nil))}])
+    (tarkkaile! "PÄÄ Hyväksyminen" hyvaksyminen)
 
-     (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
-                                 [harja.ui.napit/palvelinkutsu-nappi
-                                  "Palauta urakoitsijalle"
-                                  #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
-                                    (paallystys/hylkaa-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
-                                  {:luokka       "nappi-ensisijainen"
-                                   :disabled     (false? @valmis-kasiteltavaksi?)
-                                   :kun-onnistuu (fn [vastaus]
-                                                   (log "PÄÄ Lomake hylätty, vastaus: " (pr-str vastaus))
-                                                   (reset! paallystys/paallystystoteumat vastaus)
-                                                   (reset! lomakedata nil))}])]))
+    (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
+                                [:div.pot-kasittely
+                                 [:h3 "Hyväksyminen"]
+
+                                 [lomake {:luokka   :horizontal
+                                          :muokkaa! (fn [uusi] ; FIXME Kommentit ei näy UI:ssa mutta toimii muuten?
+                                                      (reset! hyvaksyminen uusi))
+                                          :footer [:div
+                                                   [harja.ui.napit/palvelinkutsu-nappi
+                                                    "Hyväksy"
+                                                    #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
+                                                      (paallystys/hyvaksy-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
+                                                    {:luokka       "nappi-ensisijainen"
+                                                     :disabled     (false? @valmis-kasiteltavaksi?)
+                                                     :kun-onnistuu (fn [vastaus]
+                                                                     (log "PÄÄ Lomake hyväksytty, vastaus: " (pr-str vastaus))
+                                                                     (reset! paallystys/paallystystoteumat vastaus)
+                                                                     (reset! lomakedata nil))}]
+
+
+                                                   [harja.ui.napit/palvelinkutsu-nappi
+                                                    "Palauta urakoitsijalle"
+                                                    #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
+                                                      (paallystys/hylkaa-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id))
+                                                    {:luokka       "nappi-ensisijainen"
+                                                     :disabled     (false? @valmis-kasiteltavaksi?)
+                                                     :kun-onnistuu (fn [vastaus]
+                                                                     (log "PÄÄ Lomake hylätty, vastaus: " (pr-str vastaus))
+                                                                     (reset! paallystys/paallystystoteumat vastaus)
+                                                                     (reset! lomakedata nil))}]]}
+                                  [{:otsikko "Kommentti" :nimi :kommentti :pituus-max 256 :tyyppi :text}]
+                                  @hyvaksyminen]])))
 
 (defn paallystysilmoituslomake []
   (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
@@ -166,6 +171,8 @@
                                                                                                  #(not (and (true? (:poistettu %))
                                                                                                             (neg? (:id %))))
                                                                                                  (vals uusi-arvo))))))
+        hyvaksyminen (r/wrap {:kommentti (:kommentti @lomakedata)}
+                          (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :kommentti (:kommentti uusi-arvo)))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
@@ -197,6 +204,7 @@
                                                 (not (nil? valmispvm))
                                                 (not (empty? toteutuneet-osoitteet))
                                                 (not (empty? toteutuneet-maarat)))))]
+
     (komp/luo
       (fn []
         [:div.paallystysilmoituslomake
@@ -363,7 +371,7 @@
 
          (yhteenveto)
          (tallennus valmis-tallennettavaksi?)
-         (kasittely valmis-kasiteltavaksi?)]))))
+         (kasittely valmis-kasiteltavaksi? hyvaksyminen)]))))
 
 (defn toteumaluettelo
   []
