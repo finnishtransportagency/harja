@@ -132,7 +132,7 @@ Optioissa voi olla seuraavat avaimet:
                                 :horizontal "form-horizontal"
                                 :default "")}
          (let [kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
-               kentta (fn [{:keys [muokattava? fmt hae nimi] :as kentta}]
+               kentta (fn [{:keys [muokattava? fmt hae nimi pakollinen?] :as kentta}]
                         (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                         (let [kentan-virheet (get @virheet nimi)
                               kentan-varoitukset (get @varoitukset nimi)
@@ -146,7 +146,7 @@ Optioissa voi olla seuraavat avaimet:
                                                           (muokkaa! uudet-tiedot)))
                               kentan-tunniste nimi]
                           ^{:key (:nimi kentta)}
-                          [:div.form-group
+                          [:div.form-group {:class (when pakollinen? "required")}
                            [:div.row
                             (if (+ei-otsikkoa+ (:tyyppi kentta))
                               [tyhja-otsikko luokka]

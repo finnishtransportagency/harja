@@ -28,12 +28,20 @@
         padding: 2px 6px;
     }
 
-.viesti {
-  display: inline-block;
-  margin-left: 0.5em;
+  .viesti {
+    display: inline-block;
+    margin-left: 0.5em;
+  }
+
+  .form-group.required label.control-label:after {
+    content: " \25A0";
+    color: red;
+    font-size: 0.8em;
+    position: relative;
+    top: -0.15em;
+  }
 }
-  
-}
+
 .lomake-footer{
     button + button {
         margin-left: @harja-nappien-valinen-etaisyys;
