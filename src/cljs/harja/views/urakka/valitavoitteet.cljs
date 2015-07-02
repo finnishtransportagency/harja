@@ -10,7 +10,6 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
-            [harja.tiedot.istunto :refer [rooli-urakassa?]]
             [harja.domain.roolit :as roolit]
             [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -81,7 +80,7 @@
            [y/otsikolla "Urakoitsijan kommentti" kommentti])])]
      
      (when (and (nil? pvm)
-                (rooli-urakassa? roolit/urakoitsijan-urakkaroolit-kirjoitus ur))
+                (roolit/rooli-urakassa? roolit/urakoitsijan-urakkaroolit-kirjoitus ur))
        ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
        [valitavoite-valmis-lomake opts ur vt]
          )]))

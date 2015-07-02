@@ -1,5 +1,6 @@
 (ns harja.views.urakka.materiaalit
   (:require [reagent.core :refer [atom] :as r]
+            [harja.domain.roolit :as roolit]
             [harja.ui.yleiset :refer [kuuntelija raksiboksi] :refer-macros [deftk]]
             [harja.tiedot.urakka.materiaalit :as t]
             [harja.loki :refer [log]]
@@ -215,7 +216,7 @@
              virheita? (or (not (empty? @yleiset-materiaalit-virheet))
                            (not (empty? @pohjavesialue-materiaalit-virheet))) 
              voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
-             voi-muokata? (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur))
+             voi-muokata? (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
              ]
     
          [:div.materiaalit

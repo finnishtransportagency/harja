@@ -2,6 +2,7 @@
   "Urakan 'Yksikkohintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
@@ -201,11 +202,11 @@
         [grid/grid
          {:otsikko        "Yksikköhintaiset työt"
           :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-          :tallenna       (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                      (:id ur)
-                                                      #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                      urakan-yks-hint-tyot %)
-                                                      :ei-mahdollinen)
+          :tallenna       (roolit/jos-rooli-urakassa roolit/rooli-urakanvalvoja
+                                                     (:id ur)
+                                                     #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                     urakan-yks-hint-tyot %)
+                                                     :ei-mahdollinen)
           :peruuta #(reset! tuleville? false)
           :tunniste       :tehtava
           :voi-lisata?    false

@@ -1,6 +1,7 @@
 (ns harja.views.urakka.siltatarkastukset
   "Urakan 'Siltatarkastukset' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
@@ -290,10 +291,10 @@
           :tunniste     :kohdenro
           :voi-lisata?  false
           :voi-poistaa? (constantly false)
-          :tallenna     (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                    (:id @nav/valittu-urakka)
-                                                    #(paivita-siltatarkastus! %)
-                                                    :ei-mahdollinen)
+          :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                   (:id @nav/valittu-urakka)
+                                                   #(paivita-siltatarkastus! %)
+                                                   :ei-mahdollinen)
           }
 
          ;; sarakkeet
