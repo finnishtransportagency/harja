@@ -106,8 +106,8 @@
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
 
 (defn paivita-paallystysilmoitus [db user lomakedata paallystyskohde-id aloituspvm valmistumispvm takuupvm]
-  (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id ", aloituspvm " aloituspvm ", valmistumispvm " valmistumispvm)
   ; FIXME Tarkista ettei tila ole lukittu
+  (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id ", aloituspvm " aloituspvm ", valmistumispvm " valmistumispvm)
   (let [muutoshinta (laske-muutoshinta lomakedata)
         tila (if valmistumispvm "valmis" "aloitettu")]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
@@ -141,12 +141,17 @@
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
 
-(defn vaihda-paallystysilmoituksen-tila [db user {:keys [urakka-id sopimus-id paallystyskohde-id uusi-tila]}]
-  (log/debug "Vaihdetaan päällystysilmoituksen (id: " paallystyskohde-id ") tilaksi " uusi-tila)
-  (oik/vaadi-rooli-urakassa user roolit/tilaajan-kayttaja urakka-id)
+(defn tallenna-paallystysilmoituksen-paatos [db user {:keys [urakka-id sopimus-id paallystyskohde-id paatostiedot]}]
+  (log/debug "Tallennetaan päätösilmoituksen (id: " paallystyskohde-id ") päätös: " (:paatos paatostiedot))
+  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Rooli oikein?
   ; FIXME Tarkista ettei tila ole lukittu
   (jdbc/with-db-transaction [c db]
-    (q/vaihda-paallystysilmoituksen-tila! db (name uusi-tila) (:id user) paallystyskohde-id)
+
+    (q/vaihda-paallystysilmoituksen-paatos! db (:paatos paatostiedot) (:perustelu paatostiedot) (konv/sql-date (:kasittelyaika paatostiedot)) (:id user) paallystyskohde-id)
+
+    (if (= :hyvaksytty (:paatos paatostiedot))
+      (q/vaihda-paallystysilmoituksen-tila! db :lukittu (:id user) paallystyskohde-id))
+
     (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                            :sopimus-id sopimus-id})))
 
@@ -170,12 +175,9 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
-      (julkaise-palvelu http :hyvaksy-paallystysilmoitus
+      (julkaise-palvelu http :tallenna-paallystysilmoituksen-paatos
                         (fn [user tiedot]
-                          (vaihda-paallystysilmoituksen-tila db user (assoc tiedot :uusi-tila :lukittu))))
-      (julkaise-palvelu http :hylkaa-paallystysilmoitus
-                        (fn [user tiedot]
-                          (vaihda-paallystysilmoituksen-tila db user (assoc tiedot :uusi-tila :palautettu))))
+                          (tallenna-paallystysilmoituksen-paatos db user tiedot)))
       this))
 
   (stop [this]

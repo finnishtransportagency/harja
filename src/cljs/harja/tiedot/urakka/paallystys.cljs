@@ -39,15 +39,12 @@
                                          :valmistumispvm valmistumispvm
                                          :takuupvm takuupvm}))
 
-(defn hyvaksy-paallystysilmoitus [urakka-id sopimus-id paallystyskohde-id]
-  (k/post! :hyvaksy-paallystysilmoitus {:urakka-id urakka-id
-                                         :sopimus-id sopimus-id
-                                         :paallystyskohde-id paallystyskohde-id}))
+(defn tallenna-paallystysilmoituksen-paatos [urakka-id sopimus-id paallystyskohde-id paatostiedot]
+  (k/post! :tallenna-paallystysilmoituksen-paatos {:urakka-id          urakka-id
+                                                   :sopimus-id         sopimus-id
+                                                   :paallystyskohde-id paallystyskohde-id
+                                                   :paatostiedot       paatostiedot}))
 
-(defn hylkaa-paallystysilmoitus [urakka-id sopimus-id paallystyskohde-id]
-  (k/post! :hylkaa-paallystysilmoitus {:urakka-id urakka-id
-                                         :sopimus-id sopimus-id
-                                         :paallystyskohde-id paallystyskohde-id}))
 
 (defonce paallystyskohteet (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero

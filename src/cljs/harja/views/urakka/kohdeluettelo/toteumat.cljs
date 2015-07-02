@@ -83,7 +83,7 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi? paatostiedot]
-  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-tilaajan-kayttaja))]
+  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-urakanvalvoja))]
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
@@ -95,14 +95,16 @@
         [{:otsikko     "Käsittelyn pvm"
           :nimi        :kasittelyaika
           :tyyppi      :pvm-aika
+          ;:validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]] ; FIXME Valittaa kun annetaan?
           :muokattava? muokattava?}
 
          {:otsikko       "Päätös"
           :nimi          :paatos
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
-          :muokattava? muokattava?
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- Valitse päätös -")
+          :muokattava?   muokattava?
+          :validoi       [[:ei-tyhja "Anna päätös"]]
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- Valitse päätös -") ; FIXME Näkyy urakoitsijalle tekstinä jos ei vielä annettu?
           :leveys-col    4}
 
          (when (:paatos @paatostiedot)
@@ -111,8 +113,8 @@
             :tyyppi      :text
             :koko        [80 4]
             :leveys-col  6
-            :muokattava? muokattava?
-            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
+            :validoi       [[:ei-tyhja "Anna päätöksen selitys"]]
+            :muokattava? muokattava?})] ; FIXME Ei anna kirjoittaa?
         @paatostiedot]])))
 
 (defn tallennus
@@ -121,23 +123,31 @@
                                     (if (not valmispvm)
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
         urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero]
+        [sopimus-id _] @u/valittu-sopimusnumero
+        tallenna-tekninen-ja-taloudellinen-osio #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)
+                                                       aloituspvm (:aloituspvm @lomakedata)
+                                                       valmispvm (:valmistumispvm @lomakedata)
+                                                       takuupvm (:takuupvm @lomakedata)
+                                                       lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
+                                                                            (dissoc @lomakedata :valmistumispvm)
+                                                                            (dissoc @lomakedata :aloituspvm)
+                                                                            (dissoc @lomakedata :takuupvmpvm))]
+                                                  (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
+                                                  (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm takuupvm))
+        tallenna-paatos #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)]
+                          (paallystys/tallenna-paallystysilmoituksen-paatos urakka-id sopimus-id paallystyskohde-id {:paatos (:paatos @lomakedata)
+                                                                                                                     :perustelu (:perustelu @lomakedata)
+                                                                                                                     :kasittelyaika (:kasittelyaika @lomakedata)}))
+        tallenna-nappi-toiminto (if (istunto/roolissa? istunto/rooli-urakanvalvoja)
+                                  tallenna-paatos
+                                  tallenna-tekninen-ja-taloudellinen-osio)]
 
     [:div.pot-tallennus
      [:div.pot-huomaus @huomautusteksti]
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna" ; FIXME Jos tilaajan käyttäjä, tallenna vain päätöstiedot (oletettavasti tilaajan ei tarvitse pystyä muokkaamaan koko lomaketta?)
-      #(let [paallystyskohde-id (:paallystyskohde-id @lomakedata)
-             aloituspvm (:aloituspvm @lomakedata)
-             valmispvm (:valmistumispvm @lomakedata)
-             takuupvm (:takuupvm @lomakedata)
-             lahetettava-data (-> (dissoc @lomakedata :paallystyskohde-id)
-                                  (dissoc @lomakedata :valmistumispvm)
-                                  (dissoc @lomakedata :aloituspvm)
-                                  (dissoc @lomakedata :takuupvmpvm))]
-        (log "PÄÄ Lähetetään lomake. Valmistumispvm: " valmispvm ", ilmoitustiedot: " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id lahetettava-data aloituspvm valmispvm takuupvm))
+      #(tallenna-nappi-toiminto)
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :kun-onnistuu (fn [vastaus]
@@ -177,12 +187,12 @@
                                                                                                  #(not (and (true? (:poistettu %))
                                                                                                             (neg? (:id %))))
                                                                                                  (vals uusi-arvo))))))
-        paatostiedot (r/wrap {:paatos (:paatos @lomakedata)
-                        :perustelu (:perustelu @lomakedata)
-                        :kasittelyaika (:kasittelyaika @lomakedata)}
-                       (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
-                                                              (assoc :perustelu (:perustelu uusi-arvo))
-                                                              (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))
+        paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
+                              :perustelu     (:perustelu @lomakedata)
+                              :kasittelyaika (:kasittelyaika @lomakedata)}
+                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
+                                                                    (assoc :perustelu (:perustelu uusi-arvo))
+                                                                    (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
@@ -197,9 +207,13 @@
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          kiviaines-virheet @kiviaines-virheet
                                          tila (:tila @lomakedata)
-                                         paatos (:paatos @lomakedata)]
-                                     (if (istunto/roolissa? istunto/rooli-tilaajan-kayttaja)
-                                       (and (not (nil? paatos))
+                                         paatos (:paatos @lomakedata)
+                                         perustelu (:perustelu @lomakedata)
+                                         kasittelyaika (:kasittelyaika @lomakedata)]
+                                     (if (istunto/roolissa? istunto/rooli-urakanvalvoja)
+                                       (and (not (nil? kasittelyaika))
+                                            (not (nil? paatos))
+                                            (not (nil? perustelu))
                                             (not (= tila :lukittu)))
                                      (and
                                        (not (= tila :lukittu))

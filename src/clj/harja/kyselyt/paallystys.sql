@@ -86,11 +86,21 @@ SET
 WHERE paallystyskohde = :id;
 
 -- name: vaihda-paallystysilmoituksen-tila!
--- Päivittää päällystysilmoituksen
+-- Päivittää päällystysilmoituksen tilan
 UPDATE paallystysilmoitus
 SET
-  tila           = :tila::paallystystila,
-  muokkaaja      = :muokkaaja
+  tila                = :tila::paallystystila,
+  muokkaaja           = :muokkaaja
+WHERE paallystyskohde = :id;
+
+-- name: vaihda-paallystysilmoituksen-paatos!
+-- Päivittää päällystysilmoituksen päätöksen
+UPDATE paallystysilmoitus
+SET
+  paatos              = :paatos::paallystysilmoituksen_paatostyyppi,
+  perustelu           = :perustelu,
+  kasittelyaika       = :kasittelyaika,
+  muokkaaja           = :muokkaaja
 WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!
