@@ -147,7 +147,7 @@
   ; FIXME Tarkista ettei tila ole lukittu
   (jdbc/with-db-transaction [c db]
 
-    (q/vaihda-paallystysilmoituksen-paatos! db (:paatos paatostiedot) (:perustelu paatostiedot) (konv/sql-date (:kasittelyaika paatostiedot)) (:id user) paallystyskohde-id)
+    (q/vaihda-paallystysilmoituksen-paatos! db (name (:paatos paatostiedot)) (:perustelu paatostiedot) (konv/sql-date (:kasittelyaika paatostiedot)) (:id user) paallystyskohde-id)
 
     (if (= :hyvaksytty (:paatos paatostiedot))
       (q/vaihda-paallystysilmoituksen-tila! db :lukittu (:id user) paallystyskohde-id))

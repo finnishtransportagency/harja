@@ -82,8 +82,14 @@
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
-  [valmis-kasiteltavaksi? paatostiedot]
-  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-urakanvalvoja))]
+  [valmis-kasiteltavaksi?]
+  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-urakanvalvoja))
+        paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
+                              :perustelu     (:perustelu @lomakedata)
+                              :kasittelyaika (:kasittelyaika @lomakedata)}
+                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
+                                                                    (assoc :perustelu (:perustelu uusi-arvo))
+                                                                    (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
@@ -95,7 +101,7 @@
         [{:otsikko     "Käsittelyn pvm"
           :nimi        :kasittelyaika
           :tyyppi      :pvm-aika
-          ;:validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]] ; FIXME Valittaa kun annetaan?
+          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]
           :muokattava? muokattava?}
 
          {:otsikko       "Päätös"
@@ -114,7 +120,7 @@
             :koko        [80 4]
             :leveys-col  6
             :validoi       [[:ei-tyhja "Anna päätöksen selitys"]]
-            :muokattava? muokattava?})] ; FIXME Ei anna kirjoittaa?
+            :muokattava? muokattava?})]
         @paatostiedot]])))
 
 (defn tallennus
@@ -187,12 +193,6 @@
                                                                                                  #(not (and (true? (:poistettu %))
                                                                                                             (neg? (:id %))))
                                                                                                  (vals uusi-arvo))))))
-        paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
-                              :perustelu     (:perustelu @lomakedata)
-                              :kasittelyaika (:kasittelyaika @lomakedata)}
-                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
-                                                                    (assoc :perustelu (:perustelu uusi-arvo))
-                                                                    (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
@@ -401,7 +401,7 @@
           toteutuneet-maarat]
 
          (yhteenveto)
-         (kasittely valmis-kasiteltavaksi? paatostiedot)
+         (kasittely valmis-kasiteltavaksi?)
          (tallennus valmis-tallennettavaksi?)]))))
 
 (defn toteumaluettelo
