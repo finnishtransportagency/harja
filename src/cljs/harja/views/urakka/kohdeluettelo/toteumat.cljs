@@ -52,25 +52,7 @@
 (def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
 
 (defn kohteen-tiedot []
-  (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
-                                :valmistumispvm (:valmistumispvm @lomakedata)
-                                :takuupvm       (:takuupvm @lomakedata)
-                                :hinta          (fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))}
-                               (fn [uusi-arvo]
-                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
-                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
-                                                        (assoc :hinta (:hinta uusi-arvo))))))]
-    [lomake {:luokka   :horizontal                          ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
-             :muokkaa! (fn [uusi]
-                         (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
-                         (reset! kohteen-tiedot uusi))}
-     [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi @lomakedata)) :muokattava? (constantly false)}
-      {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-      {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
-      {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-      {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}]
-     @kohteen-tiedot]))
+  )
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
 
@@ -89,13 +71,13 @@
        [:td.pot-yhteenveto-nimi [:span "Yhteensä: "]]
        [:td.pot-yhteenveto-summa [:span (fmt/euro-opt @yhteensa)]]]]]))
 
-(defn toiminnot [valmis-tallennettavaksi? valmis-kasiteltavaksi?]
+(defn tallennus [valmis-tallennettavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
                                     (if (not valmispvm)
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
         urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
-    [:div.pot-toiminnot
+    [:div.pot-tallennus
      [:div.pot-huomaus @huomautusteksti]
 
      (istunto/jos-rooli-urakassa istunto/rooli-urakoitsijan-kayttaja (:id @nav/valittu-urakka)
@@ -116,7 +98,17 @@
                                    :kun-onnistuu (fn [vastaus]
                                                    (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
                                                    (reset! paallystys/paallystystoteumat vastaus)
-                                                   (reset! lomakedata nil))}])
+                                                   (reset! lomakedata nil))}])]))
+
+(defn kasittely [valmis-kasiteltavaksi?]
+  (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
+                                    (if (not valmispvm)
+                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
+        urakka-id (:id @nav/valittu-urakka)
+        [sopimus-id _] @u/valittu-sopimusnumero]
+    [:div.pot-kasittely
+     [:h3 "Hyväksyminen"]
+     [:div.pot-huomaus @huomautusteksti]
 
      (istunto/jos-rooli-urakassa istunto/rooli-tilaajan-kayttaja (:id @nav/valittu-urakka)
                                  [harja.ui.napit/palvelinkutsu-nappi
@@ -142,9 +134,18 @@
                                                    (reset! paallystys/paallystystoteumat vastaus)
                                                    (reset! lomakedata nil))}])]))
 
-(defn paallystysilmoituslomake
-  []
-  (let [toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata))
+(defn paallystysilmoituslomake []
+  (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
+                                :valmistumispvm (:valmistumispvm @lomakedata)
+                                :takuupvm       (:takuupvm @lomakedata)
+                                :hinta          (fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))}
+                               (fn [uusi-arvo]
+                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
+                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
+                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
+                                                        (assoc :hinta (:hinta uusi-arvo))))))
+
+        toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet @lomakedata))
                                       (fn [uusi-arvo] (reset! lomakedata (assoc @lomakedata :osoitteet (filter
                                                                                                          #(not (and (true? (:poistettu %))
                                                                                                                     (neg? (:id %)))) (vals uusi-arvo))))))
@@ -197,19 +198,32 @@
                                                 (not (empty? toteutuneet-osoitteet))
                                                 (not (empty? toteutuneet-maarat)))))]
     (komp/luo
-      (fn [ur]
+      (fn []
         [:div.paallystysilmoituslomake
 
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
 
-         (kohteen-tiedot)
+         [:h3 "Kohteen tiedot"]
+
+         [lomake {:luokka   :horizontal                     ; FIXME Luokka inline ei toimi kovin hyvin koska bootstrap
+                  :muokkaa! (fn [uusi]
+                              (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
+                              (reset! kohteen-tiedot uusi))}
+          [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi @lomakedata)) :muokattava? (constantly false)}
+           {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
+           {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
+           {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
+           {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}]
+          @kohteen-tiedot]
+
+         [:h3 "Tekninen puoli"]
 
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       (fn [g] ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
+           :muutos       (fn [g]                            ; FIXME Kopioi 1. rivin tienro muille riveille, miksei toimi?
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
                              (reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
                              (reset! alikohteet-virheet (grid/hae-virheet g))))}
@@ -327,6 +341,8 @@
             :leveys        "30%"}]
           alustalle-tehdyt-toimet]
 
+         [:h3 "Talouspuoli"]
+
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
@@ -346,7 +362,8 @@
           toteutuneet-maarat]
 
          (yhteenveto)
-         (toiminnot valmis-tallennettavaksi? valmis-kasiteltavaksi?)]))))
+         (tallennus valmis-tallennettavaksi?)
+         (kasittely valmis-kasiteltavaksi?)]))))
 
 (defn toteumaluettelo
   []
