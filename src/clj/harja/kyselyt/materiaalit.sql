@@ -40,45 +40,22 @@ SELECT DISTINCT
 
 FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk
-    ON m.id = mk.materiaali AND mk.poistettu IS NOT TRUE
+    ON m.id = mk.materiaali
+    AND mk.poistettu IS NOT TRUE
+    AND mk.alkupvm::DATE BETWEEN :alku AND :loppu
+    AND mk.loppupvm::DATE BETWEEN :alku AND :loppu
+
 
   LEFT JOIN toteuma_materiaali tm
     ON tm.materiaalikoodi = m.id and tm.poistettu IS NOT TRUE
 
   LEFT JOIN toteuma t
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
+    AND t.alkanut::DATE BETWEEN :alku AND :loppu
 
-WHERE (t.urakka = :urakka OR t.urakka IS NULL) AND
-
-      -- Valitaan rivit joilla:
-      --  on joko toteuma tai mk, tai molemmat
-      --  toteuman alun pitää olla aikarajojen sisällä
-      --  mk:n alun JA lopun pitää olla aikarajojen sisällä
-      --  !! Jos t JA mk on rivillä, MOLEMPIEN pitää sopia aikaan
-      (
-        (t.id IS NOT NULL OR mk.id IS NOT NULL) AND
-        (
-          (mk.id IS NULL AND
-           (t.alkanut :: DATE BETWEEN :alku AND :loppu)
-          ) OR
-          (t.id IS NULL AND
-            (
-              mk.alkupvm::DATE BETWEEN :alku AND :loppu
-              AND
-              mk.loppupvm::DATE BETWEEN :alku AND :loppu
-            )
-          ) OR
-          (
-            (
-              mk.alkupvm::DATE BETWEEN :alku AND :loppu
-              AND
-              mk.loppupvm::DATE BETWEEN :alku AND :loppu
-            ) AND
-            (t.alkanut :: DATE BETWEEN :alku AND :loppu)
-          )
-        )
-      ) AND
-      (t.sopimus = :sopimus OR mk.sopimus = :sopimus);
+WHERE
+  (t.urakka = :urakka OR t.urakka IS NULL) AND
+  (t.sopimus = :sopimus OR mk.sopimus = :sopimus);
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
