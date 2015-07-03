@@ -2,7 +2,8 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
-            
+
+            [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
@@ -26,14 +27,14 @@
 
     "Indeksit"
     :indeksit
-    (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo
+    (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
                        ^{:key "indeksit"}
                        [i/indeksit-elementti]
     "Tämä osio on vain järjestelmän vastuuhenkilön käytössä.")
     
     "Tehtävät"
     :tehtavat
-    (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo
+    (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
     ^{:key "tehtävät"}
     [tp/toimenpidekoodit]
     "Tämä osio on vain järjestelmän vastuuhenkilön käytössä.")])

@@ -3,10 +3,10 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan]]
 
+            [harja.domain.roolit :as roolit]
             [harja.tiedot.kayttajat :as k]
             [harja.tiedot.urakat :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :refer [jos-rooli rooli-jarjestelmavastuuhenkilo]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -65,8 +65,8 @@
         haku-menossa (atom false)]
     (fn []
       [:div.kayttajaluettelo
-       (jos-rooli
-        #{rooli-jarjestelmavastuuhenkilo} ;; +hallintayksikön vastuuhenkilö
+       (roolit/jos-rooli
+        #{roolit/jarjestelmavastuuhenkilo} ;; +hallintayksikön vastuuhenkilö
         (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
           [:span.nayta-kayttajat-valinta
            "Näytä: "

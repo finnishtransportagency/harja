@@ -1,6 +1,7 @@
 (ns harja.views.urakka.suunnittelu.muut-tyot
   "Urakan 'Muut työt' välilehti, sis. Muutos-, lisä- ja äkilliset hoitotyöt"
   (:require [reagent.core :refer [atom]]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
@@ -9,7 +10,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.tiedot.istunto :as istunto]
 
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
@@ -61,16 +61,16 @@
            :tyhja        (if (nil? @u/muutoshintaiset-tyot)
                            [ajax-loader "Muutoshintaisia töitä haetaan..."]
                            "Ei muutoshintaisia töitä")
-           :tallenna     (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                     (:id @nav/valittu-urakka)
-                                                     #(tallenna-tyot
-                                                       % u/muutoshintaiset-tyot)
-                                                     :ei-mahdollinen)
+           :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                    (:id @nav/valittu-urakka)
+                                                    #(tallenna-tyot
+                                                      % u/muutoshintaiset-tyot)
+                                                    :ei-mahdollinen)
            :ohjaus       g
            :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                         (:tehtava rivi))
                                                                       (vals (grid/hae-muokkaustila %)))))
-           :voi-poistaa? #(istunto/roolissa? istunto/rooli-jarjestelmavastuuhenkilo)
+           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)
            :tunniste     :tehtava}
 
           [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi

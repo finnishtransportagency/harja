@@ -94,3 +94,33 @@ rooleista."
           (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
           :default false)
         false))))
+
+#?(:cljs
+   (defn jos-rooli-urakassa
+  "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii.
+  Palauttaa muutoin-komponentin jos ei kyseistä roolia."
+  ([rooli urakka-id sitten] (jos-rooli-urakassa rooli urakka-id sitten nil))
+  ([rooli urakka-id sitten muutoin]
+   ;; ei onnistunut 2 arityllä kutsua rooli-urakassa
+   (if (rooli-urakassa? @istunto/kayttaja rooli urakka-id)
+     sitten
+     (let [viesti (str "Käyttäjällä '" (:kayttajanimi @istunto/kayttaja) "' ei vaadittua roolia '" rooli "' urakassa " urakka-id)]
+       (log viesti)
+       muutoin)))))
+
+#?(:cljs
+   (defn jos-rooli
+     "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii.
+  Palauttaa muutoin-komponentin jos ei kyseistä roolia. Annettu rooli voi olla
+joko yksittäinen rooli tai joukko useita rooleja. Jos joukko, tarkistetaan että
+käyttäjällä on joku annetuista rooleista."
+     ([rooli sitten] (jos-rooli rooli sitten nil))
+     ([rooli sitten muutoin]
+      (if (and @istunto/kayttaja
+               (or (and (set? rooli)
+                        (some roolissa? rooli))
+                   (roolissa? rooli)))
+        sitten
+        (let [viesti (str "Käyttäjällä '" (:kayttajanimi @istunto/kayttaja) "' ei vaadittua roolia '" rooli)]
+          (log viesti)
+          muutoin)))))

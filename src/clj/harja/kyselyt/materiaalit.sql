@@ -44,7 +44,7 @@ FROM materiaalikoodi m
       AND mk.poistettu IS NOT TRUE
       AND mk.alkupvm::DATE BETWEEN :alku AND :loppu
       AND mk.loppupvm::DATE BETWEEN :alku AND :loppu
-      AND mk.sopimus = :urakka
+      AND mk.sopimus = :sopimus
 
 
   LEFT JOIN toteuma_materiaali tm
@@ -54,7 +54,7 @@ FROM materiaalikoodi m
   LEFT JOIN toteuma t
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
       AND t.alkanut::DATE BETWEEN :alku AND :loppu
-      AND t.sopimus = :urakka;
+      AND t.sopimus = :sopimus;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

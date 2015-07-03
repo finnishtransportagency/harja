@@ -6,8 +6,8 @@
             [bootstrap :as bs]
             
             [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.istunto :as istunto]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset])
@@ -117,9 +117,9 @@
              [grid/grid
               {:otsikko "Tehtävät"
                :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-               :tallenna (istunto/jos-rooli istunto/rooli-jarjestelmavastuuhenkilo 
-                                            #(tallenna-tehtavat tehtavat %) 
-                                            :ei-mahdollinen)
+               :tallenna (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
+                                           #(tallenna-tehtavat tehtavat %)
+                                           :ei-mahdollinen)
                :tunniste :id}
               
               [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "85%"}

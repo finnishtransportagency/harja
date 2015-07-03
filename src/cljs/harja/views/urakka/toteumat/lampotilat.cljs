@@ -5,6 +5,7 @@
             [harja.tiedot.urakka.lampotilat :as lampotilat]
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
+            [harja.domain.roolit :as roolit]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
@@ -13,7 +14,8 @@
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.ikonit :as ikonit]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce nykyiset-lampotilat (atom nil))
@@ -89,7 +91,8 @@
   [urakka lampotilat]
   (let [uudet-lampotilat (atom nil)
         aseta-lampotila (fn [l] (reset! uudet-lampotilat l))
-        saa-muokata? (oikeudet/rooli-urakassa? "urakanvalvoja" (:id urakka))]
+        saa-muokata?  (roolit/rooli-urakassa? roolit/urakanvalvoja
+                                              (:id urakka))]
 
     (aseta-lampotila lampotilat)
     (komp/luo
@@ -146,7 +149,8 @@
           [ajax-loader]
         [:span
          [valinnat/urakan-hoitokausi ur]
-         (when (oikeudet/rooli-urakassa? "urakanvalvoja" (:id urakka))
+         (when (roolit/rooli-urakassa? roolit/urakanvalvoja
+                                       (:id @urakka))
            [:button.nappi-toissijainen (ikonit/plus) " Lue arvot verkosta (FIXME)"]) ;fixme vaatii toteutuksen
          (if @valittu-hoitokausi
            [lampotila-lomake

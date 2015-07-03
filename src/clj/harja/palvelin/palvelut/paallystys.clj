@@ -142,18 +142,21 @@
                                                :sopimus-id sopimus-id})))))
 
 (defn tallenna-paallystysilmoituksen-paatos [db user {:keys [urakka-id sopimus-id paallystyskohde-id paatostiedot]}]
-  (log/debug "Tallennetaan päätösilmoituksen (id: " paallystyskohde-id ") päätös: " (:paatos paatostiedot))
-  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) ; FIXME Rooli oikein?
-  ; FIXME Tarkista ettei tila ole lukittu
+  (let [paatos (:paatos paatostiedot)
+        perustelu (:perustelu paatostiedot)
+        kasittelyaika (:kasittelyaika paatostiedot)]
+  (log/debug "Tallennetaan päätösilmoituksen (id: " paallystyskohde-id ") päätös: " paatos " , perustelu: " perustelu ", aika: " kasittelyaika)
+  (oik/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+
   (jdbc/with-db-transaction [c db]
+    ; FIXME Tarkista ettei tila ole lukittu
+    (q/vaihda-paallystysilmoituksen-paatos! db (name paatos) perustelu (konv/sql-date kasittelyaika) (:id user) paallystyskohde-id)
 
-    (q/vaihda-paallystysilmoituksen-paatos! db (name (:paatos paatostiedot)) (:perustelu paatostiedot) (konv/sql-date (:kasittelyaika paatostiedot)) (:id user) paallystyskohde-id)
-
-    (if (= :hyvaksytty (:paatos paatostiedot))
-      (q/vaihda-paallystysilmoituksen-tila! db :lukittu (:id user) paallystyskohde-id))
+    (if (= paatos :hyvaksytty)
+      (q/vaihda-paallystysilmoituksen-tila! db "lukittu" (:id user) paallystyskohde-id))
 
     (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
-                                           :sopimus-id sopimus-id})))
+                                           :sopimus-id sopimus-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle

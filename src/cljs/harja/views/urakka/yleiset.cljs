@@ -2,6 +2,7 @@
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
+            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
@@ -103,7 +104,7 @@
                                        :valinta    @sopimustyyppi
                                        :format-fn  #(if % (str/capitalize (name %)) "Ei sopimustyyppiä")
                                        :valitse-fn #(tallenna-sopimustyyppi ur sopimustyyppi %)
-                                       :disabled   (not (istunto/rooli-urakassa? istunto/rooli-urakanvalvoja (:id ur)))}
+                                       :disabled   (not (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur)))}
           sopimus/+sopimustyypit+])]]
 
      [grid/grid

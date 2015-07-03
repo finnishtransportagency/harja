@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kokonaishintaiset-tyot
   "Urakan 'Kokonaishintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
+            [harja.domain.roolit :as roolit]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -210,11 +211,11 @@
           [grid/grid
            {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
             :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-            :tallenna (istunto/jos-rooli-urakassa istunto/rooli-urakanvalvoja
-                                                  (:id ur)
-                                                  #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                  urakan-kok-hint-tyot % tuleville?)
-                                                  :ei-mahdollinen)
+            :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                 (:id ur)
+                                                 #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                 urakan-kok-hint-tyot % tuleville?)
+                                                 :ei-mahdollinen)
             :peruuta #(reset! tuleville? false)
              :tunniste #((juxt :vuosi :kuukausi) %)
              :voi-lisata? false

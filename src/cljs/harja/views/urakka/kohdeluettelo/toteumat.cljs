@@ -1,35 +1,24 @@
 (ns harja.views.urakka.kohdeluettelo.toteumat
   "Urakan kohdeluettelon toteumat"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.liitteet :as liitteet]
             [harja.domain.paallystys.pot :as pot]
 
-            [harja.tiedot.istunto :as istunto]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.napit :as napit]
-            [clojure.string :as str]
-            [harja.tiedot.istunto :as istunto]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.ui.kommentit :as kommentit])
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -83,14 +72,13 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [muokattava? (constantly (istunto/roolissa? istunto/rooli-urakanvalvoja))
+  (let [muokattava? (constantly (roolit/roolissa? roolit/urakanvalvoja))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
                               :kasittelyaika (:kasittelyaika @lomakedata)}
                              (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
                                                                     (assoc :perustelu (:perustelu uusi-arvo))
                                                                     (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
-
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely ja päätös"]
@@ -144,7 +132,7 @@
                           (paallystys/tallenna-paallystysilmoituksen-paatos urakka-id sopimus-id paallystyskohde-id {:paatos (:paatos @lomakedata)
                                                                                                                      :perustelu (:perustelu @lomakedata)
                                                                                                                      :kasittelyaika (:kasittelyaika @lomakedata)}))
-        tallenna-nappi-toiminto (if (istunto/roolissa? istunto/rooli-urakanvalvoja)
+        tallenna-nappi-toiminto (if (roolit/roolissa? roolit/urakanvalvoja)
                                   tallenna-paatos
                                   tallenna-tekninen-ja-taloudellinen-osio)]
 
@@ -210,7 +198,7 @@
                                          paatos (:paatos @lomakedata)
                                          perustelu (:perustelu @lomakedata)
                                          kasittelyaika (:kasittelyaika @lomakedata)]
-                                     (if (istunto/roolissa? istunto/rooli-urakanvalvoja)
+                                     (if (roolit/roolissa? roolit/urakanvalvoja)
                                        (and (not (nil? kasittelyaika))
                                             (not (nil? paatos))
                                             (not (nil? perustelu))
