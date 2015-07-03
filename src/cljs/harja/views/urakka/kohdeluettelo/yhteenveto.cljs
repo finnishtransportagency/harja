@@ -57,8 +57,11 @@
        {:otsikko "Toimenpide" :nimi :toimenpide :muokattava? (constantly false) :tyyppi :string :leveys "20%"}]
       @paallystyskohdeosat]])))
 
-(defn paallystyskohteet
-  []
+(defn paallystyskohteet []
+  (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystys/paallystyskohteet]
+                                       (filter #(= (:lisatyot %) 0) kohteet)))
+        lisatyot (reaction (let [kohteet @paallystys/paallystyskohteet]
+                             (filter #(> (:lisatyot %) 0) kohteet)))]
 
     (komp/luo
       (fn []
@@ -83,15 +86,14 @@
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)
                                                                                                                  (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-            @paallystys/paallystyskohteet]
+            @kohteet-ilman-lisatoita]
 
          [grid/grid
           {:otsikko "Lisätyöt"
            :tyhja (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei lisätöitä")
            :luokat ["paallysteurakka-kohteet-lisatyot"]
            :tunniste :numero}
-          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "#" :nimi :numero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
-           {:otsikko "Tarjoushinta" :nimi :tarjoushinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "50%"}
-           {:otsikko "Muutoshinta" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "50%"}]
-          {}]]))) ; TODO Mistä data tähän?
+          [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "5%"}
+           {:otsikko "Kohde" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
+           {:otsikko "Hinta" :nimi :lisatyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "50%"}]
+          @lisatyot]]))))
