@@ -10,7 +10,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as u]
             [harja.ui.grid :as grid]
-
+            [harja.ui.napit :as napit]
+            
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.materiaalit :as materiaali-tiedot]
@@ -170,7 +171,7 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
-                  :footer   [harja.ui.napit/palvelinkutsu-nappi
+                  :footer   [napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
                              #(tallenna-toteuma-ja-toteumamateriaalit!
                                (vals
