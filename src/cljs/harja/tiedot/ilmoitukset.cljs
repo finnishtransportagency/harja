@@ -54,13 +54,7 @@
 (defn hae-ilmoitukset
   []
   (go
-    (log "Post! :hae-ilmoitukset")
     (let [tulos (<! (k/post! :hae-ilmoitukset (kasaa-parametrit)))]
-
-      (log ":hae-ilmoitukset")
-      (log (pr-str tulos))
-
-
       (when-not (k/virhe? tulos)
         (reset! haetut-ilmoitukset tulos))
       (reset! filttereita-vaihdettu? false)

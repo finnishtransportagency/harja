@@ -96,7 +96,9 @@
 
     (log/debug (pr-str tulos))
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
-    (log/debug "Kuittauksilla: " (map :uusinkuittaus tulos))))
+    (log/debug "Kuittauksilla: " (map :uusinkuittaus tulos))
+
+    tulos))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
