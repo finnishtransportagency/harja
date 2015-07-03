@@ -25,7 +25,7 @@
   (assert (not (nil? teksti)) "Anna otsikolle teksti.")
   (->Otsikko teksti))
 
-    
+
 (defn otsikko? [x]
   (instance? Otsikko x))
 
@@ -74,7 +74,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       Grid
       (lisaa-rivi! [_ rivin-tiedot]
         (lisaa-rivi! @gridi rivin-tiedot))
-      
+
       (hae-muokkaustila [_]
         (hae-muokkaustila @gridi))
 
@@ -92,7 +92,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (muokkaa-rivit! [this funktio args]
         (apply muokkaa-rivit! @gridi funktio args))
-      
+
       (vetolaatikko-auki? [_ id]
         (vetolaatikko-auki? @gridi id))
 
@@ -102,7 +102,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
 
-      
+
       GridKahva
       (aseta-grid [_ grid]
         (reset! gridi grid)))))
@@ -165,8 +165,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:div.vetolaatikko-sisalto
          (when auki
            vetolaatikko)]]])))
-  
-  
+
+
 
 
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset voi-poistaa?
@@ -185,7 +185,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
              kentan-varoitukset (get rivin-varoitukset nimi)
              tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")
              fokus-id [id nimi]]
-              
+
          (if (or (nil? muokattava?) (muokattava? rivi))
            ^{:key (str nimi)}
            [:td {:class (str tasaus-luokka (if-not (empty? kentan-virheet)
@@ -202,35 +202,35 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             (when-let [tayta-alas (:tayta-alas? s)]
               (when (and (= fokus fokus-id)
                          (tayta-alas arvo)
-                       
+
                          ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
                          (not (empty? tulevat-rivit))
                          (every? str/blank? (map hae tulevat-rivit)))
-              
+
                 [:div {:class (if (= :oikea (:tasaa s))
                                 "pull-left"
                                 "pull-right")}
                  [:div {:style {:position "absolute" :display "inline-block"}}
-                [:button {:class    (str "nappi-toissijainen nappi-gridin-sisalla" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
-                          :title    (:tayta-tooltip s)
-                          :style    {:position "absolute"
-                                     :left     (when (= :oikea (:tasaa s)) 0)
-                                     :right    (when-not (= :oikea (:tasaa s)) "100%")}
-                          :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
-                 (ikonit/arrow-down) " Täytä"]]]))
-          
+                  [:button {:class    (str "nappi-toissijainen nappi-gridin-sisalla" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
+                            :title    (:tayta-tooltip s)
+                            :style    {:position "absolute"
+                                       :left     (when (= :oikea (:tasaa s)) 0)
+                                       :right    (when-not (= :oikea (:tasaa s)) "100%")}
+                            :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
+                   (ikonit/arrow-down) " Täytä"]]]))
+
             ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))
             [tee-kentta (assoc s
                           :focus (= fokus fokus-id)
                           :on-focus #(aseta-fokus! fokus-id)
                           :pituus-max (:pituus-max s))
              (r/wrap
-              arvo
-              (fn [uusi]
-                (if aseta
-                  (muokkaa! id (fn [rivi]
-                                 (aseta rivi uusi)))
-                  (muokkaa! id assoc nimi uusi))))]]
+               arvo
+               (fn [uusi]
+                 (if aseta
+                   (muokkaa! id (fn [rivi]
+                                  (aseta rivi uusi)))
+                   (muokkaa! id assoc nimi uusi))))]]
            ^{:key (str nimi)}
            [:td {:class tasaus-luokka}
             ((or fmt str) (hae rivi))]))))
@@ -241,7 +241,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        (ikonit/trash)])]])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot]} skeema rivi]
-  [:tr {:class luokka
+  [:tr {:class    luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
    (for [{:keys [nimi hae fmt tasaa tyyppi komponentti]} skeema]
@@ -252,10 +252,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        [:td {:class
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
         (if (= tyyppi :komponentti)
-            (komponentti rivi)
-            ((or fmt str) (if hae
-                           (hae rivi)
-                           (get rivi nimi))))]))])
+          (komponentti rivi)
+          ((or fmt str) (if hae
+                          (hae rivi)
+                          (get rivi nimi))))]))])
 
 (defn laske-sarakkeiden-leveys [skeema]
   (if (every? number? (map :leveys skeema))
@@ -266,9 +266,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               (assoc kentta
                 :leveys (str (.toFixed (* 100.0 (/ lev yhteensa)) 1) "%")))
             skeema))
-              
+
     skeema))
-  
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -304,43 +304,43 @@ Optiot on mappi optioita:
   [{:keys [otsikko tallenna peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
            muokkaa-footer muokkaa-aina muutos rivin-luokka
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
-  (let [muokatut (atom nil) ;; muokattu datajoukko
-        jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
-        uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
+  (let [muokatut (atom nil)                                 ;; muokattu datajoukko
+        jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
+        uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
-        virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
-        varoitukset (atom {}) ;; validointivaroitukset: (:id rivi) => [varoitukset]
-        viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
+        virheet (atom {})                                   ;; validointivirheet: (:id rivi) => [virheet]
+        varoitukset (atom {})                               ;; validointivaroitukset: (:id rivi) => [varoitukset]
+        viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
 
-        fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
+        fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
 
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
-                                      (into {}
-                                            (keep (fn [rivi]
-                                                    (if (::poistettu rivi)
+                                  (into {}
+                                        (keep (fn [rivi]
+                                                (if (::poistettu rivi)
+                                                  nil
+                                                  (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
+                                                    (if (empty? virheet)
                                                       nil
-                                                      (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
-                                                        (if (empty? virheet)
-                                                          nil
-                                                          [((or tunniste :id) rivi) virheet]))))
-                                                  (vals uudet-tiedot))))
+                                                      [((or tunniste :id) rivi) virheet]))))
+                                              (vals uudet-tiedot))))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                              (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
-                                    vanhat-tiedot @muokatut
-                                    vanhat-virheet @virheet
-                                    vanhat-varoitukset @varoitukset
-                                    vanha-jarjestys @jarjestys
-                                    uudet-tiedot (swap! muokatut assoc id
-                                                        ((or uusi-rivi identity)
-                                                         (merge rivin-tiedot {:id id :koskematon true})))
-                                    uusi-jarjestys (swap! jarjestys conj id)]
-                                (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
-                                (when muutos
-                                  (muutos this))))
+                   (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
+                         vanhat-tiedot @muokatut
+                         vanhat-virheet @virheet
+                         vanhat-varoitukset @varoitukset
+                         vanha-jarjestys @jarjestys
+                         uudet-tiedot (swap! muokatut assoc id
+                                             ((or uusi-rivi identity)
+                                               (merge rivin-tiedot {:id id :koskematon true})))
+                         uusi-jarjestys (swap! jarjestys conj id)]
+                     (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
+                     (when muutos
+                       (muutos this))))
                  (hae-muokkaustila [_]
                    @muokatut)
                  (hae-virheet [_]
@@ -365,16 +365,16 @@ Optiot on mappi optioita:
                                                                 (map (juxt (or tunniste :id) identity))
                                                                 (apply funktio muokatut-jarjestyksessa args)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
-                       (reset! viimeisin-muokattu-id nil) ;; bulk muutoksesta ei jätetä viimeisintä muokkausta
+                       (reset! viimeisin-muokattu-id nil)   ;; bulk muutoksesta ei jätetä viimeisintä muokkausta
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
                        (swap! virheet (fn [virheet]
                                         (validoi-ja-anna-virheet virheet uudet-tiedot :validoi)))
                        (swap! varoitukset (fn [varoitukset]
                                             (validoi-ja-anna-virheet varoitukset uudet-tiedot :varoita))))
-                     
+
                      (when muutos
                        (muutos this))))
-                 
+
                  (vetolaatikko-auki? [_ id]
                    (@vetolaatikot-auki id))
 
@@ -384,7 +384,7 @@ Optiot on mappi optioita:
                  (sulje-vetolaatikko! [_ id]
                    (swap! vetolaatikot-auki disj id))
                  )
-        
+
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
@@ -408,16 +408,16 @@ Optiot on mappi optioita:
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet)))))
                        (swap! varoitukset (fn [varoitukset]
-                                        (let [uusi-rivi (get uudet-tiedot id)
-                                              rivin-varoitukset (when-not (:poistettu uusi-rivi)
-                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :varoita))]
-                                          (if (empty? rivin-varoitukset)
-                                            (dissoc varoitukset id)
-                                            (assoc varoitukset id rivin-varoitukset))))))
+                                            (let [uusi-rivi (get uudet-tiedot id)
+                                                  rivin-varoitukset (when-not (:poistettu uusi-rivi)
+                                                                      (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :varoita))]
+                                              (if (empty? rivin-varoitukset)
+                                                (dissoc varoitukset id)
+                                                (assoc varoitukset id rivin-varoitukset))))))
                      (when muutos
                        (muutos ohjaus))))
 
-         
+
 
 
 
@@ -446,9 +446,9 @@ Optiot on mappi optioita:
                                   jarj []
                                   [r & rivit] tiedot]
                              (if-not r
-                               (do 
+                               (do
                                  (reset! muokatut muok)
-                                 (reset! jarjestys jarj)) 
+                                 (reset! jarjestys jarj))
                                (if (otsikko? r)
                                  (recur muok
                                         (conj jarj r)
@@ -464,10 +464,10 @@ Optiot on mappi optioita:
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
-    
+
     (when muokkaa-aina
       (aloita-muokkaus! tiedot))
-    
+
     (r/create-class
       {:component-will-receive-props
        (fn [this new-argv]
@@ -562,65 +562,65 @@ Optiot on mappi optioita:
                        (let [kaikki-virheet @virheet
                              kaikki-varoitukset @varoitukset
                              nykyinen-fokus @fokus]
-                         (mapcat #(keep identity %)
-                                 (map-indexed
-                                  (fn [i id]
-                                    (if (otsikko? id)
-                                      (let [teksti (:teksti id)]
-                                        [^{:key teksti}
-                                         [:tr.otsikko
-                                          [:td {:colSpan colspan}
-                                           [:h5 teksti]]]])
-                                      (let [rivi (get muokatut id)
-                                            rivin-virheet (get kaikki-virheet id)
-                                            rivin-varoitukset (get kaikki-varoitukset id)]
-                                        (when-not (:poistettu rivi)
-                                          [^{:key id}
-                                           [muokkaus-rivi {:ohjaus        ohjaus
-                                                           :vetolaatikot  vetolaatikot
-                                                           :muokkaa!      muokkaa!
-                                                           :luokka        (str (if (even? (+ i 1))
-                                                                                 "parillinen"
-                                                                                 "pariton"))
-                                                           :id            id
-                                                           :rivin-virheet rivin-virheet
-                                                           :rivin-varoitukset rivin-varoitukset
-                                                           :voi-poistaa?  voi-poistaa?
-                                                           :fokus         nykyinen-fokus
-                                                           :aseta-fokus!  #(reset! fokus %)
-                                                           :tulevat-rivit (tulevat-rivit i)}
-                                            skeema rivi]
-                                           (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
-                                  jarjestys)))))
+                         (doall (mapcat #(keep identity %)
+                                        (map-indexed
+                                          (fn [i id]
+                                            (if (otsikko? id)
+                                              (let [teksti (:teksti id)]
+                                                [^{:key teksti}
+                                                [:tr.otsikko
+                                                 [:td {:colSpan colspan}
+                                                  [:h5 teksti]]]])
+                                              (let [rivi (get muokatut id)
+                                                    rivin-virheet (get kaikki-virheet id)
+                                                    rivin-varoitukset (get kaikki-varoitukset id)]
+                                                (when-not (:poistettu rivi)
+                                                  [^{:key id}
+                                                  [muokkaus-rivi {:ohjaus            ohjaus
+                                                                  :vetolaatikot      vetolaatikot
+                                                                  :muokkaa!          muokkaa!
+                                                                  :luokka            (str (if (even? (+ i 1))
+                                                                                            "parillinen"
+                                                                                            "pariton"))
+                                                                  :id                id
+                                                                  :rivin-virheet     rivin-virheet
+                                                                  :rivin-varoitukset rivin-varoitukset
+                                                                  :voi-poistaa?      voi-poistaa?
+                                                                  :fokus             nykyinen-fokus
+                                                                  :aseta-fokus!      #(reset! fokus %)
+                                                                  :tulevat-rivit     (tulevat-rivit i)}
+                                                   skeema rivi]
+                                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
+                                          jarjestys))))))
 
                    ;; Näyttömuoto
                    (let [rivit tiedot]
                      (if (empty? rivit)
                        [:tr.tyhja [:td {:col-span colspan} tyhja]]
-                       (mapcat #(keep identity %)
-                         (map-indexed
-                           (fn [i rivi]
-                             (if (otsikko? rivi)
-                               [^{:key (:teksti rivi)}
-                               [:tr.otsikko
-                                [:td {:colSpan (inc (count skeema))}
-                                 [:h5 (:teksti rivi)]]]]
+                       (doall (mapcat #(keep identity %)
+                                      (map-indexed
+                                        (fn [i rivi]
+                                          (if (otsikko? rivi)
+                                            [^{:key (:teksti rivi)}
+                                            [:tr.otsikko
+                                             [:td {:colSpan (inc (count skeema))}
+                                              [:h5 (:teksti rivi)]]]]
 
-                               (let [id ((or tunniste :id) rivi)]
-                                 [^{:key id}
-                                 [naytto-rivi {:ohjaus        ohjaus
-                                               :vetolaatikot  vetolaatikot
-                                               :id            id
-                                               :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                (when rivi-klikattu
-                                                                  " klikattava ")
-                                                                (when rivin-luokka
-                                                                  (rivin-luokka rivi)))
-                                               :rivi-klikattu rivi-klikattu}
-                                  skeema rivi]
-                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
-                                  ])))
-                           rivit)))))]])
+                                            (let [id ((or tunniste :id) rivi)]
+                                              [^{:key id}
+                                              [naytto-rivi {:ohjaus        ohjaus
+                                                            :vetolaatikot  vetolaatikot
+                                                            :id            id
+                                                            :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                                (when rivi-klikattu
+                                                                                  " klikattava ")
+                                                                                (when rivin-luokka
+                                                                                  (rivin-luokka rivi)))
+                                                            :rivi-klikattu rivi-klikattu}
+                                               skeema rivi]
+                                               (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
+                                               ])))
+                                        rivit))))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])
              ]]))})))
@@ -645,10 +645,10 @@ Optiot on mappi optioita:
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot?
            voi-muokata? voi-lisata? jarjesta
            muokkaa-footer muutos uusi-rivi luokat] :as opts} skeema muokatut]
-  (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
+  (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
-        virheet (atom {}) ;; validointivirheet: (:id rivi) => [virheet]
-        viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
+        virheet (atom {})                                   ;; validointivirheet: (:id rivi) => [virheet]
+        viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         ohjaus-fn (fn [muokatut]
@@ -659,7 +659,7 @@ Optiot on mappi optioita:
                               vanhat-virheet @virheet
                               uudet-tiedot (swap! muokatut assoc id
                                                   ((or uusi-rivi identity)
-                                                   (merge rivin-tiedot {:id id :koskematon true})))]
+                                                    (merge rivin-tiedot {:id id :koskematon true})))]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (swap! virheet (fn [virheet]
                                            (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
@@ -682,7 +682,7 @@ Optiot on mappi optioita:
                       (sulje-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki disj id))
                       ))
-        
+
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [muokatut id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
@@ -692,7 +692,7 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-                     
+
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
@@ -704,8 +704,8 @@ Optiot on mappi optioita:
                                             (assoc virheet id rivin-virheet))))))
                      (when muutos
                        (muutos (ohjaus-fn muokatut)))))
-        
-        
+
+
         ;; Peruu yhden muokkauksen
         peru! (fn [muokatut]
                 (let [[muok virh] (peek @historia)]
@@ -715,10 +715,9 @@ Optiot on mappi optioita:
                 (when muutos
                   (muutos (ohjaus-fn muokatut))))
 
-        
         ]
-    
-    
+
+
     (r/create-class
       {:component-will-receive-props
        (fn [this new-argv]
@@ -770,55 +769,55 @@ Optiot on mappi optioita:
                    [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                    (let [kaikki-virheet @virheet]
                      (doall
-                      (mapcat
-                       #(keep identity %)
-                       (map-indexed
-                        (fn [i [id rivi]]
-                          (let [rivin-virheet (get kaikki-virheet id)]
-                            (when-not (:poistettu rivi)
-                              [
-                               ^{:key id}
-                               [:tr.muokataan {:class (str (if (even? (+ i 1))
-                                                             "parillinen"
-                                                             "pariton"))}
-                                (if rivinumerot? [:td (+ i 1)])
-                                (for [{:keys [nimi hae aseta fmt muokattava? tyyppi] :as s} skeema]
-                                  (if (= :vetolaatikon-tila tyyppi)
-                                    ^{:key (str "vetolaatikontila" id)}
-                                    [vetolaatikon-tila ohjaus vetolaatikot id]
-                                    (let [s (assoc s :rivi rivi)
-                                          arvo (if hae
-                                                 (hae rivi)
-                                                 (get rivi nimi))
-                                          kentan-virheet (get rivin-virheet nimi)]
-                                      (if (or (nil? muokattava?) (muokattava? rivi i))
-                                        ^{:key (str nimi)}
-                                        [:td {:class (str (when-not (empty? kentan-virheet)
-                                                            "sisaltaa-virheen"))}
-                                         (when-not (empty? kentan-virheet)
-                                           (virheen-ohje kentan-virheet))
-                                         [tee-kentta s (r/wrap
-                                                        arvo
-                                                        (fn [uusi]
-                                                          (if aseta
-                                                            (muokkaa! muokatut-atom
-                                                                      id (fn [rivi]
-                                                                           (aseta rivi uusi)))
-                                                            (muokkaa! muokatut-atom id assoc nimi uusi))))]]
-                                        ^{:key (str nimi)}
-                                        [:td ((or fmt str) (if hae
-                                                             (hae rivi)
-                                                             (get rivi nimi)))]))))
-                                [:td.toiminnot
-                                 (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-                                   [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                     (muokkaa! muokatut-atom id assoc :poistettu true))}
-                                    (ikonit/trash)])]]
-                               
-                               (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
-                        (if jarjesta
-                          (sort-by (comp jarjesta second) (seq muokatut))
-                          (seq muokatut))))))))]]
+                       (mapcat
+                         #(keep identity %)
+                         (map-indexed
+                           (fn [i [id rivi]]
+                             (let [rivin-virheet (get kaikki-virheet id)]
+                               (when-not (:poistettu rivi)
+                                 [
+                                  ^{:key id}
+                                  [:tr.muokataan {:class (str (if (even? (+ i 1))
+                                                                "parillinen"
+                                                                "pariton"))}
+                                   (if rivinumerot? [:td (+ i 1)])
+                                   (for [{:keys [nimi hae aseta fmt muokattava? tyyppi] :as s} skeema]
+                                     (if (= :vetolaatikon-tila tyyppi)
+                                       ^{:key (str "vetolaatikontila" id)}
+                                       [vetolaatikon-tila ohjaus vetolaatikot id]
+                                       (let [s (assoc s :rivi rivi)
+                                             arvo (if hae
+                                                    (hae rivi)
+                                                    (get rivi nimi))
+                                             kentan-virheet (get rivin-virheet nimi)]
+                                         (if (or (nil? muokattava?) (muokattava? rivi i))
+                                           ^{:key (str nimi)}
+                                           [:td {:class (str (when-not (empty? kentan-virheet)
+                                                               "sisaltaa-virheen"))}
+                                            (when-not (empty? kentan-virheet)
+                                              (virheen-ohje kentan-virheet))
+                                            [tee-kentta s (r/wrap
+                                                            arvo
+                                                            (fn [uusi]
+                                                              (if aseta
+                                                                (muokkaa! muokatut-atom
+                                                                          id (fn [rivi]
+                                                                               (aseta rivi uusi)))
+                                                                (muokkaa! muokatut-atom id assoc nimi uusi))))]]
+                                           ^{:key (str nimi)}
+                                           [:td ((or fmt str) (if hae
+                                                                (hae rivi)
+                                                                (get rivi nimi)))]))))
+                                   [:td.toiminnot
+                                    (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
+                                      [:span.klikattava {:on-click #(do (.preventDefault %)
+                                                                        (muokkaa! muokatut-atom id assoc :poistettu true))}
+                                       (ikonit/trash)])]]
+
+                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
+                           (if jarjesta
+                             (sort-by (comp jarjesta second) (seq muokatut))
+                             (seq muokatut))))))))]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])
              ]]))})))
