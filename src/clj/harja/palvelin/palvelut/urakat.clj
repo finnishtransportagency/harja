@@ -1,8 +1,8 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
-            [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
@@ -108,6 +108,6 @@
   (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
-  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))

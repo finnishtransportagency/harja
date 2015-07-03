@@ -6,7 +6,7 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
 
-            [harja.palvelin.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
             [harja.kyselyt.muutoshintaiset-tyot :as q]
             [harja.kyselyt.toteumat :as tot-q]
             [harja.kyselyt.konversio :as konv]))
@@ -22,7 +22,7 @@
 (defn hae-urakan-muutoshintaiset-tyot
   "Palvelu, joka palauttaa urakan muutoshintaiset työt."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
     muutoshintaiset-xf
     (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
@@ -30,7 +30,7 @@
 (defn tallenna-muutoshintaiset-tyot
   "Palvelu joka tallentaa muutoshintaiset tyot."
   [db user {:keys [urakka-id tyot]}]
-  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
 
   (jdbc/with-db-transaction
@@ -44,7 +44,7 @@
         (if (:poistettu tyo)
           (do
             ;; vain järjestelmän vastuuhenkilö voi poistaa muutoshintaisia töitä
-            (oikeudet/vaadi-rooli user oikeudet/rooli-jarjestelmavastuuhenkilo)
+            (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
             (apply q/poista-muutoshintainen-tyo! parametrit))
           ;; uusien rivien id on negatiivinen
           (if (neg? (:id tyo))

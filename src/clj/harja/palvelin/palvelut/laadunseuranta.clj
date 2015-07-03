@@ -10,7 +10,6 @@
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.tarkastukset :as tarkastukset]
 
-            [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
@@ -29,7 +28,7 @@
                                       (when k (keyword k)))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
     (into []
           havainto-xf
@@ -61,7 +60,7 @@
    Ottaa urakka-id:n ja havainto-id:n. Urakka id:tä käytetään oikeustarkistukseen, havainnon tulee olla annetun urakan
    toimenpiteeseen kytketty."
   [db user urakka-id havainto-id]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [havainto (first (into []
                               havainto-xf
                               (havainnot/hae-havainnon-tiedot db urakka-id havainto-id)))]
@@ -99,10 +98,10 @@
 
 (defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
   (log/info "Tuli havainto: " havainto)
-  (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
 
-                            (let [osapuoli (oik/osapuoli user urakka)
+                            (let [osapuoli (roolit/osapuoli user urakka)
                                   havainto (assoc havainto
                                              ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                                              :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
@@ -132,7 +131,7 @@
 
                               (when (:paatos (:paatos havainto))
                                 ;; Urakanvalvoja voi kirjata päätöksen
-                                (oik/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
+                                (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
                                 (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
                                 (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
                                   (havainnot/kirjaa-havainnon-paatos! c
@@ -151,7 +150,7 @@
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu]}]
 
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa)))
@@ -182,7 +181,7 @@
                                 tarkastaja mittaaja (name tyyppi) havainto (:id user)))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (oik/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [id (if (:id tarkastus)
                tarkastus ;FIXME: päivitä olemassaoleva

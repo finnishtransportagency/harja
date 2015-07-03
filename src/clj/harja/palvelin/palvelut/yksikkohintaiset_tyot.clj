@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yksikkohintaiset-tyot
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
@@ -8,7 +9,6 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
-            [harja.palvelin.oikeudet :as oikeudet]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]))
 
 (declare hae-urakan-yksikkohintaiset-tyot tallenna-urakan-yksikkohintaiset-tyot)
@@ -34,7 +34,7 @@
 (defn hae-urakan-yksikkohintaiset-tyot
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map #(assoc %
                      :maara (if (:maara %) (double (:maara %)))
@@ -44,7 +44,7 @@
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
         (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)

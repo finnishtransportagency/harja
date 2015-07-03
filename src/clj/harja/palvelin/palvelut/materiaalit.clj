@@ -2,7 +2,6 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.materiaalit :as q]
-            [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
@@ -14,7 +13,7 @@
         (q/hae-materiaalikoodit db)))
 
 (defn hae-urakan-materiaalit [db user urakka-id]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(if (:id (:pohjavesialue %))
@@ -29,7 +28,7 @@
 
 (defn hae-urakassa-kaytetyt-materiaalit
   [db user urakka-id hk-alkanut hk-paattynyt sopimus]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
@@ -38,7 +37,7 @@
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id hoitokausi sopimus]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(if (:id (:pohjavesialue %))
@@ -54,7 +53,7 @@
 
 (defn hae-toteuman-materiaalitiedot
   [db user urakka-id toteuma-id]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [mankeloitava (into []
                            (comp (map konv/alaviiva->rakenne)
                                  (map #(assoc-in % [:toteumamateriaali :maara] (double (:maara (:toteumamateriaali %))))))
@@ -68,7 +67,7 @@
 
   
 (defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit]}]
-  (oik/vaadi-rooli-urakassa user oik/rooli-urakanvalvoja urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   
   (jdbc/with-db-transaction [c db]
     (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
@@ -132,7 +131,7 @@
   * Jos tehdään vain poistoja, on parempi käyttää poista-toteuma-materiaali! funktiota
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
-  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
                             urakka-id)
   (jdbc/with-db-transaction [c db]
                             (doseq [tm toteumamateriaalit]
@@ -160,7 +159,7 @@
 
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
-  (oik/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixme roolit??
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
                             (:urakka tiedot))
   (jdbc/with-db-transaction [c db]
                             (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))

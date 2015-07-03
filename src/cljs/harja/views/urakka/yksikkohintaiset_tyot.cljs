@@ -202,7 +202,7 @@
         [grid/grid
          {:otsikko        "Yksikköhintaiset työt"
           :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-          :tallenna       (roolit/jos-rooli-urakassa roolit/rooli-urakanvalvoja
+          :tallenna       (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                      (:id ur)
                                                      #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
                                                                      urakan-yks-hint-tyot %)

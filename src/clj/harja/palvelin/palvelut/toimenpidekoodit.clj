@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.toimenpidekoodit
    (:require [com.stuartsierra.component :as component]
              [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-             [harja.palvelin.oikeudet :as oikeudet]
+             [harja.domain.roolit :as roolit]
              [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]
              
              [clojure.java.jdbc :as jdbc]
@@ -35,7 +35,7 @@
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
-  (oikeudet/vaadi-rooli user oikeudet/rooli-jarjestelmavastuuhenkilo)
+  (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
   (jdbc/with-db-transaction [c db]
                             (doseq [rivi lisattavat]
                               (lisaa-toimenpidekoodi c user rivi)

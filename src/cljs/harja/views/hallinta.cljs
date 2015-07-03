@@ -4,7 +4,6 @@
             [bootstrap :as bs]
 
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
             [harja.views.hallinta.kayttajat :as kayttajat]
@@ -21,9 +20,9 @@
     "Käyttäjät"
     :kayttajat
     ^{:key "kayttajat"}
-    (if (istunto/saa-hallita-kayttajia?)
-                            [kayttajat/kayttajat]
-                        "Ei käyttöoikeutta tähän osioon.")
+    (roolit/jos-rooli roolit/kayttajien-hallinta
+                      [kayttajat/kayttajat]
+                      "Ei käyttöoikeutta tähän osioon.")
 
     "Indeksit"
     :indeksit

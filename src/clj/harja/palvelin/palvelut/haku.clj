@@ -5,8 +5,7 @@
 
             [harja.kyselyt.urakat :as ur-q]
             [harja.kyselyt.kayttajat :as k-q]
-            [harja.kyselyt.hallintayksikot :as org-q]
-            [harja.palvelin.oikeudet :as oik]))
+            [harja.kyselyt.hallintayksikot :as org-q]))
 
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."

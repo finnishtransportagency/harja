@@ -5,7 +5,7 @@
             [harja.kyselyt.maksuerat :as q]
             [harja.palvelin.integraatiot.sampo :as sampo]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.oikeudet :as oikeudet]))
+            [harja.domain.roolit :as roolit]))
 
 (declare hae-urakan-maksuerat)
 (declare laheta-maksuerat-sampoon)
@@ -61,7 +61,7 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (into []
         maksuera-xf

@@ -3,7 +3,7 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
 
-            [harja.palvelin.oikeudet :as oik]
+            [harja.domain.roolit :as roolit]
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.fim :as fim]
@@ -113,8 +113,8 @@
     :ei-loydy))
 
 (defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
-  (when (and (not (oik/roolissa? user oik/rooli-jarjestelmavastuuhenkilo))
-             (oik/roolissa? user oik/rooli-urakoitsijan-paakayttaja)
+  (when (and (not (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo))
+             (roolit/roolissa? user roolit/urakoitsijan-paakayttaja)
              ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
              (not (= organisaatio-id (:id (:organisaatio user)))))
     (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)
@@ -129,9 +129,9 @@
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
   [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
-  (oik/vaadi-rooli user #{oik/rooli-jarjestelmavastuuhenkilo
-                          oik/rooli-hallintayksikon-vastuuhenkilo
-                          oik/rooli-urakoitsijan-paakayttaja})
+  (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
+                          roolit/hallintayksikon-vastuuhenkilo
+                          roolit/urakoitsijan-paakayttaja})
   (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
   (let [kayttajan-tiedot
         (jdbc/with-db-transaction [c db]
@@ -147,7 +147,7 @@
                 vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
             ;; FIXME:
             ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
-                                        ;(when (oik/roolissa? user oik/rooli-jarjestelmavastuuhenkilo)
+                                        ;(when (oik/roolissa? user roolit/jarjestelmavastuuhenkilo)
       
             ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
                                         ;  )

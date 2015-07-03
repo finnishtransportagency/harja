@@ -3,7 +3,6 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as q]
-            [harja.palvelin.oikeudet :as oik]
             [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
@@ -30,7 +29,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
   
   [db user urakka-id listaus]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (case listaus
     :kaikki
     (into []
@@ -109,7 +108,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
-  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
@@ -126,7 +125,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
-  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))

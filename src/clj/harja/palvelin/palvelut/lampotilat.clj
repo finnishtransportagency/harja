@@ -2,10 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.lampotilat :as q]
-            [harja.palvelin.oikeudet :as oik]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str]
-            [harja.palvelin.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
             [taoensso.timbre :as log]))
 
 (defn keskilampo-ja-pitkalampo-floatiksi
@@ -20,7 +17,7 @@
 
 (defn urakan-lampotilat [db user urakka-id]
   (log/debug "Haetaan urakan lämpotilat urakalle: " urakka-id)
-  ;(oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  ;(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (map keskilampo-ja-pitkalampo-floatiksi (q/hae-lampotilat db urakka-id)))
 
 (defn tallenna-lampotilat!
@@ -31,7 +28,7 @@
     (log/debug "Tallennetaan lämpötilaa")
     ;(log/debug (java.lang.Float/parseFloat keskilampo) (type (java.lang.Float/parseFloat keskilampo)))
     ;(log/debug (java.lang.Float/parseFloat pitkalampo))
-    (if (oikeudet/rooli-urakassa? user "urakanvalvoja" urakka)
+    (if (roolit/rooli-urakassa? user "urakanvalvoja" urakka)
       (if (:id arvot)
         (do
           (log/debug "Pävitetään olemassaolevaa riviä")

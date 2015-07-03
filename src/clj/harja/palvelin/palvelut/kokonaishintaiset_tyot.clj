@@ -6,7 +6,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
-            [harja.palvelin.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]))
 
@@ -33,7 +33,7 @@
 (defn hae-urakan-kokonaishintaiset-tyot
   "Palvelu, joka palauttaa urakan kokonaishintaiset työt."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map #(assoc %
                :summa (if (:summa %) (double (:summa %)))))
@@ -42,7 +42,7 @@
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (oikeudet/vaadi-rooli-urakassa user oikeudet/rooli-urakanvalvoja urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
                             (let [nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)

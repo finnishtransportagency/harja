@@ -166,7 +166,7 @@
   [urakka lampotilat]
   (let [uudet-lampotilat (atom nil)
         aseta-lampotila (fn [l] (reset! uudet-lampotilat l))
-        saa-muokata? (oikeudet/rooli-urakassa? "urakanvalvoja" (:id urakka))]
+        saa-muokata? (roolit/rooli-urakassa? "urakanvalvoja" (:id urakka))]
 
     (aseta-lampotila lampotilat)
     (komp/luo
@@ -209,7 +209,7 @@
           (ikonit/warning-sign))]]
 
        [:div.form-group
-        (if (oikeudet/rooli-urakassa? "urakanvalvoja" (:id urakka))
+        (if (roolit/rooli-urakassa? "urakanvalvoja" (:id urakka))
         [:div.row-md-4
          (if (not (and saa-muokata? (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))))
            [:button.nappi-ensisijainen.disabled {:name "tallenna"} "Tallenna"]

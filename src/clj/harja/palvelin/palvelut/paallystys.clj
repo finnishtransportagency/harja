@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.paallystys
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.oikeudet :as oik]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [taoensso.timbre :as log]
@@ -64,7 +63,7 @@
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
                       muunna-desimaaliluvut-xf
                       (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
@@ -73,7 +72,7 @@
 
 (defn hae-urakan-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystyskohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
                       muunna-desimaaliluvut-xf
                       (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
@@ -82,7 +81,7 @@
 
 (defn hae-urakan-paallystystoteumat [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
                       (comp (map #(paatos-string->avain %))
                             (map #(tila-string->avain %)))
@@ -92,7 +91,7 @@
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
                              (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
                                    (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
@@ -145,7 +144,7 @@
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
-  (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
   ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot lomakedata)) FIXME Validoi kantaan menevä JSON
 
   (jdbc/with-db-transaction [c db]
@@ -157,7 +156,7 @@
       ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
       ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
       (if (not (= (:paatos paallystysilmoitus-kannassa) (or (:paatos lomakedata) nil)))
-        (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id))
+        (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
 
       (if paallystysilmoitus-kannassa

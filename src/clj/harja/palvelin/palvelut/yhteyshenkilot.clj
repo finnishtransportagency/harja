@@ -8,7 +8,7 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
 
-            [harja.palvelin.oikeudet :as oik]
+            [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]))
 
 (declare hae-urakan-yhteyshenkilot
@@ -57,7 +57,7 @@
     this))
 
 (defn hae-urakan-kayttajat [db user urakka-id]
-  (oik/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
         (q/hae-urakan-kayttajat db urakka-id)))
