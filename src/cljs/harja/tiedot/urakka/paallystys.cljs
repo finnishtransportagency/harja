@@ -35,13 +35,6 @@
                                          :sopimus-id sopimus-id
                                          :lomakedata lomakedata}))
 
-(defn tallenna-paallystysilmoituksen-paatos [urakka-id sopimus-id paallystyskohde-id paatostiedot]
-  (k/post! :tallenna-paallystysilmoituksen-paatos {:urakka-id          urakka-id
-                                                   :sopimus-id         sopimus-id
-                                                   :paallystyskohde-id paallystyskohde-id
-                                                   :paatostiedot       paatostiedot}))
-
-
 (defonce paallystyskohteet (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                         valittu-urakan-valilehti @u/urakan-valittu-valilehti]

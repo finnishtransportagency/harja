@@ -106,7 +106,6 @@
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
 
 (defn paivita-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos perustelu kasittelyaika]}]
-  ; FIXME Tarkista ettei tila ole lukittu, tällöin ei voi enää muokata.
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (laske-muutoshinta ilmoitustiedot)
         tila (if (= paatos :hyvaksytty)
@@ -122,22 +121,32 @@
         tila (if valmistumispvm "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila encoodattu-ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta (:id user)))
+    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila encoodattu-ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta (:id user))))
 
   (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
     (log/debug "Käsitellään päällystysilmoitus: " lomakedata
                ". Urakka-id " urakka-id
                ", sopimus-id: " sopimus-id
                ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
-    ;(oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) FIXME Vaadi rooli urakanvalvoja jos päätöstiedot tulee.
+    (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
     ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot lomakedata)) FIXME Validoi kantaan menevä JSON
+
     (jdbc/with-db-transaction [c db]
       (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
                                                                                                    :sopimus-id         sopimus-id
                                                                                                    :paallystyskohde-id (:paallystyskohde-id lomakedata)})]
         (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
+
+        ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+        ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+        (if (not (= (:paatos paallystysilmoitus-kannassa) (:paatos lomakedata)))
+          (oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id))
+
+
         (if paallystysilmoitus-kannassa
-          (paivita-paallystysilmoitus c user lomakedata)
+          (if (not (= :lukittu (:ilmoitustiedot paallystysilmoitus-kannassa)))
+            (paivita-paallystysilmoitus c user lomakedata)
+            (log/debug "POT on lukittu, ei voi päivittää!"))
           (luo-paallystysilmoitus c user lomakedata))
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
