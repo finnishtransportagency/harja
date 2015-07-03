@@ -5,9 +5,10 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.transit :as transit])
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:import (goog.date DateTime UtcDateTime)))
+  )
 
 (def +polku+ (let [host (.-host js/location)]
                (if (#{"localhost" "localhost:3000" "harja-test.solitaservices.fi"} host)
@@ -16,22 +17,6 @@
 (defn polku []
   (str +polku+ "_/"))
 
-(deftype DateTimeHandler []
-  Object
-  (tag [_ v] "dt")
-  (rep [_ v] (pvm/pvm-aika-sek v)))
-
-(def transit-request-optiot {:handlers
-                             {DateTime    (DateTimeHandler.)
-                              UtcDateTime (DateTimeHandler.)}})
-
-(def transit-response-optiot {:handlers
-                              {"dt" (fn [v]
-                                      (pvm/->pvm-aika-sek v))
-
-                               ;; Serveri lähettää java.math.BigDecimal typen doubleksi
-                               ;; muunnettuna, joten tässä kelpaa identity
-                               "bd" identity}})
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
@@ -43,8 +28,8 @@
     (ajax-request {:uri             (str (polku) (name palvelu))
                    :method          metodi
                    :params          parametrit
-                   :format          (transit-request-format transit-request-optiot)
-                   :response-format (transit-response-format transit-response-optiot)
+                   :format          (transit-request-format transit/write-optiot)
+                   :response-format (transit-response-format transit/read-optiot)
                    :handler         cb
                    :error-handler   (fn [[_ error]]
                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
@@ -91,7 +76,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
             (let [request (.-target event)]
               (if (= 200 (.-status request))
                 (let [transit-json (.-responseText request)
-                      transit (t/read (t/reader :json transit-response-optiot) transit-json)]
+                      transit (transit/lue-transit transit-json)]
                   (log "SAATIIN VASTAUS: " (pr-str transit))
                   (put! ch transit)
                   (close! ch))

@@ -9,7 +9,10 @@
             [cognitect.transit :as t]
             [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
-            [harja.palvelin.komponentit.todennus :as todennus])
+            [harja.palvelin.komponentit.todennus :as todennus]
+
+            [harja.geo :as geo]
+            [harja.transit :as transit])
   (:import (java.text SimpleDateFormat)))
 
 
@@ -25,25 +28,10 @@
   (str "/_/" (name nimi)))
 
 
-;; Tehdään write/read handlerit pvm:ien siirtämiseksi "dt" tägillä, jotta fronttipuolella
-;; ne muunnetaan suoraan oikeaan muotoon
-(def +fi-date-time-format+ "dd.MM.yyyy HH:mm:ss")
-(def write-optiot {:handlers {java.util.Date (t/write-handler (constantly "dt")
-                                                              #(.format (SimpleDateFormat. +fi-date-time-format+) %))
-                              java.math.BigDecimal (t/write-handler (constantly "bd") double)}})
-(def read-optiot {:handlers {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}})
 
-(defn clj->transit
-  "Muuntaa Clojure tietorakenteen Transit+JSON merkkijonoksi."
-  [data]
-  (with-open [out (java.io.ByteArrayOutputStream.)]
-    (t/write (t/writer out :json write-optiot) data)
-    (str out)))
 
-(defn lue-transit
-  "Lukee Transit+JSON muotoisen tiedon annetusta inputista."
-  [in]
-  (t/read (t/reader in :json read-optiot)))
+
+
 
 (defn ring-kasittelija [nimi kasittelija-fn]
   (let [polku (transit-palvelun-polku nimi)]
@@ -54,7 +42,7 @@
 (defn transit-vastaus [data]
   {:status 200
    :headers {"Content-Type" "application/transit+json"}
-   :body (clj->transit data)})
+   :body (transit/clj->transit data)})
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -64,7 +52,7 @@
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
-              kysely (lue-transit (:body req))
+              kysely (transit/lue-transit (:body req))
               kysely (if-not skeema
                        kysely
                        (try
