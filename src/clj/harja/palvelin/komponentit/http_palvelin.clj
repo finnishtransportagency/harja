@@ -75,7 +75,7 @@
           (if (= kysely ::ei-validi-kysely)
             {:status 400
              :body "Ei validi kysely"}
-            
+
             (let [vastaus (palvelu-fn (:kayttaja req) kysely)]
               (transit-vastaus vastaus))))))))
 
@@ -93,8 +93,8 @@
               if-modified-since-header (some-> req :headers (get "if-modified-since"))
               if-modified-since (when if-modified-since-header
                                   (.parse (SimpleDateFormat. muokkaus-pvm-muoto) if-modified-since-header))]
-          
-          (if (and last-modified 
+
+          (if (and last-modified
                    if-modified-since
                    (not (.after last-modified if-modified-since)))
             {:status 304}
@@ -111,7 +111,7 @@
 
 (defprotocol HttpPalvelut
   "Protokolla HTTP palveluiden julkaisemiseksi."
-  
+
   (julkaise-palvelu
     [this nimi palvelu-fn]
     [this nimi palvelu-fn optiot]
@@ -139,7 +139,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
   )
 
-(defn- arityt 
+(defn- arityt
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
   [f]
   (->> f class .getDeclaredMethods

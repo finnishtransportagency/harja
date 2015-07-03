@@ -1,12 +1,15 @@
 (ns harja.tyokalut.xml
-  (:require [clojure.java.io :as io]
+  (:require [clojure.xml :refer [parse]]
+            [clojure.java.io :as io]
+            [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
            (java.io ByteArrayInputStream)
            (org.w3c.dom.ls LSResourceResolver LSInput)
-           (org.xml.sax SAXParseException)))
+           (org.xml.sax SAXParseException)
+           ))
 
 (defn validoi
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
@@ -36,3 +39,10 @@
          (catch SAXParseException e
            (log/error "Invalidi XML: " e)
            false))))
+
+(defn lue [xml]
+  (let [in (ByteArrayInputStream. (.getBytes xml "UTF-8"))]
+    (try (xml-zip (parse in))
+         (catch SAXParseException e
+           (log/error e "Tapahtui poikkeus luettuessa XML-sisältöä: " xml)
+           nil))))

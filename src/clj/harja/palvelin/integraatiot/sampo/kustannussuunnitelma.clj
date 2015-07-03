@@ -5,7 +5,6 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
-            [clj-time.core :as t]
             [harja.tyokalut.xml :as xml])
   (:import (java.util UUID)))
 

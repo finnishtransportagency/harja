@@ -2,17 +2,8 @@
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
-            [taoensso.timbre :as log])
-  (:import (java.io ByteArrayInputStream)
-           (org.xml.sax SAXParseException)))
-
-
-(defn lue-xml [xml]
-  (let [in (ByteArrayInputStream. (.getBytes xml "UTF-8"))]
-    (try (xml-zip (parse in))
-         (catch SAXParseException e
-           (log/error e "Virheellinen XML-kuittaus vastaanotettu Samposta. XML: " xml)
-           nil))))
+            [taoensso.timbre :as log]
+            [harja.tyokalut.xml :as xml]))
 
 (defn onnistunut? [xml]
   (= "SUCCESS" (z/xml1-> xml :Status (z/attr :state))))
@@ -32,7 +23,7 @@
               :kuvaus   (z/xml1-> error-information :Description z/text)})))
 
 (defn lue-kuittaus [kuittaus-xml]
-  (if-let [xml (lue-xml kuittaus-xml)]
+  (if-let [xml (xml/lue kuittaus-xml)]
     ;; Huom. root-elementti voi vaihtua!
     (let [xml (or (z/xml1-> xml :XOGOutput) xml)]
       (if (onnistunut? xml)

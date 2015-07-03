@@ -151,3 +151,17 @@ WHERE s.urakka = :urakka;
 SELECT EXISTS(SELECT id
               FROM urakka
               WHERE id = :id);
+
+-- name: paivita-hankkeen-tiedot-urakalle!
+-- Päivittää hankkeen ja hallintayksikön viitteet urakalle hankkeen sampo id:n avulla
+UPDATE urakka
+SET hanke         = (SELECT id
+                     FROM hanke
+                     WHERE sampoid = :hanke_sampo_id),
+  hallintayksikko = (SELECT organisaatio.id
+                     FROM organisaatio organisaatio
+                       LEFT JOIN alueurakka alueurakka ON alueurakka.elynumero = organisaatio.elynumero
+                       LEFT JOIN hanke hanke ON alueurakka.alueurakkanro = hanke.alueurakkanro
+                     WHERE hanke.sampoid = :hanke_sampo_id)
+WHERE hanke_sampoid = :hanke_sampo_id;
+

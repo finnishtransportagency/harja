@@ -32,7 +32,6 @@
 
 (def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
-
 (deftest yrita-laheta-maksuera-jota-ei-ole-olemassa
   (is (= {:virhe :maksueran-lukitseminen-epaonnistui} (:maksuera (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 666)))))
 
