@@ -147,14 +147,13 @@
                                                         (assoc :takuupvm (:takuupvm uusi-arvo))
                                                         (assoc :hinta (:hinta uusi-arvo))))))
 
+        ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
         toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
                                       (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (filter
                                                                                                          #(not (and (true? (:poistettu %))
                                                                                                                     (neg? (:id %)))) (vals uusi-arvo))))))
-        paallystystoimenpide (r/wrap (zipmap (iterate inc 1) (:toimenpiteet (:ilmoitustiedot @lomakedata)))
-                                     (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :toimenpiteet] (filter
-                                                                                                           #(not (and (true? (:poistettu %))
-                                                                                                                      (neg? (:id %)))) (vals uusi-arvo))))))
+
+        ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
         kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot @lomakedata)))
                           (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :kiviaines] (filter
                                                                                              #(not (and (true? (:poistettu %))
@@ -301,7 +300,7 @@
             :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
             :valinnat      pot/+paallystetyypit+
             :leveys        "30%"}]
-          paallystystoimenpide]
+          toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"

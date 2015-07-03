@@ -136,21 +136,29 @@
   {:hinta s/Num   ;; toteutunut hinta
 
    ;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
-   :osoitteet [{:tie s/Int :aosa s/Int :aet s/Int :losa s/Int :let s/Int
-                :ajorata +ajorata+ :suunta +suunta+ :kaista +kaista+}]
+   :osoitteet [{:tie s/Int
+                :aosa s/Int
+                :aet s/Int
+                :losa s/Int
+                :let s/Int
+                :ajorata +ajorata+
+                :suunta +suunta+
+                :kaista +kaista+
+                ; Osoitteelle tehdyt toimenpiteet
+                :paallystetyyppi +paallystetyyppi+
+                :raekoko s/Int
+                :massa s/Num ;; kg/m2
+                :rc% s/Int
+                :tyomenetelma +tyomenetelmat+ ;; koodisto "työmenetelmä"
+                :leveys s/Num  ;; metriä, esim. 4,2
+                :massamaara s/Num ;; tonnia
+                :pinta-ala s/Num ;; m2
+                :edellinen-paallystetyyppi +paallystetyyppi+}]
 
    ;; Toimenpiteitä on yhtä monta kuin osoitteita ja ne ovat samassa
    ;; järjestyksessä, eli :toimenpiteet vektorin 1. elementti on 
    ;; toimenpide 1. osoitteelle 
-   :toimenpiteet [{:paallystetyyppi +paallystetyyppi+
-                   :raekoko s/Int
-                   :massa s/Num ;; kg/m2
-                   :rc% s/Int 
-                   :tyomenetelma +tyomenetelmat+ ;; koodisto "työmenetelmä"
-                   :leveys s/Num  ;; metriä, esim. 4,2
-                   :massamaara s/Num ;; tonnia
-                   :pinta-ala s/Num ;; m2
-                   :edellinen-paallystetyyppi +paallystetyyppi+
+   :toimenpiteet [{
                   }]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
