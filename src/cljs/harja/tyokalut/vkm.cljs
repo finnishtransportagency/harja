@@ -68,6 +68,9 @@ Palautettavassa datassa:
   [tulos]
   (contains? tulos "virhe"))
 
+(defn virhe [tulos]
+  (get tulos "virhe"))
+
 (defn tieosoite->sijainti
   "Kutsuu VKM:n kautta tierekisteriosoitetta ja yrittää löytää parhaan sijainnin. 
    Palauttaa kanavan, josta sijainnin voi lukea. Virhetapauksessa kanavaan kirjoitetaan virheen kuvaus. "

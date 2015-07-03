@@ -475,8 +475,10 @@
                             (constantly nil)
                             (paivittaja 500 sijainti-haku 
                                         (fn [osoite]
-                                          (go
-                                            (reset! sijainti (<! (vkm/tieosoite->sijainti osoite)))))))]
+                                          (if-not osoite
+                                            (reset! sijainti nil)
+                                            (go
+                                              (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))]
     (komp/luo
 
      {:component-will-receive-props
@@ -485,6 +487,7 @@
           (paivita-sijainti! @data)))}
      
      (fn [{:keys [lomake? sijainti]} data]
+       (log "TR: " (pr-str @data))
        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
              muuta! (fn [kentta]
                       #(let [v (-> % .-target .-value)]
@@ -522,12 +525,15 @@
                                         :value loppuetaisyys
                                         :on-change (muuta! :loppuetaisyys)}]]
              (when hae-sijainti
-               (let [[x y] @sijainti]
-                 (if @sijainti-haku
-                   [:td [yleiset/ajax-loader-pisteet " Haetaan sijaintia"]]
-                   (when (and x y)
-                     [:td [:div.sijainti
-                           [:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)] " "
-                           [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))
+               (if @sijainti-haku
+                 [:td [yleiset/ajax-loader-pisteet " Haetaan sijaintia"]]
+                 (let [sijainti @sijainti]
+                   (when sijainti
+                     (if (vkm/virhe? sijainti)
+                       [:td [:div.virhe (vkm/virhe sijainti)]]
+                       (let [[x y] sijainti]
+                         [:td [:div.sijainti
+                               [:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)] " "
+                               [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))))
              ]]]])))))
          
