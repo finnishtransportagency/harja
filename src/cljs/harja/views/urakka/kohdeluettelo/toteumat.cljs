@@ -183,8 +183,8 @@
                                          tila (:tila @lomakedata)]
                                      (and
                                        (not (= tila :lukittu))
-                                       (empty? alikohteet-virheet)
-                                       (empty? paallystystoimenpide-virheet)
+                                       ;(empty? alikohteet-virheet) FIXME Ei validoi oikein kun lisätään rivi? Liittyy jotenkin tienumeron kopiointiin muille riveille.
+                                       ;(empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
                                        (empty? kiviaines-virheet))))
