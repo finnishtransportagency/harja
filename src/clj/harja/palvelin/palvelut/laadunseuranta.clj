@@ -175,7 +175,7 @@
   "Luo uuden tarkastuksen, palauttaa id:n"
   [db user urakka-id {:keys [aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
   (tarkastukset/luo-tarkastus<! db
-                                urakka-id aika
+                                urakka-id (konv/sql-timestamp aika)
                                 (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                                 (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
                                 tarkastaja mittaaja (name tyyppi) havainto (:id user)))
@@ -183,10 +183,14 @@
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
-    (let [id (if (:id tarkastus)
+    (let [havainto (merge (:havainto tarkastus)
+                          {:aika (:aika tarkastus)
+                           :urakka urakka-id})
+          
+          id (if (:id tarkastus)
                tarkastus ;FIXME: päivitä olemassaoleva
                (luo-tarkastus c user urakka-id tarkastus
-                              (luo-tai-paivita-havainto c user (:havainto tarkastus))))]
+                              (luo-tai-paivita-havainto c user havainto)))]
       (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
       tarkastus ;; FIXME: hae uudet tiedot
       )))

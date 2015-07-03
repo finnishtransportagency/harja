@@ -121,13 +121,14 @@
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom]
     [:div.tarkastus
-     [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus nil)]
+     [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
       {:luokka :horizontal
        :muokkaa! #(reset! tarkastus-atom %)}
 
-      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true}
+      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
+        :validoi [[:urakan-aikana]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
         :sijainti (r/wrap (:sijainti tarkastus)
