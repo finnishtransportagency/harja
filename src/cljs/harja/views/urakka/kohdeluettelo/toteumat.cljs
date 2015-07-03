@@ -195,7 +195,6 @@
                                        toteutuneet-maarat (:tyot (:ilmoitustiedot @lomakedata))
                                        tila (:tila @lomakedata)]
                                    (and (not (= tila :aloitettu))
-                                        (not (= tila :lukittu))
                                         (not (nil? valmispvm))
                                         (not (empty? toteutuneet-osoitteet))
                                         (not (empty? toteutuneet-maarat)))))]
