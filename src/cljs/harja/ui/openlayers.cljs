@@ -22,6 +22,7 @@
             [ol.Feature]
             [ol.geom.Polygon]
             [ol.geom.Point]
+            [ol.geom.Circle]
             [ol.geom.LineString]
             [ol.geom.MultiLineString]
             
@@ -321,11 +322,11 @@
   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js coordinates))}))
 
 
-(comment
-  (defmethod luo-feature :point [{:keys [coordinates color]}]
-    (js/L.Circle. (clj->js (first coordinates))
-                  10
-                  #js {:color (or color "green")})))
+(defmethod luo-feature :point [{:keys [coordinates color]}]
+  (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))}))
+
+(defmethod luo-feature :circle [{:keys [coordinates radius]}]
+  (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))

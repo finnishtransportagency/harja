@@ -169,6 +169,7 @@
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (into []
+        (map konv/alaviiva->rakenne)
         (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
 
 (defn luo-tarkastus

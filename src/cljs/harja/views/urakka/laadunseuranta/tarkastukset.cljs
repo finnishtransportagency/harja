@@ -16,11 +16,14 @@
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.komponentti :as komp]
-
+            
+            [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
             
-            [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]])
+            [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]]
+
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
 
@@ -30,16 +33,6 @@
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 
 (defonce valittu-tarkastus (atom nil))
-
-(defonce urakan-tarkastukset
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
-               laadunseurannassa? @laadunseuranta/laadunseurannassa?
-               valilehti @laadunseuranta/valittu-valilehti]
-              
-              (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                         urakka-id alku loppu)
-                (laadunseuranta/hae-urakan-tarkastukset urakka-id alku loppu))))
                 
 
 (defn uusi-tarkastus []
@@ -51,6 +44,19 @@
   "Tarkastuksien pääkomponentti"
   []
   (komp/luo
+
+   ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
+   ;; tarkastuslistauksessa
+   (komp/lippu laadunseuranta/taso-tarkastukset)
+
+   (komp/kuuntelija
+    :tarkastus-klikattu
+    (fn [e tarkastus]
+      (kartta/nayta-popup! (:sijainti tarkastus)
+                           [:div.tarkastus-popup "hei, ponnahdellaan!"])
+                           
+      (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))))
+     
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
@@ -70,11 +76,19 @@
           :tyhja "Ei tarkastuksia"}
          
          [{:otsikko "Pvm ja aika"
-           :tyyppi :pvm-aika :fmt pvm/pvm-aika 
-           :nimi :aika}         
+           :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
+           :nimi :aika}
+
+          {:otsikko "Tyyppi"
+           :nimi :tyyppi :fmt name :leveys 1}
+
+          {:otsikko "TR osoite"
+           :nimi :tr
+           :fmt #(str/join " / " (map (fn [kentta] (get % kentta)) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
+           :leveys 2}
           ]
 
-         @urakan-tarkastukset]]))))
+         @laadunseuranta/urakan-tarkastukset]]))))
 
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
