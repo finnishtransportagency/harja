@@ -226,14 +226,13 @@
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
            :rivinumerot? true
-           :muutos       (fn [g] ; FIXME Nice to have ominaisuus: salli vain 1. rivin muokkaus ja kopioi 1. rivin tienro muille riveille. Tässä pohjatoteutus, miksei toimi?
+           :muutos       (fn [g]
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
-                             ;(reset! toteutuneet-osoitteet (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data))
+                             (log "PÄÄ grid-data " (pr-str grid-data))
+                             (reset! toteutuneet-osoitteet (zipmap (iterate inc 1) (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data)))
                              (reset! alikohteet-virheet (grid/hae-virheet g))))}
-          [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]
-                                                                                   [:samat-tienumerot "Kaikkien tienumeroiden täytyy olla samat."]]
-            ;:muokattava? (fn [rivi index] (if (> index 0) false true)) ; FIXME Ei sallita muiden kuin 1. rivin muokkausta sitten kun tietojen kopiointi muille riveille toimii
-            }
+          [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
+            :muokattava? (fn [rivi index] (if (> index 0) false true))}
            {:otsikko       "Ajorata"
             :nimi          :ajorata
             :tyyppi        :valinta
