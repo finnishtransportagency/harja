@@ -312,8 +312,10 @@
 
         muuta! (fn [data t]
                  (reset! teksti t)
-                 (if-let [d (pvm/->pvm t)]
-                   (reset! data d)))
+                 (if (str/blank? t)
+                   (reset! data nil)
+                   (if-let [d (pvm/->pvm t)]
+                     (reset! data d))))
 
         sijainti (atom nil)]
     (komp/luo
