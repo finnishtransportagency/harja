@@ -80,7 +80,7 @@ SET
   valmistumispvm = :valmistumispvm,
   takuupvm       = :takuupvm,
   muutoshinta    = :muutoshinta,
-  paatos         = :paatos,
+  paatos         = :paatos::paallystysilmoituksen_paatostyyppi,
   perustelu      = :perustelu,
   kasittelyaika  = :kasittelyaika,
   muokattu       = NOW(),

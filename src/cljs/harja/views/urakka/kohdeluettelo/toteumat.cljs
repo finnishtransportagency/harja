@@ -74,7 +74,7 @@
   [valmis-kasiteltavaksi?]
   (let [muokattava? (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja) ; FIXME Pitää tarkistaa että toimii
-                                  (not (= (:tila @lomakedata) :lukittu))))
+                                  (and (not (= (:tila @lomakedata) :lukittu)))))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
                               :kasittelyaika (:kasittelyaika @lomakedata)}
@@ -194,7 +194,7 @@
                                        toteutuneet-osoitteet (:osoitteet (:ilmoitustiedot @lomakedata))
                                        toteutuneet-maarat (:tyot (:ilmoitustiedot @lomakedata))
                                        tila (:tila @lomakedata)]
-                                   (and (not (= tila :palautettu))
+                                   (and (not (= tila :aloitettu))
                                         (not (= tila :lukittu))
                                         (not (nil? valmispvm))
                                         (not (empty? toteutuneet-osoitteet))

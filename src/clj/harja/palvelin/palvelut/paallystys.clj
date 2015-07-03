@@ -110,11 +110,11 @@
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (laske-muutoshinta ilmoitustiedot)
         tila (if (= paatos :hyvaksytty)
-               :lukittu
+               "lukittu"
                (if valmistumispvm "valmis" "aloitettu"))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta paatos perustelu kasittelyaika (:id user) paallystyskohde-id)))
+    (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta (name paatos) perustelu (konv/sql-date kasittelyaika) (:id user) paallystyskohde-id)))
 
 (defn luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -122,25 +122,25 @@
         tila (if valmistumispvm "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta (:id user))))
+    (q/luo-paallystysilmoitus<! db paallystyskohde-id tila encoodattu-ilmoitustiedot (if aloituspvm (konv/sql-date aloituspvm) nil) (if valmistumispvm (konv/sql-date valmistumispvm) nil) (if takuupvm (konv/sql-date takuupvm) nil) muutoshinta (:id user)))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
-  (log/debug "Käsitellään päällystysilmoitus: " lomakedata
-             ". Urakka-id " urakka-id
-             ", sopimus-id: " sopimus-id
-             ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
-  ;(oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) FIXME Vaadi rooli urakanvalvoja jos päätöstiedot tulee.
-  ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot lomakedata)) FIXME Validoi kantaan menevä JSON
-  (jdbc/with-db-transaction [c db]
-    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
-                                                                                                 :sopimus-id         sopimus-id
-                                                                                                 :paallystyskohde-id (:paallystyskohde-id lomakedata)})]
-      (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
-      (if paallystysilmoitus-kannassa
-        (paivita-paallystysilmoitus c user lomakedata)
-        (luo-paallystysilmoitus c user lomakedata))
-      (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
-                                             :sopimus-id sopimus-id}))))
+  (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
+    (log/debug "Käsitellään päällystysilmoitus: " lomakedata
+               ". Urakka-id " urakka-id
+               ", sopimus-id: " sopimus-id
+               ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
+    ;(oik/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id) FIXME Vaadi rooli urakanvalvoja jos päätöstiedot tulee.
+    ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot lomakedata)) FIXME Validoi kantaan menevä JSON
+    (jdbc/with-db-transaction [c db]
+      (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
+                                                                                                   :sopimus-id         sopimus-id
+                                                                                                   :paallystyskohde-id (:paallystyskohde-id lomakedata)})]
+        (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
+        (if paallystysilmoitus-kannassa
+          (paivita-paallystysilmoitus c user lomakedata)
+          (luo-paallystysilmoitus c user lomakedata))
+        (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
+                                               :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
   component/Lifecycle
