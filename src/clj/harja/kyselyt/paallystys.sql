@@ -38,7 +38,7 @@ SELECT
   aloituspvm,
   valmistumispvm,
   takuupvm,
-  pk.nimi,
+  pk.nimi as kohdenimi,
   pk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,

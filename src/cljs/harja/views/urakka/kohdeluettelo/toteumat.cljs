@@ -212,7 +212,7 @@
                   :muokkaa! (fn [uusi]
                               (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                               (reset! kohteen-tiedot uusi))}
-          [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (:kohde @lomakedata) " " (:kohdenimi (:ilmoitustiedot @lomakedata))) :muokattava? (constantly false)}
+          [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
            {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
            {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
@@ -398,8 +398,8 @@
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
                                                                                                            (reset! lomakedata (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi)))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                                                     [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:ilmoitustiedot     {:kohde     (:kohdenumero rivi)
-                                                                                                                                                 :kohdenimi (:nimi rivi)}
+                                                     [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
+                                                                                                                            :kohdenimi          (:nimi rivi)
                                                                                                                             :paallystyskohde-id (:paallystyskohde_id rivi)
                                                                                                                             :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})}
                                                       [:span " Tee päällystysilmoitus"]]))}]
