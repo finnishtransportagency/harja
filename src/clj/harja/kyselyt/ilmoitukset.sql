@@ -1,7 +1,7 @@
 -- name: hae-ilmoitukset
 SELECT
   i.id, i.urakka, i.ilmoitusid, i.ilmoitettu, i.valitetty, i.yhteydenottopyynto, i.vapaateksti,
-  i.ilmoitustyyppi, i.selitteet, i.urakkatyyppi,
+  i.ilmoitustyyppi, i.selitteet, i.urakkatyyppi, i.suljettu,
 
   i.sijainti, i.tr_numero, i.tr_alkuosa, i.tr_loppuosa, i.tr_alkuetaisyys , i.tr_loppuetaisyys,
 
