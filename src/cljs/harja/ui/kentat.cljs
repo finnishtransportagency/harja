@@ -475,7 +475,7 @@
         hae-sijainti (not (nil? sijainti))
         paivita-sijainti! (if-not hae-sijainti
                             (constantly nil)
-                            (paivittaja 500 sijainti-haku 
+                            (paivittaja 3000 sijainti-haku 
                                         (fn [osoite]
                                           (if-not osoite
                                             (reset! sijainti nil)
