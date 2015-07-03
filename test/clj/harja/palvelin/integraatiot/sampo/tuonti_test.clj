@@ -71,6 +71,6 @@
 
   (tuo-urakka)
   (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
-      "Tuotaessa sama hanke uudestaan, päivitetään vanhaa eikä luoda uutta.")
+      "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
 
   (poista-urakka))
