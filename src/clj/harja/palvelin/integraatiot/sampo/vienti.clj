@@ -4,7 +4,7 @@
             [clj-time.core :as t]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sisaan-sanoma :as kuittaus-sisaan-sanoma]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sampoon-sanoma]
             [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
             [harja.palvelin.integraatiot.sampo.kustannussuunnitelma :as kustannussuunnitelma]
             [harja.palvelin.komponentit.sonja :as sonja]))
@@ -15,7 +15,7 @@
 (defn kasittele-kuittaus [db viesti]
   (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
   ;; todo: tee xsd-validointi kuittaukselle
-  (let [kuittaus (kuittaus-sisaan-sanoma/lue-kuittaus (.getText viesti))]
+  (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus (.getText viesti))]
     (log/debug "Luettiin kuittaus: " kuittaus)
     (if-let [viesti-id (:viesti-id kuittaus)]
       (if (= :maksuera (:viesti-tyyppi kuittaus))

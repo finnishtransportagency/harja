@@ -1,29 +1,27 @@
 (ns harja.palvelin.integraatiot.sampo.tuonti
   (:require [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.sampo.sanomat.viesti-sisaan-sanoma :as viesti-sisaan-sanoma]
-            [harja.palvelin.integraatiot.sampo.hanke :as hanke]
-            [clojure.java.jdbc :as jdbc])
+            [harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma :as sampo-sanoma]
+            [harja.palvelin.integraatiot.sampo.hankkeet :as hankkeet]
+            [harja.palvelin.integraatiot.sampo.urakat :as urakat]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.testi :as testi])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn tallenna-hankkeet [db hankkeet]
-  (log/debug "Hankkeet: " hankkeet)
-  (doseq [hanke hankkeet]
-    (log/debug "Hanke:" hanke)
-    (hanke/luo-hanke db hanke)
-    ;; todo: päivitä urakoille hanke ja alueurakkatiedot kohdalleen sampo-id:llä
-    ))
 
 (defn kasittele-viesti [db kuittausjono-sisaan viesti]
   (log/debug "Vastaanotettiin Sonjan viestijonosta viesti: " viesti)
   (try+
     (jdbc/with-db-transaction [transaktio db]
-      (let [data (viesti-sisaan-sanoma/lue-viesti (.getText viesti))
-            hankkeet (:hankkeet data)]
-        (tallenna-hankkeet transaktio hankkeet))
-
+      (let [data (sampo-sanoma/lue-viesti (.getText viesti))
+            hankkeet (:hankkeet data)
+            urakat (:urakat data)]
+        (hankkeet/kasittele-hankkeet transaktio hankkeet)
+        (urakat/kasittele-urakat transaktio urakat))
+      ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon
       )
+
+    ;; todo: laita päälle
     #_(catch Exception e)
 
-    ;;todo: käsittele poikkeus ja palauta nack
     ))

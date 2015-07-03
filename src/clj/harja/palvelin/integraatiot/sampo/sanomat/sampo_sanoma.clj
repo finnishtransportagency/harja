@@ -1,17 +1,21 @@
-(ns harja.palvelin.integraatiot.sampo.sanomat.viesti-sisaan-sanoma
+(ns harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml])
-  (:import (java.text SimpleDateFormat ParseException)))
+  (:import (java.text SimpleDateFormat ParseException)
+           (java.sql Date)))
 
 (def +xsd-polku+ "resources/xsd/sampo/inbound/")
 
 (defn parsi-paivamaara [teksti]
-  (try (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti)
+  (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") teksti)))
        (catch ParseException e
-         nil)))
+         (log/error e "Virhe parsiessa päivämäärää: " teksti)
+         nil))
+  ;; fixme: tarkista miksei voi syöttää kantaan
+  nil)
 
 (defn lue-hanke [program]
   {:viesti-id              (z/xml1-> program (z/attr :message_Id))
@@ -26,8 +30,8 @@
   {:viesti-id              (z/xml1-> project (z/attr :message_Id))
    :sampo-id               (z/xml1-> project (z/attr :id))
    :nimi                   (z/xml1-> project (z/attr :name))
-   :alkupvm                (z/xml1-> project (z/attr :schedule_finish))
-   :loppupvm               (z/xml1-> project (z/attr :schedule_start))
+   :alkupvm                (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
+   :loppupvm               (parsi-paivamaara (z/xml1-> project (z/attr :schedule_start)))
    :hanke-sampo-id         (z/xml1-> project (z/attr :programId))
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))})
 

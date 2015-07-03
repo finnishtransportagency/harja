@@ -18,12 +18,59 @@
 </Sampo2harja>
 ")
 
+(def +testiurakka-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" programId=\"TESTIHANKE\"
+             resourceId=\"sampotesti\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
+        <documentLinks/>
+    </Project>
+</Sampo2harja>
+")
+
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 
-(deftest tarkista-hankkeen-tallentuminen
+
+(defn tee-viesti [sisalto]
+  (reify TextMessage
+    (getText [this] sisalto)))
+
+(defn laheta-viesti-kasiteltavaksi [sisalto]
   (let [db (apply tietokanta/luo-tietokanta testitietokanta)
-        viesti (reify TextMessage
-                 (getText [this] +testihanke-sanoma+))]
-    (tuonti/kasittele-viesti db +kuittausjono-sisaan+ viesti)
-    (is (= 1 (count(q "select id from hanke where sampoid = 'TESTIHANKE';"))))
-    (u "delete from hanke where sampoid = 'TESTIHANKE'")))
+        viesti (tee-viesti sisalto)]
+    (tuonti/kasittele-viesti db +kuittausjono-sisaan+ viesti)))
+
+(defn tuo-hanke []
+  (laheta-viesti-kasiteltavaksi +testihanke-sanoma+))
+
+(defn tuo-urakka []
+  (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
+
+(defn poista-hanke []
+  (u "update urakka set hanke = null where hanke_sampoid = 'TESTIHANKE'")
+  (u "delete from hanke where sampoid = 'TESTIHANKE'"))
+
+(defn poista-urakka []
+  (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
+  (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
+
+(deftest tarkista-hankkeen-tallentuminen
+  (tuo-hanke)
+  (is (= 1 (count (q "select id from hanke where sampoid = 'TESTIHANKE';")))
+      "Luonnin jälkeen hanke löytyy Sampo id:llä.")
+
+  (tuo-hanke)
+  (is (= 1 (count (q "select id from hanke where sampoid = 'TESTIHANKE';")))
+      "Tuotaessa sama hanke uudestaan, päivitetään vanhaa eikä luoda uutta.")
+
+  (poista-hanke))
+
+(deftest tarkista-urakan-tallentuminen
+  (tuo-urakka)
+  (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
+      "Luonnin jälkeen urakka löytyy Sampo id:llä.")
+
+  (tuo-urakka)
+  (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
+      "Tuotaessa sama hanke uudestaan, päivitetään vanhaa eikä luoda uutta.")
+
+  (poista-urakka))

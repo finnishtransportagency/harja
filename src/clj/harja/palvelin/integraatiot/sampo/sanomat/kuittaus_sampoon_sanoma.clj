@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sisaan-sanoma
+(ns harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
