@@ -64,18 +64,25 @@ SELECT t.id, m.id as materiaali_id, m.nimi as materiaali_nimi, m.yksikko as mate
       pa.id as pohjavesialue_id, pa.nimi as pohjavesialue_nimi, pa.tunnus as pohjavesialue_tunnus,
       tm.id as tmid, t.lisatieto as toteuma_lisatieto, t.suorittajan_nimi as toteuma_suorittaja, t.sopimus
 FROM toteuma t
-  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-  LEFT JOIN materiaalikoodi m ON tm.materiaalikoodi = m.id
-  LEFT JOIN materiaalin_kaytto mk ON m.id = mk.materiaali
-  LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
-WHERE t.urakka = :urakka AND
-      m.id = :materiaali AND
-      mk.poistettu IS NOT true AND
-      t.poistettu IS NOT true AND
-      tm.poistettu IS NOT true AND
-      t.alkanut::DATE >= :alku AND
-      t.alkanut::DATE <= :loppu
-      AND t.sopimus =:sopimus;
+  INNER JOIN toteuma_materiaali tm
+    ON tm.toteuma = t.id
+    AND tm.poistettu IS NOT TRUE
+    AND t.poistettu IS NOT TRUE
+    AND t.sopimus = :sopimus
+    AND tm.materiaalikoodi = :materiaali
+    AND t.alkanut::DATE >= :alku
+    AND t.alkanut::DATE <= :loppu
+
+  INNER JOIN materiaalikoodi m
+    ON tm.materiaalikoodi = m.id
+
+  LEFT JOIN materiaalin_kaytto mk
+    ON m.id = mk.materiaali
+    AND mk.sopimus = :sopimus
+    AND mk.poistettu IS NOT TRUE
+
+  LEFT JOIN pohjavesialue pa
+    ON mk.pohjavesialue = pa.id;
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT m.nimi as toteumamateriaali_materiaali_nimi, m.yksikko as toteumamateriaali_materiaali_yksikko, tm.maara as toteumamateriaali_maara,

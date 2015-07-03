@@ -22,8 +22,7 @@
               (map #(assoc % :maara (double (:maara %))))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
-          (log/info "HAETAAN URAKAN MATERIAALIT")
-          (log/info tulos)
+          (log/debug "HAETAAN URAKAN MATERIAALIT")
           tulos)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
@@ -44,11 +43,11 @@
                      %
                      (dissoc % :pohjavesialue)))
               (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
-        (let [tulos (q/hae-urakan-toteumat-materiaalille db urakka-id materiaali-id
-                                                         (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))
-                                                         sopimus)]
-          (log/info "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE")
-          (log/info tulos)
+        (let [tulos (q/hae-urakan-toteumat-materiaalille db
+                                                         sopimus
+                                                         materiaali-id
+                                                         (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi)))]
+          (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE ("sopimus materiaali-id")")
           tulos)))
 
 (defn hae-toteuman-materiaalitiedot
@@ -61,8 +60,7 @@
         tulos (assoc
                 (first (map :toteuma mankeloitava))
                 :toteumamateriaalit (into [] (map :toteumamateriaali mankeloitava)))]
-    (log/info "Hae toteuman materiaalitiedot:")
-    (log/info tulos)
+    (log/debug "Hae toteuman materiaalitiedot:")
     tulos))
 
   
@@ -75,7 +73,7 @@
                               (filter #(= sopimus-id (:sopimus %))
                                       (hae-urakan-materiaalit c user urakka-id)))]
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (log/info "PÄIVITETÄÄN HOITOKAUDEN " hoitokausi " materiaalit")
+        (log/debug "PÄIVITETÄÄN HOITOKAUDEN " hoitokausi " materiaalit")
         
         (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
@@ -97,7 +95,7 @@
           ;; Muille materiaaleille, poistetaan jos ei ole enää sisääntulevissa
           (doseq [[avain {id :id}] materiaalit-kannassa
                   :when (not (materiaalit-sisaan avain))]
-            (log/info "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
+            (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
             (q/poista-materiaalinkaytto-id! c (:id user) id))
           
       
@@ -108,15 +106,15 @@
                   :let [avain (materiaali-avain materiaali)]]
             (if-let [materiaali-kannassa (materiaalit-kannassa avain)]
               ;; Materiaali on jo kannassa, päivitä, jos muuttunut
-              (do (log/info "TÄMÄ MATSKU ON KANNASSA: " avain)
+              (do (log/debug "TÄMÄ MATSKU ON KANNASSA: " avain)
                   (if (== (:maara materiaali) (:maara materiaali-kannassa))
-                    (do (log/info "Ei muutosta määrään, ei päivitetä."))
-                    (do (log/info "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
+                    (do (log/debug "Ei muutosta määrään, ei päivitetä."))
+                    (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
                         (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
                         )))
           
               (let [{:keys [alkupvm loppupvm maara materiaali pohjavesialue]} materiaali]
-                (log/info "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
+                (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
                 (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
                                     urakka-id sopimus-id (:id pohjavesialue) (:id user)))))))
           
@@ -139,15 +137,15 @@
                               (if (and (:id tm) (pos? (:id tm)))
                                 (if (:poistettu tm)
                                   (do
-                                    (log/info "Poistetaan materiaalitoteuma " (:id tm))
+                                    (log/debug "Poistetaan materiaalitoteuma " (:id tm))
                                     (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
                                   (do
-                                    (log/info "Päivitä materiaalitoteuma "
+                                    (log/debug "Päivitä materiaalitoteuma "
                                               (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:toteuma tm))
                                     (q/paivita-toteuma-materiaali!
                                       c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm))))
                                 (do
-                                  (log/info "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
+                                  (log/debug "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
                                   (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm) (:maara tm) (:id user)))))
                             (when hoitokausi
                               (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi) sopimus))))
