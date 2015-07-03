@@ -37,7 +37,7 @@
                                   @hakuehto
                                   true))
 
-(defonce haetut-ilmoitukset (atom [{:ilmoitettu "Tänään" :sijainti "Täällä" :tyyppi "Se" :vastattu? "Ei"}]))
+(defonce haetut-ilmoitukset (atom []))
 
 (defn kasaa-parametrit []
   (let [valitut (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))    ;; Jos ei yhtäkään valittuna,

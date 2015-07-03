@@ -14,7 +14,9 @@
             [harja.tiedot.urakka :as u]
 
             [bootstrap :as bs]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.pvm :as pvm]
+            [clojure.string :refer [capitalize]]))
 
 (defn urakan-sivulle-nappi
   []
@@ -70,8 +72,9 @@
         [:div
          [:label "Tilat"
           (for [ehto @tiedot/valitut-tilat]
+            ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
             [tee-kentta
-             {:tyyppi :boolean :otsikko (clojure.string/capitalize (name (first ehto)))}
+             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
              (r/wrap
                (second ehto)
                (fn [uusi-tila]
@@ -81,8 +84,9 @@
         [:div
          [:label "Ilmoituksen tyyppi"
           (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
+            ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
             [tee-kentta
-             {:tyyppi :boolean :otsikko (clojure.string/capitalize (name (first ehto)))}
+             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
              (r/wrap
                (second ehto)
                (fn [uusi-tila]
@@ -100,10 +104,11 @@
         {:tyhja (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
 
-        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu}
-         {:otsikko "Sijainti" :nimi :sijainti}
-         {:otsikko "Tyyppi" :nimi :tyyppi}
-         {:otsikko "Vast." :nimi :vastattu?}]
+        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm :ilmoitettu)}
+         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi)}
+         {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
+          :hae #(if (:uusinkuittaus %) (pvm/pvm (:uusinkuittaus %)) "-")}
+         {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu}]
 
         @tiedot/haetut-ilmoitukset]])))
 
