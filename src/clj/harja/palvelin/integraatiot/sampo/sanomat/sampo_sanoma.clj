@@ -13,16 +13,14 @@
   (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") teksti)))
        (catch ParseException e
          (log/error e "Virhe parsiessa päivämäärää: " teksti)
-         nil))
-  ;; fixme: tarkista miksei voi syöttää kantaan
-  nil)
+         nil)))
 
 (defn lue-hanke [program]
   {:viesti-id              (z/xml1-> program (z/attr :message_Id))
    :sampo-id               (z/xml1-> program (z/attr :id))
    :nimi                   (z/xml1-> program (z/attr :name))
-   :alkupvm                (parsi-paivamaara (z/xml1-> program (z/attr :schedule_finish)))
-   :loppupvm               (parsi-paivamaara (z/xml1-> program (z/attr :schedule_start)))
+   :alkupvm                (parsi-paivamaara (z/xml1-> program (z/attr :schedule_start)))
+   :loppupvm               (parsi-paivamaara (z/xml1-> program (z/attr :schedule_finish)))
    :alueurakkanro          (z/xml1-> program (z/attr :vv_alueurakkanro))
    :yhteyshenkilo-sampo-id (z/xml1-> program (z/attr :resourceId))})
 
@@ -30,8 +28,8 @@
   {:viesti-id              (z/xml1-> project (z/attr :message_Id))
    :sampo-id               (z/xml1-> project (z/attr :id))
    :nimi                   (z/xml1-> project (z/attr :name))
-   :alkupvm                (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
-   :loppupvm               (parsi-paivamaara (z/xml1-> project (z/attr :schedule_start)))
+   :alkupvm                (parsi-paivamaara (z/xml1-> project (z/attr :schedule_start)))
+   :loppupvm               (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
    :hanke-sampo-id         (z/xml1-> project (z/attr :programId))
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))})
 
