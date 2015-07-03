@@ -138,10 +138,9 @@
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
         sopimuksen-materiaalit-hoitokausittain
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero]
-                    (log "URAKAN MATSKUI::: " @urakan-materiaalit)
-                    (log "SOPIMUS: " sopimus-id " MATSKUI:: " (filter #(= sopimus-id (:sopimus %))
-                                                                      @urakan-materiaalit))
-                    (u/ryhmittele-hoitokausittain @urakan-materiaalit (u/hoitokaudet ur))))
+                    (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
+                                                          @urakan-materiaalit)
+                                                  (u/hoitokaudet ur))))
         
         
         ;; valitaan materiaaleista vain valitun hoitokauden
