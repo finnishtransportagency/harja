@@ -30,14 +30,10 @@
                                        :sopimus-id sopimus-id
                                        :paallystyskohde-id paallystyskohde-id}))
 
-(defn tallenna-paallystysilmoitus [urakka-id sopimus-id paallystyskohde-id lomakedata aloituspvm valmistumispvm takuupvm]
+(defn tallenna-paallystysilmoitus [urakka-id sopimus-id lomakedata]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
-                                         :paallystyskohde-id paallystyskohde-id
-                                         :lomakedata lomakedata
-                                         :aloituspvm aloituspvm
-                                         :valmistumispvm valmistumispvm
-                                         :takuupvm takuupvm}))
+                                         :lomakedata lomakedata}))
 
 (defn tallenna-paallystysilmoituksen-paatos [urakka-id sopimus-id paallystyskohde-id paatostiedot]
   (k/post! :tallenna-paallystysilmoituksen-paatos {:urakka-id          urakka-id

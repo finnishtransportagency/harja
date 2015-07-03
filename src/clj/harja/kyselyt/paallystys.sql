@@ -80,31 +80,23 @@ SET
   valmistumispvm = :valmistumispvm,
   takuupvm       = :takuupvm,
   muutoshinta    = :muutoshinta,
+  paatos         = :paatos,
+  perustelu      = :perustelu,
+  kasittelyaika  = :kasittelyaika,
   muokattu       = NOW(),
   muokkaaja      = :muokkaaja,
   poistettu      = FALSE
 WHERE paallystyskohde = :id;
 
--- name: vaihda-paallystysilmoituksen-tila!
--- Päivittää päällystysilmoituksen tilan
-UPDATE paallystysilmoitus
-SET
-  tila                = :tila::paallystystila,
-  muokkaaja           = :muokkaaja
-WHERE paallystyskohde = :id;
-
--- name: vaihda-paallystysilmoituksen-paatos!
--- Päivittää päällystysilmoituksen päätöksen
-UPDATE paallystysilmoitus
-SET
-  paatos              = :paatos::paallystysilmoituksen_paatostyyppi,
-  perustelu           = :perustelu,
-  kasittelyaika       = :kasittelyaika,
-  muokkaaja           = :muokkaaja
-WHERE paallystyskohde = :id;
-
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmistumispvm, takuupvm, muutoshinta, luotu, luoja, poistettu)
-VALUES (:paallystyskohde, :tila :: paallystystila, :ilmoitustiedot :: JSONB, :aloituspvm, :valmistumispvm, :takuupvm, :muutoshinta,
-        NOW(), :kayttaja, FALSE);
+VALUES (:paallystyskohde,
+        :tila::paallystystila,
+        :ilmoitustiedot::JSONB,
+        :aloituspvm,
+        :valmistumispvm,
+        :takuupvm,
+        :muutoshinta,
+        NOW(),
+        :kayttaja, FALSE);
