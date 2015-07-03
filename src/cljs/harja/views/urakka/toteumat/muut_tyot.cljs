@@ -334,7 +334,7 @@
                           (:ytunnus @u/urakan-organisaatio))
                :aseta   (fn [rivi arvo] (assoc-in rivi [:suorittajan :ytunnus] arvo))
                :tyyppi  :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-              {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
+              {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 256
                :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}))
 
            ]

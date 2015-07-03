@@ -117,11 +117,13 @@
 
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
+;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       2
-                      koko-rivit))]
+                      koko-rivit))
+        pituus-max (or pituus-max 256)]
     (komp/luo
      (when (= koko-rivit :auto)
        {:component-did-update
@@ -132,13 +134,16 @@
                 (swap! rivit + (/ erotus 19))))))})
      
      (fn [{:keys [nimi koko on-focus lomake?]} data]
-       [:textarea {:value @data
+       [:span
+        [:textarea {:value @data
                    :on-change #(reset! data (-> % .-target .-value))
                    :on-focus on-focus
                    :cols (or koko-sarakkeet 80)
                    :rows @rivit
                    :placeholder placeholder
-                   :max-length pituus-max}]))))
+                   :max-length pituus-max}]
+        (when pituus-max
+          [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
