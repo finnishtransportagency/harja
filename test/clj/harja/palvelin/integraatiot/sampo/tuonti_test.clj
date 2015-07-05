@@ -72,7 +72,10 @@
   (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
       "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
 
-  (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
-      "Luonnin jälkeen urakka löytyy Sampo id:llä.")
+  (is (= 1 (count (q "SELECT id FROM yhteyshenkilo_urakka
+                      WHERE rooli = 'Sampo yhteyshenkilö' AND
+                            urakka = (SELECT id FROM urakka
+                            WHERE sampoid = 'TESTIURAKKA');")))
+      "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
 
   (poista-urakka))

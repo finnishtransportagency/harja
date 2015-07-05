@@ -129,3 +129,9 @@ VALUES ('Sampo yhteyshenkilö', :yhteyshenkilo_sampoid, :urakka,
         (SELECT id
          FROM yhteyshenkilo
          WHERE sampoid = :yhteyshenkilo_sampoid));
+
+-- name: irrota-sampon-yhteyshenkilot-urakalta!
+-- Irrottaa Samposta tuodut yhteyshenkilöt urakalta
+DELETE FROM yhteyshenkilo_urakka
+WHERE rooli = 'Sampo yhteyshenkilö' AND
+      urakka = :urakka_id;
