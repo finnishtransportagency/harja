@@ -17,7 +17,7 @@ SELECT
 FROM yhteyshenkilo y
   LEFT JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
-WHERE yu.urakka = :urakka
+WHERE yu.urakka = :urakka;
 
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
@@ -39,7 +39,7 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
-WHERE p.urakka = :urakka
+WHERE p.urakka = :urakka;
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
@@ -60,41 +60,41 @@ WHERE kur.urakka = :urakka
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT (rooli)
-FROM yhteyshenkilo_urakka
+FROM yhteyshenkilo_urakka;
 
-     -- name: luo-yhteyshenkilo<!
-     -- Tekee uuden yhteys
-     INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti,organisaatio)
-VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org)
+-- name: luo-yhteyshenkilo<!
+-- Tekee uuden yhteys
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio)
+VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org);
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
 SET rooli = :rooli
-WHERE yhteyshenkilo = :id AND urakka = :urakka
+WHERE yhteyshenkilo = :id AND urakka = :urakka;
 
 -- name: liita-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan
-INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, :yht, :urakka)
+INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, :yht, :urakka);
 
 -- name: paivita-yhteyshenkilo!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
 SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
   sahkoposti = :email, organisaatio = :org
-WHERE id = :id
+WHERE id = :id;
 
 -- name: hae-urakan-yhteyshenkilo-idt
 -- Hakee yhteyshenkilöiden id, jotka ovat liitetty annettuun urakkaan
 SELECT yhteyshenkilo
 FROM yhteyshenkilo_urakka
-WHERE urakka = :urakka
+WHERE urakka = :urakka;
 
 -- name: poista-yhteyshenkilo!
 -- Poistaa yhteyshenkilön, joka on annetussa urakassa.
 DELETE FROM yhteyshenkilo
 WHERE id = :id AND id IN (SELECT yhteyshenkilo
                           FROM yhteyshenkilo_urakka
-                          WHERE urakka = :urakka)
+                          WHERE urakka = :urakka);
 
 
 -- name: poista-paivystaja!
@@ -102,30 +102,30 @@ WHERE id = :id AND id IN (SELECT yhteyshenkilo
 DELETE FROM yhteyshenkilo
 WHERE id = (SELECT yhteyshenkilo
             FROM paivystys
-            WHERE id = :id AND urakka = :urakka)
+            WHERE id = :id AND urakka = :urakka);
 
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
 (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo)
-VALUES (TRUE, FALSE, :alku, :loppu, :urakka, :yhteyshenkilo)
+VALUES (TRUE, FALSE, :alku, :loppu, :urakka, :yhteyshenkilo);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
 SELECT yhteyshenkilo
 FROM paivystys
-WHERE id = :id AND urakka = :urakka
+WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-paivystys!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
 SET alku = :alku, loppu = :loppu
-WHERE id = :id AND urakka = :urakka
+WHERE id = :id AND urakka = :urakka;
 
--- name: liita-yhteyshenkilo-urakkaan-sampoidlla<!
+-- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
 INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo_sampoid, urakka, yhteyshenkilo)
 VALUES ('Sampo yhteyshenkilö', :yhteyshenkilo_sampoid, :urakka,
         (SELECT id
          FROM yhteyshenkilo
-         WHERE sampoid = :yhteyshenkilo_sampoid))
+         WHERE sampoid = :yhteyshenkilo_sampoid));

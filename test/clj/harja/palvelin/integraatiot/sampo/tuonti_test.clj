@@ -29,7 +29,6 @@
 
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 
-
 (defn tee-viesti [sisalto]
   (reify TextMessage
     (getText [this] sisalto)))
@@ -72,5 +71,8 @@
   (tuo-urakka)
   (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
       "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
+
+  (is (= 1 (count (q "select id from urakka where sampoid = 'TESTIURAKKA';")))
+      "Luonnin jälkeen urakka löytyy Sampo id:llä.")
 
   (poista-urakka))

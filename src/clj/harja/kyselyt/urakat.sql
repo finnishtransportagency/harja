@@ -176,9 +176,8 @@ UPDATE urakka
 SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid
 WHERE sampoid = :sampoid;
 
--- name: onko-tuotu-samposta
--- Tarkistaa onko urakka jo tuotu Samposta
-SELECT exists(
-    SELECT urakka.id
-    FROM urakka
-    WHERE sampoid = :sampoid);
+-- name: hae-id-sampoidlla
+-- Hakee urakan id:n sampo id:llä
+SELECT urakka.id
+FROM urakka
+WHERE sampoid = :sampoid;
