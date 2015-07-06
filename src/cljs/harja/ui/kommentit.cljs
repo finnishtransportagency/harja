@@ -24,7 +24,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder]} kommentit]
+(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder voi-liittaa]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -46,5 +46,5 @@
          {:on-click #(kommentoi! @uusi-kommentti)
           :disabled (str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
-      [liitteet/liite {:urakka-id (:id @nav/valittu-urakka)
-                       :liite-ladattu #(swap! uusi-kommentti assoc :liite %)}]])])
+      (when voi-liittaa [liitteet/liite {:urakka-id (:id @nav/valittu-urakka)
+                       :liite-ladattu #(swap! uusi-kommentti assoc :liite %)}])])])

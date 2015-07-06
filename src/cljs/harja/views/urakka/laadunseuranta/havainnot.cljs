@@ -348,6 +348,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             (when-not uusi?
               {:otsikko "Kommentit" :nimi :kommentit
                :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                        :voi-liittaa true
                                         :placeholder "Kirjoita kommentti..."
                                         :uusi-kommentti (r/wrap (:uusi-kommentti @havainto)
                                                                 #(swap! havainto assoc :uusi-kommentti %))}
