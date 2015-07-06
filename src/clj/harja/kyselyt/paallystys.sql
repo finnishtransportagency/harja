@@ -10,12 +10,13 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
-  muutoshinta
+  muutoshinta,
 FROM paallystyskohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
 WHERE
   urakka = :urakka
-  AND sopimus = :sopimus;
+  AND sopimus = :sopimus
+  AND pi.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
@@ -151,10 +152,15 @@ UPDATE paallystyskohde
 SET
   kohdenumero                 = :kohdenumero,
   nimi                        = :nimi,
-  sopimuksen_mukaiset_tyot    = :sopimuksen-mukaiset-tyot,
+  sopimuksen_mukaiset_tyot    = :sopimuksen_mukaiset_tyot,
   lisatyot                    = :lisatyot,
   arvonvahennykset            = :arvonvanhennykset,
-  bitumi_indeksi              = :bitumi-indeksi,
-  kaasuindeksi                = :kaasuindeksi,
-  poistettu                   = :poistettu
+  bitumi_indeksi              = :bitumi_indeksi,
+  kaasuindeksi                = :kaasuindeksi
+WHERE id = :id;
+
+-- name: poista-paallystyskohde!
+-- Poistaa päällystyskohteen
+UPDATE paallystyskohde
+SET poistettu = true
 WHERE id = :id;

@@ -172,32 +172,40 @@
                            (or bitumi_indeksi 0)
                            (or kaasuindeksi 0)))
 
-(defn paivita-paallystyskohde [db user urakka-id sopimus-id kohde]
+(defn paivita-paallystyskohde [db user {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot lisatyot arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (log/debug "Päivitetään päällystyskohde")
-  ; TODO päivitä
-  ; TODO Ja varmista että jos löytyy POT, ei saa poistaa.
-  )
+  (if poistettu
+    (q/poista-paallystyskohde! db id) ; TODO Varmista että jos löytyy POT, ei saa poistaa.
+    (q/paivita-paallystyskohde! db
+                                kohdenumero
+                                nimi
+                                (or sopimuksen_mukaiset_tyot 0)
+                                (or lisatyot 0)
+                                (or arvonvahennykset 0)
+                                (or bitumi_indeksi 0)
+                                (or kaasuindeksi 0)
+                                id)))
 
 (defn tallenna-paallystyskohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Tallennetaan päällystyskohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut päällystyskohde: " kohde))
-      (if (neg? (:id kohde))
-        (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)
-        (paivita-paallystyskohde c user urakka-id sopimus-id kohde)))
+      (if (and (:id kohde) (not (neg? (:id kohde))))
+        (paivita-paallystyskohde c user kohde)
+        (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)))
     (let [paallystyskohteet (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
-                                          :sopimus-id sopimus-id})]
+                                                                  :sopimus-id sopimus-id})]
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
 (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
   (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
-  (jdbc/with-db-transaction [c db]
-    ; TODO Tallenna
-    (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
-                                            :sopimus-id         sopimus-id
-                                            :paallystyskohde-id paallystyskohde-id}))))
+    (jdbc/with-db-transaction [c db]
+      ; TODO Tallenna
+      (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
+                                              :sopimus-id         sopimus-id
+                                              :paallystyskohde-id paallystyskohde-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle
