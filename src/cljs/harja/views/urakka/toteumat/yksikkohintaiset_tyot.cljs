@@ -208,7 +208,7 @@
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click
                                                                #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
-                                                                      (log "TOT toteuma: " (pr-str toteuma)
+                                                                      (log "toteuma: " (pr-str toteuma)
                                                                            (let [lomake-tiedot {:toteuma-id       (:id toteuma)
                                                                                                 :tehtavat         (zipmap (iterate inc 1)
                                                                                                                           (mapv (fn [tehtava]
@@ -219,8 +219,8 @@
                                                                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
                                                                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 2)
                                                                                                                                         tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                                                                                    (log "TOT Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
-                                                                                                                                    (log "TOT Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                                                                                                    (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                                                                                                    (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
                                                                                                                                     {
                                                                                                                                      :tehtava {:id (:tpk-id tehtava)}
                                                                                                                                      :maara (:maara tehtava)
@@ -291,8 +291,8 @@
                          tehtavien-summat @tehtavien-summat]
 
                      (when tehtavien-summat
-                       (log "TOT Rivien pohja tehty: " (pr-str rivit))
-                       (log "TOT Tehtävien summat saatu: " (pr-str tehtavien-summat))
+                       (log "Rivien pohja tehty: " (pr-str rivit))
+                       (log "Tehtävien summat saatu: " (pr-str tehtavien-summat))
                        (log "Rakennetaan lopulliset rivit.")
                        (-> (lisaa-tyoriveille-yksikkohinta rivit)
                            (lisaa-tyoriveille-suunniteltu-maara)
