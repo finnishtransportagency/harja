@@ -149,55 +149,59 @@
 
        [:div
 
-        [:label "Hae ilmoituksia: " [tee-kentta {:tyyppi :string} tiedot/hakuehto]]
+        [:div.col-md-12 [:label "Hae ilmoituksia: "] [tee-kentta {:tyyppi :string} tiedot/hakuehto]]
 
         (if @tiedot/valittu-urakka
-          [urakan-hoitokausi-ja-aikavali
-           @tiedot/valittu-urakka
-           (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
-           tiedot/valittu-aikavali]
+          [:div.col-md-12
+           [urakan-hoitokausi-ja-aikavali
+            @tiedot/valittu-urakka
+            (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
+            tiedot/valittu-aikavali]]
 
-          [:div
-           [:label "Saapunut:"]
-           [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :leveys "100%"}
-            (r/wrap
-              (first @tiedot/valittu-aikavali)
-              (fn [uusi-arvo]
-                (reset! tiedot/valittu-aikavali
-                        [uusi-arvo
-                         (second @tiedot/valittu-aikavali)])))]
-
-           [:label " \u2014 "]
-           [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
-                                        (second @tiedot/valittu-aikavali)
-                                        (fn [uusi-arvo]
-                                          (swap! tiedot/valittu-aikavali
-                                                 (fn [[alku _]]
-                                                   [alku uusi-arvo]))))]])
-
-        [:div
-         [:label "Tilat"
-          (for [ehto @tiedot/valitut-tilat]
-            ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
-            [tee-kentta
-             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
+          [:div.row
+           [:div.col-md-4
+            [:label "Saapunut:"]
+            [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :leveys "100%"}
              (r/wrap
-               (second ehto)
-               (fn [uusi-tila]
-                 (reset! tiedot/valitut-tilat
-                         (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]]
+               (first @tiedot/valittu-aikavali)
+               (fn [uusi-arvo]
+                 (reset! tiedot/valittu-aikavali
+                         [uusi-arvo
+                          (second @tiedot/valittu-aikavali)])))]]
 
-        [:div
-         [:label "Ilmoituksen tyyppi"
-          (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
-            ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
-            [tee-kentta
-             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
-             (r/wrap
-               (second ehto)
-               (fn [uusi-tila]
-                 (reset! tiedot/valitut-ilmoitusten-tyypit
-                         (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]]
+           [:div.col-md-4
+            [:label " \u2014 "]
+            [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
+                                                        (second @tiedot/valittu-aikavali)
+                                                        (fn [uusi-arvo]
+                                                          (swap! tiedot/valittu-aikavali
+                                                                 (fn [[alku _]]
+                                                                   [alku uusi-arvo]))))]]])
+
+        [:div.row
+         [:div.col-md-2
+          [:label "Tilat"
+           (for [ehto @tiedot/valitut-tilat]
+             ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
+             [tee-kentta
+              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
+              (r/wrap
+                (second ehto)
+                (fn [uusi-tila]
+                  (reset! tiedot/valitut-tilat
+                          (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]]
+
+         [:div.col-md-2
+          [:label "Ilmoituksen tyyppi"
+           (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
+             ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
+             [tee-kentta
+              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
+              (r/wrap
+                (second ehto)
+                (fn [uusi-tila]
+                  (reset! tiedot/valitut-ilmoitusten-tyypit
+                          (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]]]
 
        [palvelinkutsu-nappi
         "Hae ilmoitukset"
