@@ -8,7 +8,7 @@
 (def Havainto
   {:kuvaus Teksti
    :tekija Osapuoli
-   :selvitys-pyydetty s/Bool})
+   (s/optional-key :selvitys-pyydetty) s/Bool})
 
   
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie))
@@ -20,7 +20,8 @@
    :lumimaara s/Num})
 
 (def Soratiemittaus
-  {:polyavyys (s/enum 1 2 3 4 5)
+  {:hoitoluokka (s/enum 1 2)
+   :polyavyys (s/enum 1 2 3 4 5)
    :tasaisuus (s/enum 1 2 3 4 5)
    :kiinteys (s/enum 1 2 3 4 5)
    :sivukaltevuus s/Num})
@@ -35,7 +36,7 @@
    :tarkastaja Teksti
    (s/optional-key :mittaaja) Teksti
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
-   (s/optional-key :soratiemittais) Soratiemittaus
+   (s/optional-key :soratiemittaus) Soratiemittaus
    (s/optional-key :havainto) Havainto})
 
 (defn validoi-tarkastus [data]

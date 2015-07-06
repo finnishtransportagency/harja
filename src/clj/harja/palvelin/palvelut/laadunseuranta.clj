@@ -27,6 +27,9 @@
                                     (fn [k]
                                       (when k (keyword k)))))))
 
+(def tarkastus-xf
+  (map konv/alaviiva->rakenne))
+
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
@@ -169,7 +172,7 @@
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (into []
-        (map konv/alaviiva->rakenne)
+        tarkastus-xf
         (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
 
 (defn luo-tarkastus
@@ -181,6 +184,33 @@
                                 (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
                                 tarkastaja mittaaja (name tyyppi) havainto (:id user)))
 
+(defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
+                                         {:keys [talvihoitoluokka lumimaara epatasaisuus
+                                                 kitka lampotila ajosuunta] :as talvihoitomittaus}]
+  (if uusi?
+    (tarkastukset/luo-talvihoitomittaus<! db
+                                          (or talvihoitoluokka "") lumimaara epatasaisuus
+                                          kitka lampotila (or ajosuunta 0)
+                                          tarkastus)
+    (tarkastukset/paivita-talvihoitomittaus! db
+                                             (or talvihoitoluokka "") lumimaara epatasaisuus
+                                             kitka lampotila (or ajosuunta 0)
+                                             tarkastus)))
+
+(defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
+                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus]}]
+  (if uusi?
+    (tarkastukset/luo-soratiemittaus<! db
+                                       hoitoluokka tasaisuus
+                                       kiinteys polyavyys
+                                       sivukaltevuus
+                                       tarkastus)
+    (tarkastukset/paivita-soratiemittaus! db
+                                          hoitoluokka tasaisuus
+                                          kiinteys polyavyys
+                                          sivukaltevuus
+                                          tarkastus)))
+
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
   (jdbc/with-db-transaction [c db]
@@ -188,13 +218,21 @@
                           {:aika (:aika tarkastus)
                            :urakka urakka-id})
           
-          id (if (:id tarkastus)
-               tarkastus ;FIXME: päivitä olemassaoleva
-               (luo-tarkastus c user urakka-id tarkastus
-                              (luo-tai-paivita-havainto c user havainto)))]
+          uusi? (nil? (:id tarkastus))
+          id (:id (if-not uusi?
+                    tarkastus ;FIXME: päivitä olemassaoleva
+                    (luo-tarkastus c user urakka-id tarkastus
+                                   (luo-tai-paivita-havainto c user havainto))))
+          ]
+
+      (condp = (:tyyppi tarkastus)
+        :talvihoito (luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
+        :soratie (luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+        nil)
+      
+        
       (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
-      tarkastus ;; FIXME: hae uudet tiedot
-      )))
+      (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus c urakka-id id))))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle

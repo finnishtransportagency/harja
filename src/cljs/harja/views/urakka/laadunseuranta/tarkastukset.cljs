@@ -130,7 +130,12 @@
                   {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
                    :nimi :sivukaltevuus :leveys-col 1
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
-                   :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]})))
+                   :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
+
+                  {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
+                   :nimi :hoitoluokka :leveys-col 2
+                   :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
+                   :valinnat [1 2]})))
                  
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom]
@@ -187,7 +192,12 @@
         "Tallenna tarkastus"
         (fn []
           (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-        {:disabled (not (validi-tarkastus? tarkastus))}]]]
+        
+        {:disabled (not (validi-tarkastus? tarkastus))
+         :kun-onnistuu (fn [tarkastus]
+                         (reset! valittu-tarkastus nil)
+                         (laadunseuranta/paivita-tarkastus-listaan! tarkastus))
+                         }]]]
      ]))
 
 (defn tarkastukset

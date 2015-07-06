@@ -4,7 +4,9 @@
             [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
-            [cljs.core.async :refer [<!]])
+            [harja.pvm :as pvm]
+            [cljs.core.async :refer [<!]]
+            [harja.loki :refer [log]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -35,6 +37,15 @@
                                      :alkupvm alkupvm
                                      :loppupvm loppupvm}))
 
+(def tarkastus-xf
+  (map #(assoc %
+               :type :tarkastus
+               :alue {:type :circle
+                      :radius 100
+                      :coordinates (:sijainti %)
+                      :fill {:color "green"}
+                      :stroke {:color "black" :width 10}})))
+
 (defonce urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                [alku loppu] @tiedot-urakka/valittu-aikavali
@@ -43,15 +54,32 @@
               
               (when (and laadunseurannassa? (= :tarkastukset valilehti)
                          urakka-id alku loppu)
-                (go (mapv #(assoc %
-                                  :type :tarkastus
-                                  :alue {:type :circle
-                                         :radius 100
-                                         :coordinates (:sijainti %)
-                                         :fill {:color "green"}
-                                         :stroke {:color "black" :width 10}})
+                (go (into []
+                          tarkastus-xf
                           (<! (hae-urakan-tarkastukset urakka-id alku loppu)))))))
 
+(defn paivita-tarkastus-listaan!
+  "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
+  [{:keys [aika id] :as tarkastus}]
+  (let [[alkupvm loppupvm] @tiedot-urakka/valittu-aikavali
+        tarkastus (first (sequence tarkastus-xf [tarkastus]))
+        sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]
+                                                 (when (= id tarkastus-id) i))
+                                               @urakan-tarkastukset))]
+    (if (pvm/valissa? aika alkupvm loppupvm)
+      ;; Tarkastus on valitulla välillä: päivitetään
+      (if sijainti-listassa
+         (swap! urakan-tarkastukset assoc sijainti-listassa tarkastus)
+         (swap! urakan-tarkastukset conj tarkastus))
+
+      ;; Ei pvm välillä, poistetaan listasta jos se aiemmin oli välillä
+      (when sijainti-listassa
+        (swap! urakan-tarkastukset (fn [tarkastukset]
+                                     (into []
+                                           (remove #(= (:id %) id))
+                                           tarkastukset)))))))
+
+      
 (defn hae-urakan-havainnot
   "Hakee annetun urakan havainnot urakka id:n ja aikavälin perusteella."
   [listaus urakka-id alkupvm loppupvm]
