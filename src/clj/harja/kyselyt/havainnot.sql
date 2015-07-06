@@ -9,14 +9,7 @@ SELECT
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
-  (SELECT k.kommentti
-   FROM kommentti k
-   WHERE k.id IN (SELECT hk.kommentti
-                  FROM havainto_kommentti hk
-                  WHERE hk.havainto = h.id)
-   ORDER BY luotu ASC
-   OFFSET 0
-   LIMIT 1)                          AS kuvaus
+  h.kuvaus
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka
@@ -108,6 +101,7 @@ SELECT
   h.aika,
   h.kohde,
   h.tekija,
+  h.kuvaus,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,

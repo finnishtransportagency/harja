@@ -9,3 +9,5 @@
 (def +kirjausvastaus+ "api/schemas/kirjaus-response.schema.json")
 
 (def +havainnon-kirjaus+ "api/schemas/havainnon-kirjaus-request.schema.json")
+
+(def +tiestotarkastuksen-kirjaus+ "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json")
