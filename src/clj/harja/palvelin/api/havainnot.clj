@@ -28,27 +28,38 @@
   (let [{:keys [tunniste sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (when (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste))
-      (havainnot/poista-havainto-ulkoisella-idlla! db (:id tunniste)))
-    (let [havainto (havainnot/luo-havainto<!
-                     db
-                     urakka-id
-                     (parsi-aika paivamaara)
-                     "urakoitsija"
-                     kohde
-                     true
-                     (:id kirjaaja)
-                     kuvaus
-                     (:x koordinaatit)
-                     (:y koordinaatit)
-                     (:numero tie)
-                     (:aosa tie)
-                     (:losa tie)
-                     (:aet tie)
-                     (:let tie)
-                     (:id tunniste))
-          havainnon-id (:id havainto)]
-      havainnon-id)))
+    (if (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste))
+      (:id (havainnot/paivita-havainto-ulkoisella-idlla<!
+             db
+             (parsi-aika paivamaara)
+             kohde
+             kuvaus
+             (:x koordinaatit)
+             (:y koordinaatit)
+             (:numero tie)
+             (:aosa tie)
+             (:losa tie)
+             (:aet tie)
+             (:let tie )
+             (:id kirjaaja)
+             (:id tunniste)))
+      (:id (havainnot/luo-havainto<!
+             db
+             urakka-id
+             (parsi-aika paivamaara)
+             "urakoitsija"
+             kohde
+             true
+             (:id kirjaaja)
+             kuvaus
+             (:x koordinaatit)
+             (:y koordinaatit)
+             (:numero tie)
+             (:aosa tie)
+             (:losa tie)
+             (:aet tie)
+             (:let tie)
+             (:id tunniste))))))
 
 (defn tallenna-kommentit [db havainto-id kirjaaja kommentit]
   (doseq [kommentin-data kommentit]
