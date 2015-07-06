@@ -10,29 +10,29 @@ The following keys are supported in the configuration:
   :active    An atom containing the selected tab number. Defaults to (atom 0).
   :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
 
-    [config & alternating-title-and-component]
-    (let [active (or (:active config) (atom nil))
-          style-class (case (or (:style config) :tabs)
-                          :pills "nav-pills"
-                          :tabs "nav-tabs")]
-        (fn [config & alternating-title-and-component]
-            (let [tabs (filter #(not (nil? (nth % 2))) (partition 3 alternating-title-and-component))
-                  [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]
-                [:span
-                 [:ul.nav {:class style-class}
-                  (map
-                      (fn [[title keyword]]
-                          ^{:key title}
-                          [:li {:role "presentation"
-                                :class (when (= keyword active-tab-keyword)
-                                           "active")}
-                           [:a.klikattava {:on-click #(do
-                                                         (.preventDefault %)
-                                                         (reset! active keyword))}
-                            title]])
-                      tabs)]
-                 [:div.valilehti active-component]]))))
-  
+  [config & alternating-title-and-component]
+  (let [active (or (:active config) (atom nil))
+        style-class (case (or (:style config) :tabs)
+                      :pills "nav-pills"
+                      :tabs "nav-tabs")]
+    (fn [config & alternating-title-and-component]
+      (let [tabs (filter #(not (nil? (nth % 2))) (partition 3 alternating-title-and-component))
+            [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]
+        [:span
+         [:ul.nav {:class style-class}
+          (map
+            (fn [[title keyword]]
+              ^{:key title}
+              [:li {:role  "presentation"
+                    :class (when (= keyword active-tab-keyword)
+                             "active")}
+               [:a.klikattava {:on-click #(do
+                                           (.preventDefault %)
+                                           (reset! active keyword))}
+                title]])
+            tabs)]
+         [:div.valilehti active-component]]))))
+
 (defn navbar
   "A Bootstrap navbar component"
   [options header & items]
@@ -40,18 +40,18 @@ The following keys are supported in the configuration:
     (fn [options header & items]
       [:nav.navbar.navbar-default {:role "navigation"}
        [:div.container-fluid
-        
+
         ;; Brand and toggle get grouped for better mobile display 
         [:div.navbar-header
-         [:button.navbar-toggle.collapsed {:type "button"} ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+         [:button.navbar-toggle.collapsed {:type "button"}  ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
           [:span.sr-only "Toggle navigation"]
           [:span.icon-bar]
           [:span.icon-bar]
           [:span.icon-bar]]
          [:a.navbar-brand {:href "#"} header]]
-        
+
         ;; Collect the nav links, forms, and other content for toggling
-        (let [[left-items _ right-items] (partition-by #(= :right %) items)] 
+        (let [[left-items _ right-items] (partition-by #(= :right %) items)]
           [:div.navbar-collapse {:class @collapse-state}
            (when left-items
              [:ul.nav.navbar-nav
@@ -70,9 +70,9 @@ The following keys are supported in the configuration:
                                   " "
                                   (:context (meta (first item))))}
                  item])])])]])))
- 
+
 (defn ^{:context "dropdown"}
-  dropdown
+dropdown
   "A dropdown menu."
   [title items]
   [:span
@@ -82,7 +82,7 @@ The following keys are supported in the configuration:
     (for [item items]
       [:li item])]])
 
- 
+
 
 (defn dropdown-panel
   "Panel with open/closed state that shows content only when open.
@@ -98,12 +98,12 @@ Opts can have the following keys:
 
        ;; Panel heading with title and clickable open/close toggle
        [:div.panel-heading {:on-click #(swap! open not)}
-        [:h3.panel-title title] 
-        [:span.pull-right.clickable 
+        [:h3.panel-title title]
+        [:span.pull-right.clickable
          [:i.glyphicon {:class (if @open
                                  "glyphicon-minus"
                                  "glyphicon-plus")}]]]
-       
+
        ;; Panel content
        (when @open
          [:div.panel-body
@@ -112,12 +112,14 @@ Opts can have the following keys:
 (defn panel
   ([options content] (panel options nil content))
   ([options title content]
-     [:div.panel {:class (case (or (:style options) :default)
-                           :default "panel-default")}
-      (when title
-        [:div.panel-heading
-         [:h3.panel-title title]])
-      [:div.panel-body
-       content]]))
+   [:div.panel {:class (or
+                         (:class options)
+                         (case (or (:style options) :default)
+                           :default "panel-default"))}
+    (when title
+      [:div.panel-heading
+       [:h3.panel-title title]])
+    [:div.panel-body
+     content]]))
 
 
