@@ -19,22 +19,6 @@
             [clj-time.format :as format]
             [clj-time.coerce :as coerce]))
 
-; FIXME Käytä geneeristä versiota tästä, ks. commit 9327c7cd7c1f127f7bbd6b910c3ed0badf34e222
-(def muunna-desimaaliluvut-xf
-  (map #(-> %
-            (assoc-in [:bitumi_indeksi]
-                      (or (some-> % :bitumi_indeksi double) 0))
-            (assoc-in [:sopimuksen_mukaiset_tyot]
-                      (or (some-> % :sopimuksen_mukaiset_tyot double) 0))
-            (assoc-in [:arvonvahennykset]
-                      (or (some-> % :arvonvahennykset double) 0))
-            (assoc-in [:lisatyot]
-                      (or (some-> % :lisatyot double) 0))
-            (assoc-in [:muutoshinta]
-                      (or (some-> % :muutoshinta double) 0))
-            (assoc-in [:kaasuindeksi]
-                      (or (some-> % :kaasuindeksi double) 0)))))
-
 (defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json
       (assoc-in avainpolku
@@ -44,18 +28,14 @@
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into []
-                      muunna-desimaaliluvut-xf
-                      (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
+  (let [vastaus (into [] (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystyskohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into []
-                      muunna-desimaaliluvut-xf
-                      (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+  (let [vastaus (into [] (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
     vastaus))
 

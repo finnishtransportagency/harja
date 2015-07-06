@@ -419,7 +419,6 @@
             (fn [toteuma] (case (:tila toteuma)
                             :lukittu 0
                             :valmis 1
-                            :palautettu 2
                             :aloitettu 3
                             4))
             @paallystys/paallystystoteumat)]]))))
