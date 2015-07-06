@@ -152,35 +152,21 @@
         toteutuneet-osoitteet
         (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :osoitteet]
-                                                  (filter   ; FIXME filteristä oma funktio
-                                                    #(not (and (true? (:poistettu %))
-                                                               (neg? (:id %)))) (vals uusi-arvo))))))
+                                        (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
         ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
         kiviaines
         (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :kiviaines]
-                                                  (filter
-                                                    #(not (and (true? (:poistettu %))
-                                                               (neg? (:id %)))) (vals uusi-arvo))))))
+                                        (assoc-in @lomakedata [:ilmoitustiedot :kiviaines] (grid/filteroi-uudet-poistetut uusi-arvo)))))
         alustalle-tehdyt-toimet
         (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata
-                                                  [:ilmoitustiedot :alustatoimet]
-                                                  (filter
-                                                    #(not (and (true? (:poistettu %))
-                                                               (neg? (:id %)))) (vals uusi-arvo))))))
+                                        (assoc-in @lomakedata [:ilmoitustiedot :alustatoimet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
         toteutuneet-maarat
         (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :tyot]
-                                                  (filter
-                                                    #(not (and (true? (:poistettu %))
-                                                               (neg? (:id %))))
-                                                    (vals uusi-arvo))))))
+                                        (assoc-in @lomakedata [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})

@@ -822,8 +822,10 @@ Optiot on mappi optioita:
                [muokkaa-footer ohjaus])
              ]]))})))
 
+; Apufunktiot
 
-
-
-
-
+(defn filteroi-uudet-poistetut
+  [muokkausgrid-data]
+  (filter
+    #(not (and (true? (:poistettu %))
+               (neg? (:id %)))) (vals muokkausgrid-data)))
