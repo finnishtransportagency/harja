@@ -158,19 +158,22 @@
            tiedot/valittu-aikavali]
 
           [:div
-           [:label "Saapunut:" [tee-kentta {:tyyppi :pvm :otsikko "Saapunut"}
-                                (r/wrap
-                                  (first @tiedot/valittu-aikavali)
-                                  (fn [uusi-arvo]
-                                    (reset! tiedot/valittu-aikavali
-                                            [uusi-arvo
-                                             (second @tiedot/valittu-aikavali)])))]]
-           [:label " \u2014 " [tee-kentta {:tyyppi :pvm} (r/wrap
-                                                           (second @tiedot/valittu-aikavali)
-                                                           (fn [uusi-arvo]
-                                                             (swap! tiedot/valittu-aikavali
-                                                                    (fn [[alku _]]
-                                                                      [alku uusi-arvo]))))]]])
+           [:label "Saapunut:"]
+           [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :leveys "100%"}
+            (r/wrap
+              (first @tiedot/valittu-aikavali)
+              (fn [uusi-arvo]
+                (reset! tiedot/valittu-aikavali
+                        [uusi-arvo
+                         (second @tiedot/valittu-aikavali)])))]
+
+           [:label " \u2014 "]
+           [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
+                                        (second @tiedot/valittu-aikavali)
+                                        (fn [uusi-arvo]
+                                          (swap! tiedot/valittu-aikavali
+                                                 (fn [[alku _]]
+                                                   [alku uusi-arvo]))))]])
 
         [:div
          [:label "Tilat"
