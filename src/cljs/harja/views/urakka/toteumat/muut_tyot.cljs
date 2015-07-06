@@ -139,8 +139,9 @@
                                                (:tyyppi m)
                                                (:alkanut m)
                                                (:paattynyt m)
-                                               (or (get-in m [:tehtava :paivanhinta])
-                                                   (get-in m [:tehtava :maara])))))
+                                               (or (if (= (:hinnoittelu @muokattu) :paivanhinta)
+                                                     (get-in m [:tehtava :paivanhinta])
+                                                     (get-in m [:tehtava :maara]))))))
         tallennus-kaynnissa (atom false)
         tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
