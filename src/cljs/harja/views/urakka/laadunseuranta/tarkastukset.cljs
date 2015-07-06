@@ -31,7 +31,7 @@
 (def +tarkastystyyppi+ [:tiesto :talvihoito :soratie])
 
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
-(defonce tienumero (atom nil)) ;; tienumero, tai kaikki
+
 
 (defonce valittu-tarkastus (atom nil))
                 
@@ -67,7 +67,7 @@
         [:span.label-ja-kentta
          [:span.kentan-otsikko "Tienumero"]
          [:div.kentta
-          [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} tienumero]]]
+          [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} laadunseuranta/tienumero]]]
         
         [napit/uusi "Uusi tarkastus"
          #(reset! valittu-tarkastus (uusi-tarkastus)) {}]

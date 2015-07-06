@@ -188,10 +188,13 @@
 
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
-  [db user {:keys [urakka-id alkupvm loppupvm]}]
+  [db user {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (into []
         tarkastus-xf
-        (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
+        (tarkastukset/hae-urakan-tarkastukset db urakka-id
+                                              (konv/sql-timestamp alkupvm)
+                                              (konv/sql-timestamp loppupvm)
+                                              (if tienumero true false) tienumero)))
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tarkastuksen, palauttaa id:n."
