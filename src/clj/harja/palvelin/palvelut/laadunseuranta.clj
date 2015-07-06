@@ -73,7 +73,8 @@
         id)
 
     (:id (havainnot/luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
-                                   (if selvitys-pyydetty true false) (:id user) kuvaus nil nil nil nil nil nil nil nil))))
+                                   (if selvitys-pyydetty true false) (:id user) kuvaus
+                                   nil nil nil nil nil nil nil nil))))
 
 
 (defn hae-havainnon-tiedot
