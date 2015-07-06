@@ -53,11 +53,17 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
          [k & kentat] kentat]
     (if-not k
       rivi
-      (let [arvo (get rivi k)]
-        (recur (if arvo
-                 (assoc rivi k (muunnos-fn arvo))
-                 rivi)
-               kentat)))))
+      (if (vector? k)
+        (let [arvo (get-in rivi k)]
+          (recur (if arvo
+                   (assoc-in rivi k (muunnos-fn arvo))
+                   rivi)
+                 kentat))
+        (let [arvo (get rivi k)]
+          (recur (if arvo
+                   (assoc rivi k (muunnos-fn arvo))
+                   rivi)
+                 kentat))))))
 
 (defn string->keyword
   "Muuttaa annetut kentät keywordeiksi, jos ne eivät ole NULL."
