@@ -68,7 +68,7 @@
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
 
-(reaction (when @filttereita-vaihdettu?) (lopeta-pollaus))
+(def lopeta-pollaus? (reaction (when @filttereita-vaihdettu?) (lopeta-pollaus)))
 
 (defn aloita-pollaus
   []
