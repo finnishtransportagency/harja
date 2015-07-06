@@ -64,7 +64,7 @@
     (komp/luo
       (fn []
         [:div
-         [grid/grid ; FIXME Ei saa poistaa kohdetta jolle on olemassa POT.
+         [grid/grid
           {:otsikko      "Kohteet"
            :tyhja        (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
@@ -95,14 +95,20 @@
           {:otsikko  "Lisätyöt"
            :tyhja    (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei lisätöitä")
            :luokat   ["paallysteurakka-kohteet-lisatyot"]
-           :tunniste :numero}
-          [{:otsikko "Kohde" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "40%"}
-           {:otsikko "Hinta" :nimi :lisatyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           :tunniste :numero
+           :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
+                                    [sopimus-id _] @u/valittu-sopimusnumero
+                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
+                                (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                (reset! paallystys/paallystyskohteet vastaus)))
+           :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
+          [{:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "40%"}
+           {:otsikko "Hinta" :nimi :lisatyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt  :tyyppi :numero :leveys "10%"}
+           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                                                                                                                  (:lisatyot rivi)
                                                                                                                  (:muutoshinta rivi)
