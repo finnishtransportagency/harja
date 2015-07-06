@@ -101,7 +101,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :muokattava?   muokattava?
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- Valitse päätös -") ; FIXME Näkyy urakoitsijalle tekstinä jos ei vielä annettu?
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
           :leveys-col    4}
 
          (when (:paatos @paatostiedot)
