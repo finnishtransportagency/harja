@@ -65,7 +65,6 @@
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
             liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
-        (println (liitteet/lataa-liite liitteiden-hallinta liite-id))
         (havainnot/liita-havainto<! db havainto-id liite-id)))))
 
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]

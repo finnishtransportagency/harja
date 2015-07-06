@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo.maksuera
+(ns harja.palvelin.integraatiot.sampo.kasittely.maksuerat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]

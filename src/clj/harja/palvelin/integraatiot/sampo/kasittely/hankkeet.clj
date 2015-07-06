@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo.hankkeet
+(ns harja.palvelin.integraatiot.sampo.kasittely.hankkeet
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.kyselyt.urakat :as urakat]))

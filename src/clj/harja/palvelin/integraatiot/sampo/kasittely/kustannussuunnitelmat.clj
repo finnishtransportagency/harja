@@ -1,7 +1,7 @@
-(ns harja.palvelin.integraatiot.sampo.kustannussuunnitelma
+(ns harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat
   (:require [harja.kyselyt.kustannussuunnitelmat :as qk]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
-            [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]

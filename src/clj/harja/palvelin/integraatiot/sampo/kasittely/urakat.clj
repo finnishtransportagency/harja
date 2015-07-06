@@ -1,24 +1,23 @@
-(ns harja.palvelin.integraatiot.sampo.urakat
+(ns harja.palvelin.integraatiot.sampo.kasittely.urakat
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]))
 
-(defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id]
-  (log/debug "Paivitetaan urakka.")
-  (urakat/paivita-urakka-samposta! db nimi alkupvm loppupvm hanke-sampo-id sampo-id))
+(defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id]
+  (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
+  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakka-id))
 
 (defn luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id]
-  (log/debug "Lisataan uusi urakka.")
+  (log/debug "Luodaan uusi urakka.")
   (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id))]
     (log/debug "Uusi urakka id on:" uusi-id)
     uusi-id))
 
 (defn tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id]
   (let [urakka-id (:id (first (urakat/hae-id-sampoidlla db sampo-id)))]
-    (log/debug "Urakka id: " urakka-id)
     (if urakka-id
       (do
-        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id)
+        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id)
         urakka-id)
       (do
         (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id)))))

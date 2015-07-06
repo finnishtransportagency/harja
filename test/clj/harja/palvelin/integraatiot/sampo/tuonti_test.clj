@@ -27,6 +27,15 @@
 </Sampo2harja>
 ")
 
+(def +testisopimus-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Order contactId=\"\" contractPartyId=\"TESTIORGANISAATI\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
+           name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
+           schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
+        <documentLinks/>
+    </Order>
+</Sampo2harja>")
+
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 
 (defn tee-viesti [sisalto]
@@ -41,16 +50,22 @@
 (defn tuo-hanke []
   (laheta-viesti-kasiteltavaksi +testihanke-sanoma+))
 
-(defn tuo-urakka []
-  (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
-
 (defn poista-hanke []
   (u "update urakka set hanke = null where hanke_sampoid = 'TESTIHANKE'")
   (u "delete from hanke where sampoid = 'TESTIHANKE'"))
 
+(defn tuo-urakka []
+  (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
+
 (defn poista-urakka []
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
+
+(defn tuo-sopimus []
+  (laheta-viesti-kasiteltavaksi +testisopimus-sanoma+))
+
+(defn poista-sopimus []
+  (u "delete from sopimus where sampoid = 'TESTISOPIMUS'"))
 
 (deftest tarkista-hankkeen-tallentuminen
   (tuo-hanke)
@@ -79,3 +94,16 @@
       "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
 
   (poista-urakka))
+
+
+
+(deftest tarkista-sopimuksen-tallentuminen
+  (tuo-sopimus)
+  (is (= 1 (count (q "select id from sopimus where sampoid = 'TESTISOPIMUS';")))
+      "Luonnin jälkeen sopimus löytyy Sampo id:llä.")
+
+  (tuo-sopimus)
+  (is (= 1 (count (q "select id from sopimus where sampoid = 'TESTISOPIMUS';")))
+      "Tuotaessa sama sopimus uudestaan, päivitetään vanhaa eikä luoda uutta.")
+
+  (poista-sopimus))

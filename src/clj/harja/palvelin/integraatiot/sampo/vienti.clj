@@ -5,8 +5,8 @@
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sampoon-sanoma]
-            [harja.palvelin.integraatiot.sampo.maksuera :as maksuera]
-            [harja.palvelin.integraatiot.sampo.kustannussuunnitelma :as kustannussuunnitelma]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelma]
             [harja.palvelin.komponentit.sonja :as sonja]))
 
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]

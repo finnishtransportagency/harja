@@ -170,11 +170,11 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid)
 VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid);
 
--- name: paivita-urakka-samposta!
--- Paivittaa urakan Samposta saaduilla tiedoilla
+-- name: paivita-urakka!
+-- Paivittaa urakan
 UPDATE urakka
 SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid
-WHERE sampoid = :sampoid;
+WHERE id = :id;
 
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä
