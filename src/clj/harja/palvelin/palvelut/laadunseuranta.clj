@@ -28,7 +28,24 @@
                                       (when k (keyword k)))))))
 
 (def tarkastus-xf
-  (map konv/alaviiva->rakenne))
+  (comp
+   (map konv/alaviiva->rakenne)
+   (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+   (map #(-> %1
+             (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
+             (update-in [:havainto] dissoc :selvityspyydetty)
+             (update-in [:havainto] (fn [h]
+                                      (if (nil? (:selvitys-pyydetty h))
+                                        (dissoc h :selvitys-pyydetty)
+                                        h)))))
+
+   (map #(dissoc % :sopimus)) ;; tarvitaanko sopimusta?
+   (map (fn [tarkastus]
+          (condp = (:tyyppi tarkastus)
+            :talvihoito (dissoc tarkastus :soratiemittaus)
+            :soratie (dissoc tarkastus :talvihoitomittaus)
+            :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
+
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -45,17 +62,18 @@
 
 (defn- luo-tai-paivita-havainto
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty] :as havainto}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as havainto}]
   (if id
     (do (havainnot/paivita-havainnon-perustiedot! db
                                                   (konv/sql-timestamp aika) (name tekija) kohde
                                                   (if selvitys-pyydetty true false)
                                                   (:id user)
+                                                  kuvaus
                                                   id)
         id)
 
     (:id (havainnot/luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
-                                   (if selvitys-pyydetty true false) (:id user) nil nil nil nil nil nil nil nil nil))))
+                                   (if selvitys-pyydetty true false) (:id user) kuvaus nil nil nil nil nil nil nil nil))))
 
 
 (defn hae-havainnon-tiedot
@@ -175,23 +193,38 @@
         tarkastus-xf
         (tarkastukset/hae-urakan-tarkastukset db urakka-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm))))
 
-(defn luo-tarkastus
-  "Luo uuden tarkastuksen, palauttaa id:n"
-  [db user urakka-id {:keys [aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
-  (tarkastukset/luo-tarkastus<! db
-                                urakka-id (konv/sql-timestamp aika)
-                                (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                                (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
-                                tarkastaja mittaaja (name tyyppi) havainto (:id user)))
+(defn luo-tai-paivita-tarkastus
+  "Luo uuden tarkastuksen, palauttaa id:n."
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
+  (if (nil? id)
+    (:id (tarkastukset/luo-tarkastus<! db
+                                       urakka-id (konv/sql-timestamp aika)
+                                       (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
+                                       (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
+                                       tarkastaja mittaaja (name tyyppi) havainto (:id user)))
 
+    (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
+      (tarkastukset/paivita-tarkastus! db
+                                         (konv/sql-timestamp aika)
+                                         (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
+                                         (and sijainti (geo/luo-point sijainti))
+                                         tarkastaja mittaaja (name tyyppi) (:id user)
+                                         urakka-id id)
+        id)))
+
+    
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
                                          {:keys [talvihoitoluokka lumimaara epatasaisuus
                                                  kitka lampotila ajosuunta] :as talvihoitomittaus}]
   (if uusi?
-    (tarkastukset/luo-talvihoitomittaus<! db
-                                          (or talvihoitoluokka "") lumimaara epatasaisuus
-                                          kitka lampotila (or ajosuunta 0)
-                                          tarkastus)
+    (do (log/info "PARAMS:"  db
+                  (or talvihoitoluokka "") lumimaara epatasaisuus
+                  kitka lampotila (or ajosuunta 0)
+                  tarkastus)
+      (tarkastukset/luo-talvihoitomittaus<! db
+                                            (or talvihoitoluokka "") lumimaara epatasaisuus
+                                            kitka lampotila (or ajosuunta 0)
+                                            tarkastus))
     (tarkastukset/paivita-talvihoitomittaus! db
                                              (or talvihoitoluokka "") lumimaara epatasaisuus
                                              kitka lampotila (or ajosuunta 0)
@@ -211,28 +244,33 @@
                                           sivukaltevuus
                                           tarkastus)))
 
+(defn hae-tarkastus [db user urakka-id tarkastus-id]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id))))
+
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
-  (jdbc/with-db-transaction [c db]
-    (let [havainto (merge (:havainto tarkastus)
-                          {:aika (:aika tarkastus)
-                           :urakka urakka-id})
-          
-          uusi? (nil? (:id tarkastus))
-          id (:id (if-not uusi?
-                    tarkastus ;FIXME: päivitä olemassaoleva
-                    (luo-tarkastus c user urakka-id tarkastus
-                                   (luo-tai-paivita-havainto c user havainto))))
-          ]
-
-      (condp = (:tyyppi tarkastus)
-        :talvihoito (luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
-        :soratie (luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
-        nil)
-      
+  (try 
+    (jdbc/with-db-transaction [c db]
+      (let [havainto (merge (:havainto tarkastus)
+                            {:aika (:aika tarkastus)
+                             :urakka urakka-id})
+            
+            uusi? (nil? (:id tarkastus))
+            havainto-id (luo-tai-paivita-havainto c user havainto)
+            id (luo-tai-paivita-tarkastus c user urakka-id tarkastus
+                                          havainto-id)]
         
-      (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
-      (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus c urakka-id id))))))
+        (condp = (:tyyppi tarkastus)
+          :talvihoito (luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
+          :soratie (luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+          nil)
+        
+        
+        (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
+        (hae-tarkastus c user urakka-id id)))
+    (catch Exception e
+      (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -267,7 +305,12 @@
 
      :tallenna-tarkastus
      (fn [user {:keys [urakka-id tarkastus]}]
-       (tallenna-tarkastus db user urakka-id tarkastus)))
+       (tallenna-tarkastus db user urakka-id tarkastus))
+
+
+     :hae-tarkastus
+     (fn [user {:keys [urakka-id tarkastus-id]}]
+       (hae-tarkastus db user urakka-id tarkastus-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -277,6 +320,8 @@
                      :hae-havainnon-tiedot
                      :hae-urakan-sanktiot
                      :hae-sanktiotyypit
-                     :hae-urakan-tarkastukset)
+                     :hae-urakan-tarkastukset
+                     :tallenna-tarkastus
+                     :hae-tarkastus)
     this))
             

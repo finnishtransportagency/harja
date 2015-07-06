@@ -8,7 +8,8 @@
 (def Havainto
   {:kuvaus Teksti
    :tekija Osapuoli
-   (s/optional-key :selvitys-pyydetty) s/Bool})
+   (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
+   (s/optional-key :id) s/Int})
 
   
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie))
@@ -17,7 +18,9 @@
   {:lampotila s/Num
    :epatasaisuus s/Num
    :kitka s/Num
-   :lumimaara s/Num})
+   :lumimaara s/Num
+   (s/optional-key :hoitoluokka) (s/maybe s/Str)
+   (s/optional-key :ajosuunta) (s/maybe s/Int)})
 
 (def Soratiemittaus
   {:hoitoluokka (s/enum 1 2)
@@ -29,12 +32,13 @@
 
 (def Tarkastus
   {(s/optional-key :uusi?) s/Bool
+   (s/optional-key :id) s/Int
    :aika pvm-tyyppi
    :tr Tierekisteriosoite
    (s/optional-key :sijainti) Sijainti
    :tyyppi Tarkastustyyppi
    :tarkastaja Teksti
-   (s/optional-key :mittaaja) Teksti
+   (s/optional-key :mittaaja) (s/maybe Teksti)
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus) Soratiemittaus
    (s/optional-key :havainto) Havainto})

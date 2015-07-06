@@ -25,7 +25,8 @@
 
             [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<!]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (def +tarkastystyyppi+ [:tiesto :talvihoito :soratie])
 
@@ -73,7 +74,10 @@
         
         [grid/grid
          {:otsikko "Tarkastukset"
-          :tyhja "Ei tarkastuksia"}
+          :tyhja "Ei tarkastuksia"
+          :rivi-klikattu #(go
+                            (reset! valittu-tarkastus
+                                    (<! (laadunseuranta/hae-tarkastus (:id urakka) (:id %)))))}
          
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1

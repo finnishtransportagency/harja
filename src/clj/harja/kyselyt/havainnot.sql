@@ -152,7 +152,8 @@ SET aika            = :aika,
   tekija            = :tekija :: osapuoli,
   kohde             = :kohde,
   selvitys_pyydetty = :selvitys,
-  Muokkaaja         = :muokkaaja,
+  muokkaaja         = :muokkaaja,
+  kuvaus            = :kuvaus,
   muokattu          = current_timestamp
 WHERE id = :id;
 
@@ -161,7 +162,7 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO havainto
-(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
+     (urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
         POINT(:x_koordinaatti, :y_koordinaatti), :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);
