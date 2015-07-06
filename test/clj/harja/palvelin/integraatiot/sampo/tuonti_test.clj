@@ -50,21 +50,21 @@
 (defn tuo-hanke []
   (laheta-viesti-kasiteltavaksi +testihanke-sanoma+))
 
-(defn poista-hanke []
+(defn poista-testihanke []
   (u "update urakka set hanke = null where hanke_sampoid = 'TESTIHANKE'")
   (u "delete from hanke where sampoid = 'TESTIHANKE'"))
 
 (defn tuo-urakka []
   (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
 
-(defn poista-urakka []
+(defn poista-testiurakka []
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
 
 (defn tuo-sopimus []
   (laheta-viesti-kasiteltavaksi +testisopimus-sanoma+))
 
-(defn poista-sopimus []
+(defn poista-testisopimus []
   (u "delete from sopimus where sampoid = 'TESTISOPIMUS'"))
 
 (deftest tarkista-hankkeen-tallentuminen
@@ -76,7 +76,7 @@
   (is (= 1 (count (q "select id from hanke where sampoid = 'TESTIHANKE';")))
       "Tuotaessa sama hanke uudestaan, päivitetään vanhaa eikä luoda uutta.")
 
-  (poista-hanke))
+  (poista-testihanke))
 
 (deftest tarkista-urakan-tallentuminen
   (tuo-urakka)
@@ -93,9 +93,7 @@
                             WHERE sampoid = 'TESTIURAKKA');")))
       "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
 
-  (poista-urakka))
-
-
+  (poista-testiurakka))
 
 (deftest tarkista-sopimuksen-tallentuminen
   (tuo-sopimus)
@@ -106,4 +104,13 @@
   (is (= 1 (count (q "select id from sopimus where sampoid = 'TESTISOPIMUS';")))
       "Tuotaessa sama sopimus uudestaan, päivitetään vanhaa eikä luoda uutta.")
 
-  (poista-sopimus))
+  (laheta-viesti-kasiteltavaksi (clojure.string/replace +testisopimus-sanoma+ "TESTISOPIMUS" "TESTIALISOPIMUS"))
+  (is (first (first (q "SELECT exists(SELECT id
+              FROM sopimus
+              WHERE paasopimus = (SELECT id
+                                  FROM sopimus
+                                  WHERE sampoid = 'TESTISOPIMUS'))")))
+      "Ensimmäisenä luotu sopimus tehdään pääsopimuksessa, jolle seuraavat sopimukset ovat alisteisia.")
+  (u "delete from sopimus where sampoid = 'TESTIALISOPIMUS'")
+
+  (poista-testisopimus))

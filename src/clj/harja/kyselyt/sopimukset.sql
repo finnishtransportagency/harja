@@ -1,7 +1,7 @@
 -- name: luo-sopimus<!
 -- Luo uuden sopimukset.
-INSERT INTO sopimus (sampoid, nimi, alkupvm, loppupvm, urakka_sampoid, urakoitsija_sampoid)
-VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :urakka_sampoid, :urakoitsija_sampoid);
+INSERT INTO sopimus (sampoid, nimi, alkupvm, loppupvm, urakka_sampoid, urakoitsija_sampoid, paasopimus)
+VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :urakka_sampoid, :urakoitsija_sampoid, :paasopimus);
 
 -- name: paivita-sopimus!
 -- Paivittaa sopimukset.
@@ -18,3 +18,10 @@ WHERE id = :id;
 SELECT id
 FROM sopimus
 WHERE sampoid = :sampoid;
+
+-- name: hae-paasopimuksen-id-urakan-sampoidlla
+-- Hakee pääsopimuksen id:n urakan sampo id:n avulla
+SELECT id
+FROM sopimus
+WHERE urakka_sampoid = :urakka_sampoid AND
+      paasopimus IS NULL;
