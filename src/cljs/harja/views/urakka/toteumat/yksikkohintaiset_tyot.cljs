@@ -51,10 +51,7 @@
                                                :tehtava-id (:tehtava-id rivi)
                                                :poistettu (:poistettu rivi)
                                                })
-                                            (filter
-                                              (fn [tehtava] (not (and (true? (:poistettu tehtava))
-                                                                      (neg? (:id tehtava)))))
-                                              (vals lomakkeen-tehtavat)))
+                                            (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
                                 :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
                                 :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
     (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
