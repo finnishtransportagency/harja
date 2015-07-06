@@ -8,7 +8,6 @@
             [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.paallystys.pot :as pot]
-            [harja.palvelin.tyokalut.muunnokset :as muunnokset]
 
             [harja.kyselyt.paallystys :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
@@ -43,8 +42,8 @@
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (comp (map #(muunnokset/string->avain % [:paatos]))
-                            (map #(muunnokset/string->avain % [:tila])))
+                      (comp (map #(konv/string->avain % [:paatos]))
+                            (map #(konv/string->avain % [:tila])))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -52,14 +51,16 @@
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (first (into []
-                             (comp (map #(muunnokset/jsonb->clojuremap % :ilmoitustiedot))
-                                   (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                   (map #(muunnokset/string->avain % [:tila]))
-                                   (map #(muunnokset/string->avain % [:paatos])))
-                             (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
-    (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
-    vastaus))
+  (let [paallystysilmoitus (first (into []
+                                        (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                              (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                              (map #(konv/string->avain % [:tila]))
+                                              (map #(konv/string->avain % [:paatos])))
+                                        (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
+    (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
+    (log/debug "Haetaan kommentit...")
+    ; TODO
+    paallystysilmoitus))
 
 (defn laske-muutoshinta [lomakedata]
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))

@@ -1,7 +1,10 @@
 (ns harja.kyselyt.konversio
   "Usein resultsettien dataa joudutaan jotenkin muuntamaan sopivampaan muotoon Clojure maailmaa varten.
 Tähän nimiavaruuteen voi kerätä yleisiä. Yleisesti konversioiden tulee olla funktioita, jotka prosessoivat
-yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia.")
+yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia."
+  (:require [cheshire.core :as cheshire]
+            [clj-time.coerce :as coerce]
+            [clj-time.format :as format]))
 
 
 (defn yksi
@@ -100,3 +103,25 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   [^java.util.Date dt]
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
+
+(defn jsonb->clojuremap [json avain]
+  "Muuntaa JSONin Clojuremapiksi"
+  (-> json
+      (assoc avain
+             (some-> json
+                     avain
+                     .getValue
+                     (cheshire/decode true)))))
+
+(defn parsi-json-pvm
+  "Muuntaa JSONissa olevan pvm:n Clojurelle sopivaan muotoon."
+  [json avainpolku]
+  (-> json
+      (assoc-in avainpolku
+                (when-let [dt (some-> json (get-in avainpolku))]
+                  (coerce/to-date (format/parse (format/formatters :date-time) dt))))))
+
+(defn string->avain [data avainpolku]
+  "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
+  (-> data
+      (assoc-in avainpolku (keyword (get-in data avainpolku)))))
