@@ -18,7 +18,8 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.ui.kommentit :as kommentit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -36,10 +37,10 @@
     :hylatty "Palautettu urakoitsijalle"
     ""))
 
-(def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(def lomakedata (atom nil))                                 ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
-(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+(def muutokset-kokonaishintaan                              ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
   (reaction (reduce + (mapv
                         (fn [tyo]
                           (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
@@ -73,7 +74,7 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (constantly (and
-                                  (roolit/roolissa? roolit/urakanvalvoja) ; FIXME Pitää tarkistaa että toimii
+                                  (roolit/roolissa? roolit/urakanvalvoja)
                                   (and (not (= (:tila @lomakedata) :lukittu)))))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
@@ -109,7 +110,7 @@
             :tyyppi      :text
             :koko        [80 4]
             :leveys-col  6
-            :validoi       [[:ei-tyhja "Anna päätöksen selitys"]]
+            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]
             :muokattava? muokattava?})]
         @paatostiedot]])))
 
@@ -148,25 +149,38 @@
                                                         (assoc :hinta (:hinta uusi-arvo))))))
 
         ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
-        toteutuneet-osoitteet (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
-                                      (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (filter
-                                                                                                         #(not (and (true? (:poistettu %))
-                                                                                                                    (neg? (:id %)))) (vals uusi-arvo))))))
+        toteutuneet-osoitteet
+        (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
+                (fn [uusi-arvo] (reset! lomakedata
+                                        (assoc-in @lomakedata [:ilmoitustiedot :osoitteet]
+                                                  (filter   ; FIXME filteristä oma funktio
+                                                    #(not (and (true? (:poistettu %))
+                                                               (neg? (:id %)))) (vals uusi-arvo))))))
 
         ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
-        kiviaines (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot @lomakedata)))
-                          (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :kiviaines] (filter
-                                                                                             #(not (and (true? (:poistettu %))
-                                                                                                        (neg? (:id %)))) (vals uusi-arvo))))))
-        alustalle-tehdyt-toimet (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot @lomakedata)))
-                                        (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :alustatoimet] (filter
-                                                                                                              #(not (and (true? (:poistettu %))
-                                                                                                                         (neg? (:id %)))) (vals uusi-arvo))))))
-        toteutuneet-maarat (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot @lomakedata)))
-                                   (fn [uusi-arvo] (reset! lomakedata (assoc-in @lomakedata [:ilmoitustiedot :tyot] (filter
-                                                                                                 #(not (and (true? (:poistettu %))
-                                                                                                            (neg? (:id %))))
-                                                                                                 (vals uusi-arvo))))))
+        kiviaines
+        (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot @lomakedata)))
+                (fn [uusi-arvo] (reset! lomakedata
+                                        (assoc-in @lomakedata [:ilmoitustiedot :kiviaines]
+                                                  (filter
+                                                    #(not (and (true? (:poistettu %))
+                                                               (neg? (:id %)))) (vals uusi-arvo))))))
+        alustalle-tehdyt-toimet
+        (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot @lomakedata)))
+                (fn [uusi-arvo] (reset! lomakedata
+                                        (assoc-in @lomakedata
+                                                  [:ilmoitustiedot :alustatoimet]
+                                                  (filter
+                                                    #(not (and (true? (:poistettu %))
+                                                               (neg? (:id %)))) (vals uusi-arvo))))))
+        toteutuneet-maarat
+        (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot @lomakedata)))
+                (fn [uusi-arvo] (reset! lomakedata
+                                        (assoc-in @lomakedata [:ilmoitustiedot :tyot]
+                                                  (filter
+                                                    #(not (and (true? (:poistettu %))
+                                                               (neg? (:id %))))
+                                                    (vals uusi-arvo))))))
 
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
@@ -216,7 +230,7 @@
            {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
            {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
-           ; TODO Kommentit-komponentilta kommentit tänne
+
            ]
           @kohteen-tiedot]
 
@@ -401,7 +415,7 @@
                                                                                                                             :paallystyskohde-id (:paallystyskohde_id rivi)
                                                                                                                             :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})}
                                                       [:span " Tee päällystysilmoitus"]]))}]
-          (sort
+          (sort-by
             (fn [toteuma] (case (:tila toteuma)
                             :lukittu 0
                             :valmis 1

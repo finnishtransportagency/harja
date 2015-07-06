@@ -14,9 +14,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   "Muuntaa (ja poistaa) :org_* kentät muotoon :organisaatio {:id ..., :nimi ..., ...}."
   [rivi]
   (-> rivi
-      (assoc :organisaatio {:id (:org_id rivi)
-                            :nimi (:org_nimi rivi)
-                            :tyyppi (some-> rivi :org_tyyppi keyword)
+      (assoc :organisaatio {:id      (:org_id rivi)
+                            :nimi    (:org_nimi rivi)
+                            :tyyppi  (some-> rivi :org_tyyppi keyword)
                             :lyhenne (:org_lyhenne rivi)
                             :ytunnus (:org_ytunnus rivi)})
       (dissoc :org_id :org_nimi :org_tyyppi :org_lyhenne :org_ytunnus)))
@@ -66,7 +66,7 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   [rivi & kentat]
   (muunna rivi kentat double))
 
-  
+
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."
   [rivi kentta]
@@ -79,22 +79,24 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi."
   ([rivi kentta] (array->set rivi kentta identity))
   ([rivi kentta muunnos]
-     (assoc rivi
-       kentta (if-let [a (get rivi kentta)]
-                (into #{} (map muunnos (.getArray a)))
-                #{}))))
+   (assoc rivi
+     kentta (if-let [a (get rivi kentta)]
+              (into #{} (map muunnos (.getArray a)))
+              #{}))))
 
 (defn array->keyword-set
   "Muuntaa rivin annentun kentän JDBC array tyypistä Clojure keyword hash setiksi."
   [rivi kentta]
   (array->set rivi kentta keyword))
-  
+
 (defn sql-date
   "Luo java.sql.Date objektin annetusta java.util.Date objektista."
   [^java.util.Date dt]
-  (java.sql.Date. (.getTime dt)))
+  (when dt
+    (java.sql.Date. (.getTime dt))))
 
 (defn sql-timestamp
   "Luo java.sql.Timestamp objektin annetusta java.util.Date objektista."
   [^java.util.Date dt]
-  (java.sql.Timestamp. (.getTime dt)))
+  (when dt
+    (java.sql.Timestamp. (.getTime dt))))

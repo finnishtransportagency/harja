@@ -8,6 +8,7 @@
             [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.paallystys.pot :as pot]
+            [harja.palvelin.tyokalut.muunnokset :as muunnokset]
 
             [harja.kyselyt.paallystys :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
@@ -18,6 +19,7 @@
             [clj-time.format :as format]
             [clj-time.coerce :as coerce]))
 
+; FIXME Käytä geneeristä versiota tästä, ks. commit 9327c7cd7c1f127f7bbd6b910c3ed0badf34e222
 (def muunna-desimaaliluvut-xf
   (map #(-> %
             (assoc-in [:bitumi_indeksi]
@@ -38,28 +40,6 @@
       (assoc-in avainpolku
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
-
-(defn tila-string->avain [data]
-  (-> data
-      (assoc :tila (keyword (:tila data)))))
-
-(defn paatos-string->avain [data]
-  (-> data
-      (assoc :paatos (keyword (:paatos data)))))
-
-(defn jsonb->clojuremap [json avain]
-  (-> json
-      (assoc avain
-             (some-> json
-                     avain
-                     .getValue
-                     (cheshire/decode true)))))
-
-(defn parsi-pvm [json avainpolku]
-  (-> json
-      (assoc-in avainpolku
-                (when-let [dt (some-> json (get-in avainpolku))]
-                  (coerce/to-date (format/parse (format/formatters :date-time) dt))))))
 
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -83,8 +63,8 @@
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (comp (map #(paatos-string->avain %))
-                            (map #(tila-string->avain %)))
+                      (comp (map #(muunnokset/string->avain % [:paatos]))
+                            (map #(muunnokset/string->avain % [:tila])))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -93,10 +73,10 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (first (into []
-                             (comp (map #(jsonb->clojuremap % :ilmoitustiedot))
+                             (comp (map #(muunnokset/jsonb->clojuremap % :ilmoitustiedot))
                                    (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                   (map #(tila-string->avain %))
-                                   (map #(paatos-string->avain %)))
+                                   (map #(muunnokset/string->avain % [:tila]))
+                                   (map #(muunnokset/string->avain % [:paatos])))
                              (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str vastaus))
     vastaus))
@@ -113,13 +93,13 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot
-                                   (if aloituspvm (konv/sql-date aloituspvm) nil)
-                                   (if valmistumispvm (konv/sql-date valmistumispvm) nil)
-                                   (if takuupvm (konv/sql-date takuupvm) nil)
+                                   (konv/sql-date aloituspvm)
+                                   (konv/sql-date valmistumispvm)
+                                   (konv/sql-date takuupvm)
                                    muutoshinta
                                    (if paatos (name paatos))
                                    perustelu
-                                   (if kasittelyaika (konv/sql-date kasittelyaika))
+                                   (konv/sql-date kasittelyaika)
                                    (:id user)
                                    paallystyskohde-id)))
 
@@ -133,9 +113,9 @@
                                 paallystyskohde-id
                                 tila
                                 encoodattu-ilmoitustiedot
-                                (if aloituspvm (konv/sql-date aloituspvm) nil)
-                                (if valmistumispvm (konv/sql-date valmistumispvm) nil)
-                                (if takuupvm (konv/sql-date takuupvm) nil)
+                                (konv/sql-date aloituspvm)
+                                (konv/sql-date valmistumispvm)
+                                (konv/sql-date takuupvm)
                                 muutoshinta
                                 (:id user))))
 
@@ -160,7 +140,7 @@
 
 
       (if paallystysilmoitus-kannassa
-        (if (not (= :lukittu (:ilmoitustiedot paallystysilmoitus-kannassa)))
+        (if (not (= :lukittu (:tila paallystysilmoitus-kannassa)))
           (paivita-paallystysilmoitus c user lomakedata)
           (log/debug "POT on lukittu, ei voi päivittää!"))
         (luo-paallystysilmoitus c user lomakedata))
