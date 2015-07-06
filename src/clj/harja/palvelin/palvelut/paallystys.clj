@@ -159,11 +159,35 @@
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
 
+(defn luo-uusi-paallystyskohde [db user urakka-id sopimus-id {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot lisatyot arvonvahennykset bitumi_indeksi kaasuindeksi]}]
+  (log/debug "Luodaan uusi päällystyskohde")
+  (q/luo-paallystyskohde<! db
+                           urakka-id
+                           sopimus-id
+                           kohdenumero
+                           nimi
+                           sopimuksen_mukaiset_tyot
+                           lisatyot
+                           arvonvahennykset
+                           bitumi_indeksi
+                           kaasuindeksi))
+
+(defn paivita-paallystyskohde [db user urakka-id sopimus-id kohde]
+  (log/debug "Päivitetään päällystyskohde")
+  ; TODO päivitä
+  ; TODO Ja varmista että jos löytyy POT, ei saa poistaa.
+  )
+
 (defn tallenna-paallystyskohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
   (jdbc/with-db-transaction [c db]
-    ; TODO Tallenna
+    (log/debug "Tallennetaan päällystyskohteet: " (pr-str kohteet))
+    (doseq [kohde kohteet]
+      (log/debug (str "Käsitellään saapunut päällystyskohde: " kohde))
+      (if (neg? (:id kohde))
+        (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)
+        (paivita-paallystyskohde c user urakka-id sopimus-id kohde))
     (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
-                                          :sopimus-id sopimus-id})))
+                                          :sopimus-id sopimus-id}))))
 
 (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
   (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]

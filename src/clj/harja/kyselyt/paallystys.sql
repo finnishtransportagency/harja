@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki paallystyskohteet
 SELECT
   paallystyskohde.id,
+  pi.id as paallystysilmoitus_id,
   kohdenumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,
@@ -130,3 +131,30 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: luo-paallystyskohde<!
+-- Luo uuden päällystykohteen
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, lisatyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES (:urakka,
+        :sopimus,
+        :kohdenumero,
+        :nimi,
+        :sopimuksen_mukaiset_tyot,
+        :lisatyot,
+        :arvonvahennykset,
+        :bitumi_indeksi,
+        :kaasuindeksi);
+
+-- name: paivita-paallystyskohde!
+-- Päivittää päällystyskohteen
+UPDATE paallystyskohde
+SET
+  kohdenumero                 = :kohdenumero,
+  nimi                        = :nimi,
+  sopimuksen_mukaiset_tyot    = :sopimuksen-mukaiset-tyot,
+  lisatyot                    = :lisatyot,
+  arvonvahennykset            = :arvonvanhennykset,
+  bitumi_indeksi              = :bitumi-indeksi,
+  kaasuindeksi                = :kaasuindeksi,
+  poistettu                   = :poistettu
+WHERE id = :id;
