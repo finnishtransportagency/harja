@@ -137,8 +137,10 @@
       (if (not (= (:paatos paallystysilmoitus-kannassa) (or (:paatos lomakedata) nil)))
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
+      ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
       (if (= :lukittu (:tila paallystysilmoitus-kannassa))
-        (log/debug "POT on lukittu, ei voi päivittää!"))    ; FIXME Heitä virhe, miten?
+        (do (log/debug "POT on lukittu, ei voi päivittää!")
+            (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!"))))
 
       (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user lomakedata paallystysilmoitus-kannassa)]
 
@@ -156,6 +158,20 @@
 
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
+
+(defn tallenna-paallystyskohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+  (jdbc/with-db-transaction [c db]
+    ; TODO Tallenna
+    (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
+                                          :sopimus-id sopimus-id})))
+
+(defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
+  (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
+  (jdbc/with-db-transaction [c db]
+    ; TODO Tallenna
+    (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
+                                            :sopimus-id         sopimus-id
+                                            :paallystyskohde-id paallystyskohde-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle
@@ -177,6 +193,12 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystyskohteet
+                        (fn [user tiedot]
+                          (tallenna-paallystyskohteet db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystyskohdeosat
+                        (fn [user tiedot]
+                          (tallenna-paallystyskohdeosat db user tiedot)))
       this))
 
   (stop [this]
