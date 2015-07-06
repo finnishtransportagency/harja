@@ -7,6 +7,7 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
+            [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paallystys.pot :as pot]
 
             [harja.kyselyt.paallystys :as q]
@@ -48,7 +49,8 @@
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
 
-(defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
+(defn
+  hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [paallystysilmoitus (first (into []
@@ -58,14 +60,24 @@
                                               (map #(konv/string->avain % [:paatos])))
                                         (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
-    (log/debug "Haetaan kommentit...")
-    ; TODO
-    paallystysilmoitus))
+    (when paallystysilmoitus
+      (log/debug "Haetaan kommentit...")
+      (let [kommentit (into []
+                            (comp (map konv/alaviiva->rakenne)
+                                  ;(map #(assoc % :tekija (name (:tekija %)))) FIXME Puuttuu, tarvitaanko?
+                                  (map (fn [{:keys [liite] :as kommentti}]
+                                         (if (:id
+                                               liite)
+                                           kommentti
+                                           (dissoc kommentti :liite)))))
+                            (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
+        (log/debug "Kommentit saatu: " kommentit)
+        (assoc paallystysilmoitus :kommentit kommentit)))))
 
 (defn laske-muutoshinta [lomakedata]
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
 
-(defn paivita-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos perustelu kasittelyaika]}]
+(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (laske-muutoshinta ilmoitustiedot)
         tila (if (= paatos :hyvaksytty)
@@ -82,7 +94,8 @@
                                    perustelu
                                    (konv/sql-date kasittelyaika)
                                    (:id user)
-                                   paallystyskohde-id)))
+                                   paallystyskohde-id))
+  id)
 
 (defn luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -90,15 +103,20 @@
         tila (if valmistumispvm "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
-    (q/luo-paallystysilmoitus<! db
-                                paallystyskohde-id
-                                tila
-                                encoodattu-ilmoitustiedot
-                                (konv/sql-date aloituspvm)
-                                (konv/sql-date valmistumispvm)
-                                (konv/sql-date takuupvm)
-                                muutoshinta
-                                (:id user))))
+    (:id (q/luo-paallystysilmoitus<! db
+                                     paallystyskohde-id
+                                     tila
+                                     encoodattu-ilmoitustiedot
+                                     (konv/sql-date aloituspvm)
+                                     (konv/sql-date valmistumispvm)
+                                     (konv/sql-date takuupvm)
+                                     muutoshinta
+                                     (:id user)))))
+
+(defn luo-tai-paivita-paallystysilmoitus [db user lomakedata paallystysilmoitus-kannassa]
+  (if paallystysilmoitus-kannassa
+    (paivita-paallystysilmoitus db user lomakedata)
+    (luo-paallystysilmoitus db user lomakedata)))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
   (log/debug "Käsitellään päällystysilmoitus: " lomakedata
@@ -119,15 +137,25 @@
       (if (not (= (:paatos paallystysilmoitus-kannassa) (or (:paatos lomakedata) nil)))
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
+      (if (= :lukittu (:tila paallystysilmoitus-kannassa))
+        (log/debug "POT on lukittu, ei voi päivittää!"))    ; FIXME Heitä virhe, miten?
 
-      (if paallystysilmoitus-kannassa
-        (if (not (= :lukittu (:tila paallystysilmoitus-kannassa)))
-          (paivita-paallystysilmoitus c user lomakedata)
-          (log/debug "POT on lukittu, ei voi päivittää!"))
-        (luo-paallystysilmoitus c user lomakedata))
+      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user lomakedata paallystysilmoitus-kannassa)]
 
-      (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
-                                             :sopimus-id sopimus-id}))))
+        ;; Luodaan uusi kommentti
+        (when-let [uusi-kommentti (:uusi-kommentti lomakedata)]
+          (log/info "Uusi kommentti: " uusi-kommentti)
+          (let [kommentti (kommentit/luo-kommentti<! c
+                                                     ;(name (:tekija lomakedata)) ; FIXME Puuttuu, tarvitaanko?
+                                                     nil
+                                                     (:kommentti uusi-kommentti)
+                                                     nil
+                                                     (:id user))]
+            ;; Liitä kommentti päällystysilmoitukseen
+            (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
+
+        (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
+                                               :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
   component/Lifecycle

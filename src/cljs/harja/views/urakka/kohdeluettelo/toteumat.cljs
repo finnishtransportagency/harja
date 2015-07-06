@@ -216,7 +216,14 @@
            {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
            {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
-
+           (when (not (= :aloitettu (:tila @lomakedata)))
+             {:otsikko     "Kommentit" :nimi :kommentit
+              :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                 :voi-liittaa      false
+                                                                   :placeholder "Kirjoita kommentti..."
+                                                                   :uusi-kommentti (r/wrap (:uusi-kommentti @lomakedata)
+                                                                                           #(swap! lomakedata assoc :uusi-kommentti %))}
+                            (:kommentit @lomakedata)]})
            ]
           @kohteen-tiedot]
 
