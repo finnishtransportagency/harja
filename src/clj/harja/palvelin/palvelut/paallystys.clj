@@ -185,9 +185,9 @@
       (log/debug (str "Käsitellään saapunut päällystyskohde: " kohde))
       (if (neg? (:id kohde))
         (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)
-        (paivita-paallystyskohde c user urakka-id sopimus-id kohde))
+        (paivita-paallystyskohde c user urakka-id sopimus-id kohde)))
     (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
-                                          :sopimus-id sopimus-id}))))
+                                          :sopimus-id sopimus-id})))
 
 (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
   (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
