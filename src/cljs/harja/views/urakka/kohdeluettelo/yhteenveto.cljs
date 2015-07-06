@@ -64,7 +64,7 @@
     (komp/luo
       (fn []
         [:div
-         [grid/grid
+         [grid/grid ; FIXME Ei saa poistaa kohdetta jolle on olemassa POT.
           {:otsikko      "Kohteet"
            :tyhja        (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
@@ -74,7 +74,8 @@
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paallystys/paallystyskohteet vastaus)))}
+                                (reset! paallystys/paallystyskohteet vastaus)))
+           :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%"}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%"}
