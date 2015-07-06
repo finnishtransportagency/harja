@@ -29,8 +29,7 @@
   (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)
         sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)]
     (log/debug "Käsiteltävän sopimukset id on:" sopimus-id)
-    ;
-    ))
+    (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)))
 
 (defn kasittele-sopimukset [db sopimukset]
   (doseq [sopimus sopimukset]

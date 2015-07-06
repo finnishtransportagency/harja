@@ -25,3 +25,11 @@ SELECT id
 FROM sopimus
 WHERE urakka_sampoid = :urakka_sampoid AND
       paasopimus IS NULL;
+
+-- name: paivita-urakka-sampoidlla!
+-- Päivittää sopimukselle urakan id:n urakan sampo id:llä
+UPDATE sopimus
+SET urakka = (SELECT id
+              FROM urakka
+              WHERE sampoid = :urakka_sampo_id)
+WHERE urakka_sampoid = :urakka_sampo_id;
