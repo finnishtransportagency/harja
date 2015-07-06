@@ -166,11 +166,11 @@
                            sopimus-id
                            kohdenumero
                            nimi
-                           sopimuksen_mukaiset_tyot
-                           lisatyot
-                           arvonvahennykset
-                           bitumi_indeksi
-                           kaasuindeksi))
+                           (or sopimuksen_mukaiset_tyot 0)
+                           (or lisatyot 0)
+                           (or arvonvahennykset 0)
+                           (or bitumi_indeksi 0)
+                           (or kaasuindeksi 0)))
 
 (defn paivita-paallystyskohde [db user urakka-id sopimus-id kohde]
   (log/debug "Päivitetään päällystyskohde")
@@ -186,8 +186,10 @@
       (if (neg? (:id kohde))
         (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)
         (paivita-paallystyskohde c user urakka-id sopimus-id kohde)))
-    (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
-                                          :sopimus-id sopimus-id})))
+    (let [paallystyskohteet (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
+                                          :sopimus-id sopimus-id})]
+      (log/debug "Tallennus suoritettu. Tuoreet päällystyskohteet: " (pr-str paallystyskohteet))
+      paallystyskohteet)))
 
 (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
   (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]

@@ -57,7 +57,10 @@
 
 (defn paallystyskohteet []
   (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystys/paallystyskohteet]
-                                            (filter #(= (:lisatyot %) 0) kohteet)))
+                                            (filter #(or
+                                                      (= (:lisatyot %) 0)
+                                                      (nil? (:lisatyot %)))
+                                                    kohteet)))
         lisatyot (reaction (let [kohteet @paallystys/paallystyskohteet]
                              (filter #(> (:lisatyot %) 0) kohteet)))]
 
