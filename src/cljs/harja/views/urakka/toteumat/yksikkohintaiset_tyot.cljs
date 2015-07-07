@@ -199,8 +199,7 @@
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
-         :tunniste    :tehtava_id
-         :luokat ["toteumat-haitari"]}
+         :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
          {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :numero :leveys "20%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}

@@ -250,8 +250,7 @@
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja   (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
            :tallenna (tallenna-toteuma-materiaaleja urakan-id tiedot)
-           :voi-lisata? false
-           :luokat ["toteumat-haitari"]}
+           :voi-lisata? false}
 
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
