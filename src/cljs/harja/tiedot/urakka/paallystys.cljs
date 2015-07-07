@@ -12,8 +12,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(def yhteenvetonakymassa? (atom false))
-(def toteumanakymassa? (atom false))
+(defonce yhteenvetonakymassa? (atom false))
+(defonce toteumanakymassa? (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
   (k/post! :urakan-paallystyskohteet {:urakka-id urakka-id
