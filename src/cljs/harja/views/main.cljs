@@ -13,6 +13,7 @@
             [harja.tiedot.navigaatio :as nav]
             
             [harja.views.murupolku :as murupolku]
+            [harja.views.haku :as haku]
             
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -36,10 +37,7 @@
           :alt "HARJA"
             :src "images/harja-brand-text.png"
           :on-click #(.reload js/window.location)}]
-   [:form.navbar-form.navbar-left {:role "search"}
-    [:div.form-group
-     [:input.form-control {:type "text" :placeholder "Hae..."}]]
-    [:button.nappi-toissijainen {:type "button"} "Hae"]]
+  [haku/haku]
 
    ;; FIXME: active luokka valitulle sivulle
    [:ul#sivut.nav.nav-pills

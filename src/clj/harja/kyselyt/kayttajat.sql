@@ -24,31 +24,31 @@ SELECT
   k.sukunimi,
   k.sahkoposti,
   k.puhelin,
-                                                                                                        o.id           AS org_id,
-                                                                                                        o.nimi         AS org_nimi,
-                                                                                                        o.tyyppi       AS org_tyyppi,
-                                                                                                        array_cat(
-                                                                                                            (SELECT
-                                                                                                        array_agg(rooli)
-                                                                                                             FROM
-                                                                                                               kayttaja_rooli
-                                                                                                             WHERE
-                                                                                                               kayttaja
-                                                                                                               = k.id
-                                                                                                               AND
-                                                                                                               poistettu
-                                                                                                               = FALSE),
-                                                                                                            (SELECT
-                                                                                                        array_agg(rooli)
-                                                                                                             FROM
-                                                                                                               kayttaja_urakka_rooli
-                                                                                                             WHERE
-                                                                                                               kayttaja
-                                                                                                               = k.id
-                                                                                                               AND
-                                                                                                               poistettu
-                                                                                                               =
-                                                                                                               FALSE)) AS roolit
+  o.id           AS org_id,
+  o.nimi         AS org_nimi,
+  o.tyyppi       AS org_tyyppi,
+  array_cat(
+      (SELECT
+  array_agg(rooli)
+       FROM
+         kayttaja_rooli
+       WHERE
+         kayttaja
+         = k.id
+         AND
+         poistettu
+         = FALSE),
+      (SELECT
+  array_agg(rooli)
+       FROM
+         kayttaja_urakka_rooli
+       WHERE
+         kayttaja
+         = k.id
+         AND
+         poistettu
+         =
+         FALSE)) AS roolit
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE
@@ -223,6 +223,7 @@ SELECT
   k.kayttajanimi,
   k.etunimi,
   k.sukunimi,
+  k.jarjestelma AS jarjestelmasta,
   o.id     AS org_id,
   o.nimi   AS org_nimi,
   o.tyyppi AS org_tyyppi

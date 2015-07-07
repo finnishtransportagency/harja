@@ -210,3 +210,31 @@ WHERE sampoid IN (
   FROM sopimus
   WHERE urakoitsija_sampoid = :urakoitsija_sampoid AND
         paasopimus IS NULL);
+
+-- name: hae-urakka
+-- Hakee yhden urakan id:n avulla
+SELECT
+  u.id,
+  u.nimi,
+  u.sampoid,
+  u.alue,
+  u.alkupvm,
+  u.loppupvm,
+  u.tyyppi,
+  u.sopimustyyppi,
+  hal.id                   AS hallintayksikko_id,
+  hal.nimi                 AS hallintayksikko_nimi,
+  hal.lyhenne              AS hallintayksikko_lyhenne,
+  urk.id                   AS urakoitsija_id,
+  urk.nimi                 AS urakoitsija_nimi,
+  urk.ytunnus              AS urakoitsija_ytunnus,
+  (SELECT array_agg(concat(id, '=', sampoid))
+   FROM sopimus s
+   WHERE urakka = u.id)    AS sopimukset,
+  ST_Simplify(au.alue, 50) AS alueurakan_alue
+FROM urakka u
+  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN hanke h ON u.hanke = h.id
+  LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
+WHERE u.id = :urakka_id;

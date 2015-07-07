@@ -14,17 +14,22 @@
   ;; urakoitsijalle vain oman firmansa sisältö
   (let [termi (str "%" hakutermi "%")
         loytyneet-urakat (into []
-                        (map #(assoc % :tyyppi :urakka)
-                          (ur-q/hae-urakoiden-tunnistetiedot db termi)))
-     loytyneet-kayttajat (into []
-                           (map #(assoc % :tyyppi :kayttaja)
-                             (k-q/hae-kayttajien-tunnistetiedot db termi)))
-     loytyneet-organisaatiot (into []
-                           (map #(assoc % :tyyppi :organisaatio)
-                             (org-q/hae-organisaation-tunnistetiedot db termi)))
-     tulokset (into []
-                (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
-     _ (log/info "haun tulokset" tulokset)]
+                               (map #(assoc % :tyyppi :urakka
+                                              :hakusanat (str (:nimi %)))
+                                    (ur-q/hae-urakoiden-tunnistetiedot db termi)))
+        loytyneet-kayttajat (into []
+                                  (map #(assoc % :tyyppi :kayttaja
+                                                 :hakusanat (if (:jarjestelmasta %)
+                                                              (str "Järjstelmäkäyttäjä: "(:kayttajanimi %))
+                                                              (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
+                                       (k-q/hae-kayttajien-tunnistetiedot db termi)))
+        loytyneet-organisaatiot (into []
+                                      (map #(assoc % :tyyppi :organisaatio
+                                                     :hakusanat (str (:nimi %) ", " (:organisaatiotyyppi %)))
+                                           (org-q/hae-organisaation-tunnistetiedot db termi)))
+        tulokset (into []
+                       (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
+        _ (log/info "haun tulokset" tulokset)]
     tulokset))
 
 (defrecord Haku []
@@ -33,7 +38,7 @@
     (doto (:http-palvelin this)
       (julkaise-palvelu
         :hae (fn [user hakutermi]
-                    (hae-harjasta (:db this) user hakutermi)))
+               (hae-harjasta (:db this) user hakutermi)))
       )
     this)
 

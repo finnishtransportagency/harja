@@ -7,6 +7,6 @@ SELECT id, nimi, alue
 
 -- name: hae-organisaation-tunnistetiedot
 -- Hakee organisaation perustiedot tekstihaulla.
-SELECT o.id, o.nimi, o.tyyppi
+SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
   FROM organisaatio o
  WHERE o.nimi ILIKE :teksti

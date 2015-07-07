@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.urakat  :refer :all]
             [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]))
 
 
@@ -36,3 +37,22 @@
                          :sopimustyyppi "kokonaisurakka"})]
     (is (= uusi-sopimustyyppi "kokonaisurakka"))
     (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-id))))
+
+
+(deftest hae-urakka-testi
+  []
+  (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
+        haettu-urakka
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakka urakanvalvoja @oulun-alueurakan-id)
+        sopimukset (:sopimukset haettu-urakka)
+        [eka-sopimuksen-id eka-sopimuksen-sampoid] (first sopimukset)
+        [toka-sopimuksen-id toka-sopimuksen-sampoid] (second sopimukset)]
+    (is (= (:id haettu-urakka) @oulun-alueurakan-id) "haetun urakan id")
+    (is (= (count sopimukset) 2) "haetun urakan sopimusten määrä")
+    (is (= eka-sopimuksen-id 1) "haetun urakan sopimustesti")
+    (is (= eka-sopimuksen-sampoid "1H05228/01") "haetun urakan sopimustesti")
+    (is (= toka-sopimuksen-id 2) "haetun urakan sopimustesti")
+    (is (= toka-sopimuksen-sampoid "2H05228/10") "haetun urakan sopimustesti")
+    (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
+    (is (= (:loppupvm haettu-urakka) (java.sql.Date. 110 8 30)) "haetun urakan loppupvm")))

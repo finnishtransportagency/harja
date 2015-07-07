@@ -8,42 +8,6 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(declare hallintayksikon-urakat
-         urakan-tiedot
-         hae-urakoita
-         hae-urakan-organisaatio
-         hae-organisaation-urakat
-         tallenna-urakan-sopimustyyppi)
-
-
-(defrecord Urakat []
-  component/Lifecycle
-  (start [this]
-    (let [http (:http-palvelin this)]
-      (julkaise-palvelu http :hallintayksikon-urakat
-                        (fn [user hallintayksikko]
-                          (hallintayksikon-urakat (:db this) user hallintayksikko)))
-      (julkaise-palvelu http :hae-urakoita
-                        (fn [user teksti]
-                          (hae-urakoita (:db this) user teksti)))
-      (julkaise-palvelu http :hae-organisaation-urakat
-                        (fn [user organisaatio-id]
-                          (hae-organisaation-urakat (:db this) user organisaatio-id)))
-      (julkaise-palvelu http :hae-urakan-organisaatio
-                        (fn [user urakka-id]
-                          (hae-urakan-organisaatio (:db this) user urakka-id)))
-      (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
-                        (fn [user tiedot]
-                          (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
-      this))
-
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
-    (poista-palvelu (:http-palvelin this) :hae-urakoita)
-    (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
-    this))
-
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
         
@@ -111,3 +75,42 @@
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
+
+(defn hae-urakka [db user urakka-id]
+  (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
+  (roolit/lukuoikeus-urakassa? user urakka-id)
+  (first (into []
+               urakka-xf
+               (q/hae-urakka db urakka-id))))
+
+(defrecord Urakat []
+  component/Lifecycle
+  (start [this]
+    (let [http (:http-palvelin this)]
+      (julkaise-palvelu http :hallintayksikon-urakat
+                        (fn [user hallintayksikko]
+                          (hallintayksikon-urakat (:db this) user hallintayksikko)))
+      (julkaise-palvelu http :hae-urakka
+                        (fn [user urakka-id]
+                          (hae-urakka (:db this) user urakka-id)))
+      (julkaise-palvelu http :hae-urakoita
+                        (fn [user teksti]
+                          (hae-urakoita (:db this) user teksti)))
+      (julkaise-palvelu http :hae-organisaation-urakat
+                        (fn [user organisaatio-id]
+                          (hae-organisaation-urakat (:db this) user organisaatio-id)))
+      (julkaise-palvelu http :hae-urakan-organisaatio
+                        (fn [user urakka-id]
+                          (hae-urakan-organisaatio (:db this) user urakka-id)))
+      (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
+                        (fn [user tiedot]
+                          (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
+      this))
+
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
+    (poista-palvelu (:http-palvelin this) :hae-urakka)
+    (poista-palvelu (:http-palvelin this) :hae-urakoita)
+    (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
+    (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
+    this))
