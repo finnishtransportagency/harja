@@ -93,6 +93,8 @@
                  [com.github.fge/json-schema-validator "2.2.6"]
                  [com.fasterxml.jackson.core/jackson-databind "2.5.3"]
 
+                 [org.clojure/test.check "0.7.0"]
+
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]]
 
