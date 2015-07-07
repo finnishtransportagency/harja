@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
-            [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot])
+            [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
+            [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-viesti [db kuittausjono-sisaan viesti]
@@ -19,15 +20,15 @@
             urakat (:urakat data)
             sopimukset (:sopimukset data)
             toimenpiteet (:toimenpideinstanssit data)
-            organisaatiot (:organisaatiot data)]
+            organisaatiot (:organisaatiot data)
+            yhteyshenkilot (:yhteyshenkilot data)]
+        ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon
         (hankkeet/kasittele-hankkeet transaktio hankkeet)
         (urakat/kasittele-urakat transaktio urakat)
         (sopimukset/kasittele-sopimukset transaktio sopimukset)
         (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
-        (organisaatiot/kasittele-organisaatiot transaktio organisaatiot))
-
-      ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon
-      )
+        (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
+        (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot)))
 
     ;; todo: laita päälle
     #_(catch Exception e)

@@ -120,7 +120,9 @@
                                                (:etunimi yht) (:sukunimi yht)
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
-                                               (:id (:organisaatio yht))))]
+                                               (:id (:organisaatio yht))
+                                               nil
+                                               nil))]
             (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
 
       ;; kaikki ok
@@ -153,7 +155,9 @@
         (let [yht (q/luo-yhteyshenkilo<! c
                                          (:etunimi p) (:sukunimi p)
                                          (:tyopuhelin p) (:matkapuhelin p)
-                                         (:sahkoposti p) (:id (:organisaatio p)))]
+                                         (:sahkoposti p) (:id (:organisaatio p))
+                                         nil
+                                         nil)]
           (q/luo-paivystys<! c
                              (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
                              urakka-id (:id yht) ))

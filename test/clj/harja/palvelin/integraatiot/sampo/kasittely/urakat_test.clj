@@ -16,5 +16,5 @@
 
 (deftest tarkista-yhteyshenkilon-sitominen-urakkaan
   (tuo-urakka)
-  (is (onko-onko-yhteyshenkilo-sidottu-urakkaan?) "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
+  (is (onko-yhteyshenkilo-sidottu-urakkaan?) "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
   (poista-urakka))

@@ -21,7 +21,7 @@
 (def +testiurakka-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
     <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" programId=\"TESTIHANKE\"
-             resourceId=\"sampotesti\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
+             resourceId=\"TESTIHENKILO\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
         <documentLinks/>
     </Project>
 </Sampo2harja>")
@@ -93,7 +93,7 @@
 (defn hae-urakat []
   (q "select id from urakka where sampoid = 'TESTIURAKKA';"))
 
-(defn onko-onko-yhteyshenkilo-sidottu-urakkaan? []
+(defn onko-yhteyshenkilo-sidottu-urakkaan? []
   (first (first (q "SELECT exists(
     SELECT id
     FROM yhteyshenkilo_urakka
@@ -130,16 +130,6 @@
 
 (defn poista-alisopimus []
   (u "delete from sopimus where sampoid = 'TESTIALISOPIMUS'"))
-
-(defn tuo-organisaatio []
-  (laheta-viesti-kasiteltavaksi +testiorganisaatio-sanoma+))
-
-(defn poista-organisaatio []
-  (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
-  (u "delete from organisaatio where sampoid = 'TESTIORGANISAATI'"))
-
-(defn hae-organisaatiot []
-  (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
 
 (defn onko-urakoitsija-asetettu-urakalle? []
   (first (first (q "SELECT exists(SELECT id
@@ -193,3 +183,36 @@
                           SELECT id
                           FROM toimenpideinstanssi
                           WHERE sampoid = 'TESTITOIMENPIDE'));"))
+
+
+(defn tuo-organisaatio []
+  (laheta-viesti-kasiteltavaksi +testiorganisaatio-sanoma+))
+
+(defn poista-organisaatio []
+  (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
+  (u "delete from organisaatio where sampoid = 'TESTIORGANISAATI';"))
+
+(defn hae-organisaatiot []
+  (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
+
+(defn tuo-yhteyshenkilo []
+  (laheta-viesti-kasiteltavaksi +testiyhteyshenkilo-sanoma+))
+
+(defn poista-yhteyshenkilo []
+  (u "delete from yhteyshenkilo_urakka where yhteyshenkilo = (select id from yhteyshenkilo where sampoid = 'TESTIHENKILO');")
+  (u "delete from yhteyshenkilo where sampoid = 'TESTIHENKILO';"))
+
+(defn hae-yhteyshenkilot []
+  (q "select id from yhteyshenkilo where sampoid = 'TESTIHENKILO';"))
+
+(defn onko-yhteyshenkilo-asetettu-urakalle? []
+  (first (first (q "SELECT exists(
+    SELECT id
+    FROM urakka
+    WHERE id = (
+      SELECT urakka
+      FROM yhteyshenkilo_urakka
+      WHERE yhteyshenkilo = (
+        SELECT id
+        FROM yhteyshenkilo
+        WHERE sampoid = 'TESTIHENKILO')));"))))

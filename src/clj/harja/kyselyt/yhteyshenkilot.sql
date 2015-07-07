@@ -63,9 +63,9 @@ SELECT DISTINCT (rooli)
 FROM yhteyshenkilo_urakka;
 
 -- name: luo-yhteyshenkilo<!
--- Tekee uuden yhteys
-INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio)
-VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org);
+-- Tekee uuden yhteyshenkilön
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus)
+VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org, :sampoid, :kayttajatunnus);
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
@@ -135,3 +135,18 @@ VALUES ('Sampo yhteyshenkilö', :yhteyshenkilo_sampoid, :urakka,
 DELETE FROM yhteyshenkilo_urakka
 WHERE rooli = 'Sampo yhteyshenkilö' AND
       urakka = :urakka_id;
+
+-- name: hae-id-sampoidlla
+-- Hakee yhteyshenkilön id:n sampo id:llä
+SELECT id
+FROM yhteyshenkilo
+WHERE sampoid = :sampoid;
+
+-- name: paivita-yhteyshenkilot-urakalle-sampoidlla!
+-- Päivittää yhteyshenkilöt urakalle yhteyshenkilön Sampo id:llä
+UPDATE yhteyshenkilo_urakka
+SET yhteyshenkilo = (
+  SELECT id
+  FROM yhteyshenkilo
+  WHERE sampoid = :yhteyshenkilo_sampoid)
+WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid
