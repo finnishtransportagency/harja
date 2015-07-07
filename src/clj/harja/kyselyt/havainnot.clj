@@ -4,5 +4,5 @@
 
 (defqueries "harja/kyselyt/havainnot.sql")
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id]
-  (:exists (first (harja.kyselyt.havainnot/onko-olemassa-ulkoisella-idlla db ulkoinen-id))))
+(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
+  (:exists (first (harja.kyselyt.havainnot/onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))

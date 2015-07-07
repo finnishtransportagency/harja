@@ -28,7 +28,7 @@
   (let [{:keys [tunniste sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (if (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste))
+    (if (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (havainnot/paivita-havainto-ulkoisella-idlla<!
              db
              (parsi-aika paivamaara)
@@ -42,7 +42,8 @@
              (:aet tie)
              (:let tie )
              (:id kirjaaja)
-             (:id tunniste)))
+             (:id tunniste)
+             (:id kirjaaja)))
       (:id (havainnot/luo-havainto<!
              db
              urakka-id
