@@ -192,15 +192,15 @@ VALUES (:paallystyskohde,
 -- Päivittää päällystyskohdeosan
 UPDATE paallystyskohdeosa
 SET
-nimi                  = :nimi,
-tr_numero             = :tr_numero,
-tr_alkuosa            = :tr_alkuosa,
-tr_alkuetaisyys       = :tr_alkuetaisyys,
-tr_loppuosa           = :tr_loppuosa,
-tr_loppuetaisyys      = :tr_loppuetaisyys,
-kvl                   = :kvl,
-nykyinen_paallyste    = :nykyinen_paallyste,
-toimenpide            = :toimenpide
+  nimi                  = :nimi,
+  tr_numero             = :tr_numero,
+  tr_alkuosa            = :tr_alkuosa,
+  tr_alkuetaisyys       = :tr_alkuetaisyys,
+  tr_loppuosa           = :tr_loppuosa,
+  tr_loppuetaisyys      = :tr_loppuetaisyys,
+  kvl                   = :kvl,
+  nykyinen_paallyste    = :nykyinen_paallyste,
+  toimenpide            = :toimenpide
 WHERE id = :id;
 
 -- name: poista-paallystyskohdeosa!
