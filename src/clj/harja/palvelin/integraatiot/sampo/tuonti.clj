@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.sampo.kasittely.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.sopimukset :as sopimukset]
+            [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -17,11 +18,12 @@
             hankkeet (:hankkeet data)
             urakat (:urakat data)
             sopimukset (:sopimukset data)
+            toimenpiteet (:toimenpideinstanssit data)
             organisaatiot (:organisaatiot data)]
         (hankkeet/kasittele-hankkeet transaktio hankkeet)
         (urakat/kasittele-urakat transaktio urakat)
         (sopimukset/kasittele-sopimukset transaktio sopimukset)
-        ; toimenpideinstanssit
+        (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
         (organisaatiot/kasittele-organisaatiot transaktio organisaatiot))
 
       ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon

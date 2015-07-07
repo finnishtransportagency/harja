@@ -1,27 +1,11 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakat-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset-test :as sopimus-testi]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [com.stuartsierra.component :as component]))
-
-(defn hae-urakat []
-  (q "select id from urakka where sampoid = 'TESTIURAKKA';"))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
 
 (deftest tarkista-urakan-tallentuminen
   (tuo-urakka)
   (is (= 1 (count (hae-urakat))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
-
-  (is (= 1 (count (q "SELECT id FROM yhteyshenkilo_urakka
-                      WHERE rooli = 'Sampo yhteyshenkilö' AND
-                            urakka = (SELECT id FROM urakka
-                            WHERE sampoid = 'TESTIURAKKA');")))
-      "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
-
   (poista-urakka))
 
 (deftest tarkista-urakan-paivittaminen
@@ -30,5 +14,7 @@
   (is (= 1 (count (hae-urakat))) "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (poista-urakka))
 
-
-
+(deftest tarkista-yhteyshenkilon-sitominen-urakkaan
+  (tuo-urakka)
+  (is (onko-onko-yhteyshenkilo-sidottu-urakkaan?) "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
+  (poista-urakka))

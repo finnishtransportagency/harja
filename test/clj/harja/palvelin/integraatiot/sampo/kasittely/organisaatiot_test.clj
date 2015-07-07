@@ -1,31 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.organisaatiot-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :as testi]))
-
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
-                        ))))
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
-
-
-(defn hae-organisaatiot []
-  (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
-
-(defn onko-urakoitsija-asetettu-urakalle? []
-  (first (first (q "SELECT exists(SELECT id
-              FROM urakka
-              WHERE urakoitsija = (SELECT id
-                              FROM organisaatio
-                              WHERE sampoid = 'TESTIORGANISAATI'));"))))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
 
 (deftest tarkista-organisaation-tallentuminen
   (tuo-organisaatio)
@@ -38,19 +14,20 @@
   (is (= 1 (count (hae-organisaatiot))) "Tuotaessa sama organisaatio uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (poista-organisaatio))
 
-(deftest tarkista-urakoitsijan-asettaminen-urakalle
+(deftest tarkista-urakoitsijan-asettaminen-urakalle-sopimus-ensin
   (tuo-urakka)
   (tuo-sopimus)
   (tuo-organisaatio)
   (is onko-urakoitsija-asetettu-urakalle?
       "Organisaatio on merkitty sopimuksen kautta urakalle urakoitsijaksi, kun sopimus on tuotu ensiksi.")
+  (poista-organisaatio))
 
+(deftest tarkista-urakoitsijan-asettaminen-urakalle-organisaatio-ensin
   (tuo-organisaatio)
   (tuo-urakka)
   (tuo-sopimus)
   (is onko-urakoitsija-asetettu-urakalle?
       "Organisaatio on merkitty sopimuksen kautta urakalle urakoitsijaksi, kun organisaatio on tuotu ensiksi.")
-
   (poista-organisaatio))
 
 

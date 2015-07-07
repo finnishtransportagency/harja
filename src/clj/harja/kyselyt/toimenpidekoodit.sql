@@ -2,7 +2,6 @@
 -- Listaa kaikki toimenpidekoodit.
 SELECT id,koodi,nimi,emo,taso,yksikko FROM toimenpidekoodi WHERE poistettu=false;
 
-
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
 INSERT INTO toimenpidekoodi (nimi,emo,taso,yksikko,luoja,luotu,muokattu) VALUES (:nimi, :emo, 4, :yksikko, :kayttajaid, NOW(), NOW());

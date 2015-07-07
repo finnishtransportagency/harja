@@ -42,6 +42,26 @@
     </Company>
 </Sampo2harja>")
 
+(def +testitoimenpide-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Operation financialDepartmentHash=\"KP921303\"
+               financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Varsinais-Suomen ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
+               id=\"TESTITOIMENPIDE\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
+               name=\"TESTITOIMENPIDE\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
+               schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
+               vv_operation=\"22111\">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>")
+
+(def +testiyhteyshenkilo-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Resource department_obs_path=\"\" first_name=\"Teuvo\" id=\"TESTIHENKILO\" last_name=\"Testi\"
+              message_Id=\"HenkiloMessageId\" user_Name=\"Teuvo, Testi\">
+        <contactInformation address1=\"\" city=\"\" email=\"teuvo.testi@foo.bar\" postal_Code=\"\"/>
+    </Resource>
+</Sampo2harja>")
+
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 
 (defn tee-viesti [sisalto]
@@ -59,6 +79,9 @@
   (u "update urakka set hanke = null where hanke_sampoid = 'TESTIHANKE'")
   (u "delete from hanke where sampoid = 'TESTIHANKE'"))
 
+(defn hae-hankkeet []
+  (q "select id from hanke where sampoid = 'TESTIHANKE';"))
+
 (defn tuo-urakka []
   (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
 
@@ -66,6 +89,18 @@
   (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
+
+(defn hae-urakat []
+  (q "select id from urakka where sampoid = 'TESTIURAKKA';"))
+
+(defn onko-onko-yhteyshenkilo-sidottu-urakkaan? []
+  (first (first (q "SELECT exists(
+    SELECT id
+    FROM yhteyshenkilo_urakka
+    WHERE rooli = 'Sampo yhteyshenkilö' AND
+          urakka = (SELECT id
+                    FROM urakka
+                    WHERE sampoid = 'TESTIURAKKA'));"))))
 
 (defn tuo-sopimus []
   (laheta-viesti-kasiteltavaksi +testisopimus-sanoma+))
@@ -76,6 +111,23 @@
 (defn tuo-alisopimus []
   (laheta-viesti-kasiteltavaksi (clojure.string/replace +testisopimus-sanoma+ "TESTISOPIMUS" "TESTIALISOPIMUS")))
 
+(defn onko-alisopimus-liitetty-paasopimukseen? []
+  (first (first (q "SELECT exists(SELECT id
+              FROM sopimus
+              WHERE paasopimus = (SELECT id
+                                  FROM sopimus
+                                  WHERE sampoid = 'TESTISOPIMUS'))"))))
+
+(defn onko-sopimus-sidottu-urakkaan? []
+  (first (first (q "SELECT exists(SELECT id
+              FROM sopimus
+              WHERE urakka = (SELECT id
+                                  FROM urakka
+                                  WHERE sampoid = 'TESTIURAKKA'))"))))
+
+(defn hae-sopimukset []
+  (q "select id from sopimus where sampoid = 'TESTISOPIMUS';"))
+
 (defn poista-alisopimus []
   (u "delete from sopimus where sampoid = 'TESTIALISOPIMUS'"))
 
@@ -85,4 +137,30 @@
 (defn poista-organisaatio []
   (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
   (u "delete from organisaatio where sampoid = 'TESTIORGANISAATI'"))
+
+(defn hae-organisaatiot []
+  (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
+
+(defn onko-urakoitsija-asetettu-urakalle? []
+  (first (first (q "SELECT exists(SELECT id
+              FROM urakka
+              WHERE urakoitsija = (SELECT id
+                              FROM organisaatio
+                              WHERE sampoid = 'TESTIORGANISAATI'));"))))
+
+(defn tuo-toimenpide []
+  (laheta-viesti-kasiteltavaksi +testitoimenpide-sanoma+))
+
+(defn poista-toimenpide []
+  (u "delete from toimenpideinstanssi where sampoid = 'TESTITOIMENPIDE'"))
+
+(defn hae-toimenpiteet []
+  (q "select id from toimenpideinstanssi where sampoid = 'TESTITOIMENPIDE';"))
+
+(defn onko-urakka-sidottu-toimenpiteeseen? []
+  (first (first (q "SELECT exists(SELECT id
+              FROM toimenpideinstanssi
+              WHERE urakka = (SELECT id
+                              FROM urakka
+                              WHERE sampoid = 'TESTIURAKKA'));"))))
 

@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.kyselyt.sopimukset :as sopimukset]))
+            [harja.kyselyt.sopimukset :as sopimukset]
+            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
@@ -30,6 +31,9 @@
 (defn paivita-sopimukset [db urakka-sampo-id]
   (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id))
 
+(defn paivita-toimenpiteet [db urakka-sampo-id]
+  (toimenpiteet/paivita-urakka-sampoidlla! db urakka-sampo-id))
+
 (defn kasittele-urakka [db {:keys [sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (let [urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id)]
@@ -37,9 +41,7 @@
     (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
     (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
     (paivita-sopimukset db sampo-id)
-
-    ;; todo: paivita sopimukset & toimenpideinstanssit
-    ))
+    (paivita-toimenpiteet db sampo-id)))
 
 (defn kasittele-urakat [db urakat]
   (doseq [urakka urakat]
