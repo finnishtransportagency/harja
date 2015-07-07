@@ -27,14 +27,14 @@
 (defn tila-keyword->string [tila]
   (case tila
     :aloitettu "Aloitettu"
-    :valmis "Valmis, odottaa käsittelyä"
+    :valmis "Valmis"
     :lukittu "Lukittu"
     "-"))
 
 (defn paatos-keyword->string [tila]
   (case tila
     :hyvaksytty "Hyväksytty"
-    :hylatty "Palautettu urakoitsijalle"
+    :hylatty "Hylätty"
     ""))
 
 (def lomakedata (atom nil))                                 ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
@@ -68,7 +68,7 @@
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
     :hyvaksytty "Hyväksytty"
-    :hylatty "Palauta urakoitsijalle"))
+    :hylatty "Hylätty"))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -76,10 +76,12 @@
   (let [muokattava? (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
                                   (and (not (= (:tila @lomakedata) :lukittu)))))
-        paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
-                              :perustelu     (:perustelu @lomakedata)
-                              :kasittelyaika (:kasittelyaika @lomakedata)}
-                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
+        paatostiedot (r/wrap {:paatos-tekninen      (:paatos_tekninen_osa @lomakedata)
+                              :paatos-taloudellinen (:paatos_taloudellinen_osa @lomakedata)
+                              :perustelu            (:perustelu @lomakedata)
+                              :kasittelyaika        (:kasittelyaika @lomakedata)}
+                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
+                                                                    (assoc :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
                                                                     (assoc :perustelu (:perustelu uusi-arvo))
                                                                     (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
     (when @valmis-kasiteltavaksi?
@@ -95,8 +97,8 @@
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]
           :muokattava? muokattava?}
 
-         {:otsikko       "Päätös"
-          :nimi          :paatos
+         {:otsikko       "Päätös teknisestä osasta"
+          :nimi          :paatos-tekninen
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :muokattava?   muokattava?
@@ -104,7 +106,17 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
           :leveys-col    4}
 
-         (when (:paatos @paatostiedot)
+         {:otsikko       "Päätös taloudellisesta osasta"
+          :nimi          :paatos-taloudellinen
+          :tyyppi        :valinta
+          :valinnat      [:hyvaksytty :hylatty]
+          :muokattava?   muokattava?
+          :validoi       [[:ei-tyhja "Anna päätös"]]
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
+          :leveys-col    4}
+
+         (when (or (:paatos-tekninen @paatostiedot)
+                   (:paatos-taloudellinen @paatostiedot))
            {:otsikko     "Päätöksen selitys"
             :nimi        :perustelu
             :tyyppi      :text
@@ -220,14 +232,14 @@
              {:otsikko     "Kommentit" :nimi :kommentit
               :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                  :voi-liittaa      false
-                                                                   :placeholder "Kirjoita kommentti..."
-                                                                   :uusi-kommentti (r/wrap (:uusi-kommentti @lomakedata)
-                                                                                           #(swap! lomakedata assoc :uusi-kommentti %))}
+                                                 :placeholder      "Kirjoita kommentti..."
+                                                 :uusi-kommentti   (r/wrap (:uusi-kommentti @lomakedata)
+                                                                           #(swap! lomakedata assoc :uusi-kommentti %))}
                             (:kommentit @lomakedata)]})
            ]
           @kohteen-tiedot]
 
-         [:h3 "Tekninen puoli"]
+         [:h3 "Tekninen osa"]
 
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
@@ -351,7 +363,7 @@
             :leveys        "30%"}]
           alustalle-tehdyt-toimet]
 
-         [:h3 "Talouspuoli"]
+         [:h3 "Taloudellinen osa"]
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
@@ -389,11 +401,11 @@
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                             (if (nil? (:tila rivi))
-                                                                                                               "-"
-                                                                                                               (if (nil? (:paatos rivi))
-                                                                                                                 (str (tila-keyword->string (:tila rivi)))
-                                                                                                                 (paatos-keyword->string (:paatos rivi)))))}
+                                                                                                             (tila-keyword->string (:tila rivi)))}
+           {:otsikko "Päätös (tekninen)" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                                                         (paatos-keyword->string (:paatos_tekninen_osa rivi)))}
+           {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                                                                   (paatos-keyword->string (:paatos_taloudellinen_osa rivi)))}
            {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)

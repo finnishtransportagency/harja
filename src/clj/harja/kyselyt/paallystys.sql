@@ -25,13 +25,15 @@ SELECT
   tila,
   pk.nimi,
   pk.kohdenumero,
-  paatos,
+  paatos_tekninen_osa,
+  paatos_taloudellinen_osa,
   pk.sopimuksen_mukaiset_tyot
 FROM paallystysilmoitus
   RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                                    AND pk.urakka = :urakka
                                    AND pk.sopimus = :sopimus
-WHERE poistettu IS NOT TRUE;
+WHERE paallystysilmoitus.poistettu IS NOT TRUE
+AND pk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
@@ -45,7 +47,8 @@ SELECT
   pk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,
-  paatos,
+  paatos_tekninen_osa,
+  paatos_taloudellinen_osa,
   perustelu,
   kasittelyaika
 FROM paallystysilmoitus
@@ -53,7 +56,7 @@ FROM paallystysilmoitus
                              AND pk.urakka = :urakka
                              AND pk.sopimus = :sopimus
 WHERE paallystyskohde = :paallystyskohde
-      AND poistettu IS NOT TRUE;
+      AND paallystysilmoitus.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
 -- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
@@ -77,18 +80,19 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Päivittää päällystysilmoituksen
 UPDATE paallystysilmoitus
 SET
-  tila           = :tila::paallystystila,
-  ilmoitustiedot = :ilmoitustiedot :: JSONB,
-  aloituspvm     = :aloituspvm,
-  valmistumispvm = :valmistumispvm,
-  takuupvm       = :takuupvm,
-  muutoshinta    = :muutoshinta,
-  paatos         = :paatos::paallystysilmoituksen_paatostyyppi,
-  perustelu      = :perustelu,
-  kasittelyaika  = :kasittelyaika,
-  muokattu       = NOW(),
-  muokkaaja      = :muokkaaja,
-  poistettu      = FALSE
+  tila                        = :tila::paallystystila,
+  ilmoitustiedot              = :ilmoitustiedot :: JSONB,
+  aloituspvm                  = :aloituspvm,
+  valmistumispvm              = :valmistumispvm,
+  takuupvm                    = :takuupvm,
+  muutoshinta                 = :muutoshinta,
+  paatos_tekninen_osa         = :paatos_tekninen_osa::paallystysilmoituksen_paatostyyppi,
+  paatos_taloudellinen_osa    = :paatos_taloudellinen_osa::paallystysilmoituksen_paatostyyppi,
+  perustelu                   = :perustelu,
+  kasittelyaika               = :kasittelyaika,
+  muokattu                    = NOW(),
+  muokkaaja                   = :muokkaaja,
+  poistettu                   = FALSE
 WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!

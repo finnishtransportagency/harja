@@ -43,8 +43,10 @@
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (comp (map #(konv/string->avain % [:paatos]))
-                            (map #(konv/string->avain % [:tila])))
+                      (comp
+                        (map #(konv/string->avain % [:paatos_taloudellinen_osa]))
+                        (map #(konv/string->avain % [:paatos_tekninen_osa]))
+                        (map #(konv/string->avain % [:tila])))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -57,7 +59,8 @@
                                         (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                               (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                                               (map #(konv/string->avain % [:tila]))
-                                              (map #(konv/string->avain % [:paatos])))
+                                              (map #(konv/string->avain % [:paatos_tekninen_osa]))
+                                              (map #(konv/string->avain % [:paatos_taloudellinen_osa])))
                                         (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
     (when paallystysilmoitus
@@ -77,10 +80,11 @@
 (defn laske-muutoshinta [lomakedata]
   (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
 
-(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos perustelu kasittelyaika]}]
+(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (laske-muutoshinta ilmoitustiedot)
-        tila (if (= paatos :hyvaksytty)
+        tila (if (and (= paatos_tekninen_osa :hyvaksytty)
+                      (= paatos_taloudellinen_osa :hyvaksytty))
                "lukittu"
                (if valmistumispvm "valmis" "aloitettu"))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -90,7 +94,8 @@
                                    (konv/sql-date valmistumispvm)
                                    (konv/sql-date takuupvm)
                                    muutoshinta
-                                   (if paatos (name paatos))
+                                   (if paatos_tekninen_osa (name paatos_tekninen_osa))
+                                   (if paatos_taloudellinen_osa (name paatos_taloudellinen_osa))
                                    perustelu
                                    (konv/sql-date kasittelyaika)
                                    (:id user)
@@ -134,7 +139,9 @@
 
       ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
       ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      (if (not (= (:paatos paallystysilmoitus-kannassa) (or (:paatos lomakedata) nil)))
+      (if (or
+            (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) (or (:paatos_tekninen_osa lomakedata) nil)))
+            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) (or (:paatos_taloudellinen_osa lomakedata) nil))))
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
       ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
