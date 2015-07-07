@@ -56,15 +56,16 @@
          {:otsikko "Pit" :nimi :pit :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi))))
           :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         ;{:otsikko       "Nykyinen päällyste" ; FIXME Päällyste on numero, jonka mukaan näytetään teksti --> Vaatii pudostusvalikon --> Miksi ei näy?
-         ; :nimi          :nykyinen_paallyste
-         ; :tyyppi        :valinta
-         ; :valinta-arvo  :koodi
-         ; :valinnat      paallystys-pot/+paallystetyypit+
-         ; :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
-         ; :valinta-nayta #(if % (paallystys-pot/hae-paallyste-koodilla %) "- Valitse päällyste -")
-         ; :leveys-col    4}
-         {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko       "Nykyinen päällyste" ; FIXME Päällyste on numero, jonka mukaan näytetään teksti --> Vaatii pudostusvalikon --> Miksi ei näy?
+          :nimi          :nykyinen_paallyste
+          :fmt           #(paallystys-pot/hae-paallyste-koodilla %)
+          :tyyppi        :valinta
+          :valinta-arvo  :koodi
+          :valinnat      paallystys-pot/+paallystetyypit+
+          :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
+          :valinta-nayta :nimi
+          :leveys        "20%"
+          }
          {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
         @paallystyskohdeosat]])))
 
