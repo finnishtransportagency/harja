@@ -7,7 +7,8 @@
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [harja.asiakas.tapahtumat :as tapahtumat])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,24 +34,26 @@
 
 (def ilmoitus-kartalla-xf
   #(assoc %
-         :type :ilmoitus
-         :alue {:type        :circle
-                :radius      100
-                :coordinates (:sijainti %)
-                :fill        {:color "green"}
-                :stroke      {:color "black" :width 10}}))
+    :type :ilmoitus
+    :alue {:type        :circle
+           :radius      (if (= (:id %) (:id @valittu-ilmoitus)) 10000 5000)
+           :coordinates (:sijainti %)
+           :fill        (if (= (:id %) (:id @valittu-ilmoitus)) {:color "green"} {:color "blue"}) ;;fixme väri ei toimi?
+           :stroke      {:color "black" :width 10}}))
+
+(defonce ilmoitusta-klikattu
+         (tapahtumat/kuuntele! :ilmoitus-klikattu
+                               (fn [ilmoitus]
+                                 (reset! valittu-ilmoitus (dissoc ilmoitus :type :alue)))))
 
 (defonce taso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
-   (reaction<! [paalla? @taso-ilmoitukset
-                ilmoitukset @haetut-ilmoitukset
-                valittu-ilmoitus @valittu-ilmoitus]
-
-               (when paalla?
-                 (if valittu-ilmoitus
-                   [(ilmoitus-kartalla-xf valittu-ilmoitus)]
-                   (into [] (map ilmoitus-kartalla-xf) haetut-ilmoitukset)))))
+         (reaction
+           @valittu-ilmoitus
+           (when @taso-ilmoitukset
+             (log "Piiretäänpä hommat uusiksi: " (:id @valittu-ilmoitus))
+             (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
 
 (defonce filttereita-vaihdettu? (reaction
                                   @valittu-hallintayksikko
@@ -70,7 +73,6 @@
              :tyypit          tyypit
              :aikavali        @valittu-aikavali
              :hakuehto        @hakuehto}]
-    (log (pr-str ret))
     ret))
 
 (defn hae-ilmoitukset

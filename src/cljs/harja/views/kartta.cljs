@@ -90,7 +90,6 @@ joka kertoo karttakoordinaatit. Sisältö annetaan sisalto-hiccup muodossa ja se
 HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiverinen komponentti)"
   [sijainti sisalto-hiccup]
   (openlayers/show-popup! sijainti sisalto-hiccup))
-
   
 
 (defn kartta-openlayers []

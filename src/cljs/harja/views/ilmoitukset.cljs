@@ -226,6 +226,7 @@
 (defn ilmoitukset []
   (komp/luo
     (komp/lippu tiedot/ilmoitusnakymassa?)
+    (komp/lippu tiedot/taso-ilmoitukset)
 
     (fn []
       (if @tiedot/valittu-ilmoitus
