@@ -79,6 +79,7 @@
 (defn kohdesarake [kohteet vika-korjattu]
   [:ul.puutekohdelista {:style {:padding-left "20px"}}
    (for [[kohde [tulos _]] (seq kohteet)]
+     ^{:key kohde}
      [:li.puutekohde {:style {:list-style-type "circle"}}
       (str (st/siltatarkastuskohteen-nimi kohde)
         ": "
@@ -108,6 +109,7 @@
           {:otsikko        "Sillat"
            :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
+           :tunniste :siltanro
            }
 
           ;; sarakkeet
@@ -115,15 +117,17 @@
            {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
-           (when (= :urakan-korjattavat @sillat/listaus)
-             {:otsikko "Korjattavat" :nimi :kohteet :leveys "30%" :fmt (fn [kohteet]
-                                                                         [kohdesarake kohteet])})
-           (when (= :urakassa-korjatut @sillat/listaus)
-             {:otsikko "Korjatut" :nimi :kohteet :leveys "30%" :fmt  (fn [kohteet]
-                                                                       [kohdesarake kohteet true])})
-           (when (= :korjaus-ohjelmoitava @sillat/listaus)
-             {:otsikko "Ohjelmoitavat" :nimi :kohteet :leveys "30%" :fmt  (fn [kohteet]
-                                                                            [kohdesarake kohteet])})]
+           (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
+                                    [@sillat/listaus])]
+             {:otsikko (case listaus
+                         :urakan-korjattavat "Korjattavat"
+                         :urakassa-korjatut "Korjatut"
+                         :korjaus-ohjelmoitava  "Ohjelmoitavat")
+              :nimi :kohteet :leveys "30%"
+              :fmt (fn [kohteet]
+                     (case listaus
+                       :urakassa-korjatut [kohdesarake kohteet true]
+                       [kohdesarake kohteet]))})]
 
           @urakan-sillat
           ]]))))
