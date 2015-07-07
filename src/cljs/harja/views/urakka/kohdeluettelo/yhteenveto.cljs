@@ -37,7 +37,7 @@
 
     (fn [rivi]
       [:div
-       [grid/grid ; FIXME Validoinnit?
+       [grid/grid
         {:otsikko  "Tierekisterikohteet"
          :tyhja    (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Tierekisterikohteita ei löydy")
          :tunniste :tr_numero
@@ -47,17 +47,25 @@
                               (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
                               (reset! paallystyskohdeosat vastaus)))
          :luokat   ["paallystyskohdeosat-haitari"]}
-        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
-         {:otsikko "Tieosa" :nimi :tr_numero :tyyppi :numero :leveys "10%"}
-         {:otsikko "Aot" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%"}
-         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%"}
-         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%"}
-         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%"}
-         {:otsikko "Pit" :nimi :pit :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))) ; FIXME Onko oikein laskettu?
-          :leveys  "10%"}
-         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%"}
-         {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%"}
-         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%"}]
+        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Tieosa" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Aot" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Pit" :nimi :pit :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi))))
+          :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         ;{:otsikko       "Nykyinen päällyste" ; FIXME Päällyste on numero, jonka mukaan näytetään teksti --> Vaatii pudostusvalikon --> Miksi ei näy?
+         ; :nimi          :nykyinen_paallyste
+         ; :tyyppi        :valinta
+         ; :valinta-arvo  :koodi
+         ; :valinnat      paallystys-pot/+paallystetyypit+
+         ; :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
+         ; :valinta-nayta #(if % (paallystys-pot/hae-paallyste-koodilla %) "- Valitse päällyste -")
+         ; :leveys-col    4}
+         {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
         @paallystyskohdeosat]])))
 
 (defn paallystyskohteet []
@@ -72,7 +80,7 @@
     (komp/luo
       (fn []
         [:div
-         [grid/grid ; FIXME Validoinnit?
+         [grid/grid
           {:otsikko      "Päällystyskohteet"
            :tyhja        (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
@@ -85,38 +93,40 @@
                                 (reset! paallystys/paallystyskohteet vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%"}
-           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kokonaishinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                                                                                                                                                  (:muutoshinta rivi)
                                                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                                                  (:bitumi_indeksi rivi)
-                                                                                                                                                 (:kaasuindeksi rivi))) :tyyppi :numero :leveys "20%"}]
+                                                                                                                                                 (:kaasuindeksi rivi)))
+            :tyyppi :numero :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
           @kohteet-ilman-lisatoita]
 
          [grid/grid
           {:otsikko  "Lisätyöt"
            :tyhja    (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei lisätöitä")
            :luokat   ["paallysteurakka-kohteet-lisatyot"]
-           :tunniste :numero
+           :tunniste :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                 (reset! paallystys/paallystyskohteet vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
-          [{:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "40%"}
-           {:otsikko "Hinta" :nimi :lisatyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+          [{:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "40%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Hinta" :nimi :lisatyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt  :tyyppi :numero :leveys "10%"}
-           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
+           {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt  :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                                                                                                                  (:lisatyot rivi)
                                                                                                                  (:muutoshinta rivi)

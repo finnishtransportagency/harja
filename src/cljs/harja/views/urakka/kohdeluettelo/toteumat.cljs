@@ -280,7 +280,7 @@
            {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}] ; FIXME Onko oikein laskettu?
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}]
           toteutuneet-osoitteet]
 
          [grid/muokkaus-grid
@@ -338,7 +338,7 @@
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))} ; FIXME Onko oikein laskettu?
+           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}
            {:otsikko       "Käsittelymenetelmä"
             :nimi          :kasittelymenetelma
             :tyyppi        :valinta
