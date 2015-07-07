@@ -287,4 +287,60 @@
       (is (= alku (pvm/->pvm "1.1.2015")))
       (is (= loppu (pvm/->pvm "8.4.2015"))))))
 
-      
+
+(def +prosessoitavat-rivit+
+  [{:loppupvm (pvm/->pvm "31.12.2005"), :yksikko "tiekm", :tehtava 1369, :urakka 1, :yksikkohinta 5, :maara 10,
+    :id       33, :tehtavan_nimi "K2", :sopimus 2, :alkupvm (pvm/->pvm "1.10.2005"), :tehtavan_id 1369}
+   {:loppupvm (pvm/->pvm "30.09.2006"), :yksikko "tiekm", :tehtava 1369, :urakka 1, :yksikkohinta 5, :maara 20,
+    :id       34, :tehtavan_nimi "K2", :sopimus 2, :alkupvm (pvm/->pvm "1.1.2006"), :tehtavan_id 1369}
+
+   {:loppupvm (pvm/->pvm "31.12.2005"), :yksikko "tiekm", :tehtava 1369, :urakka 1, :yksikkohinta 10, :maara 30,
+    :id       31, :tehtavan_nimi "K2", :sopimus 1, :alkupvm (pvm/->pvm "1.10.2005"), :tehtavan_id 1369}
+   {:loppupvm (pvm/->pvm "30.09.2006"), :yksikko "tiekm", :tehtava 1369, :urakka 1, :yksikkohinta 10, :maara 40,
+    :id       32, :tehtavan_nimi "K2", :sopimus 1, :alkupvm (pvm/->pvm "1.1.2006"), :tehtavan_id 1369}])
+
+;;({:yhteensa-kkt-1-9 100, :yhteensa 150, :yhteensa-kkt-10-12 50, :loppupvm #<20060930T000000>, :yksikko "tiekm",
+;; :tehtava 1369, :maara-kkt-10-12 10, :urakka 1, :yksikkohinta 5, :maara 30, :id 33, :tehtavan_nimi "K2", :sopimus 2,
+;; :maara-kkt-1-9 20, :alkupvm #<20051001T000000>, :tehtavan_id 1369}
+
+;; {:yhteensa-kkt-1-9 400, :yhteensa 700, :yhteensa-kkt-10-12 300, :loppupvm #<20060930T000000>, :yksikko "tiekm",
+;; :tehtava 1369, :maara-kkt-10-12 30, :urakka 1, :yksikkohinta 10, :maara 70, :id 31, :tehtavan_nimi "K2", :sopimus 1,
+;; :maara-kkt-1-9 40, :alkupvm #<20051001T000000>, :tehtavan_id 1369})
+
+(deftest prosessoi-ykshint-tyorivit
+  (let [tulos (s/prosessoi-tyorivit {:tyyppi :hoito } +prosessoitavat-rivit+)
+        sopimus-2-tyorivi (first (filter #(= 2 (:sopimus %)) tulos))
+        sopimus-1-tyorivi (first (filter #(= 1 (:sopimus %)) tulos))
+        viesti "yksikköhintaisten töiden prosessoi työrivit"]
+
+    ;; työrivi sopimukselle 2
+    (is (= 1 (:urakka sopimus-2-tyorivi)) viesti)
+    (is (= 2 (:sopimus sopimus-2-tyorivi)) viesti)
+    (is (= 1369 (:tehtava sopimus-2-tyorivi)) viesti)
+
+    (is (= "tiekm" (:yksikko sopimus-2-tyorivi)) viesti)
+    (is (= 5 (:yksikkohinta sopimus-2-tyorivi)) viesti)
+
+    (is (= 20 (:maara-kkt-1-9 sopimus-2-tyorivi)) )
+    (is (= 10 (:maara-kkt-10-12 sopimus-2-tyorivi)) viesti)
+    (is (= 30 (:maara sopimus-2-tyorivi)) viesti)
+
+    (is (= 100 (:yhteensa-kkt-1-9 sopimus-2-tyorivi)) viesti)
+    (is (= 50 (:yhteensa-kkt-10-12 sopimus-2-tyorivi)) viesti)
+    (is (= 150 (:yhteensa sopimus-2-tyorivi)) viesti)
+
+    ;; työrivi sopimukselle 1
+    (is (= 1 (:urakka sopimus-1-tyorivi)) viesti)
+    (is (= 1 (:sopimus sopimus-1-tyorivi)) viesti)
+    (is (= 1369 (:tehtava sopimus-1-tyorivi)) viesti)
+
+    (is (= "tiekm" (:yksikko sopimus-1-tyorivi)) viesti)
+    (is (= 10 (:yksikkohinta sopimus-1-tyorivi)) viesti)
+
+    (is (= 40 (:maara-kkt-1-9 sopimus-1-tyorivi)) viesti)
+    (is (= 30 (:maara-kkt-10-12 sopimus-1-tyorivi)) viesti)
+    (is (= 70 (:maara sopimus-1-tyorivi)) viesti)
+
+    (is (= 400 (:yhteensa-kkt-1-9 sopimus-1-tyorivi)) viesti)
+    (is (= 300 (:yhteensa-kkt-10-12 sopimus-1-tyorivi)) viesti)
+    (is (= 700 (:yhteensa sopimus-1-tyorivi)) viesti)))

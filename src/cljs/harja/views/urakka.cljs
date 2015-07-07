@@ -10,12 +10,11 @@
             [harja.views.urakka.kohdeluettelo :as kohdeluettelo]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
             [harja.views.urakka.maksuerat :as maksuerat]
-            [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
-            [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             )
 
@@ -27,7 +26,9 @@
   [ur]
   (let [hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                          (go (reset! u/urakan-yks-hint-tyot (yksikkohintaiset-tyot/prosessoi-tyorivit ur (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+                          (go (reset! u/urakan-yks-hint-tyot
+                                      (s/prosessoi-tyorivit ur
+                                                            (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
     (hae-urakan-tyot ur)
     [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
      "Yleiset"

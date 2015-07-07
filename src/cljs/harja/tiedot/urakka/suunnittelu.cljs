@@ -20,11 +20,13 @@
 Ryhmittelyfunktion mukaan riveille tehdään group-by. Yhdista funktiolle annetaan 2 riviä 
   aikajärjestyksessä."
   [rivit ryhmittely yhdista]
-  (map (fn [[eka toka]]
-         (assoc (yhdista eka toka)
-           :alkupvm (:alkupvm eka)
-           :loppupvm (:loppupvm toka)))
-       (mapcat #(partition 2 (sort-by :alkupvm %)) (vals (group-by ryhmittely rivit)))))
+  (let [ryhmitellyt-rivit
+        (mapcat #(partition 2 (sort-by :alkupvm %)) (vals (group-by ryhmittely rivit)))]
+    (map (fn [[eka toka]]
+           (assoc (yhdista eka toka)
+             :alkupvm (:alkupvm eka)
+             :loppupvm (:loppupvm toka)))
+         ryhmitellyt-rivit)))
 
 (defn jaa-rivien-hoitokaudet
   "Jakaa rivejä, joiden :alkupvm/:loppupvm ovat hoidon alueurakan hoitokausia, vuosiriveiksi.
@@ -109,3 +111,27 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
     (reaction (toiden-kustannusten-summa
                   @kaikki-sopimuksen-ja-hoitokauden-kok-hint-rivit
                   :summa)))
+
+(defn prosessoi-tyorivit [ur rivit]
+  (if (= :hoito (:tyyppi ur))
+    (yhdista-rivien-hoitokaudet rivit (juxt :tehtava :sopimus)
+                                (fn [eka toka]
+                                  (assoc eka
+                                    :maara-kkt-10-12 (:maara eka)
+                                    :maara-kkt-1-9 (:maara toka)
+
+                                    ;; Määrä on kausien yhteenlaskettu, jotta yhteensä tiedot näkyvät
+                                    :maara (+ (or (:maara eka) 0)
+                                              (or (:maara toka) 0))
+                                    :yhteensa-kkt-10-12 (when-let [hinta (:yksikkohinta eka)]
+                                                          (* (or (:maara eka) 0) hinta))
+                                    :yhteensa-kkt-1-9 (when-let [hinta (:yksikkohinta eka)]
+                                                        (* (or (:maara toka) 0) hinta))
+                                    :yhteensa (when-let [hinta (:yksikkohinta eka)]
+                                                (* (+ (or (:maara eka) 0)
+                                                      (or (:maara toka) 0))
+                                                   hinta))
+                                    )))
+    (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
+                                (* (or (:maara %) 0) hinta)))
+          rivit)))

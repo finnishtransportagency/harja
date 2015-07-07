@@ -13,13 +13,11 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.tiedot.istunto :as istunto]
 
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
             [cljs-time.core :as t]
 
             )
@@ -28,43 +26,17 @@
 
 
 (def tuleville? (atom false))
-
-(defn prosessoi-tyorivit [ur rivit]
-  (if (= :hoito (:tyyppi ur))
-    (s/yhdista-rivien-hoitokaudet rivit :tehtava
-                                  (fn [eka toka]
-                                    (assoc eka
-                                      :maara-kkt-10-12 (:maara eka)
-                                      :maara-kkt-1-9 (:maara toka)
-                                      
-                                      ;; Määrä on kausien yhteenlaskettu, jotta yhteensä tiedot näkyvät
-                                      :maara (+ (or (:maara eka) 0)
-                                                (or (:maara toka) 0))
-                                      :yhteensa-kkt-10-12 (when-let [hinta (:yksikkohinta eka)]
-                                                            (* (or (:maara eka) 0) hinta))
-                                      :yhteensa-kkt-1-9 (when-let [hinta (:yksikkohinta eka)]
-                                                            (* (or (:maara toka) 0) hinta))
-                                      :yhteensa (when-let [hinta (:yksikkohinta eka)]
-                                                  (* (+ (or (:maara eka) 0)
-                                                        (or (:maara toka) 0))
-                                                     hinta))
-                                      )))
-    (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
-                                (* (or (:maara %) 0) hinta)))
-          rivit)))
   
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
-  (go (let [tallennettavat-hoitokaudet (if @tuleville?
-                                         (u/tulevat-hoitokaudet ur valittu-hoitokausi)
-                                         valittu-hoitokausi)
-            muuttuneet
+  (go (let [muuttuneet
             (into []
                   (if @tuleville?
                     (u/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))]
-        (reset! tyot (prosessoi-tyorivit ur res))
+            res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))
+            prosessoidut-tyorivit (s/prosessoi-tyorivit ur res)]
+        (reset! tyot prosessoidut-tyorivit)
         (reset! tuleville? false)
         true)))
 
@@ -111,11 +83,9 @@
         urakka (atom nil)
         hae-urakan-tiedot (fn [ur]
                             (reset! urakka ur)
-                            ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen  urakalle
-                            (go (reset! toimenpiteet-ja-tehtavat (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
-        
-        tyorivit-samat-alkutilanteessa? (atom true)
-
+                            ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen urakalle
+                            (go (reset! toimenpiteet-ja-tehtavat
+                                        (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
         sopimuksen-tyot 
         (reaction 
          (into []
@@ -125,10 +95,8 @@
         
 
         sopimuksen-tyot-hoitokausittain
-        (reaction (let [tyyppi (:tyyppi @urakka)
-                        [sopimud-id _] @u/valittu-sopimusnumero]
-                    (u/ryhmittele-hoitokausittain @sopimuksen-tyot
-                                                  @u/valitun-urakan-hoitokaudet)))
+        (reaction (u/ryhmittele-hoitokausittain @sopimuksen-tyot
+                                                @u/valitun-urakan-hoitokaudet))
         
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?
@@ -159,6 +127,7 @@
                                    (map #(* (:maara %) (:yksikkohinta %))))
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))]
+
 
     (hae-urakan-tiedot ur)
     (komp/luo
