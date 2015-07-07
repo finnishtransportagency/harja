@@ -104,44 +104,39 @@ Optioissa voi olla seuraavat avaimet:
 
   [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata?] :as opts} skeema data]
   (let [luokka (or luokka :default)
-        virheet-atom (or virheet (atom {}))  ;; validointivirheet: (:id rivi) => [virheet]
-        varoitukset-atom (or varoitukset (atom {}))
         voi-muokata? (if (some? voi-muokata?)
                        voi-muokata?
                        true)
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
         nykyinen-fokus (atom nil)
-        aseta-fokus! #(reset! nykyinen-fokus %)]
-
-    ;; Validoidaan kaikki kentät heti lomakkeen luontivaiheessa,
-    ;; koskemattomien kenttien virheitä ei kuitenkaan näytetä.
-    (reset! virheet-atom
-            (into {}
-                  (validointi/validoi-rivi nil data skeema :validoi)))
-
-    (reset! varoitukset-atom
-            (into {}
-                  (validointi/validoi-rivi nil data skeema :varoita)))
+        aseta-fokus! #(reset! nykyinen-fokus %)
+        paivita-ulkoinen-validointitila! (fn [virheet-atom virheet varoitukset-atom varoitukset]
+                                           (when virheet-atom
+                                             (reset! virheet-atom virheet))
+                                           (when varoitukset-atom
+                                             (reset! varoitukset-atom varoitukset)))]
+    
+    (paivita-ulkoinen-validointitila! virheet (into {}
+                                                    (validointi/validoi-rivi nil data skeema :validoi))
+                                      varoitukset (into {}
+                                                        (validointi/validoi-rivi nil data skeema :varoita)))
 
     (fn [{:keys [muokkaa! luokka footer virheet varoitukset] :as opts} skeema data]
-      (let [virheet (or virheet virheet-atom)
-            varoitukset (or varoitukset varoitukset-atom)]
-        [:form.lomake {:class (case luokka
+      [:form.lomake {:class (case luokka
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
                                 :default "")}
          (let [kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
-               kentta (fn [{:keys [muokattava? fmt hae nimi pakollinen?] :as kentta}]
+               kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
+               kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
+               _ (paivita-ulkoinen-validointitila! virheet kaikki-virheet varoitukset kaikki-varoitukset)
+               kentta (fn [{:keys [muokattava? fmt hae nimi pakollinen? validoi-heti?] :as kentta}]
                         (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
-                        (let [kentan-virheet (get @virheet nimi)
-                              kentan-varoitukset (get @varoitukset nimi)
+                        (let [kentan-virheet (get kaikki-virheet nimi)
+                              kentan-varoitukset (get kaikki-varoitukset nimi)
                               kentta (assoc kentta :lomake? true)
                               arvo (atomina kentta data (fn [uudet-tiedot]
-                                                          (reset! virheet
-                                                                  (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi))
-                                                          (reset! varoitukset
-                                                                  (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita))
                                                           (swap! muokatut conj nimi)
                                                           (muokkaa! uudet-tiedot)))
                               kentan-tunniste nimi]
@@ -166,7 +161,8 @@ Optioissa voi olla seuraavat avaimet:
                                                 :focus (= @nykyinen-fokus kentan-tunniste)
                                                 :on-focus #(aseta-fokus! kentan-tunniste)) arvo]
                                   (if (and (not (empty? kentan-virheet))
-                                           (@muokatut nimi))
+                                           (or validoi-heti?
+                                               (@muokatut nimi)))
                                     (virheen-ohje kentan-virheet :virhe)
                                     (if (and (not (empty? kentan-varoitukset))
                                              (@muokatut nimi))
@@ -190,5 +186,5 @@ Optioissa voi olla seuraavat avaimet:
                 (kentta skeema)))))
 
          (when footer
-           [lomake-footer luokka footer])]))))
+           [lomake-footer luokka footer])])))
 
