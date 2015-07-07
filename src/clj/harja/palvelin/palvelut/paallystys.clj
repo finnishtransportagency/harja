@@ -223,13 +223,12 @@
                                 nykyinen_paallyste
                                 toimenpide)))
 
-(defn paivita-paallystyskohdeosa [db user {:keys [id paallystyskohde-id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+(defn paivita-paallystyskohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
   (if poistettu
     (do (log/debug "Poistetaan päällystyskohdeosa")
         (q/poista-paallystyskohdeosa! db id))
     (do (log/debug "Päivitetään päällystyskohdeosa")
         (q/paivita-paallystyskohdeosa! db
-                                       paallystyskohde-id
                                        nimi
                                        (or tr_numero 0)
                                        (or tr_alkuosa 0)

@@ -192,7 +192,6 @@ VALUES (:paallystyskohde,
 -- Päivittää päällystyskohdeosan
 UPDATE paallystyskohdeosa
 SET
-paallystyskohde       = :paallystyskohde,
 nimi                  = :nimi,
 tr_numero             = :tr_numero,
 tr_alkuosa            = :tr_alkuosa,
