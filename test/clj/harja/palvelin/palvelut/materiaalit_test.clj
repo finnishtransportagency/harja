@@ -48,29 +48,6 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn sisaltaa-ainakin-sarakkeet?
-  [tulos sarakkeet]
-  (nil?
-    (some
-      false?
-      (map
-        #(contains?
-          (get-in
-            (if (vector? tulos) (first tulos) tulos)
-            (when (vector? %) (butlast %)))
-          (if (vector? %) (last %) %)) sarakkeet))))
-
-(defn oikeat-sarakkeet-palvelussa?
-  ([sarakkeet palvelu]
-   (sisaltaa-ainakin-sarakkeet? (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                palvelu +kayttaja-jvh+) sarakkeet))
-  ([sarakkeet palvelu parametrit]
-  (sisaltaa-ainakin-sarakkeet? (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               palvelu +kayttaja-jvh+
-                                               parametrit) sarakkeet)))
-
-
-
 (deftest hae-materiaalit-sarakkeet
   (is (oikeat-sarakkeet-palvelussa? [:id :nimi :yksikko :urakkatyyppi :kohdistettava] :hae-materiaalikoodit)))
 
