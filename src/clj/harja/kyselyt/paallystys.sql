@@ -61,6 +61,7 @@ WHERE paallystyskohde = :paallystyskohde
 -- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
 -- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
 SELECT
+  paallystyskohdeosa.id,
   paallystyskohdeosa.nimi,
   tr_numero,
   tr_alkuosa,
