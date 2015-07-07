@@ -123,25 +123,25 @@
     (paivita-paallystysilmoitus db user lomakedata)
     (luo-paallystysilmoitus db user lomakedata)))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id lomakedata]}]
-  (log/debug "Käsitellään päällystysilmoitus: " lomakedata
+(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+  (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
-             ", päällystyskohde-id:" (:paallystyskohde-id lomakedata))
+             ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
-  ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot lomakedata)) FIXME Validoi kantaan menevä JSON
+  ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus)) FIXME Validoi kantaan menevä JSON
 
   (jdbc/with-db-transaction [c db]
     (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
                                                                                                  :sopimus-id         sopimus-id
-                                                                                                 :paallystyskohde-id (:paallystyskohde-id lomakedata)})]
+                                                                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
 
       ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
       ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
       (if (or
-            (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) (or (:paatos_tekninen_osa lomakedata) nil)))
-            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) (or (:paatos_taloudellinen_osa lomakedata) nil))))
+            (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) (or (:paatos_tekninen_osa paallystysilmoitus) nil)))
+            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) (or (:paatos_taloudellinen_osa paallystysilmoitus) nil))))
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
       ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
@@ -149,13 +149,13 @@
         (do (log/debug "POT on lukittu, ei voi päivittää!")
             (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!"))))
 
-      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user lomakedata paallystysilmoitus-kannassa)]
+      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus paallystysilmoitus-kannassa)]
 
         ;; Luodaan uusi kommentti
-        (when-let [uusi-kommentti (:uusi-kommentti lomakedata)]
+        (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
           (log/info "Uusi kommentti: " uusi-kommentti)
           (let [kommentti (kommentit/luo-kommentti<! c
-                                                     ;(name (:tekija lomakedata)) ; FIXME Puuttuu, tarvitaanko?
+                                                     ;(name (:tekija paallystysilmoitus)) ; FIXME Puuttuu, tarvitaanko?
                                                      nil
                                                      (:kommentti uusi-kommentti)
                                                      nil

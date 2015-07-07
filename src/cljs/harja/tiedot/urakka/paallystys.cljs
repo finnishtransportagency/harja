@@ -36,7 +36,7 @@
 (defn tallenna-paallystysilmoitus [urakka-id sopimus-id lomakedata]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
-                                         :lomakedata lomakedata}))
+                                         :paallystysilmoitus lomakedata}))
 
 (defn tallenna-paallystyskohteet [urakka-id sopimus-id kohteet]
   (k/post! :tallenna-paallystyskohteet {:urakka-id urakka-id
