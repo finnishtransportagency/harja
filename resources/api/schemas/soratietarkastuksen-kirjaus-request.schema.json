@@ -33,14 +33,14 @@
 	},
 	
 	"paivamaara": {
-	    "id": "urn:harja/tiestotarkastus/paivamaara",
+	    "id": "urn:harja/soratietarkastus/paivamaara",
 	    "type": "string",
 	    "format": "date-time",
 	    "required": true
 	},
 	
 	"tarkastaja": {
-	    "id": "urn:harja/tiestotarkastus/tarkastaja",
+	    "id": "urn:harja/soratietarkastus/tarkastaja",
 	    "type": "object",
 	    "additionalProperties": false,
 	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
@@ -48,13 +48,21 @@
 	},
 	
 	"sijainti": {
-	    "id": "urn:harja/tiestotarkastus/sijainti",
+	    "id": "urn:harja/soratietarkastus/sijainti",
 	    "type": "object",
 	    "additionalProperties": false,
 	    "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
 	    "required": true
 	},
 
+	"mittaaja": {
+	    "id": "urn:harja/soratietarkastus/mittaaja",
+	    "type": "object",
+	    "additionalProperties": false,
+	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+	    "required": false
+	},
+	
 	"mittaus": {
 	    "id": "urn:harja/mittaustulokset/soratie",
             "type": "object",

@@ -11,6 +11,7 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [clojure.java.jdbc :as jdbc]
+            [harja.geo :as geo]
             [slingshot.slingshot :refer [try+ throw+]]))
 
 
@@ -19,13 +20,33 @@
         ulkoinen-id (-> tarkastus :tunniste :id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
-    (let [tarkastus-id (first (tarkastukset/hae-tarkastus-ulkoisella-idlla ulkoinen-id (:id kayttaja)))
-          uusi? (nil? tarkastus-id)]
-      (jdbc/with-db-transaction [db db]
-        (tarkastukset/luo-tai-paivita-tarkastus
-         db kayttaja urakka-id
-         {:id tarkastus-id
-          :aika (json/parsi-aika (:paivamaara tarkastus))})))))
+    (jdbc/with-db-transaction [db db]
+      (let [tarkastus-id (first (tarkastukset/hae-tarkastus-ulkoisella-idlla db ulkoinen-id (:id kayttaja)))
+            uusi? (nil? tarkastus-id)]
+
+        ;; FIXME: havainto mukaan
+
+
+        
+        (let [id (tarkastukset/luo-tai-paivita-tarkastus
+                  db kayttaja urakka-id nil ;; HAVAINTO nil
+                  {:id tarkastus-id
+                   :aika (json/parsi-aika (:paivamaara tarkastus))
+                   :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
+                   :mittaaja (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
+                   :tr (json/sijainti->tr (:sijainti tarkastus))
+                   :sijainti (json/sijainti->point (:sijainti tarkastus))})]
+
+          (case tyyppi
+            :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
+                         db id uusi? (:mittaus tarkastus))
+                                                                        
+            :soratie  (tarkastukset/luo-tai-paivita-soratiemittaus
+                       db id uusi? (:mittaus tarkastus))
+            nil)
+
+          
+          )))))
 
 
 
