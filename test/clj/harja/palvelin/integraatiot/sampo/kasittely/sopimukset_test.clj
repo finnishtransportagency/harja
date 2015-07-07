@@ -20,8 +20,6 @@
                                   FROM urakka
                                   WHERE sampoid = 'TESTIURAKKA'))"))))
 
-
-
 (defn hae-sopimukset []
   (q "select id from sopimus where sampoid = 'TESTISOPIMUS';"))
 

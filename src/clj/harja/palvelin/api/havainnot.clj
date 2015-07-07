@@ -7,21 +7,16 @@
             [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.api.tyokalut.json :refer [parsi-aika]]
-            [clojure.java.jdbc :as jdbc]
-            [harja.domain.roolit :as roolit])
-  (:import (java.text SimpleDateFormat))
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
-
-
 (defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
+  (let [vastauksen-data {:ilmoitukset "Kaikki havainnot kirjattu onnistuneesti"}]
     vastauksen-data))
 
 (defn tallenna-havainto [db urakka-id kirjaaja data]
@@ -40,7 +35,7 @@
              (:aosa tie)
              (:losa tie)
              (:aet tie)
-             (:let tie )
+             (:let tie)
              (:id kirjaaja)
              (:id tunniste)
              (:id kirjaaja)))

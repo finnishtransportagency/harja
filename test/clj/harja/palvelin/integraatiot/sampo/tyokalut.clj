@@ -8,30 +8,28 @@
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti])
   (:import (javax.jms TextMessage)))
 
-(def +testihanke-sanoma+ "<?xml version=\"1.0\"encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Program id=\"TESTIHANKE\"manager_Id=\"A010098\"manager_User_Name=\"A010098\"message_Id=\"HankeMessageId\"
-             name=\"Testi alueurakka 2009-2014\"schedule_finish=\"2013-12-31T00:00:00.0\"
-             schedule_start=\"2009-01-01T00:00:00.0\"vv_alueurakkanro=\"1238\"vv_code=\"14-1177\">
+(def +testihanke-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Program id=\"TESTIHANKE\" manager_Id=\"A010098\" manager_User_Name=\"A010098\" message_Id=\"HankeMessageId\"
+             name=\"Testi alueurakka 2009-2014\" schedule_finish=\"2013-12-31T00:00:00.0\"
+             schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"1238\" vv_code=\"14-1177\">
         <documentLinks/>
     </Program>
-</Sampo2harja>
-")
+</Sampo2harja>")
 
-(def +testiurakka-sanoma+ "<?xml version=\"1.0\"encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Project id=\"TESTIURAKKA\"message_Id=\"UrakkaMessageId\"name=\"Testiurakka\"programId=\"TESTIHANKE\"
-             resourceId=\"sampotesti\"schedule_finish=\"2020-12-31T17:00:00.0\"schedule_start=\"2013-01-01T08:00:00.0\">
+(def +testiurakka-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" programId=\"TESTIHANKE\"
+             resourceId=\"sampotesti\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
         <documentLinks/>
     </Project>
-</Sampo2harja>
-")
+</Sampo2harja>")
 
-(def +testisopimus-sanoma+ "<?xml version=\"1.0\"encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Order contactId=\"\"contractPartyId=\"TESTIORGANISAATI\"id=\"TESTISOPIMUS\"messageId=\"OrganisaatioMessageId\"
-           name=\"Testisopimus\"projectId=\"TESTIURAKKA\"schedule_finish=\"2013-10-31T00:00:00.0\"
-           schedule_start=\"2013-09-02T00:00:00.0\"vv_code=\"\"vv_dno=\"-\">
+(def +testisopimus-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Order contactId=\"\" contractPartyId=\"TESTIORGANISAATI\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
+           name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
+           schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
         <documentLinks/>
     </Order>
 </Sampo2harja>")
@@ -41,9 +39,7 @@
     <Company id=\"TESTIORGANISAATI\" messageId=\"OrganisaatioMessageId\" name=\"Testi Oy\" vv_corporate_id=\"3214567-8\">
         <contactInformation address=\"Katu 1\" city=\"Helsinki\" postal_Code=\"00100\" type=\"main\"/>
     </Company>
-</Sampo2harja>
-")
-
+</Sampo2harja>")
 
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 
@@ -67,6 +63,7 @@
   (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
 
 (defn poista-urakka []
+  (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
 

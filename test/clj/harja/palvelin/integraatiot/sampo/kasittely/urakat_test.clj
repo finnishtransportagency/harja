@@ -7,12 +7,12 @@
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [harja.palvelin.integraatiot.sampo.kasittely.sopimukset-test :as sopimus-testi]))
 
-(defn hae-testisopimukset []
+(defn hae-urakat []
   (q "select id from urakka where sampoid = 'TESTIURAKKA';"))
 
 (deftest tarkista-urakan-tallentuminen
   (tuo-urakka)
-  (is (= 1 (count (hae-testisopimukset))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
+  (is (= 1 (count (hae-urakat))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
 
   (is (= 1 (count (q "SELECT id FROM yhteyshenkilo_urakka
                       WHERE rooli = 'Sampo yhteyshenkilö' AND
@@ -25,16 +25,12 @@
 (deftest tarkista-urakan-paivittaminen
   (tuo-urakka)
   (tuo-urakka)
-  (is (= 1 (count (q (hae-testisopimukset)))) "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
+  (is (= 1 (count (hae-urakat))) "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (poista-urakka))
 
 (deftest tarkista-urakoitsijan-sitominen-urakkaan
   (tuo-sopimus)
-  (tuo-urakka)
-
-
-
-  )
+  (tuo-urakka))
 
 
 
