@@ -51,26 +51,6 @@
     #?(:cljs (log "virheet: " (pr-str virheet)))
     (nil? virheet)))
   
-(comment
-  {:tunniste "tarkastus1234"
-   :aika "2015-07-07T12:30:22Z"
-   :sijainti {:tie {:numero 1234
-                    :aosa 1
-                    :aet 100
-                    :losa 73
-                    :let 20}
-              :koordinaatit {:x 430780
-                             :y 72330530}}
-   :tarkastaja {:id 1233232
-                :etunimi "Taneli"
-                :sukunimi "Tarkastaja"}
-   
-   :soratiemittaus {:hoitoluokka 1
-                    :polyavyys 2
-                    :tasaisuus 3
-                    :kiinteys 5
-                    :sivukaltevuus 17.4}
 
-   :havainto {:kuvaus "Jotain outoa"}}})
 
                     
