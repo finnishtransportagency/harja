@@ -1,0 +1,22 @@
+{"otsikko": {"lahettaja": {"jarjestelma": "testi"
+			   ,"organisaatio": {"nimi": "Destia"
+					     ,"ytunnus": "y123435"}}
+	     ,"viestintunniste": {"id": 3333}
+	     ,"lahetysaika": "__PVM__"}
+ ,"tunniste": {"id": __ID__}
+ ,"paivamaara": "2015-02-02T15:01:00Z"    
+ ,"sijainti": {"tie": {"numero": 1
+                       ,"aosa": 2
+                       ,"aet": 3
+                       ,"losa": 4
+                       ,"let": 5}}
+ ,"tarkastaja": {"id": 123
+		 ,"etunimi": "Taneli"
+		 ,"sukunimi": "Tarkastaja"}
+ ,"havainto": {"kuvaus": "jotain talvisen outoa"}
+ ,"mittaus": {"hoitoluokka": 1
+              ,"lumisuus": 15
+              ,"tasaisuus": 5
+              ,"kitka": 3.2
+              ,"lampotila": -10}
+}
