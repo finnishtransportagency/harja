@@ -77,7 +77,7 @@ FROM paallystyskohdeosa
   JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
                           AND urakka = :urakka
                           AND sopimus = :sopimus
-                          AND poistettu IS NOT TRUE
+                          AND paallystyskohde.poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
 AND paallystyskohdeosa.poistettu IS NOT TRUE;
 
