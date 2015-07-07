@@ -13,6 +13,7 @@ SELECT
   muutoshinta
 FROM paallystyskohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+  AND pi.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
@@ -32,8 +33,8 @@ FROM paallystysilmoitus
   RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                                    AND pk.urakka = :urakka
                                    AND pk.sopimus = :sopimus
-WHERE paallystysilmoitus.poistettu IS NOT TRUE
-AND pk.poistettu IS NOT TRUE;
+                                   AND pk.poistettu IS NOT TRUE
+WHERE paallystysilmoitus.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
@@ -55,6 +56,7 @@ FROM paallystysilmoitus
   JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                              AND pk.urakka = :urakka
                              AND pk.sopimus = :sopimus
+                             AND pk.poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
       AND paallystysilmoitus.poistettu IS NOT TRUE;
 
@@ -75,8 +77,9 @@ FROM paallystyskohdeosa
   JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
                           AND urakka = :urakka
                           AND sopimus = :sopimus
+                          AND poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
-AND poistettu IS NOT TRUE;
+AND paallystyskohdeosa.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
 -- Päivittää päällystysilmoituksen
