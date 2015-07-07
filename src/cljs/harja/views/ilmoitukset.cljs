@@ -221,12 +221,12 @@
         {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
 
-        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu)}
-         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi)}
-         {:otsikko "Sijainti" :nimi :tierekisteri :hae #(parsi-tierekisteri (:tr %))}
+        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
+         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
+         {:otsikko "Sijainti" :nimi :tierekisteri :hae #(parsi-tierekisteri (:tr %)) :leveys "20%"}
          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-          :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")}
-         {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu}]
+          :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
+         {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
 
         @tiedot/haetut-ilmoitukset]])))
 
