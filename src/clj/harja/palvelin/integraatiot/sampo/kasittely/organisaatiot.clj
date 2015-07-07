@@ -1,11 +1,12 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.organisaatiot
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.organisaatiot :as organisaatiot]))
+            [harja.kyselyt.organisaatiot :as organisaatiot]
+            [harja.kyselyt.urakat :as urakat]))
 
 
 (defn paivita-organisaatio [db organisaatio-id nimi y-tunnus katuosoite postinumero]
   (log/debug "Päivitetään organisaatio, jonka id on: " organisaatio-id ".")
-  (organisaatiot/paivita-organisaatio! db nimi y-tunnus katuosoite postinumero organisaatio-id ))
+  (organisaatiot/paivita-organisaatio! db nimi y-tunnus katuosoite postinumero organisaatio-id))
 
 (defn luo-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
   (log/debug "Luodaan uusi organisaatio.")
@@ -26,8 +27,7 @@
   (log/debug "Käsitellään organisaatio Sampo id:llä: " sampo-id)
   (let [organisaatio-id (tallenna-organisaatio db sampo-id nimi y-tunnus katuosoite postinumero)]
     (log/debug "Käsiteltävän organisaation id on:" organisaatio-id)
-    ; todo: aseta urakoille urakoitsija
-    ))
+    (urakat/aseta-urakoitsija-urakoille-yhteyshenkilon-kautta! db sampo-id)))
 
 (defn kasittele-organisaatiot [db organisaatiot]
   (doseq [organisaatio organisaatiot]

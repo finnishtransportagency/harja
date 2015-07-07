@@ -83,5 +83,6 @@
   (laheta-viesti-kasiteltavaksi +testiorganisaatio-sanoma+))
 
 (defn poista-organisaatio []
+  (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
   (u "delete from organisaatio where sampoid = 'TESTIORGANISAATI'"))
 
