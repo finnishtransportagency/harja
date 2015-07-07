@@ -52,7 +52,6 @@
          (reaction
            @valittu-ilmoitus
            (when @taso-ilmoitukset
-             (log "Piiretäänpä hommat uusiksi: " (:id @valittu-ilmoitus))
              (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
 
 (defonce filttereita-vaihdettu? (reaction
@@ -87,15 +86,13 @@
 
 (defn lopeta-pollaus
   []
-  (log "Lopetetaan pollaus!")
   (when @pollaus-id
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
 
-(run! (when @filttereita-vaihdettu?) (lopeta-pollaus))
+(run! (when @filttereita-vaihdettu? (lopeta-pollaus)))
 
 (defn aloita-pollaus
   []
-  (log "Aloitetaan pollaus!")
   (when @pollaus-id (lopeta-pollaus))
-  #_(reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))
+  (reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))

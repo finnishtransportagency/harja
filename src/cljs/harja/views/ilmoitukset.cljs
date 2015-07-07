@@ -18,6 +18,10 @@
             [harja.pvm :as pvm]
             [clojure.string :refer [capitalize]]))
 
+(defn pollauksen-merkki
+  []
+  [:span "Automaattinen päivittäminen päällä."])
+
 (defn urakan-sivulle-nappi
   []
   (when @tiedot/valittu-urakka
@@ -108,6 +112,7 @@
     {:on-click #(reset! tiedot/valittu-ilmoitus nil)}
     "Palaa"]
    (urakan-sivulle-nappi)
+   (when @tiedot/pollaus-id (pollauksen-merkki))
    [bs/panel {}
     (capitalize (name (:ilmoitustyyppi @tiedot/valittu-ilmoitus)))
     [:span
@@ -208,6 +213,8 @@
         #(tiedot/hae-ilmoitukset)
         {:ikoni        (harja.ui.ikonit/search)
          :kun-onnistuu #(tiedot/aloita-pollaus)}]
+
+       (when @tiedot/pollaus-id (pollauksen-merkki))
 
 
        [grid
