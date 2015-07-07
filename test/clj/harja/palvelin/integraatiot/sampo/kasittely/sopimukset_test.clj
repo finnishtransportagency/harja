@@ -4,7 +4,19 @@
             [clojure.zip :refer [xml-zip]]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        ))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
 
 (defn onko-alisopimus-liitetty-paasopimukseen? []
   (first (first (q "SELECT exists(SELECT id

@@ -5,7 +5,8 @@
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.integraatiot.sampo.tuonti :as tuonti])
+            [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
+            [harja.testi :as testi])
   (:import (javax.jms TextMessage)))
 
 (def +testihanke-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -48,9 +49,8 @@
     (getText [this] sisalto)))
 
 (defn laheta-viesti-kasiteltavaksi [sisalto]
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
-        viesti (tee-viesti sisalto)]
-    (tuonti/kasittele-viesti db +kuittausjono-sisaan+ viesti)))
+  (let [viesti (tee-viesti sisalto)]
+    (tuonti/kasittele-viesti testi/ds +kuittausjono-sisaan+ viesti)))
 
 (defn tuo-hanke []
   (laheta-viesti-kasiteltavaksi +testihanke-sanoma+))

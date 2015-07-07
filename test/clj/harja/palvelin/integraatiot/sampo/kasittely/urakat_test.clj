@@ -5,7 +5,9 @@
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset-test :as sopimus-testi]))
+            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset-test :as sopimus-testi]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [com.stuartsierra.component :as component]))
 
 (defn hae-urakat []
   (q "select id from urakka where sampoid = 'TESTIURAKKA';"))
@@ -27,10 +29,6 @@
   (tuo-urakka)
   (is (= 1 (count (hae-urakat))) "Tuotaessa sama urakka uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (poista-urakka))
-
-(deftest tarkista-urakoitsijan-sitominen-urakkaan
-  (tuo-sopimus)
-  (tuo-urakka))
 
 
 

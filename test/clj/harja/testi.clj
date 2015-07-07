@@ -30,6 +30,8 @@
   (apply tietokanta/luo-tietokanta testitietokanta))
 
 (def db (:datasource (luo-testitietokanta)))
+
+(def ds {:datasource db})
   
 (defn q
   "Kysele Harjan kannasta yksikkötestauksen yhteydessä"
