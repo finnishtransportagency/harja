@@ -115,6 +115,7 @@
 (def oulun-alueurakan-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
 (def muhoksen-paallystysurakan-id (atom nil))
+(def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
 
 (defn hae-oulun-alueurakan-id []
   (ffirst (q  (str "SELECT id
@@ -135,9 +136,14 @@
   (ffirst (q  (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null)"))))
 
+(defn hae-muhoksen-paallystysurakan-paasopimuksen-id []
+  (ffirst (q  (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null)"))))
+
 (defn urakkatieto-fixture [testit]
   (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
+  (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! oulun-alueurakan-paasopimuksen-id (hae-oulun-alueurakan-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (testit)
