@@ -266,7 +266,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               (assoc kentta
                 :leveys (str (.toFixed (* 100.0 (/ lev yhteensa)) 1) "%")))
             skeema))
-
     skeema))
 
 (defn grid
@@ -543,7 +542,7 @@ Optiot on mappi optioita:
                  [:tr
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
-                    [:th {:width leveys} otsikko])
+                    [:th {:width (or leveys "5%")} otsikko])
                   (when muokataan
                     [:th.toiminnot {:width "5%"} " "])
                   [:th.toiminnot ""]]]
@@ -758,7 +757,7 @@ Optiot on mappi optioita:
                 (if rivinumerot? [:th {:width "5%"} " "])
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
-                  [:th {:width leveys} otsikko])
+                  [:th {:width (or leveys "5%")} otsikko])
                 [:th.toiminnot {:width "5%"} " "]
                 [:th.toiminnot ""]]]
 
