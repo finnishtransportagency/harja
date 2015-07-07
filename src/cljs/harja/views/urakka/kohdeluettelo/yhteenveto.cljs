@@ -28,6 +28,13 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defonce paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                        nakymassa? @paallystys/yhteenvetonakymassa?]
+                                       (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                                         (log "PÄÄ Haetaan päällystyskohteet.")
+                                         (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
+
 (defn paallystyskohdeosat [rivi]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
@@ -70,28 +77,29 @@
         @paallystyskohdeosat]])))
 
 (defn paallystyskohteet []
-  (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystys/paallystyskohteet]
+  (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystyskohderivit]
                                             (filter #(or
                                                       (= (:lisatyot %) 0)
                                                       (nil? (:lisatyot %)))
                                                     kohteet)))
-        lisatyot (reaction (let [kohteet @paallystys/paallystyskohteet]
+        lisatyot (reaction (let [kohteet @paallystyskohderivit]
                              (filter #(> (:lisatyot %) 0) kohteet)))]
 
     (komp/luo
+      (komp/lippu paallystys/yhteenvetonakymassa?)
       (fn []
         [:div
          [grid/grid
           {:otsikko      "Päällystyskohteet"
-           :tyhja        (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+           :tyhja        (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystys/paallystyskohteet))
+           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
            :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paallystys/paallystyskohteet vastaus)))
+                                (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -118,7 +126,7 @@
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paallystys/paallystyskohteet vastaus)))
+                                (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "40%" :validoi [[:ei-tyhja "Anna arvo"]]}

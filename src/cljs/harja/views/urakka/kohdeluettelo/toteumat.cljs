@@ -24,6 +24,13 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                         nakymassa? @paallystys/toteumanakymassa?]
+                                        (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                                          (log "PÄÄ Haetaan päällystystoteumat.")
+                                          (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+
 (defn tila-keyword->string [tila]
   (case tila
     :aloitettu "Aloitettu"
@@ -146,7 +153,7 @@
        :disabled     (false? @valmis-tallennettavaksi?)
        :kun-onnistuu (fn [vastaus]
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
-                       (reset! paallystys/paallystystoteumat vastaus)
+                       (reset! toteumarivit vastaus)
                        (reset! lomakedata nil))}]]))
 
 (defn paallystysilmoituslomake []
@@ -396,7 +403,7 @@
         [:div
          [grid/grid
           {:otsikko  "Toteumat"
-           :tyhja    (if (nil? @paallystys/paallystystoteumat) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
+           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
@@ -426,9 +433,13 @@
                             :valmis 1
                             :aloitettu 3
                             4))
-            @paallystys/paallystystoteumat)]]))))
+            @toteumarivit)]]))))
 
 (defn toteumat []
-  (if @lomakedata
-    [paallystysilmoituslomake]
-    [toteumaluettelo]))
+  (komp/luo
+    (komp/lippu paallystys/toteumanakymassa?)
+
+    (fn []
+      (if @lomakedata
+        [paallystysilmoituslomake]
+        [toteumaluettelo]))))

@@ -12,6 +12,9 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def yhteenvetonakymassa? (atom false))
+(def toteumanakymassa? (atom false))
+
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
   (k/post! :urakan-paallystyskohteet {:urakka-id urakka-id
                                           :sopimus-id sopimus-id}))
@@ -45,17 +48,3 @@
                                         :sopimus-id sopimus-id
                                         :paallystyskohde-id paallystyskohde-id
                                         :osat osat}))
-
-(defonce paallystyskohteet (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                        valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                       (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
-                                         (log "PÄÄ Haetaan päällystyskohteet.")
-                                         (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
-
-(defonce paallystystoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                         valittu-urakan-valilehti @u/urakan-valittu-valilehti]
-                                        (when (and valittu-urakka-id valittu-sopimus-id (= valittu-urakan-valilehti :kohdeluettelo))
-                                          (log "PÄÄ Haetaan päällystystoteumat.")
-                                          (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
