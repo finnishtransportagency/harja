@@ -197,57 +197,6 @@
                                               (konv/sql-timestamp loppupvm)
                                               (if tienumero true false) tienumero)))
 
-(defn luo-tai-paivita-tarkastus
-  "Luo uuden tarkastuksen, palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
-  (if (nil? id)
-    (:id (tarkastukset/luo-tarkastus<! db
-                                       urakka-id (konv/sql-timestamp aika)
-                                       (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                                       (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
-                                       tarkastaja mittaaja (name tyyppi) havainto (:id user)))
-
-    (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
-      (tarkastukset/paivita-tarkastus! db
-                                         (konv/sql-timestamp aika)
-                                         (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                                         (and sijainti (geo/luo-point sijainti))
-                                         tarkastaja mittaaja (name tyyppi) (:id user)
-                                         urakka-id id)
-        id)))
-
-    
-(defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
-                                         {:keys [talvihoitoluokka lumimaara epatasaisuus
-                                                 kitka lampotila ajosuunta] :as talvihoitomittaus}]
-  (if uusi?
-    (do (log/info "PARAMS:"  db
-                  (or talvihoitoluokka "") lumimaara epatasaisuus
-                  kitka lampotila (or ajosuunta 0)
-                  tarkastus)
-      (tarkastukset/luo-talvihoitomittaus<! db
-                                            (or talvihoitoluokka "") lumimaara epatasaisuus
-                                            kitka lampotila (or ajosuunta 0)
-                                            tarkastus))
-    (tarkastukset/paivita-talvihoitomittaus! db
-                                             (or talvihoitoluokka "") lumimaara epatasaisuus
-                                             kitka lampotila (or ajosuunta 0)
-                                             tarkastus)))
-
-(defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
-                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus]}]
-  (if uusi?
-    (tarkastukset/luo-soratiemittaus<! db
-                                       hoitoluokka tasaisuus
-                                       kiinteys polyavyys
-                                       sivukaltevuus
-                                       tarkastus)
-    (tarkastukset/paivita-soratiemittaus! db
-                                          hoitoluokka tasaisuus
-                                          kiinteys polyavyys
-                                          sivukaltevuus
-                                          tarkastus)))
-
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id))))
@@ -262,12 +211,12 @@
             
             uusi? (nil? (:id tarkastus))
             havainto-id (luo-tai-paivita-havainto c user havainto)
-            id (luo-tai-paivita-tarkastus c user urakka-id tarkastus
-                                          havainto-id)]
+            id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
+                                                       havainto-id)]
         
         (condp = (:tyyppi tarkastus)
-          :talvihoito (luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
-          :soratie (luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+          :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
+          :soratie (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
           nil)
         
         

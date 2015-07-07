@@ -11,3 +11,5 @@
 (def +havainnon-kirjaus+ "api/schemas/havainnon-kirjaus-request.schema.json")
 
 (def +tiestotarkastuksen-kirjaus+ "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json")
+(def +soratietarkastuksen-kirjaus+ "api/schemas/soratietarkastuksen-kirjaus-request.schema.json")
+(def +talvihoitotarkastuksen-kirjaus+ "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json")
