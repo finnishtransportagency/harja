@@ -114,11 +114,13 @@ WHERE id = :urakka;
 SELECT
   u.id,
   u.nimi,
-  u.hallintayksikko
+  u.hallintayksikko,
+  u.sampoid
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.nimi ILIKE :teksti
+      OR u.sampoid ILIKE :teksti
       OR hal.nimi ILIKE :teksti
       OR urk.nimi ILIKE :teksti;
 

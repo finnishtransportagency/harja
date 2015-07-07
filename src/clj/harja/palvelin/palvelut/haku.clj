@@ -15,7 +15,7 @@
   (let [termi (str "%" hakutermi "%")
         loytyneet-urakat (into []
                                (map #(assoc % :tyyppi :urakka
-                                              :hakusanat (str (:nimi %)))
+                                              :hakusanat (str (:nimi %) ", " (:sampoid %)))
                                     (ur-q/hae-urakoiden-tunnistetiedot db termi)))
         loytyneet-kayttajat (into []
                                   (map #(assoc % :tyyppi :kayttaja
