@@ -76,12 +76,12 @@
   (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
-(defn hae-urakka [db user urakka-id]
+(defn hae-yksittainen-urakka [db user urakka-id]
   (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
   (roolit/lukuoikeus-urakassa? user urakka-id)
   (first (into []
                urakka-xf
-               (q/hae-urakka db urakka-id))))
+               (q/hae-yksittainen-urakka db urakka-id))))
 
 (defrecord Urakat []
   component/Lifecycle
@@ -92,7 +92,7 @@
                           (hallintayksikon-urakat (:db this) user hallintayksikko)))
       (julkaise-palvelu http :hae-urakka
                         (fn [user urakka-id]
-                          (hae-urakka (:db this) user urakka-id)))
+                          (hae-yksittainen-urakka (:db this) user urakka-id)))
       (julkaise-palvelu http :hae-urakoita
                         (fn [user teksti]
                           (hae-urakoita (:db this) user teksti)))

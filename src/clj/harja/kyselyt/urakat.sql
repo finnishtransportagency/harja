@@ -211,7 +211,7 @@ WHERE sampoid IN (
   WHERE urakoitsija_sampoid = :urakoitsija_sampoid AND
         paasopimus IS NULL);
 
--- name: hae-urakka
+-- name: hae-yksittainen-urakka
 -- Hakee yhden urakan id:n avulla
 SELECT
   u.id,
