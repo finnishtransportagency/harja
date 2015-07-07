@@ -1,6 +1,6 @@
 (ns harja.palvelin.komponentit.tietokanta
   (:require [com.stuartsierra.component :as component])
-  (:import com.mchange.v2.c3p0.ComboPooledDataSource))
+  (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)))
 
 ;; Tietokanta on pelkkä clojure.java.jdbc kirjaston mukainen db-spec, joka sisältää pelkään yhteyspoolin
 (defrecord Tietokanta [datasource]
@@ -10,7 +10,7 @@
     this)
   (stop [this]
     (println "Tietokanta suljetaan: " datasource)
-    (.close datasource)
+    (DataSources/destroy  datasource)
     this))
 
 
