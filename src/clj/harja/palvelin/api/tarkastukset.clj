@@ -10,6 +10,7 @@
             [harja.palvelin.api.tyokalut.json :as json]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.tarkastukset :as tarkastukset]
+            [harja.kyselyt.havainnot :as havainnot]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [slingshot.slingshot :refer [try+ throw+]]))
@@ -21,32 +22,39 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
     (jdbc/with-db-transaction [db db]
-      (let [tarkastus-id (first (tarkastukset/hae-tarkastus-ulkoisella-idlla db ulkoinen-id (:id kayttaja)))
+      (let [{tarkastus-id :id havainto-id :havainto} (first (tarkastukset/hae-tarkastus-ulkoisella-idlla db ulkoinen-id (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
 
-        ;; FIXME: havainto mukaan
-
-
-        
-        (let [id (tarkastukset/luo-tai-paivita-tarkastus
-                  db kayttaja urakka-id nil ;; HAVAINTO nil
+        (let [aika (json/parsi-aika (:paivamaara tarkastus))
+              havainto (merge (:havainto tarkastus)
+                              {:aika aika
+                               :id havainto-id
+                               :urakka urakka-id
+                               :tekija :urakoitsija})
+              havainto-id (havainnot/luo-tai-paivita-havainto db kayttaja havainto)
+              id (tarkastukset/luo-tai-paivita-tarkastus
+                  db kayttaja urakka-id 
                   {:id tarkastus-id
-                   :aika (json/parsi-aika (:paivamaara tarkastus))
+                   :ulkoinen-id ulkoinen-id
+                   :tyyppi tyyppi
+                   :aika aika
                    :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
                    :mittaaja (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
                    :tr (json/sijainti->tr (:sijainti tarkastus))
-                   :sijainti (json/sijainti->point (:sijainti tarkastus))})]
+                   :sijainti (json/sijainti->point (:sijainti tarkastus))}
+                  havainto-id)]
 
           (case tyyppi
             :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
-                         db id uusi? (:mittaus tarkastus))
+                         db id uusi? (-> tarkastus
+                                         :mittaus
+                                         (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
                                                                         
             :soratie  (tarkastukset/luo-tai-paivita-soratiemittaus
                        db id uusi? (:mittaus tarkastus))
             nil)
 
-          
-          )))))
+          nil)))))
 
 
 
@@ -72,10 +80,12 @@
       (julkaise-reitti
        http palvelu
        (POST polku request
-             (kasittele-kutsu db palvelu request
-                              skeema skeemat/+kirjausvastaus+
+             (do
+               (log/info "REQUEST: " (pr-str request))
+               (kasittele-kutsu db palvelu request
+                              skeema nil
                               (fn [parametrit data kayttaja]
-                                (kirjaa-tarkastus  db kayttaja tyyppi parametrit data))))))
+                                (kirjaa-tarkastus  db kayttaja tyyppi parametrit data)))))))
     
     this)
 

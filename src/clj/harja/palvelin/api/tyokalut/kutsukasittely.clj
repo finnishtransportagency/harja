@@ -51,12 +51,18 @@
   palautetaan status 500 (sisäinen käsittelyvirhe)."
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
-   (let [json (cheshire/encode payload)]
-     (json/validoi skeema json)
-     {:status  status
-      :headers {"Content-Type" "application/json"}
-      :body    json}
-     )))
+   (if payload
+     (let [json (cheshire/encode payload)]
+       (json/validoi skeema json)
+       {:status  status
+        :headers {"Content-Type" "application/json"}
+        :body    json})
+
+     (if skeema
+       (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                :virheet [{:koodi virheet/+tyhja-vastaus+
+                           :viesti "Tyhja vastaus vaikka skeema annettu"}]})
+       {:status status}))))
 
 (defn kasittele-invalidi-json [virheet]
   (log/warn virheet/+invalidi-json-koodi+ virheet)

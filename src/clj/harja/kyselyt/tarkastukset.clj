@@ -8,13 +8,14 @@
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tarkastuksen, palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti]} havainto]
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti ulkoinen-id] :as tarkastus} havainto]
+  (log/info "tarkastus: " tarkastus)
   (if (nil? id)
     (:id (luo-tarkastus<! db
                           urakka-id (konv/sql-timestamp aika)
                           (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                           (and sijainti (geo/luo-point sijainti)) ;; sijainti haetaan VKM:stä frontilla
-                          tarkastaja mittaaja (name tyyppi) havainto (:id user)))
+                          tarkastaja mittaaja (name tyyppi) havainto (:id user) ulkoinen-id))
     
     (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
         (paivita-tarkastus! db

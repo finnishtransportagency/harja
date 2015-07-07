@@ -43,9 +43,9 @@ SELECT t.id, t.sopimus, t.aika,
 INSERT
   INTO tarkastus
        (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-        sijainti, tarkastaja, mittaaja, tyyppi, havainto, luoja)
+        sijainti, tarkastaja, mittaaja, tyyppi, havainto, luoja, ulkoinen_id)
 VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
-        :sijainti::point, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja)
+        :sijainti::point, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja, :ulkoinen_id)
 
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
@@ -100,5 +100,5 @@ UPDATE soratiemittaus
  WHERE tarkastus = :tarkastus
 
 -- name: hae-tarkastus-ulkoisella-idlla
--- Hakee tarkastuksen id:n ulkoisella id:lla ja luojalla.
-SELECT id FROM tarkastus WHERE ulkoinen_id = :id AND luoja = :luoja
+-- Hakee tarkastuksen ja sen havainnon id:t ulkoisella id:lla ja luojalla.
+SELECT id,havainto FROM tarkastus WHERE ulkoinen_id = :id AND luoja = :luoja

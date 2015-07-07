@@ -60,21 +60,7 @@
                      :selvitys havainnot/hae-selvitysta-odottavat-havainnot
                      :kasitellyt havainnot/hae-kasitellyt-havainnot) parametrit)))))
 
-(defn- luo-tai-paivita-havainto
-  "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as havainto}]
-  (if id
-    (do (havainnot/paivita-havainnon-perustiedot! db
-                                                  (konv/sql-timestamp aika) (name tekija) kohde
-                                                  (if selvitys-pyydetty true false)
-                                                  (:id user)
-                                                  kuvaus
-                                                  id)
-        id)
 
-    (:id (havainnot/luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
-                                   (if selvitys-pyydetty true false) (:id user) kuvaus
-                                   nil nil nil nil nil nil nil nil))))
 
 
 (defn hae-havainnon-tiedot
@@ -132,7 +118,7 @@
                                              ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
                                              :selvitys-annettu (and (:uusi-kommentti havainto)
                                                                     (= :urakoitsija osapuoli)))
-                                  id (luo-tai-paivita-havainto c user havainto)]
+                                  id (havainnot/luo-tai-paivita-havainto c user havainto)]
                               ;; Luodaan uudet kommentit
                               (when-let [uusi-kommentti (:uusi-kommentti havainto)]
                                 (log/info "UUSI KOMMENTTI: " uusi-kommentti)
@@ -210,7 +196,7 @@
                              :urakka urakka-id})
             
             uusi? (nil? (:id tarkastus))
-            havainto-id (luo-tai-paivita-havainto c user havainto)
+            havainto-id (havainnot/luo-tai-paivita-havainto c user havainto)
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
                                                        havainto-id)]
         

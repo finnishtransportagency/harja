@@ -66,7 +66,7 @@
     ;; POST
     [this nimi kayttaja payload]
     "kutsu HTTP palvelufunktiota suoraan."))
-    
+
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
   []
@@ -93,6 +93,15 @@
   ([nimi kayttaja payload]
      (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja payload)))
 
+(defn arvo-vapaa-portti
+  "Arpoo vapaan portinnumeron ja palauttaa sen"
+  []
+  (let [s (doto (java.net.ServerSocket. 0)
+            (.setReuseAddress true))]
+    (try
+      (.getLocalPort s)
+      (finally (.close s)))))
+  
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
