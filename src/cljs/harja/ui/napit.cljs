@@ -10,7 +10,7 @@
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
@@ -36,7 +36,7 @@
 
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)
-        luokka (if(nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
+        luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
         ikoni (:ikoni asetukset)
         virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
         virheen-esitystapa (case (:virheen-esitystapa asetukset)
@@ -53,12 +53,11 @@
         ]
 
     (fn [teksti kysely asetukset]
-      (log "Näytä virheviest? " @nayta-virheviesti?)
       [:span
        [:button
-        {:class (if (or @kysely-kaynnissa? (:disabled asetukset))
-                  (str luokka " disabled")
-                  luokka)
+        {:class    (if (or @kysely-kaynnissa? (:disabled asetukset))
+                     (str luokka " disabled")
+                     luokka)
          :on-click #(do
                      (.preventDefault %)
                      (reset! kysely-kaynnissa? true)
@@ -68,7 +67,6 @@
                            (if (not (k/virhe? tulos))
                              (do
                                (reset! kysely-kaynnissa? false)
-                               (log "Palvelin vastasi:" (pr-str tulos))
                                (when kun-onnistuu (kun-onnistuu tulos)))
                              (do
                                (reset! kysely-kaynnissa? false)
@@ -78,14 +76,12 @@
 
         (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
        (when @nayta-virheviesti?
-         (do
-           (log "Näytetään virheviesti")
          (case virheen-esitystapa
            :flash (do (viesti/nayta! virheviesti :warning 20000) nil) ;20 sekunttia
            :modal (do (modal/nayta! {:otsikko "Virhe tapahtui"} virheviesti) nil)
            :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
            :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
-           )))
+           ))
        ])))
 
 (defn takaisin [teksti takaisin-fn]
@@ -96,14 +92,14 @@
   "Nappi 'uuden asian' luonnille. 
 Asetukset on optionaalinen mäppi ja voi sisältää:
   :disabled  jos true, nappi on disabloitu"
-  
+
   ([teksti uusi-fn] (uusi teksti uusi-fn {}))
   ([teksti uusi-fn {:keys [disabled]}]
-     [:button.nappi-ensisijainen
-      {:class (when disabled "disabled")
-       :disabled disabled
-       :on-click #(uusi-fn)}
-      (ikonit/plus-sign)
-      " " teksti]))
+   [:button.nappi-ensisijainen
+    {:class    (when disabled "disabled")
+     :disabled disabled
+     :on-click #(uusi-fn)}
+    (ikonit/plus-sign)
+    " " teksti]))
 
 
