@@ -34,3 +34,8 @@ WHERE maksuera = :numero;
 UPDATE kustannussuunnitelma
 SET tila = 'virhe'
 WHERE maksuera = :numero;
+
+-- name: luo-kustannussuunnitelma<!
+-- Luo uuden kustannussuunnitelman.
+INSERT INTO kustannussuunnitelma (maksuera, likainen, luotu)
+VALUES (:maksuera, true, current_timestamp);

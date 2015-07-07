@@ -152,6 +152,18 @@
   (laheta-viesti-kasiteltavaksi +testitoimenpide-sanoma+))
 
 (defn poista-toimenpide []
+  (u "DELETE FROM kustannussuunnitelma
+      WHERE maksuera in (SELECT numero
+                        FROM maksuera
+                        WHERE toimenpideinstanssi = (
+                          SELECT id
+                          FROM toimenpideinstanssi
+                          WHERE sampoid = 'TESTITOIMENPIDE'));")
+  (u "Delete FROM maksuera
+             WHERE toimenpideinstanssi = (
+                   SELECT id
+                   FROM toimenpideinstanssi
+                   WHERE sampoid = 'TESTITOIMENPIDE');")
   (u "delete from toimenpideinstanssi where sampoid = 'TESTITOIMENPIDE'"))
 
 (defn hae-toimenpiteet []
@@ -164,3 +176,20 @@
                               FROM urakka
                               WHERE sampoid = 'TESTIURAKKA'));"))))
 
+(defn hae-maksuerat []
+  (q "SELECT numero
+      FROM maksuera
+      WHERE toimenpideinstanssi = (
+        SELECT id
+        FROM toimenpideinstanssi
+        WHERE sampoid = 'TESTITOIMENPIDE');"))
+
+(defn hae-kustannussuunnitelmat []
+  (q "SELECT maksuera
+      FROM kustannussuunnitelma
+      WHERE maksuera in (SELECT numero
+                        FROM maksuera
+                        WHERE toimenpideinstanssi = (
+                          SELECT id
+                          FROM toimenpideinstanssi
+                          WHERE sampoid = 'TESTITOIMENPIDE'));"))

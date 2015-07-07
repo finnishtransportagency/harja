@@ -27,3 +27,15 @@
   (is (onko-urakka-sidottu-toimenpiteeseen?) "Toimenpide viittaa oikeaan urakkaan, kun toimenpide on tuotu ensin.")
   (poista-toimenpide)
   (poista-urakka))
+
+(deftest tarkista-maksuerien-ja-kustannussuunnitelmien-perustaminen
+  (tuo-toimenpide)
+
+  (is (= 8 (count (hae-maksuerat))) "Maksueriä on 8 kpl per toimenpideinstanssi.")
+  (is (= 8 (count (hae-kustannussuunnitelmat))) "Jokaiselle maksuerälle on perustettu kustannussuunnitelma.")
+
+  (tuo-toimenpide)
+  (is (= 8 (count (hae-maksuerat))) "Toimenpiteen päivitys ei saa lisätä uusia maksueriä.")
+  (is (= 8 (count (hae-kustannussuunnitelmat))) "Toimenpiteen päivitys ei saa lisätä uusia kustannussuunnitelmia.")
+
+  (poista-toimenpide))

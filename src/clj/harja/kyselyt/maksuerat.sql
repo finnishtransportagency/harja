@@ -299,13 +299,11 @@ SET lukko = :lukko, lukittu = current_timestamp
 WHERE numero = :numero AND (lukko IS NULL OR
                             (EXTRACT(EPOCH FROM (current_timestamp - lukittu)) > 300));
 
-
 -- name: merkitse-maksuera-odottamaan-vastausta!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE maksuera
 SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE
 WHERE numero = :numero;
-
 
 -- name: merkitse-maksuera-lahetetyksi!
 -- Merkitsee maksuerän lähetetyksi
@@ -313,9 +311,13 @@ UPDATE maksuera
 SET lahetetty = current_timestamp, tila = 'lahetetty'
 WHERE numero = :numero;
 
-
 -- name: merkitse-maksueralle-lahetysvirhe!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE maksuera
 SET tila = 'virhe'
 WHERE numero = :numero;
+
+-- name: luo-maksuera<!
+-- Luo uuden maksuerän.
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
+VALUES (:toimenpideinstanssi, :tyyppi::maksueratyyppi, :nimi, true, current_timestamp);
