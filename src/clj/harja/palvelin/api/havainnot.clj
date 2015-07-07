@@ -12,13 +12,13 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.api.tyokalut.liitteet :refer [dekoodaa-base64]]
+            [harja.palvelin.api.tyokalut.json :refer [parsi-aika]]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.roolit :as roolit])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn parsi-aika [paivamaara]
-  (konversio/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
+
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Kaikki toteumat kirjattu onnistuneesti"}]
