@@ -299,14 +299,6 @@
    {:loppupvm (pvm/->pvm "30.09.2006"), :yksikko "tiekm", :tehtava 1369, :urakka 1, :yksikkohinta 10, :maara 40,
     :id       32, :tehtavan_nimi "K2", :sopimus 1, :alkupvm (pvm/->pvm "1.1.2006"), :tehtavan_id 1369}])
 
-;;({:yhteensa-kkt-1-9 100, :yhteensa 150, :yhteensa-kkt-10-12 50, :loppupvm #<20060930T000000>, :yksikko "tiekm",
-;; :tehtava 1369, :maara-kkt-10-12 10, :urakka 1, :yksikkohinta 5, :maara 30, :id 33, :tehtavan_nimi "K2", :sopimus 2,
-;; :maara-kkt-1-9 20, :alkupvm #<20051001T000000>, :tehtavan_id 1369}
-
-;; {:yhteensa-kkt-1-9 400, :yhteensa 700, :yhteensa-kkt-10-12 300, :loppupvm #<20060930T000000>, :yksikko "tiekm",
-;; :tehtava 1369, :maara-kkt-10-12 30, :urakka 1, :yksikkohinta 10, :maara 70, :id 31, :tehtavan_nimi "K2", :sopimus 1,
-;; :maara-kkt-1-9 40, :alkupvm #<20051001T000000>, :tehtavan_id 1369})
-
 (deftest prosessoi-ykshint-tyorivit
   (let [tulos (s/prosessoi-tyorivit {:tyyppi :hoito } +prosessoitavat-rivit+)
         sopimus-2-tyorivi (first (filter #(= 2 (:sopimus %)) tulos))
