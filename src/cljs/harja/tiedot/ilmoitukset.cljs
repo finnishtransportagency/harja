@@ -6,9 +6,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log]]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.atom :refer-macros [reaction<!]])
 
-  (:require-macros [reagent.ratom :refer [reaction]]
+  (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 ;; FILTTERIT
@@ -22,11 +23,34 @@
 (defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :tiedoitus true}))
 (defonce hakuehto (atom nil))
 
+(defonce haetut-ilmoitukset (atom []))
+
 ;; POLLAUS
 (def pollaus-id (atom nil))
 (def +sekuntti+ 1000)
 (def +minuutti+ (* 60 +sekuntti+))
 (def +intervalli+ +minuutti+)
+
+(def ilmoitus-kartalla-xf
+  #(assoc %
+         :type :ilmoitus
+         :alue {:type        :circle
+                :radius      100
+                :coordinates (:sijainti %)
+                :fill        {:color "green"}
+                :stroke      {:color "black" :width 10}}))
+
+(defonce taso-ilmoitukset (atom false))
+
+(defonce ilmoitukset-kartalla
+   (reaction<! [paalla? @taso-ilmoitukset
+                ilmoitukset @haetut-ilmoitukset
+                valittu-ilmoitus @valittu-ilmoitus]
+
+               (when paalla?
+                 (if valittu-ilmoitus
+                   [(ilmoitus-kartalla-xf valittu-ilmoitus)]
+                   (into [] (map ilmoitus-kartalla-xf) haetut-ilmoitukset)))))
 
 (defonce filttereita-vaihdettu? (reaction
                                   @valittu-hallintayksikko
@@ -37,17 +61,15 @@
                                   @hakuehto
                                   true))
 
-(defonce haetut-ilmoitukset (atom []))
-
 (defn kasaa-parametrit []
-  (let [valitut (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit))    ;; Jos ei yhtäkään valittuna,
+  (let [valitut (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit)) ;; Jos ei yhtäkään valittuna,
         tyypit (if (empty? valitut) (keep key @valitut-ilmoitusten-tyypit) valitut) ;; lähetetään kaikki tyypit.
         ret {:hallintayksikko (:id @valittu-hallintayksikko)
-             :urakka (:id @valittu-urakka)
-             :tilat @valitut-tilat
-             :tyypit tyypit
-             :aikavali @valittu-aikavali
-             :hakuehto @hakuehto}]
+             :urakka          (:id @valittu-urakka)
+             :tilat           @valitut-tilat
+             :tyypit          tyypit
+             :aikavali        @valittu-aikavali
+             :hakuehto        @hakuehto}]
     (log (pr-str ret))
     ret))
 
@@ -68,7 +90,7 @@
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
 
-(def lopeta-pollaus? (reaction (when @filttereita-vaihdettu?) (lopeta-pollaus)))
+(run! (when @filttereita-vaihdettu?) (lopeta-pollaus))
 
 (defn aloita-pollaus
   []
