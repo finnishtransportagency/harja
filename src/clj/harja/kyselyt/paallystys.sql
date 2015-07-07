@@ -168,3 +168,39 @@ WHERE id = :id;
 UPDATE paallystyskohde
 SET poistettu = true
 WHERE id = :id;
+
+-- name: luo-paallystyskohdeosa<!
+-- Luo uuden päällystykohdeosan
+INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide)
+VALUES (:paallystyskohde,
+        :nimi,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :kvl,
+        :nykyinen_paallyste,
+        :toimenpide);
+
+-- name: paivita-paallystyskohdeosa!
+-- Päivittää päällystyskohdeosan
+UPDATE paallystyskohdeosa
+SET
+paallystyskohde       = :paallystyskohde,
+nimi                  = :nimi,
+tr_numero             = :tr_numero,
+tr_alkuosa            = :tr_alkuosa,
+tr_alkuetaisyys       = :tr_alkuetaisyys,
+tr_loppuosa           = :tr_loppuosa,
+tr_loppuetaisyys      = :tr_loppuetaisyys,
+kvl                   = :kvl,
+nykyinen_paallyste    = :nykyinen_paallyste,
+toimenpide            = :toimenpide
+WHERE id = :id;
+
+-- name: poista-paallystyskohdeosa!
+-- Poistaa päällystyskohdeosan
+UPDATE paallystyskohdeosa
+SET poistettu = true
+WHERE id = :id;

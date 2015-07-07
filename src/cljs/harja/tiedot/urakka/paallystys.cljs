@@ -41,7 +41,7 @@
                                          :kohteet kohteet}))
 
 (defn tallenna-paallystyskohdeosat [urakka-id sopimus-id paallystyskohde-id osat]
-  (k/post! :tallenna-paallystyskohteet {:urakka-id urakka-id
+  (k/post! :tallenna-paallystyskohdeosat {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
                                         :paallystyskohde-id paallystyskohde-id
                                         :osat osat}))

@@ -208,13 +208,52 @@
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
+(defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+  (log/debug "Luodaan uusi päällystyskohdeosa")
+  (when-not poistettu
+    (q/luo-paallystyskohdeosa<! db
+                                paallystyskohde-id
+                                nimi
+                                (or tr_numero 0)
+                                (or tr_alkuosa 0)
+                                (or tr_alkuetaisyys 0)
+                                (or tr_loppuosa 0)
+                                (or tr_loppuetaisyys 0)
+                                (or kvl 0)
+                                nykyinen_paallyste
+                                toimenpide)))
+
+(defn paivita-paallystyskohdeosa [db user {:keys [id paallystyskohde-id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+  (if poistettu
+    (do (log/debug "Poistetaan päällystyskohdeosa")
+        (q/poista-paallystyskohdeosa! db id))
+    (do (log/debug "Päivitetään päällystyskohdeosa")
+        (q/paivita-paallystyskohdeosa! db
+                                       paallystyskohde-id
+                                       nimi
+                                       (or tr_numero 0)
+                                       (or tr_alkuosa 0)
+                                       (or tr_alkuetaisyys 0)
+                                       (or tr_loppuosa 0)
+                                       (or tr_loppuetaisyys 0)
+                                       (or kvl 0)
+                                       nykyinen_paallyste
+                                       toimenpide
+                                       id))))
+
 (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
-  (defn tallenna-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id osat]}]
-    (jdbc/with-db-transaction [c db]
-      ; TODO Tallenna
-      (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
-                                              :sopimus-id         sopimus-id
-                                              :paallystyskohde-id paallystyskohde-id}))))
+  (jdbc/with-db-transaction [c db]
+    (log/debug "Tallennetaan päällystyskohdeosat " (pr-str osat) ". Päällystyskohde-id: " paallystyskohde-id)
+    (doseq [osa osat]
+      (log/debug (str "Käsitellään saapunut päällystyskohdeosa: " osa))
+      (if (and (:id osa) (not (neg? (:id osa))))
+        (paivita-paallystyskohdeosa c user osa)
+        (luo-uusi-paallystyskohdeosa c user paallystyskohde-id osa)))
+    (let [paallystyskohdeosat (hae-urakan-paallystyskohdeosat c user {:urakka-id  urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})]
+      (log/debug "Tallennus suoritettu. Tuoreet päällystyskohdeosat: " (pr-str paallystyskohdeosat))
+      paallystyskohdeosat)))
 
 (defrecord Paallystys []
   component/Lifecycle

@@ -37,22 +37,27 @@
 
     (fn [rivi]
       [:div
-       [grid/grid
+       [grid/grid ; FIXME Validoinnit?
         {:otsikko  "Tierekisterikohteet"
-         :tyhja    (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Päällystyskohdeosia ei löydy")
+         :tyhja    (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Tierekisterikohteita ei löydy")
          :tunniste :tr_numero
+         :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
+                                  [sopimus-id _] @u/valittu-sopimusnumero
+                                  vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) %))]
+                              (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
+                              (reset! paallystyskohdeosat vastaus)))
          :luokat   ["paallystyskohdeosat-haitari"]}
-        [{:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-         {:otsikko "Tieosa" :nimi :tr_numero :muokattava? (constantly true) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Aot" :nimi :tr_alkuosa :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Aet" :nimi :tr_alkuetaisyys :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Losa" :nimi :tr_loppuosa :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Let" :nimi :tr_loppuetaisyys :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))) ; FIXME Onko oikein laskettu?
+        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
+         {:otsikko "Tieosa" :nimi :tr_numero :tyyppi :numero :leveys "10%"}
+         {:otsikko "Aot" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%"}
+         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%"}
+         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%"}
+         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%"}
+         {:otsikko "Pit" :nimi :pit :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi)))) ; FIXME Onko oikein laskettu?
           :leveys  "10%"}
-         {:otsikko "Kvl" :nimi :kvl :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%"}
-         {:otsikko "Toimenpide" :nimi :toimenpide :muokattava? (constantly false) :tyyppi :string :leveys "20%"}]
+         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%"}
+         {:otsikko "Nyk. päällyste" :nimi :nykyinen_paallyste :tyyppi :numero :hae (fn [rivi] (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste rivi))) :leveys "10%"}
+         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%"}]
         @paallystyskohdeosat]])))
 
 (defn paallystyskohteet []
@@ -67,8 +72,8 @@
     (komp/luo
       (fn []
         [:div
-         [grid/grid
-          {:otsikko      "Kohteet"
+         [grid/grid ; FIXME Validoinnit?
+          {:otsikko      "Päällystyskohteet"
            :tyhja        (if (nil? @paallystys/paallystyskohteet) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
            :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystys/paallystyskohteet))
