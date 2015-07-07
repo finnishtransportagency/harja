@@ -75,7 +75,8 @@ FROM paallystyskohdeosa
   JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
                           AND urakka = :urakka
                           AND sopimus = :sopimus
-WHERE paallystyskohde = :paallystyskohde;
+WHERE paallystyskohde = :paallystyskohde
+AND poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
 -- Päivittää päällystysilmoituksen

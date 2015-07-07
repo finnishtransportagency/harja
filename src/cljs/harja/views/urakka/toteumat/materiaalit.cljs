@@ -119,6 +119,8 @@
   (log "Materiaalikoodit:" (pr-str @materiaalikoodit))
 
   ;; fixme Jarilla on yksikkohintaisissa töissä tässä if, mutta tässä ei toimi?
+  ;; --> Johtuu tod.näk. siitä, että grid ja muokkausgrid ottavat datan eri muodossa eli gridille pitää antaa (vals @materiaalit-atom).
+  ;; Mielellään parannetaan kuitenkin muokkausgridin :voi-muokata? keywordia niin, että sen ollessa true kaikki kentät ovat tekstikenttiä.
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
     :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))}

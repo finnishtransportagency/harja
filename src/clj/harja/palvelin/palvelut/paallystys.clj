@@ -209,7 +209,7 @@
       paallystyskohteet)))
 
 (defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
-  (log/debug "Luodaan uusi päällystyskohdeosa")
+  (log/debug "Luodaan uusi päällystyskohdeosa, jonka päällystyskohde-id: " paallystyskohde-id)
   (when-not poistettu
     (q/luo-paallystyskohdeosa<! db
                                 paallystyskohde-id

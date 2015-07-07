@@ -3,11 +3,13 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
+            [reagent.core :refer [atom]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))

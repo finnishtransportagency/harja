@@ -28,11 +28,10 @@
 
 (defonce tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                       valittu-urakan-valilehti @u/urakan-valittu-valilehti
-                                       valittu-toteuman-valilehti @u/toteumat-valilehti
+                                       nakymassa? @toteumat/yksikkohintaiset-tyot-nakymassa?
                                        valittu-hoitokausi @u/valittu-hoitokausi]
-                                      (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi (= valittu-toteuman-valilehti :yksikkohintaiset-tyot) (= valittu-urakan-valilehti :toteumat))
-                                        (log "TOT Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi valittu-toteuman-valilehti valittu-urakan-valilehti)
+                                      (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
+                                        (log "Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi)
                                         (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
 
 
@@ -54,7 +53,7 @@
                                             (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
                                 :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
                                 :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
-    (log "TOT Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
+    (log "Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
     (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
@@ -120,8 +119,8 @@
                                      (nil? (some #(nil? (:tehtava %)) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))
                                      (nil? (some #(not (integer? (:maara %))) (filter #(not (true? (:poistettu %))) (vals @lomake-tehtavat))))))]
 
-    (log "TOT Lomake-toteuma: " (pr-str @lomake-toteuma))
-    (log "TOT Lomake tehtävät: " (pr-str @lomake-tehtavat))
+    (log "Lomake-toteuma: " (pr-str @lomake-toteuma))
+    (log "Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
@@ -137,7 +136,7 @@
                   :voi-muokata? (and (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                      (not jarjestelman-lisaama-toteuma?))
                   :muokkaa!     (fn [uusi]
-                                  (log "TOT Muokataan toteumaa: " (pr-str uusi))
+                                  (log "Muokataan toteumaa: " (pr-str uusi))
                                   (reset! lomake-toteuma uusi))
                   :footer       (when  (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                   [harja.ui.napit/palvelinkutsu-nappi
@@ -146,7 +145,7 @@
                                    {:luokka       "nappi-ensisijainen"
                                     :disabled     (false? @valmis-tallennettavaksi?)
                                     :kun-onnistuu (fn [vastaus]
-                                                    (log "TOT Tehtävät tallennettu, vastaus: " (pr-str vastaus))
+                                                    (log "Tehtävät tallennettu, vastaus: " (pr-str vastaus))
                                                     (reset! tehtavien-summat (:tehtavien-summat vastaus))
                                                     (reset! lomake-tehtavat nil)
                                                     (reset! lomake-toteuma nil)
@@ -195,7 +194,7 @@
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
-                             (log "TOT Tehtävät tallennettu: " (pr-str vastaus))
+                             (log "Tehtävät tallennettu: " (pr-str vastaus))
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
@@ -339,6 +338,10 @@
           @filteroidyt-tyorivit]]))))
 
 (defn yksikkohintaisten-toteumat []
-  (if @lomakkeessa-muokattava-toteuma
-    [yksikkohintaisen-toteuman-muokkaus]
-    [yksikkohintaisten-toteumalistaus]))
+  (komp/luo
+    (komp/lippu toteumat/yksikkohintaiset-tyot-nakymassa?)
+
+    (fn []
+      (if @lomakkeessa-muokattava-toteuma
+        [yksikkohintaisen-toteuman-muokkaus]
+        [yksikkohintaisten-toteumalistaus]))))
