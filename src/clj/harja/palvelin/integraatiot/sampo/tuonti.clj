@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma :as sampo-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
-            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset :as sopimukset])
+            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset :as sopimukset]
+            [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-viesti [db kuittausjono-sisaan viesti]
@@ -15,10 +16,14 @@
       (let [data (sampo-sanoma/lue-viesti (.getText viesti))
             hankkeet (:hankkeet data)
             urakat (:urakat data)
-            sopimukset (:sopimukset data)]
+            sopimukset (:sopimukset data)
+            organisaatiot (:organisaatiot data)]
         (hankkeet/kasittele-hankkeet transaktio hankkeet)
         (urakat/kasittele-urakat transaktio urakat)
-        (sopimukset/kasittele-sopimukset transaktio sopimukset))
+        (sopimukset/kasittele-sopimukset transaktio sopimukset)
+        ; toimenpideinstanssit
+        (organisaatiot/kasittele-organisaatiot transaktio organisaatiot))
+
       ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon
       )
 

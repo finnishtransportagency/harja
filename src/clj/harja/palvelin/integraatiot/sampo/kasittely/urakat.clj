@@ -31,7 +31,7 @@
   (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id))
 
 (defn kasittele-urakka [db {:keys [sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id]}]
-  (log/debug "Tallennetaan uusi urakka sampo id:llä: " sampo-id)
+  (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (let [urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id)]
     (log/debug "Käsiteltävän urakan id on:" urakka-id)
     (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)

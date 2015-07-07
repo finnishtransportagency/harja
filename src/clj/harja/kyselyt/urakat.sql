@@ -181,3 +181,32 @@ WHERE id = :id;
 SELECT urakka.id
 FROM urakka
 WHERE sampoid = :sampoid;
+
+-- name: aseta-urakoitsija-sopimuksen-kautta!
+-- Asettaa urakalle urakoitsijan sopimuksen Sampo id:n avulla
+UPDATE urakka
+SET urakoitsija = (
+  SELECT id
+  FROM organisaatio
+  WHERE sampoid = (
+    SELECT urakoitsija_sampoid
+    FROM sopimus
+    WHERE sampoid = :sopimus_sampoid))
+WHERE sampoid = (
+  SELECT urakka_sampoid
+  FROM sopimus
+  WHERE sampoid = :sopimus_sampoid AND
+        paasopimus IS NULL);
+
+-- name: aseta-urakoitsija-urakoille-yhteyshenkilon-kautta!
+-- Asettaa urakoille urakoitsijan yhteyshenkilön Sampo id:n avulla
+UPDATE urakka
+SET urakoitsija = (
+  SELECT id
+  FROM organisaatio
+  WHERE sampoid = :urakoitsija_sampoid)
+WHERE sampoid IN (
+  SELECT urakka_sampoid
+  FROM sopimus
+  WHERE urakoitsija_sampoid = :urakoitsija_sampoid AND
+        paasopimus IS NULL);

@@ -4,7 +4,7 @@
             [harja.kyselyt.urakat :as urakat]))
 
 (defn kasittele-hanke [db {:keys [nimi alkupvm loppupvm alueurakkanro sampo-id]}]
-  (log/debug "Tallennetaan uusi hanke sampo id:llä: " sampo-id)
+  (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (if (hankkeet/onko-tuotu-samposta? db sampo-id)
     (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro sampo-id)
     (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro sampo-id))

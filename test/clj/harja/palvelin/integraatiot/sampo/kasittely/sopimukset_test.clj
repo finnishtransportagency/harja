@@ -22,19 +22,18 @@
 
 
 
-(defn hae-testisopimukset []
+(defn hae-sopimukset []
   (q "select id from sopimus where sampoid = 'TESTISOPIMUS';"))
 
 (deftest tarkista-sopimuksen-tallentuminen
   (tuo-sopimus)
-  (is (= 1 (count (hae-testisopimukset))) "Luonnin jälkeen sopimus löytyy Sampo id:llä.")
+  (is (= 1 (count (hae-sopimukset))) "Luonnin jälkeen sopimus löytyy Sampo id:llä.")
   (poista-sopimus))
 
 (deftest tarkista-sopimuksen-paivittaminen
   (tuo-sopimus)
-  (is (= 1 (count (hae-testisopimukset))) "Tuotaessa sama sopimus uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (tuo-sopimus)
-  (is (= 1 (count (hae-testisopimukset))) "Tuotaessa sama sopimus uudestaan, päivitetään vanhaa eikä luoda uutta.")
+  (is (= 1 (count (hae-sopimukset))) "Tuotaessa sama sopimus uudestaan, päivitetään vanhaa eikä luoda uutta.")
   (poista-sopimus))
 
 (deftest tarkista-paasopimuksen-ja-alisopimuksen-tallentaminen
@@ -51,7 +50,7 @@
 
   (tuo-urakka)
   (tuo-sopimus)
-  (is (onko-sopimus-sidottu-urakkaan?) "Sopimus on sidottu urakkaan, kun sopimus on tuotu ensin Samposta.")
+  (is (onko-sopimus-sidottu-urakkaan?) "Sopimus on sidottu urakkaan, kun urakka on tuotu ensin Samposta.")
 
   (poista-sopimus)
   (poista-urakka))

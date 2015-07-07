@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.sopimukset
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.sopimukset :as sopimukset]))
+            [harja.kyselyt.sopimukset :as sopimukset]
+            [harja.kyselyt.urakat :as urakat]))
 
 (defn hae-paasopimuksen-id [db urakka-sampo-id]
   (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id ))))
@@ -29,7 +30,8 @@
   (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)
         sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)]
     (log/debug "Käsiteltävän sopimukset id on:" sopimus-id)
-    (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)))
+    (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)
+    (urakat/aseta-urakoitsija-sopimuksen-kautta! db sampo-id)))
 
 (defn kasittele-sopimukset [db sopimukset]
   (doseq [sopimus sopimukset]
