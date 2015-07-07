@@ -21,13 +21,13 @@
           (do
             (if (empty? p)
               false
-              (mapv annettu? p)))
+              (some true? (map annettu? p))))
 
           (if (map? p)
             (do
               (if (empty? p)
                 false
-                (mapv #(annettu? (val %)) p)))
+                (some true? (map #(annettu? (val %)) p))))
 
             true))))))
 
@@ -42,7 +42,7 @@
         _ (log/debug "HY ja urakka: " hallintayksikko urakka)
         _ (log/debug "Aikavälit annettu? " (annettu? aikavali-alku) (annettu? aikavali-loppu))
         _ (log/debug "Aikavälit: " aikavali-alku aikavali-loppu)
-        _ (log/debug "Tyypit annettu ja tyypit: " (not (nil? (some true? (annettu? tyypit)))) tyypit)
+        _ (log/debug "Tyypit annettu ja tyypit: " (annettu? tyypit) tyypit)
         _ (log/debug "Hakuehto annettu ja hakuehto:" (annettu? hakuehto) (str "%" hakuehto "%"))
         _ (log/debug "Suljetut ja/tai avoimet?" (if (:suljetut tilat) true false) (if (:avoimet tilat) true false))
         mankeloitava (into []
@@ -60,7 +60,7 @@
                                               hallintayksikko urakka
                                               (annettu? aikavali-alku) (annettu? aikavali-loppu)
                                               aikavali-alku aikavali-loppu
-                                              (not (nil? (some true? (annettu? tyypit)))) tyypit
+                                              (annettu? tyypit) tyypit
                                               (annettu? hakuehto) (str "%" hakuehto "%")
                                               (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                               (if (:avoimet tilat) true false) ;; falseksi
@@ -93,8 +93,6 @@
                                       (:kuitattu b)))))
                               (:kuittaukset %))))
                 mankeloitu)]
-
-    (log/debug (pr-str tulos))
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
     (log/debug "Kuittauksilla: " (map :uusinkuittaus tulos))
 
