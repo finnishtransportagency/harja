@@ -29,7 +29,7 @@
 (defn luo-testitietokanta []
   (apply tietokanta/luo-tietokanta testitietokanta))
 
-(def db (:datasource (luo-testitietokanta)))
+(defonce db (:datasource (luo-testitietokanta)))
 
 (def ds {:datasource db})
 
