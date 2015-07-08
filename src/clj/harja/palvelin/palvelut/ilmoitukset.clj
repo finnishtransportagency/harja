@@ -34,9 +34,9 @@
 (defn hae-ilmoitukset
   [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
   (let [aikavali-alku (when (first aikavali)
-                        (konv/sql-timestamp (first aikavali)))
+                        (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
-                         (konv/sql-timestamp (second aikavali)))
+                         (konv/sql-date (second aikavali)))
         tyypit (mapv name tyypit)
         _ (log/debug "HY ja urakka annettu? " (annettu? hallintayksikko) (annettu? urakka))
         _ (log/debug "HY ja urakka: " hallintayksikko urakka)
@@ -94,7 +94,7 @@
                               (:kuittaukset %))))
                 mankeloitu)]
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
-    (log/debug "Kuittauksilla: " (map :uusinkuittaus tulos))
+    (log/debug "Joiden kuittaukset ovat tulleet: " (map :uusinkuittaus tulos))
 
     tulos))
 

@@ -74,4 +74,4 @@ FROM ilmoitus i
       (:suljetut IS FALSE AND :avoimet IS FALSE) OR
       (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
       (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
-    );
+    ) ORDER BY k.kuitattu ASC;
