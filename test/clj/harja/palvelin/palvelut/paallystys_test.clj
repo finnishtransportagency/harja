@@ -34,7 +34,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(def testi-ilmoitustiedot
+(def ilmoitustiedot-testidata
   {:osoitteet    [{:tie                       1
                    :aosa                      2
                    :aet                       3
@@ -75,7 +75,7 @@
                    :toimenpidekoodi  3
                    :tilattu-maara    100
                    :toteutunut-maara 200
-                   :yksikko "km"
+                   :yksikko          "km"
                    :yksikkohinta     5}]
    })
 
@@ -105,7 +105,7 @@
                               :valmistumispvm     (java.sql.Date. 105 9 2)
                               :takuupvm           (java.sql.Date. 105 9 3)
                               :muutoshinta        0
-                              :ilmoitustiedot     testi-ilmoitustiedot}
+                              :ilmoitustiedot     ilmoitustiedot-testidata}
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
@@ -121,9 +121,10 @@
                                             AND urakka = " urakka-id
                                                  "AND sopimus = " sopimus-id ";")))
           paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                      :urakan-paallystysilmoitus-paallystyskohteella +kayttaja-jvh+ {:urakka-id          urakka-id
-                                                                                                                     :sopimus-id         sopimus-id
-                                                                                                                     :paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta})]
+                                                      :urakan-paallystysilmoitus-paallystyskohteella
+                                                      +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                      :sopimus-id         sopimus-id
+                                                                      :paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta})]
       (log/debug "POT kannassa: " (pr-str paallystysilmoitus-kannassa))
       (log/debug "Muutoshinta: " (:muutoshinta paallystysilmoitus-kannassa))
       (log/debug "Muutoshinta tyyppi: " (type (:muutoshinta paallystysilmoitus-kannassa)))
@@ -132,3 +133,36 @@
       (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
       (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id-jolla-ei-ilmoitusta ";")))))
+
+(deftest ala-tallenna-crappia
+  (let [paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
+                                                           SELECT paallystyskohde.id as paallystyskohde_id
+                                                           FROM paallystyskohde
+                                                           FULL OUTER JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                                           WHERE paallystysilmoitus.id IS NULL;")))]
+    (is (not (nil? paallystyskohde-id-jolla-ei-ilmoitusta)))
+
+    (let [urakka-id @muhoksen-paallystysurakan-id
+          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          paallystysilmoitus {:paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta
+                              :aloituspvm         (java.sql.Date. 105 9 1)
+                              :valmistumispvm     (java.sql.Date. 105 9 2)
+                              :takuupvm           (java.sql.Date. 105 9 3)
+                              :muutoshinta        0
+                              :ilmoitustiedot     (assoc ilmoitustiedot-testidata :ylimaarainen-keyword "Olen cräppidataa, en halua kantaan :(")}
+          maara-ennen-pyyntoa (ffirst (q
+                                        (str "SELECT count(*) FROM paallystysilmoitus
+                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            AND urakka = " urakka-id
+                                             "AND sopimus = " sopimus-id ";")))]
+      (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :tallenna-paallystysilmoitus
+                                                    +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                    :sopimus-id         sopimus-id
+                                                                    :paallystysilmoitus paallystysilmoitus})))
+      (let [maara-pyynnon-jalkeen (ffirst (q
+                                            (str "SELECT count(*) FROM paallystysilmoitus
+                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            AND urakka = " urakka-id
+                                                 "AND sopimus = " sopimus-id ";")))]
+        (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
