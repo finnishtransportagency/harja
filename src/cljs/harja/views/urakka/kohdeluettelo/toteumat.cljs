@@ -19,7 +19,8 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.roolit :as roolit]
-            [harja.ui.kommentit :as kommentit])
+            [harja.ui.kommentit :as kommentit]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -60,17 +61,10 @@
 
 (defn yhteenveto []
   (let []
-    [:div.pot-yhteenveto
-     [:table
-      [:tr
-       [:td.pot-yhteenveto-nimi [:span "Urakkasopimuksen mukainen kokonaishinta: "]]
-       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))]]]
-      [:tr
-       [:td.pot-yhteenveto-nimi [:span "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "]]
-       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt (or @muutokset-kokonaishintaan 0))]]]
-      [:tr
-       [:td.pot-yhteenveto-nimi [:span "Yhteensä: "]]
-       [:td.pot-yhteenveto-summa [:span (fmt/euro-opt @yhteensa)]]]]]))
+    [yleiset/taulukkotietonakyma {}
+     "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))
+     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
+     "Yhteensä: " (fmt/euro-opt @yhteensa)]))
 
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos

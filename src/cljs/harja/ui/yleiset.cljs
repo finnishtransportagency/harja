@@ -285,6 +285,17 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
       [:span.tietokentta otsikko]
       [:span.tietoarvo arvo]])])
 
+(defn taulukkotietonakyma
+  "Tekee geneerisen taulukko-tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
+  [optiot & otsikot-ja-arvot]
+  [:div.taulukko-tietonakyma
+   [:table
+    (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
+          :when arvo]
+    [:tr
+     [:td.taulukko-tietonakyma-tietokentta [:span otsikko]]
+     [:td.taulukko-tietonakyma-tietoarvo [:span arvo]]])]])
+
 (defn kuvaus-ja-avainarvopareja
   [kuvaus & avaimet-ja-arvot]
   [:div
