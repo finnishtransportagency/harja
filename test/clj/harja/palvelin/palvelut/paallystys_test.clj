@@ -191,6 +191,7 @@
                                                                         :sopimus-id         sopimus-id
                                                                         :paallystyskohde-id paallystyskohde-id})]
         (log/debug "POT kannassa: " (pr-str paallystysilmoitus-kannassa))
+        (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) :hyvaksytty))
