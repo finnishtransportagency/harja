@@ -45,7 +45,6 @@
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
-
   (try
     (let [urakkatyyppi (paattele-urakkatyyppi db hanke-sampo-id)
           urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi)]
@@ -58,7 +57,6 @@
 
       (log/debug "Urakka käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))
-
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa urakkaa Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
       (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error"))))

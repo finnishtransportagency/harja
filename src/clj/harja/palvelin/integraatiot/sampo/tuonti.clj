@@ -15,7 +15,7 @@
   (sonja/laheta sonja kuittausjono kuittaus))
 
 (defn kasittele-viesti [sonja db kuittausjono viesti]
-  (log/debug "Vastaanotettiin Sonjan viestijonosta viesti: " viesti)
+  (log/debug "Vastaanotettiin Sampon viestijonosta viesti: " viesti)
   (try+
     (jdbc/with-db-transaction [transaktio db]
       (let [data (sampo-sanoma/lue-viesti (.getText viesti))

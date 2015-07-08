@@ -11,7 +11,7 @@
 
 (defn tee-sonja-viestikuuntelija [this lahetysjono-sisaan kuittausjono-sisaan]
   (log/debug "Käynnistetään Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
-  (sonja/kuuntele (:sonja this) kuittausjono-sisaan
+  (sonja/kuuntele (:sonja this) lahetysjono-sisaan
                   (fn [viesti]
                     (tuonti/kasittele-viesti (:sonja this) (:db this) kuittausjono-sisaan viesti))))
 

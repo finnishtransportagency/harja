@@ -17,6 +17,7 @@
 
   sonja/Sonja
   (kuuntele [_ nimi kuuntelija]
+    (log/debug "Lisätään kuuntelija:" kuuntelija ", jonoon: " nimi)
     (swap! kuuntelijat
            update-in [nimi]
            (fn [vanhat-kuuntelijat]
@@ -35,8 +36,10 @@
                                                (getJMSMessageID [_] id)
                                                (setText [_ t] (reset! txt t))
                                                (getText [_] @txt))))))]
-      (go (<! (async/timeout (rand-int 100))) ;; sadan millisekunnin päästä lähetys
+      (go (<! (async/timeout (rand-int 100)))               ;; sadan millisekunnin päästä lähetys
+          (log/debug "Lähetys menossa.")
           (doseq [k (get @kuuntelijat nimi)]
+            (log/debug "Kutsutaan kuuntelijaa:" k)
             (k msg)))
       (.getJMSMessageID msg))))
 

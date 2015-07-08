@@ -68,7 +68,10 @@
     </Resource>
 </Sampo2harja>")
 
+(def +lahetysjono-sisaan+ "lahetysjono-sisaan")
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
+(def +lahetysjono-ulos+ "lahetysjono-ulos")
+(def +kuittausjono-ulos+ "kuittausjono-ulos")
 
 (defn tee-viesti [sisalto]
   (reify TextMessage

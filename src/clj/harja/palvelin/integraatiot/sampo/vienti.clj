@@ -13,7 +13,7 @@
   (sonja/laheta sonja lahetysjono sanoma-xml))
 
 (defn kasittele-kuittaus [db viesti]
-  (log/debug "Vastaanotettiin Sonjan kuittausjonosta viesti: " viesti)
+  (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
   ;; todo: tee xsd-validointi kuittaukselle
   (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus (.getText viesti))]
     (log/debug "Luettiin kuittaus: " kuittaus)
