@@ -68,9 +68,6 @@
                                                                        (modal/piilota!))}
                             "Sulje"]]}
                 [:div.kayttajan-tiedot
-                 ;{:katuosoite nil, :ytunnus "2163026-3", :nimi "Destia Oy", :postinumero nil, :lyhenne nil,
-                 ; :sampoid nil, :id 13, :tyyppi :urakoitsija, :liikennemuoto nil, :elynumero nil}
-
                  [tietoja {}
                   "Org. tyyppi:" (name (:tyyppi o))
                   "Y-tunnus:" (:ytunnus o)
