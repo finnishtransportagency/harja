@@ -352,3 +352,15 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    sisalto])
 
 (def +korostuksen-kesto+ 4000)
+
+(defn taulukko2 [otsikko-leveys-col arvo-leveys-col & otsikot-ja-arvot]
+  (let [otsikko-class (str "col-md-" otsikko-leveys-col)
+        arvo-class (str "col-md-" arvo-leveys-col)]
+    [:span
+     (keep-indexed (fn [i [otsikko arvo]]
+                     (and otsikko arvo
+                          ^{:key i}
+                          [:div.row
+                           [:div {:class otsikko-class} otsikko]
+                           [:div {:class arvo-class} arvo]]))
+                   (partition 2 otsikot-ja-arvot))]))

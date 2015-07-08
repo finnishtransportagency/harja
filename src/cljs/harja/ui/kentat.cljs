@@ -108,8 +108,9 @@
 
                 
                              
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus lomake?]} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus lomake? placeholder]} data]
   [:input {:class (when lomake? "form-control")
+           :placeholder placeholder
            :on-change #(reset! data (-> % .-target .-value))
            :on-focus on-focus
            :value @data
@@ -303,7 +304,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? leveys]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys]} data]
   
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -372,7 +373,7 @@
                                                (reset! teksti (pvm/pvm %)))
                                  :pvm     naytettava-pvm
                                  :sijainti @sijainti
-                                 :leveys leveys}]])]))})))
+                                 :leveys pvm-leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   (if-let [p @data]

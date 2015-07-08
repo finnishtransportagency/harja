@@ -149,65 +149,70 @@
   (komp/luo
     (fn []
       [:span
-       [:h3 "Ilmoitukset"]
-       (urakan-sivulle-nappi)
+       
+       
 
-       [:div
+       [:div.container
 
-        [:div.col-md-12 [:label "Hae ilmoituksia: "] [tee-kentta {:tyyppi :string} tiedot/hakuehto]]
-
-        (if @tiedot/valittu-urakka
-          [:div.col-md-12
-           [urakan-hoitokausi-ja-aikavali
-            @tiedot/valittu-urakka
-            (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
-            tiedot/valittu-aikavali]]
-
+        (when @tiedot/valittu-urakka
           [:div.row
-           [:div.col-md-4
-            [:label "Saapunut:"]
-            [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :leveys "100%"}
-             (r/wrap
-               (first @tiedot/valittu-aikavali)
-               (fn [uusi-arvo]
-                 (reset! tiedot/valittu-aikavali
-                         [uusi-arvo
-                          (second @tiedot/valittu-aikavali)])))]]
+           [:div.col-md-12
+            [urakan-hoitokausi-ja-aikavali
+             @tiedot/valittu-urakka
+             (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
+             tiedot/valittu-aikavali]
+            (urakan-sivulle-nappi)]])
 
-           [:div.col-md-4
+        [yleiset/taulukko2
+         3 9
+
+         [:label "Hae ilmoituksia: "]
+         [tee-kentta {:tyyppi :string
+                      :placeholder "Hae tekstillä..."} tiedot/hakuehto]
+
+         [:label "Saapunut:"]
+         (when-not @tiedot/valittu-urakka
+           [:span
+            [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :pvm-leveys "100%"}
+             (r/wrap
+              (first @tiedot/valittu-aikavali)
+              (fn [uusi-arvo]
+                (reset! tiedot/valittu-aikavali
+                        [uusi-arvo
+                         (second @tiedot/valittu-aikavali)])))]
+            
             [:label " \u2014 "]
             [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
-                                                        (second @tiedot/valittu-aikavali)
-                                                        (fn [uusi-arvo]
-                                                          (swap! tiedot/valittu-aikavali
-                                                                 (fn [[alku _]]
-                                                                   [alku uusi-arvo]))))]]])
+                                                       (second @tiedot/valittu-aikavali)
+                                                       (fn [uusi-arvo]
+                                                         (swap! tiedot/valittu-aikavali
+                                                                (fn [[alku _]]
+                                                                  [alku uusi-arvo]))))]])
 
-        [:div.row
-         [:div.col-md-2
-          [:label "Tilat"
-           (for [ehto @tiedot/valitut-tilat]
-             ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
-             [tee-kentta
-              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
-              (r/wrap
-                (second ehto)
-                (fn [uusi-tila]
-                  (reset! tiedot/valitut-tilat
-                          (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]]
-
-         [:div.col-md-2
-          [:label "Ilmoituksen tyyppi"
-           (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
-             ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
-             [tee-kentta
-              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
-              (r/wrap
-                (second ehto)
-                (fn [uusi-tila]
-                  (reset! tiedot/valitut-ilmoitusten-tyypit
-                          (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]]]
-
+         [:label "Tilat:"]
+         [:span
+          (for [ehto @tiedot/valitut-tilat]
+            ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
+            [tee-kentta
+             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
+             (r/wrap
+              (second ehto)
+              (fn [uusi-tila]
+                (reset! tiedot/valitut-tilat
+                        (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]
+        
+         [:label "Ilmoituksen tyyppi:"]
+         [:span
+          (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
+            ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
+            [tee-kentta
+             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
+             (r/wrap
+              (second ehto)
+              (fn [uusi-tila]
+                (reset! tiedot/valitut-ilmoitusten-tyypit
+                        (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]
+         
        [palvelinkutsu-nappi
         "Hae ilmoitukset"
         #(tiedot/hae-ilmoitukset)
@@ -228,7 +233,7 @@
           :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
 
-        @tiedot/haetut-ilmoitukset]])))
+        @tiedot/haetut-ilmoitukset]]])))
 
 (defn ilmoitukset []
   (komp/luo
