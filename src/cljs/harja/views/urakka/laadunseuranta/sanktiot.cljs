@@ -11,12 +11,18 @@
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [ajax-loader]])
+            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]))
 
 (defn sanktion-tiedot
   []
-  [:div "Sanktio tänne"])
+  [:div
+   [:button.nappi-ensisijainen
+    {:on-click #(reset! tiedot/valittu-sanktio nil)}
+    "Palaa"]
+
+   [:div "Sanktion tiedot tänne"]])
 
 (defn sanktiolistaus
   []
@@ -25,9 +31,13 @@
 
    [grid/grid
     {:otsikko "Sanktiot"
-     :tyhja   (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
+     :tyhja   (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
      :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
-    []
+    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+     {:otsikko "Kohde" :nimi :kohde :leveys 1}
+     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
+     {:otsikko "Tekijä" :nimi :tekija :leveys 1}
+     {:otsikko "Päätös" :nimi :paatos :leveys 2}]
     @tiedot/haetut-sanktiot
     ]])
 

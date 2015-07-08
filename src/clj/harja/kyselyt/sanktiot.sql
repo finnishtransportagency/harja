@@ -38,6 +38,22 @@ FROM sanktio s
 WHERE h.urakka = :urakka
       AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
 
+-- name: hae-urakan-sanktiot-hoitokaudella-ja-toimenpiteella
+SELECT
+  s.id,
+  s.perintapvm,
+  s.maara      AS summa,
+  s.sakkoryhma AS laji,
+  s.indeksi,
+  h.id         AS havainto_id,
+  h.kohde      AS havainto_kohde
+FROM sanktio s
+  JOIN havainto h ON s.havainto = h.id
+  JOIN toimenpideinstanssi ti ON h.urakka = ti.urakka
+WHERE h.urakka = :urakka
+      AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
+      AND ti.id = :toimenpideinstanssi;
+
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
