@@ -108,7 +108,9 @@
                                   (:keskilampo @uudet-lampotilat)
                                   (:pitkalampo @uudet-lampotilat))
                                 {:luokka       "nappi-ensisijainen"
-                                 :disabled     (not saa-muokata?)
+                                 :disabled     (not (and
+                                                      (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))
+                                                      (kelvollinen-lampotila? (:keskilampo @uudet-lampotilat))))
                                  :ikoni        (ikonit/search)
                                  :kun-onnistuu #(do
                                                  (viesti/nayta! "Tallentaminen onnistui" :success 1500)
