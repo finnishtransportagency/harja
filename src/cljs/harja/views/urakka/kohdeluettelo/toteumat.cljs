@@ -44,10 +44,10 @@
     :hylatty "Hylätty"
     ""))
 
-(def lomakedata (atom nil))                                 ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
-(def muutokset-kokonaishintaan                              ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
+(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
   (reaction (reduce + (mapv
                         (fn [tyo]
                           (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
@@ -420,7 +420,8 @@
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                                            (log "PÄÄ Rivi: " (pr-str rivi))
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
-                                                                                                           (reset! lomakedata (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi)))))}
+                                                                                                           (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
+                                                                                                                                  (assoc :tarjoushinta (:sopimuksen_mukaiset_tyot rivi))))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
