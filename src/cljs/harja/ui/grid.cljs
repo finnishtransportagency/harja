@@ -824,7 +824,9 @@ Optiot on mappi optioita:
 ; Apufunktiot
 
 (defn filteroi-uudet-poistetut
-  [muokkausgrid-data]
+  "Ottaa datan muokkausgrid-muodossa (avaimet kokonaislukuja, jotka mappautuvat riveihin) ja palauttaa sellaiset
+  rivit, jotka eivät ole uusia ja poistettuja. Paluuarvo on vectori mappeja."
+  [rivit]
   (filter
     #(not (and (true? (:poistettu %))
-               (neg? (:id %)))) (vals muokkausgrid-data)))
+               (neg? (:id %)))) (vals rivit)))

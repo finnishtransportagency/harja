@@ -139,18 +139,24 @@
                                     (if (not valmispvm)
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
         urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero]
+        [sopimus-id _] @u/valittu-sopimusnumero
+        poista-idt (fn [lomake polku] (assoc-in lomake polku
+                                                (mapv
+                                                  (fn [rivi] (dissoc rivi :id))
+                                                  (get-in lomake polku))))]
 
     [:div.pot-tallennus
      [:div.pot-huomaus @huomautusteksti]
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
-      #(let [lahetettava-data (-> (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] ; FIXME Dissoccaa myös muista id:t
-                                                     (mapv
-                                                       (fn [rivi] (dissoc rivi :id))
-                                                           (get-in [:ilmoitustiedot :osoitteet] @lomakedata))))]
-        (log "PÄÄ Lähetetään lomake: " (pr-str lahetettava-data))
+      #(let [lomake @lomakedata
+             lahetettava-data (-> (poista-idt lomake [:ilmoitustiedot :osoitteet])
+                                  (poista-idt [:ilmoitustiedot :kiviaines])
+                                  (poista-idt [:ilmoitustiedot :alustatoimet])
+                                  (poista-idt [:ilmoitustiedot :tyot]))]
+        (log "PÄÄ Lomake-data: " (pr-str @lomakedata))
+        (log "PÄÄ Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
@@ -423,7 +429,7 @@
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                                            (log "PÄÄ Rivi: " (pr-str rivi))
-                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus))
+                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus)) ; FIXME Jos tulee internal server error tms, niin käsitellään silti onnistune
                                                                                                            (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
                                                                                                                                   (assoc :tarjoushinta (:sopimuksen_mukaiset_tyot rivi))))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
