@@ -194,4 +194,11 @@
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) :hyvaksytty))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))))))
+        (is (= (:perustelu paallystysilmoitus-kannassa) (:perustelu paallystysilmoitus)))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
+        (u (str "UPDATE paallystysilmoitus SET
+                      tila = NULL,
+                      paatos_tekninen_osa = NULL,
+                      paatos_taloudellinen_osa = NULL,
+                      perustelu = NULL
+                  WHERE paallystyskohde =" paallystyskohde-id ";"))))))
