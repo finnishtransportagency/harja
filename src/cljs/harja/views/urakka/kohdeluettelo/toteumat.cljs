@@ -429,9 +429,10 @@
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
                                                                                                                vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                                            (log "PÄÄ Rivi: " (pr-str rivi))
-                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus)) ; FIXME Jos tulee internal server error tms, niin käsitellään silti onnistune
-                                                                                                           (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
-                                                                                                                                  (assoc :tarjoushinta (:sopimuksen_mukaiset_tyot rivi))))))}
+                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus))
+                                                                                                           (if-not (k/virhe? vastaus)
+                                                                                                             (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
+                                                                                                                                    (assoc :tarjoushinta (:sopimuksen_mukaiset_tyot rivi)))))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
