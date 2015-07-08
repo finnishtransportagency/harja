@@ -69,10 +69,15 @@
             
 (defn paivittaja
   "Koostaa haku-lippu, kuristin ja paivita-jos-muuttunut funktioiden 
-   toiminnallisuuden käteväksi kokonaisuudeksi."
+   toiminnallisuuden käteväksi kokonaisuudeksi.
+   Palauttaa kaksi funktiota vektorissa: päivitys ja päivityksen lopetus. "
   [kurista-ms haku-lippu-atom paivita-fn]
-  (->> paivita-fn
-       paivita-jos-muuttunut
-       (haku-lippu haku-lippu-atom)
-       (kuristin kurista-ms)))
+  (let [aktiivinen (cljs.core/atom true)]
+    [(->> (fn [& args]
+            (when @aktiivinen
+              (apply paivita-fn args)))
+          paivita-jos-muuttunut
+          (haku-lippu haku-lippu-atom)
+          (kuristin kurista-ms))
+     #(reset! aktiivinen false)]))
   

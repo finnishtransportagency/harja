@@ -480,20 +480,25 @@
   (let [osoite-alussa @data
         sijainti-haku (atom false)
         hae-sijainti (not (nil? sijainti))
-        paivita-sijainti! (if-not hae-sijainti
-                            (constantly nil)
-                            (paivittaja 3000 sijainti-haku 
-                                        (fn [osoite]
-                                          (if-not osoite
-                                            (reset! sijainti nil)
-                                            (go
-                                              (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))]
+        [paivita-sijainti! lopeta-paivitys!] (if-not hae-sijainti
+                                               [(constantly nil) (constantly nil)]
+                                               (paivittaja 3000 sijainti-haku 
+                                                           (fn [osoite]
+                                                             (log "Haetaan TR osoitteelle sijainti: " osoite)
+                                                             (if-not osoite
+                                                               (reset! sijainti nil)
+                                                               (go
+                                                                 (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))]
     (komp/luo
 
      {:component-will-receive-props
       (fn [this & [_ _ data]]
         (when hae-sijainti
-          (paivita-sijainti! @data)))}
+          (paivita-sijainti! @data)))
+      :component-will-unmount
+      (fn [_]
+        (log "Lopetetaan TR sijaintipäivitys")
+        (lopeta-paivitys!))}
      
      (fn [{:keys [lomake? sijainti]} data]
        (log "TR: " (pr-str @data))
