@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [harja.loki :refer [log tarkkaile!]]))
 
+
 (defn suodatettu-lista
   "Luettelo, jossa on hakukenttä filtteröinnille.
   opts voi sisältää
@@ -12,6 +13,9 @@
   :on-select funktio, jolla valinta tehdään (oletuksena reset! valinta-atomille)
   :aputeksti
   :tunniste
+  :ryhmittely funktio jonka mukaan listan itemit ryhmitellään ja aliotsikoidaan (optionaalinen)
+  :ryhman-otsikko funktio joka palauttaa otsikon ryhmittely-funktion antamalle ryhmälle
+  :vinkki funktio, joka palauttaa vinkkitekstin hakukentän alle
 
   lista sisältää luettelon josta hakea."
   [opts lista]
@@ -28,12 +32,12 @@
         ;; Indeksi korostettuun elementtiin näppäimistöliikkumista varten (nil jos ei korostettua)
         korostus-idx (atom nil)
 
+
         ]
     (fn [opts lista]
 
       (let [itemit (fn [term] (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) lista))]
         [:div.haku-container
-
          [:input.haku-input.form-control
           {:type        "text"
            :value       @term
@@ -69,21 +73,36 @@
                           (reset! term (.-value (.-target %)))
                           (.log js/console (-> % .-target .-value)))}]
          [:div.haku-lista-container
+          (when-let [vinkki-fn (:vinkki opts)]
+            (when (vinkki-fn) [:div.haku-vinkki (vinkki-fn)]))
           (when-not (empty? lista)
-            [:ul.haku-lista
+
              (let [selected @valittu
                    term @term
                    korostus @korostus-idx
                    tunniste (if (:tunniste opts)
                               (:tunniste opts)
-                              :id)]
-               (map-indexed
-                 (fn [i item]
-                   ^{:key (tunniste item)}
-                   [:li.haku-lista-item.klikattava
-                    {:on-click #(on-select item)
-                     :class    (str (when (= item selected) "selected ")
-                                    (when (= i korostus) "korostettu "))}
-                    [:div.haku-lista-item-nimi
-                     (fmt item)]])
-                 (itemit term)))])]]))))
+                              :id)
+                   itemit (itemit term)
+                   ryhmitellyt-itemit (if (:ryhmittely opts)
+                                        (group-by (:ryhmittely opts) itemit)
+                                        itemit)
+                   itemilista (fn [itemit]
+                                [:ul.haku-lista
+                                (map-indexed
+                                  (fn [i item]
+                                     ^{:key (tunniste item)}
+                                     [:li.haku-lista-item.klikattava
+                                      {:on-click #(on-select item)
+                                       :class    (str (when (= item selected) "selected ")
+                                                      (when (= i korostus) "korostettu "))}
+                                      [:div.haku-lista-item-nimi
+                                       (fmt item)]])
+                                  itemit)])]
+               (if (:ryhmittely opts)
+                 (for [[ryhman-nimi ryhman-kamppeet] ryhmitellyt-itemit]
+                   ^{:key ryhman-nimi}
+                   [:div.haku-lista-ryhma
+                    [:div.haku-lista-ryhman-otsikko ((:ryhman-otsikko opts) ryhman-nimi)]
+                    (itemilista ryhman-kamppeet)])
+                 (itemilista itemit))))]]))))

@@ -10,3 +10,4 @@ SELECT id, nimi, alue
 SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
   FROM organisaatio o
  WHERE o.nimi ILIKE :teksti
+ LIMIT 11;

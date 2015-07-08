@@ -231,6 +231,7 @@ FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.kayttajanimi ILIKE :koka
       OR o.nimi ILIKE :koka
          AND k.poistettu = FALSE
+LIMIT 11;
 
 -- name: hae-kayttaja-kayttajanimella
 -- Hakee käyttäjän käyttäjänimellä

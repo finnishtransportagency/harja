@@ -24,7 +24,6 @@
 
 (defn valitse-hakutulos
   [tulos]
-  (log "valitse hakutulos" (pr-str tulos))
   (reset! hakutermi "")
   (go (when-let [valitun-tyyppi (:tyyppi tulos)]
         (case valitun-tyyppi
@@ -37,15 +36,27 @@
           ;:organisaatio (reset! nav/valittu-organisaatio (:id tulos))
           ))))
 
+(defn liikaa-osumia?
+  [tulokset]
+  (when-let [ryhmitellyt (vals (group-by :tyyppi tulokset))]
+    (some #(> (count %) 10) ryhmitellyt)))
+
 (defn haku
   []
   [:form.navbar-form.navbar-left {:role "search"}
    [:div.form-group.haku
-    [suodatettu-lista {:format    :hakusanat
-                       :haku      :hakusanat
-                       :term      hakutermi
-                       ;:selection nav/valittu-urakka
-                       :on-select #(valitse-hakutulos %)
-                       :aputeksti "Hae"
-                       :tunniste  #((juxt :tyyppi :id) %)}
+    [suodatettu-lista {:format         :hakusanat
+                       :haku           :hakusanat
+                       :term           hakutermi
+                       :ryhmittely     :tyyppi
+                       :ryhman-otsikko #(case %
+                                         :urakka "Urakat"
+                                         :kayttaja "Käyttäjät"
+                                         :organisaatio "Organisaatiot"
+                                         "Muut")
+                       :on-select      #(valitse-hakutulos %)
+                       :aputeksti      "Hae Harjasta"
+                       :tunniste       #((juxt :tyyppi :id) %)
+                       :vinkki         #(when (liikaa-osumia? @hakutulokset)
+                                         "Liikaa osumia, tarkenna hakua...")}
      @hakutulokset]]])

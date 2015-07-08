@@ -122,7 +122,8 @@ FROM urakka u
 WHERE u.nimi ILIKE :teksti
       OR u.sampoid ILIKE :teksti
       OR hal.nimi ILIKE :teksti
-      OR urk.nimi ILIKE :teksti;
+      OR urk.nimi ILIKE :teksti
+LIMIT 11;
 
 -- name: hae-urakka
 -- Hakee urakan perustiedot id:llä APIa varten.
