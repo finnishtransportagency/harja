@@ -133,8 +133,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
                (nil? @nav/valittu-urakka)
                (vec (concat [(assoc v-hal
-                               :valittu true)]
-                            @nav/suodatettu-urakkalista))
+                                    :valittu true)]
+                            @nav/urakat-kartalla))
                            
                ;; Valittu urakka, mitä näytetään?
                :default [(assoc @nav/valittu-urakka

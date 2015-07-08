@@ -15,7 +15,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.asiakas.tapahtumat :as t]
    [harja.tiedot.urakoitsijat :as urk]
    [harja.tiedot.hallintayksikot :as hy]
-   [harja.tiedot.urakat :as ur])
+   [harja.tiedot.urakat :as ur]
+   [harja.pvm :as pvm])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
@@ -57,6 +58,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun hallintayksikön
 (def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
 
+(def hallintayksikot-kartalla
+  (reaction (let [hals @hy/hallintayksikot]
+              (if @valittu-hallintayksikko
+                []
+                hals))))
 ;; Atomi, joka sisältää valitun urakan
 (def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
 
@@ -201,6 +207,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
            (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
            urakkalista))))
+
+(def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
+  (reaction (into []
+                  (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
+                  @suodatettu-urakkalista)))
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
