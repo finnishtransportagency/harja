@@ -6,6 +6,7 @@
 (def modal-sisalto (atom {:otsikko nil
                           :sisalto nil
                           :footer nil
+                          :luokka nil
                           :nakyvissa? false
                           }))
 
@@ -18,7 +19,7 @@
 (defn modal-container
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"
   []
-  (let [{:keys [otsikko sisalto footer nakyvissa?]} @modal-sisalto]
+  (let [{:keys [otsikko sisalto footer nakyvissa? luokka]} @modal-sisalto]
     ;;[ctg {:transitionName "modal-fade"
     ;;      }
      
@@ -27,7 +28,7 @@
        [:div.modal.fade.in {:style {:display "block"}}
         [:div.modal-backdrop.fade.in {:style {:height @yleiset/korkeus :z-index -1}}]
         [:div.modal-dialog.modal-sm
-         [:div.modal-content
+         [:div {:class (str "modal-content " (or luokka ""))}
           (when otsikko
             [:div.modal-header
              [:button.close {:on-click piilota!
@@ -43,11 +44,12 @@
 
 
 
-(defn modal [{:keys [sulje otsikko footer]} sisalto]
+(defn modal [{:keys [sulje otsikko footer luokka]} sisalto]
   (.log js/console "NÄYTETÄÄN: " sisalto)
   (reset! modal-sisalto {:otsikko otsikko
                          :footer footer
                          :sisalto sisalto
+                         :luokka luokka
                          :nakyvissa? true})
   (fn [{:keys [sulje]} komponentti]
     (if-not (:nakyvissa? @modal-sisalto)
@@ -55,8 +57,9 @@
           [:span.modaali-ei-nakyvissa])
       [:span.modaali-nakyvissa])))
 
-(defn nayta! [{:keys [sulje otsikko footer]} sisalto]
+(defn nayta! [{:keys [sulje otsikko footer luokka]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :footer footer
                          :sisalto sisalto
+                         :luokka luokka
                          :nakyvissa? true}))
