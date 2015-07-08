@@ -117,7 +117,7 @@
                                                            SELECT paallystyskohde.id as paallystyskohde_id
                                                            FROM paallystyskohde
                                                            JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                                           WHERE urakka = " @muhoksen-paallystysurakan-id " AND  sopimus = " @muhoksen-paallystysurakan-paasopimuksen-id ";"))))
+                                                           WHERE urakka = " @muhoksen-paallystysurakan-id " AND sopimus = " @muhoksen-paallystysurakan-paasopimuksen-id ";"))))
 (log/debug "Päällystyskohde id jolla on ilmoitus: " paallystyskohde-id-jolla-on-ilmoitus)
 
 (deftest paallystyskohteet-haettu-oikein
