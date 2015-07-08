@@ -29,7 +29,7 @@
 (defn nayta-kayttaja
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
-                 :luokka "yhteystieto"
+                 :luokka  "yhteystieto"
                  :footer  [:span
                            [:button.nappi-toissijainen {:type     "button"
                                                         :on-click #(do (.preventDefault %)
@@ -55,8 +55,43 @@
                        "Ei urakkarooleja"
                        (for [urakkarooli urakkaroolit]
                          ^{:key (get-in urakkarooli [:urakka :id])}
-                        [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
-                         [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
+                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
+                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
+
+(defn nayta-organisaatio
+  [o]
+  (modal/nayta! {:otsikko (:nimi o)
+                 :luokka  "yhteystieto"
+                 :footer  [:span
+                           [:button.nappi-toissijainen {:type     "button"
+                                                        :on-click #(do (.preventDefault %)
+                                                                       (modal/piilota!))}
+                            "Sulje"]]}
+                [:div.kayttajan-tiedot
+                 ;{:katuosoite nil, :ytunnus "2163026-3", :nimi "Destia Oy", :postinumero nil, :lyhenne nil,
+                 ; :sampoid nil, :id 13, :tyyppi :urakoitsija, :liikennemuoto nil, :elynumero nil}
+
+                 [tietoja {}
+                  "Org. tyyppi:" (name (:tyyppi o))
+                  "Y-tunnus:" (:ytunnus o)
+                  "Osoite" (:katuosoite o)
+                  "Postinumero" (:postinumero o)
+                  "Sampoid:" (or (:sampoid o) "Ei annettu")
+                  (if (= (:tyyppi o) :hallintayksikko)
+                    "Liikennemuoto:" (case (:liikennemuoto o)
+                                       "T" "Tie"
+                                       "V" "Vesi"
+                                       "R" "Rata"
+                                       "Ei annettu"))]
+                 (when-let [urakat (:urakat o)]
+                   [:span
+                    [:span.tietokentta "Mukana urakoissa:"]
+                    [:div.mukana-urakoissa
+                     (if (empty? urakat)
+                       "Ei urakoita"
+                       (for [u urakat]
+                         ^{:key (:nimi u)}
+                         [:li.tietoarvo (:nimi u)]))]])]))
 
 (defn valitse-hakutulos
   [tulos]
@@ -70,8 +105,8 @@
               (:id haettu-urakka)))
           :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]
                       (nayta-kayttaja haettu-kayttaja))
-          ;:organisaatio (reset! nav/valittu-organisaatio (:id tulos))
-          ))))
+          :organisaatio (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))]
+                          (nayta-organisaatio haettu-organisaatio))))))
 
 (defn liikaa-osumia?
   [tulokset]

@@ -20,3 +20,13 @@ WHERE
 SELECT id
 FROM organisaatio
 WHERE sampoid = :sampoid;
+
+
+-- name: hae-organisaatio
+-- Hakee organisaation id:llä
+SELECT id, nimi, lyhenne, ytunnus, liikennemuoto, katuosoite, postinumero,
+       sampoid, elynumero, tyyppi
+  FROM organisaatio
+ WHERE id = :id;
+
+
