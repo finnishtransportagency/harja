@@ -90,7 +90,7 @@
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
     (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
 
-(deftest tallenna-paallystysilmoitus-kantaan
+#_(deftest tallenna-paallystysilmoitus-kantaan
   (let [paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
                                                            SELECT paallystyskohde.id as paallystyskohde_id
                                                            FROM paallystyskohde
