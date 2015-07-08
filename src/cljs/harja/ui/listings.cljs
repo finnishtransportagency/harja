@@ -53,7 +53,7 @@
             ryhmat (when ryhmissa?
                      (if-let [nr (:nayta-ryhmat opts)]
                        (map (juxt identity #(get ryhmitellyt-itemit %)) nr)
-                       ryhmitellyt-itemit))
+                       (seq ryhmitellyt-itemit)))
 
             kaikki-kamppeet (if ryhmissa?
                               (mapcat second ryhmat)
