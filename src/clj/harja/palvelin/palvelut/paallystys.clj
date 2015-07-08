@@ -76,8 +76,10 @@
         (log/debug "Kommentit saatu: " kommentit)
         (assoc paallystysilmoitus :kommentit kommentit)))))
 
-(defn laske-muutoshinta [lomakedata]
-  (reduce + (map (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi))) (:tyot lomakedata))))
+(defn laske-muutoshinta [ilmoitustiedot]
+  (reduce + (map
+              (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))
+              (:tyot ilmoitustiedot))))
 
 (defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
@@ -87,6 +89,7 @@
                "lukittu"
                (if valmistumispvm "valmis" "aloitettu"))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
+    (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot
                                    (konv/sql-date aloituspvm)
