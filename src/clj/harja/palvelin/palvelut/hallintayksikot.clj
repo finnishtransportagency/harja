@@ -5,7 +5,7 @@
             [harja.kyselyt.organisaatiot :as org-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.kayttajat :refer [organisaatio-xf]]
-            [ harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat]]
+            [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]))
 
 
@@ -26,7 +26,9 @@
   ;; FIXME: oikeustarkistuksia ei mietitty
   (let [o (first (into []
                        organisaatio-xf (org-q/hae-organisaatio db org-id)))
-        organisaation-urakat (map #(dissoc % :alue) (hae-organisaation-urakat db user org-id))]
+        organisaation-urakat (if (= :urakoitsija (:tyyppi o))
+                               (map #(dissoc % :alue) (hae-organisaation-urakat db user org-id))
+                               (map #(dissoc % :alue) (hallintayksikon-urakat db user org-id)))]
     (assoc o :urakat organisaation-urakat)))
 
 (defrecord Hallintayksikot []

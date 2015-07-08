@@ -82,7 +82,9 @@
                                        "Ei annettu"))]
                  (when-let [urakat (:urakat o)]
                    [:span
-                    [:span.tietokentta "Mukana urakoissa:"]
+                    [:span.tietokentta (if (= :urakoitsija (:tyyppi o))
+                                         "Urakoitsijana urakoissa:"
+                                         "Tilaajana urakoissa:")]
                     [:div.mukana-urakoissa
                      (if (empty? urakat)
                        "Ei urakoita"
@@ -102,7 +104,8 @@
               (:id haettu-urakka)))
           :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]
                       (nayta-kayttaja haettu-kayttaja))
-          :organisaatio (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))]
+          :organisaatio (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))
+                              _ (log "haettu oir" (pr-str haettu-organisaatio))]
                           (nayta-organisaatio haettu-organisaatio))))))
 
 (defn liikaa-osumia?
