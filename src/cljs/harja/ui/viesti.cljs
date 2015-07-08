@@ -45,9 +45,9 @@
   ([viesti luokka] (nayta! viesti :success 1500))
   ([viesti luokka kesto]
     (reset! viesti-sisalto {:viesti viesti
-                             :luokka luokka
-                             :nakyvissa? true
-                             :kesto kesto})))
+                                    :luokka luokka
+                                    :nakyvissa? true
+                                    :kesto kesto})))
 
 (defn ^:export kokeile []
   (nayta! "Kokeillaan viestiä!"))
