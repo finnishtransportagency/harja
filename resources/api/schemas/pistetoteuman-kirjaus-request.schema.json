@@ -1,38 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
+      "id": "urn:harja/tiestotarkastuskirjaus",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "pistetoteuma": {
-      "id": "http://jsonschema.net/pistetoteuma",
+      "id": "urn:harja/pistetoteuma",
       "type": "object",
       "additionalProperties": false,
       "required":true,
       "properties": {
         "toteuma": {
-          "id": "http://jsonschema.net/pistetoteuma/toteuma",
+          "id": "urn:harja/pistetoteuma/toteuma",
           "type": "object",
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
         "sijainti": {
-          "id": "http://jsonschema.net/pistetoteuma/sijainti",
+          "id": "urn:harja/pistetoteuma/sijainti",
           "type": "object",
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
         },
         "liitteet": {
-          "id": "http://jsonschema.net/pistetoteuma/liitteet",
+          "id": "urn:harja/pistetoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

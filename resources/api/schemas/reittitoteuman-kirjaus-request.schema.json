@@ -1,38 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/otsikko",
+      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "reittitoteuma": {
-      "id": "http://jsonschema.net/reittitoteuma",
+      "id": "urn:harja/reittitoteuma",
       "type": "object",
       "additionalProperties": false,
       "required":true,
       "properties": {
         "toteuma": {
-          "id": "http://jsonschema.net/reittitoteuma/toteuma",
+          "id": "urn:harja/reittitoteuma/toteuma",
           "type": "object",
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
         "reitti": {
-          "id": "http://jsonschema.net/reittitoteuma/reitti",
+          "id": "urn:harja/reittitoteuma/reitti",
           "type": "object",
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "liitteet": {
-          "id": "http://jsonschema.net/reittitoteuma/liitteet",
+          "id": "urn:harja/reittitoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

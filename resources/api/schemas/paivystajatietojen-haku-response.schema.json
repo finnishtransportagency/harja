@@ -1,24 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "urakat": {
-      "id": "http://jsonschema.net/urakat",
+      "id": "urn:harja/urakat",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/urakat/0",
+        "id": "urn:harja/urakat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "urakka": {
-            "id": "http://jsonschema.net/urakat/0/urakka",
+            "id": "urn:harja/urakat/0/urakka",
             "type": "object",
             "required": true,
             "properties": {
               "tiedot": {
-                "id": "http://jsonschema.net/urakat/0/urakka/tiedot",
+                "id": "urn:harja/urakat/0/urakka/tiedot",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
@@ -27,10 +27,10 @@
             }
           },
           "paivystykset": {
-            "id": "http://jsonschema.net/urakat/0/urakka/paivystykset",
+            "id": "urn:harja/urakat/0/urakka/paivystykset",
             "type": "array",
             "items": {
-              "id": "http://jsonschema.net/urakat/0/urakka/paivystykset/0",
+              "id": "urn:harja/urakat/0/urakka/paivystykset/0",
               "type": "object",
               "additionalProperties": false,
               "properties": {

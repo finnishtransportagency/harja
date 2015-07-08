@@ -1,73 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "properties": {
     "virheet": {
-      "id": "http://jsonschema.net/virheet",
+      "id": "urn:harja/virheet",
       "type": "string"
     },
     "varoitukset": {
-      "id": "http://jsonschema.net/varoitukset",
+      "id": "urn:harja/varoitukset",
       "type": "string"
     },
     "tiedotukset": {
-      "id": "http://jsonschema.net/tiedotukset",
+      "id": "urn:harja/tiedotukset",
       "type": "string"
     },
     "huomiot": {
-      "id": "http://jsonschema.net/huomiot",
+      "id": "urn:harja/huomiot",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/huomiot/0",
+        "id": "urn:harja/huomiot/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tunniste": {
-            "id": "http://jsonschema.net/tunniste",
+            "id": "urn:harja/tunniste",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
           },
           "varoitukset": {
-            "id": "http://jsonschema.net/huomiot/0/varoitukset",
+            "id": "urn:harja/huomiot/0/varoitukset",
             "type": "array",
             "items": {
-              "id": "http://jsonschema.net/huomiot/0/varoitukset/0",
+              "id": "urn:harja/huomiot/0/varoitukset/0",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "varoitus": {
-                  "id": "http://jsonschema.net/huomiot/0/varoitukset/0/varoitus",
+                  "id": "urn:harja/huomiot/0/varoitukset/0/varoitus",
                   "type": "string"
                 }
               }
             }
           },
           "virheet": {
-            "id": "http://jsonschema.net/huomiot/0/virheet",
+            "id": "urn:harja/huomiot/0/virheet",
             "type": "array",
             "items": {
-              "id": "http://jsonschema.net/huomiot/0/virheet/0",
+              "id": "urn:harja/huomiot/0/virheet/0",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "virhe": {
-                  "id": "http://jsonschema.net/huomiot/0/virheet/0/virhe",
+                  "id": "urn:harja/huomiot/0/virheet/0/virhe",
                   "type": "string"
                 }
               }
             }
           },
           "tiedotukset": {
-            "id": "http://jsonschema.net/huomiot/0/tiedotukset",
+            "id": "urn:harja/huomiot/0/tiedotukset",
             "type": "array",
             "items": {
-              "id": "http://jsonschema.net/huomiot/0/tiedotukset/0",
+              "id": "urn:harja/huomiot/0/tiedotukset/0",
               "type": "object",
               "properties": {
                 "tiedotus": {
-                  "id": "http://jsonschema.net/huomiot/0/tiedotukset/0/tiedotus",
+                  "id": "urn:harja/huomiot/0/tiedotukset/0/tiedotus",
                   "type": "string"
                 }
               }

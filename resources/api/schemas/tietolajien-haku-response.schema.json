@@ -1,20 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tietolajit": {
-      "id": "http://jsonschema.net/tietolajit",
+      "id": "urn:harja/tietolajit",
       "type": "array",
       "required": true,
       "items": {
-        "id": "http://jsonschema.net/tietolajit/0",
+        "id": "urn:harja/tietolajit/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tietolaji": {
-            "id": "http://jsonschema.net/tietolajit/0/tietolaji",
+            "id": "urn:harja/tietolajit/0/tietolaji",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",

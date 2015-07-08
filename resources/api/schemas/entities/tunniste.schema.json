@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
-      "id": "http://jsonschema.net/id",
+      "id": "urn:harja/id",
       "type": "integer",
       "required": true
     }

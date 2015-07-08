@@ -1,33 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "array",
   "items": {
-    "id": "http://jsonschema.net/0",
+    "id": "urn:harja/0",
     "type": "object",
     "additionalProperties": false,
     "properties": {
       "liite": {
-        "id": "http://jsonschema.net/0/liite",
+        "id": "urn:harja/0/liite",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "nimi": {
-            "id": "http://jsonschema.net/0/liite/nimi",
+            "id": "urn:harja/0/liite/nimi",
             "type": "string",
             "required": true
           },
           "tyyppi": {
-            "id": "http://jsonschema.net/0/liite/tyyppi",
+            "id": "urn:harja/0/liite/tyyppi",
             "type": "string",
             "required": true
           },
           "kuvaus": {
-            "id": "http://jsonschema.net/0/liite/kuvaus",
+            "id": "urn:harja/0/liite/kuvaus",
             "type": "string"
           },
           "sisalto": {
-            "id": "http://jsonschema.net/0/liite/sisalto",
+            "id": "urn:harja/0/liite/sisalto",
             "type": "string",
             "required": true
           }

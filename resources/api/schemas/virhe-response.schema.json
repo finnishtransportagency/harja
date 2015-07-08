@@ -1,27 +1,27 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "properties": {
     "virheet": {
-      "id": "http://jsonschema.net/virheet",
+      "id": "urn:harja/virheet",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/virheet/0",
+        "id": "urn:harja/virheet/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "virhe": {
-            "id": "http://jsonschema.net/virheet/0/virhe",
+            "id": "urn:harja/virheet/0/virhe",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "koodi": {
-                "id": "http://jsonschema.net/virheet/0/virhe/koodi",
+                "id": "urn:harja/virheet/0/virhe/koodi",
                 "type": "string"
               },
               "viesti": {
-                "id": "http://jsonschema.net/virheet/0/virhe/viesti",
+                "id": "urn:harja/virheet/0/virhe/viesti",
                 "type": "string"
               }
             }

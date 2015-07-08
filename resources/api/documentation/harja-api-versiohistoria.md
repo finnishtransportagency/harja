@@ -2,6 +2,8 @@
 <b>Julkaistu: 10.6.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:
+    - Tiestö-, soratie- ja talvihoitotarkastusten payloadit yksinkertaistettu
 - Versionumero: 0.0.2. Julkaistu: 10.6.2015. Muutokset:
     - Poistettu päivystäjätietojen haku
     - Lisätty tielupien haku

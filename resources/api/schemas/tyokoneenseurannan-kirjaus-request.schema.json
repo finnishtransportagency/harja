@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/otsikko",
+      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "havainnot": {
-      "id": "http://jsonschema.net/havainnot",
+      "id": "urn:harja/havainnot",
       "type": "array",
       "required": true,
       "items": {
@@ -21,51 +21,51 @@
         "additionalProperties": false,
         "properties": {
           "havainto": {
-            "id": "http://jsonschema.net/havainnot/0",
+            "id": "urn:harja/havainnot/0",
             "type": "object",
             "required": true,
             "properties": {
               "tyokone": {
-                "id": "http://jsonschema.net/havainnot/0/tyokone",
+                "id": "urn:harja/havainnot/0/tyokone",
                 "type": "object",
                 "additionalProperties": false,
                 "required": true,
                 "properties": {
                   "id": {
-                    "id": "http://jsonschema.net/havainnot/0/tyokone/id",
+                    "id": "urn:harja/havainnot/0/tyokone/id",
                     "type": "integer",
                     "required": true
                   },
                   "tyyppi": {
-                    "id": "http://jsonschema.net/havainnot/0/tyokone/tyyppi",
+                    "id": "urn:harja/havainnot/0/tyokone/tyyppi",
                     "type": "string",
                     "required": true
                   }
                 }
               },
               "sijainti": {
-                "id": "http://jsonschema.net/havainnot/0/sijainti",
+                "id": "urn:harja/havainnot/0/sijainti",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
               "havaintoaika": {
-                "id": "http://jsonschema.net/havainnot/0/havaintoaika",
+                "id": "urn:harja/havainnot/0/havaintoaika",
                 "type": "string",
                 "format": "date-time",
                 "required": true
               },
               "urakkaid": {
-                "id": "http://jsonschema.net/havainnot/0/urakkaid",
+                "id": "urn:harja/havainnot/0/urakkaid",
                 "type": "integer"
               },
               "sopimusid": {
-                "id": "http://jsonschema.net/havainnot/0/sopimusid",
+                "id": "urn:harja/havainnot/0/sopimusid",
                 "type": "integer"
               },
               "suoritetavaTehtavat": {
-                "id": "http://jsonschema.net/havainnot/0/tyokonetehtava",
+                "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "array",
                 "items": {
                   "enum": [

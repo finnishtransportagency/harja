@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "sijainti": {
-      "id": "http://jsonschema.net/sijainti",
+      "id": "urn:harja/sijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
       "required": true
     },
     "alueurakkanumero": {
-      "id": "http://jsonschema.net/alueurakkanumero",
+      "id": "urn:harja/alueurakkanumero",
       "type": "integer"
     }
   }

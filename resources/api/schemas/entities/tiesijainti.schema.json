@@ -1,35 +1,35 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "properties": {
     "nimi": {
-      "id": "http://jsonschema.net/nimi",
+      "id": "urn:harja/nimi",
       "type": "string",
       "required": false
     },
     "numero": {
-      "id": "http://jsonschema.net/sijainti/tie/numero",
+      "id": "urn:harja/sijainti/tie/numero",
       "type": "integer",
       "required": true
     },
     "aosa": {
-      "id": "http://jsonschema.net/sijainti/tie/aosa",
+      "id": "urn:harja/sijainti/tie/aosa",
       "type": "integer",
       "required": true
     },
     "aet": {
-      "id": "http://jsonschema.net/sijainti/tie/aet",
+      "id": "urn:harja/sijainti/tie/aet",
       "type": "integer",
       "required": true
     },
     "losa": {
-      "id": "http://jsonschema.net/sijainti/tie/losa",
+      "id": "urn:harja/sijainti/tie/losa",
       "type": "integer",
       "required": true
     },
     "let": {
-      "id": "http://jsonschema.net/sijainti/tie/let",
+      "id": "urn:harja/sijainti/tie/let",
       "type": "integer",
       "required": true
     }

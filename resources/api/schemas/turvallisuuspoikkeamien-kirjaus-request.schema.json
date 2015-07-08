@@ -1,150 +1,150 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
+      "id": "urn:harja/tiestotarkastuskirjaus",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tunniste": {
-      "id": "http://jsonschema.net/tunniste",
+      "id": "urn:harja/tunniste",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "viimeksipaivitetty": {
-      "id": "http://jsonschema.net/viimeksipaivitetty",
+      "id": "urn:harja/viimeksipaivitetty",
       "type": "string"
     },
     "toteuttaja": {
-      "id": "http://jsonschema.net/toteuttaja",
+      "id": "urn:harja/toteuttaja",
       "type": "string"
     },
     "tilaaja": {
-      "id": "http://jsonschema.net/tilaaja",
+      "id": "urn:harja/tilaaja",
       "type": "string"
     },
     "turvallisuuskoordinaattori": {
-      "id": "http://jsonschema.net/turvallisuuskoordinaattori",
+      "id": "urn:harja/turvallisuuskoordinaattori",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
     },
     "laatija": {
-      "id": "http://jsonschema.net/laatija",
+      "id": "urn:harja/laatija",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
     },
     "turvallisuuspoikkeamat": {
-      "id": "http://jsonschema.net/turvallisuuspoikkeamat",
+      "id": "urn:harja/turvallisuuspoikkeamat",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/turvallisuuspoikkeamat/0",
+        "id": "urn:harja/turvallisuuspoikkeamat/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "tunniste": {
-            "id": "http://jsonschema.net/tunniste",
+            "id": "urn:harja/tunniste",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
             "required": true
           },
           "kohde": {
-            "id": "http://jsonschema.net/toteumat/0/kohde",
+            "id": "urn:harja/toteumat/0/kohde",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
             "required": true
           },
           "sijainti": {
-            "id": "http://jsonschema.net/toteumat/0/sijainti",
+            "id": "urn:harja/toteumat/0/sijainti",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
             "required": true
           },
           "vaylamuoto": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/vaylamuoto",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/vaylamuoto",
             "type": "string",
             "required": true
           },
           "luokittelu": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/luokittelu",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
             "type": "string"
           },
           "ilmoittaja": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/ilmoittaja",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/ilmoittaja",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
           "tapahtumapaivamaara": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/tapahtumapaivamaara",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/tapahtumapaivamaara",
             "type": "string",
             "format": "date-time",
             "required": true
           },
           "paattyny": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/paattyny",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/paattyny",
             "type": "string",
             "format": "date-time"
           },
           "kasitelty": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/kasitelty",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/kasitelty",
             "type": "string",
             "format": "date-time"
           },
           "tyontekijanammatti": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/tyontekijanammatti",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijanammatti",
             "type": "string"
           },
           "tyotehtava": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/tyotehtava",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/tyotehtava",
             "type": "string"
           },
           "kuvaus": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/kuvaus",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"
           },
           "aiheutuneetVammat": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/aiheutuneetVammat",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
             "type": "string"
           },
           "sairauspoissaolopaivat": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/sairauspoissaolopaivat",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaolopaivat",
             "type": "integer"
           },
           "sairaalahoitovuorokaudet": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/sairaalahoitovuorokaudet",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/sairaalahoitovuorokaudet",
             "type": "integer"
           },
           "korjaavatToimenpiteet": {
-            "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet",
             "type": "array",
             "items": {
-              "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0",
+              "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "kuvaus": {
-                  "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/kuvaus",
+                  "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/kuvaus",
                   "type": "string"
                 },
                 "suoritettu": {
-                  "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/suoritettu",
+                  "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/suoritettu",
                   "type": "string",
                   "format": "date-time"
                 },
                 "vastaavahenkilo": {
-                  "id": "http://jsonschema.net/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/vastaavahenkilo",
+                  "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/vastaavahenkilo",
                   "type": "object",
                   "additionalProperties": false,
                   "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
@@ -153,7 +153,7 @@
             }
           },
           "liitteet": {
-            "id": "http://jsonschema.net/toteumat/0/liitteet",
+            "id": "urn:harja/toteumat/0/liitteet",
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

@@ -1,102 +1,101 @@
 {
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "urn:harja/tiestotarkastuskirjaus",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-	"otsikko": {
-	    "id": "urn:harja/otsikko",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-	    "required": true
-	},
-	"tunniste": {
-	    "id": "urn:harja/tunniste",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-	    "required": true
-	},
-	
-	"havainto": {
-	    "id": "urn:harja/tarkastus/havainto",
-	    "type": "object",
-	    "required": false,
-	    "properties": {
-		"kuvaus": {
-		    "id": "urn:harja/tarkastus/havainto/kuvaus",
-		    "type": "string",
-		    "required": true
-		}
-	    }
-	},
-	
-	"paivamaara": {
-	    "id": "urn:harja/talvihoitotarkastus/paivamaara",
-	    "type": "string",
-	    "format": "date-time",
-	    "required": true
-	},
-	
-	"tarkastaja": {
-	    "id": "urn:harja/talvihoitotarkastus/tarkastaja",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-	    "required": true
-	},
-	
-	"sijainti": {
-	    "id": "urn:harja/talvihoitotarkastus/sijainti",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-	    "required": true
-	},
-
-	"mittaaja": {
-	    "id": "urn:harja/talvihoitotarkastus/mittaaja",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-	    "required": false
-	},
-	
-	"mittaus": {
-	    "id": "urn:harja/mittaustulokset/talvihoito",
-            "type": "object",
-            "additionalProperties": false,
-	    "required": true,
-            "properties": {
-                "hoitoluokka": {
-                    "id": "urn:harja/mittaustulokset/talvihoito/hoitoluokka",
-                    "type": "integer",
-                    "required": true
-                },
-                "lumisuus": {
-                    "id": "urn:harja/mittaustulokset/talvihoito/lumisuus",
-                    "type": "number",
-                    "required": true
-                },
-                "tasaisuus": {
-                    "id": "urn:harja/mittaustulokset/talvihoito/tasaisuus",
-                    "type": "number",
-                    "required": true
-                },
-                "kitka": {
-                    "id": "urn:harja/mittaustulokset/talvihoito/kitka",
-                    "type": "number",
-                    "required": true
-                },
-                "lampotila": {
-                    "id": "urn:harja/mittaustulokset/talvihoito/lampotila",
-                    "type": "number",
-                    "required": true
-                }
-	    }
-	}
-
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/tiestotarkastuskirjaus",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "havainto": {
+      "id": "urn:harja/tarkastus/havainto",
+      "type": "object",
+      "required": false,
+      "properties": {
+        "kuvaus": {
+          "id": "urn:harja/tarkastus/havainto/kuvaus",
+          "type": "string",
+          "required": true
+        },
+        "liitteet": {
+          "id": "urn:harja/liitteet",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        }
+      }
+    },
+    "paivamaara": {
+      "id": "urn:harja/talvihoitotarkastus/paivamaara",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "tarkastaja": {
+      "id": "urn:harja/talvihoitotarkastus/tarkastaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "sijainti": {
+      "id": "urn:harja/talvihoitotarkastus/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "mittaaja": {
+      "id": "urn:harja/talvihoitotarkastus/mittaaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": false
+    },
+    "mittaus": {
+      "id": "urn:harja/mittaustulokset/talvihoito",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "hoitoluokka": {
+          "id": "urn:harja/mittaustulokset/talvihoito/hoitoluokka",
+          "type": "integer",
+          "required": true
+        },
+        "lumisuus": {
+          "id": "urn:harja/mittaustulokset/talvihoito/lumisuus",
+          "type": "number",
+          "required": true
+        },
+        "tasaisuus": {
+          "id": "urn:harja/mittaustulokset/talvihoito/tasaisuus",
+          "type": "number",
+          "required": true
+        },
+        "kitka": {
+          "id": "urn:harja/mittaustulokset/talvihoito/kitka",
+          "type": "number",
+          "required": true
+        },
+        "lampotila": {
+          "id": "urn:harja/mittaustulokset/talvihoito/lampotila",
+          "type": "number",
+          "required": true
+        }
+      }
     }
+  }
 }
 

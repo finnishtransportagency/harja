@@ -1,57 +1,57 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
-      "id": "http://jsonschema.net/id",
+      "id": "urn:harja/id",
       "type": "integer",
       "required": true
     },
     "nimi": {
-      "id": "http://jsonschema.net/nimi",
+      "id": "urn:harja/nimi",
       "type": "string",
       "required": true
     },
     "urakoitsija": {
-      "id": "http://jsonschema.net/urakoitsija",
+      "id": "urn:harja/urakoitsija",
       "type": "object",
       "additionalProperties": false,
       "required": true,
       "properties": {
         "ytunnus": {
-          "id": "http://jsonschema.net/urakoitsija/ytunnus",
+          "id": "urn:harja/urakoitsija/ytunnus",
           "type": "string",
           "required": true
         },
         "nimi": {
-          "id": "http://jsonschema.net/urakoitsija/nimi",
+          "id": "urn:harja/urakoitsija/nimi",
           "type": "string",
           "required": true
         }
       }
     },
     "vaylamuoto": {
-      "id": "http://jsonschema.net/vaylamuoto",
+      "id": "urn:harja/vaylamuoto",
       "type": "string",
       "required": true
     },
     "tyyppi": {
-      "id": "http://jsonschema.net/urakkatyyppi",
+      "id": "urn:harja/urakkatyyppi",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
       "required": true
     },
     "alkupvm": {
-      "id": "http://jsonschema.net/alkupvm",
+      "id": "urn:harja/alkupvm",
       "type": "string",
       "format": "date-time",
       "required": true
     },
     "loppupvm": {
-      "id": "http://jsonschema.net/loppupvm",
+      "id": "urn:harja/loppupvm",
       "type": "string",
       "format": "date-time",
       "required": true

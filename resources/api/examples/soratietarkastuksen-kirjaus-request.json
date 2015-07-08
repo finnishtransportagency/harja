@@ -12,101 +12,42 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "soratietarkastus": [
-    {
-      "tunniste": {
-        "id": 123
-      },
-      "kohde": "Sarannontie",
-      "kuvaus": "Soratien laatumittaus",
-      "paivamaara": "2016-01-30T12:00:00Z",
-      "tarkastaja": {
-        "id": 987564321,
-        "etunimi": "Tarmo",
-        "sukunimi": "Tarkastaja"
-      },
-      "reitti": [
-        {
-          "reittipiste": {
-            "aika": "2016-01-30T12:00:00Z",
-            "koordinaatit": {
-              "x": 64.91292829999999,
-              "y": 25.503484200000003
-            },
-            "havainnot": [
-              {
-                "havainto": {
-                  "kirjaaja": "Minna Mittaaja",
-                  "kuvaus": "Tie on aivan liian kalteva.",
-                  "korjattavaa": true,
-                  "liitteet": [
-                    {
-                      "liite": {
-                        "tyyppi": "image/png",
-                        "kuvaus": "Kuva tiestä",
-                        "sisalto": "... sisältö base64 enkoodattuna  ..."
-                      }
-                    }
-                  ]
-                }
-              }
-            ],
-            "mittaustulokset": {
-              "mittaaja": "Minna Mittaaja",
-              "soratie": {
-                "hoitoluokka": 1,
-                "sivukaltevuus": 22.4,
-                "tasaisuus": 1,
-                "kiinteys": 2,
-                "polyavuus": 5
-              }
-            }
-          },
-          "reittipiste": {
-            "aika": "2016-01-30T12:00:00Z",
-            "koordinaatit": {
-              "x": 64.91292829999999,
-              "y": 25.503484200000003
-            },
-            "mittaustulokset": {
-              "mittaaja": "Minna Mittaaja",
-              "soratie": {
-                "hoitoluokka": 1,
-                "sivukaltevuus": 1.4,
-                "tasaisuus": 1,
-                "kiinteys": 2,
-                "polyavuus": 5
-              }
-            }
-          }  ,
-          "reittipiste": {
-            "aika": "2016-01-30T12:00:00Z",
-            "koordinaatit": {
-              "x": 64.91292829999999,
-              "y": 25.503484200000003
-            },
-            "havainnot": [
-              {
-                "havainto": {
-                  "kirjaaja": "Minna Mittaaja",
-                  "kuvaus": "Tie on aivan liian kalteva ja löysä.",
-                  "korjattavaa": true
-                }
-              }
-            ],
-            "mittaustulokset": {
-              "mittaaja": "Minna Mittaaja",
-              "soratie": {
-                "hoitoluokka": 1,
-                "sivukaltevuus": 22.4,
-                "tasaisuus": 1,
-                "kiinteys": 2,
-                "polyavuus": 5
-              }
-            }
-          }
-        }
-      ]
+  "tunniste": {
+    "id": 123
+  },
+  "paivamaara": "2015-07-06T15:01:00Z",
+  "sijainti": {
+    "tie": {
+      "numero": 1,
+      "aosa": 2,
+      "aet": 3,
+      "losa": 4,
+      "let": 5
     }
-  ]
+  },
+  "tarkastaja": {
+    "id": 123,
+    "etunimi": "Taneli",
+    "sukunimi": "Tarkastaja"
+  },
+  "havainto": {
+    "kuvaus": "Tie on aivan liian kalteva.",
+    "liitteet": [
+      {
+        "liite": {
+          "nimi": "tie.png",
+          "tyyppi": "image/png",
+          "kuvaus": "Kuva tiestä",
+          "sisalto": "... sisältö base64 enkoodattuna  ..."
+        }
+      }
+    ]
+  },
+  "mittaus": {
+    "hoitoluokka": 1,
+    "kiinteys": 3,
+    "polyavyys": 5,
+    "sivukaltevuus": 12.6,
+    "tasaisuus": 1
+  }
 }

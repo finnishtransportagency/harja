@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "properties": {
     "ehdotettutoimenpide": {
-      "id": "http://jsonschema.net/ehdotettutoimenpide",
+      "id": "urn:harja/ehdotettutoimenpide",
       "required": true,
       "enum": [
         "eiToimenpiteita",
@@ -14,7 +14,7 @@
       ]
     },
     "lisatietoja": {
-      "id": "http://jsonschema.net/lisatietoja",
+      "id": "urn:harja/lisatietoja",
       "type": "string"
     }
   }

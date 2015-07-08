@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "properties": {
     "id": {
-      "id": "http://jsonschema.net/tehtava/koodi",
+      "id": "urn:harja/tehtava/koodi",
       "type": "integer",
       "required": true
     }

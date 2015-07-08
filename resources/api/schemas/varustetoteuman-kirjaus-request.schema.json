@@ -1,39 +1,39 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/urakat/0/sopimukset/0/kohteet/0/otsikko",
+      "id": "urn:harja/tiestotarkastuskirjaus",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "varustetoteuma": {
-      "id": "http://jsonschema.net/varustetoteuma",
+      "id": "urn:harja/varustetoteuma",
       "type": "object",
       "additionalProperties": false,
       "required":true,
       "properties": {
         "toteuma": {
-          "id": "http://jsonschema.net/varustetoteuma/toteuma",
+          "id": "urn:harja/varustetoteuma/toteuma",
           "type": "object",
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "varustekirjaukset": {
-          "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset",
+          "id": "urn:harja/varustetoteuma/varuste-kirjaukset",
           "type": "array",
           "items": {
-            "id": "http://jsonschema.net/toteumat/0/toteuma/varuste-kirjaukset/0",
+            "id": "urn:harja/toteumat/0/toteuma/varuste-kirjaukset/0",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "varustekirjaus": {
-                "id": "http://jsonschema.net/varustetoteuma/varuste-kirjaukset/0/varustekirjaus",
+                "id": "urn:harja/varustetoteuma/varuste-kirjaukset/0/varustekirjaus",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/varuste-kirjaus.schema.json"
@@ -42,7 +42,7 @@
           }
         },
         "liitteet": {
-          "id": "http://jsonschema.net/varustetoteuma/liitteet",
+          "id": "urn:harja/varustetoteuma/liitteet",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

@@ -1,26 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "urakkatyyppi": {
-      "id": "http://jsonschema.net/urakkatyyppi",
+      "id": "urn:harja/urakkatyyppi",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
       "required": true
     },
     "alkaen": {
-      "id": "http://jsonschema.net/alkaen",
+      "id": "urn:harja/alkaen",
       "type": "string"
     },
     "paattyen": {
-      "id": "http://jsonschema.net/paattyen",
+      "id": "urn:harja/paattyen",
       "type": "string"
     },
     "koordinaatit": {
-      "id": "http://jsonschema.net/koordinaatit",
+      "id": "urn:harja/koordinaatit",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",

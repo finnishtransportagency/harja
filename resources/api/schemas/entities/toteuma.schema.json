@@ -1,52 +1,52 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tunniste": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/tunniste",
+      "id": "urn:harja/toteumat/0/toteuma/tunniste",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "sopimusId": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/sopimusId",
+      "id": "urn:harja/toteumat/0/toteuma/sopimusId",
       "type": "integer",
       "required": true
     },
     "selite": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/selite",
+      "id": "urn:harja/toteumat/0/toteuma/selite",
       "type": "string"
     },
     "alkanut": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/alkanut",
+      "id": "urn:harja/toteumat/0/toteuma/alkanut",
       "type": "string",
       "format": "date-time"
     },
     "paattynyt": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/paattynyt",
+      "id": "urn:harja/toteumat/0/toteuma/paattynyt",
       "type": "string",
       "format": "date-time"
     },
     "suorittaja": {
-      "id": "http://jsonschema.net/suorittaja",
+      "id": "urn:harja/suorittaja",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "nimi": {
-          "id": "http://jsonschema.net/suorittaja/nimi",
+          "id": "urn:harja/suorittaja/nimi",
           "type": "string"
         },
         "ytunnus": {
-          "id": "http://jsonschema.net/suorittaja/ytunnus",
+          "id": "urn:harja/suorittaja/ytunnus",
           "type": "string"
         }
       }
     },
     "tyyppi": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/kokonaishintainenTyo",
+      "id": "urn:harja/toteumat/0/toteuma/kokonaishintainenTyo",
       "required": true,
       "enum": [
         "yksikkohintainen",
@@ -57,13 +57,13 @@
       ]
     },
     "tehtavat": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/tehtavat/",
+      "id": "urn:harja/toteumat/0/toteuma/tehtavat/",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
     },
     "maarat": {
-      "id": "http://jsonschema.net/toteumat/0/toteuma/maarat/",
+      "id": "urn:harja/toteumat/0/toteuma/maarat/",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/maarat.schema.json"

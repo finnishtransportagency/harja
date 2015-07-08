@@ -12,63 +12,35 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "tiestotarkastus": {
-    "tunniste": {
-      "id": 123
-    },
-    "kohde": "Nelostie",
-    "kuvaus": "Oulun tiestotarkistus",
-    "paivamaara": "2016-01-30T12:00:00Z",
-    "tarkastaja": {
-      "id": 654486,
-      "etunimi": "Teija",
-      "sukunimi": "Tarkkailija"
-    },
-    "reitti": [
+  "tunniste": {
+    "id": 123
+  },
+  "paivamaara": "2015-07-06T15:01:00Z",
+  "sijainti": {
+    "tie": {
+      "numero": 1,
+      "aosa": 2,
+      "aet": 3,
+      "losa": 4,
+      "let": 5
+    }
+  },
+  "tarkastaja": {
+    "id": 123,
+    "etunimi": "Taneli",
+    "sukunimi": "Tarkastaja"
+  },
+  "havainto": {
+    "kirjaaja": "Tarja Tarkastaja",
+    "kuvaus": "Reikä tiessä",
+    "korjattavaa": true,
+    "liitteet": [
       {
-        "reittipiste": {
-          "aika": "2016-01-30T12:00:00Z",
-          "koordinaatit": {
-            "x": 64.91292829999999,
-            "y": 25.503484200000003
-          },
-          "havainnot": [
-            {
-              "havainto": {
-                "kirjaaja": "Tarja Tarkastaja",
-                "kuvaus": "Reikä tiessä",
-                "korjattavaa": true,
-                "liitteet": [
-                  {
-                    "liite": {
-                      "nimi": "reikatiessa.png",
-                      "tyyppi": "image/png",
-                      "kuvaus": "Kuva reijästä tiessä",
-                      "sisalto": "... sisältö base64 enkoodattuna  ..."
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      {
-        "reittipiste": {
-          "aika": "2016-01-30T12:00:00Z",
-          "koordinaatit": {
-            "x": 65.91292829999999,
-            "y": 25.503484200000003
-          }
-        }
-      },
-      {
-        "reittipiste": {
-          "aika": "2016-01-30T12:00:00Z",
-          "koordinaatit": {
-            "x": 66.91292829999999,
-            "y": 25.503484200000003
-          }
+        "liite": {
+          "nimi": "reikatiessa.png",
+          "tyyppi": "image/png",
+          "kuvaus": "Kuva reijästä tiessä",
+          "sisalto": "... sisältö base64 enkoodattuna  ..."
         }
       }
     ]

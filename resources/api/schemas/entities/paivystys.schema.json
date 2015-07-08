@@ -1,38 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "paivystaja": {
-      "id": "http://jsonschema.net/paivystys/paivystaja",
+      "id": "urn:harja/paivystys/paivystaja",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
     "alku": {
-      "id": "http://jsonschema.net/paivystys/alku",
+      "id": "urn:harja/paivystys/alku",
       "type": "string",
       "format": "date-time",
       "required": true
     },
     "loppu": {
-      "id": "http://jsonschema.net/paivystys/loppu",
+      "id": "urn:harja/paivystys/loppu",
       "type": "string",
       "format": "date-time",
       "required": true
     },
     "vastuuhenkilo": {
-      "id": "http://jsonschema.net/paivystys/vastuuhenkilo",
+      "id": "urn:harja/paivystys/vastuuhenkilo",
       "type": "boolean"
     },
     "yhteyshenkilo": {
-      "id": "http://jsonschema.net/paivystys/yhteyshenkilo",
+      "id": "urn:harja/paivystys/yhteyshenkilo",
       "type": "boolean"
     },
     "varahenkilo": {
-      "id": "http://jsonschema.net/paivystys/varahenkilo",
+      "id": "urn:harja/paivystys/varahenkilo",
       "type": "boolean"
     }
   }

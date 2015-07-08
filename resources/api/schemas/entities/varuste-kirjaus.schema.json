@@ -1,31 +1,31 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tunniste": {
-      "id": "http://jsonschema.net/tyyppi",
+      "id": "urn:harja/tyyppi",
       "type": "string",
       "required": true
     },
     "tyyppi": {
-      "id": "http://jsonschema.net/tyyppi",
+      "id": "urn:harja/tyyppi",
       "type": "string",
       "required": true
     },
     "kuvaus": {
-      "id": "http://jsonschema.net/kuvaus",
+      "id": "urn:harja/kuvaus",
       "type": "string",
       "required": true
     },
     "huomiot": {
-      "id": "http://jsonschema.net/huomiot",
+      "id": "urn:harja/huomiot",
       "type": "string",
       "required": true
     },
     "sijainti": {
-      "id": "http://jsonschema.net/sijainti",
+      "id": "urn:harja/sijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",

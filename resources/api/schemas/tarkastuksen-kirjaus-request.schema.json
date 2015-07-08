@@ -1,65 +1,65 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/otsikko",
+      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tarkastus": {
-      "id": "http://jsonschema.net/tarkastus",
+      "id": "urn:harja/tarkastus",
       "type": "object",
       "required": true,
       "properties": {
         "tunniste": {
-          "id": "http://jsonschema.net/tunniste",
+          "id": "urn:harja/tunniste",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
           "required": true
         },
         "kohde": {
-          "id": "http://jsonschema.net/kohde",
+          "id": "urn:harja/kohde",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/kohde.schema.json",
           "required": true
         },
         "sijainti": {
-          "id": "http://jsonschema.net/sijainti",
+          "id": "urn:harja/sijainti",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "reitti": {
-          "id": "http://jsonschema.net/reitti",
+          "id": "urn:harja/reitti",
           "type": "object",
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
         },
         "tyyppi": {
-          "id": "http://jsonschema.net/tarkastus/tyyppi",
+          "id": "urn:harja/tarkastus/tyyppi",
           "type": "string",
           "required": true
         },
         "kuvaus": {
-          "id": "http://jsonschema.net/tarkastus/kuvaus",
+          "id": "urn:harja/tarkastus/kuvaus",
           "type": "string",
           "required": true
         },
         "paivamaara": {
-          "id": "http://jsonschema.net/tarkastus/paivamaara",
+          "id": "urn:harja/tarkastus/paivamaara",
           "type": "string",
           "format": "date-time",
           "required": true
         },
         "tarkastaja": {
-          "id": "http://jsonschema.net/tarkastus/tarkastaja",
+          "id": "urn:harja/tarkastus/tarkastaja",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
@@ -71,7 +71,7 @@
           "$ref": "file:resources/api/schemas/entities/havainnot.schema.json"
         },
         "liitteet": {
-          "id": "http://jsonschema.net/tarkastukset/0/liitteet/",
+          "id": "urn:harja/tarkastukset/0/liitteet/",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

@@ -1,22 +1,43 @@
-{"otsikko": {"lahettaja": {"jarjestelma": "testi"
-			   ,"organisaatio": {"nimi": "Destia"
-					     ,"ytunnus": "y123435"}}
-	     ,"viestintunniste": {"id": 3333}
-	     ,"lahetysaika": "__PVM__"}
- ,"tunniste": {"id": __ID__}
- ,"paivamaara": "2015-07-06T15:01:00Z"    
- ,"sijainti": {"tie": {"numero": 1
-                       ,"aosa": 2
-                       ,"aet": 3
-                       ,"losa": 4
-                       ,"let": 5}}
- ,"tarkastaja": {"id": 123
-		 ,"etunimi": "Taneli"
-		 ,"sukunimi": "Tarkastaja"}
- ,"havainto": {"kuvaus": "jotain outoa"}
- ,"mittaus": {"hoitoluokka": 1
-              ,"kiinteys": 3
-              ,"polyavyys": 5
-              ,"sivukaltevuus": 12.6
-              ,"tasaisuus": 1}
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "testi",
+      "organisaatio": {
+        "nimi": "Destia",
+        "ytunnus": "y123435"
+      }
+    },
+    "viestintunniste": {
+      "id": 3333
+    },
+    "lahetysaika": "__PVM__"
+  },
+  "tunniste": {
+    "id": __ID__
+  },
+  "paivamaara": "2015-07-06T15:01:00Z",
+  "sijainti": {
+    "tie": {
+      "numero": 1,
+      "aosa": 2,
+      "aet": 3,
+      "losa": 4,
+      "let": 5
+    }
+  },
+  "tarkastaja": {
+    "id": 123,
+    "etunimi": "Taneli",
+    "sukunimi": "Tarkastaja"
+  },
+  "havainto": {
+    "kuvaus": "jotain outoa"
+  },
+  "mittaus": {
+    "hoitoluokka": 1,
+    "kiinteys": 3,
+    "polyavyys": 5,
+    "sivukaltevuus": 12.6,
+    "tasaisuus": 1
+  }
 }

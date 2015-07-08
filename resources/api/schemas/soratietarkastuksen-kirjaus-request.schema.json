@@ -1,111 +1,108 @@
 {
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "urn:harja/tiestotarkastuskirjaus",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-	"otsikko": {
-	    "id": "urn:harja/otsikko",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-	    "required": true
-	},
-	"tunniste": {
-	    "id": "urn:harja/tunniste",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-	    "required": true
-	},
-	
-	"havainto": {
-	    "id": "urn:harja/tarkastus/havainto",
-	    "type": "object",
-	    "required": false,
-	    "properties": {
-		"kuvaus": {
-		    "id": "urn:harja/tarkastus/havainto/kuvaus",
-		    "type": "string",
-		    "required": true
-		}
-	    }
-	},
-	
-	"paivamaara": {
-	    "id": "urn:harja/soratietarkastus/paivamaara",
-	    "type": "string",
-	    "format": "date-time",
-	    "required": true
-	},
-	
-	"tarkastaja": {
-	    "id": "urn:harja/soratietarkastus/tarkastaja",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-	    "required": true
-	},
-	
-	"sijainti": {
-	    "id": "urn:harja/soratietarkastus/sijainti",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-	    "required": true
-	},
-
-	"mittaaja": {
-	    "id": "urn:harja/soratietarkastus/mittaaja",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-	    "required": false
-	},
-	
-	"mittaus": {
-	    "id": "urn:harja/mittaustulokset/soratie",
-            "type": "object",
-	    "required": true,
-            "additionalProperties": false,
-            "properties": {
-                "hoitoluokka": {
-                    "id": "urn:harja/soratie/hoitoluokka",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 2,
-                    "required": true
-                  },
-                  "tasaisuus": {
-                    "id": "urn:harja/soratie/tasaisuus",
-                    "type": "integer",
-                    "required": true,
-                    "minimum": 1,
-                    "maximum": 5
-                  },
-                  "kiinteys": {
-                    "id": "urn:harja/soratie/kiinteys",
-                    "type": "integer",
-                    "required": true,
-                    "minimum": 1,
-                    "maximum": 5
-                  },
-                  "polyavyys": {
-                    "id": "urn:harja/soratie/polyavyys",
-                    "type": "integer",
-                    "required": true,
-                    "minimum": 1,
-                    "maximum": 5
-                  },
-                  "sivukaltevuus": {
-                    "id": "urn:harja/soratie/sivukaltevuus",
-                    "type": "number",
-                    "required": true
-                  }
-            
-	    }
-	}
-
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/tiestotarkastuskirjaus",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "havainto": {
+      "id": "urn:harja/tarkastus/havainto",
+      "type": "object",
+      "required": false,
+      "properties": {
+        "kuvaus": {
+          "id": "urn:harja/tarkastus/havainto/kuvaus",
+          "type": "string",
+          "required": true
+        },
+        "liitteet": {
+          "id": "urn:harja/liitteet",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        }
+      }
+    },
+    "paivamaara": {
+      "id": "urn:harja/talvihoitotarkastus/paivamaara",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "tarkastaja": {
+      "id": "urn:harja/talvihoitotarkastus/tarkastaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "sijainti": {
+      "id": "urn:harja/talvihoitotarkastus/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "mittaaja": {
+      "id": "urn:harja/talvihoitotarkastus/mittaaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": false
+    },
+    "mittaus": {
+      "id": "urn:harja/mittaustulokset/soratie",
+      "type": "object",
+      "required": true,
+      "additionalProperties": false,
+      "properties": {
+        "hoitoluokka": {
+          "id": "urn:harja/soratie/hoitoluokka",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "required": true
+        },
+        "tasaisuus": {
+          "id": "urn:harja/soratie/tasaisuus",
+          "type": "integer",
+          "required": true,
+          "minimum": 1,
+          "maximum": 5
+        },
+        "kiinteys": {
+          "id": "urn:harja/soratie/kiinteys",
+          "type": "integer",
+          "required": true,
+          "minimum": 1,
+          "maximum": 5
+        },
+        "polyavyys": {
+          "id": "urn:harja/soratie/polyavyys",
+          "type": "integer",
+          "required": true,
+          "minimum": 1,
+          "maximum": 5
+        },
+        "sivukaltevuus": {
+          "id": "urn:harja/soratie/sivukaltevuus",
+          "type": "number",
+          "required": true
+        }
+      }
     }
+  }
 }
-

@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "nimi": {
-      "id": "http://jsonschema.net/nimi",
+      "id": "urn:harja/nimi",
       "type": "string"
     },
     "ytunnus": {
-      "id": "http://jsonschema.net/ytunnus",
+      "id": "urn:harja/ytunnus",
       "type": "string",
       "required": true
     }

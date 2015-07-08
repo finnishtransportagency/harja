@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "materiaali": {
-      "id": "http://jsonschema.net/maara/materiaali",
+      "id": "urn:harja/maara/materiaali",
       "enum": [
         "talvisuolaliuosNaCl",
         "talvisuolaliuosCaCl2",
@@ -16,7 +16,7 @@
       ]
     },
     "yksikko": {
-      "id": "http://jsonschema.net/yksikko",
+      "id": "urn:harja/yksikko",
       "required": true,
       "enum": [
         "t",
@@ -28,7 +28,7 @@
       ]
     },
     "maara": {
-      "id": "http://jsonschema.net/maara",
+      "id": "urn:harja/maara",
       "type": "number",
       "required": true
     }

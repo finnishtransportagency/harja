@@ -1,59 +1,54 @@
 {
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "urn:harja/tiestotarkastuskirjaus",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-	"otsikko": {
-	    "id": "urn:harja/otsikko",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-	    "required": true
-	},
-	"tunniste": {
-	    "id": "urn:harja/tunniste",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-	    "required": true
-	},
-	
-	"havainto": {
-	    "id": "urn:harja/tarkastus/havainto",
-	    "type": "object",
-	    "required": false,
-	    "properties": {
-		"kuvaus": {
-		    "id": "urn:harja/tarkastus/havainto/kuvaus",
-		    "type": "string",
-		    "required": true
-		}
-	    }
-	},
-	
-	"paivamaara": {
-	    "id": "urn:harja/tiestotarkastus/paivamaara",
-	    "type": "string",
-	    "format": "date-time",
-	    "required": true
-	},
-	
-	"tarkastaja": {
-	    "id": "urn:harja/tiestotarkastus/tarkastaja",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-	    "required": true
-	},
-	
-	"sijainti": {
-	    "id": "urn:harja/tiestotarkastus/sijainti",
-	    "type": "object",
-	    "additionalProperties": false,
-	    "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-	    "required": true
-	}
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/tiestotarkastuskirjaus",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "havainto": {
+      "id": "urn:harja/tarkastus/havainto",
+      "type": "object",
+      "required": false,
+      "properties": {
+        "kuvaus": {
+          "id": "urn:harja/tarkastus/havainto/kuvaus",
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "paivamaara": {
+      "id": "urn:harja/tiestotarkastus/paivamaara",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "tarkastaja": {
+      "id": "urn:harja/tiestotarkastus/tarkastaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "sijainti": {
+      "id": "urn:harja/tiestotarkastus/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
     }
+  }
 }
-

@@ -1,17 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "additionalProperties": false,
   "properties": {
     "luokka": {
-      "id": "http://jsonschema.net/luokka",
+      "id": "urn:harja/luokka",
       "type": "integer",
       "required": true
     },
     "huomiot": {
-      "id": "http://jsonschema.net/havainnot",
+      "id": "urn:harja/havainnot",
       "type": "string"
     }
   }

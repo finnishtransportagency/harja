@@ -1,21 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "x": {
-      "id": "http://jsonschema.net/sijainti/koordinaatit/x",
+      "id": "urn:harja/sijainti/koordinaatit/x",
       "type": "number",
       "required": true
     },
     "y": {
-      "id": "http://jsonschema.net/sijainti/koordinaatit/y",
+      "id": "urn:harja/sijainti/koordinaatit/y",
       "type": "number",
       "required": true
     },
     "z": {
-      "id": "http://jsonschema.net/sijainti/koordinaatit/z",
+      "id": "urn:harja/sijainti/koordinaatit/z",
       "type": "number"
     }
   }

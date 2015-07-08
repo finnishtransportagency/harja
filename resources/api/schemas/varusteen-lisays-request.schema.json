@@ -1,24 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/otsikko",
+      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "lisaaja": {
-      "id": "http://jsonschema.net/lisaaVaruste/lisaaja",
+      "id": "urn:harja/lisaaVaruste/lisaaja",
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
       "required": true
     },
     "varuste": {
-      "id": "http://jsonschema.net/varuste",
+      "id": "urn:harja/varuste",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/varuste.schema.json",

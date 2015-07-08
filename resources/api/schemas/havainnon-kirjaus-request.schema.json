@@ -1,69 +1,69 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "otsikko": {
-      "id": "http://jsonschema.net/otsikko",
+      "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
     "tunniste": {
-      "id": "http://jsonschema.net/tunniste",
+      "id": "urn:harja/tunniste",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
     "sijainti": {
-      "id": "http://jsonschema.net/sijainti",
+      "id": "urn:harja/sijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
       "required": false
     },
     "kohde": {
-      "id": "http://jsonschema.net/tyyppi",
+      "id": "urn:harja/tyyppi",
       "type": "string",
       "required": true
     },
     "kuvaus": {
-      "id": "http://jsonschema.net/kuvaus",
+      "id": "urn:harja/kuvaus",
       "type": "string",
       "required": true
     },
     "kirjaaja": {
-      "id": "http://jsonschema.net/kirjaaja",
+      "id": "urn:harja/kirjaaja",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
     "paivamaara": {
-      "id": "http://jsonschema.net/paivamaara",
+      "id": "urn:harja/paivamaara",
       "type": "string",
       "format": "date-time",
       "required": true
     },
     "liitteet": {
-      "id": "http://jsonschema.net/liitteet",
+      "id": "urn:harja/liitteet",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
     },
     "kommentit": {
-      "id": "http://jsonschema.net/kommentit",
+      "id": "urn:harja/kommentit",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/kommentit/0",
+        "id": "urn:harja/kommentit/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "kommentti": {
-            "id": "http://jsonschema.net/kommentit/0/kommentti",
+            "id": "urn:harja/kommentit/0/kommentti",
             "type": "string"
           }
         }

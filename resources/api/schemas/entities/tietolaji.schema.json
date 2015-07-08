@@ -1,70 +1,70 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "http://jsonschema.net",
+  "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "tunniste": {
-      "id": "http://jsonschema.net/tietolaji/tunniste",
+      "id": "urn:harja/tietolaji/tunniste",
       "type": "string",
       "required": true
     },
     "ominaisuudet": {
-      "id": "http://jsonschema.net/tietolaji/ominaisuudet",
+      "id": "urn:harja/tietolaji/ominaisuudet",
       "type": "array",
       "items": {
-        "id": "http://jsonschema.net/tietolaji/ominaisuudet/0",
+        "id": "urn:harja/tietolaji/ominaisuudet/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "ominaisuus": {
-            "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus",
+            "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "tunniste": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/tunniste",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/tunniste",
                 "type": "string",
                 "required": true
               },
               "selite": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/selite",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/selite",
                 "type": "string",
                 "required": true
               },
               "tietotyyppi": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/tietotyyppi",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/tietotyyppi",
                 "type": "string",
                 "required": true
               },
               "pakollinen": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
                 "type": "boolean"
               },
               "pituus": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/pituus",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pituus",
                 "type": "integer"
               },
               "koodisto": {
-                "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto",
                 "type": "array",
                 "items": {
-                  "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0",
+                  "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "koodi": {
-                      "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi",
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "arvo": {
-                          "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/arvo",
+                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/arvo",
                           "type": "string",
                           "required": true
                         },
                         "selite": {
-                          "id": "http://jsonschema.net/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/selite",
+                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/selite",
                           "type": "string",
                           "required": true
                         }
