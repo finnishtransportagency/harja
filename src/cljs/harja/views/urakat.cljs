@@ -52,13 +52,13 @@
              [suodatettu-lista {:format :nimi :haku :nimi
                                 :selection nav/valittu-urakka
                                 :nayta-ryhmat [:kaynnissa :paattyneet]
-                                :ryhmittele (let [nyt (pvm/nyt)]
+                                :ryhmittely (let [nyt (pvm/nyt)]
                                               #(if (pvm/jalkeen? nyt (:loppupvm %))
                                                  :paattyneet
                                                  :kaynnissa))
-                                :ryhman-nimi #(case %
-                                                :kaynnissa "Käynnissä olevat urakat"
-                                                :paattyneet "Päättyneet urakat")
+                                :ryhman-otsikko #(case %
+                                                   :kaynnissa "Käynnissä olevat urakat"
+                                                   :paattyneet "Päättyneet urakat")
                                 :on-select nav/valitse-urakka
                                 :aputeksti "Kirjoita urakan nimi tähän"}
               @nav/suodatettu-urakkalista]]])
