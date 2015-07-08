@@ -361,7 +361,7 @@ Optiot on mappi optioita:
                                                                                              (get muokatut id))
                                                                                            @jarjestys)]
                                                           (into {}
-                                                                (map (juxt (or tunniste :id) identity))
+                                                                (map (juxt (or tunniste :id) #(dissoc % :koskematon)))
                                                                 (apply funktio muokatut-jarjestyksessa args)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (reset! viimeisin-muokattu-id nil)   ;; bulk muutoksesta ei jätetä viimeisintä muokkausta
