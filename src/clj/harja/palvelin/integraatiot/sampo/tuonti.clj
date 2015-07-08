@@ -34,7 +34,5 @@
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja kuittausjono kuittaus))))
 
-    ;; todo: laita päälle
-    #_(catch Exception e)
-    ;; todo: mitä tehdään, jos aiheutuu virhe?
-    ))
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus luettaessa sisään viestiä Samposta."))))
