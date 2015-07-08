@@ -79,8 +79,6 @@
                    :yksikkohinta     5}]
    })
 
-(log/debug "Testi-ilmoitustiedot: " (pr-str encoodattu-testi-ilmoitustiedot))
-
 (deftest paallystyskohteet-haettu-oikein
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-paallystyskohteet +kayttaja-jvh+
