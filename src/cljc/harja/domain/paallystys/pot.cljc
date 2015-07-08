@@ -177,6 +177,7 @@
            :toimenpidekoodi s/Int ;; 4. tason toimenpidekoodi
            :tilattu-maara s/Num
            :toteutunut-maara s/Num
+           :yksikko s/Str
            :yksikkohinta s/Num}]
   })
   
