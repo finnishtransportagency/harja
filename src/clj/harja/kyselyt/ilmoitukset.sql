@@ -45,7 +45,7 @@ FROM ilmoitus i
           i.sijainti::GEOMETRY)) OR
 
       -- Tai urakan tasolla
-      (st_contains((SELECT alue FROM urakka WHERE id=:urakka), i.sijainti::GEOMETRY))
+      (st_contains((SELECT alue FROM urakoiden_alueet WHERE id=:urakka), i.sijainti::GEOMETRY))
     ) AND
 
     -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
