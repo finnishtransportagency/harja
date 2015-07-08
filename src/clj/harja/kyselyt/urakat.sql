@@ -121,8 +121,6 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.nimi ILIKE :teksti
       OR u.sampoid ILIKE :teksti
-      OR hal.nimi ILIKE :teksti
-      OR urk.nimi ILIKE :teksti
 LIMIT 11;
 
 -- name: hae-urakka

@@ -25,11 +25,15 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest haku
-  (let [tulokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                   :hae +kayttaja-jvh+ "Pohj")
-        urakat (filter #(= (:tyyppi %) :urakka) tulokset)
-        kayttajat (filter #(= (:tyyppi %) :kayttaja) tulokset)
-        organisaatiot (filter #(= (:tyyppi %) :organisaatio) tulokset)]
+  (let [tulokset-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :hae +kayttaja-jvh+ "Oulu")
+        tulokset-tero (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae +kayttaja-jvh+ "Tero")
+        tulokset-pohj (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae +kayttaja-jvh+ "Pohj")
+        urakat (filter #(= (:tyyppi %) :urakka) tulokset-oulu)
+        kayttajat (filter #(= (:tyyppi %) :kayttaja) tulokset-tero)
+        organisaatiot (filter #(= (:tyyppi %) :organisaatio) tulokset-pohj)]
     (is (> (count urakat) 0) "haku: urakoiden määrä")
     (is (> (count kayttajat) 0) "haku: käyttäjien määrä")
     (is (> (count organisaatiot) 0) "haku: organisaatioiden määrä")))
