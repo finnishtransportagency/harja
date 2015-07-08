@@ -51,8 +51,8 @@ FROM ilmoitus i
     -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
     (
       (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-      (:alku_annettu IS FALSE AND i.ilmoitettu::DATE <= :loppu) OR
       (:loppu_annettu IS FALSE AND i.ilmoitettu::DATE >= :alku) OR
+      (:alku_annettu IS FALSE AND i.ilmoitettu::DATE <= :loppu) OR
       (i.ilmoitettu BETWEEN :alku AND :loppu)
     ) AND
 
