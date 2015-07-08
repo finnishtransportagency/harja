@@ -52,7 +52,7 @@
     (is (= (count sopimukset) 2) "haetun urakan sopimusten määrä")
     (is (= eka-sopimuksen-id 1) "haetun urakan sopimustesti")
     (is (= eka-sopimuksen-sampoid "1H05228/01") "haetun urakan sopimustesti")
-    (is (= toka-sopimuksen-id 2) "haetun urakan sopimustesti")
+    (is (= toka-sopimuksen-id 3) "haetun urakan sopimustesti")
     (is (= toka-sopimuksen-sampoid "2H05228/10") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
     (is (= (:loppupvm haettu-urakka) (java.sql.Date. 110 8 30)) "haetun urakan loppupvm")))
