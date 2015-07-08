@@ -235,6 +235,22 @@
                       perustelu = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
+(deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
+  (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
+    (is (not (nil? paallystyskohde-id)))
+
+    (let [urakka-id @muhoksen-paallystysurakan-id
+          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
+                                 (assoc :paatos_taloudellinen_osa :hyvaksytty)
+                                 (assoc :paatos_tekninen_osa :hyvaksytty)
+                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia."))]
+
+      (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-paallystysilmoitus +kayttaja-tero+ {:urakka-id          urakka-id
+                                                                   :sopimus-id         sopimus-id
+                                                                   :paallystysilmoitus paallystysilmoitus}))))))
+
 (deftest tallenna-paallystyskohde-kantaan
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
