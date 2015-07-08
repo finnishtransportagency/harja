@@ -15,7 +15,9 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.ikonit :as ikonit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.ui.napit :as napit]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce nykyiset-lampotilat (atom nil))
@@ -56,19 +58,8 @@
         lampotilat))
 
 (defn tallenna-muutos
-  [uudet hoitokausi urakka]
-  (log "Muokataan urakan" (:id urakka) "keskilämpöjä hoitokaudelle"
-       (pvm/pvm (nth hoitokausi 0))
-       " - "
-       (pvm/pvm (nth hoitokausi 1)))
-  (log "Uusi keskilämpötila on" (:keskilampo uudet) ", ja pitkä keskilämpö on" (:pitkalampo uudet))
-  (go (let [uusi-lampo (<!(lampotilat/tallenna-lampotilat!
-                (:id uudet)
-                (:id urakka)
-                (nth hoitokausi 0)
-                (nth hoitokausi 1)
-                (:keskilampo uudet)
-                (:pitkalampo uudet)))]
+  [tulos]
+  (go (let [uusi-lampo tulos]
         (reset! tallentaa-lampotilaa? false)
         (if (not (k/virhe? uusi-lampo))
           (do
@@ -101,31 +92,33 @@
          (aseta-lampotila l))}
       
       (fn [urakka lampotilat]
-        [lomake {:luokka :horizontal
+        [lomake {:luokka   :horizontal
                  :muokkaa! (fn [uusi]
                              (reset! uudet-lampotilat uusi))
-                 :footer (if saa-muokata?
-                           [:div.form-group
-                           [:div.col-md-4
-                            (if (and
-                                  (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))
-                                  (kelvollinen-lampotila? (:keskilampo @uudet-lampotilat)))
-                              [:button.nappi-ensisijainen {:name "tallenna" :on-click #(do
-                                                                                        (.preventDefault %)
-                                                                                        (reset! tallentaa-lampotilaa? true)
-                                                                                        (tallenna-muutos
-                                                                                          @uudet-lampotilat
-                                                                                          @u/valittu-hoitokausi
-                                                                                          urakka))}
-                               (ikonit/search) " Tallenna"]
+                 :footer   (if saa-muokata?
+                             [:div.form-group
+                              [:div.col-md-4
+                               [napit/palvelinkutsu-nappi
+                                "Tallenna"
+                                #(lampotilat/tallenna-lampotilat!
+                                  (:id @uudet-lampotilat)
+                                  (:id urakka)
+                                  (nth @u/valittu-hoitokausi 0)
+                                  (nth @u/valittu-hoitokausi 1)
+                                  (:keskilampo @uudet-lampotilat)
+                                  (:pitkalampo @uudet-lampotilat))
+                                {:luokka       "nappi-ensisijainen"
+                                 :disabled     (not saa-muokata?)
+                                 :ikoni        (ikonit/search)
+                                 :kun-onnistuu #(do
+                                                 (viesti/nayta! "Tallentaminen onnistui" :success 1500)
+                                                 (tallenna-muutos %))}]
 
-                              [:button.nappi-ensisijainen.disabled {:name "tallenna"}  "Tallenna"])
-
-                            [:div {:style {:display :inline-block :width 55}}(when @tallentaa-lampotilaa? [ajax-loader])]
-                            [:button.nappi-kielteinen {:name "peruuta" :on-click #(do
-                                                                                   (.preventDefault %)
-                                                                                   (reset! uudet-lampotilat lampotilat))}
-                             (ikonit/remove)" Peruuta"]]])
+                               [:div {:style {:display :inline-block :width 55}} (when @tallentaa-lampotilaa? [ajax-loader])]
+                               [:button.nappi-kielteinen {:name "peruuta" :on-click #(do
+                                                                                      (.preventDefault %)
+                                                                                      (reset! uudet-lampotilat lampotilat))}
+                                (ikonit/remove) " Peruuta"]]])
                  }
          [{:otsikko "Keskilämpötila" :nimi :keskilampo :tyyppi :numero :leveys-col 2}
           {:otsikko "Pitkän aikavälin keskilämpötila" :nimi :pitkalampo :tyyppi :numero :leveys-col 2}]
@@ -159,70 +152,3 @@
                              (nth @valittu-hoitokausi 1)
                              @nykyiset-lampotilat
                              (:id @urakka))])])))))
-
-;Vanha lämpötilalomake. Säilytetty jos täältä jotain apua tarvii.
-#_
-(defn lampotila-lomake
-  [urakka lampotilat]
-  (let [uudet-lampotilat (atom nil)
-        aseta-lampotila (fn [l] (reset! uudet-lampotilat l))
-        saa-muokata? (roolit/rooli-urakassa? "urakanvalvoja" (:id urakka))]
-
-    (aseta-lampotila lampotilat)
-    (komp/luo
-      {:component-will-receive-props
-       (fn [_ & [_ urakka l]]
-         (aseta-lampotila l))}
-
-    (fn [urakka lampotilat]
-      ;(log "Nykyiset lämpötilat")
-      ;(.dir js/console (clj->js @nykyiset-lampotilat))
-      ;(.dir js/console (clj->js @uudet-lampotilat))
-      [:form.form-inline
-      [:div.form-group
-       [:label.col-md-4.control-label
-        {:for "keskilampo"}
-        "Keskilämpötila"]
-       [:div.col-md-4
-        [:input#keskilampo.form-control.input-md
-         (if saa-muokata?
-           {:placeholder "", :type "text", :name "keskilampo" :value (:keskilampo @uudet-lampotilat)
-            :on-change #(let [uusi-arvo (-> % .-target .-value)]
-                         (swap! uudet-lampotilat assoc :keskilampo uusi-arvo))}
-           {:placeholder "", :type "text", :name "keskilampo" :value (:keskilampo @uudet-lampotilat)
-            :readOnly "readOnly"})]
-        (if (not (and saa-muokata? (kelvollinen-lampotila? (:keskilampo @uudet-lampotilat))))
-          (ikonit/warning-sign))]]
-
-      [:div.form-group
-       [:label.col-md-7.control-label
-        {:for "pitkalampo"}
-        "Pitkän aikavälin keskilämpötila"]
-       [:div.col-md-4
-        [:input#pitkalampo.form-control.input-md
-         (if saa-muokata?
-           {:placeholder "", :type "text", :name "pitkalampo" :value (:pitkalampo @uudet-lampotilat)
-            :on-change #(let [uusi-arvo (-> % .-target .-value)]
-                         (swap! uudet-lampotilat assoc :pitkalampo uusi-arvo))}
-           {:placeholder "", :type "text", :name "pitkalampo" :value (:pitkalampo @uudet-lampotilat) :readOnly "readOnly"})]
-        (if (not (and saa-muokata? (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))))
-          (ikonit/warning-sign))]]
-
-       [:div.form-group
-        (if (roolit/rooli-urakassa? "urakanvalvoja" (:id urakka))
-        [:div.row-md-4
-         (if (not (and saa-muokata? (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))))
-           [:button.nappi-ensisijainen.disabled {:name "tallenna"} "Tallenna"]
-             [:button.nappi-ensisijainen {:name "tallenna" :on-click #(do
-                                                                       (.preventDefault %)
-                                                                       (reset! tallentaa-lampotilaa? true)
-                                                                       (tallenna-muutos
-                                                                         @uudet-lampotilat
-                                                                         @u/valittu-hoitokausi
-                                                                         urakka))}
-              "Tallenna"])
-
-             [:button.nappi-kielteinen {:name "peruuta" :on-click #(do
-                                                                (.preventDefault %)
-                                                                (reset! uudet-lampotilat lampotilat))}
-              "Peruuta"]])]]))))
