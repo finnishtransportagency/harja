@@ -27,7 +27,7 @@
         (luo-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)))))
 
 (defn kasittele-sopimus [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]}]
-  (log/debug "Tallennetaan uusi sopimus sampo id:llä: " sampo-id)
+  (log/debug "Käsitellään sopimus sampo id:llä: " sampo-id)
 
   (try
     (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)

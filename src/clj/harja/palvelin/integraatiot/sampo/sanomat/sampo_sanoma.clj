@@ -34,7 +34,7 @@
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))})
 
 (defn lue-sopimus [order]
-  {:viesti-id            (z/xml1-> order (z/attr :message_Id))
+  {:viesti-id            (z/xml1-> order (z/attr :messageId))
    :sampo-id             (z/xml1-> order (z/attr :id))
    :nimi                 (z/xml1-> order (z/attr :name))
    :alkupvm              (parsi-paivamaara (z/xml1-> order (z/attr :schedule_finish)))
@@ -57,7 +57,7 @@
    :sampo-toimenpidekoodi (z/xml1-> operation (z/attr :vv_operation))})
 
 (defn lue-organisaatio [company]
-  {:viesti-id   (z/xml1-> company (z/attr :message_Id))
+  {:viesti-id   (z/xml1-> company (z/attr :messageId))
    :sampo-id    (z/xml1-> company (z/attr :id))
    :nimi        (z/xml1-> company (z/attr :name))
    :y-tunnus    (z/xml1-> company (z/attr :vv_corporate_id))
