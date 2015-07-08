@@ -181,10 +181,17 @@
                              (or bitumi_indeksi 0)
                              (or kaasuindeksi 0))))
 
-(defn paivita-paallystyskohde [db user {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot lisatyot arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+(defn paivita-paallystyskohde [db user urakka-id sopimus-id {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot lisatyot arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (if poistettu
-    (do (log/debug "Poistetaan päällystyskohde")
-        (q/poista-paallystyskohde! db id))                  ; TODO Varmista että jos löytyy POT, ei saa poistaa.
+    (do (log/debug "Tarkistetaan onko päällystyskohteella päällystysilmoitus")
+        (let [olemassa-oleva-ilmoitus (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id          urakka-id
+                                                                                                  :sopimus-id         sopimus-id
+                                                                                                  :paallystyskohde-id id})]
+          (log/debug "Vastaus: " olemassa-oleva-ilmoitus)
+          (if (nil? olemassa-oleva-ilmoitus)
+            (do
+              (log/debug "Poistetaan päällystyskohde")
+              (q/poista-paallystyskohde! db id)))))
     (do (log/debug "Päivitetään päällystyskohde")
         (q/paivita-paallystyskohde! db
                                     kohdenumero
@@ -202,7 +209,7 @@
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut päällystyskohde: " kohde))
       (if (and (:id kohde) (not (neg? (:id kohde))))
-        (paivita-paallystyskohde c user kohde)
+        (paivita-paallystyskohde c user urakka-id sopimus-id kohde)
         (luo-uusi-paallystyskohde c user urakka-id sopimus-id kohde)))
     (let [paallystyskohteet (hae-urakan-paallystyskohteet c user {:urakka-id  urakka-id
                                                                   :sopimus-id sopimus-id})]
