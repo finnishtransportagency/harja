@@ -90,13 +90,13 @@
                     }})
 
 (def paallystyskohde-testidata {:kohdenumero              999
-                                :nimi                     "Testiramppi"
+                                :nimi                     "Testiramppi4564ddf"
                                 :sopimuksen_mukaiset_tyot 400
                                 :lisatyot                 100
                                 :bitumi_indeksi           123
                                 :kaasuindeksi             123})
 
-(def paallystyskohdeosa-testidata {:nimi               "Testiosa"
+(def paallystyskohdeosa-testidata {:nimi               "Testiosa123456"
                                    :tr_numero          1234
                                    :tr_alkuosa         3
                                    :tr_alkuetaisyys    1
@@ -145,8 +145,7 @@
           maara-ennen-pyyntoa (ffirst (q
                                         (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id
-                                             " AND sopimus = " sopimus-id ";")))]
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :tallenna-paallystysilmoitus
@@ -156,23 +155,20 @@
       (let [maara-pyynnon-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id
-                                                 " AND sopimus = " sopimus-id ";")))]
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
-(deftest tallenna-paallystysilmoitus-kantaan
+(deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
     (is (not (nil? paallystyskohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-          _ (log/debug "Urakka-id: " urakka-id ", sopimus-id: " sopimus-id)
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id
-                                              " AND sopimus = " sopimus-id ";")))]
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -181,8 +177,7 @@
       (let [maara-lisayksen-jalkeen (ffirst (q
                                               (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id
-                                                   " AND sopimus = " sopimus-id ";")))
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -196,8 +191,7 @@
         (is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
-        (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))
-        ))))
+        (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
@@ -255,4 +249,36 @@
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-      (u (str "DELETE FROM paallystyskohde WHERE id = " (:id (last kohteet-kannassa)) ";")))))
+      (u (str "DELETE FROM paallystyskohde WHERE nimi = 'Testiramppi4564ddf';")))))
+
+(deftest tallenna-paallystyskohdeosa-kantaan
+  (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
+    (is (not (nil? paallystyskohde-id)))
+
+    (let [urakka-id @muhoksen-paallystysurakan-id
+          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
+          maara-ennen-lisaysta (ffirst (q
+                                         (str "SELECT count(*) FROM paallystyskohdeosa
+                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
+
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-paallystyskohdeosat +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                   :sopimus-id         sopimus-id
+                                                                   :paallystysilmoitus paallystysilmoitus
+                                                                   :paallystyskohde-id paallystyskohde-id
+                                                                   :osat [paallystyskohdeosa-testidata]})
+      (let [maara-lisayksen-jalkeen (ffirst (q
+                                              (str "SELECT count(*) FROM paallystyskohdeosa
+                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
+            kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :urakan-paallystyskohdeosat
+                                                        +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                        :sopimus-id         sopimus-id
+                                                                        :paallystyskohde-id paallystyskohde-id})]
+        (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
+        (is (not (nil? kohdeosat-kannassa)))
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
+        (u (str "DELETE FROM paallystyskohdeosa WHERE nimi = 'Testiosa123456';"))))))
