@@ -1,6 +1,7 @@
 (ns harja.ui.listings
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja.loki :refer [log tarkkaile!]]))
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.yleiset :refer [nuolivalinta]]))
 
 
 (defn suodatettu-lista
@@ -13,8 +14,10 @@
   :on-select funktio, jolla valinta tehdään (oletuksena reset! valinta-atomille)
   :aputeksti
   :tunniste
-  :ryhmittely funktio jonka mukaan listan itemit ryhmitellään ja aliotsikoidaan (optionaalinen)
+  :ryhmittely     funktio jonka mukaan listan itemit ryhmitellään ja aliotsikoidaan (optionaalinen)
   :ryhman-otsikko funktio joka palauttaa otsikon ryhmittely-funktion antamalle ryhmälle
+  :nayta-ryhmat   optionaalinen sekvenssi ryhmäavaimia, jonka mukaisessa järjestyksessa ryhmät
+                  näytetään. Jos ei annettu, näytetään kaikki ei missään tietyssä järjestyksessä.
   :vinkki funktio, joka palauttaa vinkkitekstin hakukentän alle
 
   lista sisältää luettelon josta hakea."
@@ -36,7 +39,25 @@
         ]
     (fn [opts lista]
 
-      (let [itemit (fn [term] (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase term)) -1) lista))]
+      (let [termi @term
+            itemit (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase termi)) -1) lista)
+            
+            korostus @korostus-idx
+            tunniste (if (:tunniste opts)
+                       (:tunniste opts)
+                       :id)
+
+            ryhmitellyt-itemit (when (:ryhmittely opts)
+                                 (group-by (:ryhmittely opts) itemit))
+            ryhmissa? (not (nil? ryhmitellyt-itemit))
+            ryhmat (when ryhmissa?
+                     (if-let [nr (:nayta-ryhmat opts)]
+                       (map (juxt identity #(get ryhmitellyt-itemit %)) nr)
+                       ryhmitellyt-itemit))
+
+            kaikki-kamppeet (if ryhmissa?
+                              (mapcat second ryhmat)
+                              itemit)]
         [:div.haku-container
          [:input.haku-input.form-control
           {:type        "text"
@@ -44,50 +65,36 @@
            :placeholder (:aputeksti opts)
 
            ;; käsitellään ylos/alas/enter näppäimet, joilla listasta voi valita näppäimistöllä
-           :on-key-down #(let [kc (.-keyCode %)]
-                          (when (or (= kc 38)
-                                    (= kc 40)
-                                    (= kc 13))
-                            (.preventDefault %)
-                            (swap! korostus-idx
-                                   (fn [k]
-                                     (case kc
-                                       38                   ;; nuoli ylös
-                                       (if (or (nil? k)
-                                               (= 0 k))
-                                         (dec (count (itemit @term)))
-                                         (dec k))
+           :on-key-down (nuolivalinta
+                         ;; Ylös
+                         #(swap! korostus-idx (fn [k]
+                                                (if (or (nil? k)
+                                                        (= 0 k))
+                                                  (dec (count kaikki-kamppeet))
+                                                  (dec k))))
+                         ;; Alas
+                         #(swap! korostus-idx (fn [k]
+                                                (if (or (nil? k)
+                                                        (= (dec (count kaikki-kamppeet)) k))
+                                                  0
+                                                  (inc k))))
 
-                                       40                   ;; nuoli alas
-                                       (if (or (nil? k)
-                                               (= (dec (count (itemit @term))) k))
-                                         0
-                                         (inc k))
-
-                                       13                   ;; enter
-                                       (when k
-                                         (on-select (nth (itemit @term) k))
-                                         nil))))))
+                         ;; Enter
+                         #(when-let [k @korostus-idx]
+                            (on-select (nth kaikki-kamppeet k))
+                            (reset! korostus-idx nil)))
            :on-change   #(do
-                          (reset! korostus-idx nil)
-                          (reset! term (.-value (.-target %)))
-                          (.log js/console (-> % .-target .-value)))}]
+                           (reset! korostus-idx nil)
+                           (reset! term (.-value (.-target %)))
+                           (.log js/console (-> % .-target .-value)))}]
          [:div.haku-lista-container
           (when-let [vinkki-fn (:vinkki opts)]
             (when (vinkki-fn) [:div.haku-vinkki (vinkki-fn)]))
           (when-not (empty? lista)
 
              (let [selected @valittu
-                   term @term
-                   korostus @korostus-idx
-                   tunniste (if (:tunniste opts)
-                              (:tunniste opts)
-                              :id)
-                   itemit (itemit term)
-                   ryhmitellyt-itemit (if (:ryhmittely opts)
-                                        (group-by (:ryhmittely opts) itemit)
-                                        itemit)
-                   itemilista (fn [itemit]
+                   
+                   itemilista (fn [itemit alkuidx]
                                 [:ul.haku-lista
                                 (map-indexed
                                   (fn [i item]
@@ -95,14 +102,21 @@
                                      [:li.haku-lista-item.klikattava
                                       {:on-click #(on-select item)
                                        :class    (str (when (= item selected) "selected ")
-                                                      (when (= i korostus) "korostettu "))}
+                                                      (when (= (+ alkuidx i) korostus) "korostettu "))}
                                       [:div.haku-lista-item-nimi
                                        (fmt item)]])
                                   itemit)])]
-               (if (:ryhmittely opts)
-                 (for [[ryhman-nimi ryhman-kamppeet] ryhmitellyt-itemit]
-                   ^{:key ryhman-nimi}
-                   [:div.haku-lista-ryhma
-                    [:div.haku-lista-ryhman-otsikko ((:ryhman-otsikko opts) ryhman-nimi)]
-                    (itemilista ryhman-kamppeet)])
-                 (itemilista itemit))))]]))))
+               (if ryhmissa?
+                 (loop [alkuidx 0
+                        acc nil
+                        [[ryhman-nimi ryhman-kamppeet] & ryhmat] ryhmat]
+                   (if (nil? ryhman-nimi)
+                     (reverse acc)
+                     (recur (+ alkuidx (count ryhman-kamppeet))
+                            (conj acc
+                                  ^{:key ryhman-nimi}
+                                  [:div.haku-lista-ryhma
+                                   [:div.haku-lista-ryhman-otsikko ((:ryhman-otsikko opts) ryhman-nimi)]
+                                   (itemilista ryhman-kamppeet alkuidx)])
+                            ryhmat)))
+                 (itemilista itemit 0))))]]))))
