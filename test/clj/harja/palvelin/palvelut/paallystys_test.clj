@@ -106,18 +106,21 @@
                                    :nykyinen_paallyste 2
                                    :toimenpide         "Ei tehdä mitään @:D"})
 
+
 (def paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
                                                            SELECT paallystyskohde.id as paallystyskohde_id
                                                            FROM paallystyskohde
                                                            FULL OUTER JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                                           WHERE paallystysilmoitus.id IS NULL AND urakka = " @muhoksen-paallystysurakan-id " AND sopimus = " @muhoksen-paallystysurakan-paasopimuksen-id ";"))))
+                                                           WHERE paallystysilmoitus.id IS NULL
+                                                           AND urakka = " (hae-muhoksen-paallystysurakan-id) "
+                                                           AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 (log/debug "Päällystyskohde id ilman ilmoitusta: " paallystyskohde-id-jolla-ei-ilmoitusta)
 
 (def paallystyskohde-id-jolla-on-ilmoitus (ffirst (q (str "
                                                            SELECT paallystyskohde.id as paallystyskohde_id
                                                            FROM paallystyskohde
                                                            JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
-                                                           WHERE urakka = " @muhoksen-paallystysurakan-id " AND sopimus = " @muhoksen-paallystysurakan-paasopimuksen-id ";"))))
+                                                           WHERE urakka = " (hae-muhoksen-paallystysurakan-id) " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 (log/debug "Päällystyskohde id jolla on ilmoitus: " paallystyskohde-id-jolla-on-ilmoitus)
 
 (deftest paallystyskohteet-haettu-oikein
@@ -143,7 +146,7 @@
                                         (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id
-                                             "AND sopimus = " sopimus-id ";")))]
+                                             " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :tallenna-paallystysilmoitus
@@ -154,7 +157,7 @@
                                             (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id
-                                                 "AND sopimus = " sopimus-id ";")))]
+                                                 " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
 (deftest tallenna-paallystysilmoitus-kantaan
@@ -169,7 +172,7 @@
                                          (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id
-                                              "AND sopimus = " sopimus-id ";")))]
+                                              " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -179,7 +182,7 @@
                                               (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id
-                                                   "AND sopimus = " sopimus-id ";")))
+                                                   " AND sopimus = " sopimus-id ";")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id          urakka-id
