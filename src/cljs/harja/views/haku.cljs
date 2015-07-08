@@ -54,6 +54,7 @@
                      (if (empty? urakkaroolit)
                        "Ei urakkarooleja"
                        (for [urakkarooli urakkaroolit]
+                         ^{:key (get-in urakkarooli [:urakka :id])}
                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
 
