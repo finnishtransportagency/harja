@@ -147,9 +147,11 @@
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
       ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
+      (log/debug "Tarkistetaan onko POT lukittu...")
       (if (= :lukittu (:tila paallystysilmoitus-kannassa))
         (do (log/debug "POT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!"))))
+            (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
+        (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))
 
       (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus paallystysilmoitus-kannassa)]
 
@@ -256,9 +258,9 @@
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-paallystyskohdeosa c user osa)
         (luo-uusi-paallystyskohdeosa c user paallystyskohde-id osa)))
-    (let [paallystyskohdeosat (hae-urakan-paallystyskohdeosat c user {:urakka-id  urakka-id
-                                                                    :sopimus-id sopimus-id
-                                                                    :paallystyskohde-id paallystyskohde-id})]
+    (let [paallystyskohdeosat (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
+                                                                      :sopimus-id         sopimus-id
+                                                                      :paallystyskohde-id paallystyskohde-id})]
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohdeosat: " (pr-str paallystyskohdeosat))
       paallystyskohdeosat)))
 

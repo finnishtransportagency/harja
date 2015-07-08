@@ -221,6 +221,13 @@
         (is (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:perustelu paallystysilmoitus-kannassa) (:perustelu paallystysilmoitus)))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
+
+        ; Lukittu, ei voi enää päivittää
+        (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                                                   :sopimus-id         sopimus-id
+                                                                                                   :paallystysilmoitus paallystysilmoitus})))
+
         (u (str "UPDATE paallystysilmoitus SET
                       tila = NULL,
                       paatos_tekninen_osa = NULL,
