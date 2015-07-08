@@ -75,9 +75,31 @@ ja viimeinen voivat olla vajaat)."
   (reaction (when-let [ur @nav/valittu-urakka]
               (hoitokaudet ur))))
 
-(defonce valittu-hoitokausi
-         (reaction (first @valitun-urakan-hoitokaudet)))
+(defn paattele-valittu-hoitokausi [hoitokaudet]
+  (when-not (empty? hoitokaudet)
+    (let [[alku-pvm _] (first hoitokaudet)
+          [_ loppu-pvm] (last hoitokaudet)
+          nyt (pvm/nyt)]
+      (cond
+        ;; Jos urakka ei ole vielä alkanut, valitaan 1. hoitokausi
+        (pvm/ennen? nyt alku-pvm)
+        (first hoitokaudet)
 
+        ;; Jos urakka on jo päättynyt, valitaan viimeinen hoitokausi
+        (pvm/jalkeen? nyt loppu-pvm)
+        (last hoitokaudet)
+
+        ;; Jos urakka on käynnissä, valitaan hoitokausi, joka on käynnissä
+        :default
+        (first (filter (fn [[alku loppu]]
+                         (pvm/valissa? nyt alku loppu))
+                       hoitokaudet))))))
+
+        
+(defonce valittu-hoitokausi
+  (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+
+  
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
