@@ -133,9 +133,7 @@
   (apply s/enum (map :avain +paallystystyon-tyypit+)))
 
 (def +paallystysilmoitus+
-  {:hinta s/Num   ;; toteutunut hinta
-
-   ;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
+  {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet [{:tie s/Int
                 :aosa s/Int
                 :aet s/Int
@@ -149,20 +147,14 @@
                 :raekoko s/Int
                 :massa s/Num ;; kg/m2
                 :rc% s/Int
-                :tyomenetelma +tyomenetelmat+ ;; koodisto "työmenetelmä"
+                :tyomenetelma +tyomenetelma+ ;; koodisto "työmenetelmä"
                 :leveys s/Num  ;; metriä, esim. 4,2
                 :massamaara s/Num ;; tonnia
                 :pinta-ala s/Num ;; m2
                 :edellinen-paallystetyyppi +paallystetyyppi+}]
 
-   ;; Toimenpiteitä on yhtä monta kuin osoitteita ja ne ovat samassa
-   ;; järjestyksessä, eli :toimenpiteet vektorin 1. elementti on 
-   ;; toimenpide 1. osoitteelle 
-   :toimenpiteet [{
-                  }]
-
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
-   :kiviaines [{:esiintyma s/Str
+   (s/optional-key :kiviaines) [{:esiintyma s/Str
                 :km-arvo s/Str
                 :muotoarvo s/Str
                 :sideainetyyppi s/Str
@@ -172,7 +164,7 @@
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet [{:tie s/Int :aosa s/Int :aet s/Int :losa s/Int :let s/Int
+   (s/optional-key :alustatoimet) [{:tie s/Int :aosa s/Int :aet s/Int :losa s/Int :let s/Int
                    :kasittelymenetelma +alustamenetelma+ ;; +alustamenetelma+ skeemasta
                    :paksuus s/Num ;; cm
                    :verkkotyyppi +verkkotyyppi+ ;; +verkkotyyppi+ skeemasta
@@ -181,7 +173,7 @@
 
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on 
    ;; toimenpidekoodistosta 4. tason tehtäviä (ylläpito, tie / päällyste / ...) 
-   :tyot [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
+   (s/optional-key :tyot) [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
            :toimenpidekoodi s/Int ;; 4. tason toimenpidekoodi
            :tilattu-maara s/Num
            :toteutunut-maara s/Num

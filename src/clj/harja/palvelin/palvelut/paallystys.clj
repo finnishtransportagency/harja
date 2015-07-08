@@ -67,7 +67,6 @@
       (log/debug "Haetaan kommentit...")
       (let [kommentit (into []
                             (comp (map konv/alaviiva->rakenne)
-                                  ;(map #(assoc % :tekija (name (:tekija %)))) FIXME Puuttuu, tarvitaanko?
                                   (map (fn [{:keys [liite] :as kommentti}]
                                          (if (:id
                                                liite)
@@ -129,7 +128,7 @@
              ", sopimus-id: " sopimus-id
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
-  ;(skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus)) FIXME Validoi kantaan menevä JSON
+  (skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
     (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
@@ -155,7 +154,6 @@
         (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
           (log/info "Uusi kommentti: " uusi-kommentti)
           (let [kommentti (kommentit/luo-kommentti<! c
-                                                     ;(name (:tekija paallystysilmoitus)) ; FIXME Puuttuu, tarvitaanko?
                                                      nil
                                                      (:kommentti uusi-kommentti)
                                                      nil

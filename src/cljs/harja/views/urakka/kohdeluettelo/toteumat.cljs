@@ -146,7 +146,10 @@
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
-      #(let [lahetettava-data @lomakedata]
+      #(let [lahetettava-data (-> (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] ; FIXME Dissoccaa myös muista id:t
+                                                     (mapv
+                                                       (fn [rivi] (dissoc rivi :id))
+                                                           (get-in [:ilmoitustiedot :osoitteet] @lomakedata))))]
         (log "PÄÄ Lähetetään lomake: " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
@@ -235,7 +238,8 @@
            {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
            {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
-           (when (not (= :aloitettu (:tila @lomakedata)))
+           (when (or (= :valmis (:tila @lomakedata))
+                     (= :lukittu (:tila @lomakedata)))
              {:otsikko     "Kommentit" :nimi :kommentit
               :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                  :voi-liittaa      false
