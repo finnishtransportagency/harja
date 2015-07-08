@@ -16,6 +16,7 @@
   (log/debug "Luodaan uusi urakka.")
   (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi))]
     (log/debug "Uusi urakka id on:" uusi-id)
+    (urakat/paivita-urakka-alaueiden-nakyma! db)
     uusi-id))
 
 (defn tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi]
@@ -53,7 +54,6 @@
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
       (paivita-sopimukset db sampo-id)
       (paivita-toimenpiteet db sampo-id)
-      ;; todo: päivitä urakan geometrioiden materialisoitu view
 
       (log/debug "Urakka käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))

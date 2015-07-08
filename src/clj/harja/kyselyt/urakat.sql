@@ -250,3 +250,7 @@ FROM urakka u
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
 WHERE u.id = :urakka_id;
+
+-- name: paivita-urakka-alaueiden-nakyma!
+-- Päivittää urakka-alueiden materialisoidun näkymän
+REFRESH MATERIALIZED VIEW urakoiden_alueet;
