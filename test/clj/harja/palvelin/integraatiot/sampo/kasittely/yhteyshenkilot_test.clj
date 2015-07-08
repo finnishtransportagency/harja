@@ -24,6 +24,6 @@
 (deftest tarkista-yhteyshenkilon-sitominen-urakkaan-urakka-ensin
   (tuo-urakka)
   (tuo-yhteyshenkilo)
-  (is (onko-yhteyshenkilo-asetettu-urakalle?) "Yhteyshenkilö on asetettu urakalle, kun yhteyshenkilö on tuotu ensin.")
+  (is (onko-yhteyshenkilo-asetettu-urakalle?) "Yhteyshenkilö on asetettu urakalle, kun urakka on tuotu ensin.")
   (poista-yhteyshenkilo)
   (poista-urakka))

@@ -1,14 +1,16 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.hankkeet
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.hankkeet :as hankkeet]
-            [harja.kyselyt.urakat :as urakat]))
+            [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]))
 
 (defn kasittele-hanke [db {:keys [nimi alkupvm loppupvm alueurakkanro sampo-id]}]
   (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (if (hankkeet/onko-tuotu-samposta? db sampo-id)
     (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro sampo-id)
     (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro sampo-id))
-  (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id))
+  (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
+  (urakat/paivita-tyyppi-hankkeen-urakoille! db (urakkatyyppi/paattele-urakkatyyppi alueurakkanro) sampo-id))
 
 (defn kasittele-hankkeet [db hankkeet]
   (doseq [hanke hankkeet]

@@ -18,3 +18,20 @@
   (tuo-urakka)
   (is (onko-yhteyshenkilo-sidottu-urakkaan?) "Urakalle löytyy luonnin jälkeen sampoid:llä sidottu yhteyshenkilö.")
   (poista-urakka))
+
+(deftest tarkista-urakkatyypin-asettaminen
+  (tuo-urakka)
+  (is (= "hoito" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein ennen kuin hanke on tuotu.")
+  (poista-urakka)
+
+  (tuo-urakka)
+  (tuo-hanke)
+  (is (= "paallystys" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun urakka on tuotu ensin.")
+  (poista-urakka)
+  (poista-hanke)
+
+  (tuo-hanke)
+  (tuo-urakka)
+  (is (= "paallystys" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun hanke on tuotu ensin.")
+  (poista-urakka)
+  (poista-hanke))

@@ -15,3 +15,9 @@ SELECT exists(
     SELECT hanke.id
     FROM hanke
     WHERE sampoid = :sampoid);
+
+-- name:hae-alueurakkanumero-sampoidlla
+-- Hakee alueurakan numeron Sampo id:llä
+SELECT alueurakkanro
+FROM hanke
+WHERE sampoid = :sampoid;
