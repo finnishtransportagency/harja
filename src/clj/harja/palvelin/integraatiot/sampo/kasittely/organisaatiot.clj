@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.organisaatiot
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.organisaatiot :as organisaatiot]
-            [harja.kyselyt.urakat :as urakat]))
+            [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
 
 
 (defn paivita-organisaatio [db organisaatio-id nimi y-tunnus katuosoite postinumero]
@@ -25,10 +26,18 @@
 
 (defn kasittele-organisaatio [db {:keys [viesti-id sampo-id nimi y-tunnus katuosoite postinumero]}]
   (log/debug "Käsitellään organisaatio Sampo id:llä: " sampo-id)
-  (let [organisaatio-id (tallenna-organisaatio db sampo-id nimi y-tunnus katuosoite postinumero)]
-    (log/debug "Käsiteltävän organisaation id on:" organisaatio-id)
-    (urakat/aseta-urakoitsija-urakoille-yhteyshenkilon-kautta! db sampo-id)))
+
+  (try
+    (let [organisaatio-id (tallenna-organisaatio db sampo-id nimi y-tunnus katuosoite postinumero)]
+      (log/debug "Käsiteltävän organisaation id on:" organisaatio-id)
+      (urakat/aseta-urakoitsija-urakoille-yhteyshenkilon-kautta! db sampo-id)
+
+      (log/debug "Organisaatio käsitelty onnistuneesti")
+      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Company"))
+
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus tuotaessa organisaatiota Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
+      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Company" "Internal Error"))))
 
 (defn kasittele-organisaatiot [db organisaatiot]
-  (doseq [organisaatio organisaatiot]
-    (kasittele-organisaatio db organisaatio)))
+  (mapv #(kasittele-organisaatio db %) organisaatiot))

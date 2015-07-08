@@ -1,36 +1,44 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma
-  (:require [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [clojure.data.zip.xml :as z]
+  (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml])
+  (:import (java.text SimpleDateFormat)
+           (java.util Date)))
 
-(defn onnistunut? [xml]
-  (= "SUCCESS" (z/xml1-> xml :Status (z/attr :state))))
+(def +xsd-polku+ "resources/xsd/sampo/inbound/")
 
-(defn hae-viesti-id [xml]
-  (z/xml1-> xml :Object (z/attr :messageId)))
+(defn formatoi-paivamaara [paivamaara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") paivamaara))
 
-(defn hae-viesti-tyyppi [xml]
-  (if (= (z/xml1-> xml :Object (z/attr :type)) "costPlan")
-    :kustannussuunnitelma
-    :maksuera))
+(defn tee-xml-sanoma [sisalto]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
-(defn hae-virheet [xml]
-  (z/xml-> xml :Records :Record :ErrorInformation
-           (fn [error-information]
-             {:vakavuus (z/xml1-> error-information :Severity z/text)
-              :kuvaus   (z/xml1-> error-information :Description z/text)})))
+(defn muodosta-viesti [viesti-id viestityyppi virhekoodi virheviesti]
+  [:aura2sampoack
+   [:ack
+    {:errorcode    virhekoodi,
+     :errormessage virheviesti,
+     :messageid    viesti-id,
+     :objecttype   viestityyppi,
+     :date         (formatoi-paivamaara (new Date))}]])
 
-(defn lue-kuittaus [kuittaus-xml]
-  (if-let [xml (xml/lue kuittaus-xml)]
-    ;; Huom. root-elementti voi vaihtua!
-    (let [xml (or (z/xml1-> xml :XOGOutput) xml)]
-      (if (onnistunut? xml)
-        {:viesti-id     (hae-viesti-id xml)
-         :viesti-tyyppi (hae-viesti-tyyppi xml)}
-        {:viesti-id     (hae-viesti-id xml)
-         :viesti-tyyppi (hae-viesti-tyyppi xml)
-         :virhe         :sampo-raportoi-virheita
-         :virheet       (hae-virheet xml)}))
-    {:virhe :kuittaus-xml-ei-validi}))
+(defn muodosta [viesti-id viestityyppi virhekoodi virheviesti]
+  (let [sisalto (muodosta-viesti viesti-id viestityyppi virhekoodi virheviesti)
+        xml (tee-xml-sanoma sisalto)]
+    (if (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml)
+      xml
+      (do
+        (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")
+        nil))))
+
+(defn muodosta-onnistunut-kuittaus [viesti-id viestityyppi]
+  muodosta viesti-id viestityyppi "NA" "")
+
+(defn muodosta-muu-virhekuittaus [viesti-id viestityyppi virheviesti]
+  muodosta viesti-id viestityyppi "CUSTOM" virheviesti)
+
+(defn muodosta-invalidi-xml-virhekuittaus [viesti-id viestityyppi virheviesti]
+  muodosta viesti-id viestityyppi "INVALID_XML" virheviesti)
+
+(defn muodosta-puuttuva-suhde-virhekuittaus [viesti-id viestityyppi virheviesti]
+  muodosta viesti-id viestityyppi "MISSING_RELATION" virheviesti)

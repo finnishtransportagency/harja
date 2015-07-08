@@ -1,10 +1,11 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.sopimukset
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.sopimukset :as sopimukset]
-            [harja.kyselyt.urakat :as urakat]))
+            [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
 
 (defn hae-paasopimuksen-id [db urakka-sampo-id]
-  (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id ))))
+  (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id))))
 
 (defn paivita-sopimus [db sopimus-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]
   (log/debug "Päivitetään sopimus, jonka id on: " sopimus-id ".")
@@ -27,12 +28,22 @@
 
 (defn kasittele-sopimus [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]}]
   (log/debug "Tallennetaan uusi sopimus sampo id:llä: " sampo-id)
-  (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)
-        sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)]
-    (log/debug "Käsiteltävän sopimukset id on:" sopimus-id)
-    (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)
-    (urakat/aseta-urakoitsija-sopimuksen-kautta! db sampo-id)))
+
+  (try
+    (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)
+          sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)]
+
+      (log/debug "Käsiteltävän sopimukset id on:" sopimus-id)
+      (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)
+      (urakat/aseta-urakoitsija-sopimuksen-kautta! db sampo-id)
+
+      (log/debug "Organisaatio käsitelty onnistuneesti")
+      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Order"))
+
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus tuotaessa sopimusta Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
+      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Order" "Internal Error"))))
+
 
 (defn kasittele-sopimukset [db sopimukset]
-  (doseq [sopimus sopimukset]
-    (kasittele-sopimus db sopimus)))
+  (mapv #(kasittele-sopimus db %) sopimukset))

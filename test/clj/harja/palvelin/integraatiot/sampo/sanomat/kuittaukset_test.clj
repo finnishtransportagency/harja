@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.kuittaukset_test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sisaan-sanoma]))
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sisaan-sanoma]))
 
 (deftest lue-onnistunut-kuittaus
   (let [xml (slurp "test/resurssit/sampo/maksuera_ack.xml")]

@@ -4,8 +4,14 @@
             [clojure.zip :refer [xml-zip]]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
+            [harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma :as sampo-sanoma]
+            [harja.palvelin.integraatiot.sampo.kasittely.hankkeet :as hankkeet]
+            [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.kasittely.sopimukset :as sopimukset]
+            [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
+            [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
+            [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
             [harja.testi :as testi])
   (:import (javax.jms TextMessage)))
 
@@ -68,12 +74,9 @@
   (reify TextMessage
     (getText [this] sisalto)))
 
-(defn laheta-viesti-kasiteltavaksi [sisalto]
-  (let [viesti (tee-viesti sisalto)]
-    (tuonti/kasittele-viesti testi/ds +kuittausjono-sisaan+ viesti)))
-
 (defn tuo-hanke []
-  (laheta-viesti-kasiteltavaksi +testihanke-sanoma+))
+  (let [hankkeet (:hankkeet (sampo-sanoma/lue-viesti +testihanke-sanoma+))]
+    (hankkeet/kasittele-hankkeet testi/ds hankkeet)))
 
 (defn poista-hanke []
   (u "update urakka set hanke = null where hanke_sampoid = 'TESTIHANKE'")
@@ -83,7 +86,8 @@
   (q "select id from hanke where sampoid = 'TESTIHANKE';"))
 
 (defn tuo-urakka []
-  (laheta-viesti-kasiteltavaksi +testiurakka-sanoma+))
+  (let [urakat (:urakat (sampo-sanoma/lue-viesti +testiurakka-sanoma+))]
+    (urakat/kasittele-urakat testi/ds urakat)))
 
 (defn poista-urakka []
   (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
@@ -106,13 +110,15 @@
                     WHERE sampoid = 'TESTIURAKKA'));"))))
 
 (defn tuo-sopimus []
-  (laheta-viesti-kasiteltavaksi +testisopimus-sanoma+))
+  (let [sopimukset (:sopimukset (sampo-sanoma/lue-viesti +testisopimus-sanoma+))]
+    (sopimukset/kasittele-sopimukset testi/ds sopimukset)))
 
 (defn poista-sopimus []
   (u "delete from sopimus where sampoid = 'TESTISOPIMUS'"))
 
 (defn tuo-alisopimus []
-  (laheta-viesti-kasiteltavaksi (clojure.string/replace +testisopimus-sanoma+ "TESTISOPIMUS" "TESTIALISOPIMUS")))
+  (let [sopimukset (:sopimukset (sampo-sanoma/lue-viesti (clojure.string/replace +testisopimus-sanoma+ "TESTISOPIMUS" "TESTIALISOPIMUS")))]
+    (sopimukset/kasittele-sopimukset testi/ds sopimukset)))
 
 (defn onko-alisopimus-liitetty-paasopimukseen? []
   (first (first (q "SELECT exists(SELECT id
@@ -142,7 +148,8 @@
                               WHERE sampoid = 'TESTIORGANISAATI'));"))))
 
 (defn tuo-toimenpide []
-  (laheta-viesti-kasiteltavaksi +testitoimenpide-sanoma+))
+  (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testitoimenpide-sanoma+))]
+    (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
 
 (defn poista-toimenpide []
   (u "DELETE FROM kustannussuunnitelma
@@ -189,7 +196,8 @@
 
 
 (defn tuo-organisaatio []
-  (laheta-viesti-kasiteltavaksi +testiorganisaatio-sanoma+))
+  (let [organisaatiot (:organisaatiot (sampo-sanoma/lue-viesti +testiorganisaatio-sanoma+))]
+    (organisaatiot/kasittele-organisaatiot testi/ds organisaatiot)))
 
 (defn poista-organisaatio []
   (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
@@ -199,7 +207,8 @@
   (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
 
 (defn tuo-yhteyshenkilo []
-  (laheta-viesti-kasiteltavaksi +testiyhteyshenkilo-sanoma+))
+  (let [yhteyshenkilot (:yhteyshenkilot (sampo-sanoma/lue-viesti +testiyhteyshenkilo-sanoma+))]
+    (yhteyshenkilot/kasittele-yhteyshenkilot testi/ds yhteyshenkilot)))
 
 (defn poista-yhteyshenkilo []
   (u "delete from yhteyshenkilo_urakka where yhteyshenkilo = (select id from yhteyshenkilo where sampoid = 'TESTIHENKILO');")

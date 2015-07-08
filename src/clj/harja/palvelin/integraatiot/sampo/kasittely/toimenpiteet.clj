@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.maksuerat :as maksuerat]
-            [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
 
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
@@ -34,10 +35,18 @@
         (luo-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)))))
 
 (defn kasittele-toimenpide [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi]}]
-  (log/debug "Tallennetaan uusi toimenpide sampo id:llä: " sampo-id)
-  (let [toimenpide-id (tallenna-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)]
-    (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)))
+  (log/debug "Käsitellään toimenpide Sampo id:llä: " sampo-id)
+
+  (try
+    (let [toimenpide-id (tallenna-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)]
+      (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
+
+      (log/debug "Toimenpide käsitelty onnistuneesti")
+      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
+
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus tuotaessa toimenpidettä Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
+      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error"))))
 
 (defn kasittele-toimenpiteet [db toimenpiteet]
-  (doseq [toimenpide toimenpiteet]
-    (kasittele-toimenpide db toimenpide)))
+  (mapv #(kasittele-toimenpide db %) toimenpiteet))

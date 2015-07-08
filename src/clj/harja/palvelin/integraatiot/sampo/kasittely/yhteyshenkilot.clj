@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]))
+            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
 
 (defn paivita-yhteyshenkilo [db yhteyshenkilo-id etunimi sukunimi kayttajatunnus sahkoposti]
   (log/debug "Päivitetään yhteyshenkilo, jonka id on: " yhteyshenkilo-id ".")
@@ -23,10 +24,18 @@
 
 (defn kasittele-yhteyshenkilo [db {:keys [viesti-id sampo-id etunimi sukunimi kayttajatunnus sahkoposti]}]
   (log/debug "Käsitellään yhteyshenkilo Sampo id:llä: " sampo-id)
-  (let [yhteyshenkilo-id (tallenna-yhteyshenkilo db sampo-id etunimi sukunimi kayttajatunnus sahkoposti)]
-    (log/debug "Käsiteltävän yhteyshenkilon id on:" yhteyshenkilo-id)
-    (yhteyshenkilot/paivita-yhteyshenkilot-urakalle-sampoidlla! db sampo-id)))
+
+  (try
+    (let [yhteyshenkilo-id (tallenna-yhteyshenkilo db sampo-id etunimi sukunimi kayttajatunnus sahkoposti)]
+      (log/debug "Käsiteltävän yhteyshenkilon id on:" yhteyshenkilo-id)
+      (yhteyshenkilot/paivita-yhteyshenkilot-urakalle-sampoidlla! db sampo-id)
+
+      (log/debug "Yhteyshenkilo käsitelty onnistuneesti")
+      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Resource"))
+
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus tuotaessa yhteyshenkilo Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
+      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Resource" "Internal Error"))))
 
 (defn kasittele-yhteyshenkilot [db yhteyshenkilot]
-  (doseq [yhteyshenkilo yhteyshenkilot]
-    (kasittele-yhteyshenkilo db yhteyshenkilo)))
+  (mapv #(kasittele-yhteyshenkilo db %) yhteyshenkilot))

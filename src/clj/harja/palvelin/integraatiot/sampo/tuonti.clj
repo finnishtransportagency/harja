@@ -11,7 +11,10 @@
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn kasittele-viesti [db kuittausjono-sisaan viesti]
+(defn laheta-kuittaus [sonja kuittausjono kuittaus]
+  (sonja/laheta sonja kuittausjono kuittaus))
+
+(defn kasittele-viesti [sonja db kuittausjono viesti]
   (log/debug "Vastaanotettiin Sonjan viestijonosta viesti: " viesti)
   (try+
     (jdbc/with-db-transaction [transaktio db]
@@ -21,16 +24,17 @@
             sopimukset (:sopimukset data)
             toimenpiteet (:toimenpideinstanssit data)
             organisaatiot (:organisaatiot data)
-            yhteyshenkilot (:yhteyshenkilot data)]
-        ;; todo: laita komponentit palauttauttamaan suoraan ack/nack ja nakkaa ne yksi kerrallaan kuittausjonoon
-        (hankkeet/kasittele-hankkeet transaktio hankkeet)
-        (urakat/kasittele-urakat transaktio urakat)
-        (sopimukset/kasittele-sopimukset transaktio sopimukset)
-        (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
-        (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
-        (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot)))
+            yhteyshenkilot (:yhteyshenkilot data)
+            kuittaukset (concat (hankkeet/kasittele-hankkeet transaktio hankkeet)
+                                (urakat/kasittele-urakat transaktio urakat)
+                                (sopimukset/kasittele-sopimukset transaktio sopimukset)
+                                (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
+                                (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
+                                (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot))]
+        (doseq [kuittaus kuittaukset]
+          (laheta-kuittaus sonja kuittausjono kuittaus))))
 
     ;; todo: laita päälle
     #_(catch Exception e)
-
+    ;; todo: mitä tehdään, jos aiheutuu virhe?
     ))

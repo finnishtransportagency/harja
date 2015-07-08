@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo.sampo-test
+(ns harja.palvelin.integraatiot.sampo.vienti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.palvelin.integraatiot.sampo :refer [->Sampo] :as sampo]
             [hiccup.core :refer [html]]
@@ -17,6 +17,8 @@
 (def +lahetysjono-ulos+ "lahetysjono-ulos")
 (def +kuittausjono-ulos+ "kuittausjono-ulos")
 
+(def +xsd-polku+ "resources/xsd/sampo/outbound/")
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -29,8 +31,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
-
-(def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
 (deftest yrita-laheta-maksuera-jota-ei-ole-olemassa
   (is (= {:virhe :maksueran-lukitseminen-epaonnistui} (:maksuera (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 666)))))

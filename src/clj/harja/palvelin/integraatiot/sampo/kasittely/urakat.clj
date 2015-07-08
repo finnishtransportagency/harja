@@ -5,7 +5,8 @@
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.hankkeet :as hankkeet]
-            [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]))
+            [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
@@ -42,18 +43,25 @@
     (log/debug "Urakan tyyppi on:" urakkatyyppi)
     urakkatyyppi))
 
-(defn kasittele-urakka [db {:keys [sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id]}]
+(defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
-  (let [urakkatyyppi (paattele-urakkatyyppi db hanke-sampo-id)
-        urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi)]
-    (log/debug "Käsiteltävän urakan id on:" urakka-id)
-    (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
-    (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
-    (paivita-sopimukset db sampo-id)
-    (paivita-toimenpiteet db sampo-id))
-  ;; todo: päivitä urakan geometrioiden materialisoitu view
-  )
+
+  (try
+    (let [urakkatyyppi (paattele-urakkatyyppi db hanke-sampo-id)
+          urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi)]
+      (log/debug "Käsiteltävän urakan id on:" urakka-id)
+      (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
+      (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
+      (paivita-sopimukset db sampo-id)
+      (paivita-toimenpiteet db sampo-id)
+      ;; todo: päivitä urakan geometrioiden materialisoitu view
+
+      (log/debug "Urakka käsitelty onnistuneesti")
+      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))
+
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus tuotaessa urakkaa Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
+      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error"))))
 
 (defn kasittele-urakat [db urakat]
-  (doseq [urakka urakat]
-    (kasittele-urakka db urakka)))
+  (mapv #(kasittele-urakka db %) urakat))
