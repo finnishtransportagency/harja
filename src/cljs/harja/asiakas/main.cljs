@@ -5,17 +5,16 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
 
-            
-    ;; Tässä voidaan vaatia tiedonhallinnan juttuja, jotka kytkeytyvät app eventeihin
-    ;; ja hakevat tietoa tarpeen mukaan
             [harja.tiedot.hallintayksikot :as hal]
-
+            [harja.tiedot.istunto :as istunto]
+            
             [reagent.core :as reagent]
             [harja.loki :refer [log]]
 
             [cljsjs.react]
             
-            [harja.pvm]))
+            [harja.pvm])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn render []
   (reagent/render [#'main-view/main] (.getElementById js/document "app")))
@@ -46,6 +45,8 @@
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
-  )
+  (go
+    (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
+                                         (reset! istunto/istunto-alkoi (js/Date.)))))))
 
 

@@ -12,7 +12,9 @@
             [harja.palvelin.komponentit.todennus :as todennus]
 
             [harja.geo :as geo]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.domain.roolit]
+            [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
 
@@ -56,15 +58,21 @@
               kysely (if-not skeema
                        kysely
                        (try
-                         (s/validate skeema kysely)
-                         (catch Exception e
-                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
-                           ::ei-validi-kysely)))]
+                        (s/validate skeema kysely)
+                        (catch Exception e
+                          (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
+                          ::ei-validi-kysely)))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
              :body "Ei validi kysely"}
-
-            (let [vastaus (palvelu-fn (:kayttaja req) kysely)]
+            (let [vastaus (try+
+                           (palvelu-fn (:kayttaja req) kysely)
+                           (catch harja.domain.roolit.EiOikeutta eo
+                             ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
+                             eo)
+                           (catch Exception e
+                             (log/warn e "Virhe POST palvelussa " nimi)
+                             {:virhe (.getMessage e)}))]
               (transit-vastaus vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")

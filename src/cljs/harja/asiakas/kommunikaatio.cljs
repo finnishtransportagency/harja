@@ -6,7 +6,8 @@
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
             [harja.loki :refer [log]]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.domain.roolit :as roolit])
   (:require-macros [cljs.core.async.macros :refer [go]])
   )
 
@@ -29,7 +30,8 @@
                    :method          metodi
                    :params          parametrit
                    :format          (transit-request-format transit/write-optiot)
-                   :response-format (transit-response-format transit/read-optiot)
+                   :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                              :raw true})
                    :handler         cb
                    :error-handler   (fn [[_ error]]
                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
@@ -53,9 +55,11 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
    (kysely service :get nil transducer)))
 
 (defn virhe?
-  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, ja tai statuksen 500"
+  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
   [vastaus]
-  (and (map? vastaus) (not (nil? (get vastaus :failure)))))
+  (or (roolit/ei-oikeutta? vastaus)
+      (and (map? vastaus)
+           (not (nil? (get vastaus :failure))))))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.

@@ -2,11 +2,18 @@
   "Harjan käyttäjäroolit"
 
   (:require
-    [clojure.set :refer [intersection]]
+   [clojure.set :refer [intersection]]
     #?(:cljs [harja.tiedot.istunto :as istunto])
     #?(:cljs [harja.loki :as frontlog])
-    #?(:clj [taoensso.timbre :as backlog])))
+    #?(:clj [taoensso.timbre :as backlog])
+    #?(:clj [slingshot.slingshot :refer [throw+]])))
 
+(defrecord EiOikeutta [syy])
+
+(defn ei-oikeutta? [arvo]
+  (instance? EiOikeutta arvo))
+
+;; Roolit kätevämpää käyttöä varten
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
 (def urakanvalvoja                     "urakanvalvoja")
@@ -119,7 +126,7 @@ rooleista."
      (when-not (roolissa? kayttaja rooli)
        (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s'", (:kayttajanimi kayttaja) rooli)]
          (backlog/warn viesti)
-         (throw (RuntimeException. viesti))))))
+         (throw+ (->EiOikeutta viesti))))))
 
 #?(:clj
    (defn vaadi-rooli-urakassa
@@ -128,7 +135,7 @@ rooleista."
        (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s' urakassa jonka id on %3$s",
                             (:kayttajanimi kayttaja) rooli urakka-id)]
          (backlog/warn viesti)
-         (throw (RuntimeException. viesti))))))
+         (throw+ (->EiOikeutta viesti))))))
 
 #?(:clj
    (defn tilaajan-kayttaja?
@@ -155,7 +162,7 @@ rooleista."
      (when-not (lukuoikeus-urakassa? kayttaja urakka-id)
        (let [viesti (format "Käyttäjällä '%1$s' ei lukuoikeutta urakassa jonka id on %2$s", (:kayttajanimi kayttaja) urakka-id)]
          (backlog/warn viesti)
-         (throw (RuntimeException. viesti))))))
+         (throw+ (->EiOikeutta viesti))))))
 
 #?(:clj
    (defn osapuoli

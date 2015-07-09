@@ -1,6 +1,7 @@
 (ns harja.transit
   "Harjan transit laajennokset"
   (:require [cognitect.transit :as t]
+            [harja.domain.roolit :as roolit]
             #?(:clj
                [harja.geo :as geo]
 
@@ -13,9 +14,7 @@
               (goog.date DateTime UtcDateTime))))
 
 
-;; backiltä kopsittu
-;; Tehdään write/read handlerit pvm:ien siirtämiseksi "dt" tägillä, jotta fronttipuolella
-;; ne muunnetaan suoraan oikeaan muotoon
+
 #?(:clj (def +fi-date-time-format+ "dd.MM.yyyy HH:mm:ss")
    :cljs (deftype DateTimeHandler []
            Object
@@ -32,8 +31,11 @@
                        (t/write-handler (constantly "bd") double)
                        
                        org.postgresql.geometric.PGpoint
-                       (t/write-handler (constantly "pp") geo/pg->clj)}
+                       (t/write-handler (constantly "pp") geo/pg->clj)
 
+                       harja.domain.roolit.EiOikeutta
+                       (t/write-handler (constantly "eo") #(:syy %))}
+                      
                       :cljs
                       {DateTime (DateTimeHandler.)
                        UtcDateTime (DateTimeHandler.)})})
@@ -51,7 +53,10 @@
 
                       ;; Serveri lähettää PGpoint tyypit muunnettuna [x y] vektoreiksi, jotka
                       ;; kelpaa meille sellaisenaan
-                      "pp" identity})})
+                      "pp" identity
+
+                      ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
+                      "eo" #(roolit/->EiOikeutta %)})})
 
 
 (defn clj->transit
