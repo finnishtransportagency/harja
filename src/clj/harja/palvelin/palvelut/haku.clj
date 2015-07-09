@@ -16,7 +16,9 @@
         loytyneet-urakat (into []
                                (map #(assoc % :tyyppi :urakka
                                               :hakusanat (str (:nimi %) ", " (:sampoid %)))
-                                    (ur-q/hae-urakoiden-tunnistetiedot db termi)))
+                                    (ur-q/hae-urakoiden-tunnistetiedot db termi
+                                                                       (name (get-in user [:organisaatio :tyyppi]))
+                                                                       (get-in user [:organisaatio :id]))))
         loytyneet-kayttajat (into []
                                   (map #(assoc % :tyyppi :kayttaja
                                                  :hakusanat (if (:jarjestelmasta %)
@@ -29,7 +31,7 @@
                                            (org-q/hae-organisaation-tunnistetiedot db termi)))
         tulokset (into []
                        (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
-        _ (log/info "haun tulokset" tulokset)]
+        _ (log/debug "haun tulokset" tulokset)]
     tulokset))
 
 (defrecord Haku []
