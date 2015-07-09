@@ -129,15 +129,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
 (defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
-  [:span
-   [:div.raksiboksi.input-group
-    [:span.input-group-addon
-     [:input {:type "checkbox"
-              :checked (if checked "checked" "")
-              :on-change #(do (.preventDefault %) (toiminto) nil)}]]
-    [:span.raksiboksi-teksti.form-control {:on-click #(toiminto)}  teksti]]
-   (when nayta-infoteksti?
-     info-teksti)])
+  (let [toiminto-fn (fn [e](do (.preventDefault e) (toiminto) nil))]
+    [:span
+     [:div.raksiboksi.input-group
+      [:span.input-group-addon
+       [:input {:type      "checkbox"
+                :checked   (if checked "checked" "")
+                :on-change #(toiminto-fn %)}]]
+      [:span.raksiboksi-teksti.form-control {:on-click #(toiminto-fn %)} teksti]]
+     (when nayta-infoteksti?
+       info-teksti)]))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
