@@ -251,7 +251,8 @@
           [:div.col-md-6
            (kasittely valmis-kasiteltavaksi?)]]
 
-         [:h3 "Tekninen osa"]
+         [:fieldset.lomake-osa
+          [:legend "Tekninen osa"]
 
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
@@ -376,9 +377,10 @@
             :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
             :valinnat      pot/+tekniset-toimenpiteet+
             :leveys        "30%"}]
-          alustalle-tehdyt-toimet]
+          alustalle-tehdyt-toimet]]
 
-         [:h3 "Taloudellinen osa"]
+         [:fieldset.lomake-osa
+          [:legend "Taloudellinen osa"]
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
@@ -397,7 +399,7 @@
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
            {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-          toteutuneet-maarat]
+          toteutuneet-maarat]]
 
          (yhteenveto)
          (tallennus valmis-tallennettavaksi?)]))))
