@@ -38,11 +38,9 @@
       (or viesti
           (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
 
-; FIXME Toimii vain muokkausgridissä, koska vals. Voidaanko yleistää?
-(defmethod validoi-saanto :samat-tienumerot [_ _ data rivi taulukko & [viesti]]
-  (when (not (every?
-               #(= (:tie %) (:tie (first (vals taulukko))))
-               (vals taulukko)))
+(defmethod validoi-saanto :ei-setissa [_ _ data rivi taulukko & [set viesti]]
+  (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str set))
+  (when (contains? set data)
     viesti))
     
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
