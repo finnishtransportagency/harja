@@ -143,7 +143,6 @@
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt  :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                 (:lisatyot rivi)
                                                                                                                  (:muutoshinta rivi)
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)

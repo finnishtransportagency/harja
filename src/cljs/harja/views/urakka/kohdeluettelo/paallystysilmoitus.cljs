@@ -257,7 +257,8 @@
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
-           :voi-muokata? (not= :lukittu (:tila @lomakedata))
+           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :rivinumerot? true
            :muutos       (fn [g]
                            (let [grid-data (vals @toteutuneet-osoitteet)]
@@ -303,7 +304,8 @@
           {:otsikko      "Päällystystoimenpiteen tiedot"
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
-           :voi-muokata? (not= :lukittu (:tila @lomakedata))
+           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :rivinumerot? true
            :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällyste"
@@ -339,7 +341,8 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
-           :voi-muokata? (not= :lukittu (:tila @lomakedata))
+           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -351,7 +354,8 @@
 
          [grid/muokkaus-grid
           {:otsikko "Alustalle tehdyt toimet"
-           :voi-muokata? (not= :lukittu (:tila @lomakedata))
+           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
@@ -387,7 +391,8 @@
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
-           :voi-muokata? (not= :lukittu (:tila @lomakedata))
+           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_taloudellinen_osa @lomakedata))))
            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällystetyön tyyppi"
             :nimi          :tyyppi
