@@ -1,5 +1,7 @@
 -- name: hae-kaikki-havainnot
 -- Hakee listaukseen kaikki urakan havainnot annetulle aikavälille
+-- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -12,11 +14,15 @@ SELECT
   h.kuvaus
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON h.id=s.havainto
 WHERE h.urakka = :urakka
-      AND (aika >= :alku AND aika <= :loppu);
+      AND (aika >= :alku AND aika <= :loppu)
+      AND s.suorasanktio IS NOT TRUE;
 
 -- name: hae-selvitysta-odottavat-havainnot
 -- Hakee listaukseen kaikki urakan havainnot, jotka odottavat urakoitsijalta selvitystä.
+-- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -36,9 +42,11 @@ SELECT
    LIMIT 1)                          AS kuvaus
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON s.havainto = h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
-      AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE;
+      AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE
+      AND s.suorasanktio IS NOT TRUE;
 
 -- name: hae-kasitellyt-havainnot
 -- Hakee listaukseen kaikki urakan havainnot, jotka on käsitelty.
@@ -61,12 +69,16 @@ SELECT
    LIMIT 1)                          AS kuvaus
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON s.havainto=h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
-      AND paatos IS NOT NULL;
+      AND paatos IS NOT NULL
+      AND s.havainto IS NOT TRUE;
 
 -- name: hae-omat-havainnot
 -- Hakee listaukseen kaikki urakan havainnot, joiden luoja tai kommentoija on annettu henkilö.
+-- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -86,12 +98,14 @@ SELECT
    LIMIT 1)                          AS kuvaus
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON s.havainto = h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND (h.luoja = :kayttaja OR
            h.id IN (SELECT hk.havainto
                     FROM havainto_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
-                    WHERE k.luoja = :kayttaja));
+                    WHERE k.luoja = :kayttaja))
+      AND s.suorasanktio IS NOT TRUE;
 
 
 -- name: hae-havainnon-tiedot
