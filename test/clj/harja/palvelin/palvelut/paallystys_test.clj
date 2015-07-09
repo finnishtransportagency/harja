@@ -92,7 +92,7 @@
 (def paallystyskohde-testidata {:kohdenumero              999
                                 :nimi                     "Testiramppi4564ddf"
                                 :sopimuksen_mukaiset_tyot 400
-                                :lisatyot                 100
+                                :lisatyo                  false
                                 :bitumi_indeksi           123
                                 :kaasuindeksi             123})
 

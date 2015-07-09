@@ -6,7 +6,7 @@ SELECT
   kohdenumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,
-  lisatyot,
+  lisatyo,
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
@@ -144,13 +144,13 @@ INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES 
 
 -- name: luo-paallystyskohde<!
 -- Luo uuden päällystykohteen
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, lisatyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, lisatyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
         :nimi,
         :sopimuksen_mukaiset_tyot,
-        :lisatyot,
+        :lisatyo,
         :arvonvahennykset,
         :bitumi_indeksi,
         :kaasuindeksi);
@@ -162,7 +162,7 @@ SET
   kohdenumero                 = :kohdenumero,
   nimi                        = :nimi,
   sopimuksen_mukaiset_tyot    = :sopimuksen_mukaiset_tyot,
-  lisatyot                    = :lisatyot,
+  lisatyo                     = :lisatyo,
   arvonvahennykset            = :arvonvanhennykset,
   bitumi_indeksi              = :bitumi_indeksi,
   kaasuindeksi                = :kaasuindeksi

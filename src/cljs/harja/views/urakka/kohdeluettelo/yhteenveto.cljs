@@ -78,12 +78,10 @@
 
 (defn paallystyskohteet []
   (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystyskohderivit]
-                                            (filter #(or
-                                                      (= (:lisatyot %) 0)
-                                                      (nil? (:lisatyot %)))
+                                            (filter #(false? (:lisatyo %))
                                                     kohteet)))
         lisatyot (reaction (let [kohteet @paallystyskohderivit]
-                             (filter #(> (:lisatyot %) 0) kohteet)))]
+                             (filter #(true? (:lisatyo %)) kohteet)))]
 
     (komp/luo
       (komp/lippu paallystys/yhteenvetonakymassa?)
@@ -97,7 +95,9 @@
            :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
-                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
+                                    payload (mapv (fn [rivi] (assoc rivi :lisatyo false)) %)
+                                    _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
+                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                 (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
@@ -124,13 +124,14 @@
            :tunniste :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
-                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id %))]
+                                    payload (mapv (fn [rivi] (assoc rivi :lisatyo true)) %)
+                                    _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
+                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                 (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "40%" :validoi [[:ei-tyhja "Anna arvo"]]}
-           {:otsikko "Hinta" :nimi :lisatyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "35%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
