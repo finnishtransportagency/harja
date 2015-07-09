@@ -109,8 +109,12 @@
 (def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"})
 
 ;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:id           2 :etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö"
-                     :kayttajanimi "jvh" :roolit #{"jarjestelmavastuuhenkilo"}})
+(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
+                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
+                     :etunimi "Jalmari" :urakka-roolit []
+                     :organisaatio {:id 1 :nimi "Liikennevirasto",
+                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                     :urakkaroolit ()})
 
 ;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
 (def +testikayttajia+ 8)
