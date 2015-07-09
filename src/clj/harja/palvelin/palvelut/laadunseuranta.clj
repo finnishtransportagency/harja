@@ -156,13 +156,13 @@
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu]}]
+  [db user {:keys [urakka-id alku loppu tpi]}]
 
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa)))
-        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu) tpi)))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."

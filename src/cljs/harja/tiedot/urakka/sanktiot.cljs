@@ -17,10 +17,11 @@
 
 (defonce nakymassa? (atom false))
 (defonce valittu-sanktio (atom nil))
-(defonce haetut-sanktiot (atom +testidata+) #_(reaction<! [urakka (:id @nav/valittu-urakka)
+(defonce haetut-sanktiot (reaction<! [urakka (:id @nav/valittu-urakka)
                                       hoitokausi @urakka/valittu-hoitokausi
+                                      tpi (get-in @urakka/valittu-toimenpideinstanssi [:tpi :id])
                                       nakymassa?]
                                       ;; Jos urakka ja hoitokausi on valittu ja käyttäjä on laadunseurannassa tällä välilehdellä,
                                       ;; haetaan urakalle sanktiot
                                       (when nakymassa?
-                                        (laadunseuranta/hae-urakan-sanktiot urakka hoitokausi))))
+                                        (laadunseuranta/hae-urakan-sanktiot urakka hoitokausi tpi))))
