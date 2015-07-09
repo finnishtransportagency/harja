@@ -10,6 +10,7 @@
     [harja.palvelin.komponentit.sonja :as sonja]
 
     ;; Integraatiokomponentit
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
 
     ;; Harjan bisneslogiikkapalvelut
@@ -171,12 +172,17 @@
                        (api-havainnot/->Havainnot)
                        [:http-palvelin :db :liitteiden-hallinta])
       :api-tarkastukset (component/using
-                         (api-tarkastukset/->Tarkastukset)
-                         [:http-palvelin :db])
-      
+                          (api-tarkastukset/->Tarkastukset)
+                          [:http-palvelin :db])
+
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db])
+
+      ;; Integraatioloki
+      :integraatioloki (component/using (integraatioloki/->Integraatioloki
+                                          (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
+                                        [:db])
 
       )))
 

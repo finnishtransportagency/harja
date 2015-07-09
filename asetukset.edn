@@ -16,7 +16,7 @@
                           :palvelin      "solita-service-1.solita.fi"
 
                           ;; Lisää nimesi vektoriin, jos haluat spämmiä
-                          :vastaanottaja ["tatu.tarvainen@solita.fi"
+                          :vastaanottaja [;;"tatu.tarvainen@solita.fi"
                                           ;;"jarno.vayrynen@solita.fi"
                                           ;;"mikko.ronkkomaki@solita.fi"
                                           ]}
@@ -25,16 +25,15 @@
  ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
  ;; tarvii SSH-tunnelin testi-Sonjaan
  :sonja
-               {:url      ""                                ;"tcp://axiom:8094"
+               {:url      "tcp://localhost:8094"
                 :kayttaja "harja"
                 :salasana "harjaxx"
-                :tyyppi   :activemq}
+                :tyyppi   :activemq
+                }
 
- :sampo        {
-                :lahetysjono-sisaan       "Harja13-16.SampoToHarja.Msg"
+ :sampo        {:lahetysjono-sisaan       "Harja13-16.SampoToHarja.Msg"
                 :kuittausjono-sisaan      "Harja13-16.HarjaToSampo.Ack"
                 :lahetysjono-ulos         "Harja17.HarjaToSampo.Msg"
                 :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
-                :paivittainen-lahetysaika nil
-                }
+                :paivittainen-lahetysaika [12 21 0]}
  }
