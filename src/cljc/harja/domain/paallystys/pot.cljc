@@ -136,13 +136,13 @@
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet
    [{:tie                        s/Int
+     :ajorata                    +ajorata+
+     :suunta                     +suunta+
+     :kaista                     +kaista+
      :aosa                       s/Int
      :aet                        s/Int
      :losa                       s/Int
      :let                        s/Int
-     :ajorata                    +ajorata+
-     :suunta                     +suunta+
-     :kaista                     +kaista+
      ; Osoitteelle tehdyt toimenpiteet
      :paallystetyyppi            +paallystetyyppi+
      :raekoko                    s/Int
@@ -169,7 +169,10 @@
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
    (s/optional-key :alustatoimet)
-   [{:tie                        s/Int :aosa s/Int :aet s/Int :losa s/Int :let s/Int
+   [{:aosa s/Int
+     :aet s/Int
+     :losa s/Int
+     :let s/Int
      :kasittelymenetelma         +alustamenetelma+          ;; +alustamenetelma+ skeemasta
      :paksuus                    s/Num                      ;; cm
      :verkkotyyppi               +verkkotyyppi+             ;; +verkkotyyppi+ skeemasta

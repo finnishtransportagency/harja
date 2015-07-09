@@ -61,7 +61,25 @@
                                     :leveys                    5
                                     :massamaara                7
                                     :pinta-ala                 8
-                                    :edellinen-paallystetyyppi 1}]
+                                    :edellinen-paallystetyyppi 1}
+                                   {:tie                       1
+                                    :aosa                      2
+                                    :aet                       3
+                                    :losa                      4
+                                    :let                       5
+                                    :ajorata                   1
+                                    :suunta                    0
+                                    :kaista                    1
+                                    :paallystetyyppi           1
+                                    :raekoko                   1
+                                    :massa                     2
+                                    :rc%                       3
+                                    :tyomenetelma              12
+                                    :leveys                    5
+                                    :massamaara                7
+                                    :pinta-ala                 8
+                                    :edellinen-paallystetyyppi 1
+                                    :poistettu                 true}]
 
                     :kiviaines    [{:esiintyma      "asd"
                                     :km-arvo        "asd"
@@ -70,8 +88,7 @@
                                     :pitoisuus      54
                                     :lisaaineet     "asd"}]
 
-                    :alustatoimet [{:tie                 1
-                                    :aosa                2
+                    :alustatoimet [{:aosa                2
                                     :aet                 3
                                     :losa                4
                                     :let                 5
