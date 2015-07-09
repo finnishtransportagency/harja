@@ -1,4 +1,4 @@
-(ns harja.palvelin.api.tyokalut.liitteet
+(ns harja.palvelin.integraatiot.api.tyokalut.liitteet
   (:require [taoensso.timbre :as log])
   (:import (java.util Base64)))
 

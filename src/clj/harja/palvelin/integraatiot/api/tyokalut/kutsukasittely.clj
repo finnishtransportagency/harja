@@ -1,8 +1,8 @@
-(ns harja.palvelin.api.tyokalut.kutsukasittely
+(ns harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
 
   (:require [harja.tyokalut.json_validointi :as json]
-            [harja.palvelin.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.kayttajat :as q])

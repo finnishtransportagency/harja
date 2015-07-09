@@ -1,13 +1,13 @@
-(ns harja.palvelin.api.tarkastukset
+(ns harja.palvelin.integraatiot.api.tarkastukset
   "Tarkastusten kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.api.tyokalut.json :as json]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.havainnot :as havainnot]

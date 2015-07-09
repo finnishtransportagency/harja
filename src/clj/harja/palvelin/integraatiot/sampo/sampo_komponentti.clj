@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo
+(ns harja.palvelin.integraatiot.sampo.sampo-komponentti
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]

@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.maksuerat :as q]
-            [harja.palvelin.integraatiot.sampo :as sampo]
+            [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]))
 

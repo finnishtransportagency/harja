@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.sampo.vienti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo :refer [->Sampo] :as sampo]
+            [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo] :as sampo]
             [hiccup.core :refer [html]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]

@@ -1,4 +1,4 @@
-(ns harja.palvelin.api.tyokalut.virheet)
+(ns harja.palvelin.integraatiot.api.tyokalut.virheet)
 
 (def +invalidi-json+ ::invalidi-json)
 (def +viallinen-kutsu+ ::viallinen-kutsu)

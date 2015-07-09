@@ -1,5 +1,5 @@
 (ns harja.tyokalut.json_validointi
-  (:require [harja.palvelin.api.tyokalut.virheet :as virheet]
+  (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [clojure.string :as str])

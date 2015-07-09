@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.sampo :refer [->Sampo]]
+            [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
             [harja.jms :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]))
 

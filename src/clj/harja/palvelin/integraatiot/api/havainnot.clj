@@ -1,17 +1,17 @@
-(ns harja.palvelin.api.havainnot
+(ns harja.palvelin.integraatiot.api.havainnot
   "Havaintojen kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
-            [harja.palvelin.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.api.tyokalut.json :refer [parsi-aika]]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [parsi-aika]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 

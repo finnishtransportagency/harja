@@ -10,7 +10,7 @@
     [harja.palvelin.komponentit.sonja :as sonja]
 
     ;; Integraatiokomponentit
-    [harja.palvelin.integraatiot.sampo :as sampo]
+    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
 
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -40,9 +40,9 @@
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
 
     ;; Harja API
-    [harja.palvelin.api.urakat :as api-urakat]
-    [harja.palvelin.api.havainnot :as api-havainnot]
-    [harja.palvelin.api.tarkastukset :as api-tarkastukset]
+    [harja.palvelin.integraatiot.api.urakat :as api-urakat]
+    [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
+    [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])

@@ -1,8 +1,8 @@
 (ns harja.palvelin.integraatiot.api.kutsukasittely-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.api.tyokalut.kutsukasittely :as kutsukasittely]
+            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsukasittely]
             [harja.palvelin.komponentit.tietokanta :as tietokanta])
   (:import (org.apache.commons.io IOUtils)))
 

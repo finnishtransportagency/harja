@@ -1,7 +1,7 @@
-(ns harja.palvelin.api.tarkastukset-test
+(ns harja.palvelin.integraatiot.api.tarkastukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.api.tarkastukset :as api-tarkastukset]
+            [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.komponentit.todennus :as todennus]

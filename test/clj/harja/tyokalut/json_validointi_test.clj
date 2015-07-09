@@ -2,8 +2,8 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.tyokalut.json_validointi :as json]
-            [harja.palvelin.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
             [slingshot.test]))

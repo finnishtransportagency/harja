@@ -1,4 +1,4 @@
-(ns harja.palvelin.api.tyokalut.json
+(ns harja.palvelin.integraatiot.api.tyokalut.json
   "APIn kautta tulevan JSONin käsittelyn apureita."
   (:require [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo])

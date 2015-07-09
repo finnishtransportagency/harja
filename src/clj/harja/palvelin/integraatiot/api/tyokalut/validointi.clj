@@ -1,6 +1,6 @@
-(ns harja.palvelin.api.tyokalut.validointi
+(ns harja.palvelin.integraatiot.api.tyokalut.validointi
   "Yleisiä API-kutsuihin liittyviä apufunktioita"
-  (:require [harja.palvelin.api.tyokalut.virheet :as virheet]
+  (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.urakat :as q]
             [taoensso.timbre :as log]
             [harja.kyselyt.kayttajat :as kayttajat])
