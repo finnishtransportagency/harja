@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kohdeluettelo.toteumat
+(ns harja.views.urakka.kohdeluettelo.paallystysilmoitus
   "Urakan kohdeluettelon toteumat"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
@@ -104,7 +104,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
-          :leveys-col    4}
+          :leveys-col    3}
 
          {:otsikko       "Päätös taloudellisesta osasta"
           :nimi          :paatos-taloudellinen
@@ -112,7 +112,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
-          :leveys-col    4}
+          :leveys-col    3}
 
          (when (or (:paatos-tekninen @paatostiedot)
                    (:paatos-taloudellinen @paatostiedot))
@@ -221,29 +221,35 @@
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
 
-         [:h3 "Kohteen tiedot"]
+         [:h2 "Päällystysilmoitus"]
 
-         [lomake {:luokka   :horizontal
-                  :voi-muokata? (not= :lukittu (:tila @lomakedata))
-                  :muokkaa! (fn [uusi]
-                              (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
-                              (reset! kohteen-tiedot uusi))}
-          [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
-           {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-           {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
-           {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-           {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
-           (when (or (= :valmis (:tila @lomakedata))
-                     (= :lukittu (:tila @lomakedata)))
-             {:otsikko     "Kommentit" :nimi :kommentit
-              :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                                 :voi-liittaa      false
-                                                 :placeholder      "Kirjoita kommentti..."
-                                                 :uusi-kommentti   (r/wrap (:uusi-kommentti @lomakedata)
-                                                                           #(swap! lomakedata assoc :uusi-kommentti %))}
-                            (:kommentit @lomakedata)]})
-           ]
-          @kohteen-tiedot]
+         [:div.row
+          [:div.col-md-6
+           [lomake {:luokka   :horizontal
+                    :voi-muokata? (not= :lukittu (:tila @lomakedata))
+                    :muokkaa! (fn [uusi]
+                                (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
+                                (reset! kohteen-tiedot uusi))}
+            [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
+             {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
+             {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
+             {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
+             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
+             (when (or (= :valmis (:tila @lomakedata))
+                       (= :lukittu (:tila @lomakedata)))
+               {:otsikko     "Kommentit" :nimi :kommentit
+                :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                   :voi-liittaa      false
+                                                   :leveys-col       40
+                                                   :placeholder      "Kirjoita kommentti..."
+                                                   :uusi-kommentti   (r/wrap (:uusi-kommentti @lomakedata)
+                                                                             #(swap! lomakedata assoc :uusi-kommentti %))}
+                              (:kommentit @lomakedata)]})
+             ]
+            @kohteen-tiedot]]
+
+          [:div.col-md-6
+           (kasittely valmis-kasiteltavaksi?)]]
 
          [:h3 "Tekninen osa"]
 
@@ -394,7 +400,6 @@
           toteutuneet-maarat]
 
          (yhteenveto)
-         (kasittely valmis-kasiteltavaksi?)
          (tallennus valmis-tallennettavaksi?)]))))
 
 (defn toteumaluettelo

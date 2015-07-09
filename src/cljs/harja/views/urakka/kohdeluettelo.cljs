@@ -20,7 +20,7 @@
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.kohdeluettelo.yhteenveto :as yhteenveto]
-            [harja.views.urakka.kohdeluettelo.toteumat :as kohdeluettelo-toteumat]
+            [harja.views.urakka.kohdeluettelo.paallystysilmoitus :as kohdeluettelo-toteumat]
             
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
