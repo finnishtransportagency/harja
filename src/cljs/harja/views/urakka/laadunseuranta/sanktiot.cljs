@@ -33,11 +33,11 @@
     {:otsikko "Sanktiot"
      :tyhja   (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
      :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
-    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Kohde" :nimi :kohde :leveys 1}
-     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :leveys 1}
-     {:otsikko "Päätös" :nimi :paatos :leveys 2}]
+    [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
+     {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :havainto) :leveys 1}
+     {:otsikko "Kuvaus" :nimi :kuvaus :hae (comp :kuvaus :havainto) :leveys 3}
+     {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :havainto) :leveys 1}
+     {:otsikko "Päätös" :nimi :paatos :hae (comp :paatos :paatos :havainto) :leveys 2}]
     @tiedot/haetut-sanktiot
     ]])
 

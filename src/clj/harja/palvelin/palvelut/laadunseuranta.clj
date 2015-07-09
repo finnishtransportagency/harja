@@ -159,6 +159,7 @@
   [db user {:keys [urakka-id alku loppu tpi]}]
 
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Hae sanktiot ("urakka-id alku loppu tpi")")
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa)))

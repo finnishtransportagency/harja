@@ -68,23 +68,6 @@ WHERE
   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
   AND s.toimenpideinstanssi = :tpi;
 
-SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
-  CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus
-FROM havainto h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id=s.havainto
-WHERE h.urakka = :urakka
-      AND (aika >= :alku AND aika <= :loppu)
-      AND s.suorasanktio IS NOT TRUE;
-
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera

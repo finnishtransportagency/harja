@@ -15,11 +15,11 @@
   [{:aika (pvm/nyt) :kohde "Raahe" :kuvaus "Maan tasalle vaan" :tekija "Me kaikki" :paatos "Antaa mennä vaan"}
    {:aika (pvm/nyt) :kohde "Masan koti" :kuvaus "Seinässä on reikä" :tekija "Masa itte" :paatos "Kai sen vois korjata"}])
 
-(defonce nakymassa? (atom false))
+(def nakymassa? (atom false))
 (defonce valittu-sanktio (atom nil))
 (defonce haetut-sanktiot (reaction<! [urakka (:id @nav/valittu-urakka)
                                       hoitokausi @urakka/valittu-hoitokausi
-                                      tpi (get-in @urakka/valittu-toimenpideinstanssi [:tpi :id])
+                                      tpi (:tpi_id @urakka/valittu-toimenpideinstanssi)
                                       nakymassa?]
                                       ;; Jos urakka ja hoitokausi on valittu ja käyttäjä on laadunseurannassa tällä välilehdellä,
                                       ;; haetaan urakalle sanktiot
