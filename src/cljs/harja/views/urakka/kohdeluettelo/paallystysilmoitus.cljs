@@ -211,7 +211,10 @@
         valmis-kasiteltavaksi? (reaction
                                  (let [valmispvm (:valmistumispvm @lomakedata)
                                        tila (:tila @lomakedata)]
-                                   (and (not (= tila :aloitettu))
+                                   (log "PÄÄ valmis käsi " (pr-str valmispvm) (pr-str tila))
+                                   (and tila
+                                        valmispvm
+                                        (not (= tila :aloitettu))
                                         (not (nil? valmispvm)))))]
 
     (komp/luo
