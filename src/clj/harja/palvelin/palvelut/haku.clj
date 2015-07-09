@@ -10,15 +10,14 @@
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
   [db user hakutermi]
-  ;; fixme: hanskaa oikeudet. Tilaajan käyttäjille palautetaan kaikki sisältö,
-  ;; urakoitsijalle vain oman firmansa sisältö
   (let [termi (str "%" hakutermi "%")
+        kayttajan-org (:organisaatio user)
         loytyneet-urakat (into []
                                (map #(assoc % :tyyppi :urakka
                                               :hakusanat (str (:nimi %) ", " (:sampoid %)))
                                     (ur-q/hae-urakoiden-tunnistetiedot db termi
-                                                                       (name (get-in user [:organisaatio :tyyppi]))
-                                                                       (get-in user [:organisaatio :id]))))
+                                                                       (name (:tyyppi kayttajan-org))
+                                                                       (:id kayttajan-org))))
         loytyneet-kayttajat (into []
                                   (map #(assoc % :tyyppi :kayttaja
                                                  :hakusanat (if (:jarjestelmasta %)

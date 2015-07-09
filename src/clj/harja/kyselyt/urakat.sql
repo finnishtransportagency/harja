@@ -25,7 +25,11 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
-WHERE hallintayksikko = :hallintayksikko;
+WHERE hallintayksikko = :hallintayksikko
+      AND (('hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi OR
+            'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi)
+           OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND
+               :kayttajan_org_id = urk.id));
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.

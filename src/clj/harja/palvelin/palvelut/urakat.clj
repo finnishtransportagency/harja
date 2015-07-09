@@ -43,10 +43,11 @@
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  ;;(Thread/sleep 2000) ;;; FIXME: this is to try out "ajax loading" ui
   (into []
         urakka-xf
-        (q/listaa-urakat-hallintayksikolle db hallintayksikko-id)))
+        (q/listaa-urakat-hallintayksikolle db hallintayksikko-id
+                                           (name (get-in user [:organisaatio :tyyppi]))
+                                           (get-in user [:organisaatio :id]))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
