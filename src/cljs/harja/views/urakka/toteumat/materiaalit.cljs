@@ -252,14 +252,14 @@
            :tallenna (tallenna-toteuma-materiaaleja urakan-id tiedot)
            :voi-lisata? false}
 
-          [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus
+          [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus :leveys "20%"
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
-            :validoi [[:positiivinen-luku "Anna käytetty määrä."]]}
-           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false)}
-           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false)}
+            :validoi [[:positiivinen-luku "Anna käytetty määrä."]] :leveys "20%"}
+           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false) :leveys "20%"}
+           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false) :leveys "20%"}
            {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
-            :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false)}]
+            :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false) :leveys "20%"}]
           @tiedot]]))))
 
 (defn materiaalit-paasivu
