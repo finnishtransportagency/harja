@@ -260,9 +260,11 @@
            :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :rivinumerot? true
            :muutos       (fn [g]
-                           (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
-                             (log "PÄÄ grid-data " (pr-str grid-data))
-                             (reset! toteutuneet-osoitteet (zipmap (iterate inc 1) (mapv (fn [rivi] (assoc rivi :tie (:tie (first grid-data)))) grid-data)))
+                           (let [grid-data (vals @toteutuneet-osoitteet)]
+                             (reset! toteutuneet-osoitteet (zipmap (iterate inc 1)
+                                                                   (mapv
+                                                                     (fn [rivi] (assoc rivi :tie (:tie (first grid-data))))
+                                                                     grid-data)))
                              (reset! alikohteet-virheet (grid/hae-virheet g))))}
           [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
             :muokattava? (fn [rivi index] (if (> index 0) false true))}
