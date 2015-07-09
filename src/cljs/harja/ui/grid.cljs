@@ -808,7 +808,8 @@ Optiot on mappi optioita:
                                                                 (hae rivi)
                                                                 (get rivi nimi)))]))))
                                    [:td.toiminnot
-                                    (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
+                                    (when (and (not= false voi-muokata?)
+                                               (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                                       [:span.klikattava {:on-click #(do (.preventDefault %)
                                                                         (muokkaa! muokatut-atom id assoc :poistettu true))}
                                        (ikonit/trash)])]]
