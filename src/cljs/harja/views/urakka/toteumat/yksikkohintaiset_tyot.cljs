@@ -59,13 +59,13 @@
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma?]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        tehtavat (if jarjestelman-lisaama-toteuma? (vals @tehtavat) tehtavat)]
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
 
-    [(if jarjestelman-lisaama-toteuma? grid/grid grid/muokkaus-grid) ; FIXME Voisi olla aina muokkaus-grid, mutta muokattava? false ei disabloi kenttiä.
+    [grid/muokkaus-grid
      {:tyhja "Ei töitä."}
      [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
        :tyyppi        :valinta
+       :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
        :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
        :valinta-arvo  :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
@@ -76,6 +76,7 @@
       {:otsikko       "Tehtävä" :nimi :tehtava ; FIXME Readonly-tilassa näkyy id, pitäisi näkyä nimi
        :tyyppi        :valinta
        :valinta-arvo  #(:id (nth % 3))
+       :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
        :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                         (:toimenpideinstanssi %)
@@ -84,7 +85,7 @@
        :aseta         (fn [rivi arvo] (assoc rivi
                                         :tehtava arvo
                                         :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%"}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%" :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
      tehtavat]))
 

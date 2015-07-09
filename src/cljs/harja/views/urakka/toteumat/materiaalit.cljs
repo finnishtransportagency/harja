@@ -118,9 +118,7 @@
   (log "Materiaalit-ja-maarat, tiedot: " (pr-str @materiaalit-atom))
   (log "Materiaalikoodit:" (pr-str @materiaalikoodit))
 
-  ;; fixme Jarilla on yksikkohintaisissa töissä tässä if, mutta tässä ei toimi?
-  ;; --> Johtuu tod.näk. siitä, että grid ja muokkausgrid ottavat datan eri muodossa eli gridille pitää antaa (vals @materiaalit-atom).
-  ;; Mielellään parannetaan kuitenkin muokkausgridin :voi-muokata? keywordia niin, että sen ollessa true kaikki kentät ovat tekstikenttiä.
+  ;; FIXME Materioaali-sarakkeille muokattava? (constantly (not koneen-lisaama?)) disabloisi sen, mutta se näkyy väärin
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
     :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))}
