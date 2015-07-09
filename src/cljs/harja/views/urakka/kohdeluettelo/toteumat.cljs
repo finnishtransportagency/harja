@@ -212,13 +212,9 @@
                                        (empty? kiviaines-virheet))))
         valmis-kasiteltavaksi? (reaction
                                  (let [valmispvm (:valmistumispvm @lomakedata)
-                                       toteutuneet-osoitteet (:osoitteet (:ilmoitustiedot @lomakedata))
-                                       toteutuneet-maarat (:tyot (:ilmoitustiedot @lomakedata))
                                        tila (:tila @lomakedata)]
                                    (and (not (= tila :aloitettu))
-                                        (not (nil? valmispvm))
-                                        (not (empty? toteutuneet-osoitteet))
-                                        (not (empty? toteutuneet-maarat)))))]
+                                        (not (nil? valmispvm)))))]
 
     (komp/luo
       (fn []
