@@ -1,7 +1,6 @@
 (ns harja.views.haku
   "Harjan haku"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [cljs-time.coerce :as tc]
+  (:require [reagent.core :refer [atom]]
             [clojure.string :as str]
 
             [harja.asiakas.kommunikaatio :as k]
@@ -23,8 +22,6 @@
               {:odota 500}
               (when (> (count termi) 1)
                 (k/post! :hae termi))))
-
-(tarkkaile! "hakutulokset" hakutulokset)
 
 (defn nayta-kayttaja
   [k]
@@ -104,9 +101,11 @@
               (:id haettu-urakka)))
           :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]
                       (nayta-kayttaja haettu-kayttaja))
-          :organisaatio (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))
-                              _ (log "haettu oir" (pr-str haettu-organisaatio))]
-                          (nayta-organisaatio haettu-organisaatio))))))
+          :organisaatio
+          (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))]
+            (if (= :urakoitsija (:tyyppi haettu-organisaatio))
+              (nayta-organisaatio haettu-organisaatio)
+              (nav/valitse-hallintayksikko haettu-organisaatio)))))))
 
 (defn liikaa-osumia?
   [tulokset]
