@@ -194,5 +194,5 @@
   (reduce + (mapv
               (fn [tyo]
                 (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-              (filter #(not= true :poistettu %) tyot))))
+              (filter #(not= true (:poistettu %)) tyot))))
   
