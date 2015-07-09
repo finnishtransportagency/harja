@@ -795,14 +795,16 @@ Optiot on mappi optioita:
                                                                "sisaltaa-virheen"))}
                                             (when-not (empty? kentan-virheet)
                                               (virheen-ohje kentan-virheet))
-                                            [tee-kentta s (r/wrap
+                                            (if voi-muokata? [tee-kentta s (r/wrap
                                                             arvo
                                                             (fn [uusi]
                                                               (if aseta
                                                                 (muokkaa! muokatut-atom
                                                                           id (fn [rivi]
                                                                                (aseta rivi uusi)))
-                                                                (muokkaa! muokatut-atom id assoc nimi uusi))))]]
+                                                                (muokkaa! muokatut-atom id assoc nimi uusi))))]
+                                                             arvo ; FIXME Pudotusvalikoiden tilalla näkyy valinta-arvo, ei näytettävä arvo.
+                                                             )]
                                            ^{:key (str nimi)}
                                            [:td ((or fmt str) (if hae
                                                                 (hae rivi)
