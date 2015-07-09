@@ -301,6 +301,7 @@
           {:otsikko      "Päällystystoimenpiteen tiedot"
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
+           :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :rivinumerot? true
            :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällyste"
