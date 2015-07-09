@@ -6,7 +6,7 @@
 (defqueries "harja/kyselyt/havainnot.sql")
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
-  (:exists (first (harja.kyselyt.havainnot/onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
+  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
 
 (defn luo-tai-paivita-havainto
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
