@@ -26,6 +26,7 @@
          (s/optional-key :email) {:taso s/Keyword
                                   :palvelin s/Str
                                   :vastaanottaja [s/Str]}}
+   (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
    (s/optional-key :sonja) {:url s/Str
                             :kayttaja s/Str
                             :salasana s/Str
@@ -35,7 +36,7 @@
                             :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
-   }) 
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
@@ -46,7 +47,7 @@
                 :portti 5432
                 :kayttaja "harja"
                 :salasana ""}
-   
+
    :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
    })
 
@@ -64,7 +65,7 @@
        read-string
        (yhdista-asetukset oletusasetukset)
        (s/validate Asetukset)))
-      
+
 
 (defn konfiguroi-lokitus [asetukset]
   (when-let [gelf (-> asetukset :log :gelf)]
@@ -87,9 +88,9 @@
                        {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
                         :to (:vastaanottaja email)}}))))
 
- 
 
-(comment (defn konfiguroi-lokitus 
+
+(comment (defn konfiguroi-lokitus
   "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
   [asetukset]
   (let [konfiguroija (JoranConfigurator.)

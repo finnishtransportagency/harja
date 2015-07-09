@@ -19,3 +19,8 @@ UPDATE integraatiotapahtuma
 SET paattynyt = current_timestamp, onnistunut = :onnistunut, lisatietoja = :lisatietoja
 WHERE ulkoinenid = :ulkoinen_id;
 
+-- name: luo-integraatioviesti<!
+-- Luo uuden integraatioviestin
+INSERT INTO integraatioviesti (integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
+VALUES (:integraatiotapahtuma, :suunta::integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit)
+

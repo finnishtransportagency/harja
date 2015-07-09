@@ -19,9 +19,13 @@
                   ))))
     (fn [] ())))
 
+(defn kirjaa-viesti [db tapahtumaid {:keys [suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
+  (integraatiloki/luo-integraatioviesti<! db tapahtumaid suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
+
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
   (let [tapahtumaid (:id (integraatiloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
-    ;; todo: kirjaa viesti
+    (when viesti
+      (kirjaa-viesti db tapahtumaid viesti))
     tapahtumaid))
 
 (defn kirjaa-paattynyt-integraatio [db viesti lisatietoja onnistunut tapahtumaid ulkoinen-id]
@@ -31,10 +35,8 @@
             (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtumaid)
             tapahtumaid)
           (:id (first (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id))))]
-    (when kasitellyn-tapahtuman-id
-      ;; todo: kirjaa viesti
-      )))
-
+    (when (and viesti kasitellyn-tapahtuman-id)
+      (kirjaa-viesti db kasitellyn-tapahtuman-id viesti))))
 
 (defrecord Integraatioloki [paivittainen-puhdistusaika]
   com.stuartsierra.component/Lifecycle
