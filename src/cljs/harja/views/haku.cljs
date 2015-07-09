@@ -23,39 +23,7 @@
               (when (> (count termi) 1)
                 (k/post! :hae termi))))
 
-(defn nayta-kayttaja
-  [k]
-  (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
-                 :luokka  "yhteystieto"
-                 :footer  [:span
-                           [:button.nappi-toissijainen {:type     "button"
-                                                        :on-click #(do (.preventDefault %)
-                                                                       (modal/piilota!))}
-                            "Sulje"]]}
-                [:div.kayttajan-tiedot
-                 [tietoja {}
-                  "Organisaatio:" (name (get-in k [:organisaatio :nimi]))
-                  "Org. tyyppi:" (name (get-in k [:organisaatio :tyyppi]))
-                  "Käyttäjänimi:" (get k :kayttajanimi)
-                  "Puhelin:" (get k :puhelin)
-                  "Sähköposti:" [:a {:href (str "mailto:" (get k :sahkoposti))}
-                                 (get k :sahkoposti)]
-
-                  "Roolit:" (if (not-empty (get k :roolit))
-                              (str/join ", " (get k :roolit))
-                              "Ei rooleja")]
-                 (when-let [urakkaroolit (get k :urakka-roolit)]
-                   [:span
-                    [:span.tietokentta "Mukana urakoissa:"]
-                    [:div.mukana-urakoissa
-                     (if (empty? urakkaroolit)
-                       "Ei urakkarooleja"
-                       (for [urakkarooli urakkaroolit]
-                         ^{:key (get-in urakkarooli [:urakka :id])}
-                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
-                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
-
-(defn nayta-organisaatio
+(defn nayta-organisaation-yhteystiedot
   [o]
   (modal/nayta! {:otsikko (:nimi o)
                  :luokka  "yhteystieto"
@@ -89,6 +57,47 @@
                          ^{:key (:nimi u)}
                          [:li.tietoarvo (:nimi u)]))]])]))
 
+(defn valitse-organisaatio
+  [o]
+  (if (= :urakoitsija (:tyyppi o))
+    (nayta-organisaation-yhteystiedot o)
+    (nav/valitse-hallintayksikko o)))
+
+(defn nayta-kayttaja
+  [k]
+  (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
+                 :luokka  "yhteystieto"
+                 :footer  [:span
+                           [:button.nappi-toissijainen {:type     "button"
+                                                        :on-click #(do (.preventDefault %)
+                                                                       (modal/piilota!))}
+                            "Sulje"]]}
+                [:div.kayttajan-tiedot
+                 [tietoja {}
+                  "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
+                                                                 (modal/piilota!)
+                                                                 (valitse-organisaatio (:organisaatio k)))}
+                                   (name (get-in k [:organisaatio :nimi]))]
+                  "Org. tyyppi:" (name (get-in k [:organisaatio :tyyppi]))
+                  "Käyttäjänimi:" (get k :kayttajanimi)
+                  "Puhelin:" (get k :puhelin)
+                  "Sähköposti:" [:a {:href (str "mailto:" (get k :sahkoposti))}
+                                 (get k :sahkoposti)]
+
+                  "Roolit:" (if (not-empty (get k :roolit))
+                              (str/join ", " (get k :roolit))
+                              "Ei rooleja")]
+                 (when-let [urakkaroolit (get k :urakka-roolit)]
+                   [:span
+                    [:span.tietokentta "Mukana urakoissa:"]
+                    [:div.mukana-urakoissa
+                     (if (empty? urakkaroolit)
+                       "Ei urakkarooleja"
+                       (for [urakkarooli urakkaroolit]
+                         ^{:key (get-in urakkarooli [:urakka :id])}
+                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
+                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
+
 (defn valitse-hakutulos
   [tulos]
   (reset! hakutermi "")
@@ -103,9 +112,7 @@
                       (nayta-kayttaja haettu-kayttaja))
           :organisaatio
           (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))]
-            (if (= :urakoitsija (:tyyppi haettu-organisaatio))
-              (nayta-organisaatio haettu-organisaatio)
-              (nav/valitse-hallintayksikko haettu-organisaatio)))))))
+            (valitse-organisaatio haettu-organisaatio))))))
 
 (defn liikaa-osumia?
   [tulokset]
