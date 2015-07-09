@@ -92,13 +92,13 @@
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
 
-(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi] :as sanktio} havainto urakka]
+(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
   (log/debug "TALLENNA sanktio: " sanktio " urakka: " urakka ", tyyppi: " tyyppi)
   (if (neg? id)
     (let [id (:id (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm)
                                           (name laji) (:id tyyppi)
                                           toimenpideinstanssi urakka
-                                          summa indeksi havainto))]
+                                          summa indeksi havainto (or suorasanktio false)))]
       (sanktiot/merkitse-maksuera-likaiseksi! db havainto))
     ;; FIXME: voiko päivittää sanktiota?
     nil))

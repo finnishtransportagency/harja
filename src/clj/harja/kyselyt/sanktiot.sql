@@ -2,11 +2,23 @@
 -- Luo uuden sanktion annetulle havainnolle
 INSERT
 INTO sanktio
-       (perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, havainto)
+       (perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, havainto, suorasanktio)
 VALUES (:perintapvm, :ryhma::sanktiolaji, :tyyppi,
         (SELECT id FROM toimenpideinstanssi WHERE id = :toimenpideinstanssi AND urakka = :urakka),
-        :summa, :indeksi, :havainto);
+        :summa, :indeksi, :havainto, :suorasanktio);
 
+-- name: paivita-sanktio<!
+-- Päivittää olemassaolevan sanktion
+UPDATE sanktio
+SET perintapvm = :perintapvm,
+  sakkoryhma = :ryhma::sanktiolaji,
+  tyyppi = :tyyppi,
+  toimenpideinstanssi = (SELECT id FROM toimenpideinstanssi WHERE id = :toimenpideinstanssi AND urakka = :urakka),
+  maara = :summa,
+  indeksi = :indeksi,
+  havainto = :havainto,
+  suorasanktio = :suorasanktio
+WHERE id = :id;
 
 -- name: hae-havainnon-sanktiot
 -- Palauttaa kaikki annetun havainnon sanktiot
