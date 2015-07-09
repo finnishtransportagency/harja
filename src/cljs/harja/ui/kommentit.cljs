@@ -24,7 +24,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder voi-liittaa]} kommentit]
+(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder voi-liittaa leveys-col]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -39,7 +39,7 @@
       [:div.uusi-kommentti-teksti
        [kentat/tee-kentta {:tyyppi :text :nimi :teksti
                            :placeholder (or placeholder "Kirjoita uusi kommentti...")
-                           :koko [80 :auto]}
+                           :koko [(or leveys-col 80) :auto]}
         (r/wrap (:kommentti @uusi-kommentti) #(swap! uusi-kommentti assoc :kommentti %))]]
       (when kommentoi!
         [:button.nappi-ensisijainen.uusi-kommentti-tallenna
