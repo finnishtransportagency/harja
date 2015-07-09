@@ -795,7 +795,7 @@ Optiot on mappi optioita:
                                                                "sisaltaa-virheen"))}
                                             (when-not (empty? kentan-virheet)
                                               (virheen-ohje kentan-virheet))
-                                            (if voi-muokata? [tee-kentta s (r/wrap
+                                            (if (not= false voi-muokata?) [tee-kentta s (r/wrap
                                                             arvo
                                                             (fn [uusi]
                                                               (if aseta
