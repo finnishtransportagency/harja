@@ -24,35 +24,54 @@ FROM sanktio s
 WHERE havainto = :havainto;
 
 -- name: hae-urakan-sanktiot
--- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä rajattuna
+-- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
+-- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 SELECT
   s.id,
   s.perintapvm,
   s.maara      AS summa,
   s.sakkoryhma AS laji,
   s.indeksi,
-  h.id         AS havainto_id,
-  h.kohde      AS havainto_kohde
-FROM sanktio s
-  JOIN havainto h ON s.havainto = h.id
-WHERE h.urakka = :urakka
-      AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
+  s.suorasanktio,
 
--- name: hae-urakan-sanktiot-hoitokaudella-ja-toimenpiteella
-SELECT
-  s.id,
-  s.perintapvm,
-  s.maara      AS summa,
-  s.sakkoryhma AS laji,
-  s.indeksi,
   h.id         AS havainto_id,
-  h.kohde      AS havainto_kohde
+  h.kohde      AS havainto_kohde,
+  h.aika AS havainto_aika,
+  h.tekija AS havainto_tekija,
+  CONCAT(k.etunimi, ' ', k.sukunimi) AS havainto_tekijanimi,
+  h.kasittelyaika AS havainto_paatos_kasittelyaika,
+  h.paatos AS havainto_paatos_paatos,
+  h.kasittelytapa AS havainto_paatos_kasittelytapa,
+  h.kuvaus AS havainto_kuvaus,
+
+  t.nimi AS tyyppi_nimi,
+  t.id AS tyyppi_id,
+  t.toimenpidekoodi AS tyyppi_toimenpidekoodi
 FROM sanktio s
   JOIN havainto h ON s.havainto = h.id
-  JOIN toimenpideinstanssi ti ON h.urakka = ti.urakka
+  JOIN kayttaja k ON h.luoja = k.id
+  JOIN sanktiotyyppi t ON s.tyyppi = t.id
+WHERE
+  h.urakka = :urakka
+  AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
+  AND s.toimenpideinstanssi = :tpi;
+
+SELECT
+  h.id,
+  h.aika,
+  h.kohde,
+  h.tekija,
+  CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
+  h.kasittelyaika                    AS paatos_kasittelyaika,
+  h.paatos                           AS paatos_paatos,
+  h.kasittelytapa                    AS paatos_kasittelytapa,
+  h.kuvaus
+FROM havainto h
+  JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON h.id=s.havainto
 WHERE h.urakka = :urakka
-      AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
-      AND ti.id = :toimenpideinstanssi;
+      AND (aika >= :alku AND aika <= :loppu)
+      AND s.suorasanktio IS NOT TRUE;
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
