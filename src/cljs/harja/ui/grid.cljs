@@ -4,7 +4,7 @@
             [harja.loki :refer [log tarkkaile! logt]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
 
             [cljs.core.async :refer [<! put! chan]]
@@ -253,9 +253,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
         (if (= tyyppi :komponentti)
           (komponentti rivi)
-          ((or fmt str) (if hae
+          (let [arvo (if hae
                           (hae rivi)
-                          (get rivi nimi))))]))])
+                          (get rivi nimi))]
+            (if fmt
+              (fmt arvo)
+              [nayta-arvo skeema (vain-luku-atomina arvo)])))]))])
 
 (defn laske-sarakkeiden-leveys [skeema]
   (if (every? number? (map :leveys skeema))
@@ -795,16 +798,18 @@ Optiot on mappi optioita:
                                                                "sisaltaa-virheen"))}
                                             (when-not (empty? kentan-virheet)
                                               (virheen-ohje kentan-virheet))
-                                            (if (not= false voi-muokata?) [tee-kentta s (r/wrap
-                                                            arvo
-                                                            (fn [uusi]
-                                                              (if aseta
-                                                                (muokkaa! muokatut-atom
-                                                                          id (fn [rivi]
-                                                                               (aseta rivi uusi)))
-                                                                (muokkaa! muokatut-atom id assoc nimi uusi))))]
-                                                             arvo ; FIXME Pudotusvalikoiden tilalla näkyy valinta-arvo, ei näytettävä arvo.
-                                                             )]
+
+                                            (if voi-muokata?
+                                              [tee-kentta s (r/wrap
+                                                             arvo
+                                                             (fn [uusi]
+                                                               (if aseta
+                                                                 (muokkaa! muokatut-atom
+                                                                           id (fn [rivi]
+                                                                                (aseta rivi uusi)))
+                                                                 (muokkaa! muokatut-atom id assoc nimi uusi))))]
+                                              [nayta-arvo s (vain-luku-atomina arvo)])]
+
                                            ^{:key (str nimi)}
                                            [:td ((or fmt str) (if hae
                                                                 (hae rivi)

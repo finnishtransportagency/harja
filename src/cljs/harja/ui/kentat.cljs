@@ -27,6 +27,9 @@
          (vaihda! (aseta data uusi))
          (vaihda! (assoc data nimi uusi)))))))
 
+(defn vain-luku-atomina [arvo]
+  (r/wrap arvo
+          #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
    
 
 (defmulti tee-kentta
@@ -39,7 +42,7 @@
 
 
 (defmethod nayta-arvo :default [_ data]
-  (str @data))
+  [:span (str @data)])
 
 (defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?]} data]
   (let [nyt-valittu @data
@@ -228,7 +231,7 @@
                    valinnat))]))
 
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
-  ((or valinta-nayta str) @data))
+  [:span ((or valinta-nayta str) @data)])
 
 (defmethod tee-kentta :boolean [{:keys [otsikko]} data]
   [:div.checkbox
@@ -267,7 +270,7 @@
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    (or ((or valinta-nayta str) valinta) valinta)))
+    [:span (or ((or valinta-nayta str) valinta) valinta)]))
 
 
 
@@ -376,9 +379,9 @@
                                  :leveys pvm-leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
-  (if-let [p @data]
-    (pvm/pvm p)
-    ""))
+  [:span (if-let [p @data]
+           (pvm/pvm p)
+           "")])
     
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? leveys]} data]
   
@@ -473,9 +476,9 @@
                                 :leveys leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
-  (if-let [p @data]
-    (pvm/pvm-aika p)
-    ""))
+  [:span (if-let [p @data]
+           (pvm/pvm-aika p)
+           "")])
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
