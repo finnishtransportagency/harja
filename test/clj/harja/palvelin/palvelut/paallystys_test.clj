@@ -82,7 +82,6 @@
                                     }]
 
                     :tyot         [{:tyyppi           :ajoradan-paallyste
-                                    :toimenpidekoodi  3
                                     :tilattu-maara    100
                                     :toteutunut-maara 200
                                     :yksikko          "km"

@@ -351,7 +351,7 @@
           {:otsikko "Alustalle tehdyt toimet"
            :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
-          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%" :pituus-max 256}
+          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
