@@ -91,18 +91,17 @@
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
-                     (reset! paatostiedot uusi))}
+                     (reset! paatostiedot uusi))
+         :voi-muokata? (not= :lukittu (:tila @lomakedata))}
         [{:otsikko     "Käsittelyn pvm"
           :nimi        :kasittelyaika
           :tyyppi      :pvm-aika
-          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]
-          :muokattava? muokattava?}
+          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
          {:otsikko       "Päätös teknisestä osasta"
           :nimi          :paatos-tekninen
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
-          :muokattava?   muokattava?
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
           :leveys-col    4}
@@ -111,7 +110,6 @@
           :nimi          :paatos-taloudellinen
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
-          :muokattava?   muokattava?
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" ""))
           :leveys-col    4}
@@ -226,6 +224,7 @@
          [:h3 "Kohteen tiedot"]
 
          [lomake {:luokka   :horizontal
+                  :voi-muokata? (not= :lukittu (:tila @lomakedata))
                   :muokkaa! (fn [uusi]
                               (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                               (reset! kohteen-tiedot uusi))}
@@ -251,6 +250,7 @@
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
+           :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :rivinumerot? true
            :muutos       (fn [g]
                            (let [grid-data (into [] (vals (grid/hae-muokkaustila g)))]
@@ -329,6 +329,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
+           :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -340,6 +341,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Alustalle tehdyt toimet"
+           :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :string :leveys "10%" :pituus-max 256}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
@@ -374,6 +376,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
+           :voi-muokata? (not= :lukittu (:tila @lomakedata))
            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällystetyön tyyppi"
             :nimi          :tyyppi
@@ -413,7 +416,7 @@
                                                                                                                                          (paatos-keyword->string (:paatos_tekninen_osa rivi)))}
            {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
                                                                                                                                                    (paatos-keyword->string (:paatos_taloudellinen_osa rivi)))}
-           {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero

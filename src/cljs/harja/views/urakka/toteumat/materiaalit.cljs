@@ -118,11 +118,10 @@
   (log "Materiaalit-ja-maarat, tiedot: " (pr-str @materiaalit-atom))
   (log "Materiaalikoodit:" (pr-str @materiaalikoodit))
 
-  ;; FIXME Materioaali-sarakkeille muokattava? (constantly (not koneen-lisaama?)) disabloisi sen, mutta se näkyy väärin
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
-    :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))}
-
+    :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
+    :voi-muokata? (not koneen-lisaama?)}
    [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
      :valinnat @materiaalikoodit
      :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
