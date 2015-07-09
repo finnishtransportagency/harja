@@ -22,7 +22,7 @@
 
   lista sisältää luettelon josta hakea."
   [opts lista]
-  (let [term (or (:term opts) (atom ""))
+  (let [termi-atom (or (:term opts) (atom ""))
         valittu (or (:selection opts) (atom nil))
         fmt (or (:format opts) str)
 
@@ -39,7 +39,8 @@
         ]
     (fn [opts lista]
 
-      (let [termi @term
+      (let [term (or (:term opts) termi-atom)
+            termi @term
             itemit (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase termi)) -1) lista)
             
             korostus @korostus-idx

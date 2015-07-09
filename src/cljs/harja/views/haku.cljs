@@ -1,6 +1,6 @@
 (ns harja.views.haku
   "Harjan haku"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
 
             [harja.asiakas.kommunikaatio :as k]
@@ -114,20 +114,26 @@
 
 (defn haku
   []
-  [:form.navbar-form.navbar-left {:role "search"}
-   [:div.form-group.haku
-    [suodatettu-lista {:format         :hakusanat
-                       :haku           :hakusanat
-                       :term           hakutermi
-                       :ryhmittely     :tyyppi
-                       :ryhman-otsikko #(case %
-                                         :urakka "Urakat"
-                                         :kayttaja "Käyttäjät"
-                                         :organisaatio "Organisaatiot"
-                                         "Muut")
-                       :on-select      #(valitse-hakutulos %)
-                       :aputeksti      "Hae Harjasta"
-                       :tunniste       #((juxt :tyyppi :id) %)
-                       :vinkki         #(when (liikaa-osumia? @hakutulokset)
-                                         "Liikaa osumia, tarkenna hakua...")}
-     @hakutulokset]]])
+  (let [tulokset @hakutulokset
+        termi @hakutermi]
+    [:form.navbar-form.navbar-left {:role "search"}
+     [:div.form-group.haku
+      [suodatettu-lista {:format         :hakusanat
+                         :haku           :hakusanat
+                         :term           (r/wrap termi (fn [uusi-termi]
+                                                         (reset! hakutermi
+                                                                 (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                         :ryhmittely     :tyyppi
+                         :ryhman-otsikko #(case %
+                                           :urakka "Urakat"
+                                           :kayttaja "Käyttäjät"
+                                           :organisaatio "Organisaatiot"
+                                           "Muut")
+                         :on-select      #(valitse-hakutulos %)
+                         :aputeksti      "Hae Harjasta"
+                         :tunniste       #((juxt :tyyppi :id) %)
+                         :vinkki         #(if (liikaa-osumia? tulokset)
+                                           "Paljon osumia, tarkenna hakua..."
+                                           (when (= [] tulokset)
+                                             (str "Ei tuloksia haulla " termi)))}
+       tulokset]]]))

@@ -228,9 +228,11 @@ SELECT
   o.nimi   AS org_nimi,
   o.tyyppi AS org_tyyppi
 FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
-WHERE k.kayttajanimi ILIKE :koka
-      OR o.nimi ILIKE :koka
-         AND k.poistettu = FALSE
+WHERE (k.kayttajanimi ILIKE :koka
+       OR k.etunimi ILIKE  :koka
+       OR k.sukunimi ILIKE  :koka
+      OR (CONCAT(k.etunimi, ' ' , k.sukunimi) ILIKE :koka))
+      AND k.poistettu = FALSE
 LIMIT 11;
 
 -- name: hae-kayttaja-kayttajanimella
