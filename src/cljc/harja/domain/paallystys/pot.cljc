@@ -178,6 +178,13 @@
            :tilattu-maara s/Num
            :toteutunut-maara s/Num
            :yksikko s/Str
-           :yksikkohinta s/Num}]
-  })
+           :yksikkohinta s/Num}]})
+
+(defn laske-muutokset-kokonaishintaan
+  "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
+  [tyot]
+  (reduce + (mapv
+              (fn [tyo]
+                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
+              tyot)))
   

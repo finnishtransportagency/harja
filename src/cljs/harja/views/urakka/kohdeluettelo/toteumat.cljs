@@ -48,11 +48,11 @@
 (def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
-(def muutokset-kokonaishintaan ; Lasketaan jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä "Muutos hintaan") ja summataan yhteen.
-  (reaction (reduce + (mapv
-                        (fn [tyo]
-                          (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-                        (:tyot (:ilmoitustiedot @lomakedata))))))
+(def muutokset-kokonaishintaan
+  (reaction (let [lomakedata @lomakedata
+                  tulos (pot/laske-muutokset-kokonaishintaan (get-in lomakedata [:ilmoitustiedot :tyot]))]
+              (log "PÄÄ Muutokset kokonaishintaan laskettu: " tulos)
+              tulos)))
 
 (def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
 
