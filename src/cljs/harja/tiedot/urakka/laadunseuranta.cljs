@@ -32,11 +32,12 @@
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
-  [urakka-id alkupvm loppupvm tienumero]
+  [urakka-id alkupvm loppupvm tienumero tyyppi]
   (k/post! :hae-urakan-tarkastukset {:urakka-id urakka-id
                                      :alkupvm alkupvm
                                      :loppupvm loppupvm
-                                     :tienumero tienumero}))
+                                     :tienumero tienumero
+                                     :tyyppi tyyppi}))
 
 (def tarkastus-xf
   (map #(assoc %
@@ -48,19 +49,21 @@
                       :stroke {:color "black" :width 10}})))
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
+(defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
 
 (defonce urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                [alku loppu] @tiedot-urakka/valittu-aikavali
                laadunseurannassa? @laadunseurannassa?
                valilehti @valittu-valilehti
-               tienumero @tienumero]
+               tienumero @tienumero
+               tyyppi @tarkastustyyppi]
               {:odota 500}
               (when (and laadunseurannassa? (= :tarkastukset valilehti)
                          urakka-id alku loppu)
                 (go (into []
                           tarkastus-xf
-                          (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero)))))))
+                          (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

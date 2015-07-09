@@ -16,6 +16,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :as yleiset]
             
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
@@ -28,9 +29,9 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastystyyppi+ [:tiesto :talvihoito :soratie])
+(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie])
 
-(defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+
 
 
 (defonce valittu-tarkastus (atom nil))
@@ -54,23 +55,39 @@
     :tarkastus-klikattu
     (fn [e tarkastus]
       (kartta/nayta-popup! (:sijainti tarkastus)
-                           [:div.tarkastus-popup "hei, ponnahdellaan!"])
+                           [:div.tarkastus-popup "TÄMÄN SISÄLTÖ TOTEUTETAAN KARTTA SPRINTISSÄ!"])
                            
       (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))))
      
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
-        [valinnat/urakan-hoitokausi urakka]
-        [valinnat/hoitokauden-aikavali urakka]
 
-        [:span.label-ja-kentta
-         [:span.kentan-otsikko "Tienumero"]
-         [:div.kentta
-          [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} laadunseuranta/tienumero]]]
-        
-        [napit/uusi "Uusi tarkastus"
-         #(reset! valittu-tarkastus (uusi-tarkastus)) {}]
+        [yleiset/taulukko2 6 6
+         
+         [valinnat/urakan-hoitokausi urakka]
+         [valinnat/hoitokauden-aikavali urakka]
+
+         [:span.label-ja-kentta
+          [:span.kentan-otsikko "Tienumero"]
+          [:div.kentta
+           [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} laadunseuranta/tienumero]]]
+
+         [:span.label-ja-kentta
+          [:span.kentan-otsikko "Tyyppi"]
+          [:div.kentta
+           [tee-kentta {:tyyppi :valinta :valinnat (conj +tarkastustyyppi+ nil)
+                        :valinta-nayta #(case %
+                                          nil "Kaikki"
+                                          :tiesto "Tiestötarkastukset"
+                                          :talvihoito "Talvihoitotarkastukset"
+                                          :soratie "Soratien tarkastukset")}
+            laadunseuranta/tarkastustyyppi]]]]
+
+        [:div.row
+         [:div.col-md-10]
+         [:div.col-md-2 [napit/uusi "Uusi tarkastus"
+                         #(reset! valittu-tarkastus (uusi-tarkastus)) {}]]]
         
         [grid/grid
          {:otsikko "Tarkastukset"
@@ -159,7 +176,7 @@
        {:otsikko "Tarkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
-        :valinnat +tarkastystyyppi+
+        :valinnat +tarkastustyyppi+
         :valinta-nayta #(case %
                           :tiesto "Tiestötarkastus"
                           :talvihoito "Talvihoitotarkastus"

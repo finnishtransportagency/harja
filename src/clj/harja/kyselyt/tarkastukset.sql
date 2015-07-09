@@ -9,6 +9,7 @@ SELECT id, sopimus, aika,
  WHERE urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
+   AND (:rajaa_tyypilla = false OR tyyppi = :tyyppi::tarkastustyyppi)
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
