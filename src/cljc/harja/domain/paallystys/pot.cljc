@@ -174,7 +174,6 @@
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on 
    ;; toimenpidekoodistosta 4. tason tehtäviä (ylläpito, tie / päällyste / ...) 
    (s/optional-key :tyot) [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
-           :toimenpidekoodi s/Int ;; 4. tason toimenpidekoodi
            :tilattu-maara s/Num
            :toteutunut-maara s/Num
            :yksikko s/Str
