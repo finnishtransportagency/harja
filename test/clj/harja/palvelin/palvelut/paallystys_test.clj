@@ -104,7 +104,7 @@
                                    :tr_loppuetaisyys   1
                                    :kvl                4
                                    :nykyinen_paallyste 2
-                                   :toimenpide         "Ei tehdä mitään @:D"})
+                                   :toimenpide         "Ei tehdä mitään"})
 
 
 (def paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
@@ -244,7 +244,7 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos_taloudellinen_osa :hyvaksytty)
                                  (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia."))]
+                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-tero+ {:urakka-id          urakka-id

@@ -63,7 +63,7 @@
          {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi))))
           :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko       "Nykyinen päällyste" ; FIXME Päällyste on numero, jonka mukaan näytetään teksti --> Vaatii pudostusvalikon --> Miksi ei näy?
+         {:otsikko       "Nykyinen päällyste"
           :nimi          :nykyinen_paallyste
           :fmt           #(paallystys-pot/hae-paallyste-koodilla %)
           :tyyppi        :valinta
