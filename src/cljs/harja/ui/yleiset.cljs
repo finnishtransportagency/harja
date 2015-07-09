@@ -292,6 +292,7 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
    [:table
     (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
           :when arvo]
+      ^{:key otsikko}
     [:tr
      [:td.taulukko-tietonakyma-tietokentta [:span otsikko]]
      [:td.taulukko-tietonakyma-tietoarvo [:span arvo]]])]])
