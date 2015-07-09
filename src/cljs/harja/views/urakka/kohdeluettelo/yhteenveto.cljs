@@ -102,7 +102,8 @@
                                 (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+           {:otsikko "#" :nimi :kohdenumero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]
+            :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Muutokset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
