@@ -43,10 +43,7 @@
 (defn tallenna-kokonaishintaiset-tyot
   "Tallentaa urakan yksikköhintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id sopimusnumero tyot]
-  (log "tallenna-urakan-kokonaishintaiset-tyot, urakka: " urakka-id "sopimus: " (first sopimusnumero))
-  (log "työt" tyot)
-
   (k/post! :tallenna-kokonaishintaiset-tyot
-           {:urakka-id urakka-id
+           {:urakka-id     urakka-id
             :sopimusnumero (first sopimusnumero)
-            :tyot (into [] tyot)}))
+            :tyot          (into [] tyot)}))

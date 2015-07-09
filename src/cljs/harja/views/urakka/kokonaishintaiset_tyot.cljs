@@ -45,9 +45,6 @@
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
   (go (let [hoitokaudet (u/hoitokaudet ur)
-            tallennettavat-hoitokaudet (if @tuleville?
-                                         (u/tulevat-hoitokaudet ur valittu-hoitokausi)
-                                         valittu-hoitokausi)
             muuttuneet
             (into [] 
                   (if @tuleville?
@@ -209,24 +206,25 @@
             puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
-           {:otsikko (str "Kokonaishintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
-            :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-            :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                 (:id ur)
-                                                 #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                 urakan-kok-hint-tyot % tuleville?)
-                                                 :ei-mahdollinen)
-            :peruuta #(reset! tuleville? false)
-             :tunniste #((juxt :vuosi :kuukausi) %)
-             :voi-lisata? false
-             :voi-poistaa? (constantly false)
-             :muokkaa-footer (fn [g]
-                               [:div.kok-hint-muokkaa-footer
-                                [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                 @tuleville?
-                                 #(swap! tuleville? not)
-                                 [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                 (and @tuleville? @varoita-ylikirjoituksesta?)]])
+           {:otsikko                (str "Kokonaishintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+            :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
+            :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                               (:id ur)
+                                                               #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                               urakan-kok-hint-tyot % tuleville?)
+                                                               :ei-mahdollinen)
+            :tallenna-vain-muokatut false
+            :peruuta                #(reset! tuleville? false)
+            :tunniste               #((juxt :vuosi :kuukausi) %)
+            :voi-lisata?            false
+            :voi-poistaa?           (constantly false)
+            :muokkaa-footer         (fn [g]
+                                      [:div.kok-hint-muokkaa-footer
+                                       [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                        @tuleville?
+                                        #(swap! tuleville? not)
+                                        [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                        (and @tuleville? @varoita-ylikirjoituksesta?)]])
             }
            
            ;; sarakkeet

@@ -289,6 +289,7 @@ Optiot on mappi optioita:
   :tallenna        funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
                    jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                    jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
+  :tallenna-vain-muokatut boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta         funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
   :rivi-klikattu   funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
@@ -301,9 +302,10 @@ Optiot on mappi optioita:
                    jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                    rivin alla
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+
   
   "
-  [{:keys [otsikko tallenna peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
+  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
            muokkaa-footer muokkaa-aina muutos rivin-luokka
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
@@ -314,6 +316,9 @@ Optiot on mappi optioita:
         varoitukset (atom {})                               ;; validointivaroitukset: (:id rivi) => [varoitukset]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
+        tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
+                                 true
+                                 tallenna-vain-muokatut)
 
         fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
 
@@ -479,9 +484,8 @@ Optiot on mappi optioita:
            (aloita-muokkaus! (nth new-argv 3))))
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu muokkaa-footer muokkaa-aina
-                    rivin-luokka uusi-rivi tyhja
-                    vetolaatikot] :as opts} skeema tiedot]
+       (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))]
@@ -522,9 +526,14 @@ Optiot on mappi optioita:
                 (when-not muokkaa-aina
                   [:button.nappi-myonteinen.grid-tallenna
                    {:disabled (not (empty? @virheet))
-                    :on-click #(do (.preventDefault %)
-                                   (go (if (<! (tallenna (filter (fn [rivi] (not (:koskematon rivi))) (mapv second @muokatut))))
-                                         (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                    :on-click #(let [kaikki-rivit (mapv second @muokatut)
+                                     tallennettavat
+                                     (if tallenna-vain-muokatut
+                                       (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
+                                       kaikki-rivit)]
+                                (do (.preventDefault %)
+                                    (go (if (<! (tallenna tallennettavat)))
+                                        (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                    (ikonit/ok) " Tallenna"])
 
                 (when-not muokkaa-aina
