@@ -49,7 +49,5 @@
             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) sanktio vanha)) @haetut-sanktiot)))
 
     (reset! haetut-sanktiot
-            (into [] (concat @haetut-sanktiot sanktio)))
-
-    (reset! valittu-sanktio nil)))
+            (into [] (concat @haetut-sanktiot sanktio)))))
 
