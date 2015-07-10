@@ -47,7 +47,7 @@
 
 (def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
-(def urakkasopimuksen-mukainen-kokonaishinta (reaction (:tarjoushinta @lomakedata)))
+(def urakkasopimuksen-mukainen-kokonaishinta (reaction (:kokonaishinta @lomakedata)))
 (def muutokset-kokonaishintaan
   (reaction (let [lomakedata @lomakedata
                   tulos (pot/laske-muutokset-kokonaishintaan (get-in lomakedata [:ilmoitustiedot :tyot]))]
@@ -446,12 +446,18 @@
                                                                                                            (log "PÄÄ Vastaus: " (pr-str vastaus))
                                                                                                            (if-not (k/virhe? vastaus)
                                                                                                              (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
-                                                                                                                                    (assoc :tarjoushinta (:sopimuksen_mukaiset_tyot rivi)))))))}
+                                                                                                                                    (assoc :kokonaishinta (+ (:sopimuksen_mukaiset_tyot rivi)
+                                                                                                                                                             (:arvonvahennykset rivi)
+                                                                                                                                                             (:bitumi_indeksi rivi)
+                                                                                                                                                             (:kaasuindeksi rivi))))))))}
                                                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
                                                                                                                             :paallystyskohde-id (:paallystyskohde_id rivi)
-                                                                                                                            :tarjoushinta       (:sopimuksen_mukaiset_tyot rivi)})}
+                                                                                                                            :kokonaishinta      (+ (:sopimuksen_mukaiset_tyot rivi)
+                                                                                                                                                   (:arvonvahennykset rivi)
+                                                                                                                                                   (:bitumi_indeksi rivi)
+                                                                                                                                                   (:kaasuindeksi rivi))})}
                                                       [:span " Tee päällystysilmoitus"]]))}]
           (sort-by
             (fn [toteuma] (case (:tila toteuma)

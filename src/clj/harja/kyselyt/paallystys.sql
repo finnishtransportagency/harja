@@ -28,7 +28,10 @@ SELECT
   pk.kohdenumero,
   paatos_tekninen_osa,
   paatos_taloudellinen_osa,
-  pk.sopimuksen_mukaiset_tyot
+  pk.sopimuksen_mukaiset_tyot,
+  pk.arvonvahennykset,
+  pk.bitumi_indeksi,
+  pk.kaasuindeksi
 FROM paallystysilmoitus
   RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                                    AND pk.urakka = :urakka
