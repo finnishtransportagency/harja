@@ -182,6 +182,7 @@
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
    (s/optional-key :tyot)
    [{:tyyppi                     +paallystystyon-tyyppi+    ;; +paallystystyon-tyyppi+ skeemasta
+     :tyo                        s/Str
      :tilattu-maara              s/Num
      :toteutunut-maara           s/Num
      :yksikko                    s/Str

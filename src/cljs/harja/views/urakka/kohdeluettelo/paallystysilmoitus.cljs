@@ -260,8 +260,10 @@
          [grid/muokkaus-grid
           {:otsikko      "Toteutuneet alikohteet"
            :tunniste     :tie
-           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
+           :voi-muokata? (do
+                           (log "PÄÄ tila " (pr-str (:tila @lomakedata)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa @lomakedata)))
+                           (not (or (= :lukittu (:tila @lomakedata))
+                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata)))))
            :rivinumerot? true
            :muutos       (fn [g]
                            (let [grid-data (vals @toteutuneet-osoitteet)]
@@ -404,7 +406,8 @@
             :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
             :valinnat      pot/+paallystystyon-tyypit+
             :leveys        "30%"}
-           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
+           {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256}
+           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20}
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}

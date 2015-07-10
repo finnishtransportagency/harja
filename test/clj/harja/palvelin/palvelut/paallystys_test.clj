@@ -99,6 +99,7 @@
                                     }]
 
                     :tyot         [{:tyyppi           :ajoradan-paallyste
+                                    :tyo              "AB 16/100 LTA"
                                     :tilattu-maara    100
                                     :toteutunut-maara 200
                                     :yksikko          "km"
