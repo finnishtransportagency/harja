@@ -13,7 +13,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
-             
+
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]))
 
@@ -29,22 +29,22 @@
 
 (def tarkastus-xf
   (comp
-   (map konv/alaviiva->rakenne)
-   (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
-   (map #(-> %1
-             (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
-             (update-in [:havainto] dissoc :selvityspyydetty)
-             (update-in [:havainto] (fn [h]
-                                      (if (nil? (:selvitys-pyydetty h))
-                                        (dissoc h :selvitys-pyydetty)
-                                        h)))))
+    (map konv/alaviiva->rakenne)
+    (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+    (map #(-> %1
+              (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
+              (update-in [:havainto] dissoc :selvityspyydetty)
+              (update-in [:havainto] (fn [h]
+                                       (if (nil? (:selvitys-pyydetty h))
+                                         (dissoc h :selvitys-pyydetty)
+                                         h)))))
 
-   (map #(dissoc % :sopimus)) ;; tarvitaanko sopimusta?
-   (map (fn [tarkastus]
-          (condp = (:tyyppi tarkastus)
-            :talvihoito (dissoc tarkastus :soratiemittaus)
-            :soratie (dissoc tarkastus :talvihoitomittaus)
-            :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
+    (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
+    (map (fn [tarkastus]
+           (condp = (:tyyppi tarkastus)
+             :talvihoito (dissoc tarkastus :soratiemittaus)
+             :soratie (dissoc tarkastus :talvihoitomittaus)
+             :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
@@ -92,78 +92,87 @@
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
 
-(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
-  (log/debug "TALLENNA sanktio: " sanktio " urakka: " urakka ", tyyppi: " tyyppi)
-  (if (neg? id)
-    (let [id (:id (sanktiot/luo-sanktio<! db (konv/sql-timestamp perintapvm)
-                                          (name laji) (:id tyyppi)
-                                          toimenpideinstanssi urakka
-                                          summa indeksi havainto (or suorasanktio false)))]
-      (sanktiot/merkitse-maksuera-likaiseksi! db havainto))
-    ;; FIXME: voiko päivittää sanktiota?
-    nil))
-
-
 (defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
   (log/info "Tuli havainto: " havainto)
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
 
-                            (let [osapuoli (roolit/osapuoli user urakka)
-                                  havainto (assoc havainto
-                                             ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
-                                             :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                                     (:selvitys-pyydetty havainto))
+    (let [osapuoli (roolit/osapuoli user urakka)
+          havainto (assoc havainto
+                     ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
+                     :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                             (:selvitys-pyydetty havainto))
 
-                                             ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
-                                             :selvitys-annettu (and (:uusi-kommentti havainto)
-                                                                    (= :urakoitsija osapuoli)))
-                                  id (havainnot/luo-tai-paivita-havainto c user havainto)]
-                              ;; Luodaan uudet kommentit
-                              (when-let [uusi-kommentti (:uusi-kommentti havainto)]
-                                (log/info "UUSI KOMMENTTI: " uusi-kommentti)
-                                (let [liite (some->> uusi-kommentti
-                                                     :liite
-                                                     :id
-                                                     (liitteet/hae-urakan-liite-id c urakka)
-                                                     first
-                                                     :id)
-                                      kommentti (kommentit/luo-kommentti<! c
-                                                                           (name (:tekija havainto))
-                                                                           (:kommentti uusi-kommentti)
-                                                                           liite
-                                                                           (:id user))]
-                                  ;; Liitä kommentti havaintoon
-                                  (havainnot/liita-kommentti<! c id (:id kommentti))))
+                     ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
+                     :selvitys-annettu (and (:uusi-kommentti havainto)
+                                            (= :urakoitsija osapuoli)))
+          id (havainnot/luo-tai-paivita-havainto c user havainto)]
+      ;; Luodaan uudet kommentit
+      (when-let [uusi-kommentti (:uusi-kommentti havainto)]
+        (log/info "UUSI KOMMENTTI: " uusi-kommentti)
+        (let [liite (some->> uusi-kommentti
+                             :liite
+                             :id
+                             (liitteet/hae-urakan-liite-id c urakka)
+                             first
+                             :id)
+              kommentti (kommentit/luo-kommentti<! c
+                                                   (name (:tekija havainto))
+                                                   (:kommentti uusi-kommentti)
+                                                   liite
+                                                   (:id user))]
+          ;; Liitä kommentti havaintoon
+          (havainnot/liita-kommentti<! c id (:id kommentti))))
 
 
-                              (when (:paatos (:paatos havainto))
-                                ;; Urakanvalvoja voi kirjata päätöksen
-                                (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
-                                (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
-                                (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
-                                  (havainnot/kirjaa-havainnon-paatos! c
-                                                                      (konv/sql-timestamp kasittelyaika)
-                                                                      (name paatos) perustelu
-                                                                      (name kasittelytapa) muukasittelytapa
-                                                                      (:id user)
-                                                                      id))
-                                (when (= :sanktio (:paatos (:paatos havainto)))
-                                  (doseq [sanktio (:sanktiot havainto)]
-                                    (tallenna-havainnon-sanktio c user sanktio id urakka))))
+      (when (:paatos (:paatos havainto))
+        ;; Urakanvalvoja voi kirjata päätöksen
+        (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
+        (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
+        (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
+          (havainnot/kirjaa-havainnon-paatos! c
+                                              (konv/sql-timestamp kasittelyaika)
+                                              (name paatos) perustelu
+                                              (name kasittelytapa) muukasittelytapa
+                                              (:id user)
+                                              id))
+        (when (= :sanktio (:paatos (:paatos havainto)))
+          (doseq [sanktio (:sanktiot havainto)]
+            (tallenna-havainnon-sanktio c user sanktio id urakka))))
 
-                              (hae-havainnon-tiedot c user urakka id))))
+      (hae-havainnon-tiedot c user urakka id))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu tpi]}]
 
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/debug "Hae sanktiot ("urakka-id alku loppu tpi")")
+  (log/debug "Hae sanktiot (" urakka-id alku loppu tpi ")")
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa)))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu) tpi)))
+
+(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
+  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi)
+  (if (or (neg? id) (nil? id))
+    (let [uusi-sanktio (sanktiot/luo-sanktio<!
+                    db (konv/sql-timestamp perintapvm)
+                    (name laji) (:id tyyppi)
+                    toimenpideinstanssi urakka
+                    summa indeksi havainto (or suorasanktio false))]
+      (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
+      (:id uusi-sanktio))
+
+    (do
+      (sanktiot/paivita-sanktio!
+        db (konv/sql-timestamp perintapvm)
+        (name laji) (:id tyyppi)
+        toimenpideinstanssi urakka
+        summa indeksi havainto (or suorasanktio false)
+        id)
+      (sanktiot/merkitse-maksuera-likaiseksi! db id)
+      id)))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
@@ -191,23 +200,23 @@
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
-  (try 
+  (try
     (jdbc/with-db-transaction [c db]
       (let [havainto (merge (:havainto tarkastus)
-                            {:aika (:aika tarkastus)
+                            {:aika   (:aika tarkastus)
                              :urakka urakka-id})
-            
+
             uusi? (nil? (:id tarkastus))
             havainto-id (havainnot/luo-tai-paivita-havainto c user havainto)
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
                                                        havainto-id)]
-        
+
         (condp = (:tyyppi tarkastus)
           :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
           :soratie (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
           nil)
-        
-        
+
+
         (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
@@ -218,40 +227,44 @@
   (start [{:keys [http-palvelin db] :as this}]
 
     (julkaise-palvelut
-     http-palvelin
-     
-     :hae-urakan-havainnot
-     (fn [user tiedot]
-       (hae-urakan-havainnot db user tiedot))
-     
-     :tallenna-havainto
-     (fn [user havainto]
-       (tallenna-havainto db user havainto))
-     
-     :hae-havainnon-tiedot
-     (fn [user {:keys [urakka-id havainto-id]}]
-       (hae-havainnon-tiedot db user urakka-id havainto-id))
-     
-     :hae-urakan-sanktiot
-     (fn [user tiedot]
-       (hae-urakan-sanktiot db user tiedot))
-     
-     :hae-sanktiotyypit
-     (fn [user]
-       (hae-sanktiotyypit db user))
-     
-     :hae-urakan-tarkastukset
-     (fn [user tiedot]
-       (hae-urakan-tarkastukset db user tiedot))
+      http-palvelin
 
-     :tallenna-tarkastus
-     (fn [user {:keys [urakka-id tarkastus]}]
-       (tallenna-tarkastus db user urakka-id tarkastus))
+      :hae-urakan-havainnot
+      (fn [user tiedot]
+        (hae-urakan-havainnot db user tiedot))
+
+      :tallenna-havainto
+      (fn [user havainto]
+        (tallenna-havainto db user havainto))
+
+      :tallenna-sanktio
+      (fn [user tiedot]
+        (tallenna-havainnon-sanktio db user (:sanktio tiedot) (:havainto-id tiedot) (:urakka-id tiedot)))
+
+      :hae-havainnon-tiedot
+      (fn [user {:keys [urakka-id havainto-id]}]
+        (hae-havainnon-tiedot db user urakka-id havainto-id))
+
+      :hae-urakan-sanktiot
+      (fn [user tiedot]
+        (hae-urakan-sanktiot db user tiedot))
+
+      :hae-sanktiotyypit
+      (fn [user]
+        (hae-sanktiotyypit db user))
+
+      :hae-urakan-tarkastukset
+      (fn [user tiedot]
+        (hae-urakan-tarkastukset db user tiedot))
+
+      :tallenna-tarkastus
+      (fn [user {:keys [urakka-id tarkastus]}]
+        (tallenna-tarkastus db user urakka-id tarkastus))
 
 
-     :hae-tarkastus
-     (fn [user {:keys [urakka-id tarkastus-id]}]
-       (hae-tarkastus db user urakka-id tarkastus-id)))
+      :hae-tarkastus
+      (fn [user {:keys [urakka-id tarkastus-id]}]
+        (hae-tarkastus db user urakka-id tarkastus-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

@@ -111,14 +111,6 @@
 (defn tallenna-havainto [havainto]
   (k/post! :tallenna-havainto havainto))
 
-  
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot annetulle hoitokaudelle."
-  [urakka-id [alku loppu] tpi]
-  (k/post! :hae-urakan-sanktiot {:urakka-id urakka-id
-                                 :alku alku
-                                 :loppu loppu
-                                 :tpi tpi}))
 
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."

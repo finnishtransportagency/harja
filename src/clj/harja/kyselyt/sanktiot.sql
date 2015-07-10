@@ -7,7 +7,7 @@ VALUES (:perintapvm, :ryhma::sanktiolaji, :tyyppi,
         (SELECT id FROM toimenpideinstanssi WHERE id = :toimenpideinstanssi AND urakka = :urakka),
         :summa, :indeksi, :havainto, :suorasanktio);
 
--- name: paivita-sanktio<!
+-- name: paivita-sanktio!
 -- Päivittää olemassaolevan sanktion
 UPDATE sanktio
 SET perintapvm = :perintapvm,
@@ -45,11 +45,13 @@ SELECT
   s.sakkoryhma AS laji,
   s.indeksi,
   s.suorasanktio,
+  s.toimenpideinstanssi,
 
   h.id         AS havainto_id,
   h.kohde      AS havainto_kohde,
   h.aika AS havainto_aika,
   h.tekija AS havainto_tekija,
+  h.urakka AS havainto_urakka,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS havainto_tekijanimi,
   h.kasittelyaika AS havainto_paatos_kasittelyaika,
   h.paatos AS havainto_paatos_paatos,
