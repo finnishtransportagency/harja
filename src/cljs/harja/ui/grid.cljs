@@ -296,6 +296,8 @@ Optiot on mappi optioita:
   :muokkaa-aina    jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
   :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                    Parametrina Grid ohjauskahva
+  :prosessoi-muutos  funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
+                     parametrina muokkausdata, palauttaa uuden muokkausdatan 
   :rivin-luokka    funktio joka palauttaa rivin luokan
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
@@ -306,7 +308,7 @@ Optiot on mappi optioita:
   
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
-           muokkaa-footer muokkaa-aina muutos rivin-luokka
+           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
@@ -400,9 +402,12 @@ Optiot on mappi optioita:
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut
                                              (fn [muokatut]
-                                               (update-in muokatut [id]
-                                                          (fn [rivi]
-                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))))]
+                                               (let [uusi-data (update-in muokatut [id]
+                                                                          (fn [rivi]
+                                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))]
+                                                 (if prosessoi-muutos
+                                                   (prosessoi-muutos uusi-data)
+                                                   uusi-data))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (reset! viimeisin-muokattu-id id)

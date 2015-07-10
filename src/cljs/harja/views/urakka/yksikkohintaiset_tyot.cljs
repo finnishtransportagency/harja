@@ -77,6 +77,17 @@
    {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
+(defn paivita-hoitorivin-summat [{:keys [maara-kkt-10-12 maara-kkt-1-9 yksikkohinta] :as rivi}]
+  (let [yht-10-12 (and yksikkohinta maara-kkt-10-12
+                       (* yksikkohinta maara-kkt-10-12))
+        yht-1-9 (and yksikkohinta maara-kkt-1-9
+                     (* yksikkohinta maara-kkt-1-9))]
+    (assoc rivi
+           :yhteensa-kkt-10-12 yht-10-12
+           :yhteensa-kkt-1-9 yht-1-9
+           :yhteensa (and yht-10-12 yht-1-9 (+ yht-10-12 yht-1-9)))))
+
+
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
         toimenpiteet-ja-tehtavat (atom nil)
@@ -186,6 +197,11 @@
                              #(swap! tuleville? not)
                              [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                              @varoita-ylikirjoituksesta?])
+          :prosessoi-muutos (when (= :hoito (:tyyppi ur))
+                              (fn [rivit]
+                                (let [rivit (seq rivit)]
+                                  (zipmap (map first rivit)
+                                          (map (comp paivita-hoitorivin-summat second) rivit)))))
           }
 
          ;; sarakkeet
