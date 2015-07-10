@@ -82,14 +82,14 @@
 
 (defrecord Urakat []
   component/Lifecycle
-  (start [{http :http-palvelin db :db :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :api-hae-urakka
+      http :hae-urakka
       (GET "/api/urakat/:id" request
-        (kasittele-kutsu db :api-hae-urakka request nil skeemat/+urakan-haku-vastaus+
+        (kasittele-kutsu db integraatioloki :hae-urakka request nil skeemat/+urakan-haku-vastaus+
                          (fn [parametit data kayttaja-id] (hae-urakka db parametit kayttaja-id)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :api-hae-urakka)
+    (poista-palvelut http :hae-urakka)
     this))

@@ -91,13 +91,13 @@
 
 (defrecord Havainnot []
   component/Lifecycle
-  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta :as this}]
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :api-lisaa-havainto
+      http :lisaa-havainto
       (POST "/api/urakat/:id/havainto" request
-        (kasittele-kutsu db :api-lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja] (kirjaa-havainto liitteiden-hallinta db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :api-lisaa-havainto)
+    (poista-palvelut http :lisaa-havainto)
     this))

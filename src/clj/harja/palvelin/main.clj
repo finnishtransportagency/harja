@@ -74,6 +74,11 @@
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
 
+      ;; Integraatioloki
+      :integraatioloki (component/using (integraatioloki/->Integraatioloki
+                                          (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
+                                        [:db])
+
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (sonja/luo-sonja (:sonja asetukset))
 
@@ -164,25 +169,20 @@
                         (laadunseuranta/->Laadunseuranta)
                         [:http-palvelin :db])
 
-      ;; Harja API
-      :api-urakat (component/using
-                    (api-urakat/->Urakat)
-                    [:http-palvelin :db])
-      :api-havainnot (component/using
-                       (api-havainnot/->Havainnot)
-                       [:http-palvelin :db :liitteiden-hallinta])
-      :api-tarkastukset (component/using
-                          (api-tarkastukset/->Tarkastukset)
-                          [:http-palvelin :db])
-
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db])
 
-      ;; Integraatioloki
-      :integraatioloki (component/using (integraatioloki/->Integraatioloki
-                                          (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
-                                        [:db])
+      ;; Harja API
+      :api-urakat (component/using
+                    (api-urakat/->Urakat)
+                    [:http-palvelin :db :integraatioloki])
+      :api-havainnot (component/using
+                       (api-havainnot/->Havainnot)
+                       [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
+      :api-tarkastukset (component/using
+                          (api-tarkastukset/->Tarkastukset)
+                          [:http-palvelin :db :integraatioloki])
 
       )))
 

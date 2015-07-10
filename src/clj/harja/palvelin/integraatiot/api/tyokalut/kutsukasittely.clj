@@ -5,26 +5,44 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.kayttajat :as q])
+            [harja.palvelin.palvelut.kayttajat :as q]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn logita-kutsu [resurssi request body]
-  ;; fixme: lisää monitorointikutsu
-  (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi)
-  (log/debug "Kutsu:" request)
-  (log/debug "Sisältö:" body))
+(defn tee-lokiviesti [suunta body viesti]
+  {:suunta        suunta
+   :sisaltotyyppi "application/json"
+   :siirtotyyppi  "HTTP"
+   :sisalto       body
+   :otsikko       (str (:headers viesti))
+   :parametrit    (str (:params viesti))})
 
-(defn logita-vastaus [resurssi response]
-  ;; fixme: lisää monitorointikutsu
+(defn lokita-kutsu [integraatioloki resurssi request body]
+  (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+  (log/debug "Kutsu:" request)
+  (log/debug "Parametrit: " (:params request))
+  (log/debug "Headerit: " (:headers request))
+  (log/debug "Sisältö:" body)
+
+  (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil (tee-lokiviesti "sisään" body request)))
+
+(defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
+  (log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
+  (log/debug "Vastaus:" response)
+  (log/debug "Headerit: " (:headers response))
+  (log/debug "Sisältö:" (:body response))
+
   (if (= 200 (:status response))
-    (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
-    (log/error "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" response)))
+    (do
+      (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
+      (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))
+    (do
+      (log/error "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" response)
+      (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))))
 
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
   [status virheet]
-  (log/debug "Virheet:" virheet)
-
   (let [body (cheshire/encode
                {:virheet
                 (mapv (fn [virhe]
@@ -32,7 +50,6 @@
                          {:koodi  (:koodi virhe)
                           :viesti (:viesti virhe)}})
                       virheet)})]
-    (log/debug "Body on:" body)
     {:status  status
      :headers {"Content-Type" "application/json"}
      :body    body}))
@@ -59,8 +76,8 @@
         :body    json})
 
      (if skeema
-       (throw+ {:type virheet/+sisainen-kasittelyvirhe+
-                :virheet [{:koodi virheet/+tyhja-vastaus+
+       (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                :virheet [{:koodi  virheet/+tyhja-vastaus+
                            :viesti "Tyhja vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
@@ -96,7 +113,7 @@
                  :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn kasittele-kutsu [db resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+(defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
   validoidaan käyttäen annettuja JSON-skeemoja.
@@ -105,8 +122,8 @@
 
   (let [body (if (:body request)
                (slurp (:body request))
-               nil)]
-    (logita-kutsu resurssi request body)
+               nil)
+        tapahtuma-id (lokita-kutsu integraatioloki resurssi request body)]
     (let [vastaus (try+
                     (let
                       [parametrit (:params request)
@@ -125,5 +142,5 @@
                       (kasittele-sisainen-kasittelyvirhe
                         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                           :viesti (.getMessage e)}])))]
-      (logita-vastaus resurssi vastaus)
+      (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id)
       vastaus)))

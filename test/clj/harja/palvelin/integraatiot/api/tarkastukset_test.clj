@@ -6,11 +6,13 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
-            [taoensso.timbre :as log]
             [clojure.data.json :as json]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.util Date)
+           (java.text SimpleDateFormat)))
 
 
 (def portti nil)
@@ -18,7 +20,7 @@
 (def urakka nil)
 
 (defn json-pvm [pvm]
-  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") pvm))
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") pvm))
 
 
 (defn jarjestelma-fixture [testit]
@@ -26,21 +28,24 @@
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
-                     (component/system-map
-                      :db (apply tietokanta/luo-tietokanta testitietokanta)
-                      :klusterin-tapahtumat (component/using
-                                             (tapahtumat/luo-tapahtumat)
-                                             [:db])
-                      
-                      :todennus (component/using
-                                 (todennus/http-todennus)
-                                 [:db :klusterin-tapahtumat])
-                      :http-palvelin (component/using
-                                      (http-palvelin/luo-http-palvelin portti true)
-                                      [:todennus])
-                      :api-tarkastukset (component/using
-                                         (api-tarkastukset/->Tarkastukset)
-                                         [:http-palvelin :db])))))
+                      (component/system-map
+                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :klusterin-tapahtumat (component/using
+                                                (tapahtumat/luo-tapahtumat)
+                                                [:db])
+
+                        :todennus (component/using
+                                    (todennus/http-todennus)
+                                    [:db :klusterin-tapahtumat])
+                        :http-palvelin (component/using
+                                         (http-palvelin/luo-http-palvelin portti true)
+                                         [:todennus])
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :api-tarkastukset (component/using
+                                            (api-tarkastukset/->Tarkastukset)
+                                            [:http-palvelin :db :integraatioloki])))))
 
   (alter-var-root #'urakka
                   (fn [_]
@@ -60,20 +65,20 @@
   Body on json string (tai muu http-kitin ymmärtämä input)."
   [api-polku-vec body]
   @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-              {:body body
+              {:body    body
                :headers {"OAM_REMOTE_USER" kayttaja
-                         "Content-Type" "application/json"}}))
+                         "Content-Type"    "application/json"}}))
 
 (deftest tallenna-soratietarkastus
-  (let [pvm (java.util.Date.)
-        id (rand-int 10000) ;; FIXME: varmista että ei ole olemassa
-        
+  (let [pvm (Date.)
+        id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
+
         vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
                            (-> "test/resurssit/api/soratietarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-pvm pvm))
                                (.replace "__ID__" (str id))))]
-    
+
     (is (= 200 (:status vastaus)))
     (is (str/blank? (slurp (:body vastaus))))
 
@@ -105,15 +110,15 @@
 
 
 (deftest tallenna-talvihoitotarkastus
-  (let [pvm (java.util.Date.)
-        id (rand-int 10000) ;; FIXME: varmista että ei ole olemassa
-        
+  (let [pvm (Date.)
+        id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
+
         vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                            (-> "test/resurssit/api/talvihoitotarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-pvm pvm))
                                (.replace "__ID__" (str id))))]
-    
+
     (is (= 200 (:status vastaus)))
     (is (str/blank? (slurp (:body vastaus))))
 

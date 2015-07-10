@@ -60,29 +60,29 @@
 
 ;; Määritellään tarkastustyypit, joiden lisäämiselle tehdään API palvelut
 (def tarkastukset
-  [{:palvelu :api-lisaa-tiestotarkastus
+  [{:palvelu :lisaa-tiestotarkastus
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
     :skeema skeemat/+tiestotarkastuksen-kirjaus+
     :tyyppi :tiesto}
-   {:palvelu :api-lisaa-talvihoitotarkastus
+   {:palvelu :lisaa-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
     :skeema skeemat/+talvihoitotarkastuksen-kirjaus+
     :tyyppi :talvihoito}
-   {:palvelu :api-lisaa-soratietarkastus
+   {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
     :skeema skeemat/+soratietarkastuksen-kirjaus+
     :tyyppi :soratie}])
 
 (defrecord Tarkastukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (doseq [{:keys [palvelu polku skeema tyyppi]} tarkastukset]
       (julkaise-reitti
        http palvelu
        (POST polku request
              (do
                (log/info "REQUEST: " (pr-str request))
-               (kasittele-kutsu db palvelu request
+               (kasittele-kutsu db integraatioloki palvelu request
                               skeema nil
                               (fn [parametrit data kayttaja]
                                 (kirjaa-tarkastus  db kayttaja tyyppi parametrit data)))))))
