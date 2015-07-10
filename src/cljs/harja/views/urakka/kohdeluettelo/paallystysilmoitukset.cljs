@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kohdeluettelo.paallystysilmoitus
+(ns harja.views.urakka.kohdeluettelo.paallystysilmoitukset
   "Urakan kohdeluettelon toteumat"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
@@ -426,7 +426,7 @@
       (fn []
         [:div
          [grid/grid
-          {:otsikko  "Toteumat"
+          {:otsikko  "Päällystysilmoitukset"
            :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
