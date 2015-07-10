@@ -91,6 +91,38 @@
                                      :summa (some-> % :summa double))))
                         (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
 
+(defn hae-urakan-sanktiot
+  "Hakee urakan sanktiot perintäpvm:n mukaan"
+  [db user {:keys [urakka-id alku loppu tpi]}]
+
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Hae sanktiot (" urakka-id alku loppu tpi ")")
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(konv/decimal->double % :summa)))
+        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu) tpi)))
+
+(defn tallenna-havainnon-sanktio
+  [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
+  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi)
+  (if (or (neg? id) (nil? id))
+    (let [uusi-sanktio (sanktiot/luo-sanktio<!
+                    db (konv/sql-timestamp perintapvm)
+                    (name laji) (:id tyyppi)
+                    toimenpideinstanssi urakka
+                    summa indeksi havainto (or suorasanktio false))]
+      (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
+      (:id uusi-sanktio))
+
+    (do
+      (sanktiot/paivita-sanktio!
+        db (konv/sql-timestamp perintapvm)
+        (name laji) (:id tyyppi)
+        toimenpideinstanssi urakka
+        summa indeksi havainto (or suorasanktio false)
+        id)
+      (sanktiot/merkitse-maksuera-likaiseksi! db id)
+      id)))
 
 (defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
   (log/info "Tuli havainto: " havainto)
@@ -141,38 +173,6 @@
             (tallenna-havainnon-sanktio c user sanktio id urakka))))
 
       (hae-havainnon-tiedot c user urakka id))))
-
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu tpi]}]
-
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/debug "Hae sanktiot (" urakka-id alku loppu tpi ")")
-  (into []
-        (comp (map konv/alaviiva->rakenne)
-              (map #(konv/decimal->double % :summa)))
-        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu) tpi)))
-
-(defn tallenna-havainnon-sanktio [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
-  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi)
-  (if (or (neg? id) (nil? id))
-    (let [uusi-sanktio (sanktiot/luo-sanktio<!
-                    db (konv/sql-timestamp perintapvm)
-                    (name laji) (:id tyyppi)
-                    toimenpideinstanssi urakka
-                    summa indeksi havainto (or suorasanktio false))]
-      (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
-      (:id uusi-sanktio))
-
-    (do
-      (sanktiot/paivita-sanktio!
-        db (konv/sql-timestamp perintapvm)
-        (name laji) (:id tyyppi)
-        toimenpideinstanssi urakka
-        summa indeksi havainto (or suorasanktio false)
-        id)
-      (sanktiot/merkitse-maksuera-likaiseksi! db id)
-      id)))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
