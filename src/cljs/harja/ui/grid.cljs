@@ -653,12 +653,13 @@ Optiot on mappi optioita:
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
+  :voi-kumota?     jos false, kumoa-nappia ei näytetä
   :voi-poistaa?    funktio, joka palauttaa true tai false.
   :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   "
-  [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot?
+  [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta
            muokkaa-footer muutos uusi-rivi luokat] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
@@ -742,7 +743,7 @@ Optiot on mappi optioita:
          )
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? rivi-klikattu rivinumerot?
+       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota? rivi-klikattu rivinumerot?
                     muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot] :as opts} skeema muokatut]
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
@@ -760,12 +761,13 @@ Optiot on mappi optioita:
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
                [:span.pull-right.muokkaustoiminnot
-                [:button.nappi-toissijainen
-                 {:disabled (empty? @historia)
-                  :on-click #(do (.stopPropagation %)
-                                 (.preventDefault %)
-                                 (peru! muokatut))}
-                 (ikonit/peru) " Kumoa"]
+                (when (not= false voi-kumota?)
+                  [:button.nappi-toissijainen
+                   {:disabled (empty? @historia)
+                    :on-click #(do (.stopPropagation %)
+                                   (.preventDefault %)
+                                   (peru! muokatut))}
+                   (ikonit/peru) " Kumoa"])
                 (when (not= false voi-lisata?)
                   [:button.nappi-toissijainen.grid-lisaa
                    {:on-click #(do (.preventDefault %)
@@ -819,13 +821,13 @@ Optiot on mappi optioita:
 
                                             (if voi-muokata?
                                               [tee-kentta s (r/wrap
-                                                             arvo
-                                                             (fn [uusi]
-                                                               (if aseta
-                                                                 (muokkaa! muokatut-atom
-                                                                           id (fn [rivi]
-                                                                                (aseta rivi uusi)))
-                                                                 (muokkaa! muokatut-atom id assoc nimi uusi))))]
+                                                              arvo
+                                                              (fn [uusi]
+                                                                (if aseta
+                                                                  (muokkaa! muokatut-atom
+                                                                            id (fn [rivi]
+                                                                                 (aseta rivi uusi)))
+                                                                  (muokkaa! muokatut-atom id assoc nimi uusi))))]
                                               [nayta-arvo s (vain-luku-atomina arvo)])]
 
                                            ^{:key (str nimi)}

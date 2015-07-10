@@ -308,6 +308,7 @@
          [grid/muokkaus-grid
           {:otsikko      "Päällystystoimenpiteen tiedot"
            :voi-lisata?  false
+           :voi-kumota?  false
            :voi-poistaa? (constantly false)
            :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
                                   (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
