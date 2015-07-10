@@ -9,7 +9,6 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.jms :refer [feikki-sonja]]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [clojure.core.async :refer [<! >! go] :as async]
             [harja.tyokalut.xml :as xml]))
 
 (def +lahetysjono-sisaan+ "lahetysjono-sisaan")
