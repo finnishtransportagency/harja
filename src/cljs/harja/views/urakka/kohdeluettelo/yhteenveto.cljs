@@ -82,7 +82,7 @@
                                                     kohteet)))
         lisatyot (reaction (let [kohteet @paallystyskohderivit]
                              (filter #(true? (:lisatyo %)) kohteet)))
-        kohdenumerot-set (reaction (let [rivit @paallystyskohderivit
+        valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @paallystyskohderivit)
                                      kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
                                      (log "PÄÄ rivit: " (pr-str rivit))
                                      (log "PÄÄ kohdenumerot: " (pr-str kohdenumerot))
@@ -108,7 +108,7 @@
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "#" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]
-                                                                                    [:arvo-ei-setissa kohdenumerot-set "Kohdenumero on jo olemassa!"]]
+                                                                                    [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
             :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}

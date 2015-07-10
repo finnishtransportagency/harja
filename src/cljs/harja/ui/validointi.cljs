@@ -38,9 +38,10 @@
       (or viesti
           (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
 
-(defmethod validoi-saanto :arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
+(defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
+  "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
-  (when (contains? @setti-atom data)
+  (when (and (contains? @setti-atom data) (neg? (:id rivi)))
     viesti))
     
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
