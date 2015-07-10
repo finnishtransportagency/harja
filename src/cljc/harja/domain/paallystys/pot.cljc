@@ -156,7 +156,7 @@
      (s/optional-key :poistettu) s/Bool}]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
-   (s/optional-key :kiviaines)
+   :kiviaines
    [{:esiintyma                  s/Str
      :km-arvo                    s/Str
      :muotoarvo                  s/Str
@@ -168,7 +168,7 @@
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   (s/optional-key :alustatoimet)
+   :alustatoimet
    [{:aosa s/Int
      :aet s/Int
      :losa s/Int
@@ -180,7 +180,7 @@
      (s/optional-key :poistettu) s/Bool}]
 
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-   (s/optional-key :tyot)
+   :tyot
    [{:tyyppi                     +paallystystyon-tyyppi+    ;; +paallystystyon-tyyppi+ skeemasta
      :tyo                        s/Str
      :tilattu-maara              s/Num
