@@ -741,7 +741,11 @@ Optiot on mappi optioita:
                     muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot] :as opts} skeema muokatut]
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
-               ohjaus (ohjaus-fn muokatut)]
+               ohjaus (ohjaus-fn muokatut)
+               voi-muokata? (if (nil? voi-muokata?)
+                              true
+                              voi-muokata?)
+               ]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
