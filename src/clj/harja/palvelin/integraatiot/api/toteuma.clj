@@ -45,38 +45,37 @@
              ""
              (get-in toteuma [:tunniste :id]))))))
 
-(defn tallenna-sijainti [db data toteuma-id]
-  (let [{:keys                      [pistetoteuma]
-         {:keys [toteuma sijainti]} :pistetoteuma} data]
-    (log/debug "Tuhotaan toteuman vanha reittipiste")
-    (toteumat/poista-reittipiste-toteuma-idlla!
-      db
-      toteuma-id)
-    (log/debug "Luodaan toteumalle uusi reittipiste")
-    (toteumat/luo-reittipiste<!
+(defn tallenna-sijainti [db toteuma toteuma-id]
+  (log/debug "Tuhotaan toteuman vanha sijainti")
+  (toteumat/poista-reittipiste-toteuma-idlla!
+    db
+    toteuma-id)
+  (log/debug "Luodaan toteumalle uusi sijainti")
+  (toteumat/luo-reittipiste<!
+    db
+    toteuma-id
+    (parsi-aika (:alkanut toteuma))
+    (:x (:sijainti toteuma))
+    (:y (:sijainti toteuma))
+    (:z (:sijainti toteuma))))
+
+(defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
+  (log/debug "Tuhotaan toteuman vanhat tehtävät")
+  (toteumat/poista-toteuma_tehtava-toteuma-idlla!
+    db
+    toteuma-id)
+  (log/debug "Luodaan toteumalle uudet tehtävät")
+  (doseq [tehtava (:tehtavat toteuma)]
+    (log/debug "Luodaan tehtävä: " (pr-str tehtava))
+    (toteumat/luo-toteuma_tehtava<!
       db
       toteuma-id
-      (parsi-aika (:alkanut toteuma))
-      (:x sijainti)
-      (:y sijainti)
-      (:z sijainti))))
+      (get-in tehtava [:tehtava :id])
+      nil
+      (:id kirjaaja)
+      nil
+      nil)))
 
-(defn tallenna-tehtavat [db kirjaaja data toteuma-id]
-  (let [{:keys                      [pistetoteuma]
-         {:keys [toteuma sijainti]} :pistetoteuma} data
-        tehtavat (:tehtavat toteuma)]
-    (log/debug "Tuhotaan toteuman vanhat tehtävät")
-    (toteumat/poista-toteuma_tehtava-toteuma-idlla!
-      db
-      toteuma-id)
-    (log/debug "Luodaan toteumalle uudet tehtävät")
-    (doseq [tehtava tehtavat]
-      (log/debug "Luodaan tehtävä: " (pr-str tehtava))
-      (toteumat/luo-toteuma_tehtava<!
-        db
-        toteuma-id
-        (get-in tehtava [:tehtava :id])
-        nil
-        (:id kirjaaja)
-        nil
-        nil))))
+(defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
+  ; FIXME tee
+  )
