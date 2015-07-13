@@ -22,30 +22,37 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   ; FIXME Ulkoinen id puuttuu, pitää lisätä ja tarkistaa ettei frontti mene rikki
-  (let [{:keys [pistetoteuma otsikko]
-         {:keys [organisaatio viestitunniste]} :otsikko
-         {:keys [toteuma sijainti]} :pistetoteuma} data]
-    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (:id viestitunniste) (:id kirjaaja))
-      (:id (toteumat/luo-toteuma<!
-             db
-             urakka-id
-             (:sopimusId toteuma)
-             (parsi-aika (:alkanut toteuma))
-             (parsi-aika (:paattynyt toteuma))
-             (:tyyppi toteuma)
-             (:id kirjaaja)
-             (:nimi organisaatio)
-             (:ytunnus organisaatio)))
-      (:id (toteumat/paivita-toteuma!
-             db
-             (parsi-aika (:alkanut toteuma))
-             (parsi-aika (:paattynyt toteuma))
-             (:id kirjaaja)
-             (:nimi organisaatio)
-             (:ytunnus organisaatio)
-             ""
-             (:id viestitunniste)
-             urakka-id)))))
+  (let [{:keys                                  [pistetoteuma otsikko]
+         {:keys [organisaatio viestintunniste]} :otsikko
+         {:keys [toteuma sijainti]}             :pistetoteuma} data]
+    (log/debug "Viestitunniste: " viestintunniste)
+    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (:id viestintunniste) (:id kirjaaja))
+      (do
+        (log/debug "Luodaan uusi toteuma.")
+        (:id (toteumat/luo-toteuma<!
+               db
+               urakka-id
+               (:sopimusId toteuma)
+               (parsi-aika (:alkanut toteuma))
+               (parsi-aika (:paattynyt toteuma))
+               (:tyyppi toteuma)
+               (:id kirjaaja)
+               (:nimi organisaatio)
+               (:ytunnus organisaatio)
+               ""
+               (:id viestintunniste))))
+      (do
+        (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (:id viestintunniste))
+        (:id (toteumat/paivita-toteuma!
+               db
+               (parsi-aika (:alkanut toteuma))
+               (parsi-aika (:paattynyt toteuma))
+               (:id kirjaaja)
+               (:nimi organisaatio)
+               (:ytunnus organisaatio)
+               ""
+               (:id viestintunniste)
+               urakka-id))))))
 
 (defn tallenna-sijainti []
   ; FIXME Tuhoa vanha reittipiste ja luo uusi
@@ -57,7 +64,9 @@
 
 (defn tallenna [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma-id (tallenna-toteuma transaktio urakka-id kirjaaja data)])))
+    (let [toteuma-id (tallenna-toteuma transaktio urakka-id kirjaaja data)])
+    (tallenna-sijainti)
+    (tallenna-tehtavat)))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

@@ -214,9 +214,9 @@ WHERE id = :id AND urakka = :urakka;
 INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
- poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+ poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja,
-        FALSE, :suorittaja, :tunnus, :lisatieto);
+        FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id);
 
 -- name: poista-toteuma!
 UPDATE toteuma
