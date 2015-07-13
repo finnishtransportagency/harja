@@ -22,18 +22,17 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (let [{:keys                                  [pistetoteuma otsikko]
-         {:keys [lahettaja viestintunniste]}    :otsikko
          {:keys [toteuma sijainti]}             :pistetoteuma} data]
-    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in [:tunniste :id] toteuma) (:id kirjaaja))
+    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
       (do ; FIXME Ilmeisesti päivittäminen ei toimi?
-        (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (:id viestintunniste))
-        (:id (toteumat/paivita-toteuma!
+        (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
+        (:id (toteumat/paivita-toteuma-ulkoisella-idlla!
                db
                (parsi-aika (:alkanut toteuma))
                (parsi-aika (:paattynyt toteuma))
                (:id kirjaaja)
-               (get-in lahettaja [:organisaatio :nimi])
-               (get-in lahettaja [:organisaatio :ytunnus])
+               (get-in toteuma [:suorittaja :nimi])
+               (get-in toteuma [:suorittaja :ytunnus])
                ""
                (get-in toteuma [:tunniste :id])
                urakka-id)))
@@ -47,8 +46,8 @@
                  (parsi-aika (:paattynyt toteuma))
                  (:tyyppi toteuma)
                  (:id kirjaaja)
-                 (get-in lahettaja [:organisaatio :nimi])
-                 (get-in lahettaja [:organisaatio :ytunnus])
+                 (get-in toteuma [:suorittaja :nimi])
+                 (get-in toteuma [:suorittaja :ytunnus])
                  ""
                  (get-in toteuma [:tunniste :id])))))))
 

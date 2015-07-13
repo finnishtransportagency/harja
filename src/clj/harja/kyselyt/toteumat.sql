@@ -209,6 +209,18 @@ SET alkanut = :alkanut,
   lisatieto = :lisatieto
 WHERE id = :id AND urakka = :urakka;
 
+-- name: paivita-toteuma-ulkoisella-idlla!
+UPDATE toteuma
+SET alkanut = :alkanut,
+  paattynyt = :paattynyt,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja,
+  suorittajan_nimi = :suorittajan_nimi,
+  suorittajan_ytunnus = :ytunnus,
+  lisatieto = :lisatieto
+WHERE ulkoinen_id = :id AND urakka = :urakka;
+
+
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
 INSERT
