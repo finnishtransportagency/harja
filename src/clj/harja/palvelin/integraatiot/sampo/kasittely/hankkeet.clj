@@ -4,7 +4,7 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.sampo.tyokalut.lokitus :as sampo-lokitus])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm alueurakkanro sampo-id]}]
@@ -24,9 +24,9 @@
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa hanketta Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Program" "Internal Error")]
-        (throw+ {:type       virheet/+poikkeus-samposisaanluvussa+
+        (throw+ {:type     sampo-lokitus/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus (.toString e)}]})))))
+                 :virheet  [{:poikkeus e}]})))))
 
 (defn kasittele-hankkeet [db hankkeet]
   (mapv #(kasittele-hanke db %) hankkeet))

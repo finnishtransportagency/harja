@@ -19,7 +19,7 @@
   (log/debug "Käynnistetään Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
   (sonja/kuuntele (:sonja this) kuittausjono-ulos
                   (fn [viesti]
-                    (vienti/kasittele-kuittaus (:db this) viesti))))
+                    (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti))))
 
 (defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika lahetysjono-ulos]
   (if paivittainen-lahetysaika
@@ -27,7 +27,7 @@
       (log/debug "Ajastetaan maksuerien ja kustannussuunnitelmien lähetys ajettavaksi joka päivä kello: " paivittainen-lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
-        (fn [_] (vienti/aja-paivittainen-lahetys (:sonja this) (:db this) lahetysjono-ulos))))
+        (fn [_] (vienti/aja-paivittainen-lahetys (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos))))
     (fn [] ())))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
@@ -47,7 +47,7 @@
 
   Maksueralahetys
   (laheta-maksuera-sampoon [this numero]
-    (let [maksueran-lahetys (vienti/laheta-maksuera (:sonja this) (:db this) lahetysjono-ulos numero)
-          kustannussuunnitelman-lahetys (vienti/laheta-kustannussuunitelma (:sonja this) (:db this) lahetysjono-ulos numero)]
+    (let [maksueran-lahetys (vienti/laheta-maksuera (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)
+          kustannussuunnitelman-lahetys (vienti/laheta-kustannussuunitelma (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)]
       {:maksuera             maksueran-lahetys
        :kustannussuunnitelma kustannussuunnitelman-lahetys})))

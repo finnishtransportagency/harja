@@ -7,27 +7,42 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sampoon-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelma]
-            [harja.palvelin.komponentit.sonja :as sonja]))
+            [harja.palvelin.integraatiot.sampo.tyokalut.lokitus :as sampo-lokitus]
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.tyokalut.xml :as xml]))
+
+(def +xsd-polku+ "resources/xsd/sampo/outbound/")
 
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
   (sonja/laheta sonja lahetysjono sanoma-xml))
 
-(defn kasittele-kuittaus [db viesti]
+(defn kasittele-kuittaus [integraatioloki db viesti]
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
-  ;; todo: tee xsd-validointi kuittaukselle
-  (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus (.getText viesti))]
-    (log/debug "Luettiin kuittaus: " kuittaus)
-    (if-let [viesti-id (:viesti-id kuittaus)]
-      (if (= :maksuera (:viesti-tyyppi kuittaus))
-        (maksuera/kasittele-maksuera-kuittaus db kuittaus viesti-id)
-        (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id))
-      (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä."))))
+  (let [kuittaus-xml (.getText viesti)]
+    ;todo: kytke päälle
+    ;(if (xml/validoi +xsd-polku+ "status.xsd" kuittaus-xml)
+    (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus kuittaus-xml)
+          onnistunut (not (contains? kuittaus :virhe))]
+      (log/debug "Luettiin kuittaus: " kuittaus)
+      (if-let [viesti-id (:viesti-id kuittaus)]
+        (if (= :maksuera (:viesti-tyyppi kuittaus))
+          (do
+            (sampo-lokitus/lokita-saapunut-kuittaus integraatioloki kuittaus-xml viesti-id "maksuera-lähetys" onnistunut)
+            (maksuera/kasittele-maksuera-kuittaus db kuittaus viesti-id))
+          (do
+            (sampo-lokitus/lokita-saapunut-kuittaus integraatioloki kuittaus-xml viesti-id "kustannussuunnitelma-lahetys" onnistunut)
+            (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id)))
+        (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))
+    ;    (log/error "Samposta vastaanotettu kuittaus ei ole validia XML:ää."))
+    ))
 
-(defn laheta-kustannussuunitelma [sonja db lahetysjono-ulos numero]
+(defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
   (if-let [kustannussuunnitelma-xml (kustannussuunnitelma/muodosta-kustannussuunnitelma db numero)]
-    (if-let [lahetys-id (laheta-sanoma-jonoon sonja lahetysjono-ulos kustannussuunnitelma-xml)]
-      (kustannussuunnitelma/merkitse-kustannussuunnitelma-odottamaan-vastausta db numero lahetys-id)
+    (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos kustannussuunnitelma-xml)]
+      (do
+        (sampo-lokitus/lokita-viesti integraatioloki "kustannussuunnitelma-lahetys" viesti-id "ulos" kustannussuunnitelma-xml)
+        (kustannussuunnitelma/merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id))
       (do
         (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")
         (kustannussuunnitelma/merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
@@ -36,11 +51,13 @@
       (log/warn "Kustannussuunnitelman (numero: " numero ") lukitus epäonnistui.")
       {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui})))
 
-(defn laheta-maksuera [sonja db lahetysjono-ulos numero]
+(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
   (if-let [maksuera-xml (maksuera/muodosta-maksuera db numero)]
-    (if-let [lahetys-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
-      (maksuera/merkitse-maksuera-odottamaan-vastausta db numero lahetys-id)
+    (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
+      (do
+        (maksuera/merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+        (sampo-lokitus/lokita-viesti integraatioloki "maksuera-lähetys" viesti-id "ulos" maksuera-xml))
       (do
         (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
         (maksuera/merkitse-maksueralle-lahetysvirhe db numero)
@@ -49,12 +66,12 @@
       (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
       {:virhe :maksueran-lukitseminen-epaonnistui})))
 
-(defn aja-paivittainen-lahetys [sonja db lahetysjono-ulos]
+(defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
   (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [maksuera maksuerat]
-      (laheta-maksuera sonja db lahetysjono-ulos (:numero maksuera)))
+      (laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera)))
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (laheta-kustannussuunitelma sonja db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
+      (laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))

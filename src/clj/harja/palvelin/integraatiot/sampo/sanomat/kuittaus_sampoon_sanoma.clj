@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [clojure.data.zip.xml :as z])
   (:import (java.text SimpleDateFormat)
            (java.util Date)))
 
@@ -42,3 +43,6 @@
 
 (defn muodosta-puuttuva-suhde-virhekuittaus [viesti-id viestityyppi virheviesti]
   (muodosta viesti-id viestityyppi "MISSING_RELATION" virheviesti))
+
+(defn onko-kuittaus-positiivinen? [kuittaus]
+  (= "NA" (first (z/xml-> (xml/lue kuittaus) (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode)))))))

@@ -22,5 +22,16 @@ WHERE ulkoinenid = :ulkoinen_id;
 -- name: luo-integraatioviesti<!
 -- Luo uuden integraatioviestin
 INSERT INTO integraatioviesti (integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
-VALUES (:integraatiotapahtuma, :suunta::integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit)
+VALUES
+  (:integraatiotapahtuma, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit);
+
+-- name: hae-tapahtumaid-ulkoisella-idlla
+-- Hakee tapahtuma id:n ulkoisella id:llä ja integraatiolla
+SELECT id
+FROM integraatiotapahtuma
+WHERE ulkoinenid = :ulkoinenid AND
+      integraatio = (SELECT id
+                     FROM integraatio
+                     WHERE jarjestelma = :jarjestelma AND nimi = :nimi);
+
 

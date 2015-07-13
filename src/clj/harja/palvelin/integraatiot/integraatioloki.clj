@@ -34,7 +34,7 @@
           (do
             (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtumaid)
             tapahtumaid)
-          (:id (first (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id))))]
+          (:id (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id)))]
     (when (and viesti kasitellyn-tapahtuman-id)
       (kirjaa-viesti db kasitellyn-tapahtuman-id viesti))))
 

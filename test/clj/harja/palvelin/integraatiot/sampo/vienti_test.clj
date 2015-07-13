@@ -1,10 +1,11 @@
 (ns harja.palvelin.integraatiot.sampo.vienti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo] :as sampo]
             [hiccup.core :refer [html]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo] :as sampo]
+            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.jms :refer [feikki-sonja]]
@@ -25,7 +26,8 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :sonja (feikki-sonja)
-                        :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja])))))
+                        :integraatioloki (component/using (->Integraatioloki nil) [:db])
+                        :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja :integraatioloki])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
