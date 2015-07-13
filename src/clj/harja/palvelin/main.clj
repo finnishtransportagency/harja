@@ -44,6 +44,7 @@
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
     [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
     [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
+    [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
 
     [com.stuartsierra.component :as component]
@@ -183,6 +184,9 @@
                        [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
       :api-pistetoteuma (component/using
                           (api-pistetoteuma/->Pistetoteuma)
+                          [:http-palvelin :db :integraatioloki])
+      :api-reittitoteuma (component/using
+                          (api-reittitoteuma/->Reittitoteuma)
                           [:http-palvelin :db :integraatioloki])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
