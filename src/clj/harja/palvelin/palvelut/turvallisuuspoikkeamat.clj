@@ -10,8 +10,14 @@
 
             [harja.kyselyt.turvallisuuspoikkeamat :as q]))
 
-(defn hae-turvallisuuspoikkeamat [db user tiedot]
-  (log/info "Not implemented yet"))
+(defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (harja.geo/muunna-pg-tulokset :sijainti)
+              (map #(konv/array->vec % :tyyppi))
+              (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+              (map #(assoc-in % [:liite :tyyppi] (keyword (get-in % [:liite :tyyppi])))))
+        (q/hae-urakan-turvallisuuspoikkeamat db urakka-id alku loppu)))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
