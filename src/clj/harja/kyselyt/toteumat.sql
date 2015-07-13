@@ -352,3 +352,11 @@ INSERT INTO reittipiste (toteuma, aika, luotu, x, y, z) VALUES (:toteuma, :aika,
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
 DELETE FROM reittipiste WHERE toteuma = :id;
+
+-- name: luo-toteuma_tehtava<!
+-- Luo uuden toteuman tehtävän
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto) VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto);
+
+-- name: poista-toteuma_tehtava-toteuma-idlla!
+-- Poistaa toteuman kaikki tehtävät
+DELETE FROM toteuma_tehtava WHERE toteuma = :id;

@@ -27,29 +27,29 @@
       (do
         (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
         (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
-                                db
-                                (parsi-aika (:alkanut toteuma))
-                                (parsi-aika (:paattynyt toteuma))
-                                (:id kirjaaja)
-                                (get-in toteuma [:suorittaja :nimi])
-                                (get-in toteuma [:suorittaja :ytunnus])
-                                ""
-                                (get-in toteuma [:tunniste :id])
-                                urakka-id)))
+               db
+               (parsi-aika (:alkanut toteuma))
+               (parsi-aika (:paattynyt toteuma))
+               (:id kirjaaja)
+               (get-in toteuma [:suorittaja :nimi])
+               (get-in toteuma [:suorittaja :ytunnus])
+               ""
+               (get-in toteuma [:tunniste :id])
+               urakka-id)))
       (do
         (log/debug "Luodaan uusi toteuma.")
         (:id (toteumat/luo-toteuma<!
-                                db
-                                urakka-id
-                                (:sopimusId toteuma)
-                                (parsi-aika (:alkanut toteuma))
-                                (parsi-aika (:paattynyt toteuma))
-                                (:tyyppi toteuma)
-                                (:id kirjaaja)
-                                (get-in toteuma [:suorittaja :nimi])
-                                (get-in toteuma [:suorittaja :ytunnus])
-                                ""
-                                (get-in toteuma [:tunniste :id])))))))
+               db
+               urakka-id
+               (:sopimusId toteuma)
+               (parsi-aika (:alkanut toteuma))
+               (parsi-aika (:paattynyt toteuma))
+               (:tyyppi toteuma)
+               (:id kirjaaja)
+               (get-in toteuma [:suorittaja :nimi])
+               (get-in toteuma [:suorittaja :ytunnus])
+               ""
+               (get-in toteuma [:tunniste :id])))))))
 
 (defn tallenna-sijainti [db data toteuma-id]
   (let [{:keys                      [pistetoteuma]
@@ -67,9 +67,25 @@
       (:y sijainti)
       (:z sijainti))))
 
-(defn tallenna-tehtavat [db data toteuma-id]
-  ; FIXME Tuhoa vanhat tehtävät ja luo uusi
-  )
+(defn tallenna-tehtavat [db kirjaaja data toteuma-id]
+  (let [{:keys                      [pistetoteuma]
+         {:keys [toteuma sijainti]} :pistetoteuma} data
+        tehtavat (:tehtavat toteuma)]
+    (log/debug "Tuhotaan toteuman vanhat tehtävät")
+    (toteumat/poista-toteuma_tehtava-toteuma-idlla!
+      db
+      toteuma-id)
+    (log/debug "Luodaan toteumalle uudet tehtävät")
+    (doseq [tehtava tehtavat]
+      (log/debug "Luodaan tehtävä: " (pr-str tehtava))
+      (toteumat/luo-toteuma_tehtava<!
+        db
+        toteuma-id
+        (get-in tehtava [:tehtava :id])
+        nil
+        (:id kirjaaja)
+        nil
+        nil))))
 
 (defn tallenna [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
@@ -78,7 +94,7 @@
       (log/debug "Tallennetaan sijainti")
       (tallenna-sijainti transaktio data toteuma-id)
       (log/debug "Tallennetaan toteuman sijainti")
-      (tallenna-tehtavat transaktio data toteuma-id))))
+      (tallenna-tehtavat transaktio kirjaaja data toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
