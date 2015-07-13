@@ -202,7 +202,7 @@ SELECT exists(
     FROM havainto
     WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
--- name: paivita-havainto-ulkoisella-idlla!
+-- name: paivita-havainto-ulkoisella-idlla<!
 -- Päivittää havainnon annetuille perustiedoille.
 UPDATE havainto
 SET
