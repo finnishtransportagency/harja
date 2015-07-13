@@ -3,8 +3,9 @@
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
-
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
 
@@ -43,10 +44,12 @@
 
       (log/debug "Toimenpide käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
-
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa toimenpidettä Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
-      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error"))))
+      (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error")]
+        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
+                 :kuittaus kuittaus
+                 :virheet  [{:poikkeus (.toString e)}]})))))
 
 (defn kasittele-toimenpiteet [db toimenpiteet]
   (mapv #(kasittele-toimenpide db %) toimenpiteet))

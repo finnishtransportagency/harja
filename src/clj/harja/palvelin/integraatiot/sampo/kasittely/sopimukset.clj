@@ -2,7 +2,9 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.kyselyt.urakat :as urakat]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-paasopimuksen-id [db urakka-sampo-id]
   (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id))))
@@ -42,8 +44,10 @@
 
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa sopimusta Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
-      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Order" "Internal Error"))))
-
+      (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Order" "Internal Error")]
+        (throw+ {:type      virheet/+poikkeus-samposisaanluvussa+
+                 :kuittaus kuittaus
+                 :virheet  [{:poikkeus (.toString e)}]})))))
 
 (defn kasittele-sopimukset [db sopimukset]
   (mapv #(kasittele-sopimus db %) sopimukset))

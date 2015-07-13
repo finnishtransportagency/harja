@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-yhteyshenkilo [db yhteyshenkilo-id etunimi sukunimi kayttajatunnus sahkoposti]
   (log/debug "Päivitetään yhteyshenkilo, jonka id on: " yhteyshenkilo-id ".")
@@ -35,7 +37,10 @@
 
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa yhteyshenkilo Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
-      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Resource" "Internal Error"))))
+      (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Resource" "Internal Error")]
+        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
+                 :kuittaus kuittaus
+                 :virheet  [{:poikkeus (.toString e)}]})))))
 
 (defn kasittele-yhteyshenkilot [db yhteyshenkilot]
   (mapv #(kasittele-yhteyshenkilo db %) yhteyshenkilot))

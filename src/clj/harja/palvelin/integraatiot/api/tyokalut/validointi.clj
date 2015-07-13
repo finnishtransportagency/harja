@@ -4,7 +4,7 @@
             [harja.kyselyt.urakat :as q]
             [taoensso.timbre :as log]
             [harja.kyselyt.kayttajat :as kayttajat])
-  (:use [slingshot.slingshot :only [throw+ try+]]))
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tarkista-urakka [db urakkaid]
   (log/debug "Validoidaan urakkaa id:llä" urakkaid)

@@ -10,6 +10,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
+            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]))
 
@@ -22,9 +23,10 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :sonja (feikki-sonja)
+                        :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :sampo (component/using
                                  (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
-                                 [:db :sonja])))))
+                                 [:db :sonja :integraatioloki])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -39,8 +41,6 @@
     (let [xml (first @viestit)
           data (xml/lue xml)]
       (is (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
-
-      (println "Data on:" data)
 
       (is (= "UrakkaMessageId" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
           "Kuittaus on tehty oikeaan viestiin.")

@@ -2,8 +2,9 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.organisaatiot :as organisaatiot]
             [harja.kyselyt.urakat :as urakat]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]))
-
+            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-organisaatio [db organisaatio-id nimi y-tunnus katuosoite postinumero]
   (log/debug "Päivitetään organisaatio, jonka id on: " organisaatio-id ".")
@@ -37,7 +38,10 @@
 
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa organisaatiota Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
-      (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Company" "Internal Error"))))
+      (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Company" "Internal Error")]
+        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
+                 :kuittaus kuittaus
+                 :virheet  [{:poikkeus (.toString e)}]})))))
 
 (defn kasittele-organisaatiot [db organisaatiot]
   (mapv #(kasittele-organisaatio db %) organisaatiot))

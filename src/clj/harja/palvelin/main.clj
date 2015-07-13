@@ -92,7 +92,7 @@
                                              (:lahetysjono-ulos (:sampo asetukset))
                                              (:kuittausjono-ulos (:sampo asetukset))
                                              (:paivittainen-lahetysaika (:sampo asetukset)))
-                              [:sonja :db])
+                              [:sonja :db :integraatioloki])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
