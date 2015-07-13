@@ -200,8 +200,13 @@ FROM toteuma_tehtava tt
 
 -- name: paivita-toteuma!
 UPDATE toteuma
-SET alkanut        = :alkanut, paattynyt = :paattynyt, muokattu = NOW(), muokkaaja = :kayttaja,
-  suorittajan_nimi = :suorittajan_nimi, suorittajan_ytunnus = :ytunnus, lisatieto = :lisatieto
+SET alkanut = :alkanut,
+  paattynyt = :paattynyt,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja,
+  suorittajan_nimi = :suorittajan_nimi,
+  suorittajan_ytunnus = :ytunnus,
+  lisatieto = :lisatieto
 WHERE id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -234,6 +239,13 @@ UPDATE toteuma_tehtava
 UPDATE toteuma_tehtava
    SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
  WHERE id IN (:id) AND poistettu IS NOT TRUE;
+
+ -- name: onko-olemassa-ulkoisella-idlla
+-- Tarkistaa löytyykö toteumaa ulkoisella id:llä
+SELECT exists(
+    SELECT toteuma.id
+    FROM toteuma
+    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset
