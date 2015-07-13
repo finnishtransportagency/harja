@@ -17,7 +17,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
 
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.tiedot.urakka :as tiedot-urakka])
   (:require-macros [harja.atom :refer [reaction<!]]))
 
 (defn sanktion-tiedot
@@ -43,10 +44,10 @@
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Tekijä" :nimi :tekijanimi
-          :hae     (comp :tekijanimi :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekijanimi] arvo))
-          :leveys  1 :tyyppi :string
+        [{:otsikko     "Tekijä" :nimi :tekijanimi
+          :hae         (comp :tekijanimi :havainto)
+          :aseta       (fn [rivi arvo] (assoc-in rivi [:havainto :tekijanimi] arvo))
+          :leveys      1 :tyyppi :string
           :muokattava? (constantly false)}
 
          ;; TODO Mitkä päivämäärät tarvitaan?
@@ -82,11 +83,11 @@
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kuvaus] arvo))
           :leveys  3 :tyyppi :string}
 
-        ;; TODO, eikö tekijän tyyppiä oikeasti tarvita? Hard-koodataanko?
-        #_{:otsikko "Tekijätyyppi" :nimi :tekija
-          :hae     (comp :tekija :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
-          :leveys  1 :tyyppi :string}
+         ;; TODO, eikö tekijän tyyppiä oikeasti tarvita? Hard-koodataanko?
+         #_{:otsikko "Tekijätyyppi" :nimi :tekija
+           :hae     (comp :tekija :havainto)
+           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
+           :leveys  1 :tyyppi :string}
          {:otsikko "Käsittelytapa" :nimi :kasittelytapa
           :hae     (comp :kasittelytapa :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelytapa] arvo))
@@ -102,11 +103,30 @@
          #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
 
          ;; TODO Dropdowneiksi, liittyvät yhteen
-         {:otsikko "Tyypin nimi" :nimi :tyyppinimi
-          :hae     (comp :nimi :tyyppi)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :nimi] arvo))
-          :leveys  1 :tyyppi :string}
-         {:otsikko "Laji" :nimi :laji :leveys 2 :tyyppi :string}
+         {:otsikko       "Laji" :tyyppi :valinta :leveys 1
+          :nimi          :laji
+          :hae           (comp keyword :laji)
+          :aseta         #(assoc %1 :laji %2 :tyyppi nil)
+          :valinnat      [:A :B :C]
+          :valinta-nayta #(case %
+                           :A "Ryhmä A"
+                           :B "Ryhmä B"
+                           :C "Ryhmä C"
+                           "- valitse -")
+          :validoi       [[:ei-tyhja "Valitse laji"]]}
+
+         {:otsikko       "Tyyppi" :leveys 3 :tyyppi :valinta
+          :nimi          :tyyppi
+          :aseta         (fn [sanktio tyyppi]
+                           (assoc sanktio
+                             :tyyppi tyyppi
+                             :toimenpideinstanssi (:tpi_id (first
+                                                             (filter
+                                                               #(= (:toimenpidekoodi tyyppi) (:id %))
+                                                               @tiedot-urakka/urakan-toimenpideinstanssit)))))
+          :valinnat-fn   #(laadunseuranta/lajin-sanktiotyypit %)
+          :valinta-nayta :nimi
+          :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]}
          #_{:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi
           :hae     (comp :toimenpidekoodi :tyyppi)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :toimenpidekoodi] arvo))
