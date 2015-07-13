@@ -240,7 +240,7 @@ UPDATE toteuma_tehtava
    SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
  WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
- -- name: onko-olemassa-ulkoisella-idlla
+-- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö toteumaa ulkoisella id:llä
 SELECT exists(
     SELECT toteuma.id

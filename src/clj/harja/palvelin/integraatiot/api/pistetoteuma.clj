@@ -21,38 +21,36 @@
     vastauksen-data))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
-  ; FIXME Ulkoinen id puuttuu, pitää lisätä ja tarkistaa ettei frontti mene rikki
   (let [{:keys                                  [pistetoteuma otsikko]
-         {:keys [organisaatio viestintunniste]} :otsikko
+         {:keys [lahettaja viestintunniste]}    :otsikko
          {:keys [toteuma sijainti]}             :pistetoteuma} data]
-    (log/debug "Viestitunniste: " viestintunniste)
-    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (:id viestintunniste) (:id kirjaaja))
-      (do
-        (log/debug "Luodaan uusi toteuma.")
-        (:id (toteumat/luo-toteuma<!
-               db
-               urakka-id
-               (:sopimusId toteuma)
-               (parsi-aika (:alkanut toteuma))
-               (parsi-aika (:paattynyt toteuma))
-               (:tyyppi toteuma)
-               (:id kirjaaja)
-               (:nimi organisaatio)
-               (:ytunnus organisaatio)
-               ""
-               (:id viestintunniste))))
-      (do
+    (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in [:tunniste :id] toteuma) (:id kirjaaja))
+      (do ; FIXME Ilmeisesti päivittäminen ei toimi?
         (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (:id viestintunniste))
         (:id (toteumat/paivita-toteuma!
                db
                (parsi-aika (:alkanut toteuma))
                (parsi-aika (:paattynyt toteuma))
                (:id kirjaaja)
-               (:nimi organisaatio)
-               (:ytunnus organisaatio)
+               (get-in lahettaja [:organisaatio :nimi])
+               (get-in lahettaja [:organisaatio :ytunnus])
                ""
-               (:id viestintunniste)
-               urakka-id))))))
+               (get-in toteuma [:tunniste :id])
+               urakka-id)))
+        (do
+          (log/debug "Luodaan uusi toteuma.")
+          (:id (toteumat/luo-toteuma<!
+                 db
+                 urakka-id
+                 (:sopimusId toteuma)
+                 (parsi-aika (:alkanut toteuma))
+                 (parsi-aika (:paattynyt toteuma))
+                 (:tyyppi toteuma)
+                 (:id kirjaaja)
+                 (get-in lahettaja [:organisaatio :nimi])
+                 (get-in lahettaja [:organisaatio :ytunnus])
+                 ""
+                 (get-in toteuma [:tunniste :id])))))))
 
 (defn tallenna-sijainti []
   ; FIXME Tuhoa vanha reittipiste ja luo uusi

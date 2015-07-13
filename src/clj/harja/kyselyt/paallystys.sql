@@ -1,9 +1,9 @@
 -- name: hae-urakan-paallystyskohteet
 -- Hakee urakan kaikki paallystyskohteet
 SELECT
-  paallystyskohde.id,
+  paallystyskohde.id,o
   pi.id as paallystysilmoitus_id,
-  kohdenumero,
+  kohdeoumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,
   lisatyo,
