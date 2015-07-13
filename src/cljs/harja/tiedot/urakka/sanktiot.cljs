@@ -6,11 +6,19 @@
             [harja.pvm :as pvm]
 
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
+(def +uusi-sanktio+
+  {:suorasanktio true
+   :havainto
+   {
+    :tekijanimi @istunto/kayttajan-nimi
+    :paatos {:paatos "sanktio"}
+    }})
 
 (defonce valittu-sanktio (atom nil))
 

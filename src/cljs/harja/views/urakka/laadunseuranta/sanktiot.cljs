@@ -43,7 +43,14 @@
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Perintäpäivämäärä" :nimi :perintapvm
+        [{:otsikko "Tekijä" :nimi :tekijanimi
+          :hae     (comp :tekijanimi :havainto)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekijanimi] arvo))
+          :leveys  1 :tyyppi :string
+          :muokattava? (constantly false)}
+
+         ;; TODO Mitkä päivämäärät tarvitaan?
+         {:otsikko "Perintäpäivämäärä" :nimi :perintapvm
           :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm}
          {:otsikko "Havainnon aika" :nimi :havaintoaika
           :hae     (comp :aika :havainto)
@@ -53,11 +60,14 @@
           :hae     (comp :kasittelyaika :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelyaika] arvo))
           :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm}
-         {:otsikko "Päätös" :nimi :paatos
+
+         ;; Päätös on aina sanktio
+         #_{:otsikko "Päätös" :nimi :paatos
           :hae     (comp :paatos :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :paatos] arvo))
-          :leveys  1 :tyyppi :string}
-         {:otsikko "Perustelu" :nimi :paatos
+          :leveys  1 :tyyppi :string
+          :muokattava? (constantly false)}
+         {:otsikko "Perustelu" :nimi :perustelu
           :hae     (comp :perustelu :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :perustelu] arvo))
           :leveys  1 :tyyppi :string}
@@ -65,33 +75,41 @@
           :hae     (comp :kohde :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kohde] arvo))
           :leveys  1 :tyyppi :string}
-         {:otsikko "Kuvaus" :nimi :kuvaus
+
+         ;; Ei havainnon kuvausta, koska annetaan suoraan perustelu
+         #_{:otsikko "Kuvaus" :nimi :kuvaus
           :hae     (comp :kuvaus :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kuvaus] arvo))
           :leveys  3 :tyyppi :string}
-         {:otsikko "Tekijätyyppi" :nimi :tekija
+
+        ;; TODO, eikö tekijän tyyppiä oikeasti tarvita? Hard-koodataanko?
+        #_{:otsikko "Tekijätyyppi" :nimi :tekija
           :hae     (comp :tekija :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
-          :leveys  1 :tyyppi :string}
-         {:otsikko "Tekijä" :nimi :tekijanimi
-          :hae     (comp :tekijanimi :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekijanimi] arvo))
           :leveys  1 :tyyppi :string}
          {:otsikko "Käsittelytapa" :nimi :kasittelytapa
           :hae     (comp :kasittelytapa :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelytapa] arvo))
           :leveys  2 :tyyppi :string}
+         {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
+          :hae     (comp :muukasittelytapa :paatos :havainto)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
+          :leveys  2 :tyyppi :string}
          {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :string}
-         {:otsikko "Laji" :nimi :laji :leveys 2 :tyyppi :string}
          {:otsikko "Indeksi" :nimi :indeksi :leveys 2 :tyyppi :string}
-         {:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
-         {:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi
-          :hae     (comp :toimenpidekoodi :tyyppi)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :toimenpidekoodi] arvo))
-          :leveys  1 :tyyppi :string}
+
+         ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
+         #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
+
+         ;; TODO Dropdowneiksi, liittyvät yhteen
          {:otsikko "Tyypin nimi" :nimi :tyyppinimi
           :hae     (comp :nimi :tyyppi)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :nimi] arvo))
+          :leveys  1 :tyyppi :string}
+         {:otsikko "Laji" :nimi :laji :leveys 2 :tyyppi :string}
+         #_{:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi
+          :hae     (comp :toimenpidekoodi :tyyppi)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :toimenpidekoodi] arvo))
           :leveys  1 :tyyppi :string}]
         @muokattu]])))
 
@@ -100,7 +118,7 @@
   [:div.sanktiot
    [urakka-valinnat/urakan-hoitokausi-ja-toimenpide @nav/valittu-urakka]
    [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-sanktio {})}
+    {:on-click #(reset! tiedot/valittu-sanktio tiedot/+uusi-sanktio+)}
     (ikonit/plus-sign) " Lisää sanktio"]
    [grid/grid
     {:otsikko       "Sanktiot"
