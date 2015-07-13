@@ -31,7 +31,6 @@
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
-  ;; TODO: lisää palvelimelle
   (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennuksen-parametrit tp)))
 
 (defn turvallisuuspoikkeaman-tallennus-onnistui

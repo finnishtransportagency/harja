@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.turvallisuuspoikkeamat
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
@@ -9,6 +9,9 @@
             [clj-time.coerce :refer [from-sql-time]]
 
             [harja.kyselyt.turvallisuuspoikkeamat :as q]))
+
+(defn tallenna-turvallisuuspoikkeama [db user tiedot]
+  (log/info "Turvallisuuspoikkeaminen tallentaminen on implementoimatta"))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
@@ -25,14 +28,20 @@
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
   (start [this]
-    (julkaise-palvelu (:http-palvelin this)
+    (julkaise-palvelut (:http-palvelin this)
+
                       :hae-turvallisuuspoikkeamat
                       (fn [user tiedot]
-                        (hae-turvallisuuspoikkeamat (:db this) user tiedot)))
+                        (hae-turvallisuuspoikkeamat (:db this) user tiedot))
+
+                      :tallenna-turvallisuuspoikkeama
+                      (fn [user tiedot]
+                        (tallenna-turvallisuuspoikkeama (:db this) user tiedot)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :hae-turvallisuuspoikkeamat)
+                     :hae-turvallisuuspoikkeamat
+                     :tallenna-turvallisuuspoikkeama)
 
     this))

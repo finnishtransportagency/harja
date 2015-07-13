@@ -31,14 +31,13 @@
         {:luokka   :horizontal
          :muokkaa! #(reset! muokattu %)
          :virheet  lomakkeen-virheet
-         ;; TODO: Lisää tallennusnappi
-         #_:footer   #_[napit/palvelinkutsu-nappi
+         :footer   [napit/palvelinkutsu-nappi
                     "Tallenna turvallisuuspoikkeama"
                     #(tiedot/tallenna-turvallisuuspoikkeama @muokattu)
                     {:luokka       "nappi-ensisijainen"
                      :ikoni        (ikonit/envelope)
                      :kun-onnistuu #(do
-                                     (tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
+                                     #_(tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}]
