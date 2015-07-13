@@ -23,7 +23,7 @@
 
 (defn tallenna [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma-id (api-toteuma/tallenna-toteuma transaktio urakka-id kirjaaja (get-in data [:reittitoteuma :toteuma])]
+    (let [toteuma-id (api-toteuma/tallenna-toteuma transaktio urakka-id kirjaaja (get-in data [:reittitoteuma :toteuma]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)))) ; FIXME Tallenna loputkin tiedot
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
