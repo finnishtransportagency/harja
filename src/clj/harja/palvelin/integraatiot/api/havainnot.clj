@@ -24,7 +24,7 @@
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (if (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
-      (:id (havainnot/paivita-havainto-ulkoisella-idlla!
+      (:id (havainnot/paivita-havainto-ulkoisella-idlla<!
              db
              (parsi-aika paivamaara)
              kohde

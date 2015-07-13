@@ -153,7 +153,7 @@ WHERE k.poistettu = FALSE
 ORDER BY k.luotu ASC;
 
 
--- name: paivita-havainnon-perustiedot!
+-- name: paivita-havainnon-perustiedot<!
 -- Päivittää aiemmin luodun havainnon perustiedot
 UPDATE havainto
 SET aika            = :aika,
