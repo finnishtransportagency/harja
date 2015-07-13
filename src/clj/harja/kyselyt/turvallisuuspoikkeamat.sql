@@ -38,4 +38,4 @@ LEFT JOIN turvallisuuspoikkeama_liite tl
 LEFT JOIN liite l
     ON l.id = tl.liite
 WHERE t.urakka = :urakka
-      AND t.tapahtunut BETWEEN :alku AND :loppu;
+      AND t.tapahtunut::DATE BETWEEN :alku AND :loppu;

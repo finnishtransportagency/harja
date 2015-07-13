@@ -8,18 +8,41 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
 (defn turvallisuuspoikkeaman-tiedot
   []
-  [:div
-   [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
-    "Palaa"]
 
-   [:div "Tänne yhden turvallisuuspoikkeaman tiedot"]])
+  (let [muokattu (atom @tiedot/valittu-turvallisuuspoikkeama)
+        lomakkeen-virheet (atom {})
+        voi-tallentaa? (atom true)]
+
+    (fn []
+      [:div
+       [:button.nappi-ensisijainen
+        {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
+        "Palaa"]
+
+       [lomake/lomake
+        {:luokka   :horizontal
+         :muokkaa! #(reset! muokattu %)
+         :virheet  lomakkeen-virheet
+         ;; TODO: Lisää tallennusnappi
+         #_:footer   #_[napit/palvelinkutsu-nappi
+                    "Tallenna turvallisuuspoikkeama"
+                    #(tiedot/tallenna-turvallisuuspoikkeama @muokattu)
+                    {:luokka       "nappi-ensisijainen"
+                     :ikoni        (ikonit/envelope)
+                     :kun-onnistuu #(do
+                                     (tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
+                                     (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                     :disabled     (not @voi-tallentaa?)}]}
+        [{:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}]
+        @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus
   []
@@ -32,7 +55,7 @@
     {:otsikko       "Turvallisuuspoikkeamat"
      :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
      :rivi-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %)}
-    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}]
+    [{:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "100%"}]
     @tiedot/haetut-turvallisuuspoikkeamat
     ]])
 

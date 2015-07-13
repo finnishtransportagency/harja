@@ -11,13 +11,16 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as q]))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
-  (into []
-        (comp (map konv/alaviiva->rakenne)
-              (harja.geo/muunna-pg-tulokset :sijainti)
-              (map #(konv/array->vec % :tyyppi))
-              (map #(assoc % :tyyppi (keyword (:tyyppi %))))
-              (map #(assoc-in % [:liite :tyyppi] (keyword (get-in % [:liite :tyyppi])))))
-        (q/hae-urakan-turvallisuuspoikkeamat db urakka-id alku loppu)))
+  (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
+  (let [tulos (into []
+                    (comp (map konv/alaviiva->rakenne)
+                          (harja.geo/muunna-pg-tulokset :sijainti)
+                          (map #(konv/array->vec % :tyyppi))
+                          (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+                          (map #(assoc-in % [:liite :tyyppi] (keyword (get-in % [:liite :tyyppi])))))
+                    (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))]
+    (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
+    tulos))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
