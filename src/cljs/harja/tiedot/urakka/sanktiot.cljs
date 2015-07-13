@@ -31,16 +31,14 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s]
-  ;; Käytetään palvelimella funktiota, jota käytetään myös havainnon tallettamisessa.
-  ;; Koska funktiota käytetiin alunperin havainnon tallentamiseen, se odottaa tietynlaiset parametrit
-  ;; ja tässä "joudutaan" kaivamaan erikseen ensimmäiselle tasolle havainnon ja urakan id:t.
-  {:sanktio     s
-   :havainto-id (get-in s [:havainto :id])
-   :urakka-id   (get-in s [:havainto :urakka])})
+  {:sanktio   (dissoc s :havainto)
+   :havainto  (if-not (get-in s [:havainto :urakka])
+                (:havainto (assoc-in s [:havainto :urakka] (:id @nav/valitse-urakka)))
+                (:havainto s))})
 
 (defn tallenna-sanktio
   [sanktio]
-  (k/post! :tallenna-sanktio (kasaa-tallennuksen-parametrit sanktio)))
+  (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]

@@ -104,13 +104,13 @@
 
 (defn tallenna-havainnon-sanktio
   [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
-  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi)
-  (if (or (neg? id) (nil? id))
+  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi ", havaintoon " havainto)
+  (if (or (nil? id) (neg? id))
     (let [uusi-sanktio (sanktiot/luo-sanktio<!
-                    db (konv/sql-timestamp perintapvm)
-                    (name laji) (:id tyyppi)
-                    toimenpideinstanssi urakka
-                    summa indeksi havainto (or suorasanktio false))]
+                         db (konv/sql-timestamp perintapvm)
+                         (name laji) (:id tyyppi)
+                         toimenpideinstanssi urakka
+                         summa indeksi havainto (or suorasanktio false))]
       (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
       (:id uusi-sanktio))
 
@@ -222,6 +222,35 @@
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
+(defn tallenna-suorasanktio [db user sanktio havainto urakka]
+  ;; Roolien tarkastukset on kopioitu havainnon kirjaamisesta,
+  ;; riittäisi varmaan vain roolit/urakanvalvoja?
+  (log/info "Tallenna suorasanktio " (:id sanktio) " havaintoon " (:id havainto) ", urakassa " urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
+
+  (jdbc/with-db-transaction [c db]
+    (let [;; FIXME: Suorasanktiolle pyydetty/annettu flagit?
+          #_osapuoli #_(roolit/osapuoli user urakka)
+          #_havainto #_(assoc havainto
+                     :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                             (:selvitys-pyydetty havainto))
+                     :selvitys-annettu (and (:uusi-kommentti havainto)
+                                            (= :urakoitsija osapuoli)))
+          id (havainnot/luo-tai-paivita-havainto c user havainto)]
+
+      (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
+        (havainnot/kirjaa-havainnon-paatos! c
+                                            (konv/sql-timestamp kasittelyaika)
+                                            (name paatos) perustelu
+                                            (name kasittelytapa) muukasittelytapa
+                                            (:id user)
+                                            id))
+
+      ;; Frontilla oletetaan että palvelu palauttaa tallennetun sanktion id:n
+      ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
+      (tallenna-havainnon-sanktio c user sanktio id urakka))))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -237,9 +266,9 @@
       (fn [user havainto]
         (tallenna-havainto db user havainto))
 
-      :tallenna-sanktio
+      :tallenna-suorasanktio
       (fn [user tiedot]
-        (tallenna-havainnon-sanktio db user (:sanktio tiedot) (:havainto-id tiedot) (:urakka-id tiedot)))
+        (tallenna-suorasanktio db user (:sanktio tiedot) (:havainto tiedot) (get-in tiedot [:havainto :urakka])))
 
       :hae-havainnon-tiedot
       (fn [user {:keys [urakka-id havainto-id]}]
