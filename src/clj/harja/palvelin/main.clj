@@ -39,6 +39,7 @@
     [harja.palvelin.palvelut.liitteet :as liitteet]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+    [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
 
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -174,6 +175,10 @@
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db])
+
+      :turvallisuuspoikkeamat (component/using
+                                (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
+                                [:http-palvelin :db])
 
       ;; Harja API
       :api-urakat (component/using
