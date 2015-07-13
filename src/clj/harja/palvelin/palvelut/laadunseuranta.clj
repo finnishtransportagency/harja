@@ -99,7 +99,8 @@
   (log/debug "Hae sanktiot (" urakka-id alku loppu tpi ")")
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(konv/decimal->double % :summa)))
+              (map #(konv/decimal->double % :summa))
+              (map #(assoc % :laji (keyword (:laji %)))))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu) tpi)))
 
 (defn tallenna-havainnon-sanktio

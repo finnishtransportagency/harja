@@ -19,12 +19,16 @@
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka])
-  (:require-macros [harja.atom :refer [reaction<!]]))
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]))
 
 (defn sanktion-tiedot
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
-        voi-tallentaa? (atom true)]
+        lomakkeen-virheet (atom {})
+        voi-tallentaa? (reaction (and
+                                   (= (count @lomakkeen-virheet) 0)
+                                   (> (count @muokattu) (count tiedot/+uusi-sanktio+))))]
     (fn []
       (run! @muokattu (log "Muokattu on nyt " (pr-str @muokattu)))
       [:div
@@ -35,6 +39,7 @@
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! #(reset! muokattu %)
+         :virheet lomakkeen-virheet
          :footer   [napit/palvelinkutsu-nappi
                     "Tallenna sanktio"
                     #(tiedot/tallenna-sanktio @muokattu)
@@ -102,7 +107,6 @@
          ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
          #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
 
-         ;; TODO Dropdowneiksi, liittyvät yhteen
          {:otsikko       "Laji" :tyyppi :valinta :leveys 1
           :nimi          :laji
           :hae           (comp keyword :laji)
@@ -124,7 +128,8 @@
                                                              (filter
                                                                #(= (:toimenpidekoodi tyyppi) (:id %))
                                                                @tiedot-urakka/urakan-toimenpideinstanssit)))))
-          :valinnat-fn   #(laadunseuranta/lajin-sanktiotyypit %)
+          ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Havainnossa käytetään.
+          :valinnat-fn   (fn [_] (map #(dissoc % :laji) (laadunseuranta/lajin-sanktiotyypit (:laji @muokattu))))
           :valinta-nayta :nimi
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]}
          #_{:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi

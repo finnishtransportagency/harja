@@ -71,8 +71,7 @@ SELECT
 
   t.nimi AS tyyppi_nimi,
   t.id AS tyyppi_id,
-  t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji AS tyyppi_laji
+  t.toimenpidekoodi AS tyyppi_toimenpidekoodi
 
 FROM sanktio s
   JOIN havainto h ON s.havainto = h.id
