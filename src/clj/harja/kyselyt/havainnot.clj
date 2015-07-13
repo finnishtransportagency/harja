@@ -12,7 +12,7 @@
   "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
   [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as havainto}]
   (if id
-    (do (paivita-havainnon-perustiedot! db
+    (do (paivita-havainnon-perustiedot<! db
                                         (konv/sql-timestamp aika) (name tekija) kohde
                                         (if selvitys-pyydetty true false)
                                         (:id user)
