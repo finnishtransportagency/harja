@@ -209,7 +209,7 @@ SET alkanut = :alkanut,
   lisatieto = :lisatieto
 WHERE id = :id AND urakka = :urakka;
 
--- name: paivita-toteuma-ulkoisella-idlla!
+-- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
 SET alkanut = :alkanut,
   paattynyt = :paattynyt,
@@ -344,3 +344,11 @@ WHERE
   toimenpideinstanssi IN (SELECT id
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi);
+
+-- name: luo-reittipiste<!
+-- Luo uuden reittipisteen
+INSERT INTO reittipiste (toteuma, aika, luotu, x, y, z) VALUES (:toteuma, :aika, NOW(), :x, :y, :z);
+
+-- name: poista-reittipiste-toteuma-idlla!
+-- Poistaa toteuman kaikki reittipisteet
+DELETE FROM reittipiste WHERE toteuma = :id;

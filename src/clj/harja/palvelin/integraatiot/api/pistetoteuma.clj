@@ -21,49 +21,64 @@
     vastauksen-data))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
-  (let [{:keys                                  [pistetoteuma otsikko]
-         {:keys [toteuma sijainti]}             :pistetoteuma} data]
+  (let [{:keys                      [pistetoteuma otsikko]
+         {:keys [toteuma sijainti]} :pistetoteuma} data]
     (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
-      (do ; FIXME Ilmeisesti päivittäminen ei toimi?
+      (do
         (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-        (:id (toteumat/paivita-toteuma-ulkoisella-idlla!
-               db
-               (parsi-aika (:alkanut toteuma))
-               (parsi-aika (:paattynyt toteuma))
-               (:id kirjaaja)
-               (get-in toteuma [:suorittaja :nimi])
-               (get-in toteuma [:suorittaja :ytunnus])
-               ""
-               (get-in toteuma [:tunniste :id])
-               urakka-id)))
-        (do
-          (log/debug "Luodaan uusi toteuma.")
-          (:id (toteumat/luo-toteuma<!
-                 db
-                 urakka-id
-                 (:sopimusId toteuma)
-                 (parsi-aika (:alkanut toteuma))
-                 (parsi-aika (:paattynyt toteuma))
-                 (:tyyppi toteuma)
-                 (:id kirjaaja)
-                 (get-in toteuma [:suorittaja :nimi])
-                 (get-in toteuma [:suorittaja :ytunnus])
-                 ""
-                 (get-in toteuma [:tunniste :id])))))))
+        (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
+                                db
+                                (parsi-aika (:alkanut toteuma))
+                                (parsi-aika (:paattynyt toteuma))
+                                (:id kirjaaja)
+                                (get-in toteuma [:suorittaja :nimi])
+                                (get-in toteuma [:suorittaja :ytunnus])
+                                ""
+                                (get-in toteuma [:tunniste :id])
+                                urakka-id)))
+      (do
+        (log/debug "Luodaan uusi toteuma.")
+        (:id (toteumat/luo-toteuma<!
+                                db
+                                urakka-id
+                                (:sopimusId toteuma)
+                                (parsi-aika (:alkanut toteuma))
+                                (parsi-aika (:paattynyt toteuma))
+                                (:tyyppi toteuma)
+                                (:id kirjaaja)
+                                (get-in toteuma [:suorittaja :nimi])
+                                (get-in toteuma [:suorittaja :ytunnus])
+                                ""
+                                (get-in toteuma [:tunniste :id])))))))
 
-(defn tallenna-sijainti []
-  ; FIXME Tuhoa vanha reittipiste ja luo uusi
-  )
+(defn tallenna-sijainti [db data toteuma-id]
+  (let [{:keys                      [pistetoteuma]
+         {:keys [toteuma sijainti]} :pistetoteuma} data]
+    (log/debug "Tuhotaan toteuman vanha reittipiste")
+    (toteumat/poista-reittipiste-toteuma-idlla!
+      db
+      toteuma-id)
+    (log/debug "Luodaan toteumalle uusi reittipiste")
+    (toteumat/luo-reittipiste<!
+      db
+      toteuma-id
+      (parsi-aika (:alkanut toteuma))
+      (:x sijainti)
+      (:y sijainti)
+      (:z sijainti))))
 
-(defn tallenna-tehtavat []
+(defn tallenna-tehtavat [db data toteuma-id]
   ; FIXME Tuhoa vanhat tehtävät ja luo uusi
   )
 
 (defn tallenna [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma-id (tallenna-toteuma transaktio urakka-id kirjaaja data)])
-    (tallenna-sijainti)
-    (tallenna-tehtavat)))
+    (let [toteuma-id (tallenna-toteuma transaktio urakka-id kirjaaja data)]
+      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+      (log/debug "Tallennetaan sijainti")
+      (tallenna-sijainti transaktio data toteuma-id)
+      (log/debug "Tallennetaan toteuman sijainti")
+      (tallenna-tehtavat transaktio data toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
