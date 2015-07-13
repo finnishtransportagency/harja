@@ -10,6 +10,7 @@
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.toteumat :as toteumat]
+            [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [parsi-aika]]
@@ -21,7 +22,9 @@
     vastauksen-data))
 
 (defn tallenna [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db])) ; FIXME Tee tämä
+  (jdbc/with-db-transaction [transaktio db]
+    (let [toteuma-id (api-toteuma/tallenna-toteuma transaktio urakka-id kirjaaja (get-in data [:reittitoteuma :toteuma])]
+      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)))) ; FIXME Tallenna loputkin tiedot
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
