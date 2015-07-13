@@ -16,6 +16,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
+            [harja.views.urakka.turvallisuus :as turvallisuus]
             )
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -73,4 +74,9 @@
      :maksuerat
      ^{:key "maksuerat"}
      [maksuerat/maksuerat-listaus ur]
+
+     "Turvallisuus"
+     :turvallisuus
+     ^{:key "turvallisuus"}
+     [turvallisuus/turvallisuus ur]
      ]))

@@ -1,6 +1,6 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot
   "Sanktioiden listaus"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom]]
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
 
