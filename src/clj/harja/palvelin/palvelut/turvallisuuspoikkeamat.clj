@@ -19,7 +19,7 @@
                            (comp (map konv/alaviiva->rakenne)
                                  (harja.geo/muunna-pg-tulokset :sijainti)
                                  (map #(konv/array->vec % :tyyppi))
-                                 (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+                                 (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
                                  (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi])))))
                            (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
 
