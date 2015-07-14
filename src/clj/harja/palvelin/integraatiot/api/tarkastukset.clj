@@ -25,7 +25,7 @@
       (let [{tarkastus-id :id havainto-id :havainto} (first (tarkastukset/hae-tarkastus-ulkoisella-idlla db ulkoinen-id (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
 
-        (let [aika (json/pvm-string->java.sql.Date (:paivamaara tarkastus))
+        (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
               havainto (merge (:havainto tarkastus)
                               {:aika aika
                                :id havainto-id

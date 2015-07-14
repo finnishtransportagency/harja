@@ -4,7 +4,7 @@
             [harja.geo :as geo])
   (:import (java.text SimpleDateFormat)))
 
-(defn pvm-string->java.sql.Date [paivamaara]
+(defn pvm-string->java-sql-date [paivamaara]
   (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
 
 (defn json-pvm [paivamaara]
