@@ -67,12 +67,13 @@
                                                (-> "test/resurssit/api/pistetoteuma.json"
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
-                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                                                   (.replace "__TOTEUMA_TYYPPI__" "yksikkohintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "yksikkohintainen"]))
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
@@ -80,11 +81,12 @@
                                                      (-> "test/resurssit/api/pistetoteuma.json"
                                                          slurp
                                                          (.replace "__ID__" (str ulkoinen-id))
-                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
+                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
+                                                         (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
         (is (= 200 (:status vastaus-paivitys)))
-        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen"]))
           (is (= (count toteuma-tehtava-idt) 1)))
 
         (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))

@@ -40,6 +40,7 @@
              (get-in toteuma [:suorittaja :nimi])
              (get-in toteuma [:suorittaja :ytunnus])
              ""
+             (:tyyppi toteuma)
              (get-in toteuma [:tunniste :id])
              urakka-id)))
     (do

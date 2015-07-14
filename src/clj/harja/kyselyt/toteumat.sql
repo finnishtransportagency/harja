@@ -217,7 +217,8 @@ SET alkanut = :alkanut,
   muokkaaja = :kayttaja,
   suorittajan_nimi = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
-  lisatieto = :lisatieto
+  lisatieto = :lisatieto,
+  tyyppi = :tyyppi::toteumatyyppi
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 
