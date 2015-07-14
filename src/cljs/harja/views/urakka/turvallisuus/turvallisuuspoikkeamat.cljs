@@ -96,7 +96,14 @@
     {:otsikko       "Turvallisuuspoikkeamat"
      :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
      :rivi-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %)}
-    [{:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "100%"}]
+    [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
+     {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
+     {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
+     {:otsikko "Vammat" :nimi :vammat :tyyppi :string :leveys "15%"}
+     {:otsikko "Pois. (pv)" :nimi :sairauspoissaolopaivat :tyyppi :numero :leveys "5%"}
+     {:otsikko "Sairaalas." :nimi :sairaalavuorokaudet :tyyppi :numero :leveys "5%"}
+     {:otsikko "Korjaava toimenpide" :nimi :korjaavatoimenpide :tyyppi :string :leveys "30%"
+      :hae (comp :kuvaus :korjaavatoimenpide)}]
     @tiedot/haetut-turvallisuuspoikkeamat
     ]])
 
