@@ -6,6 +6,7 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [harja.palvelin.integraatiot.api.tyokalut :as apityokalut]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
@@ -55,20 +56,10 @@
 (deftest tallenna-tiestotarkastus
   (is true))
 
-;; FIXME: generisoi muihin API testeihin tätä sekä fixturea
-(defn api-kutsu
-  "Tekee POST kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
-  Body on json string (tai muu http-kitin ymmärtämä input)."
-  [api-polku-vec body]
-  @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-              {:body    body
-               :headers {"OAM_REMOTE_USER" kayttaja
-                         "Content-Type"    "application/json"}}))
-
 (deftest tallenna-pistetoteuma
   (let [pvm (Date.)
         id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
-        vastaus (api-kutsu ["/api/urakat/" urakka "/toteumat/piste"]
+        vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                            (-> "test/resurssit/api/pistetoteuma.json"
                                slurp
                                (.replace "__PVM__" (json-tyokalut/json-pvm pvm))

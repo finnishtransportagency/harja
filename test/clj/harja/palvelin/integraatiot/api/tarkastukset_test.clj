@@ -11,7 +11,8 @@
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.api.tyokalut :as apityokalut])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -56,21 +57,11 @@
 (deftest tallenna-tiestotarkastus
   (is true))
 
-;; FIXME: generisoi muihin API testeihin tätä sekä fixturea
-(defn api-kutsu
-  "Tekee POST kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
-  Body on json string (tai muu http-kitin ymmärtämä input)."
-  [api-polku-vec body]
-  @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-              {:body    body
-               :headers {"OAM_REMOTE_USER" kayttaja
-                         "Content-Type"    "application/json"}}))
-
 (deftest tallenna-soratietarkastus
   (let [pvm (Date.)
         id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
 
-        vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
+        vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                            (-> "test/resurssit/api/soratietarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
@@ -98,7 +89,7 @@
 
 
 (deftest tallenna-virheellinen-soratietarkastus
-  (let [vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
+  (let [vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]  kayttaja portti
                            (-> "test/resurssit/api/soratietarkastus-virhe.json"
                                slurp))]
     (is (= 400 (:status vastaus)))
@@ -110,7 +101,7 @@
   (let [pvm (Date.)
         id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
 
-        vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+        vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]  kayttaja portti
                            (-> "test/resurssit/api/talvihoitotarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
