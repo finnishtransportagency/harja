@@ -4,7 +4,8 @@
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.tiedot.ilmoitukset :as ilmoitukset])
+            [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def geometriat (reaction
@@ -13,6 +14,7 @@
                                          @sillat/sillat
                                          @laadunseuranta/urakan-tarkastukset
                                          @ilmoitukset/ilmoitukset-kartalla
+                                         @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          )]
                    (if-not g
                      (persistent! geometriat)
@@ -24,7 +26,8 @@
     :pohjavesialueet pohjavesialueet/taso-pohjavesialueet
     :sillat sillat/taso-sillat
     :tarkastukset laadunseuranta/taso-tarkastukset
-    :ilmoitukset ilmoitukset/taso-ilmoitukset))
+    :ilmoitukset ilmoitukset/taso-ilmoitukset
+    :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat))
     
 (defn taso-paalle! [nimi]
   (reset! (taso-atom nimi) true))
