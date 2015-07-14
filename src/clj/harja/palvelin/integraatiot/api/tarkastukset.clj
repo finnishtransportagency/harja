@@ -85,7 +85,7 @@
                (kasittele-kutsu db integraatioloki palvelu request
                               skeema nil
                               (fn [parametrit data kayttaja]
-                                (kirjaa-tarkastus  db kayttaja tyyppi parametrit data)))))))
+                                (kirjaa-tarkastus db kayttaja tyyppi parametrit data)))))))
     
     this)
 

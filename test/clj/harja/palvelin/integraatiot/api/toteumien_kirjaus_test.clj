@@ -12,7 +12,8 @@
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut])
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
+            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -40,9 +41,12 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :api-toteumat (component/using
+                        :api-pistetoteuma (component/using
                                         (api-pistetoteuma/->Pistetoteuma)
-                                        [:http-palvelin :db :integraatioloki])))))
+                                        [:http-palvelin :db :integraatioloki])
+                        :api-reittitoteuma (component/using
+                                            (api-reittitoteuma/->Reittitoteuma)
+                                            [:http-palvelin :db :integraatioloki])))))
 
   (alter-var-root #'urakka
                   (fn [_]
@@ -57,12 +61,15 @@
   (is true))
 
 (deftest tallenna-pistetoteuma
-  (let [pvm (Date.)
-        id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
-        vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+  (let [vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                            (-> "test/resurssit/api/pistetoteuma.json"
-                               slurp
-                               (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                               (.replace "__ID__" (str id))))]
+                               slurp))]
 
-    (is (= 200 (:status vastaus))))) ;; FIXME Varmistaettä toteuma löytyy tietokannasta ja tiedot on ok
+    (is (= 200 (:status vastaus))))) ;; FIXME Varmista että toteuma löytyy tietokannasta ja tiedot on ok
+
+(deftest tallenna-reittitoteuma
+  (let [vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                       (-> "test/resurssit/api/reittitoteuma.json"
+                                           slurp))]
+
+    (is (= 200 (:status vastaus))))) ;; FIXME Varmista että toteuma löytyy tietokannasta ja tiedot on ok

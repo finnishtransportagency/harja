@@ -99,8 +99,6 @@
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
-; FIXME Yksi recordi ja reitit mappiin, katso mallia tarkastuksista
-
 (defrecord Reittitoteuma []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
