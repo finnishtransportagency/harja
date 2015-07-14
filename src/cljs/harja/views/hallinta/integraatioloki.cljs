@@ -47,7 +47,8 @@
        :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
       {:otsikko "Päättynyt" :nimi :paattynyt :leveys "20%"
        :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
-      {:otsikko "Onnistunut" :nimi :onnistunut :tyyppi :boolean :leveys "20%"}
+      {:otsikko "Onnistunut" :nimi :onnistunut :tyyppi :boolean :leveys "20%"
+       :hae     #(if (= "true" (:onnistunut %)) "kyllä" "ei")}
       {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys "20%"}
       {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys "20%"}]
 

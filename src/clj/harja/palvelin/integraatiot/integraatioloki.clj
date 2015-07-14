@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.integraatioloki :as integraatiloki]
-            [joda-time :as j]))
+            [clj-time.core :refer [months ago]]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defprotocol IntegraatiolokiKirjaus
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
@@ -16,10 +17,9 @@
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-puhdistusaika
         (fn [_]
-          #_(integraatiloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) (minus now (months 10))
-
-                  ;;todo: toteuta
-                  ))))
+          (let [aikarajaus (konversio/sql-timestamp (.toDate (-> 1 months ago)))]
+            (log/debug "Poistetaan kaikki integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus)
+            (integraatiloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus)))))
     (fn [] ())))
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
