@@ -63,20 +63,33 @@
 
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (rand-int 10000)
-        vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                        (-> "test/resurssit/api/pistetoteuma.json"
-                                            slurp
-                                            (.replace "__ID__" (str ulkoinen-id))))]
+        vastaus-lisays (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+                                               (-> "test/resurssit/api/pistetoteuma.json"
+                                                   slurp
+                                                   (.replace "__ID__" (str ulkoinen-id))
+                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
 
-    (is (= 200 (:status vastaus)))
+    (is (= 200 (:status vastaus-lisays)))
 
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          toteuma-kannassa (first (q (str "SELECT ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id]))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
-      (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
-      (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
-      (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))
+      ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
+      (let [vastaus-paivitys (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+                                                     (-> "test/resurssit/api/pistetoteuma.json"
+                                                         slurp
+                                                         (.replace "__ID__" (str ulkoinen-id))
+                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
+
+        (is (= 200 (:status vastaus-paivitys)))
+
+        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"])))
+
+        (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+        (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+        (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
 
 (deftest tallenna-reittitoteuma
   (let [ulkoinen-id (rand-int 10000)
@@ -89,8 +102,8 @@
 
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))
-          toteuma-kannassa (first (q (str "SELECT ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id]))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
 
       (doseq [reittipiste-id reittipiste-idt]
         (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))

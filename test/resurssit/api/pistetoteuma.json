@@ -20,7 +20,7 @@
       "sopimusId": 1,
       "selite": "Tien paikkaus",
       "suorittaja": {
-        "nimi": "Tehotekijät Oy",
+        "nimi": "__SUORITTAJA_NIMI__",
         "ytunnus": "8765432-1"
       },
       "alkanut": "2016-01-30T12:00:00Z",
