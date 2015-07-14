@@ -52,3 +52,7 @@ FROM turvallisuuspoikkeama t
        AND kom.poistettu IS NOT TRUE
 WHERE t.urakka = :urakka
       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+
+-- name: liita-kommentti<!
+INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
+VALUES (:turvallisuuspoikkeama, :kommentti);
