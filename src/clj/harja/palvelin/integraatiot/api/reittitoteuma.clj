@@ -33,7 +33,7 @@
       db
       reittipiste-id
       (get-in tehtava [:tehtava :id])
-      nil)))
+      (get-in tehtava [:tehtava :maara :maara]))))
 
 (defn tallenna-reitin-materiaalit [db kirjaaja reittipiste reittipiste-id]
   (log/debug "Tuhotaan reitin vanhat materiaalit")
@@ -41,12 +41,15 @@
     db
     reittipiste-id)
   (log/debug "Luodaan reitin materiaalit")
-  (doseq [materiaali (get-in reittipiste [:reittipiste :maarat])]
-    (toteumat/luo-reitti_materiaali<!
-      db
-      reittipiste-id
-      (get-in materiaali [:maara :materiaali]) ; FIXME Selvitä stringiä vastaava integer
-      (get-in materiaali [:maara :maara]))))
+  (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
+    (log/debug "Käsitellään " materiaali)
+    (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
+          materiaalikoodi-id (:id (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi))]
+      (toteumat/luo-reitti_materiaali<!
+        db
+        reittipiste-id
+        materiaalikoodi-id
+        (get-in materiaali [:maara :maara])))))
 
 (defn tallenna-reitti [db kirjaaja reitti toteuma-id]
   (log/debug "Tuhotaan toteuman vanha reitti")
@@ -56,13 +59,14 @@
   (log/debug "Luodaan uusi reittipiste")
   (doseq [reittipiste reitti]
     (log/debug "Luodaan riettipiste")
-    (let [reittipiste-id (toteumat/luo-reittipiste<!
+    (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
                            db
                            toteuma-id
-                           (get-in reittipiste [:reittipiste :aika])
+                           (pvm-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
                            (get-in reittipiste [:reittipiste :koordinaatit :x])
                            (get-in reittipiste [:reittipiste :koordinaatit :y])
-                           (get-in reittipiste [:reittipiste :koordinaatit :z]))]
+                           (get-in reittipiste [:reittipiste :koordinaatit :z])))]
+      (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
       (tallenna-reitin-tehtavat db kirjaaja reittipiste reittipiste-id)
       (log/debug "Aloitetaan reittipisteen materiaalien tallennus.")
@@ -74,7 +78,7 @@
           reitti (get-in data [:reittitoteuma :reitti])
           toteuma-id (api-toteuma/tallenna-toteuma transaktio urakka-id kirjaaja toteuma)]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-      (log/debug "Aloitetaan toteuman sijainnin tallennus")
+      (log/debug "Aloitetaan toteuman tehtävien tallennus")
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman materiaalien tallennus")
       (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)

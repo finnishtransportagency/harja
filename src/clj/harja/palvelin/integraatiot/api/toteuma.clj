@@ -82,7 +82,7 @@
       db
       toteuma-id
       (get-in tehtava [:tehtava :id])
-      nil
+      (get-in tehtava [:tehtava :maara :maara])
       (:id kirjaaja)
       nil
       nil)))
@@ -93,10 +93,11 @@
     db
     toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
-  (doseq [materiaali (:maarat toteuma)]
-    (log/debug "Etsitään materiaalikoodi kannasta." materiaali)
+  (doseq [materiaali (:materiaalit toteuma)]
+    (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
-          materiaalikoodi-id (materiaalit/hae-materiaalikoodin-id-nimella<! db materiaali-nimi)]
+          _ (log/debug (format "Materiaalin %s nimi selvitetty: %s" (:materiaali materiaali) materiaali-nimi))
+          materiaalikoodi-id (:id (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi))]
       (log/debug "Luodaan materiaali.")
       (toteumat/luo-toteuma_materiaali<!
         db
