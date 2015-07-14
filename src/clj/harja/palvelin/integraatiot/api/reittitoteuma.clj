@@ -87,7 +87,7 @@
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman materiaalien tallennus")
       (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman vanhan reitin (jos sellainen on) postaminen")
+      (log/debug "Aloitetaan toteuman vanhan reitin (jos sellainen on) poistaminen")
       (poista-toteuman-reitti transaktio toteuma-id)
       (log/debug "Aloitetaan reitin tallennus")
       (luo-reitti transaktio kirjaaja reitti toteuma-id))))
