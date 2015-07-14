@@ -6,7 +6,7 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.integraatiot.api.tyokalut :as apityokalut]
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
@@ -61,14 +61,14 @@
   (is true))
 
 (deftest tallenna-pistetoteuma
-  (let [vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+  (let [vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                            (-> "test/resurssit/api/pistetoteuma.json"
                                slurp))]
 
     (is (= 200 (:status vastaus))))) ;; FIXME Varmista että toteuma löytyy tietokannasta ja tiedot on ok
 
 (deftest tallenna-reittitoteuma
-  (let [vastaus (apityokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+  (let [vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                        (-> "test/resurssit/api/reittitoteuma.json"
                                            slurp))]
 
