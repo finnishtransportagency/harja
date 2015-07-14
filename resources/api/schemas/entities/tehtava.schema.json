@@ -7,6 +7,12 @@
       "id": "urn:harja/tehtava/koodi",
       "type": "integer",
       "required": true
+    },
+    "maara": {
+      "id": "urn:harja/maarat/0/maara",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/maara.schema.json"
     }
   }
 }

@@ -4,17 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "materiaali": {
-      "id": "urn:harja/maara/materiaali",
-      "enum": [
-        "talvisuolaliuosNaCl",
-        "talvisuolaliuosCaCl2",
-        "erityisalueetNaCl",
-        "erityisalueetNaClLiuos",
-        "hiekoitushiekka",
-        "kaliumformiaatti"
-      ]
-    },
     "yksikko": {
       "id": "urn:harja/yksikko",
       "required": true,

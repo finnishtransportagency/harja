@@ -62,11 +62,11 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
     },
-    "maarat": {
-      "id": "urn:harja/toteumat/0/toteuma/maarat/",
+    "materiaalit": {
+      "id": "urn:harja/toteumat/0/toteuma/materiaalit/",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/maarat.schema.json"
+      "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json"
     }
   }
 }

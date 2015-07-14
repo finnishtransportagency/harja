@@ -30,11 +30,11 @@
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/tehtavat.schema.json"
           },
-          "maarat": {
+          "materiaalit": {
             "id": "urn:harja/reitti/0/maarat/",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/maarat.schema.json"
+            "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json"
           },
           "havainnot": {
             "id": "urn:harja/reitti/0/havainnot",

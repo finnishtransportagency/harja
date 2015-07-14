@@ -3,9 +3,20 @@
   "id": "urn:harja",
   "type": "array",
   "items": {
-    "id": "urn:harja/maarat/0/maara",
+    "id": "urn:harja/materiaalit/0/materiaali",
     "type": "object",
     "properties": {
+      "materiaali": {
+        "id": "urn:harja/maara/materiaali",
+        "enum": [
+          "talvisuolaliuosNaCl",
+          "talvisuolaliuosCaCl2",
+          "erityisalueetNaCl",
+          "erityisalueetNaClLiuos",
+          "hiekoitushiekka",
+          "kaliumformiaatti"
+        ]
+      },
       "maara": {
         "id": "urn:harja/maarat/0/maara",
         "type": "object",

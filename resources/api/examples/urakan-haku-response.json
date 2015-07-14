@@ -56,8 +56,8 @@
           "materiaalinKaytot": [
             {
               "materiaalinKaytto": {
+                "materiaali": "talvisuolaliuosNaCl",
                 "maara": {
-                  "materiaali": "talvisuolaliuosNaCl",
                   "yksikko": "t",
                   "maara": 10.92
                 },

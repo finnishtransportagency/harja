@@ -29,27 +29,29 @@
       "tehtavat": [
         {
           "tehtava": {
-            "id": 1
+            "id": 1,
+            "maara": {
+              "yksikko": "km",
+              "maara": 10.12
+            }
           }
         },
         {
           "tehtava": {
-            "id": 2
+            "id": 2 ,
+            "maara": {
+              "yksikko": "km",
+              "maara": 10.12
+            }
           }
         }
       ],
-      "maarat": [
+      "materiaalit": [
         {
-          "maara": {
-            "yksikko": "km",
-            "maara": 10.12
-          }
-        },
-        {
+          "materiaali": "talvisuolaliuosNaCl",
           "maara": {
             "yksikko": "kg",
-            "maara": 4.62,
-            "materiaali": "talvisuolaliuosNaCl"
+            "maara": 4.62
           }
         }
       ]
@@ -74,10 +76,10 @@
               }
             }
           ],
-          "maarat": [
+          "materiaalit": [
             {
+              "materiaali": "talvisuolaliuosNaCl",
               "maara": {
-                "materiaali": "talvisuolaliuosNaCl",
                 "yksikko": "kg",
                 "maara": 1.32
               }
@@ -104,10 +106,10 @@
               }
             }
           ],
-          "maarat": [
+          "materiaalit": [
             {
+              "materiaali": "talvisuolaliuosNaCl",
               "maara": {
-                "materiaali": "talvisuolaliuosNaCl",
                 "yksikko": "kg",
                 "maara": 0.9
               }
@@ -134,10 +136,10 @@
               }
             }
           ],
-          "maarat": [
+          "materiaalit": [
             {
+              "materiaali": "talvisuolaliuosNaCl",
               "maara": {
-                "materiaali": "talvisuolaliuosNaCl",
                 "yksikko": "kg",
                 "maara": 2.4
               }
