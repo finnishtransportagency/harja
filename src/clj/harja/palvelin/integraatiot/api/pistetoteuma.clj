@@ -27,8 +27,8 @@
           toteuma-id (api-toteuma/tallenna-toteuma transaktio urakka-id kirjaaja toteuma)]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Tallennetaan sijainti")
-      (api-toteuma/tallenna-sijainti transaktio toteuma toteuma-id)
-      (log/debug "Tallennetaan toteuman sijainti")
+      (api-toteuma/tallenna-sijainti transaktio (get-in data [:pistetoteuma :sijainti]) toteuma-id)
+      (log/debug "Tallennetaan toteuman tehtävät")
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
