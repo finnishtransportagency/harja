@@ -50,17 +50,21 @@
 
 (defn kasaa-tallennuksen-parametrit
   [tp]
-  {})
+  {:tp                 (assoc
+                         (dissoc tp :liitteet :kommentit :korjaavatoimenpide :uusi-kommentti)
+                         :urakka @nav/valittu-urakka)
+   :korjaavatoimenpide (:korjaavatoimenpide tp)
+   ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
+   ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
+   ;:liitteet           (:liitteet tp)
+   ;:kommentit          (:kommentit tp)
+   :uusi-kommentti     (:uusi-kommentti tp)
+   :hoitokausi @urakka/valittu-hoitokausi})
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
   (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennuksen-parametrit tp)))
 
 (defn turvallisuuspoikkeaman-tallennus-onnistui
-  [palautettu-id turvallisuuspoikkeama]
-  (if (some #(= (:id %) palautettu-id) @haetut-turvallisuuspoikkeamat)
-    (reset! haetut-turvallisuuspoikkeamat
-            (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) turvallisuuspoikkeama vanha)) @haetut-turvallisuuspoikkeamat)))
-
-    (reset! haetut-turvallisuuspoikkeamat
-            (into [] (concat @haetut-turvallisuuspoikkeamat turvallisuuspoikkeama)))))
+  [turvallisuuspoikkeamat]
+  (reset! haetut-turvallisuuspoikkeamat turvallisuuspoikkeamat))

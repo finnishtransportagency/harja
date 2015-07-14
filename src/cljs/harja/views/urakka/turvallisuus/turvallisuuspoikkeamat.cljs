@@ -41,7 +41,7 @@
                     {:luokka       "nappi-ensisijainen"
                      :ikoni        (ikonit/envelope)
                      :kun-onnistuu #(do
-                                     #_(tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
+                                     (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko "Tyyppi" :tyyppi :valinta :nimi :tyyppi
