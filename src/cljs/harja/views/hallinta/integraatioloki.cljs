@@ -6,7 +6,7 @@
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader livi-pudotusvalikko]]
             [harja.ui.grid :refer [grid]]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
@@ -37,17 +37,17 @@
                            :class      "suunnittelu-alasveto"}
       (:integraatiot @tiedot/valittu-jarjestelma)]]
 
-    [urakka-valinnat/hoitokauden-aikavali @tiedot/valittu-aikavali]
+    [valinnat/hoitokauden-aikavali tiedot/valittu-aikavali]
 
     [grid
-     {:tyhja         (if @tiedot/haetut-tapahtumat "Ei löytyneitä tapahtumia" [ajax-loader "Haetaan tapahtumia"])
+     {:tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
       :rivi-klikattu #(reset! tiedot/valittu-tapahtuma %)}
 
-     [{:otsikko "Järjestelmä" :nimi :jarjestelma :leveys "20%"}
-      {:otsikko "Integraatio" :nimi :integraatio :leveys "20%"}
-      {:otsikko "Alkanut" :nimi :alkanut :leveys "20%"}
-      {:otsikko "Päättynyt" :nimi :paattynyt :leveys "20%"}
-      {:otsikko "Onnistunut" :nimi :onnistunut :leveys "20%"}
+     [{:otsikko "Alkanut" :nimi :alkanut :leveys "20%"
+       :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
+      {:otsikko "Päättynyt" :nimi :paattynyt :leveys "20%"
+       :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
+      {:otsikko "Onnistunut" :nimi :onnistunut :tyyppi :boolean :leveys "20%"}
       {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys "20%"}
       {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys "20%"}]
 

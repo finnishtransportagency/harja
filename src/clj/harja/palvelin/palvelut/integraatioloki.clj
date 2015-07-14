@@ -7,7 +7,7 @@
             [harja.domain.roolit :as roolit]))
 
 (declare hae-jarjestelmien-integraatiot)
-(declare hae-integaatiotapahtumat)
+(declare hae-integraatiotapahtumat)
 
 (defrecord Integraatioloki []
   component/Lifecycle
@@ -16,14 +16,19 @@
                       :hae-jarjestelmien-integraatiot (fn [kayttaja _]
                                                         (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-integaatiotapahtumat (fn [kayttaja jarjestelma integraatio alkaen paattyen]
-                                                  (hae-integaatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+                      :hae-integraatiotapahtumat (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
+                                                   (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-jarjestelmien-integraatiot)
-    (poista-palvelu (:http-palvelin this) :hae-integaatiotapahtumat)
+    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
     this))
+
+
+(def tapahtuma-xf
+  (comp
+    (map #(assoc % :onnistunut (boolean (Boolean/valueOf (:onnistunut %)))))))
 
 (defn hae-integraatiot [db]
   (let [integraatiot (q/hae-jarjestelmien-integraatiot db)
@@ -43,14 +48,18 @@
   (log/debug "Haetaan järjestelmien integraatiot.")
   (hae-integraatiot db))
 
-(defn hae-integaatiotapahtumat
+(defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen]
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
   (log/debug "Haetaan tapahtumat järjestelmän:" jarjestelma ", integraatiolle:" integraatio ", alkaen:" alkaen ", paattyen:" paattyen)
-  (let [tapahtumat (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db jarjestelma integraatio alkaen paattyen)]
+  (let [tapahtumat
+        (into []
+              tapahtuma-xf
+              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db jarjestelma integraatio (konversio/sql-date alkaen) (konversio/sql-date paattyen)))]
     (log/debug "Tapahtumat:" tapahtumat)
-    (let [tapahtumat-viesteineen (mapv #(assoc % :viestit (q/hae-integraatiotapahtuman-viestit db (:id %))) tapahtumat)]
+    (let [tapahtumat-viesteineen
+          (mapv #(assoc % :viestit (q/hae-integraatiotapahtuman-viestit db (:id %))) tapahtumat)]
       (log/debug "Tapahtumat viesteineen:" tapahtumat-viesteineen)
       tapahtumat-viesteineen)))
 
