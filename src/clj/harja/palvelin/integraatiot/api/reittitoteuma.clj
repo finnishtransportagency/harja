@@ -9,6 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
+            [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
@@ -44,8 +45,8 @@
     (toteumat/luo-reitti_materiaali<!
       db
       reittipiste-id
-      (get-in materiaali [:maara :materiaali]) ; FIXME Integer kannassa, miten?
-      (get-in materiaali [:maara :maara])))) ; FIXME Yksikköä ei haluta tallentaa?
+      (get-in materiaali [:maara :materiaali]) ; FIXME Selvitä stringiä vastaava integer
+      (get-in materiaali [:maara :maara]))))
 
 (defn tallenna-reitti [db kirjaaja reitti toteuma-id]
   (log/debug "Tuhotaan toteuman vanha reitti")
