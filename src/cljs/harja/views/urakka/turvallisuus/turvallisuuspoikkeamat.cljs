@@ -10,7 +10,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kommentit :as kommentit])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -44,7 +45,14 @@
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti muokattu)
-                            #(swap! muokattu assoc :sijainti %))}]
+                            #(swap! muokattu assoc :sijainti %))}
+         {:otsikko     "Kommentit" :nimi :kommentit
+          :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                             :voi-liittaa      true
+                                             :placeholder      "Kirjoita kommentti..."
+                                             :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
+                                                                       #(swap! muokattu assoc :uusi-kommentti %))}
+                        (:kommentit @muokattu)]}]
         @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus
