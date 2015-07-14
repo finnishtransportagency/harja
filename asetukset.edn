@@ -37,4 +37,5 @@
                 :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
                 :paivittainen-lahetysaika nil
                 }
+ :integraatiot {:paivittainen-lokin-puhdistusaika nil}
  }
