@@ -15,7 +15,7 @@
   "pistetoteuma": {
     "toteuma": {
       "tunniste": {
-        "id": 753725
+        "id": __ID__
       },
       "sopimusId": 1,
       "selite": "Tien paikkaus",

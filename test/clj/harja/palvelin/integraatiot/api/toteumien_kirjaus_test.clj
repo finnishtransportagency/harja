@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
+            [taoensso.timbre :as log]
             [clojure.data.json :as json]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
@@ -42,11 +43,11 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :api-pistetoteuma (component/using
-                                        (api-pistetoteuma/->Pistetoteuma)
-                                        [:http-palvelin :db :integraatioloki])
+                                            (api-pistetoteuma/->Pistetoteuma)
+                                            [:http-palvelin :db :integraatioloki])
                         :api-reittitoteuma (component/using
-                                            (api-reittitoteuma/->Reittitoteuma)
-                                            [:http-palvelin :db :integraatioloki])))))
+                                             (api-reittitoteuma/->Reittitoteuma)
+                                             [:http-palvelin :db :integraatioloki])))))
 
   (alter-var-root #'urakka
                   (fn [_]
@@ -61,15 +62,40 @@
   (is true))
 
 (deftest tallenna-pistetoteuma
-  (let [vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                           (-> "test/resurssit/api/pistetoteuma.json"
-                               slurp))]
+  (let [ulkoinen-id (rand-int 10000)
+        vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+                                        (-> "test/resurssit/api/pistetoteuma.json"
+                                            slurp
+                                            (.replace "__ID__" (str ulkoinen-id))))]
 
-    (is (= 200 (:status vastaus))))) ;; FIXME Varmista että toteuma löytyy tietokannasta ja tiedot on ok
+    (is (= 200 (:status vastaus)))
+
+    (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id]))
+
+      (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+      (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+      (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))
 
 (deftest tallenna-reittitoteuma
-  (let [vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                       (-> "test/resurssit/api/reittitoteuma.json"
-                                           slurp))]
+  (let [ulkoinen-id (rand-int 10000)
+        vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                        (-> "test/resurssit/api/reittitoteuma.json"
+                                            slurp
+                                            (.replace "__ID__" (str ulkoinen-id))))]
 
-    (is (= 200 (:status vastaus))))) ;; FIXME Varmista että toteuma löytyy tietokannasta ja tiedot on ok
+    (is (= 200 (:status vastaus)))
+
+    (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id]))
+
+      (doseq [reittipiste-id reittipiste-idt]
+        (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))
+        (u (str "DELETE FROM reitti_tehtava WHERE reittipiste = " reittipiste-id)))
+      (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+      (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
+      (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+      (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))
