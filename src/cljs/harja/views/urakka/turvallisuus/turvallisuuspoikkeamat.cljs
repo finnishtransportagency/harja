@@ -13,16 +13,19 @@
             [harja.ui.napit :as napit]
             [harja.ui.kommentit :as kommentit])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 (defn turvallisuuspoikkeaman-tiedot
   []
 
   (let [muokattu (atom @tiedot/valittu-turvallisuuspoikkeama)
         lomakkeen-virheet (atom {})
-        voi-tallentaa? (atom true)]
+        voi-tallentaa? (reaction (and
+                                   (= (count @lomakkeen-virheet) 0)
+                                   (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fn []
+      (run! @muokattu (log "Muokattu on nyt " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
@@ -41,7 +44,22 @@
                                      #_(tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
+        [{:otsikko "Tyyppi" :tyyppi :valinta :nimi :tyyppi
+          :valinnat [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]
+          :valinta-nayta #(case %
+                           :turvallisuuspoikkeama "Turvallisuuspoikkeama"
+                           :prosessipoikkeama "Prosessipoikkeama"
+                           :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"
+                           " - Valitse tyyppi -")}
+         {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+         {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :leveys 1 :tyyppi :string}
+         {:otsikko "Työtehtävä" :nimi :tyotehtava :leveys 1 :tyyppi :string}
+         {:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
+         {:otsikko "Vammat" :nimi :vammat :leveys 1 :tyyppi :string}
+         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys 1 :tyyppi :numero}
+         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys 1 :tyyppi :numero}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti muokattu)
@@ -52,7 +70,19 @@
                                              :placeholder      "Kirjoita kommentti..."
                                              :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
                                                                        #(swap! muokattu assoc :uusi-kommentti %))}
-                        (:kommentit @muokattu)]}]
+                        (:kommentit @muokattu)]}
+         {:otsikko "Vastaava henkilö" :nimi :vastaava
+          :hae (comp :vastaavahenkilo :korjaavatoimenpide)
+          :aseta #(assoc-in %1 [:korjaavatoimenpide :vastaavahenkilo] %2)
+          :leveys 1 :tyyppi :string}
+         {:otsikko "Kuvaus" :nimi :korjauksenkuvaus
+          :hae (comp :kuvaus :korjaavatoimenpide)
+          :aseta #(assoc-in %1 [:korjaavatoimenpide :kuvaus] %2)
+          :leveys 1 :tyyppi :string}
+         {:otsikko "Korjaus suoritettu" :nimi :korjauspvm :fmt pvm/pvm-aika
+          :hae (comp :suoritettu :korjaavatoimenpide)
+          :aseta #(assoc-in %1 [:korjaavatoimenpide :suoritettu] %2)
+          :leveys 1 :tyyppi :pvm}]
         @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus

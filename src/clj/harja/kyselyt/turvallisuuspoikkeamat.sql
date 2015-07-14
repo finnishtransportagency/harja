@@ -48,7 +48,7 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN turvallisuuspoikkeama_kommentti tpk
     ON t.id = tpk.turvallisuuspoikkeama
   LEFT JOIN kommentti kom
-    ON tpk.liite = kom.id
+    ON tpk.kommentti = kom.id
        AND kom.poistettu IS NOT TRUE
 WHERE t.urakka = :urakka
       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
