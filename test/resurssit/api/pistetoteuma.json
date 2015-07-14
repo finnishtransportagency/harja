@@ -1,0 +1,44 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "pistetoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": 753725
+      },
+      "sopimusId": 1,
+      "selite": "Tien paikkaus",
+      "suorittaja": {
+        "nimi": "Tehotekijät Oy",
+        "ytunnus": "8765432-1"
+      },
+      "alkanut": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
+      "tyyppi": "yksikkohintainen",
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 1
+          }
+        }
+      ]
+    },
+    "sijainti": {
+      "koordinaatit": {
+        "x": 64.91292829999999,
+        "y": 25.503484200000003
+      }
+    }
+  }
+}

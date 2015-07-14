@@ -11,7 +11,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [parsi-aika]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java.sql.Date]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -26,7 +26,7 @@
     (if (havainnot/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (havainnot/paivita-havainto-ulkoisella-idlla<!
              db
-             (parsi-aika paivamaara)
+             (pvm-string->java.sql.Date paivamaara)
              kohde
              kuvaus
              (:x koordinaatit)
@@ -42,7 +42,7 @@
       (:id (havainnot/luo-havainto<!
              db
              urakka-id
-             (parsi-aika paivamaara)
+             (pvm-string->java.sql.Date paivamaara)
              "urakoitsija"
              kohde
              true

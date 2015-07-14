@@ -14,7 +14,7 @@
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [parsi-aika]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java.sql.Date]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -87,6 +87,8 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
+
+; FIXME Yksi recordi ja reitit mappiin, katso mallia tarkastuksista
 
 (defrecord Reittitoteuma []
   component/Lifecycle

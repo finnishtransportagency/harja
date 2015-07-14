@@ -4,8 +4,11 @@
             [harja.geo :as geo])
   (:import (java.text SimpleDateFormat)))
 
-(defn parsi-aika [paivamaara]
+(defn pvm-string->java.sql.Date [paivamaara]
   (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
+
+(defn json-pvm [paivamaara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))
 
 (defn henkilo->nimi
   "Antaa json skeeman mukaiselle henkilölle nimen yhdistämällä etu- ja sukunimet."

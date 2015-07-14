@@ -7,6 +7,7 @@
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
@@ -18,10 +19,6 @@
 (def portti nil)
 (def kayttaja "fastroi")
 (def urakka nil)
-
-(defn json-pvm [pvm]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") pvm))
-
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'portti (fn [_] (arvo-vapaa-portti)))
@@ -43,7 +40,7 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :api-tarkastukset (component/using
+                        :api-pistetoteuma (component/using
                                             (api-tarkastukset/->Tarkastukset)
                                             [:http-palvelin :db :integraatioloki])))))
 
@@ -76,7 +73,7 @@
         vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
                            (-> "test/resurssit/api/soratietarkastus.json"
                                slurp
-                               (.replace "__PVM__" (json-pvm pvm))
+                               (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
                                (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))
@@ -116,7 +113,7 @@
         vastaus (api-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                            (-> "test/resurssit/api/talvihoitotarkastus.json"
                                slurp
-                               (.replace "__PVM__" (json-pvm pvm))
+                               (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
                                (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))

@@ -13,7 +13,7 @@
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [parsi-aika]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java.sql.Date]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -34,8 +34,8 @@
       (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
       (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
              db
-             (parsi-aika (:alkanut toteuma))
-             (parsi-aika (:paattynyt toteuma))
+             (pvm-string->java.sql.Date (:alkanut toteuma))
+             (pvm-string->java.sql.Date (:paattynyt toteuma))
              (:id kirjaaja)
              (get-in toteuma [:suorittaja :nimi])
              (get-in toteuma [:suorittaja :ytunnus])
@@ -48,8 +48,8 @@
              db
              urakka-id
              (:sopimusId toteuma)
-             (parsi-aika (:alkanut toteuma))
-             (parsi-aika (:paattynyt toteuma))
+             (pvm-string->java.sql.Date (:alkanut toteuma))
+             (pvm-string->java.sql.Date (:paattynyt toteuma))
              (:tyyppi toteuma)
              (:id kirjaaja)
              (get-in toteuma [:suorittaja :nimi])
