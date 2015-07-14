@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.integraatioloki
   (:require [taoensso.timbre :as log]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.kyselyt.integraatioloki :as integraatiloki]))
+            [harja.kyselyt.integraatioloki :as integraatiloki]
+            [joda-time :as j]))
 
 (defprotocol IntegraatiolokiKirjaus
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
@@ -14,7 +15,9 @@
       (log/debug "Ajastetaan integraatiolokin puhdistus ajettavaksi joka päivä kello: " paivittainen-puhdistusaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-puhdistusaika
-        (fn [_] (
+        (fn [_]
+          #_(integraatiloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) (minus now (months 10))
+
                   ;;todo: toteuta
                   ))))
     (fn [] ())))

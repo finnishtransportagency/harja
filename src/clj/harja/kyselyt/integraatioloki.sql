@@ -34,4 +34,20 @@ WHERE ulkoinenid = :ulkoinenid AND
                      FROM integraatio
                      WHERE jarjestelma = :jarjestelma AND nimi = :nimi);
 
+-- name: poista-ennen-paivamaaraa-kirjatut-tapahtumat!
+-- Poistaa ennen annettua päivämäärää kirjatut integraatiotapahtumat viesteineen
+WITH
+    poistettavat_tapahtumaidt AS (
+      SELECT id
+      FROM integraatiotapahtuma
+      WHERE alkanut < :paivamaara),
+    viestien_poisto AS (
+    DELETE FROM integraatioviesti
+    WHERE integraatiotapahtuma IN (
+      SELECT id
+      FROM poistettavat_tapahtumaidt))
+DELETE FROM integraatiotapahtuma
+WHERE id IN (SELECT id
+             FROM poistettavat_tapahtumaidt);
+
 

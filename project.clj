@@ -96,7 +96,10 @@
                  [org.clojure/test.check "0.7.0"]
 
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
-                 [slingshot "0.12.2"]]
+                 [slingshot "0.12.2"]
+
+                 ;; Joda Timen Clojure toteutus
+                 [clojure.joda-time "0.2.0"]]
 
 
   :dev-dependencies [;; Selain REPL
