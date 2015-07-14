@@ -50,4 +50,27 @@ DELETE FROM integraatiotapahtuma
 WHERE id IN (SELECT id
              FROM poistettavat_tapahtumaidt);
 
+-- name: hae-jarjestelmien-integraatiot
+-- Hakee kaikki järjestelmien integraatiot
+SELECT
+  jarjestelma AS jarjestelma,
+  nimi        AS integraatio
+FROM integraatio;
 
+-- name: hae-jarjestelman-integraatiotapahtumat-aikavalilla
+-- Hakee annetun järjestelmän integraatiotapahtumat annetulla aikavälillä
+SELECT *
+FROM integraatiotapahtuma
+WHERE integraatio IN
+      (SELECT id
+       FROM integraatio
+       WHERE jarjestelma ILIKE :jarjestelma AND
+             nimi ILIKE :integraatio) AND
+      alkanut >= :alkaen AND
+      paattynyt <= :paattyen;
+
+-- name: hae-integraatiotapahtuman-viestit
+-- Hakee annetun integraatiotapahtuman viestit
+SELECT *
+FROM integraatioviesti
+WHERE integraatiotapahtuma = :integraatiotapahtumaid;

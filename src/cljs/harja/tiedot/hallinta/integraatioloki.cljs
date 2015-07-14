@@ -8,13 +8,17 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+
+(defn hae-jarjestelmien-integraatiot []
+  (k/post! :hae-jarjestelmien-integraatiot nil))
+
+(defn hae-tapahtumat [])
+
 (def nakymassa? (atom false))
-(defonce jarjestelmien-integraatiot (atom [{:jarjestelma  "API"
-                                            :integraatiot [{:nimi "hae-urakka"}
-                                                           {:nimi "kirjaa-havainto"}]}
-                                           {:jarjestelma  "Sampo"
-                                            :integraatiot [{:nimi "sisaanluku"}
-                                                           {:nimi "maksueralahetys"}]}]))
+
+(defonce jarjestelmien-integraatiot (reaction<! [nakymassa?]
+                                                (when nakymassa?
+                                                  (hae-jarjestelmien-integraatiot))))
 
 (defonce haetut-tapahtumat (atom [{:jarjestelma "API"
                                    :integraatio "hae-urakka"
@@ -38,8 +42,5 @@
 (defonce valittu-aikavali (atom nil))
 (defonce valittu-tapahtuma (atom nil))
 
-(defn hae-jarjestelmien-integraatiot [])
-
-(defn hae-tapahtumat [])
 
 

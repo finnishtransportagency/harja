@@ -40,6 +40,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+    [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
 
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -178,6 +179,10 @@
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
+                                [:http-palvelin :db])
+
+      :integraatioloki-palvelu (component/using
+                                (integraatioloki-palvelu/->Integraatioloki)
                                 [:http-palvelin :db])
 
       ;; Harja API

@@ -32,7 +32,7 @@
      [:span.alasvedon-otsikko "Integraatio"]
      [livi-pudotusvalikko {:valinta    @tiedot/valittu-integraatio
                            ;;\u2014 on väliviivan unikoodi
-                           :format-fn  :nimi
+                           :format-fn  #(str %)
                            :valitse-fn #(reset! tiedot/valittu-integraatio %)
                            :class      "suunnittelu-alasveto"}
       (:integraatiot @tiedot/valittu-jarjestelma)]]
