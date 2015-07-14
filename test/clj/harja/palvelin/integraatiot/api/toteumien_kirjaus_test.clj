@@ -115,11 +115,15 @@
               reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))
               toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
-              toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))]
+              toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
+              toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
+                                                            JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+                                                            WHERE toteuma = " toteuma-id)))]
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
           (is (= (count reittipiste-idt) 3))
           (is (= (count toteuma-tehtava-idt) 2))
           (is (= (count toteuma-materiaali-idt) 1))
+          (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
 
           (doseq [reittipiste-id reittipiste-idt]
             (let [reitti-tehtava-idt (into [] (flatten (q (str "SELECT id FROM reitti_tehtava WHERE reittipiste = " reittipiste-id))))
