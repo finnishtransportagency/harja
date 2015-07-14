@@ -1,17 +1,14 @@
 (ns harja.palvelin.palvelut.turvallisuuspoikkeamat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [clj-time.core :as t]
-            [clj-time.coerce :refer [from-sql-time]]
 
+            [harja.kyselyt.kommentit :as kommentit]
+            [harja.kyselyt.liitteet :as liitteet]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]))
-
-(defn tallenna-turvallisuuspoikkeama [db user tiedot]
-  (log/info "Turvallisuuspoikkeaminen tallentaminen on implementoimatta"))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
@@ -29,6 +26,10 @@
         ;; Tietokantahaku luonnollisesti palauttaa yhden kommentin/liitteen per rivi,
         ;; joten ensimmäisenä kaivetaan ulos uniikit tp:t, ja yhdistetään niiden
         ;; kommentit yhteen taulukkoon
+        ;;
+        ;; Itse asiassa tämä tehtiin turhankin monimutkaisesti, koska nykyisellään ei voi
+        ;; olla liitteitä, jotka eivät liity kommenttiin - tämä ei kuitenkaan ole tietomallin aiheuttama
+        ;; rajoite, vaan käyttöliittymän. Ehkä ei siis ollut hukkaan heitettyä aikaa? ;)
         kommentteineen (mapv
                          #(assoc % :kommentit
                                    (into []
@@ -83,14 +84,14 @@
                                         (fn[tp]
                                           (assoc tp :liitteet
                                                     (vec (remove nil? (map
-                                                                    (fn [liite]
-                                                                      (when-not
-                                                                        (some
-                                                                          (fn [kommentti]
-                                                                            (= (get-in kommentti [:liite :id]) (:id liite)))
-                                                                          (flatten (map :kommentit liitteet-kommenteissa)))
-                                                                        liite))
-                                                                    (:liitteet tp))))))
+                                                                        (fn [liite]
+                                                                          (when-not
+                                                                            (some
+                                                                              (fn [kommentti]
+                                                                                (= (get-in kommentti [:liite :id]) (:id liite)))
+                                                                              (flatten (map :kommentit liitteet-kommenteissa)))
+                                                                            liite))
+                                                                        (:liitteet tp))))))
                                         liitteineen)
 
         ;; Lopuksi tehdään tp, jolla on molemmat kommentit- ja liitteet-vektorit
@@ -106,6 +107,67 @@
         tulos yhdistetty]
     (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
     tulos))
+
+(defn luo-tai-paivita-korjaavatoimenpide
+  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
+
+  (assert
+    (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
+    "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
+    annettu turvallisuuspoikkeaman id.")
+
+  (if id
+    (do (q/paivita-korjaava-toimenpide<! db kuvaus suoritettu vastaavahenkilo (:id user) id tp-id))
+
+    (:id (q/luo-korjaava-toimenpide<! db tp-id kuvaus suoritettu vastaavahenkilo (:id user))))
+  )
+
+(defn luo-tai-paivita-turvallisuuspoikkeama
+  [db user
+   {:keys
+    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
+     sairaalavuorokaudet sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
+     tyyppi]}]
+
+  (if id
+    (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                           (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
+                                           tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa tyyppi (:id user) id)
+        id)
+
+    (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                           (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
+                           tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa tyyppi (:id user)))))
+
+(defn tallenna-turvallisuuspoikkeama [db user [tp korjaavatoimenpide uusi-kommentti hoitokausi]]
+  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+
+  (jdbc/with-db-transaction [c db]
+    (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
+
+      (when uusi-kommentti
+        (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
+        (let [liite (some->> uusi-kommentti
+                             :liite
+                             :id
+                             (liitteet/hae-urakan-liite-id c (:urakka tp))
+                             first
+                             :id)
+              kommentti (kommentit/luo-kommentti<! c
+                                                   nil
+                                                   (:kommentti uusi-kommentti)
+                                                   liite
+                                                   (:id user))]
+          (q/liita-kommentti<! c id (:id kommentti))))
+
+      (when korjaavatoimenpide
+        (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
+
+        (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide))
+
+      (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
