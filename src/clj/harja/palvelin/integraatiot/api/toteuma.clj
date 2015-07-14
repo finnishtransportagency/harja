@@ -28,7 +28,7 @@
     "kaliumformiaatti" "Kaliumformiaatti"
     (throw (RuntimeException. (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)))))
 
-(defn tallenna-toteuma [db urakka-id kirjaaja toteuma]
+(defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
     (do
       (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
@@ -96,9 +96,8 @@
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
-          _ (log/debug (format "Materiaalin %s nimi selvitetty: %s" (:materiaali materiaali) materiaali-nimi))
-          materiaalikoodi-id (:id (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi))]
-      (log/debug "Luodaan materiaali.")
+          materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
+      (if (nil? materiaalikoodi-id) (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
       (toteumat/luo-toteuma_materiaali<!
         db
         toteuma-id

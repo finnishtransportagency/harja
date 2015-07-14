@@ -384,3 +384,6 @@ INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara) VALUE
 -- name: poista-reitti_materiaali-reittipiste-idlla!
 -- Poistaa reitin materiaalit
 DELETE FROM reitti_materiaali WHERE reittipiste = :id;
+
+-- name: hae-toteuman-reittipisteet-idlla
+SELECT * FROM reittipiste WHERE toteuma = :id;
