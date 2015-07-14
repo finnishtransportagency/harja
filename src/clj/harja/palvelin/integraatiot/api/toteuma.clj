@@ -56,7 +56,7 @@
     nil
     (get-in sijainti [:koordinaatit :x])
     (get-in sijainti [:koordinaatit :y])
-    nil))
+    (get-in sijainti [:koordinaatit :z])))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")
@@ -65,7 +65,7 @@
     toteuma-id)
   (log/debug "Luodaan toteumalle uudet tehtävät")
   (doseq [tehtava (:tehtavat toteuma)]
-    (log/debug "Luodaan tehtävä: " (pr-str tehtava))
+    (log/debug "Luodaan tehtävä.")
     (toteumat/luo-toteuma_tehtava<!
       db
       toteuma-id
@@ -77,17 +77,15 @@
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
-  (toteumat/poista-toteuma_tehtava-toteuma-idlla!
+  (toteumat/poista-toteuma_materiaali-toteuma-idlla!
     db
     toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
-  (doseq [tehtava (:maarat toteuma)]
-    (log/debug "Luodaan materiaali: " (pr-str tehtava))
-    (toteumat/luo-toteuma_tehtava<!
+  (doseq [materiaali (:maarat toteuma)]
+    (log/debug "Luodaan materiaali.")
+    (toteumat/luo-toteuma_materiaali<!
       db
       toteuma-id
-      (get-in tehtava [:tehtava :id])
-      nil
-      (:id kirjaaja)
-      nil
-      nil)))
+      (get-in materiaali [:maara :materiaali]) ; FIXME Kannassa integer, mitä tehdään?
+      (get-in materiaali [:maara :maara]) ; FIXME Yksikköä ei haluta tallentaa?
+      (:id kirjaaja))))

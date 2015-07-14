@@ -360,3 +360,27 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paiv
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
 DELETE FROM toteuma_tehtava WHERE toteuma = :id;
+
+-- name: luo-toteuma_materiaali<!
+-- Luo uuden toteuman materiaalin
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja) VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
+
+-- name: poista-toteuma_materiaali-toteuma-idlla!
+-- Poistaa toteuman materiaalit
+DELETE FROM toteuma_materiaali WHERE toteuma = :id;
+
+-- name: luo-reitti_tehtava<!
+-- Luo uuden reitin tehtävän
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara) VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
+
+-- name: poista-reitti_tehtava-reittipiste-idlla!
+-- Poistaa reitin tehtävät
+DELETE FROM reitti_tehtava WHERE reittipiste = :id;
+
+-- name: luo-reitti_materiaali<!
+-- Luo uuden reitin materiaalin
+INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara) VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
+
+-- name: poista-reitti_materiaali-reittipiste-idlla!
+-- Poistaa reitin materiaalit
+DELETE FROM reitti_materiaali WHERE reittipiste = :id;
