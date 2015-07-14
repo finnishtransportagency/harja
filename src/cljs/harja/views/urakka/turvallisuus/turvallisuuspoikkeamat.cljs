@@ -1,5 +1,5 @@
 (ns harja.views.urakka.turvallisuus.turvallisuuspoikkeamat
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as tiedot]
@@ -40,7 +40,11 @@
                                      #_(tiedot/turvallisuuspoikkeaman-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}]
+        [{:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
+         {:otsikko  "Tierekisteriosoite" :nimi :tr
+          :tyyppi   :tierekisteriosoite
+          :sijainti (r/wrap (:sijainti muokattu)
+                            #(swap! muokattu assoc :sijainti %))}]
         @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus
@@ -61,6 +65,7 @@
 (defn turvallisuuspoikkeamat []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
+    (komp/lippu tiedot/taso-turvallisuuspoikkeamat)
 
     (fn []
       (if @tiedot/valittu-turvallisuuspoikkeama
