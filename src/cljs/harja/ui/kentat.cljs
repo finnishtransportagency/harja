@@ -505,7 +505,6 @@
         (lopeta-paivitys!))}
      
      (fn [{:keys [lomake? sijainti]} data]
-       (log "TR: " (pr-str @data))
        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
              muuta! (fn [kentta]
                       #(let [v (-> % .-target .-value)]
