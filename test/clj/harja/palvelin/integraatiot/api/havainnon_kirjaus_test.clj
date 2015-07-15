@@ -6,13 +6,16 @@
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.liitteet :as liitteet]
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
             [taoensso.timbre :as log]
             [clojure.data.json :as json]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.havainnot :as api-havainnot])
+            [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [cheshire.core :as cheshire])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -40,9 +43,12 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
+                        :liitteiden-hallinta (component/using
+                                           (liitteet/->Liitteet)
+                                           [:db])
                         :api-havainnot (component/using
                                             (api-havainnot/->Havainnot)
-                                            [:http-palvelin :db :integraatioloki])))))
+                                            [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))))
 
   (alter-var-root #'urakka
                   (fn [_]
@@ -56,9 +62,9 @@
 (deftest tallenna-tiestotarkastus
   (is true))
 
-; FIXME Ei toimi jostain syystä
-#_(deftest tallenna-havainto
-  (let [vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
+(deftest tallenna-havainto
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
                                                (-> "test/resurssit/api/havainto.json"
-                                                slurp))]
-    (is (= 200 (:status vastaus-lisays)))))
+                                                slurp))
+        encoodattu-havainto (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))))
