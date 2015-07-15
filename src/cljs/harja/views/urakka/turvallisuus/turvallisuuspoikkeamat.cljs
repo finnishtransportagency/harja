@@ -35,7 +35,6 @@
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fn []
-      (run! @muokattu (log "Muokattu: " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
