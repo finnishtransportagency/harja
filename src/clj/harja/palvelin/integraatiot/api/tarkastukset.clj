@@ -84,7 +84,7 @@
                (log/info "REQUEST: " (pr-str request))
                (kasittele-kutsu db integraatioloki palvelu request
                                 pyynto-skeema nil
-                              (fn [parametrit data kayttaja]
+                              (fn [parametrit data kayttaja db]
                                 (kirjaa-tarkastus db kayttaja tyyppi parametrit data)))))))
     
     this)

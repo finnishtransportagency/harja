@@ -97,13 +97,11 @@
   [{:palvelu        :hae-urakka
     :polku          "/api/urakat/:id"
     :vastaus-skeema skeemat/+urakan-haku-vastaus+
-    :kasittely-fn   (fn [db]
-                      (fn [parametrit data kayttaja-id] (hae-urakka-idlla db parametrit kayttaja-id)))}
+    :kasittely-fn   (fn [parametrit data kayttaja-id db] (hae-urakka-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-urakka-ytunnuksella
     :polku          "/api/urakat/haku/:ytunnus"
     :vastaus-skeema skeemat/+urakoiden-haku-vastaus+
-    :kasittely-fn   (fn [db]
-                      (fn [parametrit data kayttaja-id] (hae-urakka-ytunnuksella db parametrit kayttaja-id)))}])
+    :kasittely-fn   (fn [parametrit data kayttaja-id db] (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
 
 (defrecord Urakat []
   component/Lifecycle
@@ -112,7 +110,7 @@
       (julkaise-reitti
         http palvelu
         (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema (kasittely-fn db)))))
+          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema kasittely-fn))))
     this)
 
   (stop [{http :http-palvelin :as this}]

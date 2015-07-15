@@ -129,7 +129,7 @@
                       [parametrit (:params request)
                        kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                        kutsun-data (lue-kutsu kutsun-skeema request body)
-                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja)]
+                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
                       (tee-vastaus vastauksen-skeema vastauksen-data))
                     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
                       (kasittele-invalidi-json virheet))

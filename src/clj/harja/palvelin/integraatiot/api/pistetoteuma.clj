@@ -45,7 +45,7 @@
       http :lisaa-pistetoteuma
       (POST "/api/urakat/:id/toteumat/piste" request
         (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request skeemat/+pistetoteuman-kirjaus+ skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja] (kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-pistetoteuma)

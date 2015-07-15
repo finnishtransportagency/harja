@@ -96,7 +96,7 @@
       http :lisaa-havainto
       (POST "/api/urakat/:id/havainto" request
         (kasittele-kutsu db integraatioloki :lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja] (kirjaa-havainto liitteiden-hallinta db parametrit data kayttaja)))))
+                         (fn [parametrit data kayttaja db] (kirjaa-havainto liitteiden-hallinta db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-havainto)

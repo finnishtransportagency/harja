@@ -106,7 +106,7 @@
       http :lisaa-reittitoteuma
       (POST "/api/urakat/:id/toteumat/reitti" request
         (kasittele-kutsu db integraatioloki :lisaa-reittitoteuma request skeemat/+reittitoteuman-kirjaus+ skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja] (kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-pistetoteuma)
