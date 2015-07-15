@@ -111,6 +111,7 @@
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
 
+  ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
@@ -141,7 +142,7 @@
                            kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
                            tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa tyyppi (:id user)))))
 
-(defn tallenna-turvallisuuspoikkeama [db user [tp korjaavatoimenpide uusi-kommentti hoitokausi]]
+(defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavatoimenpide uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
 
   (jdbc/with-db-transaction [c db]
