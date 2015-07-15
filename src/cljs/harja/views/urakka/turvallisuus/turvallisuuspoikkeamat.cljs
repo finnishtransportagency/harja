@@ -35,6 +35,7 @@
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fn []
+      (run! @muokattu (log "Muokattu: " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
@@ -53,14 +54,8 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko       "Tyyppi" :tyyppi :valinta :nimi :tyyppi
-          :valinnat      [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]
-          :valinta-nayta #(case %
-                           :turvallisuuspoikkeama "Turvallisuuspoikkeama"
-                           :prosessipoikkeama "Prosessipoikkeama"
-                           :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"
-                           " - Valitse tyyppi -")
-          :validoi [[:ei-tyhja "Valitse poikkeaman tyyppi"]]}
+        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+          :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
          {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
           :validoi [[:ei-tyhja "Valitse päivämäärä"]] :varoita [[:urakan-aikana]]}
          {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
