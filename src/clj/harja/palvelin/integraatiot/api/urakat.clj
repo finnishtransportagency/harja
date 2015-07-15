@@ -75,8 +75,8 @@
     :sopimukset (hae-urakan-sopimukset db id)}})
 
 (defn muodosta-vastaus-hae-urakka-ytunnuksella [db urakat]
-  {:urakat (mapv #({:urakka
-                    {:tiedot (assoc %
+  {:urakat (mapv (fn [urakka] {:urakka
+                    {:tiedot (assoc urakka
                                :vaylamuoto "tie")}}) urakat)})
 
 (defn hae-urakka-idlla [db {:keys [id]} kayttaja]
