@@ -6,7 +6,8 @@
             [harja.tyokalut.json_validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kayttajat :as q]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [clojure.walk :as walk])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tee-lokiviesti [suunta body viesti]
@@ -14,7 +15,7 @@
    :sisaltotyyppi "application/json"
    :siirtotyyppi  "HTTP"
    :sisalto       body
-   :otsikko       (str (:headers viesti))
+   :otsikko       (str (walk/keywordize-keys (:headers viesti)))
    :parametrit    (str (:params viesti))})
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
