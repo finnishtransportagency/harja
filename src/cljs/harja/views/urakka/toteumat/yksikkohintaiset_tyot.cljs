@@ -75,7 +75,7 @@
        :validoi       [[:ei-tyhja "Valitse työ"]]
        :aseta         #(assoc %1 :toimenpideinstanssi %2
                                  :tehtava nil)}
-      {:otsikko       "Tehtävä" :nimi :tehtava              ; FIXME Readonly-tilassa näkyy id, pitäisi näkyä nimi
+      {:otsikko       "Tehtävä" :nimi :tehtava
        :tyyppi        :valinta
        :valinta-arvo  #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
