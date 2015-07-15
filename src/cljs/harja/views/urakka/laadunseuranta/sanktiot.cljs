@@ -30,7 +30,6 @@
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count tiedot/+uusi-sanktio+))))]
     (fn []
-      (run! @muokattu (log "Muokattu on nyt " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-sanktio nil)}
