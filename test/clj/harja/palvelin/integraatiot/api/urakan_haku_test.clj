@@ -59,6 +59,6 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)]
     (is (= 200 (:status vastaus)))))
 
-(deftest urakan-haku-idlla-toimii
+(deftest urakan-haku-ytunnuksella-toimii
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] kayttaja portti)]
     (is (= 200 (:status vastaus)))))
