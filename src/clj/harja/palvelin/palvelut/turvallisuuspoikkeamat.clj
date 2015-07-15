@@ -81,7 +81,7 @@
         ;; TP:n liitteet-vektorista voidaan siis poistaa liitteet, jotka liittyvät
         ;; johonkin kommenttiin
         ilman-redundantteja-liitteita (mapv
-                                        (fn[tp]
+                                        (fn [tp]
                                           (assoc tp :liitteet
                                                     (vec (remove nil? (map
                                                                         (fn [liite]
@@ -118,9 +118,9 @@
     annettu turvallisuuspoikkeaman id.")
 
   (if id
-    (do (q/paivita-korjaava-toimenpide<! db kuvaus suoritettu vastaavahenkilo (:id user) id tp-id))
+    (do (q/paivita-korjaava-toimenpide<! db kuvaus suoritettu vastaavahenkilo id tp-id))
 
-    (:id (q/luo-korjaava-toimenpide<! db tp-id kuvaus suoritettu vastaavahenkilo (:id user))))
+    (:id (q/luo-korjaava-toimenpide<! db tp-id kuvaus suoritettu vastaavahenkilo)))
   )
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
@@ -130,17 +130,33 @@
      sairaalavuorokaudet sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
      tyyppi]}]
 
+  (log/debug "tallennetaan tyypit: " (str "{" (clojure.string/join "," (map name tyyppi)) "}"))
+
+  ;; Tässä on nyt se venäläinen homma.
+  ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
+  ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
+  ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
+  ;; että betan vuoksi sitä ei liene järkevää tehdä.
   (if id
     (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                            (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
-                                           tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa tyyppi (:id user) id)
+                                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                           (str "{" (clojure.string/join "," (map name tyyppi)) "}")
+                                           (:id user) id)
+        (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+                                                  (first sijainti) (second sijainti) tr_numero
+                                                  tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id)
 
-    (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                           (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
-                           tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa tyyppi (:id user)))))
+    (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                                 (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                                 kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
+                                                 tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
+                                                 (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
+      (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+                                                (first sijainti) (second sijainti) tr_numero
+                                                tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+      id)))
 
 (defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavatoimenpide uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))

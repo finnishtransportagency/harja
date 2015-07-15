@@ -59,11 +59,11 @@ VALUES (:turvallisuuspoikkeama, :kommentti);
 
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
-  SET
-    kuvaus=:kuvaus,
-    suoritettu=:suoritettu,
-    vastaavahenkilo=:vastaava
-WHERE id=:id AND turvallisuuspoikkeama=:tp;
+SET
+  kuvaus          = :kuvaus,
+  suoritettu      = :suoritettu,
+  vastaavahenkilo = :vastaava
+WHERE id = :id AND turvallisuuspoikkeama = :tp;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
@@ -72,6 +72,8 @@ VALUES
   (:tp, :kuvaus, :suoritettu, :vastaava);
 
 --name: paivita-turvallisuuspoikkeama<!
+-- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
+-- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
 SET urakka               = :urakka,
   tapahtunut             = :tapahtunut,
@@ -83,22 +85,32 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  sijainti               = :sijainti,
-  tr_numero              = :numero,
-  tr_alkuetaisyys        = :aet,
-  tr_loppuetaisyys       = :let,
-  tr_alkuosa             = :aos,
-  tr_loppuosa            = :los,
-  tyyppi                 = :tyyppi,
+  tyyppi                 = :tyyppi::turvallisuuspoikkeamatyyppi[],
   muokkaaja              = :kayttaja,
   muokattu               = NOW()
 WHERE id = :id;
 
+--name: aseta-turvallisuuspoikkeaman-sijanti<!
+-- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
+-- Clojuressa voi olla max 20. Ei aseta muokkaajaa ja muokattua, koska:
+-- * kyselyä kutsutaan heti paivita1:sen jälkeen, joka jo asettaa ne
+-- * kyselyä kutsutaan heti luonnin jälkeen
+UPDATE turvallisuuspoikkeama
+SET
+  sijainti               = POINT(:x_koordinaatti, :y_koordinaatti),
+  tr_numero              = :numero,
+  tr_alkuetaisyys        = :aet,
+  tr_loppuetaisyys       = :let,
+  tr_alkuosa             = :aos,
+  tr_loppuosa            = :los
+WHERE id = :id;
+
 --name: luo-turvallisuuspoikkeama<!
+-- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
+-- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, sijainti, tr_numero, tr_alkuetaisyys, tr_loppuetaisyys,
- tr_alkuosa, tr_loppuosa, tyyppi, luoja, luotu)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
-   :sijainti, :numero, :aet, :let, :aos, :los, :tyyppi, :kayttaja, NOW());
+   :tyyppi::turvallisuuspoikkeamatyyppi[], :kayttaja, NOW());

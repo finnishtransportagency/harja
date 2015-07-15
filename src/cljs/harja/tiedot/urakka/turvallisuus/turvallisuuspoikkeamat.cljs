@@ -52,14 +52,14 @@
   [tp]
   {:tp                 (assoc
                          (dissoc tp :liitteet :kommentit :korjaavatoimenpide :uusi-kommentti)
-                         :urakka @nav/valittu-urakka)
+                         :urakka (:id @nav/valittu-urakka))
    :korjaavatoimenpide (:korjaavatoimenpide tp)
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
    ;:liitteet           (:liitteet tp)
    ;:kommentit          (:kommentit tp)
    :uusi-kommentti     (:uusi-kommentti tp)
-   :hoitokausi @urakka/valittu-hoitokausi})
+   :hoitokausi         @urakka/valittu-hoitokausi})
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
@@ -68,3 +68,4 @@
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]
   (reset! haetut-turvallisuuspoikkeamat turvallisuuspoikkeamat))
+
