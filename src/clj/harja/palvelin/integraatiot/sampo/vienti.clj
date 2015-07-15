@@ -57,7 +57,7 @@
     (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
       (do
         (maksuera/merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-        (sampo-lokitus/lokita-viesti integraatioloki "maksuera-lähetys" viesti-id "ulos" maksuera-xml))
+        (sampo-lokitus/lokita-viesti integraatioloki "maksuera-lahetys" viesti-id "ulos" maksuera-xml))
       (do
         (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
         (maksuera/merkitse-maksueralle-lahetysvirhe db numero)
