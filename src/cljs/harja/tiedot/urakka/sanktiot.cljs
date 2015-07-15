@@ -9,16 +9,17 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto])
   (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
 (def +uusi-sanktio+
-  {:suorasanktio true
-   :havainto
-   {
-    :tekijanimi @istunto/kayttajan-nimi
-    :paatos {:paatos "sanktio"}
-    }})
+  (reaction {:suorasanktio true
+             :havainto
+                           {
+                            :tekijanimi @istunto/kayttajan-nimi
+                            :paatos     {:paatos "sanktio"}
+                            }}))
 
 (defonce valittu-sanktio (atom nil))
 
@@ -39,10 +40,10 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s]
-  {:sanktio   (dissoc s :havainto)
-   :havainto  (if-not (get-in s [:havainto :urakka])
-                (:havainto (assoc-in s [:havainto :urakka] (:id @nav/valitse-urakka)))
-                (:havainto s))})
+  {:sanktio  (dissoc s :havainto)
+   :havainto (if-not (get-in s [:havainto :urakka])
+               (:havainto (assoc-in s [:havainto :urakka] (:id @nav/valittu-urakka)))
+               (:havainto s))})
 
 (defn tallenna-sanktio
   [sanktio]

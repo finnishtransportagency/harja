@@ -28,8 +28,9 @@
         lomakkeen-virheet (atom {})
         voi-tallentaa? (reaction (and
                                    (= (count @lomakkeen-virheet) 0)
-                                   (> (count @muokattu) (count tiedot/+uusi-sanktio+))))]
+                                   (> (count @muokattu) (count @tiedot/+uusi-sanktio+))))]
     (fn []
+      (run! @muokattu (log "Muokattu: " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-sanktio nil)}
@@ -55,16 +56,22 @@
           :muokattava? (constantly false)}
 
          ;; TODO Mitkä päivämäärät tarvitaan?
-         {:otsikko "Perintäpäivämäärä" :nimi :perintapvm
-          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm}
          {:otsikko "Havainnon aika" :nimi :havaintoaika
           :hae     (comp :aika :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :aika] arvo))
-          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]] :varoita [[:urakan-aikana]]}
          {:otsikko "Käsittelyn aika" :nimi :kasittelyaika
           :hae     (comp :kasittelyaika :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelyaika] arvo))
-          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                    [:pvm-kentan-jalkeen (comp :aika :havainto) "Ei voida käsitellä havaintoa ennen"]]}
+         {:otsikko "Perintäpäivämäärä" :nimi :perintapvm
+          :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                   [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :havainto)
+                    "Ei voida periä käsittelyä ennen"]]}
 
          ;; Päätös on aina sanktio
          #_{:otsikko "Päätös" :nimi :paatos
@@ -75,7 +82,8 @@
          {:otsikko "Perustelu" :nimi :perustelu
           :hae     (comp :perustelu :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :perustelu] arvo))
-          :leveys  1 :tyyppi :string}
+          :leveys  1 :tyyppi :string
+          :validoi [[:ei-tyhja "Anna perustelu"]]}
          {:otsikko "Kohde" :nimi :kohde
           :hae     (comp :kohde :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kohde] arvo))
@@ -100,7 +108,8 @@
           :hae     (comp :muukasittelytapa :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
           :leveys  2 :tyyppi :string}
-         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :string}
+         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :string
+          :validoi [[:ei-tyhja "Anna summa"]]}
          {:otsikko "Indeksi" :nimi :indeksi :leveys 2 :tyyppi :string}
 
          ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
@@ -142,7 +151,7 @@
   [:div.sanktiot
    [urakka-valinnat/urakan-hoitokausi-ja-toimenpide @nav/valittu-urakka]
    [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-sanktio tiedot/+uusi-sanktio+)}
+    {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
     (ikonit/plus-sign) " Lisää sanktio"]
    [grid/grid
     {:otsikko       "Sanktiot"
