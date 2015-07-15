@@ -34,4 +34,8 @@
 
            (if (.isSuccess validointiraportti)
              (log/debug "JSON data on validia")
-             (kasittele-validointivirheet validointiraportti))))))
+             (kasittele-validointivirheet validointiraportti))))
+       (catch Exception e
+         (throw+ {:type virheet/+invalidi-json+ :virheet
+                        [{:koodi  virheet/+invalidi-json-koodi+
+                          :viesti "JSONin validoinnissa tapahtui virhe."}]}))))

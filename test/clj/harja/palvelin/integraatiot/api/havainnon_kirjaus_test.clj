@@ -44,11 +44,11 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :liitteiden-hallinta (component/using
-                                           (liitteet/->Liitteet)
-                                           [:db])
+                                               (liitteet/->Liitteet)
+                                               [:db])
                         :api-havainnot (component/using
-                                            (api-havainnot/->Havainnot)
-                                            [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))))
+                                         (api-havainnot/->Havainnot)
+                                         [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))))
 
   (alter-var-root #'urakka
                   (fn [_]
@@ -64,7 +64,26 @@
 
 (deftest tallenna-havainto
   (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
-                                               (-> "test/resurssit/api/havainto.json"
-                                                slurp))
+                                         (-> "test/resurssit/api/havainto.json"
+                                             slurp))
         encoodattu-havainto (cheshire/decode (:body vastaus) true)]
-    (is (= 200 (:status vastaus)))))
+    (is (= 200 (:status vastaus)))
+
+    (let [liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.png';")))
+          havainto-id (ffirst (q (str "SELECT id FROM havainto WHERE kohde = 'testikohde36934853';")))
+          kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'testihavainto36934853';")))]
+      (log/debug "liite-id: " liite-id)
+      (log/debug "havainto-id: " havainto-id)
+      (log/debug "kommentti-id: " kommentti-id)
+      (u (str "DELETE FROM havainto_liite WHERE havainto = " havainto-id ";"))
+      (u (str "DELETE FROM havainto_kommentti WHERE havainto = " havainto-id ";"))
+      (when kommentti-id (u (str "DELETE from kommentti WHERE id = " kommentti-id ";")))
+      (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
+      (u (str "DELETE FROM havainto WHERE kuvaus = 'testihavainto36934853';")))))
+
+
+(deftest tallenna-havainto-virheellisella-liitteella
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
+                                         (-> "test/resurssit/api/havainto-virheellinen-liite.json"
+                                             slurp))]
+    (is (= 400 (:status vastaus)))))

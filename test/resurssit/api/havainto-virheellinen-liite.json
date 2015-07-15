@@ -30,7 +30,7 @@
     }
   },
   "kuvaus": "Aura-auto osui pysäköityyn autoon.",
-  "kohde": "test",
+  "kohde": "Kiviharjunlenkin risteys",
   "kirjaaja": {
     "id": 54697481,
     "etunimi": "Ville",
@@ -43,7 +43,7 @@
         "nimi": "kolari.png",
         "tyyppi": "image/png",
         "kuvaus": "Kuva",
-        "sisalto": "... sisältö base64 enkoodattuna  ..."
+        "sisalto": "crap",
       }
     }
   ],
