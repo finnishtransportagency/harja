@@ -61,7 +61,12 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (log/debug "Urakan haku id:llä: " encoodattu-body)
     (is (= 200 (:status vastaus)))
-    (is (not (nil? (:urakka encoodattu-body))))))
+    (is (not (nil? (:urakka encoodattu-body))))
+    (is (= (get-in encoodattu-body [:urakka :tiedot :id]) urakka))
+    (is (>= (count (get-in encoodattu-body [:urakka :sopimukset])) 1))
+    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :kokonaishintaisetTyot])) 1))
+    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :yksikkohintaisetTyot])) 1))
+    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :materiaalinKaytot])) 1))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
