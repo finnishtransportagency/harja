@@ -89,7 +89,7 @@
 (defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
   ;(validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Validointi puuttuu, tarkista että käyttäjällä on oikeus urakoihin?
   (log/debug "Haetaan urakat ytynnuksella " ytunnus)
-  (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) first konv/alaviiva->rakenne)]
+  (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
     (log/debug "Urakat haettu: " urakat)
     (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
 
