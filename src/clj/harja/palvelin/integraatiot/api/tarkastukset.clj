@@ -62,28 +62,28 @@
 (def tarkastukset
   [{:palvelu :lisaa-tiestotarkastus
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
-    :skeema skeemat/+tiestotarkastuksen-kirjaus+
+    :pyynto-skeema skeemat/+tiestotarkastuksen-kirjaus+
     :tyyppi :tiesto}
    {:palvelu :lisaa-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
-    :skeema skeemat/+talvihoitotarkastuksen-kirjaus+
+    :pyynto-skeema skeemat/+talvihoitotarkastuksen-kirjaus+
     :tyyppi :talvihoito}
    {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
-    :skeema skeemat/+soratietarkastuksen-kirjaus+
+    :pyynto-skeema skeemat/+soratietarkastuksen-kirjaus+
     :tyyppi :soratie}])
 
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku skeema tyyppi]} tarkastukset]
+    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} tarkastukset]
       (julkaise-reitti
        http palvelu
        (POST polku request
              (do
                (log/info "REQUEST: " (pr-str request))
                (kasittele-kutsu db integraatioloki palvelu request
-                              skeema nil
+                                pyynto-skeema nil
                               (fn [parametrit data kayttaja]
                                 (kirjaa-tarkastus db kayttaja tyyppi parametrit data)))))))
     

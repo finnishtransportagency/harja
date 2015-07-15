@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.skeemat)
 
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
+(def +urakoiden-haku-vastaus+ "api/schemas/urakoiden-haku-response.schema.json")
 
 (def +onnistunut-kirjaus+ "api/schemas/kirjaus-response.schema.json")
 

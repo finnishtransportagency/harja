@@ -80,14 +80,23 @@
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus db urakka-id urakka))))
 
+(def hakutyypit
+  [{:palvelu        :hae-urakka
+    :polku          "/api/urakat/:id"
+    :vastaus-skeema skeemat/+urakan-haku-vastaus+}
+   #_{:palvelu :hae-urakka-ytunnuksella ; FIXME To be implemented
+    :polku "/api/urakat/haku/:ytunnus"
+    :vastaus-skeema skeemat/+urakoiden-haku-vastaus+}])
+
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (julkaise-reitti
-      http :hae-urakka
-      (GET "/api/urakat/:id" request
-        (kasittele-kutsu db integraatioloki :hae-urakka request nil skeemat/+urakan-haku-vastaus+
-                         (fn [parametit data kayttaja-id] (hae-urakka db parametit kayttaja-id)))))
+    (doseq [{:keys [palvelu polku vastaus-skeema]} hakutyypit]
+      (julkaise-reitti
+        http palvelu
+        (GET polku request
+          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema
+                           (fn [parametit data kayttaja-id] (hae-urakka db parametit kayttaja-id))))))
     this)
 
   (stop [{http :http-palvelin :as this}]
