@@ -56,3 +56,49 @@ WHERE t.urakka = :urakka
 -- name: liita-kommentti<!
 INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
 VALUES (:turvallisuuspoikkeama, :kommentti);
+
+--name: paivita-korjaava-toimenpide<!
+UPDATE korjaavatoimenpide
+  SET
+    kuvaus=:kuvaus,
+    suoritettu=:suoritettu,
+    vastaavahenkilo=:vastaava
+WHERE id=:id AND turvallisuuspoikkeama=:tp;
+
+--name: luo-korjaava-toimenpide<!
+INSERT INTO korjaavatoimenpide
+(turvallisuuspoikkeama, kuvaus, suoritettu, vastaavahenkilo)
+VALUES
+  (:tp, :kuvaus, :suoritettu, :vastaava);
+
+--name: paivita-turvallisuuspoikkeama<!
+UPDATE turvallisuuspoikkeama
+SET urakka               = :urakka,
+  tapahtunut             = :tapahtunut,
+  paattynyt              = :paattynyt,
+  kasitelty              = :kasitelty,
+  tyontekijanammatti     = :ammatti,
+  tyotehtava             = :tehtava,
+  kuvaus                 = :kuvaus,
+  vammat                 = :vammat,
+  sairauspoissaolopaivat = :poissa,
+  sairaalavuorokaudet    = :sairaalassa,
+  sijainti               = :sijainti,
+  tr_numero              = :numero,
+  tr_alkuetaisyys        = :aet,
+  tr_loppuetaisyys       = :let,
+  tr_alkuosa             = :aos,
+  tr_loppuosa            = :los,
+  tyyppi                 = :tyyppi,
+  muokkaaja              = :kayttaja,
+  muokattu               = NOW()
+WHERE id = :id;
+
+--name: luo-turvallisuuspoikkeama<!
+INSERT INTO turvallisuuspoikkeama
+(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
+ sairauspoissaolopaivat, sairaalavuorokaudet, sijainti, tr_numero, tr_alkuetaisyys, tr_loppuetaisyys,
+ tr_alkuosa, tr_loppuosa, tyyppi, luoja, luotu)
+VALUES
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
+   :sijainti, :numero, :aet, :let, :aos, :los, :tyyppi, :kayttaja, NOW());
