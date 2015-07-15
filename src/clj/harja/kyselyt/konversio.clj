@@ -46,6 +46,11 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                            uusi-key arvo)
                  ks))))))
 
+(defn vector-mappien-alaviiva->rakenne
+  "Muuntaa vectorissa olevien mäppien avaimet alaviivalla sisäiseksi rakenteeksi."
+  [vector]
+  (mapv #(alaviiva->rakenne %) vector))
+
 (defn muunna
   "Muuntaa mäpin annetut keyt muunnos-fn funktiolla. Nil arvot menevät läpi sellaisenaan ilman muunnosta."
   [rivi kentat muunnos-fn]
