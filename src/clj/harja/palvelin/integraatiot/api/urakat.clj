@@ -38,21 +38,21 @@
 (defn muodosta-materiaalin-kaytot [materiaalit]
   (for [{:keys [id alkupvm loppupvm maara materiaali] :as mat} (map konv/alaviiva->rakenne materiaalit)]
     {:materiaalinKaytto
-     {:maara    {:materiaali
-                 ;; FIXME: Tämä lista pitää tarkistaa Annelta, materiaali UI:n puolella on kommentoitu,
-                 ;; että vain suolankäyttö kiinnostaa... turha naulata tätä listaa APIin kiinni, jos sen
-                 ;; on asiakas jo huonoksi todennut.
-                          (case (:nimi materiaali)
-                            "Talvisuolaliuos NaCl" "talvisuolaliuosNaCl"
-                            "Talvisuolaliuos CaCl2" "talvisuolaliuosCaCl2"
-                            "Erityisalueet NaCl" "erityisalueetNaCl"
-                            "Erityisalueet NaCl-liuos" "erityisalueetNaClLiuos"
-                            "Hiekoitushiekka" "hiekoitushiekka"
-                            "Kaliumformiaatti" "kaliumformiaatti"
+     {:materiaali
+      ;; FIXME: Tämä lista pitää tarkistaa Annelta, materiaali UI:n puolella on kommentoitu,
+      ;; että vain suolankäyttö kiinnostaa... turha naulata tätä listaa APIin kiinni, jos sen
+      ;; on asiakas jo huonoksi todennut.
+                (case (:nimi materiaali)
+                  "Talvisuolaliuos NaCl" "talvisuolaliuosNaCl"
+                  "Talvisuolaliuos CaCl2" "talvisuolaliuosCaCl2"
+                  "Erityisalueet NaCl" "erityisalueetNaCl"
+                  "Erityisalueet NaCl-liuos" "erityisalueetNaClLiuos"
+                  "Hiekoitushiekka" "hiekoitushiekka"
+                  "Kaliumformiaatti" "kaliumformiaatti"
 
-                            ;; default
-                            "Talvisuolaliuos NaCl")
-                 :yksikko (:yksikko materiaali)
+                  ;; default
+                  "Talvisuolaliuos NaCl")
+      :maara    {:yksikko (:yksikko materiaali)
                  :maara   maara}
       :alkupvm  alkupvm
       :loppupvm loppupvm}}))
