@@ -83,14 +83,13 @@
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
-      (log/debug "Urakka haettu: " urakka)
       (muodosta-vastaus-hae-urakka-idlla db urakka-id urakka))))
 
 (defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
-  ;(validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Validointi puuttuu, tarkista että käyttäjällä on oikeus urakoihin?
   (log/debug "Haetaan urakat ytynnuksella " ytunnus)
   (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
-    (log/debug "Urakat haettu: " urakat)
+    (doseq [urakka urakat]
+      (validointi/tarkista-urakka-ja-kayttaja db (:id urakka) kayttaja))
     (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
 
 (def hakutyypit
