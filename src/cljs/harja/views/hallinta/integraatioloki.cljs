@@ -102,9 +102,11 @@
       :tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
       :rivi-klikattu #(reset! tiedot/valittu-tapahtuma %)}
 
-     [{:otsikko     "Onnistunut" :nimi :onnistunut :leveys "10%" :tyyppi :komponentti
-       :komponentti #(if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                         [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"])}
+     [{:otsikko     "Tila" :nimi :onnistunut :leveys "10%" :tyyppi :komponentti
+       :komponentti #(if (nil? (:paattynyt %))
+                       [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
+                       (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
+                                           [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
       {:otsikko "Alkanut" :nimi :alkanut :leveys "15%"
        :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
       {:otsikko "Päättynyt" :nimi :paattynyt :leveys "15%"
@@ -122,9 +124,6 @@
       [:div
        [tapahtumien-paanakyma]
        (when @tiedot/valittu-tapahtuma
-         [tapahtuman-tiedot])]
-
-      #_(if @tiedot/valittu-tapahtuma
-        ))))
+         [tapahtuman-tiedot])])))
 
 

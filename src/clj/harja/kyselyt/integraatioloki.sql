@@ -67,7 +67,7 @@ WHERE integraatio IN
        WHERE jarjestelma ILIKE :jarjestelma AND
              nimi ILIKE :integraatio) AND
       alkanut >= :alkaen AND
-      paattynyt <= :paattyen;
+      alkanut <= :paattyen;
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
