@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [cljs-time.core :as time])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -26,7 +27,7 @@
 
 (defonce valittu-jarjestelma (reaction (first @jarjestelmien-integraatiot)))
 (defonce valittu-integraatio (reaction (first (:integraatiot @valittu-jarjestelma))))
-(defonce valittu-aikavali (atom [(harja.pvm/nyt) (harja.pvm/nyt)]))
+(defonce valittu-aikavali (atom [(time/yesterday) (harja.pvm/nyt)]))
 (defonce valittu-tapahtuma (atom nil))
 
 (defonce haetut-tapahtumat (reaction<! [valittu-jarjestelma @valittu-jarjestelma
@@ -34,24 +35,5 @@
                                         valittu-aikavali @valittu-aikavali
                                         nakymassa?]
                                        (when nakymassa?
+                                         (reset! valittu-tapahtuma nil)
                                          (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
-
-#_(defonce haetut-tapahtumat (atom [{:jarjestelma "API"
-                                   :integraatio "hae-urakka"
-                                   :alkanut     "1.1.2015"
-                                   :paattynyt   "1.1.2015"
-                                   :onnistunut  true
-                                   :ulkoinenid  "asdfasfd"
-                                   :lisatietoja "makiaista"
-                                   :viestit     [{:suunta "ulos"}
-                                                 {:suunta "sisään"}]}
-                                  {:jarjestelma "API"
-                                   :alkanut     "1.1.2015"
-                                   :paattynyt   "1.1.2015"
-                                   :onnistunut  true
-                                   :ulkoinenid  "asdfasfd"
-                                   :lisatietoja "makiaista"
-                                   :integraatio "kirjaa-havainto"}]))
-
-
-
