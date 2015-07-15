@@ -61,7 +61,7 @@
   (let [pvm (Date.)
         id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
 
-        vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                            (-> "test/resurssit/api/soratietarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
@@ -89,7 +89,7 @@
 
 
 (deftest tallenna-virheellinen-soratietarkastus
-  (let [vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]  kayttaja portti
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]  kayttaja portti
                            (-> "test/resurssit/api/soratietarkastus-virhe.json"
                                slurp))]
     (is (= 400 (:status vastaus)))
@@ -101,7 +101,7 @@
   (let [pvm (Date.)
         id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
 
-        vastaus (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]  kayttaja portti
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]  kayttaja portti
                            (-> "test/resurssit/api/talvihoitotarkastus.json"
                                slurp
                                (.replace "__PVM__" (json-tyokalut/json-pvm pvm))

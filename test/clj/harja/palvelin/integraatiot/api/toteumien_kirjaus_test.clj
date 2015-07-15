@@ -63,7 +63,7 @@
 
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (rand-int 10000)
-        vastaus-lisays (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                (-> "test/resurssit/api/pistetoteuma.json"
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
@@ -77,7 +77,7 @@
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                      (-> "test/resurssit/api/pistetoteuma.json"
                                                          slurp
                                                          (.replace "__ID__" (str ulkoinen-id))
@@ -95,7 +95,7 @@
 
 (deftest tallenna-reittitoteuma
   (let [ulkoinen-id (rand-int 10000)
-        vastaus-lisays (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                (-> "test/resurssit/api/reittitoteuma.json"
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
@@ -105,7 +105,7 @@
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/api-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                      (-> "test/resurssit/api/reittitoteuma.json"
                                                          slurp
                                                          (.replace "__ID__" (str ulkoinen-id))
