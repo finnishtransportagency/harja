@@ -35,7 +35,6 @@
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fn []
-      (run! @muokattu (log "Muokattu on nyt " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
@@ -60,10 +59,16 @@
                            :turvallisuuspoikkeama "Turvallisuuspoikkeama"
                            :prosessipoikkeama "Prosessipoikkeama"
                            :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"
-                           " - Valitse tyyppi -")}
-         {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
-         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
-         {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm}
+                           " - Valitse tyyppi -")
+          :validoi [[:ei-tyhja "Valitse poikkeaman tyyppi"]]}
+         {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]] :varoita [[:urakan-aikana]]}
+         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                    [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä tapahtumista ennen"]]}
+         {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                    [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä päättymistä ennen"]]}
          {:otsikko "Työntekijä" :nimi :tyontekijanammatti :leveys 1 :tyyppi :string}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :leveys 1 :tyyppi :string}
          {:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
