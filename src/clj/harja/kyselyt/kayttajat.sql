@@ -282,3 +282,12 @@ SELECT exists(
       JOIN kayttaja k ON k.organisaatio = u.urakoitsija
     WHERE u.id = :urakka_id AND
           k.id = :kayttaja_id);
+
+-- name: onko-kayttaja-organisaatiossa
+-- Tarkistaa onko käyttäjä organisaatiossa
+SELECT exists(
+    SELECT o.id
+    FROM organisaatio o
+      JOIN kayttaja k ON k.organisaatio = o.id
+      AND o.ytunnus = :ytunnus
+      AND k.id = :kayttaja_id);

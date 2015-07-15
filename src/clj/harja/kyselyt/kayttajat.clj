@@ -8,3 +8,6 @@
 
 (defn onko-kayttaja-urakan-organisaatiossa? [db urakka-id kayttaja-id]
   (:exists (first (harja.kyselyt.kayttajat/onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))
+
+(defn onko-kayttaja-organisaatiossa? [db ytunnus kayttaja-id]
+  (:exists (first (harja.kyselyt.kayttajat/onko-kayttaja-organisaatiossa db ytunnus kayttaja-id))))

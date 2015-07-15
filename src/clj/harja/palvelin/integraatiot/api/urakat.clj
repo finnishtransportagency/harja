@@ -87,11 +87,9 @@
 
 (defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
   (log/debug "Haetaan urakat ytynnuksella " ytunnus)
+  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
-    (doseq [urakka urakat]
-      (validointi/tarkista-urakka-ja-kayttaja db (:id urakka) kayttaja))
     (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
-; FIXME: "Raskas" oikeustarkistus, mieluummin näin: tarkista ensimmäisenä onko käyttäjä ytunnuksen mukaisessa organisaatiossa.
 
 (def hakutyypit
   [{:palvelu        :hae-urakka
