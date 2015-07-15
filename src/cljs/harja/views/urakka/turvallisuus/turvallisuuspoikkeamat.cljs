@@ -15,6 +15,16 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn korjaavattoimenpiteet
+  [toimenpiteet]
+  #_[:div "HUHEUEH"]
+  [grid/muokkaus-grid
+   {:tyhja "Ei korjaavia toimenpiteitä"}
+   [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}
+    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
+    {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text}]
+   toimenpiteet])
+
 (defn turvallisuuspoikkeaman-tiedot
   []
 
@@ -44,8 +54,8 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Tyyppi" :tyyppi :valinta :nimi :tyyppi
-          :valinnat [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]
+        [{:otsikko       "Tyyppi" :tyyppi :valinta :nimi :tyyppi
+          :valinnat      [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]
           :valinta-nayta #(case %
                            :turvallisuuspoikkeama "Turvallisuuspoikkeama"
                            :prosessipoikkeama "Prosessipoikkeama"
@@ -71,18 +81,24 @@
                                              :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
                                                                        #(swap! muokattu assoc :uusi-kommentti %))}
                         (:kommentit @muokattu)]}
-         {:otsikko "Vastaava henkilö" :nimi :vastaava
-          :hae (comp :vastaavahenkilo :korjaavatoimenpide)
-          :aseta #(assoc-in %1 [:korjaavatoimenpide :vastaavahenkilo] %2)
-          :leveys 1 :tyyppi :string}
-         {:otsikko "Kuvaus" :nimi :korjauksenkuvaus
-          :hae (comp :kuvaus :korjaavatoimenpide)
-          :aseta #(assoc-in %1 [:korjaavatoimenpide :kuvaus] %2)
-          :leveys 1 :tyyppi :string}
-         {:otsikko "Korjaus suoritettu" :nimi :korjauspvm :fmt pvm/pvm-aika
-          :hae (comp :suoritettu :korjaavatoimenpide)
-          :aseta #(assoc-in %1 [:korjaavatoimenpide :suoritettu] %2)
-          :leveys 1 :tyyppi :pvm}]
+         {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+          :komponentti [korjaavattoimenpiteet (r/wrap
+                                                (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @muokattu)))
+                                                ;swap! muokattu assoc :korjaavattoimenpiteet
+                                                (fn [uusi]
+                                                  (swap!
+                                                    muokattu
+                                                    assoc
+                                                    :korjaavattoimenpiteet
+                                                    (vals
+                                                      (filter
+                                                        (fn [kartta]
+                                                          (not
+                                                            (and
+                                                              (neg? (key kartta))
+                                                              (:poistettu (val kartta)))))
+                                                        uusi)))
+                                                  #_(reset! muokattu (assoc @muokattu :korjaavattoimenpiteet uusi))))]}]
         @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus
@@ -102,7 +118,7 @@
      {:otsikko "Vammat" :nimi :vammat :tyyppi :string :leveys "15%"}
      {:otsikko "Pois. (pv)" :nimi :sairauspoissaolopaivat :tyyppi :numero :leveys "5%"}
      {:otsikko "Sairaalas." :nimi :sairaalavuorokaudet :tyyppi :numero :leveys "5%"}
-     {:otsikko "Korjaava toimenpide" :nimi :korjaavatoimenpide :tyyppi :string :leveys "30%"
+     #_{:otsikko "Korjaava toimenpide" :nimi :korjaavatoimenpide :tyyppi :string :leveys "30%"
       :hae (comp :kuvaus :korjaavatoimenpide)}]
     @tiedot/haetut-turvallisuuspoikkeamat
     ]])

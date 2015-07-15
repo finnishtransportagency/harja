@@ -51,9 +51,9 @@
 (defn kasaa-tallennuksen-parametrit
   [tp]
   {:tp                 (assoc
-                         (dissoc tp :liitteet :kommentit :korjaavatoimenpide :uusi-kommentti)
+                         (dissoc tp :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
                          :urakka (:id @nav/valittu-urakka))
-   :korjaavatoimenpide (:korjaavatoimenpide tp)
+   :korjaavattoimenpiteet (:korjaavattoimenpiteet tp)
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
    ;:liitteet           (:liitteet tp)

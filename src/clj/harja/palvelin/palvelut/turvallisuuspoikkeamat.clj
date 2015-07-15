@@ -40,7 +40,7 @@
                                                     (= (:id tp) (:id %)))
                                                (:kommentti tp)))
                                            mankeloitava)))
-                         (set (map #(dissoc % :kommentti :liite) mankeloitava)))
+                         (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
 
         ;; Sitten sama tehdään liitteille
         liitteineen (mapv
@@ -53,7 +53,20 @@
                                                  (= (:id tp) (:id %)))
                                             (:liite tp)))
                                         mankeloitava)))
-                      (set (map #(dissoc % :kommentti :liite) mankeloitava)))
+                      (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
+
+        ;; Korjaavat toimenpiteet
+        korjaavineen (mapv
+                       #(assoc % :korjaavattoimenpiteet
+                                 (into []
+                                       (keep
+                                         (fn [tp]
+                                           (when
+                                             (and (not (nil? (get-in tp [:korjaavatoimenpide :id])))
+                                                  (= (:id tp) (:id %)))
+                                             (:korjaavatoimenpide tp)))
+                                         mankeloitava)))
+                       (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
 
         ;; Joillain kommenteilla on viittaus liitteen id:hen.
         ;; Korvataan id itse liitteellä.
@@ -95,14 +108,23 @@
                                         liitteineen)
 
         ;; Lopuksi tehdään tp, jolla on molemmat kommentit- ja liitteet-vektorit
+        liitteet-ja-kommentit (mapv
+                                (fn [tp]
+                                  (assoc tp :liitteet
+                                            (some
+                                              (fn [tpl]
+                                                (when (= (:id tpl) (:id tp)) (:liitteet tpl)))
+                                              ilman-redundantteja-liitteita)))
+                                liitteet-kommenteissa)
+
         yhdistetty (mapv
                      (fn [tp]
-                       (assoc tp :liitteet
+                       (assoc tp :korjaavattoimenpiteet
                                  (some
-                                   (fn [tpl]
-                                     (when (= (:id tpl) (:id tp)) (:liitteet tpl)))
-                                   ilman-redundantteja-liitteita)))
-                     liitteet-kommenteissa)
+                                   (fn [kp]
+                                     (when (= (:id kp) (:id tp)) (:korjaavattoimenpiteet kp)))
+                                   korjaavineen)))
+                     liitteet-ja-kommentit)
 
         tulos yhdistetty]
     (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
@@ -158,7 +180,7 @@
                                                 tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
       id)))
 
-(defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavatoimenpide uusi-kommentti hoitokausi]}]
+(defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
 
   (jdbc/with-db-transaction [c db]
@@ -179,10 +201,11 @@
                                                    (:id user))]
           (q/liita-kommentti<! c id (:id kommentti))))
 
-      (when korjaavatoimenpide
-        (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
+      (when korjaavattoimenpiteet
+        (doseq [korjaavatoimenpide korjaavattoimenpiteet]
+          (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
 
-        (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide))
+          (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
 
       (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
 
