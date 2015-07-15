@@ -14,7 +14,8 @@
             [clojure.data.json :as json]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma])
+            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
+            [cheshire.core :as cheshire])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -56,9 +57,23 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest urakan-haku-idlla-toimii
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)]
-    (is (= 200 (:status vastaus)))))
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (log/debug "Urakan haku id:llä: " encoodattu-body)
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? (:urakka encoodattu-body))))))
+
+(deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
+    (is (not (= 200 (:status vastaus))))))
 
 (deftest urakan-haku-ytunnuksella-toimii
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] kayttaja portti)]
-    (is (= 200 (:status vastaus)))))
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] kayttaja portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (log/debug "Urakan haku ytunnuksella löytyi " (count (:urakat encoodattu-body)) " urakkaa: " (:body vastaus))
+    (is (= 200 (:status vastaus)))
+    (is (>= (count (:urakat encoodattu-body)) 2))))
+
+(deftest urakan-haku-ytunnuksella-ei-toimi-ilman-oikeuksia
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] "Erkki Esimerkki" portti)]
+    (is (not (= 200 (:status vastaus))))))

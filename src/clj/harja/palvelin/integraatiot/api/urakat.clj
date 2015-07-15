@@ -91,6 +91,7 @@
     (doseq [urakka urakat]
       (validointi/tarkista-urakka-ja-kayttaja db (:id urakka) kayttaja))
     (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
+; FIXME: "Raskas" oikeustarkistus, mieluummin näin: tarkista ensimmäisenä onko käyttäjä ytunnuksen mukaisessa organisaatiossa.
 
 (def hakutyypit
   [{:palvelu        :hae-urakka
