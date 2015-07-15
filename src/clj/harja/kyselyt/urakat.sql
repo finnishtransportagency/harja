@@ -145,6 +145,19 @@ FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.id = :id;
 
+-- name: hae-urakat-ytunnuksella
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm,
+  urk.nimi    AS urakoitsija_nimi,
+  urk.ytunnus AS urakoitsija_ytunnus
+FROM urakka u
+  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  AND urk.ytunnus = :ytunnus;
+
 -- name: hae-urakan-sopimukset
 -- Hakee urakan sopimukset urakan id:llä.
 SELECT

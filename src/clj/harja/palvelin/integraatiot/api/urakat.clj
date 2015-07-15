@@ -68,35 +68,51 @@
                   :yksikkohintaisetTyot (muodosta-yksikkohintaiset-tyot (get yksikkohintaiset (:id sopimus)))
                   :materiaalinKaytot (muodosta-materiaalin-kaytot (get materiaalit (:id sopimus))))})))
 
-(defn muodosta-vastaus [db id urakka]
+(defn muodosta-vastaus-hae-urakka-idlla [db id urakka]
   {:urakka
    {:tiedot     (assoc urakka                               ; perustiedot (pl. väylämuoto) tulevat suoraan hae-urakka kyselystä
                   :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn hae-urakka [db {id :id} kayttaja]
+(defn muodosta-vastaus-hae-urakka-ytunnuksella [db urakat]
+  {:urakat (mapv #({:urakka
+                    {:tiedot (assoc %
+                               :vaylamuoto "tie")}}) urakat)})
+
+(defn hae-urakka-idlla [db {:keys [id]} kayttaja]
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
-      (muodosta-vastaus db urakka-id urakka))))
+      (log/debug "Urakka haettu: " urakka)
+      (muodosta-vastaus-hae-urakka-idlla db urakka-id urakka))))
+
+(defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
+  ;(validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Validointi puuttuu, tarkista että käyttäjällä on oikeus urakoihin?
+  (log/debug "Haetaan urakat ytynnuksella " ytunnus)
+  (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) first konv/alaviiva->rakenne)]
+    (log/debug "Urakat haettu: " urakat)
+    (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
 
 (def hakutyypit
   [{:palvelu        :hae-urakka
     :polku          "/api/urakat/:id"
-    :vastaus-skeema skeemat/+urakan-haku-vastaus+}
-   #_{:palvelu :hae-urakka-ytunnuksella ; FIXME To be implemented
-    :polku "/api/urakat/haku/:ytunnus"
-    :vastaus-skeema skeemat/+urakoiden-haku-vastaus+}])
+    :vastaus-skeema skeemat/+urakan-haku-vastaus+
+    :kasittely-fn   (fn [db]
+                      (fn [parametrit data kayttaja-id] (hae-urakka-idlla db parametrit kayttaja-id)))}
+   {:palvelu        :hae-urakka-ytunnuksella
+    :polku          "/api/urakat/haku/:ytunnus"
+    :vastaus-skeema skeemat/+urakoiden-haku-vastaus+
+    :kasittely-fn   (fn [db]
+                      (fn [parametrit data kayttaja-id] (hae-urakka-ytunnuksella db parametrit kayttaja-id)))}])
 
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku vastaus-skeema]} hakutyypit]
+    (doseq [{:keys [palvelu polku vastaus-skeema kasittely-fn]} hakutyypit]
       (julkaise-reitti
         http palvelu
         (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema
-                           (fn [parametit data kayttaja-id] (hae-urakka db parametit kayttaja-id))))))
+          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema (kasittely-fn db)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
