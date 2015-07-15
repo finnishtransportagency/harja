@@ -97,8 +97,7 @@
                                                             (and
                                                               (neg? (key kartta))
                                                               (:poistettu (val kartta)))))
-                                                        uusi)))
-                                                  #_(reset! muokattu (assoc @muokattu :korjaavattoimenpiteet uusi))))]}]
+                                                        uusi)))))]}]
         @muokattu]])))
 
 (defn turvallisuuspoikkeamalistaus
@@ -115,11 +114,11 @@
     [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
      {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
      {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
-     {:otsikko "Vammat" :nimi :vammat :tyyppi :string :leveys "15%"}
-     {:otsikko "Pois. (pv)" :nimi :sairauspoissaolopaivat :tyyppi :numero :leveys "5%"}
-     {:otsikko "Sairaalas." :nimi :sairaalavuorokaudet :tyyppi :numero :leveys "5%"}
-     #_{:otsikko "Korjaava toimenpide" :nimi :korjaavatoimenpide :tyyppi :string :leveys "30%"
-      :hae (comp :kuvaus :korjaavatoimenpide)}]
+     {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
+     {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
+      :hae (fn [rivi] (str (:sairaalavuorokaudet rivi)"+"(:sairauspoissaolopaivat rivi)))}
+     {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
+      :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
     @tiedot/haetut-turvallisuuspoikkeamat
     ]])
 

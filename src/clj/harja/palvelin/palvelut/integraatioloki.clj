@@ -25,6 +25,17 @@
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
     this))
 
+(defn muunna-merkkijono-kartaksi [merkkijono]
+  ;; todo: read-stringing käyttö voi olla turvatonta. kysy tatulta parempi tapa.
+  (if (and merkkijono (not (empty? merkkijono)))
+    (let [kartta (binding [*read-eval* false] (read-string merkkijono))]
+      kartta)
+    nil))
+
+(def viesti-xf
+  (comp
+    (map #(assoc % :parametrit (muunna-merkkijono-kartaksi (:parametrit %))))
+    (map #(assoc % :otsikko (muunna-merkkijono-kartaksi (:otsikko %))))))
 
 (def tapahtuma-xf
   (comp
@@ -59,7 +70,10 @@
               (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db jarjestelma integraatio (konversio/sql-date alkaen) (konversio/sql-date paattyen)))]
     (log/debug "Tapahtumat:" tapahtumat)
     (let [tapahtumat-viesteineen
-          (mapv #(assoc % :viestit (q/hae-integraatiotapahtuman-viestit db (:id %))) tapahtumat)]
+          (mapv #(assoc % :viestit
+                          (into []
+                                viesti-xf
+                                (q/hae-integraatiotapahtuman-viestit db (:id %)))) tapahtumat)]
       (log/debug "Tapahtumat viesteineen:" tapahtumat-viesteineen)
       tapahtumat-viesteineen)))
 
