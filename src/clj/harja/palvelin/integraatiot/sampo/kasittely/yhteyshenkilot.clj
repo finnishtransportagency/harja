@@ -7,11 +7,11 @@
 
 (defn paivita-yhteyshenkilo [db yhteyshenkilo-id etunimi sukunimi kayttajatunnus sahkoposti]
   (log/debug "Päivitetään yhteyshenkilo, jonka id on: " yhteyshenkilo-id ".")
-  (yhteyshenkilot/paivita-yhteyshenkilo! db etunimi sukunimi nil nil sahkoposti nil yhteyshenkilo-id))
+  (yhteyshenkilot/paivita-yhteyshenkilo<! db etunimi sukunimi nil nil sahkoposti nil yhteyshenkilo-id))
 
 (defn luo-yhteyshenkilo [db sampo-id etunimi sukunimi kayttajatunnus sahkoposti]
   (log/debug "Luodaan uusi yhteyshenkilo.")
-  (let [uusi-id (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil nil sahkoposti nil sampo-id kayttajatunnus))]
+  (let [uusi-id (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil nil sahkoposti nil sampo-id kayttajatunnus nil))]
     (log/debug "Uusi yhteyshenkilo id on:" uusi-id)
     uusi-id))
 

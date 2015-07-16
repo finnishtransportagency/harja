@@ -7,23 +7,40 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.havainnot :as havainnot]
-            [harja.kyselyt.kommentit :as kommentit]
-            [harja.kyselyt.toteumat :as toteumat]
-            [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
+            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
+"NOTE: Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
+ilman ulkoista id:tä olevat lisätään Harjaan. Harjan käyttöliittymästä lisätyillä päivystäjillä
+ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
+
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
     vastauksen-data))
 
+(defn paivita-tai-luo-uusi-paivystys [db urakka-id kirjaaja paivystys paivystaja-id]
+  (log/debug "Päivitetään päivystyksen tiedot")
+  (log/debug "Lisätään uusi päivystys"))
+
+(defn paivita-tai-luo-uusi-paivystaja [db urakka-id kirjaaja {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
+  (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
+    (do
+      (log/debug "Päivitetään päivystäjän tiedot")
+      (:id (yhteyshenkilot/paivita-yhteyshenkilo<! db etunimi sukunimi puhelinnumero email nil id)))
+    (do
+      (log/debug "Lisätään uusi päivystäjä")
+      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil puhelinnumero email nil nil liviTunnus (str id))))))
+
 (defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
+  (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-    )) ; FIXME Puuttuu
+    (doseq [paivystys (:paivystykset data)]
+      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db urakka-id kirjaaja (get-in paivystys [:paivystys :paivystaja]))]
+        (paivita-tai-luo-uusi-paivystys db urakka-id kirjaaja paivystys paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

@@ -64,8 +64,8 @@ FROM yhteyshenkilo_urakka;
 
 -- name: luo-yhteyshenkilo<!
 -- Tekee uuden yhteyshenkilön
-INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus)
-VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org, :sampoid, :kayttajatunnus);
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus, ulkoinen_id)
+VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org, :sampoid, :kayttajatunnus, :ulkoinen_id);
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
@@ -76,12 +76,19 @@ WHERE yhteyshenkilo = :id AND urakka = :urakka;
 -- Liittää yhteyshenkilön urakkaan
 INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, :yht, :urakka);
 
--- name: paivita-yhteyshenkilo!
+-- name: paivita-yhteyshenkilo<!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
 SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
   sahkoposti = :email, organisaatio = :org
 WHERE id = :id;
+
+-- name: paivita-yhteyshenkilo-ulkoisella-idlla!
+-- Päivittää yhteyshenkilön tiedot
+UPDATE yhteyshenkilo
+SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
+  sahkoposti = :email, organisaatio = :org
+WHERE ulkoinen_id = :id;
 
 -- name: hae-urakan-yhteyshenkilo-idt
 -- Hakee yhteyshenkilöiden id, jotka ovat liitetty annettuun urakkaan
@@ -150,3 +157,10 @@ SET yhteyshenkilo = (
   FROM yhteyshenkilo
   WHERE sampoid = :yhteyshenkilo_sampoid)
 WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid
+
+-- name: onko-olemassa-paivystys-jossa-yhteyshenkilona-id
+-- Etsii päivystyksen, jossa yhteyshenkilönä on annettu id.
+SELECT exists(
+    SELECT id
+    FROM yhteyshenkilo
+    WHERE ulkoinen_id = :ulkoinen_id);

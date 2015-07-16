@@ -107,7 +107,7 @@
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
             (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id", joka ei ole liitetty urakkaan!")
-            (do (q/paivita-yhteyshenkilo! c
+            (do (q/paivita-yhteyshenkilo<! c
                                           (:etunimi yht) (:sukunimi yht)
                                           (:tyopuhelin yht) (:matkapuhelin yht)
                                           (:sahkoposti yht)
@@ -121,6 +121,7 @@
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
                                                (:id (:organisaatio yht))
+                                               nil
                                                nil
                                                nil))]
             (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
@@ -157,6 +158,7 @@
                                          (:tyopuhelin p) (:matkapuhelin p)
                                          (:sahkoposti p) (:id (:organisaatio p))
                                          nil
+                                         nil
                                          nil)]
           (q/luo-paivystys<! c
                              (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
@@ -165,7 +167,7 @@
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
           (log/info "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
-          (q/paivita-yhteyshenkilo! c
+          (q/paivita-yhteyshenkilo<! c
                                     (:etunimi p) (:sukunimi p)
                                     (:tyopuhelin p) (:matkapuhelin p)
                                     (:sahkoposti p) (:id (:organisaatio p))
