@@ -63,11 +63,16 @@
   (is true))
 
 (deftest tallenna-havainto
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
+  (let [havainnot-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
                                          (-> "test/resurssit/api/havainto.json"
                                              slurp))
         encoodattu-havainto (cheshire/decode (:body vastaus) true)]
+
     (is (= 200 (:status vastaus)))
+
+    (let [havainnot-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))]
+      (is (= (+ havainnot-kannassa-ennen-pyyntoa 1) havainnot-kannassa-pyynnon-jalkeen)))
 
     (let [liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.png';")))
           havainto-id (ffirst (q (str "SELECT id FROM havainto WHERE kohde = 'testikohde36934853';")))
@@ -77,7 +82,7 @@
       (log/debug "kommentti-id: " kommentti-id)
       (u (str "DELETE FROM havainto_liite WHERE havainto = " havainto-id ";"))
       (u (str "DELETE FROM havainto_kommentti WHERE havainto = " havainto-id ";"))
-      (when kommentti-id (u (str "DELETE from kommentti WHERE id = " kommentti-id ";")))
+      (u (str "DELETE FROM kommentti WHERE kommentti = 'Testikommentti323353435';"))
       (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
       (u (str "DELETE FROM havainto WHERE kuvaus = 'testihavainto36934853';")))))
 
