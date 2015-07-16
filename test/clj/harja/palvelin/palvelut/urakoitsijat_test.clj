@@ -30,3 +30,23 @@
 
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 10))))
+
+(deftest urakkatyypin-urakoitsijoiden-haku-toimii
+  (let [hoito (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :urakkatyypin-urakoitsijat +kayttaja-jvh+ :hoito)
+        paallystys (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :paallystys)
+        tiemerkinta (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :tiemerkinta)
+        valaistus (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :valaistus)]
+
+    (is (not (nil? hoito)))
+    (is (not (nil? paallystys)))
+    (is (not (nil? tiemerkinta)))
+    (is (not (nil? valaistus)))
+
+    (is (>= (count hoito) 1))
+    (is (>= (count paallystys) 1))
+    (is (>= (count tiemerkinta) 1))
+    (is (>= (count valaistus) 1))))
