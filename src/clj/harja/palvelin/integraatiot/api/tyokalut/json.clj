@@ -5,7 +5,8 @@
   (:import (java.text SimpleDateFormat)))
 
 (defn pvm-string->java-sql-date [paivamaara]
-  (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
+  (when paivamaara
+    (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
 
 (defn json-pvm [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))
@@ -22,10 +23,10 @@
   (some-> sijainti
           :tie
           ((fn [{numero :numero alkuosa :aosa alkuetaisyys :aet loppuosa :losa loppuetaisyys :let}]
-             {:numero numero
-              :alkuosa alkuosa
-              :alkuetaisyys alkuetaisyys
-              :loppuosa loppuosa
+             {:numero        numero
+              :alkuosa       alkuosa
+              :alkuetaisyys  alkuetaisyys
+              :loppuosa      loppuosa
               :loppuetaisyys loppuetaisyys}))))
 
 (defn sijainti->point

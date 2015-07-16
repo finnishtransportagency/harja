@@ -129,6 +129,12 @@ UPDATE paivystys
 SET alku = :alku, loppu = :loppu
 WHERE id = :id AND urakka = :urakka;
 
+-- name: paivita-paivystys-yhteyshenkilon-idlla<!
+-- Päivittää päivystyksen tiedot
+UPDATE paivystys
+SET alku = :alku, loppu = :loppu
+WHERE yhteyshenkilo = :yhteyshenkilo_id
+
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
 INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo_sampoid, urakka, yhteyshenkilo)
@@ -162,5 +168,5 @@ WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid
 -- Etsii päivystyksen, jossa yhteyshenkilönä on annettu id.
 SELECT exists(
     SELECT id
-    FROM yhteyshenkilo
-    WHERE ulkoinen_id = :ulkoinen_id);
+    FROM paivystys
+    WHERE yhteyshenkilo = :yhteyshenkilo);

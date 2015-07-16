@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
@@ -22,9 +23,14 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn paivita-tai-luo-uusi-paivystys [db urakka-id kirjaaja paivystys paivystaja-id]
-  (log/debug "Päivitetään päivystyksen tiedot")
-  (log/debug "Lisätään uusi päivystys"))
+(defn paivita-tai-luo-uusi-paivystys [db urakka-id kirjaaja {:keys [alku loppu]} paivystaja-id]
+  (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
+    (do
+      (log/debug "Päivitetään päivystäjään liittyvän päivystyksen tiedot.")
+      (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<! db (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu) paivystaja-id))
+    (do
+      (log/debug "Päivystäjällä ei ole päivystystä. Luodaan uusi päivystys.")
+      (yhteyshenkilot/luo-paivystys<! db (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu) urakka-id paivystaja-id))))
 
 (defn paivita-tai-luo-uusi-paivystaja [db urakka-id kirjaaja {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
@@ -40,7 +46,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (jdbc/with-db-transaction [transaktio db]
     (doseq [paivystys (:paivystykset data)]
       (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db urakka-id kirjaaja (get-in paivystys [:paivystys :paivystaja]))]
-        (paivita-tai-luo-uusi-paivystys db urakka-id kirjaaja paivystys paivystaja-id)))))
+        (paivita-tai-luo-uusi-paivystys db urakka-id kirjaaja (:paivystys paivystys) paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
