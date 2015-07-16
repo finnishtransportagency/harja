@@ -164,6 +164,12 @@ SET yhteyshenkilo = (
   WHERE sampoid = :yhteyshenkilo_sampoid)
 WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid
 
+-- name: onko-olemassa-yhteyshenkilo-ulkoisella-idlla
+SELECT exists(
+    SELECT id
+    FROM yhteyshenkilo
+    WHERE ulkoinen_id = :ulkoinen_id);
+
 -- name: onko-olemassa-paivystys-jossa-yhteyshenkilona-id
 -- Etsii päivystyksen, jossa yhteyshenkilönä on annettu id.
 SELECT exists(
