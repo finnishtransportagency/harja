@@ -12,6 +12,7 @@
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
+    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
 
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -90,12 +91,17 @@
       ;; FIM REST rajapinta
       :fim (fim/->FIM (:url (:fim asetukset)))
 
-      ;; Sampo rajapinta
+      ;; Sampo
       :sampo (component/using (sampo/->Sampo (:lahetysjono-sisaan (:sampo asetukset))
                                              (:kuittausjono-sisaan (:sampo asetukset))
                                              (:lahetysjono-ulos (:sampo asetukset))
                                              (:kuittausjono-ulos (:sampo asetukset))
                                              (:paivittainen-lahetysaika (:sampo asetukset)))
+                              [:sonja :db :integraatioloki])
+
+      ;; T-LOIK
+      :sampo (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
+                                             (:ilmoituskuittausjono (:tloik asetukset)))
                               [:sonja :db :integraatioloki])
 
       ;; Frontille tarjottavat palvelut

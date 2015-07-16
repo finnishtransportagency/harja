@@ -10,13 +10,13 @@
   (laheta-maksuera-sampoon [this numero]))
 
 (defn tee-sonja-viestikuuntelija [this lahetysjono-sisaan kuittausjono-sisaan]
-  (log/debug "Käynnistetään Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
+  (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
   (sonja/kuuntele (:sonja this) lahetysjono-sisaan
                   (fn [viesti]
                     (tuonti/kasittele-viesti (:sonja this) (:integraatioloki this) (:db this) kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [this kuittausjono-ulos]
-  (log/debug "Käynnistetään Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
+  (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
   (sonja/kuuntele (:sonja this) kuittausjono-ulos
                   (fn [viesti]
                     (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti))))

@@ -63,7 +63,6 @@
    [:div.container
     [grid
      {:otsikko "Viestit"}
-
      [{:otsikko     "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
        :komponentti #(if (= "sisään" (:suunta %))
                       [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
