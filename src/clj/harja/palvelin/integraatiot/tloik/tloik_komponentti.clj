@@ -5,10 +5,11 @@
             [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]))
 
 (defn tee-sonja-ilmoitusviestikuuntelija [this ilmoitusviestijono ilmoituskuittausjono]
-  (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
-  (sonja/kuuntele (:sonja this) ilmoitusviestijono
-                  (fn [viesti]
-                    (ilmoitukset/vastaanota-ilmoitus (:sonja this) (:integraatioloki this) (:db this) ilmoituskuittausjono viesti))))
+  (when ilmoitusviestijono
+    (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
+    (sonja/kuuntele (:sonja this) ilmoitusviestijono
+                    (fn [viesti]
+                      (ilmoitukset/vastaanota-ilmoitus (:sonja this) (:integraatioloki this) (:db this) ilmoituskuittausjono viesti)))))
 
 (defrecord Tloik [ilmoitusviestijono ilmoituskuittausjono]
   com.stuartsierra.component/Lifecycle

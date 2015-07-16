@@ -7,7 +7,7 @@
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.lokitus :as sampo-lokitus])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi]
@@ -62,7 +62,7 @@
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa urakkaa Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error")]
-        (throw+ {:type     sampo-lokitus/+poikkeus-samposisaanluvussa+
+        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
                  :virheet  [{:poikkeus e}]})))))
 

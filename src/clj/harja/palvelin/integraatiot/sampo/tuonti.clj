@@ -10,18 +10,19 @@
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
-            [harja.palvelin.integraatiot.sampo.tyokalut.lokitus :as sampo-lokitus])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus tapahtuma-id lisatietoja]
-  (sampo-lokitus/lokita-lahteva-kuittaus integraatioloki kuittaus tapahtuma-id (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus) lisatietoja)
+  (integraatioloki/kirjaa-lahteva-jms-kuittaus integraatioloki kuittaus tapahtuma-id (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus) lisatietoja)
   (sonja/laheta sonja kuittausjono kuittaus))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
   (log/debug "Vastaanotettiin Sampon viestijonosta viesti: " viesti)
   (let [viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
-        tapahtuma-id (sampo-lokitus/lokita-viesti integraatioloki "sisaanluku" viesti-id "sisään" viestin-sisalto)]
+        tapahtuma-id (integraatioloki/kirjaa-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id "sisään" viestin-sisalto)]
     (try+
       (jdbc/with-db-transaction [transaktio db]
         (let [data (sampo-sanoma/lue-viesti viestin-sisalto)
@@ -39,7 +40,7 @@
                                   (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot))]
           (doseq [kuittaus kuittaukset]
             (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id nil))))
-      (catch [:type sampo-lokitus/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
+      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id (str virheet)))
       (catch Exception e
         (log/error e "Tapahtui poikkeus luettaessa sisään viestiä Samposta.")))))
