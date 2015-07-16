@@ -65,17 +65,7 @@
                                               (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                               (if (:avoimet tilat) true false) ;; falseksi
                                               ))
-        mankeloitu (mapv
-                     #(assoc % :kuittaukset
-                               (into []
-                                     (keep
-                                       (fn [ilm]
-                                         (when
-                                           (and (not (nil? (:id (:kuittaus ilm))))
-                                                (= (:id ilm) (:id %)))
-                                           (:kuittaus ilm)))
-                                       mankeloitava)))
-                     (set (map #(dissoc % :kuittaus) mankeloitava)))
+        mankeloitu (konv/sarakkeet-vektoriin mankeloitava {:kuittaus :kuittaukset})
 
         tulos (mapv
                 #(assoc % :uusinkuittaus
