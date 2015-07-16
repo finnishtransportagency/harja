@@ -31,8 +31,8 @@
   (when merkkijono (subs merkkijono 0 (min (count merkkijono) pituus))))
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
-  ;; todo: levennä modaalia dialogia
-  (modal/nayta! {:otsikko otsikko}
+  (modal/nayta! {:otsikko otsikko
+                 :leveys "600px"}
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn tapahtuman-tiedot []
