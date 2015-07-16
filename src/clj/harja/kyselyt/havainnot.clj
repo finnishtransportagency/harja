@@ -13,13 +13,13 @@
   [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as havainto}]
   (if id
     (do (paivita-havainnon-perustiedot<! db
-                                        (konv/sql-timestamp aika) (name tekija) kohde
+                                        (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
                                         (if selvitys-pyydetty true false)
                                         (:id user)
                                         kuvaus
                                         id)
         id)
 
-    (:id (luo-havainto<! db urakka (konv/sql-timestamp aika) (name tekija) kohde
+    (:id (luo-havainto<! db urakka (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
                          (if selvitys-pyydetty true false) (:id user) kuvaus
                          nil nil nil nil nil nil nil nil))))
