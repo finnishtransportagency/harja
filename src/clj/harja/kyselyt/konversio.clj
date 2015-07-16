@@ -34,6 +34,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   Muunna aluksi rivien rakenne nested mapiksi alaviiva->rakenne funktiolla, ja syötä
   tulos tälle funktiolle.
 
+  Rivien yhdistäminen tehdään aina id:n perusteella - olettaa että emorivillä JA lapsirivillä
+  on nimenomaan avain 'id'.
+
   Parametrit:
   * kaikki-rivit: Vektori mäppejä, jossa yksi 'rivi' sisältää avaimen 'lapselle', joka on mäppi.
     * [{:ilmoitus-id 1 :kuittaus {:kuittaus-id 1}} {:ilmoitus-id 1 :kuittaus {:kuittaus-id 2}}]
