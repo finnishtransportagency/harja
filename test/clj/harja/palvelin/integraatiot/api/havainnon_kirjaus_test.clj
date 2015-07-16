@@ -59,9 +59,6 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tallenna-tiestotarkastus
-  (is true))
-
 (deftest tallenna-havainto
   (let [havainnot-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti

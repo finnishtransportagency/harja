@@ -58,9 +58,6 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tallenna-tiestotarkastus
-  (is true))
-
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (rand-int 10000)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
