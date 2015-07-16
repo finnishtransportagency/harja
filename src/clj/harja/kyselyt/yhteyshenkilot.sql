@@ -83,7 +83,7 @@ SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :mat
   sahkoposti = :email, organisaatio = :org
 WHERE id = :id;
 
--- name: paivita-yhteyshenkilo-ulkoisella-idlla!
+-- name: paivita-yhteyshenkilo-ulkoisella-idlla<!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
 SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,

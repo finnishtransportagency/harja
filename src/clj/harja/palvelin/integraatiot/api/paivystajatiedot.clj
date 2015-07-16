@@ -29,10 +29,10 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
 (defn paivita-tai-luo-uusi-paivystaja [db urakka-id kirjaaja {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
     (do
-      (log/debug "Päivitetään päivystäjän tiedot")
-      (:id (yhteyshenkilot/paivita-yhteyshenkilo<! db etunimi sukunimi puhelinnumero email nil id)))
+      (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
+      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi nil puhelinnumero email nil (str id))))
     (do
-      (log/debug "Lisätään uusi päivystäjä")
+      (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
       (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil puhelinnumero email nil nil liviTunnus (str id))))))
 
 (defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
