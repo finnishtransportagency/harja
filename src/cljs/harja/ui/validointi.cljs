@@ -45,7 +45,6 @@
     viesti))
 
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
-  (log "Ei-tyhja " (str/blank? data))
   (when (str/blank? data)
     viesti))
 
