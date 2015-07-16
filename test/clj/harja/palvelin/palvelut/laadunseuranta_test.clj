@@ -91,4 +91,23 @@
             ;; muokatut kentät tallentuivat
             (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainto :kuvaus])))
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
-      
+
+
+; FIXME Testi ei toimi jostain syystä
+#_(deftest hae-urakan-sanktiot-test
+  (is (oikeat-sarakkeet-palvelussa?
+        [:id :perintapvm :summa :laji :indeksi :suorasanktio :toimenpideinstanssi
+         [:havainto :id] [:havainto :kohde] [:havainto :aika] [:havainto :tekija] [:havainto :urakka]
+         [:havainto :tekijanimi] [:havainto :kuvaus] [:havainto :sijainti] [:havainto :tarkastuspiste]
+         [:havainto :selvityspyydetty] [:havainto :selvitysannettu]
+
+         [:havainto :paatos :kasittelyaika] [:havainto :paatos :paatos] [:havainto :paatos :kasittelytapa]
+         [:havainto :paatos :muukasittelytapa] [:havainto :paatos :perustelu]
+
+         [:havainto :tr :numero] [:havainto :tr :alkuosa] [:havainto :tr :loppuosa]
+         [:havainto :tr :alkuetaisyys] [:havainto :tr :loppuetaisyys]]
+        :hae-urakan-sanktiot
+        {:urakka-id @oulun-alueurakan-id
+         :alku      (java.sql.Date. 104 9 1)
+         :loppu    (java.sql.Date. 105 8 30)
+         :tpi 1})))
