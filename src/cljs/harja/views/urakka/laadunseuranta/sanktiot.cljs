@@ -30,11 +30,18 @@
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count @tiedot/+uusi-sanktio+))))]
     (fn []
-      (run! @muokattu (log "Muokattu: " (pr-str @muokattu)))
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-sanktio nil)}
         "Palaa"]
+
+       (if (:id @muokattu)
+         (if (:suorasanktio @muokattu)
+           [:h3 "Muokkaa suoraa sanktiota"]
+
+           [:h3 "Muokkaa havainnon kautta tehtyä sanktiota"])
+
+         [:h3 "Luo uusi suora sanktio"])
 
        [lomake/lomake
         {:luokka   :horizontal
@@ -100,17 +107,32 @@
            :hae     (comp :tekija :havainto)
            :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
            :leveys  1 :tyyppi :string}
-         {:otsikko "Käsittelytapa" :nimi :kasittelytapa
-          :hae     (comp :kasittelytapa :paatos :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelytapa] arvo))
-          :leveys  2 :tyyppi :string}
+         {:otsikko "Käsitelty" :nimi :kasittelytapa
+          :hae (comp :kasittelytapa :paatos :havainto)
+          :aseta #(assoc-in %1 [:havainto :paatos :kasittelytapa] %2)
+          :tyyppi :valinta
+          :valinnat [:tyomaakokous :puhelin :kommentit :muu]
+          :valinta-nayta #(if % (case %
+                                  :tyomaakokous "Työmaakokous"
+                                  :puhelin "Puhelimitse"
+                                  :kommentit "Harja-kommenttien perusteella"
+                                  :muu "Muu tapa"
+                                  nil) "- valitse käsittelytapa -")
+          :leveys-col 4}
+
          {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
           :hae     (comp :muukasittelytapa :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
-          :leveys  2 :tyyppi :string}
-         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :string
+          :leveys  2 :tyyppi :string
+          :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]}
+
+         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :numero
           :validoi [[:ei-tyhja "Anna summa"]]}
-         {:otsikko "Indeksi" :nimi :indeksi :leveys 2 :tyyppi :string}
+         {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 2
+          :tyyppi :valinta
+          :valinnat ["MAKU 2005" "MAKU 2010"]
+          :valinta-nayta #(or % "Ei sidota indeksiin")
+          :leveys-col 3}
 
          ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
          #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
@@ -159,9 +181,9 @@
      :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
     [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :havainto) :leveys 1}
-     {:otsikko "Kuvaus" :nimi :kuvaus :hae (comp :kuvaus :havainto) :leveys 3}
+     {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :havainto) :leveys 3}
      {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :havainto) :leveys 1}
-     {:otsikko "Päätös" :nimi :paatos :hae (comp :paatos :paatos :havainto) :leveys 2}]
+     {:otsikko "Summa" :nimi :summa :leveys 1 :tyyppi :numero}]
     @tiedot/haetut-sanktiot
     ]])
 
