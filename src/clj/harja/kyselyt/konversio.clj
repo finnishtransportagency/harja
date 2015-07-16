@@ -60,14 +60,15 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                 (fn [[sarake vektori]] ;; 2. Lisää jokainen vektori jokaiseen uniikkiin riviin
                   (assoc uniikki vektori
                                  (into []
-                                       (keep        ;; 3. Käy läpi jokainen alkuperäinen rivi,
-                                         (fn [rivi] ;;    ja palauta sarakkeen arvo jos se löytyy,
-                                           (when    ;;    ja jos rivin id on sama kuin uniikin rivin id
-                                             (and
-                                               (not (nil? (get-in rivi [sarake :id])))
-                                               (= (:id rivi) (:id uniikki)))
-                                             (sarake rivi)))
-                                         kaikki-rivit))))
+                                       (set
+                                         (keep               ;; 3. Käy läpi jokainen alkuperäinen rivi,
+                                          (fn [rivi]        ;;    ja palauta sarakkeen arvo jos se löytyy,
+                                            (when           ;;    ja jos rivin id on sama kuin uniikin rivin id
+                                              (and
+                                                (not (nil? (get-in rivi [sarake :id])))
+                                                (= (:id rivi) (:id uniikki)))
+                                              (sarake rivi)))
+                                          kaikki-rivit)))))
                 sarake-vektori)))
 
     ;; 1. Kaiva esiin uniikit rivit poistamalla ensin lapsirivit kokonaan
