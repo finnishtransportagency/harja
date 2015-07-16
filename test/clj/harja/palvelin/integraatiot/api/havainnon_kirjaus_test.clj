@@ -71,15 +71,19 @@
 
     (is (= 200 (:status vastaus)))
 
-    (let [havainnot-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))]
-      (is (= (+ havainnot-kannassa-ennen-pyyntoa 1) havainnot-kannassa-pyynnon-jalkeen)))
-
-    (let [liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.png';")))
+    (let [havainnot-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))
+          liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.png';")))
           havainto-id (ffirst (q (str "SELECT id FROM havainto WHERE kohde = 'testikohde36934853';")))
-          kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'testihavainto36934853';")))]
+          kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'Testikommentti323353435';")))]
       (log/debug "liite-id: " liite-id)
       (log/debug "havainto-id: " havainto-id)
       (log/debug "kommentti-id: " kommentti-id)
+
+      (is (= (+ havainnot-kannassa-ennen-pyyntoa 1) havainnot-kannassa-pyynnon-jalkeen))
+      (is (number? liite-id))
+      (is (number? havainto-id))
+      (is (number? kommentti-id))
+
       (u (str "DELETE FROM havainto_liite WHERE havainto = " havainto-id ";"))
       (u (str "DELETE FROM havainto_kommentti WHERE havainto = " havainto-id ";"))
       (u (str "DELETE FROM kommentti WHERE kommentti = 'Testikommentti323353435';"))
