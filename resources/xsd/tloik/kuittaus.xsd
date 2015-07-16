@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="kuittaus" type="kuittaus"/>
+
+  <xs:complexType name="kuittaus">
+    <xs:sequence>
+      <xs:element name="ilmoitusId" type="xs:int"/>
+      <xs:element name="kasittelija" type="kasittelija" minOccurs="0"/>
+      <xs:element name="kuitattu" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="kuittaaja" type="kasittelija" minOccurs="0"/>
+      <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="0"/>
+      <xs:element name="vapaateksti" type="xs:string" minOccurs="0"/>
+      <xs:element name="viestiId" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="kasittelija">
+    <xs:sequence>
+      <xs:element name="henkilo" type="henkilo" minOccurs="0"/>
+      <xs:element name="organisaatio" type="organisaatio" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="henkilo">
+    <xs:sequence>
+      <xs:element name="etunimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="matkapuhelin" type="xs:string" minOccurs="0"/>
+      <xs:element name="sahkoposti" type="xs:string" minOccurs="0"/>
+      <xs:element name="sukunimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="tyopuhelin" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="organisaatio">
+    <xs:sequence>
+      <xs:element name="nimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="ytunnus" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="kuittaustyyppi">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="vastaanotto"/>
+      <xs:enumeration value="lopetus"/>
+      <xs:enumeration value="vastaus"/>
+      <xs:enumeration value="muutos"/>
+      <xs:enumeration value="aloitus"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
