@@ -32,8 +32,31 @@
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
-                 :leveys "600px"}
+                 :leveys  "1000px"}
                 [:div.kayttajan-tiedot sisalto]))
+
+(defn nayta-otsikko [otsikko]
+  (let [sisalto (kartta-merkkijonoksi otsikko)]
+    (if (> (count sisalto) 30)
+      [:div (str (leikkaa-merkkijono sisalto 30) "...")
+       [:span.pull-right
+        [:button.nappi-toissijainen.grid-lisaa
+         {:on-click
+          (fn [e]
+            (nayta-sisalto-modaalissa-dialogissa "Otsikko" (kartta-listaksi otsikko)))}
+         (ikonit/eye-open)]]]
+      sisalto)))
+
+(defn nayta-sisalto [sisalto]
+  (if (> (count sisalto) 30)
+    [:div (str (leikkaa-merkkijono sisalto 30) "...")
+     [:span.pull-right
+      [:button.nappi-toissijainen.grid-lisaa
+       {:on-click
+        (fn [e]
+          (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
+       (ikonit/eye-open)]]]
+    sisalto))
 
 (defn tapahtuman-tiedot []
   [:span
@@ -48,30 +71,11 @@
       {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
        :komponentti #(leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
       {:otsikko     "Otsikko" :nimi :otsikko :leveys "40%" :tyyppi :komponentti
-       :komponentti #(let [sisalto (kartta-merkkijonoksi (:otsikko %))]
-                      (if (> (count sisalto) 30)
-                        [:div (str (leikkaa-merkkijono sisalto 30) "...")
-                         [:span.pull-right
-                          [:button.nappi-toissijainen.grid-lisaa
-                           {:on-click
-                            (fn [e]
-                              (nayta-sisalto-modaalissa-dialogissa "Otsikko" (kartta-listaksi (:otsikko %))))}
-                           (ikonit/eye-open)]]]
-                        sisalto))}
+       :komponentti #(nayta-otsikko (:otsikko %))}
       {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
       {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys "20%"}
       {:otsikko     "Sisältö" :nimi :sisalto :leveys "40%" :tyyppi :komponentti
-       :komponentti #(let [sisalto (:sisalto %)]
-                      (if (> (count sisalto) 30)
-                        [:div (str (leikkaa-merkkijono sisalto 30) "...")
-                         [:span.pull-right
-                          [:button.nappi-toissijainen.grid-lisaa
-                           {:on-click
-                            (fn [e]
-                              (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
-                           (ikonit/eye-open)]]]
-                        sisalto))}]
-
+       :komponentti #(nayta-sisalto (:sisalto %))}]
      (:viestit @tiedot/valittu-tapahtuma)]]])
 
 (defn tapahtumien-paanakyma []
@@ -104,9 +108,9 @@
 
      [{:otsikko     "Tila" :nimi :onnistunut :leveys "10%" :tyyppi :komponentti
        :komponentti #(if (nil? (:paattynyt %))
-                       [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
-                       (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                           [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
+                      [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
+                      (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
+                                          [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
       {:otsikko "Alkanut" :nimi :alkanut :leveys "15%"
        :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
       {:otsikko "Päättynyt" :nimi :paattynyt :leveys "15%"
