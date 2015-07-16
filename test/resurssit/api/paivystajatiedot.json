@@ -17,8 +17,8 @@
       "paivystys": {
         "paivystaja": {
           "id": __ID__,
-          "etunimi": "Päivi",
-          "sukunimi": "Päivystäjä",
+          "etunimi": "__ETUNIMI__",
+          "sukunimi": "__SUKUNIMI__",
           "email": "paivi.paivystaja@test.i",
           "puhelinnumero": "7849885769",
           "liviTunnus":"LX1234345"

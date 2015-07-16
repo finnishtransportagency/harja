@@ -60,7 +60,9 @@
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
                                                (-> "test/resurssit/api/paivystajatiedot.json"
                                                    slurp
-                                                   (.replace "__ID__" (str ulkoinen-id))))]
+                                                   (.replace "__ID__" (str ulkoinen-id))
+                                                   (.replace "__ETUNIMI__" "Päivi")
+                                                   (.replace "__SUKUNIMI__" "Päivystäjä")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [paivystaja-id (ffirst (q (str "SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id)"';")))
           paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
@@ -68,19 +70,17 @@
       (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä"]))
       (is (= paivystys [paivystaja-id]))
 
-      ; FIXME Tämä puuttuu vielä: Päivitetään paivystystiedot ja tarkistetaan, että tiedot päivittyy
-      #_(let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                     (-> "test/resurssit/api/pistetoteuma.json"
-                                                         slurp
-                                                         (.replace "__ID__" (str ulkoinen-id))
-                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
-                                                         (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
+                                                    (-> "test/resurssit/api/paivystajatiedot.json"
+                                                        slurp
+                                                        (.replace "__ID__" (str ulkoinen-id))
+                                                        (.replace "__ETUNIMI__" "Taneli")
+                                                        (.replace "__SUKUNIMI__" "Tähystäjä")))]
         (is (= 200 (:status vastaus-paivitys)))
-        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen"]))
-          (is (= (count toteuma-tehtava-idt) 1)))
+        (let [paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
+              paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
+          (is (= paivystaja [(str ulkoinen-id) "Taneli" "Tähystäjä"]))
+          (is (= paivystys [paivystaja-id]))
 
-        (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
-        (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
-        (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
+        (u (str "DELETE FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';"))
+        (u (str "DELETE FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))))))
