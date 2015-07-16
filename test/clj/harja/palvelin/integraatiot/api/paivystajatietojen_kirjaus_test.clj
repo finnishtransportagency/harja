@@ -62,12 +62,14 @@
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
                                                    (.replace "__ETUNIMI__" "Päivi")
-                                                   (.replace "__SUKUNIMI__" "Päivystäjä")))]
+                                                   (.replace "__SUKUNIMI__" "Päivystäjä")
+                                                   (.replace "__EMAIL__" "paivi.paivystaja@sahkoposti.com")
+                                                   (.replace "__PUHELIN__" "04001234567")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [paivystaja-id (ffirst (q (str "SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id)"';")))
-          paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
+          paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi ,sahkoposti, matkapuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
           paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
-      (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä"]))
+      (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567"]))
       (is (= paivystys [paivystaja-id]))
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
@@ -75,11 +77,13 @@
                                                         slurp
                                                         (.replace "__ID__" (str ulkoinen-id))
                                                         (.replace "__ETUNIMI__" "Taneli")
-                                                        (.replace "__SUKUNIMI__" "Tähystäjä")))]
+                                                        (.replace "__SUKUNIMI__" "Tähystäjä")
+                                                        (.replace "__EMAIL__" "taneli.tahystaja@gmail.com")
+                                                        (.replace "__PUHELIN__" "05001234567")))]
         (is (= 200 (:status vastaus-paivitys)))
-        (let [paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
+        (let [paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
               paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
-          (is (= paivystaja [(str ulkoinen-id) "Taneli" "Tähystäjä"]))
+          (is (= paivystaja [(str ulkoinen-id) "Taneli" "Tähystäjä" "taneli.tahystaja@gmail.com" "05001234567"]))
           (is (= paivystys [paivystaja-id]))
 
         (u (str "DELETE FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';"))

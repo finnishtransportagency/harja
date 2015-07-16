@@ -19,8 +19,8 @@
           "id": __ID__,
           "etunimi": "__ETUNIMI__",
           "sukunimi": "__SUKUNIMI__",
-          "email": "paivi.paivystaja@test.i",
-          "puhelinnumero": "7849885769",
+          "email": "__EMAIL__",
+          "puhelinnumero": "__PUHELIN__",
           "liviTunnus":"LX1234345"
         },
         "alku": "2015-01-30T12:00:00Z",
