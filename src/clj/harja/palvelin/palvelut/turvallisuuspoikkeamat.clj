@@ -149,7 +149,7 @@
   [db user
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
+     sairaalavuorokaudet sijainti tr
      tyyppi]}]
 
   (log/debug "tallennetaan tyypit: " (str "{" (clojure.string/join "," (map name tyyppi)) "}"))
@@ -159,26 +159,30 @@
   ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
-  (if id
-    (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                           (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                           kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                           (str "{" (clojure.string/join "," (map name tyyppi)) "}")
-                                           (:id user) id)
-        (q/aseta-turvallisuuspoikkeaman-sijanti<! db
-                                                  (first sijainti) (second sijainti) tr_numero
-                                                  tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
-        id)
+  (let [tr_numero (:numero tr)
+        tr_alkuetaisyys (:alkuetaisyys tr)
+        tr_loppuetaisyys (:loppuetaisyys tr)
+        tr_alkuosa (:alkuosa tr)
+        tr_loppuosa (:loppuosa tr)]
+    (if id
+     (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                            (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                            kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                            (str "{" (clojure.string/join "," (map name tyyppi)) "}")
+                                            (:id user) id)
+         (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+                                                   (first sijainti) (second sijainti) tr_numero
+                                                   tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+         id)
 
-    (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                                 (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                                 kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr_numero
-                                                 tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
-                                                 (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
-      (q/aseta-turvallisuuspoikkeaman-sijanti<! db
-                                                (first sijainti) (second sijainti) tr_numero
-                                                tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
-      id)))
+     (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                                  (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                                  kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                                  (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
+       (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+                                                 (first sijainti) (second sijainti) tr_numero
+                                                 tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+       id))))
 
 (defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
