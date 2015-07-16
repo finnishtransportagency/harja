@@ -43,10 +43,21 @@
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
   (when (and (contains? @setti-atom data) (neg? (:id rivi)))
     viesti))
-    
+
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
+  (log "Ei-tyhja " (str/blank? data))
   (when (str/blank? data)
     viesti))
+
+(defmethod validoi-saanto :joku-naista [_ _ data rivi _ & avaimet-ja-viesti]
+  (let [avaimet (if (string? (last avaimet-ja-viesti)) (butlast avaimet-ja-viesti) avaimet-ja-viesti)
+        viesti (if (string? (last avaimet-ja-viesti))
+                 (last avaimet-ja-viesti)
+
+                 (str "Anna joku näistä: "
+                      (clojure.string/join ", "
+                                           (map (comp clojure.string/capitalize name) avaimet))))]
+    (when-not (some #(not (str/blank? (% rivi))) avaimet) viesti)))
 
 (defmethod validoi-saanto :positiivinen-luku [_ _ data _ _ & [viesti]]
   (when (not (pos? data)) viesti))
@@ -72,25 +83,25 @@
             (saanto data rivi)
             (let [[saanto & optiot] saanto]
               (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
-    saannot))
+        saannot))
 
 (defn validoi-rivi
   "Tekee validoinnin yhden rivin / lomakkeen kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori.
   Tyyppi on joko :validoi (default) tai :varoita"
   ([taulukko rivi skeema] (validoi-rivi taulukko rivi skeema :validoi))
   ([taulukko rivi skeema tyyppi]
-  (loop [v {}
-         [s & skeema] skeema]
-    (if-not s
-      v
-      (let [{:keys [nimi hae]} s
-            validoi (tyyppi s)]
-        (if (empty? validoi)
-          (recur v skeema)
-          (let [virheet (validoi-saannot nimi (if hae
-                                                (hae rivi)
-                                                (get rivi nimi))
-                          rivi taulukko
-                                         validoi)]
-            (recur (if (empty? virheet) v (assoc v nimi virheet))
-                   skeema))))))))
+   (loop [v {}
+          [s & skeema] skeema]
+     (if-not s
+       v
+       (let [{:keys [nimi hae]} s
+             validoi (tyyppi s)]
+         (if (empty? validoi)
+           (recur v skeema)
+           (let [virheet (validoi-saannot nimi (if hae
+                                                 (hae rivi)
+                                                 (get rivi nimi))
+                                          rivi taulukko
+                                          validoi)]
+             (recur (if (empty? virheet) v (assoc v nimi virheet))
+                    skeema))))))))
