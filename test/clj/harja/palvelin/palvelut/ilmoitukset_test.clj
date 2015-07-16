@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.materiaalit-test
+(ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
