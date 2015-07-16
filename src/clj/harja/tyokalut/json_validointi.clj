@@ -38,4 +38,4 @@
        (catch Exception e
          (throw+ {:type virheet/+invalidi-json+ :virheet
                         [{:koodi  virheet/+invalidi-json-koodi+
-                          :viesti "JSONin validoinnissa tapahtui virhe."}]}))))
+                          :viesti "JSON ei ole validia"}]}))))

@@ -18,4 +18,5 @@
       (json/validoi skeemat/+virhevastaus+ json-data)
       (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
       (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-        (is (.contains (:viesti (first virheet)) "object instance has properties which are not allowed by the schema"))))))
+        (println virheet)
+        (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
