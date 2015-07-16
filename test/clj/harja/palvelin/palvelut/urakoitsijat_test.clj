@@ -28,6 +28,5 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakoitsijat +kayttaja-jvh+ "Joku turha parametri?")]
 
-    (log/debug vastaus)
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 10))))

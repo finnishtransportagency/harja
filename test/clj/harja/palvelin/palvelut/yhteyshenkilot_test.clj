@@ -28,6 +28,29 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-yhteyshenkilot +kayttaja-jvh+ 1)]
 
-    (log/debug vastaus)
+    (is (not (nil? vastaus)))
+    (is (>= (count vastaus) 1))))
+
+(deftest yhteyshenkiloiden-tyyppien-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-yhteyshenkilotyypit +kayttaja-jvh+ "Joku turha parametri?")]
+
+    (is (set? vastaus))
+    (is (>= (count vastaus) 1))))
+
+(deftest urakan-paivystajien-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-paivystajat +kayttaja-jvh+ 1)]
+
+    (is (not (nil? vastaus)))
+    (is (>= (count vastaus) 1))
+    (mapv (fn [yhteyshenkilo] (do
+                                (is (string? (:etunimi yhteyshenkilo)))
+                                (is (string? (:sukunimi yhteyshenkilo))))) vastaus)))
+
+(deftest urakan-kayttajien-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-kayttajat +kayttaja-jvh+ 1)]
+
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 1))))
