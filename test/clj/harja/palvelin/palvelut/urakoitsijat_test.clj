@@ -9,14 +9,14 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-    (fn [_]
-      (component/start
-        (component/system-map
-          :db (apply tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :hae (component/using
-                      (->Urakoitsijat)
-                      [:http-palvelin :db])))))
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :hae (component/using
+                               (->Urakoitsijat)
+                               [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -33,13 +33,13 @@
 
 (deftest urakkatyypin-urakoitsijoiden-haku-toimii
   (let [hoito (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :urakkatyypin-urakoitsijat +kayttaja-jvh+ :hoito)
+                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :hoito)
         paallystys (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :paallystys)
+                                   :urakkatyypin-urakoitsijat +kayttaja-jvh+ :paallystys)
         tiemerkinta (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :tiemerkinta)
+                                    :urakkatyypin-urakoitsijat +kayttaja-jvh+ :tiemerkinta)
         valaistus (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :urakkatyypin-urakoitsijat +kayttaja-jvh+ :valaistus)]
+                                  :urakkatyypin-urakoitsijat +kayttaja-jvh+ :valaistus)]
 
     (is (not (nil? hoito)))
     (is (not (nil? paallystys)))
@@ -50,3 +50,10 @@
     (is (>= (count paallystys) 1))
     (is (>= (count tiemerkinta) 1))
     (is (>= (count valaistus) 1))))
+
+(deftest yllapidon-urakoitsijoiden-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :yllapidon-urakoitsijat +kayttaja-jvh+)]
+
+    (is (set? vastaus))
+    (is (>= (count vastaus) 1))))
