@@ -306,6 +306,7 @@
                      :hae-sanktiotyypit
                      :hae-urakan-tarkastukset
                      :tallenna-tarkastus
+                     :tallenna-suorasanktio
                      :hae-tarkastus)
     this))
             
