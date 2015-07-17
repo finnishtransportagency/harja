@@ -111,15 +111,16 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 10))))
 
-(deftest hae-urakan-havainnot []
+(deftest hae-urakan-sanktiot []
   (let [urakka-id (hae-oulun-alueurakan-id)
+        tpi-idt (hae-oulun-alueurakan-toimenpideinstanssien-idt)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-havainnot +kayttaja-jvh+ {:listaus :kaikki
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:tpi (first tpi-idt)
                                                                       :urakka-id    urakka-id
                                                                       :alku (java.sql.Date. 100 9 1)
                                                                       :loppu (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 10))))
+    (is (>= (count vastaus) 1))))
 
 ; FIXME Testi ei toimi jostain syystä
 #_(deftest hae-urakan-sanktiot-test

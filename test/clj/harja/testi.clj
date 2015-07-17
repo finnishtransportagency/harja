@@ -109,10 +109,10 @@
 (def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"})
 
 ;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
-                     :etunimi "Jalmari" :urakka-roolit []
-                     :organisaatio {:id 1 :nimi "Liikennevirasto",
+(def +kayttaja-jvh+ {:sahkoposti   "jalmari@example.com" :kayttajanimi "jvh"
+                     :sukunimi     "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
+                     :etunimi      "Jalmari" :urakka-roolit []
+                     :organisaatio {:id     1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
                      :urakkaroolit ()})
 
@@ -134,6 +134,12 @@
   (ffirst (q (str "SELECT id
                                FROM   urakka
                                WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+
+(defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
+  (into [] (flatten (q (str "SELECT tpi.id
+                  FROM   urakka u
+                    JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
+                  WHERE  u.nimi = 'Oulun alueurakka 2005-2010';")))))
 
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
