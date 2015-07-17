@@ -14,51 +14,8 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
-            [harja.testi :as testi]
-            [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset])
-  (:import (javax.jms TextMessage)))
-
-(def +xsd-polku+ "resources/xsd/sampo/inbound/")
-(def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
-(def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
-(def +testi-ilmoitus-sanoma+ "<ilmoitus>
-    <ilmoitettu>2008-09-29T04:49:45</ilmoitettu>
-    <ilmoittaja>
-        <etunimi>Irmeli</etunimi>
-        <matkapuhelin>0903228927</matkapuhelin>
-        <sahkoposti>irmeli.ilmoittaja@foo.bar</sahkoposti>
-        <sukunimi>Ilmoittaja</sukunimi>
-        <tyopuhelin>0908772789</tyopuhelin>
-        <tyyppi>muu</tyyppi>
-    </ilmoittaja>
-    <ilmoitusId>123456789</ilmoitusId>
-    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
-    <valitettu>2014-06-09T18:15:04+03:00</valitettu>
-    <lahettaja>
-        <etunimi>Lasse</etunimi>
-        <matkapuhelin>0807228930</matkapuhelin>
-        <sahkoposti>lasse.lahettaja@foo.bar</sahkoposti>
-        <sukunimi>Lähettäjä</sukunimi>
-        <tyopuhelin>9809377280</tyopuhelin>
-    </lahettaja>
-    <seliteet>
-        <selite>auraustarve</selite>
-        <selite>aurausvallitNakemaesteena</selite>
-    </seliteet>
-    <sijainti>
-        <tienumero>4</tienumero>
-        <x>41.40338</x>
-        <y>2.17403</y>
-    </sijainti>
-    <urakkatyyppi>paallystys</urakkatyyppi>
-    <vapaateksti>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</vapaateksti>
-    <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
-    <yhteydenottopyynto>true</yhteydenottopyynto>
-    <vastaanottaja>
-        <nimi>Urakoitsija Oy</nimi>
-        <ytunnus>1234567-8</ytunnus>
-    </vastaanottaja>
-</ilmoitus>")
+            [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]
+            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -76,16 +33,6 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn tuo-ilmoitus []
-  (let [ilmoitus  (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
-
-(defn hae-ilmoitus []
-  (q "select * from ilmoitus where ilmoitusid = 123456789;"))
-
-(defn poista-ilmoitus []
-  (u "delete from ilmoitus where ilmoitusid = 123456789;"))
-
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
   (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
@@ -96,7 +43,20 @@
   (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (tuo-ilmoitus)
   (is (= 1 (count (hae-ilmoitus))) "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
-  #_(poista-ilmoitus))
+  (poista-ilmoitus))
+
+(deftest tarkista-ilmoituksen-urakan-paattely
+  (tuo-ilmoitus)
+  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+      "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019")
+  (poista-ilmoitus)
+
+  (tuo-paallystysilmoitus)
+  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa")
+  (poista-ilmoitus))
 
 #_(deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]

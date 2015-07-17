@@ -2,13 +2,16 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]))
 
-(defn paattele-urakka [urakkatyyppi sijainti]
-  ;; todo: toteuta
-  1)
+(defn paattele-urakka [db urakkatyyppi sijainti]
+  (let [urakka-id (:id (first (ilmoitukset/hae-ilmoituksen-urakka db urakkatyyppi (:x sijainti) (:y sijainti))))]
+    (log/debug "-----Urakka id:" urakka-id "-----")
+    (if (and (not urakka-id) (not (= "hoito" urakkatyyppi)))
+      (:id (first (ilmoitukset/hae-ilmoituksen-urakka db "hoito" (:x sijainti) (:y sijainti))))
+      urakka-id)))
 
 (defn paivita-ilmoitus [db id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi vapaateksti yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   ;; todo tallenna välitystiedot ja vastaanottaja, jos on jo välitetty
-  (let [urakka (paattele-urakka urakkatyyppi sijainti)]
+  (let [urakka (paattele-urakka db urakkatyyppi sijainti)]
     (ilmoitukset/paivita-ilmoitus!
       db
       urakka
@@ -34,7 +37,7 @@
 
 (defn luo-ilmoitus [db {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi vapaateksti yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   ;; todo tallenna vastaanottaja, jos on jo välitetty
-  (let [urakka (paattele-urakka urakkatyyppi sijainti)
+  (let [urakka (paattele-urakka db urakkatyyppi sijainti)
         id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   urakka

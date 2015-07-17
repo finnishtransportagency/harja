@@ -179,9 +179,19 @@ SET
 WHERE id = :id;
 
 -- name: aseta-ilmoituksen-sijainti!
+-- Asettaa ilmoituksen sijaintitiedot. Joudutaan tekemään erikseen YESQL:n 20 muuttujan rajoituksen vuoksi.
 UPDATE ilmoitus
 SET
   tr_numero = :tr_numero,
   sijainti  = POINT(:x_koordinaatti, :y_koordinaatti)
 WHERE id = :id;
 
+-- name: hae-ilmoituksen-urakka
+-- Hakee sijainnin ja urakan tyypin perusteella urakan, johon ilmoitus liittyy. Urakan täytyy myös olla käynnissä.
+SELECT u.id
+FROM urakoiden_alueet ua
+  JOIN urakka u ON ua.id = u.id
+WHERE
+  ua.tyyppi = :urakkatyyppi::urakkatyyppi AND
+  (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
+  (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
