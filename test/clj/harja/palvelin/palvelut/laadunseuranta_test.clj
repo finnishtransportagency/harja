@@ -109,7 +109,7 @@
                                                                       :alku (java.sql.Date. 100 9 1)
                                                                       :loppu (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 10))))
+    (is (>= (count vastaus) 1))))
 
 (deftest hae-urakan-sanktiot []
   (let [urakka-id (hae-oulun-alueurakan-id)
