@@ -13,8 +13,8 @@
 (defn urakan-hoitokausi [ur]
   (valinnat/urakan-hoitokausi ur (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!))
 
-(defn hoitokauden-aikavali [ur]
-  (valinnat/hoitokauden-aikavali u/valittu-aikavali))
+(defn aikavali [ur]
+  (valinnat/aikavali u/valittu-aikavali))
 
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))

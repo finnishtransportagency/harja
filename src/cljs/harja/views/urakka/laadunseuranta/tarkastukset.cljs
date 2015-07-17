@@ -66,7 +66,7 @@
         [yleiset/taulukko2 6 6
          
          [valinnat/urakan-hoitokausi urakka]
-         [valinnat/hoitokauden-aikavali urakka]
+         [valinnat/aikavali urakka]
 
          [:span.label-ja-kentta
           [:span.kentan-otsikko "Tienumero"]

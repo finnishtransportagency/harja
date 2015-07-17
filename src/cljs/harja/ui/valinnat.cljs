@@ -32,7 +32,7 @@
                          }
     hoitokaudet]])
 
-(defn hoitokauden-aikavali
+(defn aikavali
   [valittu-aikavali-atom]
   ; TODO Harjaa vastaava tyyli tälle
   [:span.label-ja-aikavali
@@ -46,12 +46,14 @@
                                                         (and (string? uusi-arvo) (empty? uusi-arvo))
                                                         (nil? uusi-arvo))
                                                 (second (pvm/kuukauden-aikavali uusi-arvo))
-                                                (second @valittu-aikavali-atom))])))]
+                                                (second @valittu-aikavali-atom))])
+               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:span " \u2014 "]
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
-               (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))))]
+               (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))
+               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     ]])
 
 (defn urakan-toimenpide
@@ -126,7 +128,7 @@
     ur
     hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
 
-   [hoitokauden-aikavali valittu-aikavali-atom]])
+   [aikavali valittu-aikavali-atom]])
 
 
 
@@ -144,6 +146,6 @@
     valittu-sopimusnumero-atom valitse-sopimus-fn
     hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
 
-   [hoitokauden-aikavali valittu-aikavali-atom]
+   [aikavali valittu-aikavali-atom]
 
    [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])

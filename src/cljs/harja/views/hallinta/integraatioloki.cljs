@@ -98,7 +98,7 @@
                            :class      "suunnittelu-alasveto"}
       (:integraatiot @tiedot/valittu-jarjestelma)]]
 
-    [valinnat/hoitokauden-aikavali tiedot/valittu-aikavali]
+    [valinnat/aikavali tiedot/valittu-aikavali]
 
     [grid
      {:otsikko       "Tapahtumat"

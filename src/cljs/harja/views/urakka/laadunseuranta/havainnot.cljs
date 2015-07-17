@@ -92,7 +92,7 @@
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
 
    
-   [urakka-valinnat/hoitokauden-aikavali @nav/valittu-urakka]
+   [urakka-valinnat/aikavali @nav/valittu-urakka]
    
 
    [yleiset/pudotusvalikko
