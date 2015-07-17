@@ -141,6 +141,16 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
+; FIXME Toimii jos ajetaan kaikki testit, mutta yksittäin ajettuna palauttaa nillin?
+#_(deftest hae-tarkastus []
+  (let [urakka-id (hae-oulun-alueurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
+                                                               :tarkastus-id 1})]
+    (log/debug "Vastaus: " vastaus)
+    (is (not (empty? vastaus)))
+    (is (>= (count vastaus) 1))))
+
 ; FIXME Testi ei toimi jostain syystä
 #_(deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?
