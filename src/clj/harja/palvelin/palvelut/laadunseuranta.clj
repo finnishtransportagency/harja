@@ -45,7 +45,7 @@
              :talvihoito (dissoc tarkastus :soratiemittaus)
              :soratie (dissoc tarkastus :talvihoitomittaus)
              :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
-
+            ; FIXME pistokoe? -Jari
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)

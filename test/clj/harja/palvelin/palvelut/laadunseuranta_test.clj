@@ -91,6 +91,7 @@
             ;; muokatut kentät tallentuivat
             (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainto :kuvaus])))
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
+; FIXME Siivoa tallennettu data
 
 (deftest hae-havainnon-tiedot []
   (let [urakka-id (hae-oulun-alueurakan-id)
@@ -104,10 +105,10 @@
 (deftest hae-urakan-havainnot []
   (let [urakka-id (hae-oulun-alueurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-havainnot +kayttaja-jvh+ {:listaus :kaikki
-                                                                      :urakka-id    urakka-id
-                                                                      :alku (java.sql.Date. 100 9 1)
-                                                                      :loppu (java.sql.Date. 110 8 30)})]
+                                :hae-urakan-havainnot +kayttaja-jvh+ {:listaus   :kaikki
+                                                                      :urakka-id urakka-id
+                                                                      :alku      (java.sql.Date. 100 9 1)
+                                                                      :loppu     (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
@@ -115,10 +116,10 @@
   (let [urakka-id (hae-oulun-alueurakan-id)
         tpi-idt (hae-oulun-alueurakan-toimenpideinstanssien-idt)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:tpi (first tpi-idt)
-                                                                      :urakka-id    urakka-id
-                                                                      :alku (java.sql.Date. 100 9 1)
-                                                                      :loppu (java.sql.Date. 110 8 30)})]
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:tpi       (first tpi-idt)
+                                                                     :urakka-id urakka-id
+                                                                     :alku      (java.sql.Date. 100 9 1)
+                                                                     :loppu     (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
@@ -127,6 +128,18 @@
                                 :hae-sanktiotyypit +kayttaja-jvh+)]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 9))))
+
+; FIXME Tapahtuu virhe: pistokokeelle ei ole casea.
+#_(deftest hae-urakan-tarkastukset []
+  (let [urakka-id (hae-oulun-alueurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                         :alkupvm   (java.sql.Date. 100 9 1)
+                                                                         :loppupvm  (java.sql.Date. 110 8 30)
+                                                                         :tienumero nil
+                                                                         :tyyppi    nil})]
+    (is (not (empty? vastaus)))
+    (is (>= (count vastaus) 1))))
 
 ; FIXME Testi ei toimi jostain syystä
 #_(deftest hae-urakan-sanktiot-test
