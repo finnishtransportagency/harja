@@ -122,6 +122,12 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
+(deftest hae-sanktiotyypit []
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-sanktiotyypit +kayttaja-jvh+)]
+    (is (not (empty? vastaus)))
+    (is (>= (count vastaus) 9))))
+
 ; FIXME Testi ei toimi jostain syystä
 #_(deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?
