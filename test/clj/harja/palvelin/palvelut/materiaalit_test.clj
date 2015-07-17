@@ -64,7 +64,7 @@
            FROM toteuma t LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma
            AND t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE
            WHERE urakka is not null and materiaalikoodi is not null and sopimus is not null;")]
-    ;; TODO: Olettaisin että täm toimii oikeasti laiskasti, mutta nyt näyttää että ei. Miksi? :(
+    ;; TODO: Olettaisin että tämä toimii oikeasti laiskasti, mutta nyt näyttää että ei. Miksi? :(
     (is
     (some
       true?
