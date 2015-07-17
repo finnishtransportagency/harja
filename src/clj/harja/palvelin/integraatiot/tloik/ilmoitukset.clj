@@ -2,13 +2,16 @@
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.java.jdbc :as jdbc]
+            [clj-time.core :as time]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
-            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]))
+            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
+            [harja.palvelin.integraatiot.tloik.sanomat.viestikuittaus-sanoma :as viestikuittaus]
+            [harja.palvelin.komponentit.sonja :as sonja]))
 
-(defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus tapahtuma-id virheet]
-  ;; todo: toteuta
-  )
+(defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus tapahtuma-id onnistunut lisatietoja]
+  (integraatioloki/kirjaa-lahteva-jms-kuittaus integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja)
+  (sonja/laheta sonja kuittausjono kuittaus))
 
 (defn vastaanota-ilmoitus [sonja integraatioloki db kuittausjono viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
@@ -20,10 +23,12 @@
       (jdbc/with-db-transaction [transaktio db]
         (let [ilmoitus (ilmoitus-sanoma/lue-viesti viestin-sisalto)
               kuittaus (ilmoitus/kasittele-ilmoitus transaktio ilmoitus)]
-          (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id nil)))
+          (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id true nil)))
       (catch Exception e
-        ;; todo: tee kuittaus
-        (log/error e "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta.")))))
+        (log/error e "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta.")
+        (let [virhe (str "Tapahtui poikkeus: " e)
+              kuittaus (viestikuittaus/muodosta tloik-viesti-id (.toString (time/now)) "virhe" nil virhe)]
+          (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id false virhe))))))
 
 
 

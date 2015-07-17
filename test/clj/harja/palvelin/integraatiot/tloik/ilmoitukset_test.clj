@@ -12,9 +12,6 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
-            [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]))
 
 (defn jarjestelma-fixture [testit]
@@ -49,36 +46,31 @@
   (tuo-ilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-      "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019")
+      "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
   (poista-ilmoitus)
 
   (tuo-paallystysilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa")
+      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-ilmoitus))
 
-#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
+(deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ +testi-ilmoitus-sanoma+)
+    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
     (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
-    ;;todo: toteuta kuittausten tarkistus
-    #_(let [xml (first @viestit)
+
+    (let [xml (first @viestit)
           data (xml/lue xml)]
-      (is (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
+      (is (xml/validoi +xsd-polku+ "viestikuittaus.xsd" xml) "Kuittaus on validia XML:ää.")
 
-      (is (= "UrakkaMessageId" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
-          "Kuittaus on tehty oikeaan viestiin.")
+      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+      (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+      (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
-      (is (= "Project" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
-          "Kuittauksen tyyppi on Project eli urakka.")
-
-      (is (= "NA" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
-          "Virheitä ei tapahtunut käsittelyssä.")))
-
-  (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
-  (poista-ilmoitus))
+    (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
+    (poista-ilmoitus)))
 
 
