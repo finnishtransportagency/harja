@@ -41,7 +41,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
       (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil puhelinnumero email nil nil liviTunnus (str id))))))
 
-(defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
+(defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
     (doseq [paivystys (:paivystykset data)]
@@ -52,7 +52,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan päivystäjätiedot urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (tallenna-paivystajatiedot db urakka-id kirjaaja data)
+    (tallenna-paivystajatiedot db urakka-id data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Paivystajatiedot []

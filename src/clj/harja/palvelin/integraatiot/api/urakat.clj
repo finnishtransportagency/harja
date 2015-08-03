@@ -114,5 +114,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-urakka)
+    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella)
     this))

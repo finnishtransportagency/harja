@@ -109,5 +109,5 @@
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :lisaa-pistetoteuma)
+    (poista-palvelut http :lisaa-reittitoteuma)
     this))
