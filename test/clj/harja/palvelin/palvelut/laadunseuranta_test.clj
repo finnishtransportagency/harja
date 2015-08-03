@@ -129,8 +129,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 9))))
 
-; FIXME Tapahtuu virhe: pistokokeelle ei ole casea.
-#_(deftest hae-urakan-tarkastukset []
+(deftest hae-urakan-tarkastukset []
   (let [urakka-id (hae-oulun-alueurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
@@ -141,8 +140,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-; FIXME Tapahtuu virhe: pistokokeelle ei ole casea.
-#_(deftest hae-tarkastus []
+(deftest hae-tarkastus []
   (let [urakka-id (hae-oulun-alueurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
