@@ -244,11 +244,13 @@
 
   ([sarakkeet palvelu parametrit kayttaja]
    (if parametrit
-     (sisaltaa-ainakin-sarakkeet? (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                  palvelu (or kayttaja +kayttaja-jvh+)
-                                                  parametrit)
-                                  sarakkeet)
-
-     (sisaltaa-ainakin-sarakkeet? (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                  palvelu (or kayttaja +kayttaja-jvh+))
-                                  sarakkeet))))
+     (do
+       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     palvelu (or kayttaja +kayttaja-jvh+) parametrit)]
+         (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
+         (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)))
+     (do
+       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     palvelu (or kayttaja +kayttaja-jvh+))]
+         (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
+         (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet))))))

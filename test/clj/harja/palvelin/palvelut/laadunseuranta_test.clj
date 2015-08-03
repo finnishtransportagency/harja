@@ -145,12 +145,10 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
                                                                :tarkastus-id 1})]
-    (log/debug "Vastaus: " vastaus)
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-; FIXME Testi ei toimi jostain syystä
-#_(deftest hae-urakan-sanktiot-test
+(deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?
         [:id :perintapvm :summa :laji :indeksi :suorasanktio :toimenpideinstanssi
          [:havainto :id] [:havainto :kohde] [:havainto :aika] [:havainto :tekija] [:havainto :urakka]
@@ -163,7 +161,7 @@
          [:havainto :tr :numero] [:havainto :tr :alkuosa] [:havainto :tr :loppuosa]
          [:havainto :tr :alkuetaisyys] [:havainto :tr :loppuetaisyys]]
         :hae-urakan-sanktiot
-        {:urakka-id @oulun-alueurakan-id
-         :alku      (java.sql.Date. 104 9 1)
-         :loppu    (java.sql.Date. 105 8 30)
+        {:urakka-id (hae-oulun-alueurakan-id)
+         :alku      (java.sql.Date. 100 0 1)
+         :loppu    (java.sql.Date. 110 0 1)
          :tpi 1})))
