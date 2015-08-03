@@ -58,8 +58,13 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn hae-vapaa-toteuma-ulkoinen-id []
+  (let [id (rand-int 10000)
+        vastaus (q (str "SELECT * FROM toteuma WHERE ulkoinen_id = '" id "';"))]
+    (if (empty? vastaus) id (recur))))
+
 (deftest tallenna-pistetoteuma
-  (let [ulkoinen-id (rand-int 10000)
+  (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                (-> "test/resurssit/api/pistetoteuma.json"
                                                    slurp
@@ -91,7 +96,7 @@
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
 
 (deftest tallenna-reittitoteuma
-  (let [ulkoinen-id (rand-int 10000)
+  (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                (-> "test/resurssit/api/reittitoteuma.json"
                                                    slurp
