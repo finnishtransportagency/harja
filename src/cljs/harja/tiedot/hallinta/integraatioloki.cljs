@@ -16,11 +16,13 @@
 
 (defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali]
   (log "Aikavali: " aikavali)
-  (k/post! :hae-integraatiotapahtumat {:jarjestelma (:jarjestelma jarjestelma)
-                                       :integraatio integraatio
-                                       :alkaen      (first aikavali)
-                                       ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
-                                       :paattyen    (t/plus (second aikavali) (t/days 1))}))
+  (k/post! :hae-integraatiotapahtumat
+           (merge {:jarjestelma (:jarjestelma jarjestelma)
+                   :integraatio integraatio}
+                  (when aikavali
+                    {:alkaen      (first aikavali)
+                     ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
+                     :paattyen    (t/plus (second aikavali) (t/days 1))}))))
 
 (defn hae-integraatiotapahtuman-viestit [tapahtuma-id]
   (k/post! :hae-integraatiotapahtuman-viestit tapahtuma-id))
@@ -31,8 +33,8 @@
                                                 (when nakymassa?
                                                   (hae-jarjestelmien-integraatiot))))
 
-(defonce valittu-jarjestelma (reaction (first @jarjestelmien-integraatiot)))
-(defonce valittu-integraatio (reaction (first (:integraatiot @valittu-jarjestelma))))
+(defonce valittu-jarjestelma (atom nil))
+(defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom [(time/yesterday) (harja.pvm/nyt)]))
 (defonce valittu-tapahtuma (atom nil))
 
@@ -44,6 +46,12 @@
               (when nakymassa?
                 ;;(reset! valittu-tapahtuma nil)
                 (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
+
+(defn nayta-tapahtumat-eilisen-jalkeen []
+  (reset! valittu-aikavali [(time/yesterday) (harja.pvm/nyt)]))
+
+(defn nayta-uusimmat-tapahtumat []
+  (reset! valittu-aikavali nil))
 
 (defn paivita-tapahtumat! []
   (paivita! haetut-tapahtumat))

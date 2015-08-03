@@ -107,10 +107,14 @@
                              :class      "suunnittelu-alasveto"}
         (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
 
-    [valinnat/aikavali tiedot/valittu-aikavali]
-
+    (if (nil? @tiedot/valittu-aikavali)
+      [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä aikaväliltä"]
+      [:span
+       [valinnat/aikavali tiedot/valittu-aikavali]
+       [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat)} "Näytä uusimmat tapahtumat"]])
+    
     [grid
-     {:otsikko       "Tapahtumat"
+     {:otsikko       (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
       :tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
       :rivi-klikattu #(reset! tiedot/valittu-tapahtuma %)
       :vetolaatikot (into {}
@@ -146,7 +150,8 @@
       (loop []
         (<! (timeout 10000))
         (when @paivita?
-          (tiedot/paivita-tapahtumat!)
+          (when (nil? @tiedot/valittu-aikavali)
+            (tiedot/paivita-tapahtumat!))
           (recur))))
     #(reset! paivita? false)))
         

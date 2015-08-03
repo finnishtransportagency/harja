@@ -76,11 +76,15 @@
   (let [tapahtumat
         (into []
               tapahtuma-xf
-              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                    (if jarjestelma true false) jarjestelma
-                                                                    (if integraatio true false) integraatio
-                                                                    (konversio/sql-date alkaen)
-                                                                    (konversio/sql-date paattyen)))]
+              (if (and alkaen paattyen)
+                (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
+                                                                      (if jarjestelma true false) jarjestelma
+                                                                      (if integraatio true false) integraatio
+                                                                      (konversio/sql-date alkaen)
+                                                                      (konversio/sql-date paattyen))
+                (q/hae-uusimmat-integraatiotapahtumat db
+                                                      (if jarjestelma true false) jarjestelma
+                                                      (if integraatio true false) integraatio)))]
     (log/debug "Tapahtumat:" tapahtumat)
     tapahtumat
     #_(let [tapahtumat-viesteineen
