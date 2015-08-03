@@ -127,7 +127,14 @@
         rivit (atom (if (= :auto koko-rivit)
                       2
                       koko-rivit))
-        pituus-max (or pituus-max 256)]
+        pituus-max (or pituus-max 256)
+        muuta! (fn [e]
+                 ;; alla pientä workaroundia koska selaimen max-length -ominaisuus ei tue rivinvaihtoja
+                 (let [teksti (-> e .-target .-value)]
+                   ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
+                   (if (< (count teksti) pituus-max)
+                     (reset! data teksti)
+                     (reset! data (subs teksti 0 pituus-max)))))]
     (komp/luo
       (when (= koko-rivit :auto)
         {:component-did-update
@@ -142,13 +149,13 @@
       (fn [{:keys [nimi koko on-focus lomake?]} data]
         [:span
          [:textarea {:value       @data
-                     :on-change   #(reset! data (-> % .-target .-value))
+                     :on-change   #(muuta! %)
                      :on-focus    on-focus
                      :cols        (or koko-sarakkeet 80)
                      :rows        @rivit
-                     :placeholder placeholder
-                     :max-length  pituus-max}]
-         (when pituus-max
+                     :placeholder placeholder}]
+         ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
+         (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defmethod tee-kentta :numero [kentta data]
