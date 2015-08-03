@@ -56,13 +56,13 @@
         [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
          {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]] :varoita [[:urakan-aikana]]}
-         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                    [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä tapahtumista ennen"]]}
+          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]] :varoita [[:urakan-aikana]]}
+         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
+          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                    [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
          {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                    [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä päättymistä ennen"]]}
+          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                    [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]}
          {:otsikko "Työntekijä" :nimi :tyontekijanammatti :leveys 1 :tyyppi :string}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :leveys 1 :tyyppi :string}
          {:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}

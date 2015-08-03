@@ -3,7 +3,8 @@
   (:require [cljs-time.format :as df]
             [cljs-time.core :as t]
             [cljs-time.coerce :as tc]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [clojure.string :as str])
   (:import (goog.date DateTime)))
 
 
@@ -113,7 +114,7 @@
 (defn ->pvm-aika [teksti]
   "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."
   (try
-    (df/parse fi-pvm-aika teksti)
+    (df/parse fi-pvm-aika (str/trim teksti))
     (catch js/Error e
       nil)))
 

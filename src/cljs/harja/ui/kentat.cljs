@@ -448,7 +448,9 @@
                               aika @aika-teksti
                               p (pvm/->pvm-aika (str pvm " " aika))]
                           (log "pvm: " pvm ", aika: " aika ", p: " p)
-                          (when p (reset! data p))))
+                          (if p
+                            (reset! data p)
+                            (reset! data nil))))
 
                muuta! (fn [t]
                         (reset! teksti t)
@@ -480,12 +482,14 @@
                                                nil)
                              :value       nykyinen-teksti
                              :on-focus    on-focus
+                             :on-blur   #(muuta! (-> % .-target .-value))
                              :on-change   #(muuta! (-> % .-target .-value))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
+                         :on-blur   #(muuta-aika! (-> % .-target .-value))
                          :on-change   #(muuta-aika! (-> % .-target .-value))}]]]]]
 
             (when @auki
