@@ -28,8 +28,16 @@
                          (= @nav/sivu :hallinta) "hide"
                          (= @nav/sivu :about) "hide"
                          :default ""))}
-        [:ol.breadcrumb.murupolku
-         [:li [linkki "Koko maa" #(nav/valitse-hallintayksikko nil)]]
+        [:ol.murupolku
+         [:li
+          [:a.murupolkuteksti {:href "#"
+                               :style (when (nil? @nav/valittu-hallintayksikko)
+                                        {:text-decoration "none"
+                                         :color "#323232"})
+               :on-click #(do
+                           (.preventDefault %)
+                           (nav/valitse-hallintayksikko nil))}
+           "Koko maa"]]
          (when-let [valittu @nav/valittu-hallintayksikko]
            [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko @valinta-auki) "open")}
          
@@ -37,9 +45,12 @@
                   va @valinta-auki]
               (if (or (not (nil? vu))
                       (= va :hallintayksikko))
-                [linkki (str (:nimi valittu) " ") #(nav/valitse-hallintayksikko valittu)
-                 ]
-                [:span.valittu-hallintayksikko (:nimi valittu) " "]))
+                [:a.murupolkuteksti {:href "#"
+                                     :on-click #(do
+                                                 (.preventDefault %)
+                                                 (nav/valitse-hallintayksikko valittu))}
+                 (str (:nimi valittu) " ")]
+                [:span.valittu-hallintayksikko.murupolkuteksti (:nimi valittu) " "]))
          
             [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                                (fn [v]
@@ -56,7 +67,7 @@
                                                      (nav/valitse-hallintayksikko muu-yksikko)) ]])]])
          (when-let [valittu @nav/valittu-urakka]
            [:li.dropdown.livi-alasveto {:class (when (= :urakka @valinta-auki) "open")}
-            [:span.valittu-urakka (:nimi valittu) " "]
+            [:span.valittu-urakka.murupolkuteksti (:nimi valittu) " "]
          
             [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
                                                                                (fn [v]

@@ -38,11 +38,24 @@ span.tietoarvo {
   font-weight: bold;
   text-align: right;
 }
-
 .murupolku {
+    background-color: @harmaa9;
+    padding: 8px 15px;
+    margin-bottom: 1.25rem;
+    list-style: none;
 	.dropdown-menu {
 		top: 24px; // BS-default 100% => valikko jäisi koko murupolun alle ja jää iso väli
 	}
+    > li {
+        display: inline-block;
+        margin-top: 10px;
+    }
+}
+.murupolkuteksti {
+    background-color:      @harjan-taustavari;
+    border: 1px solid @harmaa7;
+    display: inline-block;
+    padding: 5px 8px;
 }
 
 button .ajax-loader {
