@@ -11,6 +11,7 @@
             [com.stuartsierra.component :as component]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
+            [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut])
   (:import (java.util Date)
@@ -57,9 +58,14 @@
 (deftest tallenna-tiestotarkastus
   (is true))
 
+(defn hae-vapaa-tarkastus-ulkoinen-id []
+  (let [id (rand-int 10000)
+        vastaus (q (str "SELECT * FROM tarkastus t WHERE t.ulkoinen_id = " id ";"))]
+  (if (empty? vastaus) id (recur))))
+
 (deftest tallenna-soratietarkastus
   (let [pvm (Date.)
-        id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
+        id (hae-vapaa-tarkastus-ulkoinen-id)
 
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                            (-> "test/resurssit/api/soratietarkastus.json"
@@ -99,7 +105,7 @@
 
 (deftest tallenna-talvihoitotarkastus
   (let [pvm (Date.)
-        id (rand-int 10000)                                 ;; FIXME: varmista että ei ole olemassa
+        id (hae-vapaa-tarkastus-ulkoinen-id)
 
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]  kayttaja portti
                            (-> "test/resurssit/api/talvihoitotarkastus.json"
