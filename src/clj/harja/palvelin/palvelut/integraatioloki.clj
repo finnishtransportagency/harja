@@ -8,21 +8,29 @@
 
 (declare hae-jarjestelmien-integraatiot)
 (declare hae-integraatiotapahtumat)
+(declare hae-integraatiotapahtuman-viestit)
 
 (defrecord Integraatioloki []
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-jarjestelmien-integraatiot (fn [kayttaja _]
-                                                        (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
+                      :hae-jarjestelmien-integraatiot
+                      (fn [kayttaja _]
+                        (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtumat (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
-                                                   (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+                      :hae-integraatiotapahtumat
+                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
+                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-integraatiotapahtuman-viestit
+                      (fn [kayttaja tapahtuma-id]
+                        (hae-integraatiotapahtuman-viestit (:db this) kayttaja tapahtuma-id)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-jarjestelmien-integraatiot)
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
+    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtuman-viestit)
     this))
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
@@ -45,9 +53,9 @@
   (let [integraatiot (q/hae-jarjestelmien-integraatiot db)
         uniikit-integraatiot (mapv (fn [kartta]
                                      (assoc kartta :integraatiot
-                                                   (mapv #(:integraatio %)
-                                                         (into []
-                                                               (filter #(= (:jarjestelma %) (:jarjestelma kartta))) integraatiot))))
+                                            (mapv #(:integraatio %)
+                                                  (into []
+                                                        (filter #(= (:jarjestelma %) (:jarjestelma kartta))) integraatiot))))
                                    (set (map #(dissoc % :integraatio) integraatiot)))]
     (log/debug "Integraatiot:" uniikit-integraatiot)
     uniikit-integraatiot))
@@ -67,13 +75,25 @@
   (let [tapahtumat
         (into []
               tapahtuma-xf
-              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db jarjestelma integraatio (konversio/sql-date alkaen) (konversio/sql-date paattyen)))]
+              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
+                                                                    jarjestelma integraatio
+                                                                    
+                                                                    (konversio/sql-date alkaen)
+                                                                    (konversio/sql-date paattyen)))]
     (log/debug "Tapahtumat:" tapahtumat)
-    (let [tapahtumat-viesteineen
+    tapahtumat
+    #_(let [tapahtumat-viesteineen
           (mapv #(assoc % :viestit
-                          (into []
-                                viesti-xf
-                                (q/hae-integraatiotapahtuman-viestit db (:id %)))) tapahtumat)]
+                        (into []
+                              viesti-xf
+                              (q/hae-integraatiotapahtuman-viestit db (:id %)))) tapahtumat)]
       (log/debug "Tapahtumat viesteineen:" tapahtumat-viesteineen)
       tapahtumat-viesteineen)))
+
+(defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
+  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
+  (into []
+        viesti-xf
+        (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))
+
 
