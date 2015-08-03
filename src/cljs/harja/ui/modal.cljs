@@ -25,10 +25,15 @@
      
      (if nakyvissa?
        ^{:key "modaali"}
-       [:div.modal.fade.in.harja-modal {:style {:display "block"}}
+       [:div.modal.fade.in.harja-modal {:style {:display "block"}
+                                        :on-click piilota!}
         [:div.modal-backdrop.fade.in {:style {:height @yleiset/korkeus :z-index -1}}]
         [:div.modal-dialog.modal-sm {:style {:width (or leveys "600px")}}
-         [:div {:class (str "modal-content " (or luokka "")) :style {:width "100%"}}
+         [:div {:class (str "modal-content " (or luokka "")) :style {:width "100%"}
+                :on-click #(do
+                            (.preventDefault %)
+                            (.stopPropagation %)
+                            piilota!)}
           (when otsikko
             [:div.modal-header
              [:button.close {:on-click piilota!
