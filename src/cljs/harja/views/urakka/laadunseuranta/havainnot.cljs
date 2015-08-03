@@ -343,7 +343,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                :validoi [[:ei-tyhja "Anna havainnon kohde"]]})
 
             {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text
-             :placeholder "Kirjoita kuvaus..."}
+             :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
             (when-not uusi?
               {:otsikko "Kommentit" :nimi :kommentit
