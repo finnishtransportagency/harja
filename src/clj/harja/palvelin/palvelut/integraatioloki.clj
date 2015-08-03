@@ -47,7 +47,8 @@
 
 (def tapahtuma-xf
   (comp
-    (map #(assoc % :onnistunut (boolean (Boolean/valueOf (:onnistunut %)))))))
+   (map konversio/alaviiva->rakenne)
+   (map #(assoc % :onnistunut (boolean (Boolean/valueOf (:onnistunut %)))))))
 
 (defn hae-integraatiot [db]
   (let [integraatiot (q/hae-jarjestelmien-integraatiot db)

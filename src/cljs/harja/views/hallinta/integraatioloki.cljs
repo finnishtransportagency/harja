@@ -119,37 +119,48 @@
                                @tiedot/haetut-tapahtumat))
       }
 
-     [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-      {:otsikko     "Tila" :nimi :onnistunut :leveys "10%" :tyyppi :komponentti
-       :komponentti #(if (nil? (:paattynyt %))
-                      [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
-                      (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                          [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
-      {:otsikko "Alkanut" :nimi :alkanut :leveys "15%"
-       :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
-      {:otsikko "Päättynyt" :nimi :paattynyt :leveys "15%"
-       :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
-      {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys "20%"}
-      {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys "40%"}]
+     (vec
+      (keep identity
+            [{:tyyppi :vetolaatikon-tila :leveys 3}
+             (when-not @tiedot/valittu-jarjestelma
+               {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
+             (when-not @tiedot/valittu-integraatio
+               {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
+             {:otsikko     "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
+              :komponentti #(if (nil? (:paattynyt %))
+                              [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
+                              (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
+                                  [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
+             {:otsikko "Alkanut" :nimi :alkanut :leveys 15
+              :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
+             {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
+              :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
+             {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
+             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30}]))
 
      @tiedot/haetut-tapahtumat]]])
 
-(defn aloita-tapahtumien-paivitys []
-  (go
-    (loop []
-      (<! (timeout 10000))
-      (when @tiedot/nakymassa?
-        (tiedot/paivita-tapahtumat!)
-        (recur)))))
+(defn aloita-tapahtumien-paivitys! []
+  (let [paivita? (atom true)]
+    (go
+      (loop []
+        (<! (timeout 10000))
+        (when @paivita?
+          (tiedot/paivita-tapahtumat!)
+          (recur))))
+    #(reset! paivita? false)))
         
 (defn integraatioloki []
-  (komp/luo
+  (let [lopeta-paivitys! (aloita-tapahtumien-paivitys!)]
+    (komp/luo
    
-   (komp/lippu tiedot/nakymassa?)
-   {:component-did-mount (fn [this] (aloita-tapahtumien-paivitys))}
+     (komp/lippu tiedot/nakymassa?)
+     {:component-will-unmount
+      (fn [this]
+        (lopeta-paivitys!))}
    
     (fn []
       [:div
-       [tapahtumien-paanakyma]])))
+       [tapahtumien-paanakyma]]))))
 
 
