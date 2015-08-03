@@ -76,8 +76,8 @@
         (into []
               tapahtuma-xf
               (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                    jarjestelma integraatio
-                                                                    
+                                                                    (if jarjestelma true false) jarjestelma
+                                                                    (if integraatio true false) integraatio
                                                                     (konversio/sql-date alkaen)
                                                                     (konversio/sql-date paattyen)))]
     (log/debug "Tapahtumat:" tapahtumat)

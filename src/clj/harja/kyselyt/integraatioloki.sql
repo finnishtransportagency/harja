@@ -60,14 +60,13 @@ FROM integraatio;
 -- name: hae-jarjestelman-integraatiotapahtumat-aikavalilla
 -- Hakee annetun järjestelmän integraatiotapahtumat annetulla aikavälillä
 SELECT *
-FROM integraatiotapahtuma
-WHERE integraatio IN
-      (SELECT id
-       FROM integraatio
-       WHERE jarjestelma ILIKE :jarjestelma AND
-             nimi ILIKE :integraatio) AND
-      alkanut >= :alkaen AND
-      alkanut <= :paattyen;
+  FROM integraatiotapahtuma
+ WHERE integraatio IN
+       (SELECT id
+         FROM integraatio
+        WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
+	  AND (:integraatio_annettu = false OR nimi ILIKE :integraatio))
+   AND alkanut >= :alkaen AND alkanut <= :paattyen;
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
