@@ -21,7 +21,10 @@
                  {:id 3, :jutut [], :hommat []}]
 
         [only-in-a only-in-b in-both] (diff
-                                        (harja.kyselyt.konversio/sarakkeet-vektoriin mankeloitava {:juttu :jutut :homma :hommat})
+                                        (harja.kyselyt.konversio/sarakkeet-vektoriin mankeloitava
+                                                                                     {:juttu :jutut :homma :hommat})
                                         haluttu)]
 
-    (is (and (nil? only-in-a) (nil? only-in-b) (= (count in-both) (count haluttu))))))
+    (is (nil? only-in-a))
+    (is (nil? only-in-b))
+    (is (= (count in-both) (count haluttu)))))
