@@ -133,17 +133,17 @@
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
 
+  (log/debug "Tallennetaan korjaavatoimenpide ("id") turvallisuuspoikkeamalle " tp-id ".")
   ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
     annettu turvallisuuspoikkeaman id.")
 
-  (if id
-    (do (q/paivita-korjaava-toimenpide<! db kuvaus suoritettu vastaavahenkilo id tp-id))
+  (if-not (or (nil? id) (neg? id))
+    (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo id tp-id)
 
-    (:id (q/luo-korjaava-toimenpide<! db tp-id kuvaus suoritettu vastaavahenkilo)))
-  )
+    (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user
