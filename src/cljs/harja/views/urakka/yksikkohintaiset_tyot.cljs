@@ -128,17 +128,17 @@
                                          (filter (fn [tp]
                                                    (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
 
-                    (ryhmittele-tehtavat
-                     @toimenpiteet-ja-tehtavat
-                     (vec (concat (mapcat second tehtavien-rivit)
-                                  tyhjat-tyot)))))
+                    (sort-by :tehtavan_nimi
+                             (ryhmittele-tehtavat
+                               @toimenpiteet-ja-tehtavat
+                               (vec (concat (mapcat second tehtavien-rivit)
+                                            tyhjat-tyot))))))
         
         kaikkien-hoitokausien-kustannukset
         (reaction (transduce (comp (mapcat second)
                                    (map #(* (:maara %) (:yksikkohinta %))))
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))]
-
 
     (hae-urakan-tiedot ur)
     (komp/luo
