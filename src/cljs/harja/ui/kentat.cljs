@@ -132,7 +132,9 @@
       (when (= koko-rivit :auto)
         {:component-did-update
          (fn [this _]
-           (let [n (r/dom-node this)]
+           (let [n (-> this r/dom-node
+                       (.getElementsByTagName "textarea")
+                       (aget 0))]
              (let [erotus (- (.-scrollHeight n) (.-clientHeight n))]
                (when (> erotus 0)
                  (swap! rivit + (/ erotus 19))))))})
