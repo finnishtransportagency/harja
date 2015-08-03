@@ -23,7 +23,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn paivita-tai-luo-uusi-paivystys [db urakka-id kirjaaja {:keys [alku loppu]} paivystaja-id]
+(defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
       (log/debug "Päivitetään päivystäjään liittyvän päivystyksen tiedot.")
@@ -32,7 +32,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
       (log/debug "Päivystäjällä ei ole päivystystä. Luodaan uusi päivystys.")
       (yhteyshenkilot/luo-paivystys<! db (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu) urakka-id paivystaja-id))))
 
-(defn paivita-tai-luo-uusi-paivystaja [db urakka-id kirjaaja {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
+(defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
     (do
       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
@@ -45,8 +45,8 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
     (doseq [paivystys (:paivystykset data)]
-      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db urakka-id kirjaaja (get-in paivystys [:paivystys :paivystaja]))]
-        (paivita-tai-luo-uusi-paivystys db urakka-id kirjaaja (:paivystys paivystys) paivystaja-id)))))
+      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
+        (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -62,7 +62,8 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
       http :lisaa-paivystajatiedot
       (POST "/api/urakat/:id/paivystajatiedot" request
         (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request skeemat/+paivystajatietojen-kirjaus+ skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja db] (kirjaa-paivystajatiedot db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db]
+                           (kirjaa-paivystajatiedot db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-paivystajatiedot)

@@ -141,7 +141,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-; FIXME Toimii jos ajetaan kaikki testit, mutta yksittäin ajettuna palauttaa nillin?
+; FIXME Tapahtuu virhe: pistokokeelle ei ole casea.
 #_(deftest hae-tarkastus []
   (let [urakka-id (hae-oulun-alueurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
