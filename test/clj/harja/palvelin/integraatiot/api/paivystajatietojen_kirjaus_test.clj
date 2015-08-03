@@ -55,8 +55,13 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn hae-vapaa-yhteyshenkilo-ulkoinen-id []
+  (let [id (rand-int 10000)
+        vastaus (q (str "SELECT * FROM yhteyshenkilo WHERE ulkoinen_id = '" id "';"))]
+    (if (empty? vastaus) id (recur))))
+
 (deftest tallenna-paivystajatiedot
-  (let [ulkoinen-id (rand-int 10000)
+  (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
                                                (-> "test/resurssit/api/paivystajatiedot.json"
                                                    slurp
