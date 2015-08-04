@@ -496,10 +496,6 @@ Optiot on mappi optioita:
                muokataan (not (nil? @muokatut))]
            [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
             [:div.panel-heading
-             [:h6.panel-title otsikko
-
-              ]
-
              (if-not muokataan
                [:span.pull-right
                 (when tallenna
@@ -550,6 +546,7 @@ Optiot on mappi optioita:
                                 nil)}
                    (ikonit/ban-circle) " Peruuta"])
                 ])
+             [:h6.panel-title otsikko]
              ]
             [:div.panel-body
              (if (nil? tiedot)

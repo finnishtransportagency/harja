@@ -22,12 +22,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 	// pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
 	// tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
 	.panel-heading {
+		h6 {
+		  display: inline;
+		}
 		// anna padding top ja bottom tulla BS:stä
 		padding-left: 5px;
 		padding-right: 5px;
 		// Näytetään panel-headerin span samalla rivillä itse otsikon h3 kanssa (ks. dropdown panel kontrollit)
 		span {
-			margin-top: -30px;
 			font-size: 200%;
 		}
 		button {
