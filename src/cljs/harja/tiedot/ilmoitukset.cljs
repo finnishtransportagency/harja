@@ -38,7 +38,7 @@
     :alue {:type        :circle
            :radius      (if (= (:id %) (:id @valittu-ilmoitus)) 10000 5000)
            :coordinates (:sijainti %)
-           :fill        (if (= (:id %) (:id @valittu-ilmoitus)) {:color "green"} {:color "blue"}) ;;fixme väri ei toimi?
+           :color        (if (= (:id %) (:id @valittu-ilmoitus)) "green" "blue") ;;fixme väri ei toimi?
            :stroke      {:color "black" :width 10}}))
 
 (defonce ilmoitusta-klikattu

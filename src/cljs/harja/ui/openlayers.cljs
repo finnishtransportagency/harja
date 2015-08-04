@@ -305,7 +305,7 @@
 
 (defmulti luo-feature :type)
 
-(defn- aseta-tyylit [feature {:keys [color fill stroke marker] :as geom}]
+(defn- aseta-tyylit [feature {:keys [color stroke marker] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
                 #js {:fill (when fill (ol.style.Fill. #js {:color (or color "red")
