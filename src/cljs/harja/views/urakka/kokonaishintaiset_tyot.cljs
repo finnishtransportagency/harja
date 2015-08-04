@@ -137,14 +137,21 @@
         tyorivit (reaction (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
                                                              @valitun-toimenpiteen-ja-hoitokauden-tyot))
                                  tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
-                                 tyhjat-tyot (keep #(luo-tyhja-tyo (:tyyppi @urakka)
-                                                                   (:tpi_id @u/valittu-toimenpideinstanssi)
-                                                                   @u/valittu-hoitokausi
-                                                                   %
-                                                                   (first @u/valittu-sopimusnumero))
-                                                  tyhjat-kkt)]
+                                 [hoitokauden-alku hoitokauden-loppu] @u/valittu-hoitokausi
+                                 tyhjat-tyot (when hoitokauden-alku
+                                               (keep #(luo-tyhja-tyo (:tyyppi @urakka)
+                                                                     (:tpi_id @u/valittu-toimenpideinstanssi)
+                                                                     @u/valittu-hoitokausi
+                                                                     %
+                                                                     (first @u/valittu-sopimusnumero))
+                                                     tyhjat-kkt))]
                              (vec (sort-by (juxt :vuosi :kuukausi)
-                                           (concat @valitun-toimenpiteen-ja-hoitokauden-tyot tyhjat-tyot)))))
+                                           (concat @valitun-toimenpiteen-ja-hoitokauden-tyot
+                                                   ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                                                   (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                                          hoitokauden-alku hoitokauden-loppu)
+                                                                
+                                                           tyhjat-tyot))))))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
 
