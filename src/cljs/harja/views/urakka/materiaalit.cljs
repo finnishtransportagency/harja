@@ -3,7 +3,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.yleiset :refer [kuuntelija raksiboksi] :refer-macros [deftk]]
             [harja.tiedot.urakka.materiaalit :as t]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
@@ -248,6 +248,7 @@
                                       rivit (if @tuleville?
                                               (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
                                               rivit)
+                                      _ (logt rivit)
                                       uudet-materiaalit (<! (t/tallenna (:id ur)
                                                                         (first @u/valittu-sopimusnumero)
                                                                         rivit))]

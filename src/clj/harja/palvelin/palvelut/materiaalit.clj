@@ -64,9 +64,9 @@
     tulos))
 
   
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit]}]
+(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit] :as tiedot}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
-  
+  (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
     (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
           vanhat-materiaalit (ryhmittele
@@ -103,6 +103,7 @@
           ;; Jos materiaali on kannassa, päivitetään sen määrä tarvittaessa
           ;; Jos materiaali ei ole kannassa, syötetään se uutena
           (doseq [materiaali materiaalit
+                  :when (not (:poistettu materiaali))
                   :let [avain (materiaali-avain materiaali)]]
             (if-let [materiaali-kannassa (materiaalit-kannassa avain)]
               ;; Materiaali on jo kannassa, päivitä, jos muuttunut

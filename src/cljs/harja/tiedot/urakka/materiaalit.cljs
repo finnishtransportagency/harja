@@ -56,5 +56,6 @@
                      (<! (k/post! :tallenna-urakan-materiaalit
                                   {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
-                                   :materiaalit (filter #(not (nil? (:maara %))) materiaalit)})))))
+                                   :materiaalit (filter #(or (:pohjavesialue %)
+                                                             (not (nil? (:maara %)))) materiaalit)})))))
     ch))
