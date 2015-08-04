@@ -92,7 +92,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot uusi))
-         :voi-muokata? (not= :lukittu (:tila @lomakedata))}
+         :voi-muokata? (muokattava?)}
         [{:otsikko     "Käsittelyn pvm"
           :nimi        :kasittelyaika
           :tyyppi      :pvm-aika
@@ -121,8 +121,7 @@
             :tyyppi      :text
             :koko        [80 4]
             :leveys-col  6
-            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]
-            :muokattava? muokattava?})]
+            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot]])))
 
 (defn tallennus
