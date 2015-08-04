@@ -128,7 +128,7 @@
                       2
                       koko-rivit))
         pituus-max (or pituus-max 256)
-        muuta! (fn [e]
+        muuta! (fn [data e]
                  ;; alla pientä workaroundia koska selaimen max-length -ominaisuus ei tue rivinvaihtoja
                  (let [teksti (-> e .-target .-value)]
                    ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
@@ -149,7 +149,7 @@
       (fn [{:keys [nimi koko on-focus lomake?]} data]
         [:span
          [:textarea {:value       @data
-                     :on-change   #(muuta! %)
+                     :on-change   #(muuta! data %)
                      :on-focus    on-focus
                      :cols        (or koko-sarakkeet 80)
                      :rows        @rivit
