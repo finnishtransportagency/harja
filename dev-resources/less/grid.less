@@ -194,19 +194,25 @@ tr.otsikko {
   color: @valkoinen;
   
 }
-.kok-hint-muokkaa-footer {
-	.raksiboksi {
-		width: 305px;
+.raksiboksi {
+	background-color: @harmaa11;
+	border: 1px solid @harmaa5;
+	margin: 10px 0;
+	width: 270px;
+	.input-group-addon {
+		background-color: @harmaa11;
+		border: none;
 	}
-	> * {
-		display: inline-block;
-	}
+}
+> * {
+	display: inline-block;
 }
 .raksiboksi-teksti {
 	color: @harmaa1;
+	line-height: 34px;
+	padding: 0 2px;
 }
 .raksiboksin-info {
-	padding: 2px 0 2px 40px;
 	.glyphicon-warning-sign {
 		color: orange;
 	}

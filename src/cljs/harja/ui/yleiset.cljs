@@ -136,7 +136,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:input {:type      "checkbox"
                 :checked   (if checked "checked" "")
                 :on-change #(toiminto-fn %)}]]
-      [:span.raksiboksi-teksti.form-control {:on-click #(toiminto-fn %)} teksti]]
+      [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
      (when nayta-infoteksti?
        info-teksti)]))
 
