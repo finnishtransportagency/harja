@@ -116,19 +116,16 @@
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
                      :urakkaroolit ()})
 
-;; Tätä käytetään testikäyttäjien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
-(def +testikayttajia+ 8)
 
-;; Tätä käytetään testiindeksien määrän tarkistamiseen. Tätä pitää kasvattaa jos testidataan lisätään uusia.
-;; Nämä ovat indeksivuosi-pareja, esim. MAKU 2005 vuonna 2014 olisi yksi entry, ja MAKU 2005 vuonna 2015 toinen.
-(def +testiindekseja+ 4)
-
-
+(def testikayttajien-lkm (atom nil))
 (def oulun-alueurakan-id (atom nil))
 (def oulun-alueurakan-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
 (def muhoksen-paallystysurakan-id (atom nil))
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
+
+(defn hae-testikayttajat []
+  (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
 (defn hae-oulun-alueurakan-id []
   (ffirst (q (str "SELECT id
@@ -160,6 +157,7 @@
                            (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null)"))))
 
 (defn urakkatieto-fixture [testit]
+  (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))

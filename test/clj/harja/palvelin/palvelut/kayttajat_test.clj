@@ -21,9 +21,9 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-
-  
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once (compose-fixtures
+                      jarjestelma-fixture
+                      urakkatieto-fixture))
 
 (deftest tavallinen-kayttaja-ei-nae-mitaan []
   (let [[lkm kayttajat] (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -37,8 +37,8 @@
   (let [[lkm kayttajat] (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-kayttajat +kayttaja-jvh+
                                         ["" 0 10])]
-    (is (= lkm +testikayttajia+))
-    (is (= (count kayttajat) +testikayttajia+))))
+    (is (= lkm @testikayttajien-lkm))
+    (is (= (count kayttajat) @testikayttajien-lkm))))
 
                                        
   
