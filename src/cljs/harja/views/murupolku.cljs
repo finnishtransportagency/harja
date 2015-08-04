@@ -57,7 +57,7 @@
                                                                                  (if (= v :hallintayksikko)
                                                                                    nil
                                                                                    :hallintayksikko)))}
-             [:span.caret]]
+             [:span.livicon-chevron-down]]
          
             ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
             [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
@@ -74,7 +74,7 @@
                                                                                  (if (= v :urakka)
                                                                                    nil
                                                                                    :urakka)))}
-             [:span.caret]]
+             [:span.livicon-chevron-down]]
          
             ;; Alasvetovalikko urakan nopeaa vaihtamista varten
             [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
@@ -89,28 +89,26 @@
       
          [:span.pull-right.murupolku-suotimet
           [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
-           [livi-pudotusvalikko {:valinta urakoitsija
-                             :format-fn #(if % (:nimi %) "Kaikki")
-                             :valitse-fn nav/valitse-urakoitsija!
-                             :class "alasveto-urakoitsija"
-                             :disabled (boolean @nav/valittu-urakka)}
+           [livi-pudotusvalikko {:valinta    urakoitsija
+                                 :format-fn  #(if % (:nimi %) "Kaikki")
+                                 :valitse-fn nav/valitse-urakoitsija!
+                                 :class      (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
+                                 :disabled   (boolean @nav/valittu-urakka)}
             (vec (conj (into [] (case (:arvo urakkatyyppi)
-                                 :hoito @urakoitsijat/urakoitsijat-hoito
-                                 :paallystys @urakoitsijat/urakoitsijat-paallystys
-                                 :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
-                                 :valaistus @urakoitsijat/urakoitsijat-valaistus
+                                  :hoito @urakoitsijat/urakoitsijat-hoito
+                                  :paallystys @urakoitsijat/urakoitsijat-paallystys
+                                  :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
+                                  :valaistus @urakoitsijat/urakoitsijat-valaistus
 
-                                 @urakoitsijat/urakoitsijat-hoito) ;;defaulttina hoito
-                               ) nil))
-            ]]
+                                  @urakoitsijat/urakoitsijat-hoito)) ;;defaulttina hoito
+                       nil))]]
           [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakkatyyppi"]
            [livi-pudotusvalikko {:valinta urakkatyyppi
-                             :format-fn #(if % (:nimi %) "Kaikki")
-                             :valitse-fn nav/vaihda-urakkatyyppi!
-                             :class "alasveto-urakkatyyppi"
-                             :disabled (boolean @nav/valittu-urakka)}
-            nav/+urakkatyypit+
-            ]]]]]))
+                                 :format-fn #(if % (:nimi %) "Kaikki")
+                                 :valitse-fn nav/vaihda-urakkatyyppi!
+                                 :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
+                                 :disabled (boolean @nav/valittu-urakka)}
+            nav/+urakkatyypit+]]]]]))
 
    ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]

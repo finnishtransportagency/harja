@@ -215,7 +215,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (reset! auki false)))) nil))}
 
          [:div.valittu (format-fn valinta)]
-         [:span.caret]]
+         [:span.livicon-chevron-down]]
         [:ul.dropdown-menu.livi-alasvetolista
          (doall
           (for [vaihtoehto vaihtoehdot]
