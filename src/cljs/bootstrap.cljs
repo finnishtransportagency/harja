@@ -36,14 +36,20 @@ The following keys are supported in the configuration:
 (defn navbar
   "A Bootstrap navbar component"
   [options header & items]
-  (let [collapse-state (atom "collapse")]
+  (let [collapse-state (atom "collapse.in")
+        toggle! #(swap! collapse-state
+                        (fn [s]
+                          (if (= s "collapse")
+                            "collapse.in"
+                            "collapse")))]
     (fn [options header & items]
       [:nav.navbar.navbar-default {:role "navigation"}
        [:div.container-fluid
 
         ;; Brand and toggle get grouped for better mobile display 
         [:div.navbar-header
-         [:button.navbar-toggle.collapsed {:type "button"}  ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+         [:button.navbar-toggle.collapsed {:type "button"
+                                           :on-click toggle!}  ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
           [:span.sr-only "Toggle navigation"]
           [:span.icon-bar]
           [:span.icon-bar]
