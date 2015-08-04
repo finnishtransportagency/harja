@@ -112,9 +112,15 @@ Optioissa voi olla seuraavat avaimet:
         nykyinen-fokus (atom nil)
         aseta-fokus! #(reset! nykyinen-fokus %)
         paivita-ulkoinen-validointitila! (fn [virheet-atom virheet varoitukset-atom varoitukset]
-                                           (when virheet-atom
+                                           ;; Päivitetään ulkoinen validointitila vain, jos atomit on
+                                           ;; annettu ja uusi virhelista on muuttunut. Tämä estää
+                                           ;; ulkoisesti annetun atomin joka luetaan samassa komponentista
+                                           ;; aiheuttamast ikuista render-looppia.
+                                           (when (and virheet-atom
+                                                      (not= virheet @virheet-atom))
                                              (reset! virheet-atom virheet))
-                                           (when varoitukset-atom
+                                           (when (and varoitukset-atom
+                                                      (not= varoitukset @varoitukset-atom))
                                              (reset! varoitukset-atom varoitukset)))]
     
     (paivita-ulkoinen-validointitila! virheet (into {}
