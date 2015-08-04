@@ -36,9 +36,7 @@
 
     (fn []
       [:div
-       [:button.nappi-ensisijainen
-        {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama nil)}
-        "Palaa"]
+       [napit/takaisin "Palaa" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
        [lomake/lomake
         {:luokka   :horizontal
