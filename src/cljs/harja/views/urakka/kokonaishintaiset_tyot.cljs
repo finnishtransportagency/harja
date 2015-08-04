@@ -22,9 +22,8 @@
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [cljs-time.core :as t]
+            [cljs-time.core :as t])
 
-            )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
