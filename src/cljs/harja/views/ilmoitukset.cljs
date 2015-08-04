@@ -8,7 +8,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log]]
-            [harja.ui.napit :refer [palvelinkutsu-nappi]]
+            [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
 
             [harja.tiedot.urakka :as u]
@@ -108,9 +108,7 @@
 (defn ilmoituksen-tiedot
   []
   [:div
-   [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-ilmoitus nil)}
-    "Palaa"]
+   [napit/takaisin "Palaa" #(reset! tiedot/valittu-ilmoitus nil)]
    (urakan-sivulle-nappi)
    (when @tiedot/pollaus-id (pollauksen-merkki))
    [bs/panel {}
