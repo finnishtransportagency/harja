@@ -213,14 +213,6 @@
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
             :varoita [[:urakan-aikana]]}
            {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
-          (when (and
-                  (:id @muokattu)
-                  (not (nil? (:indeksin_nimi @muokattu))))
-            {:otsikko "Indeksikorjattuna" :nimi :indeksikorjattuna :tyyppi :string
-             :fmt #(if (nil? %)
-                    "Ei indeksiarvoa"
-                    (fmt/euro-opt %))
-             :leveys-col 3 :muokattava? (constantly false)})
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet +ei-sidota-indeksiin+)
