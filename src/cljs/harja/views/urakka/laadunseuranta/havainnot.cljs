@@ -17,6 +17,8 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]])
@@ -41,14 +43,19 @@
                     
 (defonce valittu-havainto-id (atom nil))
 
+(defn uusi-havainto []
+  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
+             
 (defonce valittu-havainto
   (reaction<! [id @valittu-havainto-id]
               (when id
                 (go (let [havainto (if (= :uusi id)
-                                     {}
+                                     (uusi-havainto)
                                      (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
                       (-> havainto
+
                           ;; Tarvitsemme urakan liitteen linkitystä varten
+                        
                           (assoc :urakka (:id @nav/valittu-urakka))
                           (assoc :sanktiot (into {}
                                                  (map (juxt :id identity) (:sanktiot havainto))))))))))

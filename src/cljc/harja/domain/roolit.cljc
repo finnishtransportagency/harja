@@ -164,27 +164,28 @@ rooleista."
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
-#?(:clj
-   (defn osapuoli
+(defn osapuoli
      "Päättelee kuka osapuoli on kyseessä roolien perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
      [kayttaja urakka-id]
-     (let [roolit (urakkaroolit kayttaja urakka-id)]
-       (cond
-         (some roolit [jarjestelmavastuuhenkilo
-                       tilaajan-kayttaja
-                       urakanvalvoja
-                       tilaajan-asiantuntija])
-         :tilaaja
+     (if (roolissa? kayttaja  jarjestelmavastuuhenkilo)
+       :tilaaja
+       (let [roolit (urakkaroolit kayttaja urakka-id)]
+         (cond
+           (some roolit [jarjestelmavastuuhenkilo
+                         tilaajan-kayttaja
+                         urakanvalvoja
+                         tilaajan-asiantuntija])
+           :tilaaja
 
-         (some roolit [tilaajan-laadunvalvontakonsultti])
-         :konsultti
+           (some roolit [tilaajan-laadunvalvontakonsultti])
+           :konsultti
 
-         (some roolit [urakoitsijan-paakayttaja
-                       urakoitsijan-urakan-vastuuhenkilo
-                       urakoitsijan-kayttaja
-                       urakoitsijan-laatuvastaava])
-         :urakoitsija))))
+           (some roolit [urakoitsijan-paakayttaja
+                         urakoitsijan-urakan-vastuuhenkilo
+                         urakoitsijan-kayttaja
+                         urakoitsijan-laatuvastaava])
+           :urakoitsija))))
 
 
 ;;VAIN FRONTILLA
