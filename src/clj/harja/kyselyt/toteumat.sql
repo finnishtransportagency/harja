@@ -272,7 +272,8 @@ SELECT
   indeksin_nimi,
   lisatieto,
   luotu,
-  luoja
+  luoja,
+  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma) AS indeksikorjattuna
 FROM erilliskustannus
 WHERE sopimus IN (SELECT id
                   FROM sopimus

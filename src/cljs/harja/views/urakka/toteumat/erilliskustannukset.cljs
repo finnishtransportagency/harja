@@ -15,10 +15,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.valinnat :as valinnat]
 
-            [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
@@ -214,7 +212,15 @@
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
             :varoita [[:urakan-aikana]]}
-           {:otsikko "Rahamäärä" :nimi :rahasumma :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
+           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
+          (when (and
+                  (:id @muokattu)
+                  (not (nil? (:indeksin_nimi @muokattu))))
+            {:otsikko "Indeksikorjattuna" :nimi :indeksikorjattuna :tyyppi :string
+             :fmt #(if (nil? %)
+                    "Ei indeksiarvoa"
+                    (fmt/euro-opt %))
+             :leveys-col 3 :muokattava? (constantly false)})
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet +ei-sidota-indeksiin+)
@@ -262,12 +268,23 @@
              :rivin-luokka  #(aseta-rivin-luokka %)}
             [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
              {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
-             {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "10%"}
+             {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
+             {:otsikko "Ind. korjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna
+              :hae     #(if (nil? (:indeksin_nimi %))
+                         "Ei sidottu indeksiin"
+                         (if (and
+                               (not (nil? (:indeksin_nimi %)))
+                               (nil? (:indeksikorjattuna %)))
+                           nil
+                           (fmt/euro-opt (:indeksikorjattuna %))))
+              :fmt     #(if (nil? %)
+                         [:span.ei-arvoa "Ei indeksiarvoa"]
+                         (str %))
+              :leveys  "13%"}
+             {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
              {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
               :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "45%" :pituus-max 1024}
-             {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
-             ]
+             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
             @valitut-kustannukset
             ]])))))
 
