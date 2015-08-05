@@ -14,7 +14,7 @@
 (defn gitlog []
   [:span {:style {:overflow "visible"}}
    [grid/grid
-   {:otsikko "Viimeisimmät muutokset" :voi-muokata? false}
+   {:otsikko "Viimeisimmät muutokset" :voi-muokata? false :tunniste :hash}
 
    [{:otsikko "Pvm ja aika" :nimi :date :hae #(tc/from-long (tc/to-long (:date %))) :fmt pvm/pvm-aika :tyyppi :string :leveys "15%"}
     {:otsikko "Tiiviste" :nimi :hash  :tyyppi :string :leveys "15%"}
