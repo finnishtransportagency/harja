@@ -166,7 +166,7 @@
                            (siltatarkastukset/->Siltatarkastukset)
                            [:http-palvelin :db])
       :lampotilat (component/using
-                    (lampotilat/->Lampotilat)
+                    (lampotilat/->Lampotilat (:lampotilat-url (:ilmatieteenlaitos asetukset)))
                     [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)

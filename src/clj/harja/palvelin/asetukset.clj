@@ -37,7 +37,10 @@
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :tloik) {:ilmoitusviestijono s/Str
-                            :ilmoituskuittausjono s/Str}})
+                            :ilmoituskuittausjono s/Str}
+
+   :ilmatieteenlaitos {:lampotilat-url s/Str}
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
