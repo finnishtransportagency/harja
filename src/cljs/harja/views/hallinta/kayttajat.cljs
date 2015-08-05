@@ -130,22 +130,28 @@
           (map (comp :id :urakka)))
         (vals urakat-map)))
 
-(defn valitse-kartalta [g]
-  (let [kuuntelija (atom nil)
-        avain (gensym "kayttajat")]
-    (r/create-class
-      {:component-will-unmount
-       (fn [this]
-         ;; poista kuuntelija
-         (when-let [kuuntelija @kuuntelija]
-           (log "poista kuuntelija")
-           (kuuntelija))
-         ;; poista kartan pakotus
-         (swap! nav/tarvitsen-karttaa
-                (fn [tk]
-                  (disj tk avain))))
+;; Lisätty [HAR-316] vuoksi
+;; Kun käyttäjää lisätään urakoitsijaksi urakkaan, on mahdollista lisätä urakka suoraan kartalta.
+;; Aiemmin kartta katosi, jos urakat-gridiin lisättiin uusi rivi, tai painettiin kumoa-nappia.
+;; Jotta tämä voidaan korjata, piti karttaan liittyviä arvoja kantaa mukana funktiosta funktioon,
+;; joten korjaus on vähän ruma. Mutta toimii.
+(defn poista-kartan-pakotus
+  [k a]
+  (log "poista kartan pakotus")
+  ;; poista kuuntelija
+  (when-let [kuuntelija @k]
+    (log "poista kuuntelija")
+    (kuuntelija))
+  ;; poista kartan pakotus
+  (swap! nav/tarvitsen-karttaa
+         (fn [tk]
+           (disj tk a))))
 
-       :component-will-update
+(defn valitse-kartalta [g k avain]
+  (let [kuuntelija k
+        avain avain]
+    (r/create-class
+      {:component-will-update
        (fn [this _]
          (if (not (@nav/tarvitsen-karttaa avain))
            (when-let [kk @kuuntelija]
@@ -186,7 +192,7 @@
                "Valitse kartalta"
                "Piilota kartta")]]))})))
 
-(defn urakkalista [virheet urakat-atom organisaatio]
+(defn urakkalista [virheet urakat-atom organisaatio kartan-kuuntelija kartan-avain]
   [:span
    [grid/muokkaus-grid
     {:otsikko        "Urakat"
@@ -204,7 +210,7 @@
                            (str "Lisää kaikki " (case (:tyyppi organisaatio)
                                                   :hallintayksikko "hallintayksikön"
                                                   :urakoitsija "urakoitsijan") " urakat")])
-                        [valitse-kartalta g]])
+                        [valitse-kartalta g kartan-kuuntelija kartan-avain]])
 
      :uusi-rivi      #(assoc % :luotu (pvm/nyt))
      :muutos         (fn [g]
@@ -245,9 +251,15 @@
    organisaatio])
 
 
-
+;; kartan-kuuntelija, kartan-avain lisätty [HAR-316] vuoksi
+;; Kun käyttäjää lisätään urakoitsijaksi urakkaan, on mahdollista lisätä urakka suoraan kartalta.
+;; Aiemmin kartta katosi, jos urakat-gridiin lisättiin uusi rivi, tai painettiin kumoa-nappia.
+;; Jotta tämä voidaan korjata, piti karttaan liittyviä arvoja kantaa mukana funktiosta funktioon,
+;; joten korjaus on vähän ruma. Mutta toimii.
 (defn kayttajatiedot [k]
-  (let [organisaatio (atom (:organisaatio k))
+  (let [kartan-kuuntelija (atom nil)
+        kartan-avain (gensym "kayttajat")
+        organisaatio (atom (:organisaatio k))
         tyyppi (reaction (case (:tyyppi @organisaatio)
                            (:hallintayksikko :liikennevirasto) :tilaaja
                            :urakoitsija :urakoitsija
@@ -366,7 +378,9 @@
 
 
     (r/create-class
-      {
+      {:component-will-unmount
+       (fn []
+         (poista-kartan-pakotus kartan-kuuntelija kartan-avain))
 
        :reagent-render
        (fn [k]
@@ -411,6 +425,12 @@
               [:label.col-sm-2.control-label
                "Roolit:"]
               [:div.col-sm-10.roolit
+
+               ;; kartan-kuuntelija, kartan-avain lisätty [HAR-316] vuoksi
+               ;; Kun käyttäjää lisätään urakoitsijaksi urakkaan, on mahdollista lisätä urakka suoraan kartalta.
+               ;; Aiemmin kartta katosi, jos urakat-gridiin lisättiin uusi rivi, tai painettiin kumoa-nappia.
+               ;; Jotta tämä voidaan korjata, piti karttaan liittyviä arvoja kantaa mukana funktiosta funktioon,
+               ;; joten korjaus on vähän ruma. Mutta toimii.
                (cond
                  (= tyyppi :tilaaja)
                  [:span
@@ -422,14 +442,14 @@
                    ^{:key "urakat"}
                    [urakkalista (r/wrap (@virheet "urakanvalvoja")
                                         #(swap! virheet assoc "urakanvalvoja" %))
-                    urakanvalvoja-urakat @organisaatio]]
+                    urakanvalvoja-urakat @organisaatio kartan-kuuntelija kartan-avain]]
 
                   [roolivalinta "tilaajan asiantuntija"]
                   [roolivalinta "tilaajan laadunvalvontakonsultti"
                    ^{:key "urakat"}
                    [urakkalista (r/wrap (@virheet "tilaajan laadunvalvontakonsultti")
                                         #(swap! virheet assoc "tilaajan laadunvalvontakonsultti" %))
-                    tilaajan-laadunvalvontakonsultti-urakat @organisaatio]]]
+                    tilaajan-laadunvalvontakonsultti-urakat @organisaatio kartan-kuuntelija kartan-avain]]]
 
                  (= tyyppi :urakoitsija)
                  ;; urakoitsijan roolit
@@ -439,18 +459,18 @@
                    ^{:key "urakat"}
                    [urakkalista (r/wrap (@virheet "urakoitsijan urakan vastuuhenkilo")
                                         #(swap! virheet assoc "urakoitsijan urakan vastuuhenkilo" %))
-                    urakan-vastuuhenkilo-urakat @organisaatio]]
+                    urakan-vastuuhenkilo-urakat @organisaatio kartan-kuuntelija kartan-avain]]
 
                   [roolivalinta "urakoitsijan kayttaja"
                    ^{:key "urakat"}
                    [urakkalista (r/wrap (@virheet "urakoitsijan kayttaja")
                                         #(swap! virheet assoc "urakoitsijan kayttaja" %))
-                    urakoitsijan-kayttaja-urakat @organisaatio]]
+                    urakoitsijan-kayttaja-urakat @organisaatio kartan-kuuntelija kartan-avain]]
                   [roolivalinta "urakoitsijan laatuvastaava"
                    ^{:key "urakat"}
                    [urakkalista (r/wrap (@virheet "urakoitsijan laatuvastaava")
                                         #(swap! virheet assoc "urakoitsijan laatuvastaava" %))
-                    urakoitsijan-laatuvastaava-urakat @organisaatio]]]
+                    urakoitsijan-laatuvastaava-urakat @organisaatio kartan-kuuntelija kartan-avain]]]
 
                  :default "Valitse organisaatio")]]
 
