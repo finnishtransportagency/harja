@@ -148,7 +148,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn- vetolaatikon-tila [ohjaus vetolaatikot id]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td.vetolaatikon-tila {:on-click (when vetolaatikko? #(avaa-tai-sulje-vetolaatikko! ohjaus id))}
+    [:td.vetolaatikon-tila.klikattava {:on-click (when vetolaatikko? #(avaa-tai-sulje-vetolaatikko! ohjaus id))}
      (when vetolaatikko?
        (if (vetolaatikko-auki? ohjaus id)
          (ikonit/chevron-down)
