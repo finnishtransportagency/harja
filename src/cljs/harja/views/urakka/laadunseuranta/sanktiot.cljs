@@ -31,9 +31,7 @@
                                    (> (count @muokattu) (count @tiedot/+uusi-sanktio+))))]
     (fn []
       [:div
-       [:button.nappi-ensisijainen
-        {:on-click #(reset! tiedot/valittu-sanktio nil)}
-        "Takaisin"]
+       [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
 
        (if (:id @muokattu)
          (if (:suorasanktio @muokattu)

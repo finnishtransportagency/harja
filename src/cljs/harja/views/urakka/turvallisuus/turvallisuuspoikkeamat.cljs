@@ -36,7 +36,7 @@
 
     (fn []
       [:div
-       [napit/takaisin "Takaisin" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
+       [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
        [lomake/lomake
         {:luokka   :horizontal
