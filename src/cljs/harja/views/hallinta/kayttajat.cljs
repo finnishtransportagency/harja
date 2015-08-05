@@ -17,7 +17,7 @@
             [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.kentat :refer [tee-kentta]]
-            
+
             [harja.loki :refer [log]]
             [harja.asiakas.tapahtumat :as t]
             [clojure.string :as str]
@@ -38,26 +38,26 @@
 
 (defonce kayttajalista (atom nil))
 (defonce kayttajalista-haku
-  (go (let [[lkm data] (<! (k/hae-kayttajat "" 0 500))]
-        (log "KAYTTAJALISTA TULI: " data)
-        (reset! kayttajalista data))))
+         (go (let [[lkm data] (<! (k/hae-kayttajat "" 0 500))]
+               (log "KAYTTAJALISTA TULI: " data)
+               (reset! kayttajalista data))))
 
-(defonce kayttajatyyppi-rajaus (atom nil)) ;; voi olla "L" tai "LX" jos halutaa
+(defonce kayttajatyyppi-rajaus (atom nil))                  ;; voi olla "L" tai "LX" jos halutaa
 
 (def kayttajalista-rajattu
   (reaction (let [rajaus @kayttajatyyppi-rajaus
                   kaikki-kayttajat @kayttajalista]
               (if rajaus
                 (filterv #(let [t (:kayttajanimi %)]
-                            (or (and (= rajaus "L")
-                                     (re-matches #"^L[^X].*$" t))
-                                (and (= rajaus "LX")
-                                     (re-matches #"^LX.*$" t))))
+                           (or (and (= rajaus "L")
+                                    (re-matches #"^L[^X].*$" t))
+                               (and (= rajaus "LX")
+                                    (re-matches #"^LX.*$" t))))
                          kaikki-kayttajat)
                 kaikki-kayttajat))))
-                                 
-                              
-                  
+
+
+
 (defn kayttajaluettelo
   "Käyttäjälistauskomponentti"
   []
@@ -66,59 +66,59 @@
     (fn []
       [:div.kayttajaluettelo
        (roolit/jos-rooli
-        #{roolit/jarjestelmavastuuhenkilo} ;; +hallintayksikön vastuuhenkilö
-        (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
-          [:span.nayta-kayttajat-valinta
-           "Näytä: "
-           [:input.kaikki-tunnukset {:type "radio" :on-change #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
-           [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} "kaikki"]
-           
-           [:input.vain-l-tunnukset {:type "radio" :on-change #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
-           [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} "vain L-tunnukset"]
-           
-           [:input.vain-lx-tunnukset {:type "radio" :on-change #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
-           [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} "vain LX-tunnukset"]]))
-        [grid/grid
-        {:otsikko "Käyttäjät"
-         :tyhja "Ei käyttäjiä."
+         #{roolit/jarjestelmavastuuhenkilo}                 ;; +hallintayksikön vastuuhenkilö
+         (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
+           [:span.nayta-kayttajat-valinta
+            "Näytä: "
+            [:input.kaikki-tunnukset {:type "radio" :on-change #(rajaa nil) :checked (nil? @kayttajatyyppi-rajaus)}]
+            [:label {:on-click #(rajaa nil) :for "kaikki-tunnukset"} "kaikki"]
+
+            [:input.vain-l-tunnukset {:type "radio" :on-change #(rajaa "L") :checked (= @kayttajatyyppi-rajaus "L")}]
+            [:label {:on-click #(rajaa "L") :for "vain-l-tunnukset"} "vain L-tunnukset"]
+
+            [:input.vain-lx-tunnukset {:type "radio" :on-change #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
+            [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} "vain LX-tunnukset"]]))
+       [grid/grid
+        {:otsikko       "Käyttäjät"
+         :tyhja         "Ei käyttäjiä."
          :rivi-klikattu #(reset! valittu-kayttaja %)
          }
-        
+
         [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
          {:otsikko "Livi-tunnus" :nimi :kayttajanimi :leveys "10%"}
 
          {:otsikko "Organisaatio" :nimi :org-nimi
-          :hae #(:nimi (:organisaatio %))
-          :leveys "25%"}
-         
+          :hae     #(:nimi (:organisaatio %))
+          :leveys  "25%"}
+
          {:otsikko "Roolit" :nimi :roolit
-          :fmt #(str/join ", " (map +rooli->kuvaus+ %))
-          :leveys "35%"}
+          :fmt     #(str/join ", " (map +rooli->kuvaus+ %))
+          :leveys  "35%"}
          ]
-        
+
         @kayttajalista-rajattu]
-       
+
        [:form.form-inline
         [:div.form-group
          [:label {:for "tuoKayttaja"} "Tuo käyttäjä Harjaan: "]
-         [:input#tuoKayttaja.form-control {:value @tunnus
-                                           :on-change #(reset! tunnus (-> % .-target .-value))
-                                           
+         [:input#tuoKayttaja.form-control {:value       @tunnus
+                                           :on-change   #(reset! tunnus (-> % .-target .-value))
+
                                            :placeholder "Livi-tunnus (LX123456)..."}]]
         [:button.nappi-toissijainen {:disabled (or @haku-menossa
-                                                (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
-                                  :on-click #(do (.preventDefault %)
-                                                 (reset! haku-menossa true)
-                                                 (go (let [tunnus @tunnus
-                                                           res (<! (k/hae-fim-kayttaja tunnus))]
-                                                       (log "TULI: " res)
-                                                       ;; onko valittu käyttäjä edelleen nil?
-                                                       (when (nil? @valittu-kayttaja)
-                                                         (if (map? res)
-                                                           (reset! valittu-kayttaja res)
-                                                           (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
-                                                                          :warning)))
-                                                       (reset! haku-menossa false))))}
+                                                   (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
+                                     :on-click #(do (.preventDefault %)
+                                                    (reset! haku-menossa true)
+                                                    (go (let [tunnus @tunnus
+                                                              res (<! (k/hae-fim-kayttaja tunnus))]
+                                                          (log "TULI: " res)
+                                                          ;; onko valittu käyttäjä edelleen nil?
+                                                          (when (nil? @valittu-kayttaja)
+                                                            (if (map? res)
+                                                              (reset! valittu-kayttaja res)
+                                                              (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
+                                                                             :warning)))
+                                                          (reset! haku-menossa false))))}
          (when @haku-menossa
            [ajax-loader])
          "Tuo käyttäjä"]]])))
@@ -126,125 +126,125 @@
 (defn valitut-urakat [urakat-map]
   (into #{}
         (comp
-         (filter #(not (:poistettu %)))
-         (map (comp :id :urakka)))
+          (filter #(not (:poistettu %)))
+          (map (comp :id :urakka)))
         (vals urakat-map)))
-              
+
 (defn valitse-kartalta [g]
   (let [kuuntelija (atom nil)
         avain (gensym "kayttajat")]
     (r/create-class
-     {:component-will-unmount
-      (fn [this]
-        ;; poista kuuntelija
-        (when-let [kuuntelija @kuuntelija]
-          (log "poista kuuntelija")
-          (kuuntelija))
-        ;; poista kartan pakotus
-        (swap! nav/tarvitsen-karttaa
-               (fn [tk]
-                 (disj tk avain))))
+      {:component-will-unmount
+       (fn [this]
+         ;; poista kuuntelija
+         (when-let [kuuntelija @kuuntelija]
+           (log "poista kuuntelija")
+           (kuuntelija))
+         ;; poista kartan pakotus
+         (swap! nav/tarvitsen-karttaa
+                (fn [tk]
+                  (disj tk avain))))
 
-      :component-will-update
-      (fn [this _]
-        (if (not (@nav/tarvitsen-karttaa avain))
-          (when-let [kk @kuuntelija]
-            (log "en tarvitse karttaa, mutta minulla on kuuntelija... poistetaan!")
-            (kk)
-            (reset! kuuntelija nil))))
-      
-      :reagent-render
-      (fn [g]
-        (let [tk @nav/tarvitsen-karttaa
-              kk @kuuntelija]
-         
-          [:span
-           [:button.btn.btn-default.pull-right
-            {:on-click #(do (.preventDefault %)
-                            (swap! nav/tarvitsen-karttaa
-                                 (fn [tk]
-                                   (if (tk avain)
-                                     (disj tk avain)
-                                     #{avain})))
+       :component-will-update
+       (fn [this _]
+         (if (not (@nav/tarvitsen-karttaa avain))
+           (when-let [kk @kuuntelija]
+             (log "en tarvitse karttaa, mutta minulla on kuuntelija... poistetaan!")
+             (kk)
+             (reset! kuuntelija nil))))
 
-                            (when-not (nil? @nav/valittu-urakka)
-                              ;; Ei voi olla urakan kontekstissa, jos valitaan urakoita
-                              (nav/valitse-urakka nil))
-                          
-                            (swap! kuuntelija
-                                   (fn [k]
-                                     (if k
-                                       (do (k) nil)
-                                       (t/kuuntele! :urakka-klikattu
-                                                    (fn [urakka]
-                                                      (let [urakat (valitut-urakat (grid/hae-muokkaustila g))]
-                                                        (log "jo valitut urakat: " urakat ", nyt ollaan valitsemassa: " (dissoc urakka :alue))
-                                                        (when-not (urakat (:id urakka))
-                                                          (grid/lisaa-rivi! g {:urakka urakka
-                                                                               :luotu (pvm/nyt)})))))))))}
-          (if (nil? @kuuntelija)
-            "Valitse kartalta"
-            "Piilota kartta")]]))})))
+       :reagent-render
+       (fn [g]
+         (let [tk @nav/tarvitsen-karttaa
+               kk @kuuntelija]
+
+           [:span
+            [:button.btn.btn-default.pull-right
+             {:on-click #(do (.preventDefault %)
+                             (swap! nav/tarvitsen-karttaa
+                                    (fn [tk]
+                                      (if (tk avain)
+                                        (disj tk avain)
+                                        #{avain})))
+
+                             (when-not (nil? @nav/valittu-urakka)
+                               ;; Ei voi olla urakan kontekstissa, jos valitaan urakoita
+                               (nav/valitse-urakka nil))
+
+                             (swap! kuuntelija
+                                    (fn [k]
+                                      (if k
+                                        (do (k) nil)
+                                        (t/kuuntele! :urakka-klikattu
+                                                     (fn [urakka]
+                                                       (let [urakat (valitut-urakat (grid/hae-muokkaustila g))]
+                                                         (log "jo valitut urakat: " urakat ", nyt ollaan valitsemassa: " (dissoc urakka :alue))
+                                                         (when-not (urakat (:id urakka))
+                                                           (grid/lisaa-rivi! g {:urakka urakka
+                                                                                :luotu  (pvm/nyt)})))))))))}
+             (if (nil? @kuuntelija)
+               "Valitse kartalta"
+               "Piilota kartta")]]))})))
 
 (defn urakkalista [virheet urakat-atom organisaatio]
   [:span
    [grid/muokkaus-grid
-    {:otsikko "Urakat"
-     :tyhja "Ei liitettyjä urakoita."
+    {:otsikko        "Urakat"
+     :tyhja          "Ei liitettyjä urakoita."
      :muokkaa-footer (fn [g]
                        [:div.urakkalista-napit
                         (when (#{:hallintayksikko :urakoitsija} (:tyyppi organisaatio))
                           [:button.nappi-toissijainen {:on-click #(do (.preventDefault %)
-                                                   (go (let [res (<! (k/hae-organisaation-urakat (:id organisaatio)))
-                                                             urakat (valitut-urakat @urakat-atom)]
-                                                         (log "TULI URAKOITA: " res)
-                                                         (doseq [u res]
-                                                           (when-not (urakat (:id u))
-                                                             (swap! urakat-atom assoc (:id u) {:urakka u :luotu (pvm/nyt)}))))))}
+                                                                      (go (let [res (<! (k/hae-organisaation-urakat (:id organisaatio)))
+                                                                                urakat (valitut-urakat @urakat-atom)]
+                                                                            (log "TULI URAKOITA: " res)
+                                                                            (doseq [u res]
+                                                                              (when-not (urakat (:id u))
+                                                                                (swap! urakat-atom assoc (:id u) {:urakka u :luotu (pvm/nyt)}))))))}
                            (str "Lisää kaikki " (case (:tyyppi organisaatio)
                                                   :hallintayksikko "hallintayksikön"
                                                   :urakoitsija "urakoitsijan") " urakat")])
                         [valitse-kartalta g]])
-                                               
-     :uusi-rivi #(assoc % :luotu (pvm/nyt))
-     :muutos (fn [g]
-               (log "VIRHEITÄ " (grid/hae-virheet g))
-               (reset! virheet (count (grid/hae-virheet g)))
-               (log "gridi muuttui: " g))
-     } 
+
+     :uusi-rivi      #(assoc % :luotu (pvm/nyt))
+     :muutos         (fn [g]
+                       (log "VIRHEITÄ " (grid/hae-virheet g))
+                       (reset! virheet (count (grid/hae-virheet g)))
+                       (log "gridi muuttui: " g))
+     }
     [{:otsikko "Liitetty urakka" :leveys "50%" :nimi :urakka
-      :tyyppi :haku
-      :nayta :nimi :fmt :nimi
-      :lahde (reify protokollat/Haku
-               ;; Tehdään oma haku urakkahaun pohjalta, joka ei näytä jo valittuja urakoita
-               (hae [_ teksti]
-                 (let [ch (chan)]
-                   (go (let [res (<! (protokollat/hae u/urakka-haku teksti))
-                             urakat (valitut-urakat @urakat-atom)]
-                         (log "JO OLEMASSA OLEVAT " urakat)
-                         (>! ch (into []
-                                      (filter #(not (urakat (:id %))))
-                                      res))))
-                   ch)))
+      :tyyppi  :haku
+      :nayta   :nimi :fmt :nimi
+      :lahde   (reify protokollat/Haku
+                 ;; Tehdään oma haku urakkahaun pohjalta, joka ei näytä jo valittuja urakoita
+                 (hae [_ teksti]
+                   (let [ch (chan)]
+                     (go (let [res (<! (protokollat/hae u/urakka-haku teksti))
+                               urakat (valitut-urakat @urakat-atom)]
+                           (log "JO OLEMASSA OLEVAT " urakat)
+                           (>! ch (into []
+                                        (filter #(not (urakat (:id %))))
+                                        res))))
+                     ch)))
       :validoi [[:ei-tyhja "Valitse urakka"]]}
      {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
      {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string
-      :fmt pvm/pvm :muokattava? (constantly false) }]
-    
+      :fmt     pvm/pvm :muokattava? (constantly false)}]
+
     urakat-atom]])
 
 (defn organisaatiovalinta
   "Komponentti organisaation valitsemiseksi."
   [organisaatio]
   (log "ORG: " organisaatio)
-  [tee-kentta {:tyyppi :haku
-               :pituus 50
+  [tee-kentta {:tyyppi      :haku
+               :pituus      50
                :placeholder "Hae hallintayksikkö / urakoitsija..."
-               :nayta :nimi
-               :lahde k/organisaatio-haku}
-              organisaatio])
-                      
-               
+               :nayta       :nimi
+               :lahde       k/organisaatio-haku}
+   organisaatio])
+
+
 
 (defn kayttajatiedot [k]
   (let [organisaatio (atom (:organisaatio k))
@@ -252,7 +252,7 @@
                            (:hallintayksikko :liikennevirasto) :tilaaja
                            :urakoitsija :urakoitsija
                            nil))
-        
+
         roolit (atom (into #{} (:roolit k)))
         toggle-rooli! (fn [r]
                         (swap! roolit (fn [roolit]
@@ -263,25 +263,25 @@
                        (let [valittu (@roolit rooli)]
                          [:div.rooli
                           [:div.roolivalinta
-                           [:input {:type "checkbox" :checked valittu
+                           [:input {:type      "checkbox" :checked valittu
                                     :on-change #(toggle-rooli! rooli)
-                                    :name rooli}]
+                                    :name      rooli}]
                            " "
-                           [:label {:for rooli
+                           [:label {:for      rooli
                                     :on-click #(toggle-rooli! rooli)} (+rooli->kuvaus+ rooli)]]
                           [:div.rooli-lisavalinnat
                            ;; Piilotetaan tämä displayllä, ei poisteta kokonaan, koska halutaan säilyttää
                            ;; tila jos käyttäjä klikkaa roolin pois päältä ja takaisin.
                            {:style {:display (when-not (and valittu (not (empty? sisalto)))
                                                "none")}}
-                             sisalto]]))
+                           sisalto]]))
         tiedot (atom {})
 
         ;; tekee urakkaroolilistasta {<idx> <urakkarooli>} array-mapin, muokkausgridiä varten
         urakat-muokattava #(into {}
                                  (map (fn [urakkarooli]
                                         [(:id (:urakka urakkarooli)) urakkarooli]) %))
-        
+
         urakanvalvoja-urakat (atom (array-map))
         tilaajan-laadunvalvontakonsultti-urakat (atom (array-map))
         urakan-vastuuhenkilo-urakat (atom (array-map))
@@ -298,43 +298,43 @@
                                     :rooli rooli))
                                 (vals muokattavat)))
 
-        virheet (atom {}) ;; urakkalistan nimi => virheiden lkm
-        
+        virheet (atom {})                                   ;; urakkalistan nimi => virheiden lkm
+
         tallennus-menossa (atom false)
         tallenna! (fn []
                     (reset! tallennus-menossa true)
                     (log "TALLENNETAAN KÄYTTÄJÄÄ")
-                    (go 
+                    (go
                       (let [uudet-tiedot
                             (<! (k/tallenna-kayttajan-tiedot!
-                                 k
-                                 @organisaatio
-                                 {:roolit @roolit
-                                  :urakka-roolit
-                                  (into []
-                                        (concat
-                                         (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
-                                         (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")
-                                         (urakat-tallennus @urakan-vastuuhenkilo-urakat "urakoitsijan urakan vastuuhenkilo")
-                                         (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
-                                         (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
-                                  }))]
+                                  k
+                                  @organisaatio
+                                  {:roolit @roolit
+                                   :urakka-roolit
+                                           (into []
+                                                 (concat
+                                                   (urakat-tallennus @urakanvalvoja-urakat "urakanvalvoja")
+                                                   (urakat-tallennus @tilaajan-laadunvalvontakonsultti-urakat "tilaajan laadunvalvontakonsultti")
+                                                   (urakat-tallennus @urakan-vastuuhenkilo-urakat "urakoitsijan urakan vastuuhenkilo")
+                                                   (urakat-tallennus @urakoitsijan-kayttaja-urakat "urakoitsijan kayttaja")
+                                                   (urakat-tallennus @urakoitsijan-laatuvastaava-urakat "urakoitsijan laatuvastaava")))
+                                   }))]
                         (reset! valittu-kayttaja nil)
                         (swap! kayttajalista
                                (fn [kl]
                                  (if (some #(= (:id %) (:id uudet-tiedot)) kl)
                                    ;; käyttäjä on jo, päivitetään se
                                    (mapv #(if (= (:id %) (:id k))
-                                            ;; päivitetään käyttäjän roolit näkymään
-                                            (assoc % :roolit (:roolit uudet-tiedot))
-                                            %) kl)
+                                           ;; päivitetään käyttäjän roolit näkymään
+                                           (assoc % :roolit (:roolit uudet-tiedot))
+                                           %) kl)
                                    ;; uusi käyttäjä lisätään listaan
                                    (conj kl uudet-tiedot))))
                         (viesti/nayta! "Käyttäjä tallennettu." :success)
                         (reset! tallennus-menossa false))))
 
         poista! (fn []
-                  (go 
+                  (go
                     (if (<! (k/poista-kayttaja! (:id k)))
                       (do (log "poistettiin")
                           (reset! valittu-kayttaja nil)
@@ -342,12 +342,12 @@
                                  (fn [kl]
                                    (filterv #(not= (:id %) (:id k)) kl)))
                           (viesti/nayta! [:span "Käyttäjän " [:b (:etunimi k) " " (:sukunimi k)] " käyttöoikeus poistettu."]))
-                      (viesti/nayta! "Käyttöoikeuden poisto epäonnistui!" :warning))))                  
+                      (viesti/nayta! "Käyttöoikeuden poisto epäonnistui!" :warning))))
         ]
 
     (go (reset! tiedot (<! (k/hae-kayttajan-tiedot (:id k)))))
     (run! (let [tiedot @tiedot]
-            
+
             (let [urakka-roolit (group-by :rooli (:urakka-roolit tiedot))]
               (log "URAKKA ROOLIT : " urakka-roolit)
               (reset! urakanvalvoja-urakat
@@ -361,10 +361,10 @@
                       (urakat-muokattava (or (get urakka-roolit "urakoitsijan kayttaja") [])))
               (reset! urakoitsijan-laatuvastaava-urakat
                       (urakat-muokattava (or (get urakka-roolit "urakoitsijan laatuvastaava") [])))
-              
+
               )))
-    
-                                   
+
+
     (r/create-class
       {
 
@@ -486,7 +486,7 @@
                                                                  [:div "Haluatko varmasti poistaa käyttäjän "
                                                                   [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]))))}
                  (ikonit/ban-circle) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
-              
+
 (defn kayttajat
   "Käyttäjähallinnan pääkomponentti"
   []
