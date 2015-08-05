@@ -312,6 +312,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         :disabled (let [h @havainto]
                                     (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
                                     (not (and (:aika h)
+                                              (:kohde h)
+                                              (:kuvaus h)
                                               (if (paatos? h)
                                                 (every? empty? (vals @sanktio-virheet))
                                                 true))))
@@ -350,6 +352,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                :validoi [[:ei-tyhja "Anna havainnon kohde"]]})
 
             {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text
+             :validoi [[:ei-tyhja "Kirjoita kuvaus"]]
              :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
             (when-not uusi?
