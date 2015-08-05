@@ -6,226 +6,240 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 */
 
 .virhe-tai-varoitus (@taustavari, @vari) {
-	background-color: @taustavari;
-	bottom: 5px;
-	color: @vari;
-	padding: 5px;
-	position: absolute;
-	width: 100%;
+  background-color: @taustavari;
+  bottom: 5px;
+  color: @vari;
+  padding: 5px;
+  position: absolute;
+  width: 100%;
 }
+
 @livi-taulukon-padding: 5px;
 .livi-taulukon-reunat {
-	border: 1px solid @harmaa7;
+  border: 1px solid @harmaa7;
 }
+
 .livi-grid {
-	color: @harmaa1;
-	// pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
-	// tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
-	.panel-heading {
-		h6 {
-		  display: inline;
-		}
-		// anna padding top ja bottom tulla BS:stä
-		padding-left: 5px;
-		padding-right: 5px;
-		// Näytetään panel-headerin span samalla rivillä itse otsikon h3 kanssa (ks. dropdown panel kontrollit)
-		span {
-			font-size: 200%;
-		}
-		button {
-			padding: 4px 12px;
-		}
-		.nappi-ensisijainen span,
-		.nappi-toissijainen span,
-		.nappi-myonteinen span,
-		.nappi-kielteinen span, {
-			font-size: @fontin-koko-leipateksti;
-		}
-	}
-    div.panel-body {
-	padding: 0;
+  color: @harmaa1;
+  // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
+  // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
+  .panel-heading {
+    h6 {
+      display: inline;
     }
-    table {
-	td {
-	    overflow: hidden;
-
-	    input, select {
-		width: 100%;
-		z-index: 10;
-	    }
-	    .kombo {
-		width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
-	    }
-	    .dropdown-menu {
-		z-index: 1000;
-		margin-top: 0;
-	    }
-
-		.varoitukset,
-		.virheet {
-			display: none;
-			position: relative;
-	    }
-		.varoitus {
-			.virhe-tai-varoitus(@varoitus, @valkoinen);
-		}
-		.virhe {
-			.virhe-tai-varoitus(@vaara, @valkoinen);
-		}
-	}
-
-	td:hover {
-	    // jotta pulldown valinnat näkyvät
-	    overflow: visible;
-
-	    .varoitukset,
-		.virheet {
-			display: block;
-		}
-	}
-
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: fixed;
+    // anna padding top ja bottom tulla BS:stä
+    padding-left: 5px;
+    padding-right: 5px;
+    // Näytetään panel-headerin span samalla rivillä itse otsikon h3 kanssa (ks. dropdown panel kontrollit)
+    span {
+      font-size: 200%;
     }
-	thead {
-		background-color: @harmaa9;
+    button {
+      padding: 4px 12px;
     }
-    table.grid tr.vetolaatikko-auki {
-       display: table-row;
-       > td {
-		 padding-top: 10px;
-         padding-bottom: 30px;
-		 padding-left: 15px;
-       }
+    .nappi-ensisijainen span,
+    .nappi-toissijainen span,
+    .nappi-myonteinen span,
+    .nappi-kielteinen span, {
+      font-size: @fontin-koko-leipateksti;
+    }
+  }
+  div.panel-body {
+    padding: 0;
+  }
+  table {
+    td {
+      overflow: hidden;
+
+      input, select {
+        width: 100%;
+        z-index: 10;
+      }
+      .kombo {
+        width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
+      }
+      .dropdown-menu {
+        z-index: 1000;
+        margin-top: 0;
+      }
+
+      .varoitukset,
+      .virheet {
+        display: none;
+        position: relative;
+      }
+      .varoitus {
+        .virhe-tai-varoitus(@varoitus, @valkoinen);
+      }
+      .virhe {
+        .virhe-tai-varoitus(@vaara, @valkoinen);
+      }
     }
 
-    // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
-    tr.vetolaatikko-kiinni {
-      display: none;
-    }
-    td.vetolaatikon-tila { text-align: center; }
-    tr, td, th {
-		padding: @livi-taulukon-padding;
-		.livi-taulukon-reunat;
+    td:hover {
+      // jotta pulldown valinnat näkyvät
+      overflow: visible;
+
+      .varoitukset,
+      .virheet {
+        display: block;
+      }
     }
 
-    th.muokataan {
-	width: 20px;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead {
+    background-color: @harmaa9;
+  }
+  table.grid tr.vetolaatikko-auki {
+    display: table-row;
+    > td {
+      padding-top: 10px;
+      padding-bottom: 30px;
+      padding-left: 15px;
     }
+  }
 
-	.sisaltaa-virheen {
-		.sisaltaa-virheen-tai-varoituksen(@vaara);
-	}
-	.sisaltaa-varoituksen {
-		.sisaltaa-virheen-tai-varoituksen(@varoitus);
-	}
-	    
-    
-    .muokkaustoiminnot {
-	button { margin-right: 1em; }
-	.ikoni {
-	    position: relative;
-	    top: 5px;
-	}
-    }
+  // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
+  tr.vetolaatikko-kiinni {
+    display: none;
+  }
+  td.vetolaatikon-tila {
+    cursor: pointer; // iPadin Safari vaatii tämän, jotta on-click eventti napataan oikein
+    text-align: center;
+  }
+  tr, td, th {
+    padding: @livi-taulukon-padding;
+    .livi-taulukon-reunat;
+  }
 
-    table th {
-	overflow: hidden;
-    }
+  th.muokataan {
+    width: 20px;
+  }
 
-    .panel-title {
-		color: @harmaa1;
-		font-size: @fontin-koko-leipateksti;
-    }
+  .sisaltaa-virheen {
+    .sisaltaa-virheen-tai-varoituksen(@vaara);
+  }
+  .sisaltaa-varoituksen {
+    .sisaltaa-virheen-tai-varoituksen(@varoitus);
+  }
 
-    button.grid-lisaa {
-	margin-right: 3em;
+  .muokkaustoiminnot {
+    button {
+      margin-right: 1em;
     }
+    .ikoni {
+      position: relative;
+      top: 5px;
+    }
+  }
 
-    td.toiminnot span {
-	display: inline-block;
-    }
+  table th {
+    overflow: hidden;
+  }
 
-    div.pvm {
-	position: relative;
-    }
-    .aikavalinta {
-	position: relative;
-	height: 0;
-	z-index: 1000;
-	background-color: #ffffff;
-	top: 100%;
-	left: 0;
-	float: left;
-	min-width: 160px;
-    }
+  .panel-title {
+    color: @harmaa1;
+    font-size: @fontin-koko-leipateksti;
+  }
 
-	tr.parillinen {
-		background-color: @harmaa11;
-	}
-    tr.pariton {
-		background-color: @harmaa10;
-    }
-    tr.klikattava:hover {
-	cursor: pointer;
-    	background-color: #D2CFCE;
-    }
-	.ei-arvoa {
-		color: @varoitus;
-	}
+  button.grid-lisaa {
+    margin-right: 3em;
+  }
 
-    tr.muokataan td {
-      vertical-align: top;
-    }
+  td.toiminnot span {
+    display: inline-block;
+  }
+
+  div.pvm {
+    position: relative;
+  }
+  .aikavalinta {
+    position: relative;
+    height: 0;
+    z-index: 1000;
+    background-color: #ffffff;
+    top: 100%;
+    left: 0;
+    float: left;
+    min-width: 160px;
+  }
+
+  tr.parillinen {
+    background-color: @harmaa11;
+  }
+  tr.pariton {
+    background-color: @harmaa10;
+  }
+  tr.klikattava:hover {
+    cursor: pointer;
+    background-color: #D2CFCE;
+  }
+  .ei-arvoa {
+    color: @varoitus;
+  }
+
+  tr.muokataan td {
+    vertical-align: top;
+  }
 }
+
 .muokkaustoiminnot .taulukossa-virheita {
-	font-size: 12px;
-	.glyphicon-warning-sign {
-		color: orange;
-	}
-	span {
-		font-size: 12px;
-		font-weight: bold;
-	}
+  font-size: 12px;
+  .glyphicon-warning-sign {
+    color: orange;
+  }
+  span {
+    font-size: 12px;
+    font-weight: bold;
+  }
 }
+
 .nappi-toissijainen.nappi-gridin-sisalla {
-	margin: 1px;
-	padding: 1px 4px;
+  margin: 1px;
+  padding: 1px 4px;
 }
+
 // Gridin väliotsikkotyyli
 tr.otsikko {
   background-color: @harmaa5;
   color: @valkoinen;
-  
+
 }
+
 .raksiboksi {
-	background-color: @harmaa11;
-	border: 1px solid @harmaa5;
-	margin: 10px 0;
-	width: 270px;
-	.input-group-addon {
-		background-color: @harmaa11;
-		border: none;
-	}
+  background-color: @harmaa11;
+  border: 1px solid @harmaa5;
+  margin: 10px 0;
+  width: 270px;
+  .input-group-addon {
+    background-color: @harmaa11;
+    border: none;
+  }
 }
+
 > * {
-	display: inline-block;
+  display: inline-block;
 }
+
 .raksiboksi-teksti {
-	color: @harmaa1;
-	line-height: 34px;
-	padding: 0 2px;
+  color: @harmaa1;
+  line-height: 34px;
+  padding: 0 2px;
 }
+
 .raksiboksin-info {
-	.glyphicon-warning-sign {
-		color: orange;
-	}
-	> span {
-		margin-left: 10px;
-	}
+  .glyphicon-warning-sign {
+    color: orange;
+  }
+  > span {
+    margin-left: 10px;
+  }
 }
+
 .kelluta-tayta-nappi {
-	height: 31px; //sama korkeus kuin alasvedolla ympärillä
-	z-index: 1000;
+  height: 31px; //sama korkeus kuin alasvedolla ympärillä
+  z-index: 1000;
 }
