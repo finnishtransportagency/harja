@@ -74,6 +74,10 @@
     viesti))
 
 
+(defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
+  (when-not (<= -55 data 55)
+    (or viesti "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")))
+  
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]
