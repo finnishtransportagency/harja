@@ -42,7 +42,7 @@
 
 (defn nayta!
   ([viesti] (nayta! viesti :success))
-  ([viesti luokka] (nayta! viesti :success 1500))
+  ([viesti luokka] (nayta! viesti luokka 1500))
   ([viesti luokka kesto]
     (reset! viesti-sisalto {:viesti viesti
                                     :luokka luokka
