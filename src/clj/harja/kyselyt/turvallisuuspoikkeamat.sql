@@ -28,6 +28,8 @@ SELECT
   kom.tekija        AS kommentti_tekija,
   kom.kommentti     AS kommentti_kommentti,
   kom.liite         AS kommentti_liite,
+  kom.luotu         AS kommentti_aika,
+  kom.luoja         AS kommentti_tekijanimi,
 
   l.id              AS liite_id,
   l.tyyppi          AS liite_tyyppi,
