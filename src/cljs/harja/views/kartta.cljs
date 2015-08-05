@@ -1,7 +1,7 @@
 (ns harja.views.kartta
   "Harjan kartta."
   (:require [reagent.core :refer [atom] :as reagent]
-            
+
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
@@ -16,7 +16,7 @@
 
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]))
-            
+
 
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
@@ -27,7 +27,7 @@
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))
 
-(defonce kartta-kuuntelija 
+(defonce kartta-kuuntelija
   (t/kuuntele! :hallintayksikkovalinta-poistettu
                #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
                     (reset! zoom-taso +koko-suomi-zoom-taso+))))
@@ -60,19 +60,19 @@
             @yleiset/ikkunan-koko
             (log "Päivitetään openlayers koko!")
             (openlayers/invalidate-size!))))
-  
+
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
     [:span.kartan-koko-kontrollit {:class (when (or (not (empty? @nav/tarvitsen-karttaa))
                                                     (= sivu :tilannekuva)) "hide")}
-     [:div.ikoni-pienenna {:class (when (= koko :S) "hide")
+     [:span.livicon-compress.kartta-kontrolli {:class (when (= koko :S) "hide")
                            :on-click #(nav/vaihda-kartan-koko! (case koko
                                                                  :S :S
                                                                  :M :S
                                                                  :L :M))}]
-     [:div.ikoni-suurenna {:class (case koko
+     [:span.livicon-expand.kartta-kontrolli {:class (case koko
                                     :L "hide"
                                     :M ""
                                     :S "kulmassa-kelluva"
@@ -90,7 +90,7 @@ joka kertoo karttakoordinaatit. Sisältö annetaan sisalto-hiccup muodossa ja se
 HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiverinen komponentti)"
   [sijainti sisalto-hiccup]
   (openlayers/show-popup! sijainti sisalto-hiccup))
-  
+
 
 (defn kartta-openlayers []
   (let [hals @hal/hallintayksikot
@@ -135,13 +135,13 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                (vec (concat [(assoc v-hal
                                     :valittu true)]
                             @nav/urakat-kartalla))
-                           
+
                ;; Valittu urakka, mitä näytetään?
                :default [(assoc @nav/valittu-urakka
                            :valittu true
                            :harja.ui.openlayers/fit-bounds true)])
               @tasot/geometriat)
-              
+
       :geometry-fn (fn [hy]
                      (when-let [alue (:alue hy)]
                        (when (map? alue)

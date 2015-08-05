@@ -2,93 +2,101 @@
 #kartta {
   // tämä tarvitaan ettei leaflet sekoa kartan kokovaihteluissa
   position: absolute;
-	.leaflet-top.leaflet-left {
-		z-index: 1; //ettei zoominapit peitä urakoitsija-pudotusvalikkoa
-	}
+  .leaflet-top.leaflet-left {
+    z-index: 1; //ettei zoominapit peitä urakoitsija-pudotusvalikkoa
+  }
 }
 
 .ikoni-kartta-ctrl {
-	background-color: #FFF;
-	display: inline-block;
-	height: 40px;
-	margin-right: 5px;
-	opacity: 0.7;
-	width: 40px;
-	&:hover {
-		background-color: #F4F4F4;
-		cursor: pointer;
-	}
+  background-color: #FFF;
+  display: inline-block;
+  height: 40px;
+  margin-right: 5px;
+  opacity: 0.7;
+  width: 40px;
+  &:hover {
+    background-color: #F4F4F4;
+    cursor: pointer;
+  }
 }
+
 .ikoni-pienenna {
-	.ikoni-kartta-ctrl;
-	background-image: url("../images/pienenna.svg");
-	margin-right: 5px;
+  .ikoni-kartta-ctrl;
+  background-image: url("../images/pienenna.svg");
+  margin-right: 5px;
 }
+
 .ikoni-suurenna {
-	.ikoni-kartta-ctrl;
-	background-image: url("../images/suurenna.svg");
+  .ikoni-kartta-ctrl;
+  background-image: url("../images/suurenna.svg");
 }
+
 .kartan-koko-kontrollit {
-	padding-right: 15px;
-	position: absolute;
-	right: 0;
-	top: 0;
-	z-index: 1; //kartan päällä > 0
-	button {
-		height: 39px;
-		width: 44px;
-	}
-	.otsikko {
-		bottom: 5px;
-		height: 39px;
-		position: relative;
-	}
-	.gi-2x {
-		font-size: 2em;
-		margin-top: 3px;
-	}
+  padding-right: 15px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1; //kartan päällä > 0
+  button {
+    height: 39px;
+    width: 44px;
+  }
+  .otsikko {
+    bottom: 5px;
+    height: 39px;
+    position: relative;
+  }
+  .gi-2x {
+    font-size: 2em;
+    margin-top: 3px;
+  }
+
+  .kartta-kontrolli {
+    font-size: 32px;
+  }
 }
+
 .kulma-kartta {
-    .nappi-avaa-kartta {
-		.glyphicon {
-			margin-left: 10px;
-		}
-		position: absolute;
-		right: 0;
-		top: 150px;
-	}
+  .nappi-avaa-kartta {
+    .glyphicon {
+      margin-left: 10px;
+    }
+    position: absolute;
+    right: 0;
+    top: 150px;
+  }
 }
 
 .piilota-kartta {
-	position: relative;
-	right: 0;
-	top: 0;
-	     #kartta {
-		display: none;
-	}
+  position: relative;
+  right: 0;
+  top: 0;
+  #kartta {
+    display: none;
+  }
 }
 
 .kartta-tooltip {
-    z-index: 10;
-    display: block;
-    position: absolute;
-    
-    box-shadow: 0 1px 7px rgba(0,0,0,0.4);
-    border-radius: 1px;
-    border: 1px solid #bbb;
-    background-color: #fff;
-    cursor: default;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
+  z-index: 10;
+  display: block;
+  position: absolute;
+
+  box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
+  border-radius: 1px;
+  border: 1px solid #bbb;
+  background-color: #fff;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 
   .pohjavesialue {
-     padding-left: 37px;
-     margin-right: 5px;
-     background-size: 32px 20px;
-     background-position: 0 0;
-     background-repeat: no-repeat;
-     background-image: url("../images/pohjavesialue.png");
-   }
+    padding-left: 37px;
+    margin-right: 5px;
+    background-size: 32px 20px;
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    background-image: url("../images/pohjavesialue.png");
+  }
 }
 
