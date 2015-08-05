@@ -19,24 +19,26 @@ SELECT
   t.tr_loppuosa,
   t.tyyppi,
 
-  k.id              AS korjaavatoimenpide_id,
-  k.kuvaus          AS korjaavatoimenpide_kuvaus,
-  k.suoritettu      AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo,
+  k.id                   AS korjaavatoimenpide_id,
+  k.kuvaus               AS korjaavatoimenpide_kuvaus,
+  k.suoritettu           AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo      AS korjaavatoimenpide_vastaavahenkilo,
 
-  kom.id            AS kommentti_id,
-  kom.tekija        AS kommentti_tekija,
-  kom.kommentti     AS kommentti_kommentti,
-  kom.liite         AS kommentti_liite,
-  kom.luotu         AS kommentti_aika,
-  kom.luoja         AS kommentti_tekijanimi,
+  kom.id                 AS kommentti_id,
+  kom.tekija             AS kommentti_tekija,
+  kom.kommentti          AS kommentti_kommentti,
+  kom.liite              AS kommentti_liite,
+  kom.luotu              AS kommentti_aika,
+  (SELECT CONCAT(etunimi, ' ', sukunimi)
+   FROM kayttaja
+   WHERE id = kom.luoja) AS kommentti_tekijanimi,
 
-  l.id              AS liite_id,
-  l.tyyppi          AS liite_tyyppi,
-  l.koko            AS liite_koko,
-  l.nimi            AS liite_nimi,
-  l.liite_oid       AS liite_oid,
-  l.pikkukuva       AS liite_pikkukuva
+  l.id                   AS liite_id,
+  l.tyyppi               AS liite_tyyppi,
+  l.koko                 AS liite_koko,
+  l.nimi                 AS liite_nimi,
+  l.liite_oid            AS liite_oid,
+  l.pikkukuva            AS liite_pikkukuva
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -87,7 +89,7 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi::turvallisuuspoikkeamatyyppi[],
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
   muokkaaja              = :kayttaja,
   muokattu               = NOW()
 WHERE id = :id;
@@ -99,12 +101,12 @@ WHERE id = :id;
 -- * kyselyä kutsutaan heti luonnin jälkeen
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti               = POINT(:x_koordinaatti, :y_koordinaatti),
-  tr_numero              = :numero,
-  tr_alkuetaisyys        = :aet,
-  tr_loppuetaisyys       = :let,
-  tr_alkuosa             = :aos,
-  tr_loppuosa            = :los
+  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti),
+  tr_numero        = :numero,
+  tr_alkuetaisyys  = :aet,
+  tr_loppuetaisyys = :let,
+  tr_alkuosa       = :aos,
+  tr_loppuosa      = :los
 WHERE id = :id;
 
 --name: luo-turvallisuuspoikkeama<!
@@ -115,4 +117,4 @@ INSERT INTO turvallisuuspoikkeama
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
-   :tyyppi::turvallisuuspoikkeamatyyppi[], :kayttaja, NOW());
+   :tyyppi :: turvallisuuspoikkeamatyyppi [], :kayttaja, NOW());
