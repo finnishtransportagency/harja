@@ -24,7 +24,7 @@
   (comment
     (k/post! :hae-yhteyshenkilotyypit nil))
   (let [ch (chan)]
-    (go (>! ch ["Aluevastaava" "Työmaapäällikkö" "Kunnossapitopäällikkö"
+    (go (>! ch ["Kunnossapitopäällikkö"
                 "Sillanvalvoja" "Kelikeskus" "Tieliikennekeskus"]))
     ch))
 

@@ -125,7 +125,6 @@
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta  :leveys "17%"
-        :valinta-arvo identity
         :valinta-nayta #(if (nil? %) "- valitse -" %)
         
         :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
@@ -148,8 +147,7 @@
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "22%"}]
-      @yhteyshenkilot
-      ] 
+      @yhteyshenkilot]
 
      
      [grid/grid
