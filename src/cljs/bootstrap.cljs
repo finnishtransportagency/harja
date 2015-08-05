@@ -54,7 +54,7 @@ The following keys are supported in the configuration:
           [:span.icon-bar]
           [:span.icon-bar]
           [:span.icon-bar]]
-         [:a.navbar-brand {:href "#"} header]]
+         [:a {:href "#"} header]]
 
         ;; Collect the nav links, forms, and other content for toggling
         (let [[left-items _ right-items] (partition-by #(= :right %) items)]
