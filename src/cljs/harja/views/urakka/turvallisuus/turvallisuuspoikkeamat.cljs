@@ -21,7 +21,7 @@
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}
-    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
+    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys "15%" :tyyppi :pvm}
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text}]
    toimenpiteet])
 
@@ -113,7 +113,7 @@
      {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
      {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
      {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
-      :hae (fn [rivi] (str (:sairaalavuorokaudet rivi)"+"(:sairauspoissaolopaivat rivi)))}
+      :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
      {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
       :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
     @tiedot/haetut-turvallisuuspoikkeamat
