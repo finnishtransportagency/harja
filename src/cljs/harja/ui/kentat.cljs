@@ -322,19 +322,6 @@
                                                        (reset! auki false))]])]]))))
 
 
-
-; ** 26.5.-15, Teemu K.***
-; Päivämääräkentissä on seuraavanlainen bugi:
-;  - Valitse kalenterista, tai kirjoita validi päivämäärä
-;  - Yritä muokata kirjoittamalla esimerkiksi kuukautta
-;  - Kentän arvo resetoituu välittömästi vanhaan arvoon, eli kenttää ei voi muokata enää käsin
-;
-; Bugiin törmättiin, kun :component-will-receive-props vaiheessa tehtävä swap! laitettiin palauttamaan
-; alkuperäinen teksti, jos päivämäärän parsiminen ei onnistu.
-;
-; Samalla aiheutui "virhe", jossa kenttään voi syöttää tauhkaa - tästä kuitenkin tulee käyttöliittymään
-; virheilmoitus, joten ainoa ongelma on, että yleensä Harjassa ei voi esim numerokenttiin syöttää aakkosia.
-
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys]} data]
@@ -349,12 +336,18 @@
         ;; picker auki?
         auki (atom false)
 
+        teksti-paivamaaraksi! (fn [data t]
+                                (reset! teksti t)
+                                (if (str/blank? t)
+                                  (reset! data nil))
+                                (when-not focus
+                                  (when-let [d (pvm/->pvm t)]
+                                   (reset! data d))))
+
         muuta! (fn [data t]
                  (reset! teksti t)
                  (if (str/blank? t)
-                   (reset! data nil)
-                   (if-let [d (pvm/->pvm t)]
-                     (reset! data d))))
+                   (reset! data nil)))
 
         sijainti (atom nil)]
     (komp/luo
@@ -391,14 +384,16 @@
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
                naytettava-pvm (if (nil? nykyinen-pvm)
                                 (pvm-tyhjana rivi)
-                                nykyinen-pvm)]
+                                ;; Näytettävä pvm on joko kirjoitettu teksti parsittuna pvm:ksi,
+                                ;; tai jos teksti ei ole pvm, näytetään joko tyhjä, tai viimeisin validi pvm
+                                (or (pvm/->pvm nykyinen-teksti) nykyinen-pvm))]
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
             [:input.pvm {:class     (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus  on-focus
-                         :on-blur   #(muuta! data (-> % .-target .-value))
-                         :on-change #(muuta! data (-> % .-target .-value))}]
+                         :on-change   #(muuta! data (-> % .-target .-value))
+                         :on-blur #(teksti-paivamaaraksi! data (-> % .-target .-value))}]
             (when @auki
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
