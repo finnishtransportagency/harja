@@ -33,7 +33,7 @@
       [:div
        [:button.nappi-ensisijainen
         {:on-click #(reset! tiedot/valittu-sanktio nil)}
-        "Palaa"]
+        "Takaisin"]
 
        (if (:id @muokattu)
          (if (:suorasanktio @muokattu)
