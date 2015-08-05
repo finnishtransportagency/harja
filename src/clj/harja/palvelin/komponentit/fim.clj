@@ -16,13 +16,13 @@
 
 (def +fim-elementit+
   "Mäppäys FIM elementeistä suomenkielisiin avaimiin ja mahdollisiin prosessointeihin"
-  {:ObjectID :tunniste
+  {:ObjectID    :tunniste
    :AccountName :kayttajatunnus
-   :FirstName :etunimi
-   :LastName :sukunimi
-   :Email :sahkoposti
+   :FirstName   :etunimi
+   :LastName    :sukunimi
+   :Email       :sahkoposti
    :MobilePhone [:puhelin #(str/replace % " " "")]
-   :Company :organisaatio})
+   :Company     :organisaatio})
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin käyttäjä mäppejä."
@@ -41,22 +41,25 @@
 (defn lue-xml [bytet]
   (xml-zip (parse (java.io.ByteArrayInputStream. bytet))))
 
-  
+
 (defn hae
   "Hakee FIM palvelusta käyttäjätunnuksella."
   [fim kayttajatunnus]
   (let [{:keys [status body error]} @(http/get (:url fim)
-                                               {:timeout 15000 ; 15 sekuntia
-                                                :as :byte-array
+                                               {:timeout      15000 ; 15 sekuntia
+                                                :as           :byte-array
                                                 :query-params {:filterproperty "AccountName"
-                                                               :filter kayttajatunnus
-                                                               :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"
+                                                               :filter         kayttajatunnus
+                                                               :fetch          "AccountName,FirstName,LastName,Email,MobilePhone,Company"
                                                                }})]
     (if error
       (do (log/error "FIM haku epäonnistui: " error)
           (throw (RuntimeException. "FIM haku epäonnistui: " error)))
-      (first (lue-fim-vastaus (lue-xml body))))))
-            
+      (if (and (<= 400 status) (> 600 status))
+        nil
+
+        (first (lue-fim-vastaus (lue-xml body)))))))
+
 
 (defrecord FIM [url]
   component/Lifecycle
