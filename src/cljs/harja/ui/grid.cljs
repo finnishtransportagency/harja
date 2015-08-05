@@ -258,7 +258,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                           (get rivi nimi))]
             (if fmt
               (fmt arvo)
-              [nayta-arvo skeema (vain-luku-atomina arvo)])))]))])
+              [nayta-arvo skeema (vain-luku-atomina arvo)])))]))
+   [:td.toiminnot]])
 
 (defn laske-sarakkeiden-leveys [skeema]
   (if (every? number? (map :leveys skeema))
@@ -557,9 +558,7 @@ Optiot on mappi optioita:
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
                     [:th {:width (or leveys "5%")} otsikko])
-                  (when muokataan
-                    [:th.toiminnot {:width "5%"} " "])
-                  [:th.toiminnot ""]]]
+                    [:th.toiminnot {:width "5%"} " "]]]
 
                 [:tbody
                  (if muokataan
@@ -778,8 +777,7 @@ Optiot on mappi optioita:
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
                   [:th {:width (or leveys "5%")} otsikko])
-                [:th.toiminnot {:width "5%"} " "]
-                [:th.toiminnot ""]]]
+                [:th.toiminnot {:width "5%"} " "]]]
 
               [:tbody
                (let [muokatut-atom muokatut
