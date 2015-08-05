@@ -95,21 +95,24 @@
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
 (defn hae-fim-kayttaja [db fim user tunnus]
-  (if-let [kayttaja (fim/hae fim tunnus)]
-    (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio kayttaja))))
-          olemassaoleva (some->> tunnus
-                                 (q/hae-kirjautumistiedot db)
-                                 first :id
-                                 (hae-kayttajan-tiedot db user))]
+  (if-let [tulos (fim/hae fim tunnus)]
+    (if-not (number? tulos) ;; Tulos on virhekoodi
+      (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
+           olemassaoleva (some->> tunnus
+                                  (q/hae-kirjautumistiedot db)
+                                  first :id
+                                  (hae-kayttajan-tiedot db user))]
 
-      (merge
-       olemassaoleva
-       (if org
-         ;; Liitetään olemassaoleva organisaatio käyttäjälle
-         (assoc kayttaja :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
-        
-         ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
-         (dissoc kayttaja :organisaatio))))
+       (merge
+         olemassaoleva
+         (if org
+           ;; Liitetään olemassaoleva organisaatio käyttäjälle
+           (assoc tulos :organisaatio (assoc org :tyyppi (keyword (:tyyppi org))))
+
+           ;; FIMistä tulleella nimellä ei löydy organisaatiota, käyttäjä joutuu valitsemaan sen
+           (dissoc tulos :organisaatio))))
+
+      tulos) ;; Palauta statuskoodi
     :ei-loydy))
 
 (defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
