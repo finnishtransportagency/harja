@@ -461,9 +461,11 @@
                             (reset! data p)
                             (reset! data nil))))
 
-               muuta! (fn [t]
-                        (reset! teksti t)
-                        (aseta!))
+               muuta-pvm! (fn [t]
+                        (when (or (str/blank? t)
+                                  (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
+                          (reset! teksti t)
+                        (aseta!)))
 
                muuta-aika! (fn [t]
                              (when (or (str/blank? t)
@@ -491,8 +493,8 @@
                                                nil)
                              :value       nykyinen-teksti
                              :on-focus    on-focus
-                             :on-blur   #(muuta! (-> % .-target .-value))
-                             :on-change   #(muuta! (-> % .-target .-value))}]]
+                             :on-blur   #(muuta-pvm! (-> % .-target .-value))
+                             :on-change   #(muuta-pvm! (-> % .-target .-value))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
@@ -504,7 +506,7 @@
             (when @auki
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                                (muuta! (pvm/pvm %)))
+                                                (muuta-pvm! (pvm/pvm %)))
                                  :pvm      naytettava-pvm
                                  :sijainti @sijainti
                                  :leveys   leveys}]])]))})))
