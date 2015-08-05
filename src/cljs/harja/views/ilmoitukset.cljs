@@ -108,7 +108,7 @@
 (defn ilmoituksen-tiedot
   []
   [:div
-   [napit/takaisin "Palaa" #(reset! tiedot/valittu-ilmoitus nil)]
+   [napit/takaisin "Takaisin" #(reset! tiedot/valittu-ilmoitus nil)]
    (urakan-sivulle-nappi)
    (when @tiedot/pollaus-id (pollauksen-merkki))
    [bs/panel {}

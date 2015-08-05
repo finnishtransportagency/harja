@@ -39,4 +39,6 @@
  :tloik        {:ilmoitusviestijono   "tloik-ilmoitukset"
                 :ilmoituskuittausjono "tloik-ilmoituskuittaukset"}
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
+
+ :ilmatieteenlaitos {:lampotilat-url "https://sonja.tiehallinto.fi/http/AURA/Lampotilat"}
  }

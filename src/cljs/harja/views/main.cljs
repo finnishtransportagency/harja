@@ -32,11 +32,9 @@
 
 (defn header [s]
   [bs/navbar {}
-   [:img {
-          :id "harja-brand-icon"
-          :alt "HARJA"
-            :src "images/harja-brand-text.png"
-          :on-click #(.reload js/window.location)}]
+   [:img#harja-brand-icon {:alt "HARJA"
+                           :src "images/harja_logo_soft.svg"
+                           :on-click #(.reload js/window.location)}]
   [haku/haku]
 
    ;; FIXME: active luokka valitulle sivulle

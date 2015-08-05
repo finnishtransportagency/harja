@@ -273,3 +273,7 @@ WHERE u.id = :urakka_id;
 -- name: paivita-urakka-alaueiden-nakyma!
 -- Päivittää urakka-alueiden materialisoidun näkymän
 REFRESH MATERIALIZED VIEW urakoiden_alueet;
+
+-- name: hae-urakan-alueurakkanumero
+-- Hakee urakan alueurakkanumeron
+SELECT alueurakkanro FROM hanke WHERE id = (SELECT hanke FROM urakka WHERE id = :id)

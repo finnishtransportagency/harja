@@ -2,8 +2,10 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.lampotilat :as q]
+            [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]))
 
 (defn keskilampo-ja-pitkalampo-floatiksi
   [kartta]
@@ -51,7 +53,16 @@
                                                 kl
                                                 pl)))))))
 
-(defrecord Lampotilat []
+(defn hae-lampotilat-ilmatieteenlaitokselta [db url urakka-id vuosi]
+  ;; Haetaan urakan id:n perusteella alueurakan tunnus, jota ilmatieteenlaitos käyttää
+  (let [alueurakkanro (:alueurakkanro (first (urakat/hae-urakan-alueurakkanumero db urakka-id)))]
+    (when alueurakkanro
+      (some #(when (= (:urakka-id %) alueurakkanro)
+               %)
+            (ilmatieteenlaitos/hae-talvikausi url vuosi)))))
+
+    
+(defrecord Lampotilat [ilmatieteenlaitos-url]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)]
@@ -62,9 +73,13 @@
       (julkaise-palvelu http :tallenna-lampotilat!
                         (fn [user arvot]
                           (tallenna-lampotilat! (:db this) user arvot)))
+      (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
+                        (fn [user {:keys [urakka-id vuosi]}]
+                          (hae-lampotilat-ilmatieteenlaitokselta (:db this) ilmatieteenlaitos-url urakka-id vuosi)))
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :urakan-lampotilat)
-    (poista-palvelut (:http-palvelin this) :tallenna-lampotilat!)
+    (poista-palvelut (:http-palvelin this)
+                     :urakan-lampotilat :tallenna-lampotilat!
+                     :hae-lampotilat-ilmatieteenlaitokselta)
     this))

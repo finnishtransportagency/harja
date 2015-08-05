@@ -116,8 +116,19 @@
                                                           (when (nil? @valittu-kayttaja)
                                                             (if (map? res)
                                                               (reset! valittu-kayttaja res)
-                                                              (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
-                                                                             :warning)))
+                                                              (if (number? res)
+                                                                (cond
+                                                                  (and (<= 400 res) (> 500 res))
+                                                                  (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                 :danger)
+                                                                  (and (<= 500 res) (> 600 res))
+                                                                  (viesti/nayta! (str "FIM-palvelun kutsuminen epäonnistui ("res")")
+                                                                                 :danger)
+                                                                  :else (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                       :warning))
+
+                                                                (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
+                                                                              :warning))))
                                                           (reset! haku-menossa false))))}
          (when @haku-menossa
            [ajax-loader])

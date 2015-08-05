@@ -524,6 +524,6 @@
   [:span.glyphicon.glyphicon-menu-up])
 
 (defn peru []
-  [:span.ikoni.ikoni-peru])
+  [:span.livicon-rotate-left])
 (defn tee-sittenkin []
-  [:span.ikoni.ikoni-tee-sittenkin])
+  [:span.livicon-rotate-right])

@@ -40,9 +40,11 @@
            (log/error "Invalidi XML: " e)
            false))))
 
-(defn lue [xml]
-  (let [in (ByteArrayInputStream. (.getBytes xml "UTF-8"))]
-    (try (xml-zip (parse in))
-         (catch SAXParseException e
-           (log/error e "Tapahtui poikkeus luettuessa XML-sisältöä: " xml)
-           nil))))
+(defn lue
+  ([xml] (lue xml "UTF-8"))
+  ([xml charset]
+   (let [in (ByteArrayInputStream. (.getBytes xml charset))]
+     (try (xml-zip (parse in))
+          (catch SAXParseException e
+            (log/error e "Tapahtui poikkeus luettuessa XML-sisältöä: " xml)
+            nil)))))

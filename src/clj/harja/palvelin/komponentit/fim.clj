@@ -56,7 +56,7 @@
       (do (log/error "FIM haku epäonnistui: " error)
           (throw (RuntimeException. "FIM haku epäonnistui: " error)))
       (if (and (<= 400 status) (> 600 status))
-        nil
+        status
 
         (first (lue-fim-vastaus (lue-xml body)))))))
 

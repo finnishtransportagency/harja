@@ -1,6 +1,6 @@
 (ns harja.views.urakka.toteumat.lampotilat
   "Urakan toteumat: lämpötilat"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom wrap]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.tiedot.urakka.lampotilat :as lampotilat]
             [cljs.core.async :refer [<!]]
@@ -17,10 +17,23 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
-            [harja.ui.viesti :as viesti])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as nav])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]
+                   [harja.atom :refer [reaction<!]]))
 
-(defonce nykyiset-lampotilat (atom nil))
+;; Nykyiset lämpötilat hoitokausittain, mäppäys [alku loppu] => {:id ... :keskilampo ... :pitkalampo ...}
+(defonce nykyiset-lampotilat (reaction<! [ur @nav/valittu-urakka]
+                                         (when ur
+                                           (go
+                                             (let [lampotilat (<! (lampotilat/hae-urakan-lampotilat (:id ur)))]
+                                               (log "LAMPOTILAT HAETTU: " (pr-str lampotilat))
+                                               (zipmap (map (juxt :alkupvm :loppupvm) lampotilat)
+                                                       lampotilat))))))
+
+(defonce muokatut-lampotilat (reaction @nykyiset-lampotilat))
+
 (defonce tallentaa-lampotilaa? (atom false))
 
 (defn kelvollinen-lampotila?
@@ -57,100 +70,90 @@
                   l))
         lampotilat))
 
-(defn tallenna-muutos
-  [tulos]
-  (go (let [uusi-lampo tulos]
-        (reset! tallentaa-lampotilaa? false)
-        (if (not (k/virhe? uusi-lampo))
-          (do
-            (if (nil? (some #(when (= (:id %) (:id uusi-lampo)) uusi-lampo) @nykyiset-lampotilat))
-              ; Jos tällä id:llä ei löydy lämpötilaa, lämpötila on uusi ja se voidaan liittää listaan
-              (do
-                ;(log "Luo uusi rivi lämpötilalle")
-                (swap! nykyiset-lampotilat conj uusi-lampo))
-              ; Jos löytyi, täytyy lista rakentaa uusiksi
-              (do
-                ;(log "Päivitä olemassaolevaa lämpötilamerkintää")
-                (reset! nykyiset-lampotilat (mapv
-                                            (fn [vanha-lampo]
-                                              (if (= (:id vanha-lampo) (:id uusi-lampo))
-                                                uusi-lampo
-                                                vanha-lampo))
-                                            @nykyiset-lampotilat)))))))))
+(defn tallenna-muutos [hoitokausi tulos]
+  (let [uusi-lampo tulos]
+    (when-not (k/virhe? uusi-lampo)
+      (swap! nykyiset-lampotilat
+             assoc hoitokausi tulos))))
+
 
 (defn lampotila-lomake
   [urakka lampotilat]
-  (let [uudet-lampotilat (atom nil)
-        aseta-lampotila (fn [l] (reset! uudet-lampotilat l))
-        saa-muokata?  (roolit/rooli-urakassa? roolit/urakanvalvoja
+  (let [saa-muokata?  (roolit/rooli-urakassa? roolit/urakanvalvoja
                                               (:id urakka))]
-
-    (aseta-lampotila lampotilat)
-    (komp/luo
-      {:component-will-receive-props
-       (fn [_ & [_ urakka l]]
-         (aseta-lampotila l))}
-      
-      (fn [urakka lampotilat]
+    
+    (fn [urakka lampotilat]
+      (let [hoitokausi @u/valittu-hoitokausi]
         [lomake {:luokka   :horizontal
                  :muokkaa! (fn [uusi]
-                             (reset! uudet-lampotilat uusi))
+                             (reset! lampotilat uusi))
                  :footer   (if saa-muokata?
                              [:div.form-group
                               [:div.col-md-4
                                [napit/palvelinkutsu-nappi
                                 "Tallenna"
                                 #(lampotilat/tallenna-lampotilat!
-                                  (:id @uudet-lampotilat)
+                                  (:id @lampotilat)
                                   (:id urakka)
-                                  (nth @u/valittu-hoitokausi 0)
-                                  (nth @u/valittu-hoitokausi 1)
-                                  (:keskilampo @uudet-lampotilat)
-                                  (:pitkalampo @uudet-lampotilat))
+                                  hoitokausi
+                                  (:keskilampo @lampotilat)
+                                  (:pitkalampo @lampotilat))
                                 {:luokka       "nappi-ensisijainen"
                                  :disabled     (not (and
-                                                      (kelvollinen-lampotila? (:pitkalampo @uudet-lampotilat))
-                                                      (kelvollinen-lampotila? (:keskilampo @uudet-lampotilat))))
+                                                     (::muokattu @lampotilat)
+                                                     (kelvollinen-lampotila? (:pitkalampo @lampotilat))
+                                                     (kelvollinen-lampotila? (:keskilampo @lampotilat))))
                                  :ikoni        (ikonit/search)
                                  :kun-onnistuu #(do
-                                                 (viesti/nayta! "Tallentaminen onnistui" :success 1500)
-                                                 (tallenna-muutos %))}]
-
-                               [:div {:style {:display :inline-block :width 55}} (when @tallentaa-lampotilaa? [ajax-loader])]
-                               [:button.nappi-kielteinen {:name "peruuta" :on-click #(do
-                                                                                      (.preventDefault %)
-                                                                                      (reset! uudet-lampotilat lampotilat))}
+                                                  (viesti/nayta! "Tallentaminen onnistui" :success 1500)
+                                                  (tallenna-muutos hoitokausi %))}]
+                               
+                               [:button.nappi-kielteinen {:name "peruuta"
+                                                          :disabled (= @muokatut-lampotilat @nykyiset-lampotilat)
+                                                          :on-click #(do
+                                                                       (.preventDefault %)
+                                                                       (reset! muokatut-lampotilat @nykyiset-lampotilat))}
                                 (ikonit/remove) " Peruuta"]]])
                  }
          [{:otsikko "Keskilämpötila" :nimi :keskilampo :tyyppi :numero :leveys-col 2}
           {:otsikko "Pitkän aikavälin keskilämpötila" :nimi :pitkalampo :tyyppi :numero :leveys-col 2}]
-         @uudet-lampotilat]))))
+         @lampotilat]))))
 
 (defn lampotilat [ur]
   (let [urakka (atom nil)
-        aseta-urakka (fn [ur] (reset! urakka ur))
-        valittu-hoitokausi u/valittu-hoitokausi]
+        aseta-urakka (fn [ur] (reset! urakka ur))]
 
-    (go (reset! nykyiset-lampotilat (<! (lampotilat/hae-urakan-lampotilat (:id ur)))))
     (aseta-urakka ur)
-
+    
     (komp/luo
-      {:component-will-receive-props
-       (fn [_ & [_ ur]]
-         (aseta-urakka ur))}
-
-      (fn [ur]
-        (if (nil? @nykyiset-lampotilat)
-          [ajax-loader]
-        [:span
-         [valinnat/urakan-hoitokausi ur]
-         (when (roolit/rooli-urakassa? roolit/urakanvalvoja
-                                       (:id @urakka))
-           [:button.nappi-toissijainen (ikonit/plus) " Lue arvot verkosta (FIXME)"]) ;fixme vaatii toteutuksen
-         (if @valittu-hoitokausi
-           [lampotila-lomake
-            @urakka
-            (etsi-lampotilat (nth @valittu-hoitokausi 0)
-                             (nth @valittu-hoitokausi 1)
-                             @nykyiset-lampotilat
-                             (:id @urakka))])])))))
+     {:component-will-receive-props
+      (fn [_ & [_ ur]]
+        (aseta-urakka ur))}
+     
+     (fn [ur]
+       (let [hoitokausi @u/valittu-hoitokausi]
+         (if (nil? @nykyiset-lampotilat)
+           [ajax-loader]
+           [:span
+            [valinnat/urakan-hoitokausi ur]
+            (when (roolit/rooli-urakassa? roolit/urakanvalvoja
+                                          (:id @urakka))
+              [napit/palvelinkutsu-nappi "Hae ilmatieteenlaitokselta"
+               #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id @urakka) (pvm/vuosi (first @u/valittu-hoitokausi)))
+               {:ikoni true
+                :kun-onnistuu (fn [{:keys [keskilampotila ilmastollinen-keskiarvo]}]
+                                (log "SAATIIN ilmatieteenlaitokselta " keskilampotila " ja " ilmastollinen-keskiarvo)
+                                (swap! muokatut-lampotilat update-in [hoitokausi]
+                                       (fn [lampotilat]
+                                         (assoc lampotilat
+                                                :keskilampo keskilampotila
+                                                :pitkalampo ilmastollinen-keskiarvo
+                                                ::muokattu true))))}])
+            
+            (if @u/valittu-hoitokausi
+              [lampotila-lomake
+               @urakka
+               (wrap (get @muokatut-lampotilat @u/valittu-hoitokausi)
+                     #(swap! muokatut-lampotilat
+                             assoc @u/valittu-hoitokausi
+                             (assoc % ::muokattu true)))])]))))))
