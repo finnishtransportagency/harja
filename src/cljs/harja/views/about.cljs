@@ -9,7 +9,7 @@
 
 (defn pienenna-ja-laajenna-ikonien-attribuutio []
   [:li
-   "Icons pienenna.svg, suurenna.svg, undo.svg and redo.svg made by "
+   "Icons undo.svg and redo.svg made by "
    [:a {:href "http://catalinfertu.com" :title "Catalin Fertu"} "Catalin Fertu "]
    "from "
    [:a {:href "http://flaticon.com" :title "Flaticon"} "www.flaticon.com "]
