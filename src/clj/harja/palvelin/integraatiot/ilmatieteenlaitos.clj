@@ -23,17 +23,22 @@
                 :ilmastollinen-ylaraja (arvo :ilmastollinen_ylaraja)}))))
 
 (defn hae-talvikausi [endpoint-url talvikauden-alkuvuosi]
-  (let [{:keys [status body error]} @(http/post endpoint-url
+  (let [{:keys [status body error headers]} @(http/post endpoint-url
                                                 {:insecure? true ; pitää tehdä oma SSLEngine, jossa truststore
                                                  :query-params {"season" (str talvikauden-alkuvuosi "-" (inc talvikauden-alkuvuosi))
                                                                 "newversion" 1}
                                                  :timeout 10000})]
+    (log/info "STATUS: " status)
+    (log/info "HEADERS: " headers)
     (if error
       (do (log/warn "Ilmatieteenlaitoksen palvelun kutsu epäonnistui: " status error)
           (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
                    :error error}))
-      (-> body 
-          (xml/lue "ISO-8859-1")
-          lue-lampotilat))))
+      (if (not= "text/xml" (:content-type headers))
+        (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
+                 :error body})
+        (-> body 
+            (xml/lue "ISO-8859-1")
+            lue-lampotilat)))))
                  
                  
