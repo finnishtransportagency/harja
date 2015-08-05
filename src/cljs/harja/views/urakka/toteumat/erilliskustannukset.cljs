@@ -163,7 +163,8 @@
                                [:button.nappi-kielteinen
                                 {:class (when @tallennus-kaynnissa "disabled")
                                  :on-click
-                                        (fn []
+                                        (fn [e]
+                                          (.preventDefault e)
                                           (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
                                                          :footer  [:span
                                                                    [:button.nappi-toissijainen {:type     "button"
