@@ -34,7 +34,7 @@
 (defonce haetut-sanktiot (reaction<! [urakka (:id @nav/valittu-urakka)
                                       hoitokausi @urakka/valittu-hoitokausi
                                       tpi (:tpi_id @urakka/valittu-toimenpideinstanssi)
-                                      nakymassa?]
+                                      _ @nakymassa?]
                                      (when @nakymassa?
                                        (hae-urakan-sanktiot urakka hoitokausi tpi))))
 

@@ -22,7 +22,7 @@
 
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi
-                                                    nakymassa?]
+                                                    _ @nakymassa?]
                                                    (when @nakymassa?
                                                      (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
 

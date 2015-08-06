@@ -121,8 +121,14 @@
 
 (defn turvallisuuspoikkeamat []
   (komp/luo
-    (komp/lippu tiedot/nakymassa?)
-    (komp/lippu tiedot/taso-turvallisuuspoikkeamat)
+    {:component-will-mount
+     (fn []
+       (reset! tiedot/nakymassa? true)
+       (reset! tiedot/taso-turvallisuuspoikkeamat true))
+     :component-will-unmount
+     (fn []
+       (reset! tiedot/nakymassa? true)
+       (reset! tiedot/taso-turvallisuuspoikkeamat true))}
 
     (fn []
       (if @tiedot/valittu-turvallisuuspoikkeama
