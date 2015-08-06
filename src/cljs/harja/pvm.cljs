@@ -81,6 +81,10 @@
 
 (def fi-aika
   "Ajan formatointi suomalaisessa muodossa"
+  (df/formatter "HH:mm"))
+
+(def fi-aika-sek
+  "Ajan formatointi suomalaisessa muodossa"
   (df/formatter "HH:mm:ss"))
 
 (def fi-pvm-aika
@@ -110,6 +114,10 @@
   "Formatoi ajan suomalaisessa muodossa"
   [pvm]
   (df/unparse fi-aika pvm))
+
+(defn aika-sek
+  [pvm]
+  (df/unparse fi-aika-sek pvm))
 
 (defn ->pvm-aika [teksti]
   "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."
