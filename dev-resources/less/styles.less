@@ -17,7 +17,7 @@
 .label-ja-alasveto.alasveto-sillan-tarkastaja {
 	@leveys: 330px;
 	width: @leveys;
-	.livi-alasveto(@leveys);
+	.livi-alasveto(@valintakontrollin-leveys);
 }
 #footer {
 	background-color: @harjan-taustavari;
@@ -162,12 +162,19 @@ tr.uusitehtavakoodi td {
 		display: inline-block;
 		font-weight: bold;
 	}
-	.livi-alasveto(300px);
+	.livi-alasveto(@valintakontrollin-leveys);
 }
 
 .label-ja-aikavali {
-  display: inline-block;
-  margin: 10px 5px 20px;
+	display: inline-block;
+	margin: 10px 5px 20px;
+	width: @valintakontrollin-leveys;
+	.pvm {
+		height: @valintakontrollin-korkeus;
+		position: relative;
+		top: 1px;
+		width: 139px;
+	}
 }
 
 .flash-viesti {
@@ -206,5 +213,10 @@ div.valitavoitteet { margin-top: 100px; }
 	margin-left: 2px;
 	.rooli {
 		margin-left: 2px;
+	}
+}
+.valitavoite {
+	.pvm-kentta {
+		margin-left: 20px;
 	}
 }

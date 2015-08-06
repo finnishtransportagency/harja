@@ -1,5 +1,6 @@
-/* harja.ui.yleiset namespacessa olevien yleisten komponenttien tyylejä */
+@import "livi_tyylit";
 
+/* harja.ui.yleiset namespacessa olevien yleisten komponenttien tyylejä */
 #app {
 	background-color: @harmaa10
 }
@@ -110,9 +111,15 @@ button .ajax-loader {
 	to {background-color: @harjan-taustavari;}
 }
 
-span.label-ja-kentta {
+.label-ja-kentta {
     display: inline-block;
+    margin: 10px 5px 20px;
     .kentan-otsikko { font-weight: bold; }
+    .livi-alasveto(@valintakontrollin-leveys, @valintakontrollin-leveys);
+    input {
+        height: @valintakontrollin-korkeus;
+        width: @valintakontrollin-leveys;
+    }
 }
 .modal-body {
     .kuvaus {
