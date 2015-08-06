@@ -257,7 +257,7 @@
           [:legend "Tekninen osa"]
 
          [grid/muokkaus-grid
-          {:otsikko      "Toteutuneet alikohteet"
+          {:otsikko      "Päällystetyt tierekisteriosoitteet"
            :tunniste     :tie
            :voi-muokata? (do
                            (log "PÄÄ tila " (pr-str (:tila @lomakedata)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa @lomakedata)))
