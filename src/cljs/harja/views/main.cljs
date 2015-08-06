@@ -111,7 +111,7 @@
              [:div#kartta-container {:class kartan-luokka}
               (if (= :S kartan-koko)
                 [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
-                 [:span "Avaa kartta" (ikonit/resize-full)]]
+                 [:span.livicon-expand " Avaa kartta"]]
                 [kartta/kartta])]]])
          [footer]
          [modal-container]
