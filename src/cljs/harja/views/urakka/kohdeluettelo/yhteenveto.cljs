@@ -149,8 +149,8 @@
           @kohteet-ilman-lisatoita]
 
          [grid/grid
-          {:otsikko      "Lisätyöt"
-           :tyhja        (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei lisätöitä")
+          {:otsikko      "Muut työt" ; FIXME Nimi vaihdettu asiakkaan pyynnöstä. Kannassa (ja mahdollisesti myös mualla koodissa) käytössä vanha nimi lisätyöt. Pitää vaihtaa
+           :tyhja        (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei muita töitä")
            :luokat       ["paallysteurakka-kohteet-lisatyot"]
            :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
@@ -175,5 +175,4 @@
                                                                                                                  (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
           @lisatyot]
 
-         (yhteenveto)
-         ]))))
+         (yhteenveto)]))))

@@ -233,8 +233,8 @@
                                 (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                                 (reset! kohteen-tiedot uusi))}
             [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
-             {:otsikko "Aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-             {:otsikko "Valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
+             {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
+             {:otsikko "Kohde valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
