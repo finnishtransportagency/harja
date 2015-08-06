@@ -419,9 +419,8 @@
                             ""))
         ;; picker auki?
         auki (atom false)
-
-        sijainti (atom nil)
-        ]
+        pvm-aika-koskettu (atom [false false])
+        sijainti (atom nil)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
@@ -450,9 +449,10 @@
                         (let [pvm @pvm-teksti
                               aika @aika-teksti
                               p (pvm/->pvm-aika (str pvm " " aika))]
-                          (if p
-                            (reset! data p)
-                            (reset! data nil))))
+                          (when-not (some false? @pvm-aika-koskettu)
+                            (if p
+                             (reset! data p)
+                             (reset! data nil)))))
 
                muuta-pvm! (fn [t]
                             (when (or (str/blank? t)
@@ -463,6 +463,9 @@
                              (when (or (str/blank? t)
                                        (re-matches #"\d{1,2}(:\d*)?" t))
                                (reset! aika-teksti t)))
+
+               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
+               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
 
                nykyinen-pvm @data
                nykyinen-pvm-teksti @pvm-teksti
@@ -485,14 +488,14 @@
                                                nil)
                              :value       nykyinen-pvm-teksti
                              :on-focus    on-focus
-                             :on-blur     aseta!
+                             :on-blur     #((do (koske-pvm!) (aseta!)))
                              :on-change   #(muuta-pvm! (-> % .-target .-value))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
-                         :on-blur     aseta!
+                         :on-blur     #((do (koske-aika!) (aseta!)))
                          :on-change   #(muuta-aika! (-> % .-target .-value))}]]]]]
 
             (when @auki
