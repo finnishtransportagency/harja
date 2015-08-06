@@ -321,6 +321,13 @@
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
                                                        (reset! auki false))]])]]))))
 
+;; Regexiä käytetään tunnistamaan, millaisia merkkejä pvm-kenttään voi syöttää.
+;; Regex sallii esim muotoa ".10.2009" muotoa olevan merkkijonon, koska tällaiseen voidaan helposti
+;; päätyä, jos käyttäjä pyyhkii päivän pois validin pvm:n alusta - eikä tätä tietenkään haluta estää.
+;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
+;; Käytännössä regex sallii vuosiluvut 0-2999
+(def +pvm-regex+ #"[0-3]{0,2}((\.[0-2]{0,2})(\.[1-2]{0,1}[0-9]{0,3})?)?")
+
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -347,7 +354,7 @@
         muuta! (fn [data t]
                  (when
                    (or
-                     (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t)
+                     (re-matches +pvm-regex+ t)
                      (str/blank? t))
                    (reset! teksti t))
                  (if (str/blank? t)
@@ -461,7 +468,7 @@
                muuta-pvm! (fn [t]
                             (when (or
                                     (str/blank? t)
-                                    (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
+                                    (re-matches +pvm-regex+ t))
                               (reset! pvm-teksti t)))
 
                muuta-aika! (fn [t]
