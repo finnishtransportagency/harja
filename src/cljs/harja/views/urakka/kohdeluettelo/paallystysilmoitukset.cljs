@@ -317,7 +317,10 @@
             :nimi          :paallystetyyppi
             :tyyppi        :valinta
             :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                               (str (:lyhenne rivi)  " - " (:nimi rivi))
+                               "- Valitse päällyste -"))
             :valinnat      pot/+paallystetyypit+
             :leveys        "30%"
             :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
@@ -328,7 +331,10 @@
             :nimi          :tyomenetelma
             :tyyppi        :valinta
             :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse menetelmä -")
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                               (str (:lyhenne rivi)  " - " (:nimi rivi))
+                               "- Valitse menetelmä -"))
             :valinnat      pot/+tyomenetelmat+
             :leveys        "30%"
             :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
@@ -339,7 +345,10 @@
             :nimi          :edellinen-paallystetyyppi
             :tyyppi        :valinta
             :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse päällyste -")
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                               (str (:lyhenne rivi)  " - " (:nimi rivi))
+                               "- Valitse päällyste -"))
             :valinnat      pot/+paallystetyypit+
             :leveys        "30%"}]
           toteutuneet-osoitteet]
@@ -371,7 +380,10 @@
             :nimi          :kasittelymenetelma
             :tyyppi        :valinta
             :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse menetelmä -")
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                               (str (:lyhenne rivi)  " - " (:nimi rivi))
+                               "- Valitse menetelmä -"))
             :valinnat      pot/+alustamenetelmat+
             :leveys        "30%"}
            {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero}
