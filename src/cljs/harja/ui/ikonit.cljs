@@ -24,8 +24,8 @@
   [:span.glyphicon.glyphicon-glass])
 (defn music []
   [:span.glyphicon.glyphicon-music])
-(defn search []
-  [:span.glyphicon.glyphicon-search])
+;(defn search []
+ ; [:span.glyphicon.glyphicon-search])
 (defn heart []
   [:span.glyphicon.glyphicon-heart])
 (defn star []
@@ -527,3 +527,9 @@
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []
   [:span.livicon-rotate-right])
+(defn tallenna []
+  [:span.livicon-check])
+(defn search []
+  [:span.livicon-search])
+(defn plus []
+  [:span.livicon-plus])

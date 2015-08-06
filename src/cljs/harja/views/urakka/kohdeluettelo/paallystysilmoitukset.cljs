@@ -151,6 +151,7 @@
         (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
+       :ikoni (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (reset! toteumarivit vastaus)

@@ -68,7 +68,7 @@
                                    {:luokka       "nappi-ensisijainen"
                                     :disabled     (or (not= true (::muokattu @lampotilat))
                                                       (not (empty? virheet)))
-                                    :ikoni        (ikonit/search)
+                                    :ikoni        (ikonit/tallenna)
                                     :kun-onnistuu #(do
                                                      (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                      (tallenna-muutos hoitokausi %))}]

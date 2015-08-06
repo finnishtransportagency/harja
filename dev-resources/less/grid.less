@@ -28,10 +28,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       display: inline;
     }
     // anna padding top ja bottom tulla BS:stä
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: 0;
+    padding-right: 0;
     button {
-      padding: 4px 12px;
+      padding: 4px 8px;
     }
     .nappi-ensisijainen span,
     .nappi-toissijainen span,
@@ -124,6 +124,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   .muokkaustoiminnot {
     button {
       margin-right: 1em;
+    }
+    button:last-child {
+      margin-right: 0;
     }
     .ikoni {
       position: relative;

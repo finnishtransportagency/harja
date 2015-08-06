@@ -49,7 +49,7 @@
                     "Tallenna sanktio"
                     #(tiedot/tallenna-sanktio @muokattu)
                     {:luokka       "nappi-ensisijainen"
-                     :ikoni        (ikonit/envelope)
+                     :ikoni        (ikonit/tallenna)
                      :kun-onnistuu #(do
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
@@ -172,7 +172,7 @@
    [urakka-valinnat/urakan-hoitokausi-ja-toimenpide @nav/valittu-urakka]
    [:button.nappi-ensisijainen
     {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
-    (ikonit/plus-sign) " Lisää sanktio"]
+    (ikonit/plus) " Lisää sanktio"]
    [grid/grid
     {:otsikko       "Sanktiot"
      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])

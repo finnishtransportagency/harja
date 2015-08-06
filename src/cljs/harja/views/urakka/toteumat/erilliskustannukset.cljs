@@ -250,7 +250,7 @@
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
-            (ikonit/plus-sign) " Lisää kustannus"]
+            (ikonit/plus) " Lisää kustannus"]
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

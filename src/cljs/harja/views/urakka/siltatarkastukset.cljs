@@ -282,7 +282,7 @@
                                                       " tehdyn tarkastuksen?"]))}
            (ikonit/trash) " Poista tarkastus"]
           [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen true)}
-           (ikonit/plus) " Uusi tarkastus"]]
+           [:span.livicon-plus " Uusi tarkastus"]]]
 
         [grid/grid
          {:otsikko      (if @st/valittu-tarkastus

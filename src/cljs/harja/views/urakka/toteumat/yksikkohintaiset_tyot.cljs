@@ -318,7 +318,7 @@
 
          [:button.nappi-ensisijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma {})
                                       :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
-          (ikonit/plus-sign) " Lisää toteuma"]
+          (ikonit/plus) " Lisää toteuma"]
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi valittu-tpi) " / " (:t3_nimi valittu-tpi) " / " (:tpi_nimi valittu-tpi))

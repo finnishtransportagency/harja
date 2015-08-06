@@ -184,7 +184,7 @@
                                    @materiaalitoteumat-mapissa))
                                  @muokattu)
                              {:luokka "nappi-ensisijainen"
-                              :ikoni (ikonit/envelope)
+                              :ikoni (ikonit/tallenna)
                               :kun-onnistuu
                                       #(do
                                         (reset! urakan-materiaalin-kaytot %)
@@ -267,7 +267,7 @@
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-materiaalin-kaytto {})}
-    (ikonit/plus-sign) " Lisää toteuma"]
+    (ikonit/plus) " Lisää toteuma"]
    [grid/grid
     {:otsikko        "Suunnitellut ja toteutuneet materiaalit"
      :tyhja          (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Toteuman materiaaleja haetaan."] "Ei löytyneitä tietoja.")

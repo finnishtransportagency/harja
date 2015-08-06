@@ -20,7 +20,7 @@
 
 (defn pollauksen-merkki
   []
-  [:span "Automaattinen päivittäminen päällä."])
+  [:span " Automaattinen päivittäminen päällä."])
 
 (defn urakan-sivulle-nappi
   []

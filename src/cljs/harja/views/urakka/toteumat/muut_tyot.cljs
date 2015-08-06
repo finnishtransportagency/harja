@@ -380,7 +380,7 @@
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})
                                         :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus
                                                                                (:id @nav/valittu-urakka)))}
-            (ikonit/plus-sign) " Lisää toteuma"]
+            (ikonit/plus) " Lisää toteuma"]
 
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt ")

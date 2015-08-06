@@ -504,19 +504,19 @@ Optiot on mappi optioita:
                                                 {:disabled (= :ei-mahdollinen tallenna)}
                                                 {:on-click #(do (.preventDefault %)
                                                                 (aloita-muokkaus! tiedot))})
-                   (ikonit/pencil) " Muokkaa"])]
+                   [:span.livicon-pen " Muokkaa"]])]
                [:span.pull-right.muokkaustoiminnot
                 [:button.nappi-toissijainen
                  {:disabled (empty? @historia)
                   :on-click #(do (.stopPropagation %)
                                  (.preventDefault %)
                                  (peru!))}
-                 (ikonit/peru) " Kumoa"]
+                 [:span.livicon-rotate-left " Kumoa"]]
 
                 (when-not (= false voi-lisata?)
                   [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                          (lisaa-rivi! ohjaus {}))}
-                   (ikonit/plus-sign) (or (:lisaa-rivi opts) " Lisää rivi")])
+                   [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
 
                 [:span {:class (str (if (empty? @virheet)
                                       "hide"
@@ -536,7 +536,7 @@ Optiot on mappi optioita:
                                 (do (.preventDefault %)
                                     (go (if (<! (tallenna tallennettavat)))
                                         (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                   (ikonit/ok) " Tallenna"])
+                   [:span.livicon-check " Tallenna"]])
 
                 (when-not muokkaa-aina
                   [:button.nappi-kielteinen.grid-peru
@@ -545,7 +545,7 @@ Optiot on mappi optioita:
                                 (nollaa-muokkaustiedot!)
                                 (when peruuta (peruuta))
                                 nil)}
-                   (ikonit/ban-circle) " Peruuta"])
+                   [:span.livicon-ban " Peruuta"]])
                 ])
              [:h6.panel-title otsikko]
              ]
@@ -768,7 +768,7 @@ Optiot on mappi optioita:
                   [:button.nappi-toissijainen.grid-lisaa
                    {:on-click #(do (.preventDefault %)
                                    (lisaa-rivi! ohjaus {}))}
-                   (ikonit/plus-sign) (or (:lisaa-rivi opts) " Lisää rivi")])])]
+                   (ikonit/plus) (or (:lisaa-rivi opts) " Lisää rivi")])])]
             [:div.panel-body
              [:table.grid
               [:thead

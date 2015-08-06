@@ -46,7 +46,7 @@
                     "Tallenna turvallisuuspoikkeama"
                     #(tiedot/tallenna-turvallisuuspoikkeama @muokattu)
                     {:luokka       "nappi-ensisijainen"
-                     :ikoni        (ikonit/envelope)
+                     :ikoni        (ikonit/tallenna)
                      :kun-onnistuu #(do
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
@@ -103,7 +103,7 @@
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
    [:button.nappi-ensisijainen
     {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
-    (ikonit/plus-sign) " Lisää turvallisuuspoikkeama"]
+    (ikonit/plus) " Lisää turvallisuuspoikkeama"]
    [grid/grid
     {:otsikko       "Turvallisuuspoikkeamat"
      :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
