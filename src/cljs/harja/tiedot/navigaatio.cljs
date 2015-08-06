@@ -19,7 +19,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.pvm :as pvm])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]])
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction<!]])
   
   (:import goog.History))
 
@@ -48,26 +49,51 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    {:nimi "Päällystys" :arvo :paallystys }
    {:nimi "Valaistus" :arvo :valaistus }])
 
-(def valittu-urakkatyyppi "Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi"
-  (atom (first +urakkatyypit+)))
+
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden 
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
 
+;; Hallintayksikön valinta id:llä (URL parametrista)
+(defonce valittu-hallintayksikko-id (atom nil))
+
 ;; Atomi, joka sisältää valitun hallintayksikön
-(def valittu-hallintayksikko "Tällä hetkellä valittu hallintayksikkö (tai nil)" (atom nil))
+(defonce valittu-hallintayksikko
+  (reaction (let [id @valittu-hallintayksikko-id
+                  yksikot @hy/hallintayksikot]
+              (when (and id yksikot)
+                (some #(and (= id (:id %)) %) yksikot)))))
 
 (def hallintayksikot-kartalla
   (reaction (let [hals @hy/hallintayksikot]
               (if @valittu-hallintayksikko
                 []
                 hals))))
-;; Atomi, joka sisältää valitun urakan
-(def valittu-urakka "Tällä hetkellä valittu urakka (hoidon alueurakka / ylläpidon urakka) tai nil" (atom nil))
+
+;; Jos urakka valitaan id:n perusteella (url parametrilla), asetetaan se tänne
+(defonce valittu-urakka-id (atom nil))
 
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
-(def urakkalista "Hallintayksikon urakat" (atom nil))
+(defonce urakkalista 
+  (reaction<! [yks @valittu-hallintayksikko]
+              (when yks
+                (ur/hae-hallintayksikon-urakat yks))))
+
+;; Atomi, joka sisältää valitun urakan (tai nil)
+(defonce valittu-urakka
+  (reaction (let [id @valittu-urakka-id
+                  urakat @urakkalista]
+              (when (and id urakat)
+                (some #(when (= id (:id %)) %) urakat)))))
+
+;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
+(defonce valittu-urakkatyyppi
+  (reaction (let [ur @valittu-urakka]
+              (if ur
+                (first (filter #(= (:tyyppi ur) (:arvo %))
+                               +urakkatyypit+))
+                (first +urakkatyypit+)))))
 
 (defn paivita-urakka [urakka-id funktio & argumentit]
   (swap! urakkalista (fn [urakat]
@@ -100,21 +126,19 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                       (= sivu :tilannekuva) :L
                       :default valittu-koko)))))
 
-(defn aseta-urakka-ja-urakkatyyppi [urakkalista, urakka-id]
-  (let [ur (first (filter #(= urakka-id (:id %)) urakkalista))]
-    (valitse-urakka ur)
-    (reset! valittu-urakkatyyppi (first (filter #(= (:tyyppi ur) (:arvo %))
-                                                +urakkatyypit+)))))
-
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
-  ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
-  (if-not (= hy-id (:id @valittu-hallintayksikko))
-    (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
-          (reset! valittu-hallintayksikko yks)
-          (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
-          (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
-    ;; else
-    (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
+  (reset! valittu-hallintayksikko-id hy-id)
+  (reset! valittu-urakka-id u-id))
+
+  ;; ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
+  ;; (if-not (= hy-id (:id @valittu-hallintayksikko))
+  ;;   (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
+  ;;         (reset! valittu-hallintayksikko yks)
+  ;;         (reset! valittu-urakka-id u-id)
+  ;;         ;;(reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
+  ;;         ;;(aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
+  ;;   ;; else
+  ;;   (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
@@ -139,24 +163,28 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-hallintayksikko [yks]
   ;;(js* "debugger;")
   (reset! valittu-hallintayksikko yks)
-  (reset! urakkalista nil)
+  (reset! valittu-urakka-id nil)
   (reset! valittu-urakka nil)
   (reset! kartan-kokovalinta :M)
-  (paivita-url)
-  (if yks
-    (do
-      (go (reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks))))
-      (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu)))
-    (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))
+  (paivita-url))
 
+(defonce ilmoita-hallintayksikkovalinnasta
+  (run! (let [yks @valittu-hallintayksikko]
+          (if yks
+            (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
+            (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
 
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
-  (paivita-url)
-  (reset! kartan-kokovalinta :S)
-  (if ur
-    (t/julkaise! (assoc ur :aihe :urakka-valittu))
-    (t/julkaise! {:aihe :urakkavalinta-poistettu})))
+  (log "VALITTIIN URAKKA: " (pr-str ur))
+  (paivita-url)  
+  (reset! kartan-kokovalinta :S))
+
+(defonce ilmoita-urakkavalinnasta
+  (run! (let [ur @valittu-urakka]
+          (if ur
+            (t/julkaise! (assoc ur :aihe :urakka-valittu))
+            (t/julkaise! {:aihe :urakkavalinta-poistettu})))))
 
 (defonce urakka-klikkaus-kuuntelija
   (t/kuuntele! :urakka-klikattu
@@ -187,8 +215,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                  (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
     (when (not= url (.-token historia))
       (log "URL != token :: " url " != " (.getToken historia))
-      (.setToken historia url))
-  ))
+      (.setToken historia url))))
 
 (defn vaihda-sivu!
   "Vaihda nykyinen sivu haluttuun."
@@ -228,15 +255,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       "about" (vaihda-sivu! :about)
       (vaihda-sivu! :urakat))
     (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
-      (if-let [u (some-> parametrit (.get "u") js/parseInt)] 
-        (do (log "ASETA HALLINTAYKSIKKO JA URAKKA")
-            (aseta-hallintayksikko-ja-urakka hy u))
-        ;; else
-        (go
-          (log "ASETA VAIN HALLINTAYKSIKKO")
-          (valitse-hallintayksikko (<! (hy/hae-hallintayksikko (js/parseInt hy)))))
-        ))
-    ))
+      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
+        (do (reset! valittu-hallintayksikko-id hy)
+            (reset! valittu-urakka-id u)
+            (reset! kartan-kokovalinta :S))
+        (do
+          (reset! valittu-hallintayksikko-id hy)
+          (reset! valittu-urakka-id nil)
+          (reset! valittu-urakka nil)
+          (reset! kartan-kokovalinta :M))))))
 
 (.setEnabled historia true)
 
