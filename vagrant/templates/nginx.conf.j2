@@ -1,0 +1,76 @@
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    proxy_cache_path /tmp/cache keys_zone=mml:10m;
+
+    error_log /var/log/nginx/error.log;
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+
+
+    upstream wms {
+      server 192.130.60.137:443;
+    }
+
+    upstream wmts {
+      server karttakuva.maanmittauslaitos.fi:443;
+    }
+
+    upstream harja {
+      server 10.0.2.2:3000;
+    }
+
+    server {
+        listen       8000;
+        server_name  localhost;
+
+        proxy_cache mml;
+
+        underscores_in_headers on;
+
+	location ~ /wmts/(?<path>.*)$ {
+	  proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
+          proxy_set_header Authorization "Basic bGlpa2VubmV2aXJrb2U6VG9yczIydGFp";
+          proxy_pass   https://wmts/$path$is_args$args;
+	  access_log /var/log/nginx/wmts.log;
+        }
+
+        location ~ /(?<path>.*)$ {
+	    proxy_pass_request_headers on;
+	    #proxy_pass_header OAM_REMOTE_USER;
+	    proxy_set_header OAM_REMOTE_USER jvh;
+	    proxy_pass http://harja/$path$is_args$args;
+	    access_log /var/log/nginx/3000_access.log;
+	    error_log /var/log/nginx/3000_error.log;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+    }
+
+}

@@ -1,0 +1,59 @@
+---
+- hosts: all
+  sudo: true
+  vars:
+    deus_user: CHANGEME
+    deus_password: CHANGEME
+  tasks:
+  - name: Add maven repository
+    apt_repository: repo='ppa:andrei-pozolotin/maven3' state=present
+  - name: Add postgresql repository
+    apt_repository: repo='deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' state=present
+  - name: Add postgresql repository key
+    apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+  - name: Add PostGIS repository key
+    apt_key: keyserver=keyserver.ubuntu.com id=6B827C12C2D425E227EDCA75089EBE08314DF160
+  - name: Add PostGIS repository
+    apt_repository: repo='deb http://ppa.launchpad.net/ubuntugis/ppa/ubuntu devel main' state=present
+  - name: apt-get update
+    apt: update_cache=yes
+  - name: Install GIT
+    apt: name=git state=present
+  - name: Install NGINX
+    apt: name=nginx state=present
+  - name: Install Maven
+    apt: name=maven3 state=present
+  - name: Install PostgreSQL 9.4+
+    apt: name=postgresql-9.4 state=present
+  - name: Install PostGIS
+    apt: name=postgresql-9.4-postgis-2.1 state=present force=yes
+  - name: Install PostGIS scripts
+    apt: name=postgresql-9.4-postgis-2.1-scripts state=present force=yes
+  - name: Trust local connections to PostgresSQL
+    template: src=templates/pg_hba.conf.j2 dest=/etc/postgresql/9.4/main/pg_hba.conf
+  - name: Make PostgreSQL listen on all interfaces
+    template: src=templates/postgresql.conf.j2 dest=/etc/postgresql/9.4/main/postgresql.conf
+  - name: restart postgres
+    service: name=postgresql state=restarted
+  - name: Configure NGINX
+    template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf
+  - name: Restart NGINX
+    service: name=nginx state=restarted
+  - name: Checkout harja-tietokanta
+    sudo: yes
+    sudo_user: postgres
+    git: repo=https://{{deus_user}}:{{deus_password}}@deus.solita.fi/Solita/projects/harja/repositories/git/harja-tietokanta
+         dest=/tmp/checkout
+         version=develop
+  - name: Install database
+    command: sh kanta_uusiksi.sh
+    sudo: yes
+    sudo_user: postgres
+    args:
+       chdir: /tmp/checkout
+  - name: Install test database
+    command: sh testikanta_uusiksi.sh
+    sudo: yes
+    sudo_user: postgres
+    args:
+       chdir: /tmp/checkout
