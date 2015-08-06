@@ -98,10 +98,6 @@
 
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
 
-   
-   [urakka-valinnat/aikavali @nav/valittu-urakka]
-   
-
    [yleiset/pudotusvalikko
     "Näytä havainnot"
     {:valinta @listaus
@@ -113,6 +109,8 @@
                    :omat "Minun kirjaamat / kommentoimat")}
 
     [:kaikki :selvitys :kasitellyt :omat]]
+   
+   [urakka-valinnat/aikavali @nav/valittu-urakka]
 
 
    [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)]
@@ -189,7 +187,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          :ohjaus g
          :uusi-rivi (fn [rivi]
                       (grid/avaa-vetolaatikko! g (:id rivi))
-                      rivi)
+                      (assoc rivi :sakko? true))
          :vetolaatikot (into {}
                              (map (juxt first
                                         (fn [[id sanktio]]

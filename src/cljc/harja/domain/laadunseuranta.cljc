@@ -5,11 +5,41 @@
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
             #?(:cljs [harja.loki :refer [log]])))
 
+(def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
+(def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))
+
+(def Sakkolaji (s/enum :A :B :C :muistutus))
+(def Sanktiotyyppi
+  {:id s/Num
+   :nimi s/Str
+   :toimenpidekoodi s/Num
+   :laji #{s/Keyword}})
+
+(def Sanktio
+  {:sakko? s/Bool
+   :id s/Num
+   :perintapvm pvm-tyyppi
+   :laji Sakkolaji
+   :tyyppi Sanktiotyyppi
+   (s/optional-key :toimenpideinstanssi) s/Any ;; FIXME: tpi instanssin skeema
+   (s/optional-key :summa) s/Num
+   (s/optional-key :indeksi) s/Str})
+   
+(def Paatos
+  {:kasittelyaika pvm-tyyppi
+   :kasittelytapa Kasittelytapa
+   (s/optional-key :kasittelytapa-selite) s/Str
+   :paatos Paatostyyppi
+   :perustelu s/Str
+   })
+
 (def Havainto
   {:kuvaus Teksti
    :tekija Osapuoli
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
-   (s/optional-key :id) s/Int})
+   (s/optional-key :id) s/Int
+   :paatos Paatos
+   (s/optional-key :sanktiot) {s/Num Sanktio}})
 
   
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie))
