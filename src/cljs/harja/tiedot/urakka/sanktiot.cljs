@@ -35,7 +35,7 @@
                                       hoitokausi @urakka/valittu-hoitokausi
                                       tpi (:tpi_id @urakka/valittu-toimenpideinstanssi)
                                       nakymassa?]
-                                     (when nakymassa?
+                                     (when @nakymassa?
                                        (hae-urakan-sanktiot urakka hoitokausi tpi))))
 
 (defn kasaa-tallennuksen-parametrit
