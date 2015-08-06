@@ -51,10 +51,20 @@
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
-  (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
-    (reset! haetut-sanktiot
-            (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) sanktio vanha)) @haetut-sanktiot)))
+  (when (and
+          palautettu-id
+          (= (:toimenpideinstanssi sanktio) (:tpi_id @urakka/valittu-toimenpideinstanssi))
+          (pvm/valissa?
+            (get-in sanktio [:havainto :aika])
+            (first @urakka/valittu-hoitokausi)
+            (second @urakka/valittu-hoitokausi)))
+    (assoc sanktio :id palautettu-id)
+    (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
+     (reset! haetut-sanktiot
+             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) sanktio vanha)) @haetut-sanktiot)))
 
-    (reset! haetut-sanktiot
-            (into [] (concat @haetut-sanktiot [sanktio])))))
+     (reset! haetut-sanktiot
+             (into [] (concat @haetut-sanktiot [sanktio])))))
+
+  (log (pr-str (map :id @haetut-sanktiot))))
 
