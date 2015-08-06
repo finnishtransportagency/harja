@@ -12,7 +12,7 @@
   )
 
 (def +polku+ (let [host (.-host js/location)]
-               (if (#{"localhost" "localhost:3000" "harja-test.solitaservices.fi"} host)
+               (if (#{"localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
                  "/"
                  "/harja/")))
 (defn polku []
