@@ -32,7 +32,6 @@
   (let [urakka @nav/valittu-urakka
         alkupvm (:alkupvm urakka)
         loppupvm (:loppupvm urakka)]
-    (log "VALIDOI urakan aikana? " data " väliss? " alkupvm " - " loppupvm)
     (when (and data alkupvm loppupvm
                (not (pvm/valissa? data alkupvm loppupvm)))
       (or viesti
