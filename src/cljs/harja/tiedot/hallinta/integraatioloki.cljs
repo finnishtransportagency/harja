@@ -29,7 +29,7 @@
 
 (def nakymassa? (atom false))
 
-(defonce jarjestelmien-integraatiot (reaction<! [nakymassa?]
+(defonce jarjestelmien-integraatiot (reaction<! [nakymassa? @nakymassa?]
                                                 (when nakymassa?
                                                   (hae-jarjestelmien-integraatiot))))
 
@@ -42,7 +42,7 @@
   (reaction<! [valittu-jarjestelma @valittu-jarjestelma
                valittu-integraatio @valittu-integraatio
                valittu-aikavali @valittu-aikavali
-               nakymassa?]
+               nakymassa? @nakymassa?]
               (when nakymassa?
                 ;;(reset! valittu-tapahtuma nil)
                 (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
