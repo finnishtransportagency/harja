@@ -345,7 +345,11 @@
                                     (reset! data d))))
 
         muuta! (fn [data t]
-                 (reset! teksti t)
+                 (when
+                   (or
+                     (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t)
+                     (str/blank? t))
+                   (reset! teksti t))
                  (if (str/blank? t)
                    (reset! data nil)))
 
@@ -455,8 +459,9 @@
                              (reset! data nil)))))
 
                muuta-pvm! (fn [t]
-                            (when (or (str/blank? t)
-                                      (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
+                            (when (or
+                                    (str/blank? t)
+                                    (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
                               (reset! pvm-teksti t)))
 
                muuta-aika! (fn [t]
