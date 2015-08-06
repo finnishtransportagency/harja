@@ -32,17 +32,17 @@
                                           (log "PÄÄ Haetaan päällystystoteumat.")
                                           (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
-(defn tila-keyword->string [tila]
+(defn nayta-tila [tila]
   (case tila
     :aloitettu "Aloitettu"
     :valmis "Valmis"
     :lukittu "Lukittu"
     "-"))
 
-(defn paatos-keyword->string [tila]
+(defn nayta-paatos [tila]
   (case tila
-    :hyvaksytty "Hyväksytty"
-    :hylatty "Hylätty"
+    :hyvaksytty [:span.paallystysilmoitus-hyvaksytty "Hyväksytty"]
+    :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
     ""))
 
 (def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
@@ -444,11 +444,11 @@
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                             (tila-keyword->string (:tila rivi)))}
-           {:otsikko "Päätös (tekninen)" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                                                         (paatos-keyword->string (:paatos_tekninen_osa rivi)))}
-           {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                                                                   (paatos-keyword->string (:paatos_taloudellinen_osa rivi)))}
+                                                                                                             (nayta-tila (:tila rivi)))}
+           {:otsikko "Päätös (tekninen)" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                                         (nayta-paatos (:paatos_tekninen_osa rivi)))}
+           {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                                                   (nayta-paatos (:paatos_taloudellinen_osa rivi)))}
            {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
