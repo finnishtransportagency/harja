@@ -257,7 +257,7 @@
 (defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot]} data]
   [:span
    (for [v vaihtoehdot]
-     ^{:key (str "boolean-group-"(name v))}
+     ^{:key (str "boolean-group-" (name v))}
      [:div.checkbox
       [:label
        [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
@@ -342,7 +342,7 @@
                                   (reset! data nil))
                                 (when-not focus
                                   (when-let [d (pvm/->pvm t)]
-                                   (reset! data d))))
+                                    (reset! data d))))
 
         muuta! (fn [data t]
                  (reset! teksti t)
@@ -382,18 +382,17 @@
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
-               naytettava-pvm (if (nil? nykyinen-pvm)
-                                (pvm-tyhjana rivi)
-                                ;; Näytettävä pvm on joko kirjoitettu teksti parsittuna pvm:ksi,
-                                ;; tai jos teksti ei ole pvm, näytetään joko tyhjä, tai viimeisin validi pvm
-                                (or (pvm/->pvm nykyinen-teksti) nykyinen-pvm))]
+               naytettava-pvm (or
+                                (pvm/->pvm nykyinen-teksti)
+                                nykyinen-pvm
+                                (pvm-tyhjana rivi))]
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
             [:input.pvm {:class     (when lomake? "form-control")
                          :value     nykyinen-teksti
                          :on-focus  on-focus
-                         :on-change   #(muuta! data (-> % .-target .-value))
-                         :on-blur #(teksti-paivamaaraksi! data (-> % .-target .-value))}]
+                         :on-change #(muuta! data (-> % .-target .-value))
+                         :on-blur   #(teksti-paivamaaraksi! data (-> % .-target .-value))}]
             (when @auki
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
@@ -412,9 +411,9 @@
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
-        teksti (atom (if p
-                       (pvm/pvm p)
-                       ""))
+        pvm-teksti (atom (if p
+                           (pvm/pvm p)
+                           ""))
         aika-teksti (atom (if p
                             (pvm/aika p)
                             ""))
@@ -429,9 +428,9 @@
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
            (reset! auki false))
-         (swap! teksti #(if-let [p @data]
-                         (pvm/pvm p)
-                         %)))
+         (swap! pvm-teksti #(if-let [p @data]
+                             (pvm/pvm p)
+                             %)))
 
        :component-did-mount
        (when lomake? (fn [this]
@@ -448,33 +447,31 @@
        :reagent-render
        (fn [_ data]
          (let [aseta! (fn []
-                        (let [pvm @teksti
+                        (let [pvm @pvm-teksti
                               aika @aika-teksti
                               p (pvm/->pvm-aika (str pvm " " aika))]
-                          (log "pvm: " pvm ", aika: " aika ", p: " p)
                           (if p
                             (reset! data p)
                             (reset! data nil))))
 
                muuta-pvm! (fn [t]
-                        (when (or (str/blank? t)
-                                  (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
-                          (reset! teksti t)
-                        (aseta!)))
+                            (when (or (str/blank? t)
+                                      (re-matches #"\d{1,2}((\.\d{0,2})(\.\d{0,4})?)?" t))
+                              (reset! pvm-teksti t)))
 
                muuta-aika! (fn [t]
                              (when (or (str/blank? t)
                                        (re-matches #"\d{1,2}(:\d*)?" t))
-                               (reset! aika-teksti t)
-                               (aseta!)))
+                               (reset! aika-teksti t)))
 
                nykyinen-pvm @data
-               nykyinen-teksti @teksti
+               nykyinen-pvm-teksti @pvm-teksti
                nykyinen-aika-teksti @aika-teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
-               naytettava-pvm (if (nil? nykyinen-pvm)
-                                (pvm-tyhjana rivi)
-                                nykyinen-pvm)]
+               naytettava-pvm (or
+                                (pvm/->pvm nykyinen-pvm-teksti)
+                                nykyinen-pvm
+                                (pvm-tyhjana rivi))]
            [:span.pvm-kentta
             [:table
              [:tbody
@@ -486,16 +483,16 @@
                                                (.preventDefault %)
                                                (reset! auki true)
                                                nil)
-                             :value       nykyinen-teksti
+                             :value       nykyinen-pvm-teksti
                              :on-focus    on-focus
-                             :on-blur   #(muuta-pvm! (-> % .-target .-value))
+                             :on-blur     aseta!
                              :on-change   #(muuta-pvm! (-> % .-target .-value))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
-                         :on-blur   #(muuta-aika! (-> % .-target .-value))
+                         :on-blur     aseta!
                          :on-change   #(muuta-aika! (-> % .-target .-value))}]]]]]
 
             (when @auki

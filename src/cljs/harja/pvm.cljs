@@ -127,7 +127,7 @@
   (try
     (df/parse fi-pvm-parse teksti)
     (catch js/Error e
-      (.log js/console "E: " e)
+      #_(.log js/console "E: " e)
       nil)))
 
 (defn kuukauden-nimi [kk]
