@@ -326,7 +326,7 @@
 ;; päätyä, jos käyttäjä pyyhkii päivän pois validin pvm:n alusta - eikä tätä tietenkään haluta estää.
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
-(def +pvm-regex+ #"[0-3]{0,2}((\.[0-2]{0,2})(\.[1-2]{0,1}[0-9]{0,3})?)?")
+(def +pvm-regex+ #"[0-3]{0,2}((\.\d{0,2})(\.[1-2]{0,1}[0-9]{0,3})?)?")
 
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
