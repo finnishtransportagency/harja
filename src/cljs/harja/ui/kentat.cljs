@@ -430,7 +430,10 @@
                             ""))
         ;; picker auki?
         auki (atom false)
-        pvm-aika-koskettu (atom [false false])
+        pvm-aika-koskettu (atom [(not
+                                   (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
+                                 (not
+                                   (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
         sijainti (atom nil)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
@@ -500,14 +503,14 @@
                                                nil)
                              :value       nykyinen-pvm-teksti
                              :on-focus    on-focus
-                             :on-blur     #((do (koske-pvm!) (aseta!)))
+                             :on-blur     #(do (koske-pvm!) (aseta!))
                              :on-change   #(muuta-pvm! (-> % .-target .-value))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
-                         :on-blur     #((do (koske-aika!) (aseta!)))
+                         :on-blur     #(do (koske-aika!) (aseta!))
                          :on-change   #(muuta-aika! (-> % .-target .-value))}]]]]]
 
             (when @auki
