@@ -105,7 +105,7 @@
 
 (defn tallenna-havainnon-sanktio
   [db user {:keys [id perintapvm laji tyyppi toimenpideinstanssi summa indeksi suorasanktio] :as sanktio} havainto urakka]
-  (log/debug "TALLENNA sanktio: " id " urakka: " urakka ", tyyppi: " tyyppi ", havaintoon " havainto)
+  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", havaintoon " havainto)
   (if (or (nil? id) (neg? id))
     (let [uusi-sanktio (sanktiot/luo-sanktio<!
                          db (konv/sql-timestamp perintapvm)
@@ -197,7 +197,9 @@
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id))))
+  (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
+    (assoc tarkastus
+           :havainto (hae-havainnon-tiedot db user urakka-id (:id (:havainto tarkastus))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
@@ -208,7 +210,7 @@
                              :urakka urakka-id})
 
             uusi? (nil? (:id tarkastus))
-            havainto-id (havainnot/luo-tai-paivita-havainto c user havainto)
+            havainto-id (:id (tallenna-havainto db user havainto)) ;; (havainnot/luo-tai-paivita-havainto c user havainto)
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
                                                        havainto-id)]
 

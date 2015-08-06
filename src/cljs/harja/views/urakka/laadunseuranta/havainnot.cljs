@@ -18,6 +18,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [harja.domain.roolit :as roolit]
+            [harja.domain.laadunseuranta :refer [validi-havainto?]]
             [harja.tiedot.istunto :as istunto]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
@@ -307,14 +308,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      
                        #(tallenna-havainto @havainto)
                        {:ikoni (ikonit/check)
-                        :disabled (let [h @havainto]
-                                    (log "SANKTIO VIRHEET: " (pr-str @sanktio-virheet))
-                                    (not (and (:aika h)
-                                              (:kohde h)
-                                              (:kuvaus h)
-                                              (if (paatos? h)
-                                                (every? empty? (vals @sanktio-virheet))
-                                                true))))
+                        :disabled (not (validi-havainto? @havainto))
                         :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
            [
 

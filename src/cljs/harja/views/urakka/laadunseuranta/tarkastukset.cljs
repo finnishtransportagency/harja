@@ -98,7 +98,13 @@
           :tyhja "Ei tarkastuksia"
           :rivi-klikattu #(go
                             (reset! valittu-tarkastus
-                                    (<! (laadunseuranta/hae-tarkastus (:id urakka) (:id %)))))}
+                                    (update-in (<! (laadunseuranta/hae-tarkastus (:id urakka) (:id %)))
+                                               [:havainto :sanktiot]
+                                               (fn [sanktiot]
+                                                 (when sanktiot
+                                                   (into {}
+                                                         (map (juxt :id identity)
+                                                              sanktiot)))))))}
          
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
@@ -216,7 +222,11 @@
        [napit/palvelinkutsu-nappi
         "Tallenna tarkastus"
         (fn []
-          (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+          (laadunseuranta/tallenna-tarkastus (:id @nav/valittu-urakka)
+                                             (update-in tarkastus [:havainto :sanktiot]
+                                                        (fn [sanktiot]
+                                                          (when sanktiot
+                                                            (vals sanktiot))))))
         
         {:disabled (not (validi-tarkastus? tarkastus))
          :kun-onnistuu (fn [tarkastus]

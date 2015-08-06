@@ -12,7 +12,7 @@
 (def Sanktiotyyppi
   {:id s/Num
    :nimi s/Str
-   :toimenpidekoodi s/Num
+   :toimenpidekoodi (s/maybe s/Num)
    :laji #{s/Keyword}})
 
 (def Sanktio
@@ -28,14 +28,19 @@
 (def Paatos
   {:kasittelyaika pvm-tyyppi
    :kasittelytapa Kasittelytapa
-   (s/optional-key :kasittelytapa-selite) s/Str
+   (s/optional-key :muukasittelytapa) (s/maybe s/Str)
    :paatos Paatostyyppi
    :perustelu s/Str
    })
 
 (def Havainto
-  {:kuvaus Teksti
+  {(s/optional-key :aika) pvm-tyyppi ;; ei ole, jos on tarkastuksen havainto
+   :kuvaus Teksti
    :tekija Osapuoli
+   (s/optional-key :kohde) (s/maybe s/Str)
+   (s/optional-key :urakka) s/Any
+   (s/optional-key :tekijanimi) s/Str
+   (s/optional-key :kommentit) s/Any ;; FIXME: kommentit skeema
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
    (s/optional-key :id) s/Int
    :paatos Paatos
@@ -78,9 +83,14 @@
 
 (defn validi-tarkastus? [data]
   (let [virheet (validoi-tarkastus data)]
-    #?(:cljs (log "virheet: " (pr-str virheet)))
+    #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
     (nil? virheet)))
   
+(defn validoi-havainto [data]
+  (skeema/tarkista Havainto data))
 
-
+(defn validi-havainto? [data]
+  (let [virheet (validoi-havainto data)]
+    #?(:cljs (log "havainto virheet: " (pr-str virheet)))
+    (nil? virheet)))
                     
