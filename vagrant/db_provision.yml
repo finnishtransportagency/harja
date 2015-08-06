@@ -1,9 +1,6 @@
 ---
 - hosts: all
   sudo: true
-  vars:
-    deus_user: CHANGEME
-    deus_password: CHANGEME
   tasks:
   - name: Add maven repository
     apt_repository: repo='ppa:andrei-pozolotin/maven3' state=present
@@ -39,12 +36,28 @@
     template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf
   - name: Restart NGINX
     service: name=nginx state=restarted
+  - name: Copy Deus private key
+    copy: src=keys/id_rsa_harjavagrant dest=/tmp/id_rsa_harjavagrant
   - name: Checkout harja-tietokanta
     sudo: yes
     sudo_user: postgres
-    git: repo=https://{{deus_user}}:{{deus_password}}@deus.solita.fi/Solita/projects/harja/repositories/git/harja-tietokanta
+    git: repo=deveo@deus.solita.fi:Solita/projects/harja/repositories/git/harja-tietokanta
          dest=/tmp/checkout
          version=develop
+         key_file=/tmp/id_rsa_harjavagrant
+         accept_hostkey=yes
+  - name: Install database template
+    command: sh kanta_template.sh
+    sudo: yes
+    sudo_user: postgres
+    args:
+       chdir: /tmp/checkout
+  - name: Install test database template
+    command: sh testikanta_template.sh
+    sudo: yes
+    sudo_user: postgres
+    args:
+       chdir: /tmp/checkout
   - name: Install database
     command: sh kanta_uusiksi.sh
     sudo: yes

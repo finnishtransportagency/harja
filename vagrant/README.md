@@ -8,9 +8,7 @@
 3. Ansible
    ```brew install ansible```
 
-## Valmistelut
-
-Editoi omat Deus-käyttäjätunnuksesi ja salasanasi db_provision.yml:n vars-osioon (deus_user ja deus_password).
+# Käyttö
 
 Virtuaalikone käynnistyy ja provisioituu komennolla
 
