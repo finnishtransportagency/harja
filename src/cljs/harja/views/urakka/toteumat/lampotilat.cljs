@@ -73,12 +73,12 @@
                                                      (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                      (tallenna-muutos hoitokausi %))}]
                                   
-                                  [:button.nappi-kielteinen {:name "peruuta"
+                                  [:button.nappi-toissijainen {:name "peruuta"
                                                              :disabled (= @muokatut-lampotilat @nykyiset-lampotilat)
                                                              :on-click #(do
                                                                           (.preventDefault %)
                                                                           (reset! muokatut-lampotilat @nykyiset-lampotilat))}
-                                   (ikonit/remove) " Peruuta"]]]))
+                                   (ikonit/remove) " Kumoa"]]]))
                  }
          [{:otsikko "Keskilämpötila" :nimi :keskilampo :tyyppi :numero :leveys-col 2
            :validoi [[:lampotila]]}
