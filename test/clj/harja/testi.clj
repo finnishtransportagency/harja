@@ -9,15 +9,21 @@
 
 (def jarjestelma nil)
 
+(defn ollaanko-jenkinsissa? []
+  (= "harja-jenkins.solitaservices.fi"
+     (.getHostName (java.net.InetAddress/getLocalHost))))
 
-(def testitietokanta [(if (= "harja-jenkins.solitaservices.fi"
-                             (.getHostName (java.net.InetAddress/getLocalHost)))
+(def testitietokanta [(if (ollaanko-jenkinsissa?)
                         "172.17.238.100"
                         "localhost")
                       5432
                       "harjatest"
                       "harjatest"
                       nil])
+
+; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
+; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
+(def temppitietokanta ["localhost" 5432 "temp" "harjatest" nil])
 
 (defn odota [ehto-fn viesti max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
@@ -29,7 +35,11 @@
 (defn luo-testitietokanta []
   (apply tietokanta/luo-tietokanta testitietokanta))
 
+(defn luo-temppitietokanta []
+  (apply tietokanta/luo-tietokanta temppitietokanta))
+
 (defonce db (:datasource (luo-testitietokanta)))
+(defonce temppidb (:datasource (luo-temppitietokanta)))
 
 (def ds {:datasource db})
 
@@ -57,6 +67,24 @@
   (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
+
+(defn- tapa-backend-kannasta [ps kanta]
+  (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()")))
+
+(defn- luo-kannat-uudelleen []
+  (alter-var-root #'db (fn [_] (:datasource (luo-testitietokanta))))
+  (alter-var-root #'temppidb (fn [_] (:datasource (luo-temppitietokanta)))))
+
+(defn pudota-ja-luo-testitietokanta-templatesta
+  "Droppaa tietokannan ja luo sen templatesta uudelleen"
+  []
+  (with-open [c (.getConnection temppidb)
+              ps (.createStatement c)]
+    (tapa-backend-kannasta ps "harjatest_template")
+    (tapa-backend-kannasta ps "harjatest")
+    (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+    (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
+  (luo-kannat-uudelleen))
 
 (defprotocol FeikkiHttpPalveluKutsu
   (kutsu-palvelua
@@ -156,7 +184,9 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null)"))))
 
+
 (defn urakkatieto-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))

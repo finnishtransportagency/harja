@@ -180,7 +180,7 @@
     (is (= uusi-maara (int (ffirst (q (str "SELECT maara FROM toteuma_materiaali WHERE id="@tmid)))))
         "Toteumamateriaalin määrän olisi pitänyt päivittyä.")
 
-    (u (str "DELETE FROM toteuma_materiaali WHERE id="@tmid))))
+    (u (str "DELETE FROM toteuma_materiaali WHERE id=" @tmid))))
 
 (deftest poista-toteuma-materiaali-test
   (let [maara 874625
