@@ -110,12 +110,16 @@
                {:ikoni true
                 :kun-onnistuu (fn [{:keys [keskilampotila ilmastollinen-keskiarvo]}]
                                 (log "SAATIIN ilmatieteenlaitokselta " keskilampotila " ja " ilmastollinen-keskiarvo)
-                                (swap! muokatut-lampotilat update-in [hoitokausi]
-                                       (fn [lampotilat]
-                                         (assoc lampotilat
-                                                :keskilampo keskilampotila
-                                                :pitkalampo ilmastollinen-keskiarvo
-                                                ::muokattu true))))}])
+                                (if (and keskilampotila ilmastollinen-keskiarvo)
+                                  (swap! muokatut-lampotilat update-in [hoitokausi]
+                                         (fn [lampotilat]
+                                           (assoc lampotilat
+                                                  :keskilampo keskilampotila
+                                                  :pitkalampo ilmastollinen-keskiarvo
+                                                  ::muokattu true)))
+                                  (viesti/nayta! (str "Talvikauden "
+                                                      (pvm/vuosi (first hoitokausi)) " \u2014 " (pvm/vuosi (second hoitokausi))
+                                                      " lämpötiloja ei löytynyt.") :warning)))}])
             
             (if @u/valittu-hoitokausi
               [lampotila-lomake

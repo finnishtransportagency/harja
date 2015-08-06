@@ -28,8 +28,9 @@
                                                  :query-params {"season" (str talvikauden-alkuvuosi "-" (inc talvikauden-alkuvuosi))
                                                                 "newversion" 1}
                                                  :timeout 10000})]
-    (log/info "STATUS: " status)
-    (log/info "HEADERS: " headers)
+    (log/debug "STATUS: " status)
+    (log/debug "HEADERS: " headers)
+
     (if error
       (do (log/warn "Ilmatieteenlaitoksen palvelun kutsu epäonnistui: " status error)
           (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
