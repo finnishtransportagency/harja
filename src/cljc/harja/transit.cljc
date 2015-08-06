@@ -53,7 +53,7 @@
 
                       ;; Serveri lähettää PGpoint tyypit muunnettuna [x y] vektoreiksi, jotka
                       ;; kelpaa meille sellaisenaan
-                      "pp" identity
+                      "pp" js->clj
 
                       ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
                       "eo" #(roolit/->EiOikeutta %)})})
