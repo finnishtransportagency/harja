@@ -29,6 +29,10 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
+                              :talvihoito "Talvihoitotarkastus"
+                              :soratie "Soratien tarkastus"})
+
 (def +tarkastustyyppi+ [:tiesto :talvihoito :soratie])
 
 
@@ -101,7 +105,7 @@
            :nimi :aika}
 
           {:otsikko "Tyyppi"
-           :nimi :tyyppi :fmt name :leveys 1}
+           :nimi :tyyppi :fmt +tarkastustyyppi->nimi+ :leveys 1}
 
           {:otsikko "TR osoite"
            :nimi :tr
