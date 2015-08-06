@@ -12,6 +12,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.viesti :as viesti]
+            [harja.ui.komponentti :as komp]
             [bootstrap :as bs]
 
             [harja.ui.leaflet :refer [leaflet]]
@@ -25,7 +26,7 @@
             [harja.domain.roolit :refer [+rooli->kuvaus+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.ui.yleiset :refer [deftk]]))
+                   [harja.atom :refer [reaction<!]]))
 
 
 
@@ -35,12 +36,12 @@
 
 (defonce haku (atom ""))
 
+(defonce kayttajahallinnassa? (atom false))
 
-(defonce kayttajalista (atom nil))
-(defonce kayttajalista-haku
-         (go (let [[lkm data] (<! (k/hae-kayttajat "" 0 500))]
-               (log "KAYTTAJALISTA TULI: " data)
-               (reset! kayttajalista data))))
+(defonce kayttajalista (reaction<!
+                        [hae? @kayttajahallinnassa?]
+                        (when hae?
+                          (go (second (<! (k/hae-kayttajat "" 0 500)))))))
 
 (defonce kayttajatyyppi-rajaus (atom nil))                  ;; voi olla "L" tai "LX" jos halutaa
 
@@ -63,9 +64,11 @@
   []
   (let [tunnus (atom "")
         haku-menossa (atom false)]
-    (fn []
-      [:div.kayttajaluettelo
-       (roolit/jos-rooli
+    (komp/luo
+     (komp/lippu kayttajahallinnassa?)
+     (fn []
+       [:div.kayttajaluettelo
+        (roolit/jos-rooli
          #{roolit/jarjestelmavastuuhenkilo}                 ;; +hallintayksikön vastuuhenkilö
          (let [rajaa #(reset! kayttajatyyppi-rajaus %)]
            [:span.nayta-kayttajat-valinta
@@ -78,61 +81,61 @@
 
             [:input.vain-lx-tunnukset {:type "radio" :on-change #(rajaa "LX") :checked (= @kayttajatyyppi-rajaus "LX")}]
             [:label {:on-click #(rajaa "LX") :for "vain-lx-tunnukset"} "vain LX-tunnukset"]]))
-       [grid/grid
-        {:otsikko       "Käyttäjät"
-         :tyhja         "Ei käyttäjiä."
-         :rivi-klikattu #(reset! valittu-kayttaja %)
-         }
+        [grid/grid
+         {:otsikko       "Käyttäjät"
+          :tyhja         "Ei käyttäjiä."
+          :rivi-klikattu #(reset! valittu-kayttaja %)
+          }
 
-        [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
-         {:otsikko "Livi-tunnus" :nimi :kayttajanimi :leveys "10%"}
+         [{:otsikko "Nimi" :hae #(str (:etunimi %) " " (:sukunimi %)) :leveys "30%"}
+          {:otsikko "Livi-tunnus" :nimi :kayttajanimi :leveys "10%"}
 
-         {:otsikko "Organisaatio" :nimi :org-nimi
-          :hae     #(:nimi (:organisaatio %))
-          :leveys  "25%"}
+          {:otsikko "Organisaatio" :nimi :org-nimi
+           :hae     #(:nimi (:organisaatio %))
+           :leveys  "25%"}
 
-         {:otsikko "Roolit" :nimi :roolit
-          :fmt     #(str/join ", " (map +rooli->kuvaus+ %))
-          :leveys  "35%"}
-         ]
+          {:otsikko "Roolit" :nimi :roolit
+           :fmt     #(str/join ", " (map +rooli->kuvaus+ %))
+           :leveys  "35%"}
+          ]
 
-        @kayttajalista-rajattu]
+         @kayttajalista-rajattu]
 
-       [:form.form-inline
-        [:div.form-group
-         [:label {:for "tuoKayttaja"} "Tuo käyttäjä Harjaan: "]
-         [:input#tuoKayttaja.form-control {:value       @tunnus
-                                           :on-change   #(reset! tunnus (-> % .-target .-value))
+        [:form.form-inline
+         [:div.form-group
+          [:label {:for "tuoKayttaja"} "Tuo käyttäjä Harjaan: "]
+          [:input#tuoKayttaja.form-control {:value       @tunnus
+                                            :on-change   #(reset! tunnus (-> % .-target .-value))
 
-                                           :placeholder "Livi-tunnus (LX123456)..."}]]
-        [:button.nappi-toissijainen {:disabled (or @haku-menossa
-                                                   (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
-                                     :on-click #(do (.preventDefault %)
-                                                    (reset! haku-menossa true)
-                                                    (go (let [tunnus @tunnus
-                                                              res (<! (k/hae-fim-kayttaja tunnus))]
-                                                          (log "TULI: " res)
-                                                          ;; onko valittu käyttäjä edelleen nil?
-                                                          (when (nil? @valittu-kayttaja)
-                                                            (if (map? res)
-                                                              (reset! valittu-kayttaja res)
-                                                              (if (number? res)
-                                                                (cond
-                                                                  (and (<= 400 res) (> 500 res))
-                                                                  (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
-                                                                                 :danger)
-                                                                  (and (<= 500 res) (> 600 res))
-                                                                  (viesti/nayta! (str "FIM-palvelun kutsuminen epäonnistui ("res")")
-                                                                                 :danger)
-                                                                  :else (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
-                                                                                       :warning))
+                                            :placeholder "Livi-tunnus (LX123456)..."}]]
+         [:button.nappi-toissijainen {:disabled (or @haku-menossa
+                                                    (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
+                                      :on-click #(do (.preventDefault %)
+                                                     (reset! haku-menossa true)
+                                                     (go (let [tunnus @tunnus
+                                                               res (<! (k/hae-fim-kayttaja tunnus))]
+                                                           (log "TULI: " res)
+                                                           ;; onko valittu käyttäjä edelleen nil?
+                                                           (when (nil? @valittu-kayttaja)
+                                                             (if (map? res)
+                                                               (reset! valittu-kayttaja res)
+                                                               (if (number? res)
+                                                                 (cond
+                                                                   (and (<= 400 res) (> 500 res))
+                                                                   (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                  :danger)
+                                                                   (and (<= 500 res) (> 600 res))
+                                                                   (viesti/nayta! (str "FIM-palvelun kutsuminen epäonnistui ("res")")
+                                                                                  :danger)
+                                                                   :else (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                        :warning))
 
-                                                                (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
-                                                                              :warning))))
-                                                          (reset! haku-menossa false))))}
-         (when @haku-menossa
-           [ajax-loader])
-         "Tuo käyttäjä"]]])))
+                                                                 (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
+                                                                                :warning))))
+                                                           (reset! haku-menossa false))))}
+          (when @haku-menossa
+            [ajax-loader])
+          "Tuo käyttäjä"]]]))))
 
 (defn valitut-urakat [urakat-map]
   (into #{}
