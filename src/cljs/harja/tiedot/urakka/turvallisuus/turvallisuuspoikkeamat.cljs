@@ -23,7 +23,7 @@
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi
                                                     nakymassa?]
-                                                   (when nakymassa?
+                                                   (when @nakymassa?
                                                      (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
 
 (def taso-turvallisuuspoikkeamat (atom false))
