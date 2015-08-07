@@ -14,7 +14,7 @@
   (into #{}
         (map :nimi (q/hae-indeksien-nimet db))))
 
-(defn- ryhmittele-indeksit [db indeksit]
+(defn- ryhmittele-indeksit [indeksit]
   (seq (group-by (fn [rivi]
                    [(:nimi rivi) (:vuosi rivi)])
                  indeksit)))
