@@ -169,7 +169,7 @@
 (defn sanktiolistaus
   []
   [:div.sanktiot
-   [urakka-valinnat/urakan-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+   [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
    [:button.nappi-ensisijainen
     {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
     (ikonit/plus) " Lisää sanktio"]

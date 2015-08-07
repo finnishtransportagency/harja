@@ -25,18 +25,16 @@
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot annetulle hoitokaudelle."
-  [urakka-id [alku loppu] tpi]
+  [urakka-id [alku loppu]]
   (k/post! :hae-urakan-sanktiot {:urakka-id urakka-id
                                  :alku      alku
-                                 :loppu     loppu
-                                 :tpi       tpi}))
+                                 :loppu     loppu}))
 
 (defonce haetut-sanktiot (reaction<! [urakka (:id @nav/valittu-urakka)
                                       hoitokausi @urakka/valittu-hoitokausi
-                                      tpi (:tpi_id @urakka/valittu-toimenpideinstanssi)
                                       _ @nakymassa?]
                                      (when @nakymassa?
-                                       (hae-urakan-sanktiot urakka hoitokausi tpi))))
+                                       (hae-urakan-sanktiot urakka hoitokausi))))
 
 (defn kasaa-tallennuksen-parametrit
   [s]
@@ -53,18 +51,14 @@
   [palautettu-id sanktio]
   (when (and
           palautettu-id
-          (= (:toimenpideinstanssi sanktio) (:tpi_id @urakka/valittu-toimenpideinstanssi))
           (pvm/valissa?
             (get-in sanktio [:havainto :aika])
             (first @urakka/valittu-hoitokausi)
             (second @urakka/valittu-hoitokausi)))
-    (assoc sanktio :id palautettu-id)
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
      (reset! haetut-sanktiot
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) sanktio vanha)) @haetut-sanktiot)))
+             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot)))
 
      (reset! haetut-sanktiot
-             (into [] (concat @haetut-sanktiot [sanktio])))))
-
-  (log (pr-str (map :id @haetut-sanktiot))))
+             (into [] (concat @haetut-sanktiot [(assoc sanktio :id palautettu-id)]))))))
 

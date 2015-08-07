@@ -114,10 +114,8 @@
 
 (deftest hae-urakan-sanktiot []
   (let [urakka-id (hae-oulun-alueurakan-id)
-        tpi-idt (hae-oulun-alueurakan-toimenpideinstanssien-idt)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:tpi       (first tpi-idt)
-                                                                     :urakka-id urakka-id
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                      :alku      (java.sql.Date. 100 9 1)
                                                                      :loppu     (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
