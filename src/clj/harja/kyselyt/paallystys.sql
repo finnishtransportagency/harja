@@ -54,8 +54,10 @@ SELECT
   ilmoitustiedot,
   paatos_tekninen_osa,
   paatos_taloudellinen_osa,
-  perustelu,
-  kasittelyaika
+  perustelu_tekninen_osa,
+  perustelu_taloudellinen_osa,
+  kasittelyaika_tekninen_osa,
+  kasittelyaika_taloudellinen_osa
 FROM paallystysilmoitus
   JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                              AND pk.urakka = :urakka
@@ -89,20 +91,22 @@ AND paallystyskohdeosa.poistettu IS NOT TRUE;
 -- Päivittää päällystysilmoituksen
 UPDATE paallystysilmoitus
 SET
-  tila                        = :tila::paallystystila,
-  ilmoitustiedot              = :ilmoitustiedot :: JSONB,
-  aloituspvm                  = :aloituspvm,
-  valmispvm_kohde             = :valmispvm_kohde,
-  valmispvm_paallystys        = :valmispvm_paallystys,
-  takuupvm                    = :takuupvm,
-  muutoshinta                 = :muutoshinta,
-  paatos_tekninen_osa         = :paatos_tekninen_osa::paallystysilmoituksen_paatostyyppi,
-  paatos_taloudellinen_osa    = :paatos_taloudellinen_osa::paallystysilmoituksen_paatostyyppi,
-  perustelu                   = :perustelu,
-  kasittelyaika               = :kasittelyaika,
-  muokattu                    = NOW(),
-  muokkaaja                   = :muokkaaja,
-  poistettu                   = FALSE
+  tila                              = :tila::paallystystila,
+  ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
+  aloituspvm                        = :aloituspvm,
+  valmispvm_kohde                   = :valmispvm_kohde,
+  valmispvm_paallystys              = :valmispvm_paallystys,
+  takuupvm                          = :takuupvm,
+  muutoshinta                       = :muutoshinta,
+  paatos_tekninen_osa               = :paatos_tekninen_osa::paallystysilmoituksen_paatostyyppi,
+  paatos_taloudellinen_osa          = :paatos_taloudellinen_osa::paallystysilmoituksen_paatostyyppi,
+  perustelu_tekninen_osa            = :perustelu_tekninen_osa,
+  perustelu_taloudellinen_osa       = :perustelu_taloudellinen_osa,
+  kasittelyaika_tekninen_osa        = :kasittelyaika_tekninen_osa,
+  kasittelyaika_taloudellinen_osa   = :kasittelyaika_taloudellinen_osa,
+  muokattu                          = NOW(),
+  muokkaaja                         = :muokkaaja,
+poistettu                           = FALSE
 WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!

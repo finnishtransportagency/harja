@@ -77,28 +77,33 @@
   (let [muokattava? (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
                                   (and (not (= (:tila @lomakedata) :lukittu)))))
-        paatostiedot (r/wrap {:paatos-tekninen      (:paatos_tekninen_osa @lomakedata)
-                              :paatos-taloudellinen (:paatos_taloudellinen_osa @lomakedata)
-                              :perustelu            (:perustelu @lomakedata)
-                              :kasittelyaika        (:kasittelyaika @lomakedata)}
+        paatostiedot (r/wrap {:paatos-tekninen                 (:paatos_tekninen_osa @lomakedata)
+                              :paatos-taloudellinen            (:paatos_taloudellinen_osa @lomakedata)
+                              :perustelu_tekninen_osa          (:perustelu_tekninen_osa @lomakedata)
+                              :perustelu_taloudellinen_osa     (:perustelu_taloudellinen_osa @lomakedata)
+                              :kasittelyaika_tekninen_osa      (:kasittelyaika_tekninen_osa @lomakedata)
+                              :kasittelyaika_taloudellinen_osa (:kasittelyaika_taloudellinen_osa @lomakedata)}
                              (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
                                                                     (assoc :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
-                                                                    (assoc :perustelu (:perustelu uusi-arvo))
-                                                                    (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
+                                                                    (assoc :perustelu_tekninen_osa (:perustelu_tekninen_osa uusi-arvo))
+                                                                    (assoc :perustelu_taloudellinen_osa (:perustelu_taloudellinen_osa uusi-arvo))
+                                                                    (assoc :kasittelyaika_tekninen_osa (:kasittelyaika_tekninen_osa uusi-arvo))
+                                                                    (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika_taloudellinen_osa uusi-arvo))))))]
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
-       [:h3 "Käsittely ja päätös"]
+       [:h3 "Käsittely"]
+       [:h4 "Tekninen osa"]
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot uusi))
          :voi-muokata? (muokattava?)}
-        [{:otsikko     "Käsittelyn pvm"
-          :nimi        :kasittelyaika
+        [{:otsikko     "Käsitelty"
+          :nimi        :kasittelyaika_tekninen_osa
           :tyyppi      :pvm-aika
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
-         {:otsikko       "Päätös teknisestä osasta"
+         {:otsikko       "Päätös"
           :nimi          :paatos-tekninen
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
@@ -106,7 +111,29 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
-         {:otsikko       "Päätös taloudellisesta osasta"
+         (when (or (:paatos-tekninen @paatostiedot)
+                   (:paatos-taloudellinen @paatostiedot))
+           {:otsikko     "Selitys"
+            :nimi        :perustelu_tekninen_osa
+            :tyyppi      :text
+            :koko        [80 4]
+            :pituus-max  2048
+            :leveys-col  6
+            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
+        @paatostiedot]
+
+       [:h4 "Taloudellinen osa"]
+       [lomake/lomake
+        {:luokka   :horizontal
+         :muokkaa! (fn [uusi]
+                     (reset! paatostiedot uusi))
+         :voi-muokata? (muokattava?)}
+        [{:otsikko     "Käsitelty"
+          :nimi        :kasittelyaika_taloudellinen_osa
+          :tyyppi      :pvm-aika
+          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+
+         {:otsikko       "Päätös"
           :nimi          :paatos-taloudellinen
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
@@ -116,8 +143,8 @@
 
          (when (or (:paatos-tekninen @paatostiedot)
                    (:paatos-taloudellinen @paatostiedot))
-           {:otsikko     "Päätöksen selitys"
-            :nimi        :perustelu
+           {:otsikko     "Selitys"
+            :nimi        :perustelu_taloudellinen_osa
             :tyyppi      :text
             :koko        [80 4]
             :pituus-max  2048
@@ -240,6 +267,7 @@
 
          [:div.row
           [:div.col-md-6
+           [:h3 "Perustiedot"]
            [lomake {:luokka   :horizontal
                     :voi-muokata? (not= :lukittu (:tila @lomakedata))
                     :muokkaa! (fn [uusi]

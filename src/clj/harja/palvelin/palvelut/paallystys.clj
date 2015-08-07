@@ -76,7 +76,7 @@
         (log/debug "Kommentit saatu: " kommentit)
         (assoc paallystysilmoitus :kommentit kommentit)))))
 
-(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu kasittelyaika]}]
+(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (pot/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos_tekninen_osa :hyvaksytty)
@@ -94,8 +94,10 @@
                                    muutoshinta
                                    (if paatos_tekninen_osa (name paatos_tekninen_osa))
                                    (if paatos_taloudellinen_osa (name paatos_taloudellinen_osa))
-                                   perustelu
-                                   (konv/sql-date kasittelyaika)
+                                   perustelu_tekninen_osa
+                                   perustelu_taloudellinen_osa
+                                   (konv/sql-date kasittelyaika_tekninen_osa)
+                                   (konv/sql-date kasittelyaika_taloudellinen_osa)
                                    (:id user)
                                    paallystyskohde-id))
   id)
