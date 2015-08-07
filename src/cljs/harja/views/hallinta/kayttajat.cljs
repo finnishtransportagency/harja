@@ -217,7 +217,6 @@
                           [:button.nappi-toissijainen {:on-click #(do (.preventDefault %)
                                                                       (go (let [res (<! (k/hae-organisaation-urakat (:id organisaatio)))
                                                                                 urakat (valitut-urakat @urakat-atom)]
-                                                                            (log "TULI URAKOITA: " res)
                                                                             (doseq [u res]
                                                                               (when-not (urakat (:id u))
                                                                                 (swap! urakat-atom assoc (:id u) {:urakka u :luotu (pvm/nyt)}))))))}

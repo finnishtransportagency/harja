@@ -77,7 +77,7 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
-  u.alue :: POLYGON,
+  u.alue,
   u.alkupvm,
   u.loppupvm,
   u.tyyppi,
