@@ -170,7 +170,7 @@
         (hae-urakan-paallystystoteumat c user {:urakka-id  urakka-id
                                                :sopimus-id sopimus-id})))))
 
-(defn luo-uusi-paallystyskohde [db user urakka-id sopimus-id {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot lisatyo arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+(defn luo-uusi-paallystyskohde [db user urakka-id sopimus-id {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot muu_tyo arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (log/debug "Luodaan uusi päällystyskohde")
   (when-not poistettu
     (q/luo-paallystyskohde<! db
@@ -179,12 +179,12 @@
                              kohdenumero
                              nimi
                              (or sopimuksen_mukaiset_tyot 0)
-                             (or lisatyo false)
+                             (or muu_tyo false)
                              (or arvonvahennykset 0)
                              (or bitumi_indeksi 0)
                              (or kaasuindeksi 0))))
 
-(defn paivita-paallystyskohde [db user urakka-id sopimus-id {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot lisatyo arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+(defn paivita-paallystyskohde [db user urakka-id sopimus-id {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot muu_tyo arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko päällystyskohteella päällystysilmoitus")
         (let [olemassa-oleva-ilmoitus (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id          urakka-id
@@ -200,7 +200,7 @@
                                     kohdenumero
                                     nimi
                                     (or sopimuksen_mukaiset_tyot 0)
-                                    (or lisatyo false)
+                                    (or muu_tyo false)
                                     (or arvonvahennykset 0)
                                     (or bitumi_indeksi 0)
                                     (or kaasuindeksi 0)

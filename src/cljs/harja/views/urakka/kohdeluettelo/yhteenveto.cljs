@@ -100,11 +100,11 @@
         @paallystyskohdeosat]])))
 
 (defn paallystyskohteet []
-  (let [kohteet-ilman-lisatoita (reaction (let [kohteet @paallystyskohderivit]
-                                            (filter #(false? (:lisatyo %))
+  (let [paallystyskohteet (reaction (let [kohteet @paallystyskohderivit]
+                                            (filter #(false? (:muu_tyo %))
                                                     kohteet)))
-        lisatyot (reaction (let [kohteet @paallystyskohderivit]
-                             (filter #(true? (:lisatyo %)) kohteet)))
+        muut-tyot (reaction (let [kohteet @paallystyskohderivit]
+                             (filter #(true? (:muu_tyo %)) kohteet)))
         valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @paallystyskohderivit)
                                                  kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
                                              (log "PÄÄ rivit: " (pr-str rivit))
@@ -123,7 +123,7 @@
            :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
-                                    payload (mapv (fn [rivi] (assoc rivi :lisatyo false)) %)
+                                    payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
                                     _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
@@ -145,16 +145,15 @@
                                                                                                                                                  (:bitumi_indeksi rivi)
                                                                                                                                                  (:kaasuindeksi rivi)))
             :tyyppi  :numero :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
-          @kohteet-ilman-lisatoita]
+          @paallystyskohteet]
 
          [grid/grid
-          {:otsikko      "Muut työt" ; FIXME Nimi vaihdettu asiakkaan pyynnöstä. Kannassa (ja mahdollisesti myös mualla koodissa) käytössä vanha nimi lisätyöt. Pitää vaihtaa
-           :tyhja        (if (nil? {}) [ajax-loader "Haetaan lisätöitä..."] "Ei muita töitä")
-           :luokat       ["paallysteurakka-kohteet-lisatyot"]
+          {:otsikko      "Muut työt" ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
+           :tyhja        (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
            :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
-                                    payload (mapv (fn [rivi] (assoc rivi :lisatyo true)) %)
+                                    payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
                                     _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
@@ -172,6 +171,6 @@
                                                                                                                  (:arvonvahennykset rivi)
                                                                                                                  (:bitumi_indeksi rivi)
                                                                                                                  (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-          @lisatyot]
+          @muut-tyot]
 
          (yhteenveto)]))))
