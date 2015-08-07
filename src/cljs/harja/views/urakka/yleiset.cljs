@@ -132,6 +132,7 @@
         :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "17%"
         :tyyppi :valinta
+        :validoi [[:ei-tyhja "Anna yhteyshenkilön organisaatio"]]
         :valinta-arvo :id
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
@@ -143,7 +144,8 @@
                                        (str " " suku))))
         :aseta (fn [yht arvo]
                  (assoc yht :nimi arvo))
-        :tyyppi :string :leveys "15%"}
+        :tyyppi :string :leveys "15%"
+        :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "22%"}]
