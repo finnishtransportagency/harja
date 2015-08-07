@@ -400,7 +400,7 @@
        (fn [k]
          [:div.kayttajatiedot
           [:button.nappi-toissijainen {:on-click #(reset! valittu-kayttaja nil)}
-           (ikonit/chevron-left) " Takaisin käyttäjäluetteloon"]
+           [:span.livicon-chevron-left " Takaisin käyttäjäluetteloon"]]
 
           [:h3 "Muokkaa käyttäjää " (:etunimi k) " " (:sukunimi k)]
 

@@ -498,13 +498,13 @@ Optiot on mappi optioita:
            [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
             [:div.panel-heading
              (if-not muokataan
-               [:span.pull-right
+               [:span.pull-right.muokkaustoiminnot
                 (when tallenna
                   [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
                                                 {:disabled (= :ei-mahdollinen tallenna)}
                                                 {:on-click #(do (.preventDefault %)
                                                                 (aloita-muokkaus! tiedot))})
-                   [:span.livicon-pen " Muokkaa"]])]
+                   [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
                [:span.pull-right.muokkaustoiminnot
                 [:button.nappi-toissijainen
                  {:disabled (empty? @historia)

@@ -234,10 +234,10 @@
   [:span.glyphicon.glyphicon-comment])
 (defn magnet []
   [:span.glyphicon.glyphicon-magnet])
-(defn chevron-up []
-  [:span.glyphicon.glyphicon-chevron-up])
-(defn chevron-down []
-  [:span.glyphicon.glyphicon-chevron-down])
+;(defn chevron-up []
+;  [:span.glyphicon.glyphicon-chevron-up])
+;(defn chevron-down []
+;  [:span.glyphicon.glyphicon-chevron-down])
 (defn retweet []
   [:span.glyphicon.glyphicon-retweet])
 (defn shopping-cart []
@@ -525,6 +525,14 @@
 
 (defn ban []
   [:span.livicon-ban])
+(defn chevron-up []
+  [:span.livicon-chevron-up])
+(defn chevron-right []
+  [:span.livicon-chevron-right])
+(defn chevron-down []
+  [:span.livicon-chevron-down])
+(defn chevron-left []
+  [:span.livicon-chevron-left])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []
