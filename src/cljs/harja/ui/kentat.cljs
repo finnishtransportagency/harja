@@ -398,12 +398,18 @@
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))]
            [:span.pvm-kentta
-            {:on-click #(do (reset! auki true) nil) :style {:display "inline-block"}}
-            [:input.pvm {:class     (when lomake? "form-control")
-                         :value     nykyinen-teksti
-                         :on-focus  on-focus
-                         :on-change #(muuta! data (-> % .-target .-value))
-                         :on-blur   #(teksti-paivamaaraksi! data (-> % .-target .-value))}]
+            {:on-click #(do (reset! auki true) nil)
+             :style    {:display "inline-block"}}
+            [:input.pvm {:class       (when lomake? "form-control")
+                         :value       nykyinen-teksti
+                         :on-focus    #(do (on-focus) (reset! auki true) nil)
+                         :on-change   #(muuta! data (-> % .-target .-value))
+                         ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                         :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+                                        (reset! auki false)
+                                        %)
+                         :on-blur     #(do
+                                        (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
@@ -465,8 +471,8 @@
                               p (pvm/->pvm-aika (str pvm " " aika))]
                           (when-not (some false? @pvm-aika-koskettu)
                             (if p
-                             (reset! data p)
-                             (reset! data nil)))))
+                              (reset! data p)
+                              (reset! data nil)))))
 
                muuta-pvm! (fn [t]
                             (when (or
@@ -502,16 +508,20 @@
                                                (reset! auki true)
                                                nil)
                              :value       nykyinen-pvm-teksti
-                             :on-focus    on-focus
-                             :on-blur     #(do (koske-pvm!) (aseta!))
-                             :on-change   #(muuta-pvm! (-> % .-target .-value))}]]
+                             :on-focus    #(do (on-focus) (reset! auki true))
+                             :on-change   #(muuta-pvm! (-> % .-target .-value))
+                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+                                            (reset! auki false)
+                                            %)
+                             :on-blur     #(do (koske-pvm!) (aseta!))}]]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
-                         :on-blur     #(do (koske-aika!) (aseta!))
-                         :on-change   #(muuta-aika! (-> % .-target .-value))}]]]]]
+                         :on-change   #(muuta-aika! (-> % .-target .-value))
+                         :on-blur     #(do (koske-aika!) (aseta!))}]]]]]
 
             (when @auki
               [:div.aikavalinta
