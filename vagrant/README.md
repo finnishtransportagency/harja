@@ -11,8 +11,17 @@
 
 # Käyttö
 
-Virtuaalikone käynnistyy ja provisioituu komennolla
+Virtuaalikone käynnistyy ja provisioituu komennolla. Schemaversiot ovat automaattisesti viimeisimmät.
 
 ```vagrant up```
 
 Nginx proxy vastaa portissa 8000 ja PostgreSQL oletusportissa 5432.
+
+# Tietokannan päivittäminen
+
+`vagrant provision` muuntaa ja tyhjentää molemmat kannat (harja, harjatest) viimeisimpään schemaversioon
+suoraan versionhallinnasta.
+
+`migrate.sh` muuntaa harja-kannan ilman putsausta (omasta harja-tietokanta -workspacesta).
+
+`migrate_test.sh` muuntaa ja tyhjentää testikannan (omasta harja-tietokanta -workspacesta).
