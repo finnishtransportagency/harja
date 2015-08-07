@@ -75,6 +75,10 @@
 
 (def +ei-otsikkoa+ #{:boolean})
 
+(defn yleinen-huomautus
+  "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
+  [teksti]
+  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
@@ -125,7 +129,7 @@
                                            (when (and varoitukset-atom
                                                       (not= varoitukset @varoitukset-atom))
                                              (reset! varoitukset-atom varoitukset)))]
-    
+
     (paivita-ulkoinen-validointitila! virheet (into {}
                                                     (validointi/validoi-rivi nil data skeema :validoi))
                                       varoitukset (into {}
@@ -184,7 +188,7 @@
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
                                 :default "")}
-         
+
          (doall
           (for [skeema (keep identity skeema)]
             (if-let [ryhma (and (ryhma? skeema) skeema)]

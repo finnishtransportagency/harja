@@ -147,7 +147,7 @@
 
     [:div.pot-tallennus
      (when @huomautusteksti
-       [:div.lomake-yleinen-huomautus @huomautusteksti])
+       (lomake/yleinen-huomautus @huomautusteksti))
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
