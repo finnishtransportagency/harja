@@ -1,7 +1,7 @@
 # Liikenneviraston Harja järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
-client on ClojureScript sovellus, joka käyttää Reagentia, LeafletJSää ja Bootstrap CSSää.
+client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
 
 Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
 
@@ -15,7 +15,7 @@ Harja repon hakemistorakenne:
 - README                    (yleinen readme)
 
 - src/                      (kaikki lähdekoodit)
-  - cljx/                   (palvelimen ja asiakkaan jaettu koodi)
+  - cljc/                   (palvelimen ja asiakkaan jaettu koodi)
   - cljs/                   (asiakaspuolen ClojureScript koodi)
     - harja/asiakas/
       - ui/                 (yleisiä UI komponentteja ja koodia)
@@ -28,6 +28,8 @@ Harja repon hakemistorakenne:
   - clj/                    (palvelimen koodi)
     - harja/palvelin/
       - komponentit/        (Yleiset komponentit: tietokanta, todennus, HTTP-palvelin, jne)
+      - lokitus/            (Logitukseen liittyvää koodia)
+      - integraatiot/       (Integraatioiden toteutukset)
       - api/                (Harja API endpointit ja tukikoodi)
       - palvelut/           (Harja asiakkaalle palveluja tarjoavat EDN endpointit)
       - main.cljs           (palvelimen aloituspiste)
@@ -39,14 +41,17 @@ Harja repon hakemistorakenne:
 
 ## Integraatiot
 
-Integraatiot MULEeen ja niiden implementaatioprojekti on omanaan.
+MULEsta on luovuttu, integraatiot suoraan backendistä.
 
 ## Tietokanta
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat omassa repossaan: harja-tietokanta 
 
+Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
+
 
 ## Staging tietokannan päivitys, uusi ja hyvä tapa
+
 ssh -L7777:localhost:5432 harja-db1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
