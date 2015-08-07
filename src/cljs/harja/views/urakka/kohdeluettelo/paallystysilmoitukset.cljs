@@ -127,9 +127,16 @@
 (defn tallennus
   [valmis-tallennettavaksi?]
   (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
-                                        valmispvm-paallystys (:valmispvm_paallystys @lomakedata)]
-                                    (if (not (and valmispvm-kohde valmispvm-paallystys))
-                                      "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
+                                        valmispvm-paallystys (:valmispvm_paallystys @lomakedata)
+                                        paatos-tekninen (:paatos_tekninen_osa @lomakedata)
+                                        paatos-taloudellinen (:paatos_taloudellinen_osa @lomakedata)]
+                                    (cond (not (and valmispvm-kohde valmispvm-paallystys))
+                                          "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
+                                          (and (= :hyvaksytty paatos-tekninen)
+                                               (= :hyvaksytty paatos-taloudellinen))
+                                          "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
+                                          :else
+                                          nil)))
         urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         poista-idt (fn [lomake polku] (assoc-in lomake polku
@@ -138,7 +145,8 @@
                                                   (get-in lomake polku))))]
 
     [:div.pot-tallennus
-     [:div.lomake-yleinen-huomautus @huomautusteksti]
+     (when @huomautusteksti
+       [:div.lomake-yleinen-huomautus @huomautusteksti])
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
