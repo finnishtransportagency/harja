@@ -523,6 +523,8 @@
 (defn menu-up []
   [:span.glyphicon.glyphicon-menu-up])
 
+(defn ban []
+  [:span.livicon-ban])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []

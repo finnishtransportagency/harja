@@ -404,7 +404,7 @@
                                   ;; Epäonnistui jostain syystä
                                   ;; fixme: pitäisköhän näyttää se käyttäjällekin ;)
                                   (reset! tallennus-kaynnissa false)))))}
-           (ikonit/ok) " Tallenna tarkastus"]
+           (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not @voi-tallentaa?)
            [:span.napin-vinkki "Täytä kaikki tiedot ennen tallennusta"])]))))
 
