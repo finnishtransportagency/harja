@@ -162,20 +162,20 @@
                                       (or (nil? muokattava?)
                                           (muokattava? data)))
                                ;; Muokattava tieto, tehdään sille kenttä
-                               [:span {:class (str (when-not (empty? kentan-virheet)
+                               [:div {:class (str (when-not (empty? kentan-virheet)
                                                      "sisaltaa-virheen")
                                                    (when-not (empty? kentan-varoitukset)
                                                      "sisaltaa-varoituksen"))}
-                                [tee-kentta (assoc kentta
-                                                   :focus (= @nykyinen-fokus kentan-tunniste)
-                                                   :on-focus #(aseta-fokus! kentan-tunniste)) arvo]
                                 (if (and (not (empty? kentan-virheet))
                                          (or validoi-heti?
                                              (@muokatut nimi)))
                                   (virheen-ohje kentan-virheet :virhe)
                                   (if (and (not (empty? kentan-varoitukset))
                                            (@muokatut nimi))
-                                    (virheen-ohje kentan-varoitukset :varoitus)))]
+                                    (virheen-ohje kentan-varoitukset :varoitus)))
+                                [tee-kentta (assoc kentta
+                                              :focus (= @nykyinen-fokus kentan-tunniste)
+                                              :on-focus #(aseta-fokus! kentan-tunniste)) arvo]]
 
                                ;; Ei muokattava, näytetään
                                [:div.form-control-static

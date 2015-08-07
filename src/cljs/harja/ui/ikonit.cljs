@@ -222,8 +222,8 @@
   [:span.glyphicon.glyphicon-eye-open])
 (defn eye-close []
   [:span.glyphicon.glyphicon-eye-close])
-(defn warning-sign []
-  [:span.glyphicon.glyphicon-warning-sign])
+;(defn warning-sign []
+; [:span.glyphicon.glyphicon-warning-sign])
 (defn plane []
   [:span.glyphicon.glyphicon-plane])
 (defn calendar []
@@ -543,3 +543,5 @@
   [:span.livicon-search])
 (defn plus []
   [:span.livicon-plus])
+(defn warning-sign []
+  [:span.livicon-exclamation-triangle])

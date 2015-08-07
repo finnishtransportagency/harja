@@ -1,28 +1,23 @@
-.virhe-tai-varoitus (@taustavari, @vari) {
+.virhe-tai-varoitus-lomake (@taustavari, @vari) {
     background-color: @taustavari;
+    bottom: 0;
     color: @vari;
     padding: 5px;
-    width: 100%;
-    z-index: 1000;
+    position: absolute;
 }
 
 .lomake {
-    .sisaltaa-virheen {
-        .sisaltaa-virheen-tai-varoituksen(@vaara);
-    }
-    .sisaltaa-varoituksen {
-        .sisaltaa-virheen-tai-varoituksen(@varoitus);
-    }
+    margin-top: 1rem;
     .varoitukset,
     .virheet {
-        position: relative;
-        top: -30px;
+        position: absolute;
+        width: 100%;
     }
     .varoitus {
-        .virhe-tai-varoitus(@varoitus, @valkoinen);
+        .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
     }
     .virhe {
-        .virhe-tai-varoitus(@vaara, @valkoinen);
+        .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
     }
     textarea {
         padding: 2px 6px;

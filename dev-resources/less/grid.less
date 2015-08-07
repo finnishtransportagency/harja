@@ -5,7 +5,7 @@ font: #191919
 border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa background-even: #e1e1e1
 */
 
-.virhe-tai-varoitus (@taustavari, @vari) {
+.virhe-tai-varoitus-grid (@taustavari, @vari) {
   background-color: @taustavari;
   bottom: 5px;
   color: @vari;
@@ -65,10 +65,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
         position: relative;
       }
       .varoitus {
-        .virhe-tai-varoitus(@varoitus, @valkoinen);
+        .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
       }
       .virhe {
-        .virhe-tai-varoitus(@vaara, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
       }
     }
 
