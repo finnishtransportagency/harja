@@ -273,8 +273,18 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
                                 (let [kuuntelijat (-> this reagent/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
                                     (k))))})))
-                             
-    
+
+(defn kaksi-palstaa-otsikkoja-ja-arvoja
+  "Tekee geneeriset kaksi palstaa. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
+  [optiot & otsikot-ja-arvot]
+  [:div.tietoja.container
+   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
+         :when arvo]
+     ^{:key otsikko}
+     [:div.tietorivi.row
+      [:div.col-md-4.tietokentta otsikko]
+      [:div.col-md-8.tietoarvo arvo]])])
+
 (defn tietoja
   "Tekee geneerisen tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
   [optiot & otsikot-ja-arvot]

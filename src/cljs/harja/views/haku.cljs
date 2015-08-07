@@ -6,7 +6,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.modal :refer [modal] :as modal]
-            [harja.ui.yleiset :refer [tietoja]]
+            [harja.ui.yleiset :refer [tietoja kaksi-palstaa-otsikkoja-ja-arvoja]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.atom :refer-macros [reaction<!]])
@@ -73,7 +73,7 @@
                                                                        (modal/piilota!))}
                             "Sulje"]]}
                 [:div.kayttajan-tiedot
-                 [tietoja {}
+                 [kaksi-palstaa-otsikkoja-ja-arvoja {}
                   "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
                                                                  (modal/piilota!)
                                                                  (valitse-organisaatio (:organisaatio k)))}
