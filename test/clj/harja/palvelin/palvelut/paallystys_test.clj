@@ -42,7 +42,8 @@
 
 (def pot-testidata
   {:aloituspvm     (java.sql.Date. 105 9 1)
-   :valmistumispvm (java.sql.Date. 105 9 2)
+   :valmispvm_kohde (java.sql.Date. 105 9 2)
+   :valmispvm_paallystys (java.sql.Date. 105 9 2)
    :takuupvm       (java.sql.Date. 105 9 3)
    :muutoshinta    0
    :ilmoitustiedot {:osoitteet    [{:tie                       1

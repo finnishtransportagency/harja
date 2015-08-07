@@ -72,6 +72,11 @@
           (pvm/ennen? data (avain rivi)))
     viesti))
 
+(defmethod validoi-saanto :pvm-annettu-toisen-jalkeen [_ _ data rivi _ & [avain viesti]]
+  (when (and
+            (not (nil? data))
+            (nil? (avain rivi)))
+    viesti))
 
 (defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
   (when-not (<= -55 data 55)

@@ -126,8 +126,9 @@
 
 (defn tallennus
   [valmis-tallennettavaksi?]
-  (let [huomautusteksti (reaction (let [valmispvm (:valmistumispvm @lomakedata)]
-                                    (if (not valmispvm)
+  (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
+                                        valmispvm-paallystys (:valmispvm_paallystys @lomakedata)]
+                                    (if (not (and valmispvm-kohde valmispvm-paallystys))
                                       "Valmistusmispäivämäärää ei annettu, ilmoitus tallennetaan keskeneräisenä.")))
         urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
@@ -159,12 +160,14 @@
 
 (defn paallystysilmoituslomake []
   (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
-                                :valmistumispvm (:valmistumispvm @lomakedata)
+                                :valmispvm_kohde (:valmispvm_kohde @lomakedata)
+                                :valmispvm_paallystys (:valmispvm_paallystys @lomakedata)
                                 :takuupvm       (:takuupvm @lomakedata)
                                 :hinta          (fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))}
                                (fn [uusi-arvo]
                                  (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                        (assoc :valmistumispvm (:valmistumispvm uusi-arvo))
+                                                        (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
+                                                        (assoc :valmispvm_paallystys (:valmispvm_paallystys uusi-arvo))
                                                         (assoc :takuupvm (:takuupvm uusi-arvo))
                                                         (assoc :hinta (:hinta uusi-arvo))))))
 
@@ -209,13 +212,13 @@
                                        (empty? toteutuneet-maarat-virheet)
                                        (empty? kiviaines-virheet))))
         valmis-kasiteltavaksi? (reaction
-                                 (let [valmispvm (:valmistumispvm @lomakedata)
+                                 (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
                                        tila (:tila @lomakedata)]
-                                   (log "PÄÄ valmis käsi " (pr-str valmispvm) (pr-str tila))
+                                   (log "PÄÄ valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
                                    (and tila
-                                        valmispvm
+                                        valmispvm-kohde
                                         (not (= tila :aloitettu))
-                                        (not (nil? valmispvm)))))]
+                                        (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
       (fn []
@@ -235,7 +238,8 @@
                                 (reset! kohteen-tiedot uusi))}
             [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-             {:otsikko "Kohde valmistunut" :nimi :valmistumispvm :tyyppi :pvm}
+             {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
+             {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde :tyyppi :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))

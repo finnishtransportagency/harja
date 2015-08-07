@@ -76,19 +76,20 @@
         (log/debug "Kommentit saatu: " kommentit)
         (assoc paallystysilmoitus :kommentit kommentit)))))
 
-(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu kasittelyaika]}]
+(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (pot/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos_tekninen_osa :hyvaksytty)
                       (= paatos_taloudellinen_osa :hyvaksytty))
                "lukittu"
-               (if valmistumispvm "valmis" "aloitettu"))
+               (if (and valmispvm_kohde valmispvm_paallystys) "valmis" "aloitettu"))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot
                                    (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmistumispvm)
+                                   (konv/sql-date valmispvm_kohde)
+                                   (konv/sql-date valmispvm_paallystys)
                                    (konv/sql-date takuupvm)
                                    muutoshinta
                                    (if paatos_tekninen_osa (name paatos_tekninen_osa))
@@ -99,18 +100,21 @@
                                    paallystyskohde-id))
   id)
 
-(defn luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmistumispvm takuupvm paallystyskohde-id]}]
+(defn luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
+  (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
+  (log/debug "valmispvm_paallystys: " (pr-str valmispvm_paallystys))
   (let [muutoshinta (pot/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (if valmistumispvm "valmis" "aloitettu")
+        tila (if (and valmispvm_kohde valmispvm_paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-    (log/debug "Ilmoituksen valmistumispvm on " valmistumispvm ", joten asetetaan ilmoituksen tilaksi " tila)
+    (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (:id (q/luo-paallystysilmoitus<! db
                                      paallystyskohde-id
                                      tila
                                      encoodattu-ilmoitustiedot
                                      (konv/sql-date aloituspvm)
-                                     (konv/sql-date valmistumispvm)
+                                     (konv/sql-date valmispvm_kohde)
+                                     (konv/sql-date valmispvm_paallystys)
                                      (konv/sql-date takuupvm)
                                      muutoshinta
                                      (:id user)))))

@@ -45,7 +45,8 @@ SELECT
   paallystysilmoitus.id,
   tila,
   aloituspvm,
-  valmistumispvm,
+  valmispvm_kohde,
+  valmispvm_paallystys,
   takuupvm,
   pk.nimi as kohdenimi,
   pk.kohdenumero,
@@ -91,7 +92,8 @@ SET
   tila                        = :tila::paallystystila,
   ilmoitustiedot              = :ilmoitustiedot :: JSONB,
   aloituspvm                  = :aloituspvm,
-  valmistumispvm              = :valmistumispvm,
+  valmispvm_kohde             = :valmispvm_kohde,
+  valmispvm_paallystys        = :valmispvm_paallystys,
   takuupvm                    = :takuupvm,
   muutoshinta                 = :muutoshinta,
   paatos_tekninen_osa         = :paatos_tekninen_osa::paallystysilmoituksen_paatostyyppi,
@@ -105,12 +107,13 @@ WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmistumispvm, takuupvm, muutoshinta, luotu, luoja, poistettu)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
         :tila::paallystystila,
         :ilmoitustiedot::JSONB,
         :aloituspvm,
-        :valmistumispvm,
+        :valmispvm_kohde,
+        :valmispvm_paallystys,
         :takuupvm,
         :muutoshinta,
         NOW(),
