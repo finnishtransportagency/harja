@@ -8,44 +8,33 @@
             
             [harja.kyselyt.indeksit :as q]))
 
-
-
-
 (defn hae-indeksien-nimet
-      "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
+  "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
   [db user]
   (into #{}
-    (map :nimi (q/hae-indeksien-nimet db))))
+        (map :nimi (q/hae-indeksien-nimet db))))
+
+(defn- ryhmittele-indeksit [db indeksit]
+  (seq (group-by (fn [rivi]
+                   [(:nimi rivi) (:vuosi rivi)])
+                 indeksit)))
+
+(defn- zippaa [indeksit-vuosittain]
+  (zipmap (map first indeksit-vuosittain)
+          (map (fn [[_ kuukaudet]]
+                 (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
+                        :vuosi (:vuosi (first kuukaudet))))
+               indeksit-vuosittain)))
 
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
   [db user]
-        (let 
-          [indeksit-vuosittain  (seq (group-by
-                            (fn [rivi]
-                              [(:nimi rivi) (:vuosi rivi)]
-                              ) (q/listaa-indeksit db)))]
-          
-          (zipmap (map first indeksit-vuosittain)
-                  (map (fn [[_ kuukaudet]]
-                         (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
-                                :vuosi (:vuosi (first kuukaudet))))
-                       indeksit-vuosittain))))
+  (zippaa (ryhmittele-indeksit (q/listaa-indeksit db))))
 
 (defn hae-indeksi
   "Sisäinen funktio joka palauttaa indeksin nimellä"
   [db nimi]
-        (let 
-          [indeksit-vuosittain  (seq (group-by
-                            (fn [rivi]
-                              [(:nimi rivi) (:vuosi rivi)]
-                              ) (q/hae-indeksi db nimi)))]
-          
-          (zipmap (map first indeksit-vuosittain)
-                  (map (fn [[_ kuukaudet]]
-                         (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
-                                :vuosi (:vuosi (first kuukaudet))))
-                       indeksit-vuosittain))))
+  (zippaa (ryhmittele-indeksit (q/hae-indeksi db nimi))))
 
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
@@ -88,15 +77,15 @@
   component/Lifecycle
   (start [this]
     (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :indeksit (fn [user]
-                    (hae-indeksit (:db this) user)))
+      (julkaise-palvelu :indeksit
+                        (fn [user]
+                          (hae-indeksit (:db this) user)))
       (julkaise-palvelu :tallenna-indeksi
-        (fn [user tiedot]
-          (tallenna-indeksi (:db this) user tiedot)))
-      (julkaise-palvelu
-        :indeksien-nimet (fn [user]
-                    (hae-indeksien-nimet (:db this) user))))
+                        (fn [user tiedot]
+                          (tallenna-indeksi (:db this) user tiedot)))
+      (julkaise-palvelu :indeksien-nimet
+                        (fn [user]
+                          (hae-indeksien-nimet (:db this) user))))
     this)
 
   (stop [this]

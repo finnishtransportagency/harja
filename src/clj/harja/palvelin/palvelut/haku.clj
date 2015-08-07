@@ -38,9 +38,8 @@
   (start [this]
     (doto (:http-palvelin this)
       (julkaise-palvelu
-        :hae (fn [user hakutermi]
-               (hae-harjasta (:db this) user hakutermi)))
-      )
+       :hae (fn [user hakutermi]
+              (hae-harjasta (:db this) user hakutermi))))
     this)
 
   (stop [this]
