@@ -249,8 +249,12 @@
              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
              {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
              {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
-              :vihje (when false "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina.")
-              :tyyppi :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+              :vihje   (when (and
+                               (:valmispvm_paallystys @lomakedata)
+                               (:valmispvm_kohde @lomakedata)
+                               (= :aloitettu (:tila @lomakedata)))
+                         "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina.")
+              :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
