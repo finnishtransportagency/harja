@@ -13,9 +13,9 @@
   [^ProcessingReport validointiraportti]
   (let [validointi-virheet (str/join validointiraportti)]
     (log/error "JSON ei ole validia. Validointivirheet: " validointi-virheet)
-    (throw+ {:type virheet/+invalidi-json+ :virheet
-                   [{:koodi  virheet/+invalidi-json-koodi+
-                     :viesti (str/replace (str/replace validointi-virheet "\n" "") "\"" "'")}]})))
+    (throw+ {:type virheet/+invalidi-json+
+             :virheet [{:koodi  virheet/+invalidi-json-koodi+
+                        :viesti (str/replace (str/replace validointi-virheet "\n" "") "\"" "'")}]})))
 
 (defn validoi
   "Validoi annetun JSON sisällön vasten annettua JSON-skeemaa. JSON-skeeman tulee olla tiedosto annettussa

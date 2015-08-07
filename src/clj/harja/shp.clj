@@ -40,26 +40,32 @@
       (conj koordinaatit eka)
       koordinaatit)))
 
+(defn- spacella-erotetuksi-pariksi [koordinaatti]
+  (str (.x koordinaatti) " " (.y koordinaatti)))
+
+(defn- pilkkulistaksi [koordinaattilista]
+  (str/join ", " (map spacella-erotetuksi-pariksi (suljettu-rengas (seq koordinaattilista)))))
+
+(defn- polygoni [koordinaattilista]
+  (str "ST_GeomFromText('POLYGON((" koordinaattilista "))')::GEOMETRY"))
+
+(defn- multipolygoni [koordinaattilista]
+  (str "ST_GeomFromText('MULTIPOLYGON(" koordinaattilista ")')::GEOMETRY"))
+
 (defn geom->pg [alue]
   (if (= 1 (.getNumGeometries alue))
     ;; Sisältää yksittäisen polygonin, otetaan se vain
     (let [p (.getGeometryN alue 0)]
-      (str "ST_GeomFromText('POLYGON(("
-           (str/join ", "
-                     (map #(str (.x %) " " (.y %)) (suljettu-rengas (seq (.getCoordinates p))))) ;;"x1 y1, x2 y2, xN yN"
-           "))')::GEOMETRY"))
+      ;;"x1 y1, x2 y2, xN yN"
+      (polygoni (pilkkulistaksi (.getCoordinates p))))
 
     ;; useita polygoneja
-    (str "ST_GeomFromText('MULTIPOLYGON("
-         (str/join ","
-                   (loop [acc []
-                          i 0]
-                     (if (= i (.getNumGeometries alue))
-                       acc
-                       (recur (conj acc
-                                    (str "((" (str/join ", "
-                                                        (map #(str (.x %) " " (.y %))
-                                                             (suljettu-rengas (seq (.getCoordinates (.getGeometryN alue i)))))) "))"))
-                              (inc i)))))
-         ")')::GEOMETRY")))
-
+    (multipolygoni
+     (str/join ","
+               (loop [acc []
+                      i 0]
+                 (if (= i (.getNumGeometries alue))
+                   acc
+                   (recur (conj acc
+                                (str "((" (pilkkulistaksi (.getCoordinates (.getGeometryN alue i))) "))"))
+                          (inc i))))))))
