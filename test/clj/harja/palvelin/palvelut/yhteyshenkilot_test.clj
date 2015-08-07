@@ -22,7 +22,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest urakan-yhteyshenkiloiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -39,9 +39,10 @@
     (is (>= (count vastaus) 1))))
 
 (deftest urakan-paivystajien-haku-toimii
+  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2005-10-10','2006-06-06', 1, 1)")
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-paivystajat +kayttaja-jvh+ 1)]
-
+    (log/info "VASTAUS: " vastaus)
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 1))
     (mapv (fn [yhteyshenkilo] (do
