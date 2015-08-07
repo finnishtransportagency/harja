@@ -23,7 +23,13 @@
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta ["localhost" 5432 "temp" "harjatest" nil])
+(def temppitietokanta [(if (ollaanko-jenkinsissa?)
+                         "172.17.238.100"
+                         "localhost")
+                       5432
+                       "temp"
+                       "harjatest"
+                       nil])
 
 (defn odota [ehto-fn viesti max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
