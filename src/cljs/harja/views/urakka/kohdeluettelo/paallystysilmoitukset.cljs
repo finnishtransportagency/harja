@@ -100,7 +100,7 @@
          :voi-muokata? (muokattava?)}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-tekninen-osa
-          :tyyppi      :pvm-aika
+          :tyyppi      :pvm
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
          {:otsikko       "Päätös"
@@ -129,7 +129,7 @@
          :voi-muokata? (muokattava?)}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-taloudellinen-osa
-          :tyyppi      :pvm-aika
+          :tyyppi      :pvm
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
          {:otsikko       "Päätös"
