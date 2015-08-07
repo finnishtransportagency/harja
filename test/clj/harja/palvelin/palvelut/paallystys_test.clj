@@ -221,7 +221,7 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos_taloudellinen_osa :hyvaksytty)
                                  (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu "Hyvä ilmoitus!"))]
+                                 (assoc :perustelu_tekninen_osa "Hyvä ilmoitus!"))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -237,7 +237,7 @@
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) :hyvaksytty))
-        (is (= (:perustelu paallystysilmoitus-kannassa) (:perustelu paallystysilmoitus)))
+        (is (= (:perustelu_tekninen_osa paallystysilmoitus-kannassa) (:perustelu_tekninen_osa paallystysilmoitus)))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
 
         ; Lukittu, ei voi enää päivittää
@@ -250,7 +250,7 @@
                       tila = NULL,
                       paatos_tekninen_osa = NULL,
                       paatos_taloudellinen_osa = NULL,
-                      perustelu = NULL
+                      perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
@@ -262,7 +262,7 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos_taloudellinen_osa :hyvaksytty)
                                  (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
+                                 (assoc :perustelu_tekninen_osa "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-tero+ {:urakka-id          urakka-id
