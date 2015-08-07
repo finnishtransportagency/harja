@@ -5,46 +5,53 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
-            
+
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.istunto :as istunto]
-            
+
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            
+
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
-            
+
             [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]]
 
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
                               :talvihoito "Talvihoitotarkastus"
-                              :soratie "Soratien tarkastus"})
+                              :soratie "Soratien tarkastus"
+                              :laatu "Laaduntarkastus"
+                              :pistokoe "Pistokoe"})
 
-(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie])
+(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie :laatu :pistokoe])
 
-
-
+(defn tarkastustyypit-tekijalle [tekija]
+  (case tekija
+    :tilaaja [:laatu :pistokoe]
+    :urakoitsija [:tiesto :talvihoito :soratie]
+    +tarkastustyyppi+))
 
 (defonce valittu-tarkastus (atom nil))
                 
 
 (defn uusi-tarkastus []
-  {:uusi? true
-   :aika (pvm/nyt)
-   :tarkastaja @istunto/kayttajan-nimi})
+  {:uusi?      true
+   :aika       (pvm/nyt)
+   :tarkastaja @istunto/kayttajan-nimi
+   :havainto {:tekija     (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))}})
 
 (defn tarkastuslistaus
   "Tarkastuksien pääkomponentti"
@@ -85,7 +92,9 @@
                                           nil "Kaikki"
                                           :tiesto "Tiestötarkastukset"
                                           :talvihoito "Talvihoitotarkastukset"
-                                          :soratie "Soratien tarkastukset")}
+                                          :soratie "Soratien tarkastukset"
+                                          :laatu "Laaduntarkastus"
+                                          :pistokoe "Pistokoe")}
             laadunseuranta/tarkastustyyppi]]]]
 
         [:div.row
@@ -170,6 +179,7 @@
                  
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom]
+    (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
@@ -186,11 +196,13 @@
        {:otsikko "Tarkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
-        :valinnat +tarkastustyyppi+
+        :valinnat (tarkastustyypit-tekijalle (get-in tarkastus [:havainto :tekija]))
         :valinta-nayta #(case %
                           :tiesto "Tiestötarkastus"
                           :talvihoito "Talvihoitotarkastus"
                           :soratie "Soratien tarkastus"
+                          :laatu "Laaduntarkastus"
+                          :pistokoe "Pistokoe"
                           "- valitse -")
         :leveys-col 2}
        
