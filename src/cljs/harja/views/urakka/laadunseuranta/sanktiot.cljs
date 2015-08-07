@@ -118,10 +118,12 @@
                                   nil) "- valitse käsittelytapa -")
           :leveys-col 4}
 
-         {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
-          :hae     (comp :muukasittelytapa :paatos :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
-          :leveys  2 :tyyppi :string}
+         (when (= :muu (get-in @muokattu [:havainto :paatos :kasittelytapa]))
+           {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
+            :hae     (comp :muukasittelytapa :paatos :havainto)
+            :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
+            :leveys  2 :tyyppi :string
+            :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
          {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :numero
           :validoi [[:ei-tyhja "Anna summa"]]}
