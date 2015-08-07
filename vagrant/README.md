@@ -3,10 +3,11 @@
 
 ## Tarvitset
 
-1. [VirtualBox](https://www.virtualbox.org)
-2. [Vagrant](https://www.vagrantup.com)
-3. Ansible
-   ```brew install ansible```
+1. Uusin [VirtualBox](https://www.virtualbox.org)
+2. [Vagrant 1.7.4](https://www.vagrantup.com)
+3. Ansible 1.9.2+
+
+  ```brew install ansible```
 
 # Käyttö
 
