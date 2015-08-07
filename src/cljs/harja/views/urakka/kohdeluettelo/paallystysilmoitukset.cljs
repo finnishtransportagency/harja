@@ -120,6 +120,7 @@
             :nimi        :perustelu
             :tyyppi      :text
             :koko        [80 4]
+            :pituus-max  2048
             :leveys-col  6
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot]])))
@@ -247,7 +248,9 @@
             [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
              {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
-             {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde :tyyppi :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+             {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
+              :vihje (when false "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina.")
+              :tyyppi :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
