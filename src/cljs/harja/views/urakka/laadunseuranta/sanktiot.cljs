@@ -180,6 +180,7 @@
     [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :havainto) :leveys 1}
      {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :havainto) :leveys 3}
+     {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
      {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :havainto) :leveys 1}
      {:otsikko "Summa" :nimi :summa :leveys 1 :tyyppi :numero}]
     @tiedot/haetut-sanktiot
