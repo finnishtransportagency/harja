@@ -77,18 +77,18 @@
   (let [muokattava? (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
                                   (and (not (= (:tila @lomakedata) :lukittu)))))
-        paatostiedot (r/wrap {:paatos-tekninen                 (:paatos_tekninen_osa @lomakedata)
-                              :paatos-taloudellinen            (:paatos_taloudellinen_osa @lomakedata)
-                              :perustelu_tekninen_osa          (:perustelu_tekninen_osa @lomakedata)
-                              :perustelu_taloudellinen_osa     (:perustelu_taloudellinen_osa @lomakedata)
-                              :kasittelyaika_tekninen_osa      (:kasittelyaika_tekninen_osa @lomakedata)
-                              :kasittelyaika_taloudellinen_osa (:kasittelyaika_taloudellinen_osa @lomakedata)}
-                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
-                                                                    (assoc :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
-                                                                    (assoc :perustelu_tekninen_osa (:perustelu_tekninen_osa uusi-arvo))
-                                                                    (assoc :perustelu_taloudellinen_osa (:perustelu_taloudellinen_osa uusi-arvo))
-                                                                    (assoc :kasittelyaika_tekninen_osa (:kasittelyaika_tekninen_osa uusi-arvo))
-                                                                    (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika_taloudellinen_osa uusi-arvo))))))]
+        paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @lomakedata)
+                                           :perustelu-tekninen-osa     (:perustelu_tekninen_osa @lomakedata)
+                                           :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
+                                          (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
+                                                                                 (assoc :perustelu_tekninen_osa (:perustelu-tekninen-osa uusi-arvo))
+                                                                                 (assoc :kasittelyaika_tekninen_osa (:kasittelyaika-tekninen-osa uusi-arvo))))))
+        paatostiedot-taloudellinen-osa (r/wrap {:paatos-taloudellinen            (:paatos_taloudellinen_osa @lomakedata)
+                                                :perustelu-taloudellinen-osa     (:perustelu_taloudellinen_osa @lomakedata)
+                                                :kasittelyaika-taloudellinen-osa (:kasittelyaika_taloudellinen_osa @lomakedata)}
+                                               (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
+                                                                                      (assoc :perustelu_taloudellinen_osa (:perustelu-taloudellinen-osa uusi-arvo))
+                                                                                      (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely"]
@@ -96,10 +96,10 @@
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
-                     (reset! paatostiedot uusi))
+                     (reset! paatostiedot-tekninen-osa uusi))
          :voi-muokata? (muokattava?)}
         [{:otsikko     "Käsitelty"
-          :nimi        :kasittelyaika_tekninen_osa
+          :nimi        :kasittelyaika-tekninen-osa
           :tyyppi      :pvm-aika
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
@@ -111,25 +111,25 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
-         (when (or (:paatos-tekninen @paatostiedot)
-                   (:paatos-taloudellinen @paatostiedot))
+         (when (or (:paatos-tekninen @paatostiedot-tekninen-osa)
+                   (:paatos-taloudellinen @paatostiedot-tekninen-osa))
            {:otsikko     "Selitys"
-            :nimi        :perustelu_tekninen_osa
+            :nimi        :perustelu-tekninen-osa
             :tyyppi      :text
             :koko        [80 4]
             :pituus-max  2048
             :leveys-col  6
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
-        @paatostiedot]
+        @paatostiedot-tekninen-osa]
 
        [:h4 "Taloudellinen osa"]
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
-                     (reset! paatostiedot uusi))
+                     (reset! paatostiedot-taloudellinen-osa uusi))
          :voi-muokata? (muokattava?)}
         [{:otsikko     "Käsitelty"
-          :nimi        :kasittelyaika_taloudellinen_osa
+          :nimi        :kasittelyaika-taloudellinen-osa
           :tyyppi      :pvm-aika
           :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
@@ -141,16 +141,16 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
-         (when (or (:paatos-tekninen @paatostiedot)
-                   (:paatos-taloudellinen @paatostiedot))
+         (when (or (:paatos-tekninen @paatostiedot-taloudellinen-osa)
+                   (:paatos-taloudellinen @paatostiedot-taloudellinen-osa))
            {:otsikko     "Selitys"
-            :nimi        :perustelu_taloudellinen_osa
+            :nimi        :perustelu-taloudellinen-osa
             :tyyppi      :text
             :koko        [80 4]
             :pituus-max  2048
             :leveys-col  6
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
-        @paatostiedot]])))
+        @paatostiedot-taloudellinen-osa]])))
 
 (defn tallennus
   [valmis-tallennettavaksi?]
