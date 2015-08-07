@@ -379,7 +379,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                (when (= :muu (:kasittelytapa (:paatos @havainto)))
                  {:otsikko "Muu käsittelytapa"
                   :nimi :kasittelytapa-selite
-                  :hae (comp :kasittelytapa-selite :paatos)
+                  :hae (comp :muukasittelytapa :paatos)
                   :aseta #(assoc-in %1 [:paatos :muukasittelytapa] %2)
                   :tyyppi :string
                   :leveys-col 4
