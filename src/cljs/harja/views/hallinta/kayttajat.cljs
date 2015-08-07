@@ -249,7 +249,7 @@
       :validoi [[:ei-tyhja "Valitse urakka"]]}
      {:otsikko "Hallintayksikkö" :leveys "30%" :muokattava? (constantly false) :nimi :hal-nimi :hae (comp :nimi :hallintayksikko :urakka) :tyyppi :string}
      {:otsikko "Lisätty" :leveys "20%" :nimi :luotu :tyyppi :string
-      :fmt     pvm/pvm :muokattava? (constantly false)}]
+      :fmt     pvm/pvm-opt :muokattava? (constantly false)}]
 
     urakat-atom]])
 
@@ -498,7 +498,7 @@
                                                              (tallenna!))}
                   (if @tallennus-menossa
                     [ajax-loader]
-                    (ikonit/ok)) " Tallenna"])
+                    (ikonit/tallenna)) " Tallenna"])
                [:span.pull-right
                 [:button.nappi-kielteinen {:on-click
                                            (fn [e]
@@ -519,7 +519,7 @@
                                                                             ]}
                                                                  [:div "Haluatko varmasti poistaa käyttäjän "
                                                                   [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]))))}
-                 (ikonit/ban-circle) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
+                 (ikonit/ban) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
 
 (defn kayttajat
   "Käyttäjähallinnan pääkomponentti"
