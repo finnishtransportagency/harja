@@ -73,14 +73,12 @@
     [lkm kayttajat]))
 
 (defn hae-kayttaja [db kayttaja-id]
-  (let [k (first (q/hae-kayttaja db kayttaja-id))]
-    (when k
-      (konv/array->set (konv/organisaatio k) :roolit))))
+  (when-let [k (first (q/hae-kayttaja db kayttaja-id))]
+    (konv/array->set (konv/organisaatio k) :roolit)))
 
 (defn hae-kayttaja-kayttajanimella [db kayttajanimi]
-  (let [k (first (q/hae-kayttaja-kayttajanimella db kayttajanimi))]
-    (when k
-      (konv/array->set (konv/organisaatio k) :roolit))))
+  (when-let [k (first (q/hae-kayttaja-kayttajanimella db kayttajanimi))]
+    (konv/array->set (konv/organisaatio k) :roolit)))
 
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
@@ -98,12 +96,12 @@
   (if-let [tulos (fim/hae fim tunnus)]
     (if-not (number? tulos) ;; Tulos on virhekoodi
       (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
-           olemassaoleva (some->> tunnus
-                                  (q/hae-kirjautumistiedot db)
-                                  first :id
-                                  (hae-kayttajan-tiedot db user))]
+            olemassaoleva (some->> tunnus
+                                   (q/hae-kirjautumistiedot db)
+                                   first :id
+                                   (hae-kayttajan-tiedot db user))]
 
-       (merge
+        (merge
          olemassaoleva
          (if org
            ;; Liitetään olemassaoleva organisaatio käyttäjälle
@@ -133,8 +131,8 @@
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
   [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
   (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
-                          roolit/hallintayksikon-vastuuhenkilo
-                          roolit/urakoitsijan-paakayttaja})
+                             roolit/hallintayksikon-vastuuhenkilo
+                             roolit/urakoitsijan-paakayttaja})
   (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
   (let [kayttajan-tiedot
         (jdbc/with-db-transaction [c db]
@@ -146,18 +144,18 @@
                               kayttaja-id)
                 vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
                 vanhat-roolit (:roolit vanhat-tiedot)
-                                 
+                
                 vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
             ;; FIXME:
             ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
                                         ;(when (oik/roolissa? user roolit/jarjestelmavastuuhenkilo)
-      
+            
             ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
                                         ;  )
 
             (log/info "VANHAT-ROOLIT " vanhat-roolit)
             (log/info "VANHAT-URAKKA-ROOLIT " vanhat-urakka-roolit)
-      
+            
             (doseq [rooli (:roolit tiedot)]
               (if (vanhat-roolit rooli)
                 (log/info "Käyttäjällä on rooli " rooli " ja se jatkuu.")
@@ -169,14 +167,14 @@
               (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli)
               (q/poista-urakka-roolit! c (:id user) kayttaja-id poistettava-rooli)
               )
-          
-      
+            
+            
             (doseq [{:keys [rooli urakka] :as urakka-rooli} (:urakka-roolit tiedot)]
-      
+              
               (if (:poistettu urakka-rooli)
                 (do (log/info "Poistetaan käyttäjän " kayttaja-id " rooli " rooli " urakasta " (:id urakka))
                     (q/poista-urakka-rooli! c (:id user) kayttaja-id (:id urakka) rooli))
-        
+                
                 (let [roolit-urakassa (into #{} (map :rooli (get vanhat-urakka-roolit (:id urakka) [])))]
                   (if (roolit-urakassa rooli)
                     (log/info "Käyttäjällä on rooli " rooli " urakassa " (:id urakka) " ja se jatkuu...")
@@ -194,14 +192,7 @@
 
 (defn poista-kayttaja [db user kayttaja-id]
   (jdbc/with-db-transaction [c db]
-    (if (= 1 (q/poista-kayttaja! c (:id user) kayttaja-id))
-      true
-      false)))
-
-
-
-
-
+    (= 1 (q/poista-kayttaja! c (:id user) kayttaja-id))))
             
 (defn hae-organisaatioita [db user teksti]
   (into []

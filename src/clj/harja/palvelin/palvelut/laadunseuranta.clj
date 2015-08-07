@@ -61,8 +61,6 @@
                      :kasitellyt havainnot/hae-kasitellyt-havainnot) parametrit)))))
 
 
-
-
 (defn hae-havainnon-tiedot
   "Hakee yhden havainnon kaiken tiedon muokkausnäkymää varten: havainnon perustiedot, kommentit ja liitteet, päätös ja sanktiot.
    Ottaa urakka-id:n ja havainto-id:n. Urakka id:tä käytetään oikeustarkistukseen, havainnon tulee olla annetun urakan
