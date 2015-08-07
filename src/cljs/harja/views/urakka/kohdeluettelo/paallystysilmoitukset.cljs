@@ -138,7 +138,7 @@
                                                   (get-in lomake polku))))]
 
     [:div.pot-tallennus
-     [:div.lomake-varoitus-yleinen @huomautusteksti]
+     [:div.lomake-yleinen-huomautus @huomautusteksti]
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
