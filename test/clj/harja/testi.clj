@@ -82,7 +82,7 @@
                          (com.mchange.v2.c3p0.DataSources/destroy db)
                          (:datasource (luo-testitietokanta))))
   (alter-var-root #'ds (fn [_]
-                         (:datasource db)))
+                         {:datasource db}))
   (alter-var-root #'temppidb (fn [_]
                                (com.mchange.v2.c3p0.DataSources/destroy temppidb)
                                (:datasource (luo-temppitietokanta)))))
