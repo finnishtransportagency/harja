@@ -71,7 +71,6 @@
        [grid/grid
         {:otsikko  "Tierekisterikohteet"
          :tyhja    (if (nil? @paallystyskohdeosat) [ajax-loader "Haetaan..."] "Tierekisterikohteita ei löydy")
-         :tunniste :tr_numero
          :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                               [sopimus-id _] @u/valittu-sopimusnumero
                               vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) %))]
