@@ -12,7 +12,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
-            [harja.testi :as testi])
+            [harja.testi :as testi]
+            [taoensso.timbre :as log])
   (:import (javax.jms TextMessage)))
 
 (def +testihanke-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>

@@ -3,6 +3,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
 
+(use-fixtures :once tietokanta-fixture)
+
 (deftest tarkista-hankkeen-tallentuminen
   (tuo-hanke)
   (is (= 1 (count (hae-hankkeet))) "Luonnin jälkeen hanke löytyy Sampo id:llä.")

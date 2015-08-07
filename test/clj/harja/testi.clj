@@ -78,8 +78,14 @@
   (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()")))
 
 (defn- luo-kannat-uudelleen []
-  (alter-var-root #'db (fn [_] (:datasource (luo-testitietokanta))))
-  (alter-var-root #'temppidb (fn [_] (:datasource (luo-temppitietokanta)))))
+  (alter-var-root #'db (fn [_]
+                         (com.mchange.v2.c3p0.DataSources/destroy db)
+                         (:datasource (luo-testitietokanta))))
+  (alter-var-root #'ds (fn [_]
+                         (:datasource db)))
+  (alter-var-root #'temppidb (fn [_]
+                               (com.mchange.v2.c3p0.DataSources/destroy temppidb)
+                               (:datasource (luo-temppitietokanta)))))
 
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
@@ -191,8 +197,14 @@
                            (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null)"))))
 
 
+(defn tietokanta-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (luo-kannat-uudelleen)
+  (testit))
+
 (defn urakkatieto-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
+  (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
