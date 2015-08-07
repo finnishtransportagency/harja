@@ -111,8 +111,7 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
-         (when (or (:paatos-tekninen @paatostiedot-tekninen-osa)
-                   (:paatos-taloudellinen @paatostiedot-tekninen-osa))
+         (when (:paatos-tekninen @paatostiedot-tekninen-osa)
            {:otsikko     "Selitys"
             :nimi        :perustelu-tekninen-osa
             :tyyppi      :text
@@ -141,8 +140,7 @@
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
-         (when (or (:paatos-tekninen @paatostiedot-taloudellinen-osa)
-                   (:paatos-taloudellinen @paatostiedot-taloudellinen-osa))
+         (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)
            {:otsikko     "Selitys"
             :nimi        :perustelu-taloudellinen-osa
             :tyyppi      :text
