@@ -155,10 +155,12 @@
   (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
                                         valmispvm-paallystys (:valmispvm_paallystys @lomakedata)
                                         paatos-tekninen (:paatos_tekninen_osa @lomakedata)
-                                        paatos-taloudellinen (:paatos_taloudellinen_osa @lomakedata)]
+                                        paatos-taloudellinen (:paatos_taloudellinen_osa @lomakedata)
+                                        tila (:tila @lomakedata)]
                                     (cond (not (and valmispvm-kohde valmispvm-paallystys))
                                           "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
-                                          (and (= :hyvaksytty paatos-tekninen)
+                                          (and (not= :lukittu tila)
+                                               (= :hyvaksytty paatos-tekninen)
                                                (= :hyvaksytty paatos-taloudellinen))
                                           "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
                                           :else
