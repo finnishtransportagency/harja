@@ -87,13 +87,19 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
               (when (and id urakat)
                 (some #(when (= id (:id %)) %) urakat)))))
 
+(defonce edellinen-valittu-urakkatyyppi (atom nil))
+
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 (defonce valittu-urakkatyyppi
-  (reaction (let [ur @valittu-urakka]
-              (if ur
-                (first (filter #(= (:tyyppi ur) (:arvo %))
-                               +urakkatyypit+))
-                (first +urakkatyypit+)))))
+         (reaction (let [valittu-urakka @valittu-urakka]
+                     (if valittu-urakka
+                       (let [valittu (first (filter #(= (:tyyppi valittu-urakka) (:arvo %))
+                                                    +urakkatyypit+))]
+                         (reset! edellinen-valittu-urakkatyyppi valittu)
+                         valittu)
+                       (if (not (nil? @edellinen-valittu-urakkatyyppi))
+                         @edellinen-valittu-urakkatyyppi
+                         (first +urakkatyypit+))))))
 
 (defn paivita-urakka [urakka-id funktio & argumentit]
   (swap! urakkalista (fn [urakat]
