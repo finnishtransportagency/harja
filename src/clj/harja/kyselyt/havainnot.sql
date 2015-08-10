@@ -73,7 +73,7 @@ FROM havainto h
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
-      AND s.havainto IS NOT TRUE;
+      AND s.suorasanktio IS NOT TRUE;
 
 -- name: hae-omat-havainnot
 -- Hakee listaukseen kaikki urakan havainnot, joiden luoja tai kommentoija on annettu henkilö.
