@@ -42,10 +42,9 @@
    (s/optional-key :tekijanimi)        s/Str
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
-   (s/optional-key :id)                s/Int
-   (s/optional-key :paatos)            Paatos
-   (s/optional-key :sanktiot)          {s/Num Sanktio}})
-
+   (s/optional-key :id) s/Int
+   (s/optional-key :paatos) Paatos
+   (s/optional-key :sanktiot) {s/Num Sanktio}})
 
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie :laatu :pistokoe))
 
