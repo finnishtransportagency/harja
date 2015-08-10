@@ -20,7 +20,8 @@
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.kohdeluettelo.yhteenveto :as yhteenveto]
-            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as kohdeluettelo-toteumat]
+            [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]
+            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             
             [harja.ui.visualisointi :as vis]
             [harja.ui.lomake :refer [lomake]]
@@ -47,5 +48,12 @@
    [yhteenveto/paallystyskohteet]
 
    "Päällystysilmoitukset" :paallystysilmoitukset
-   [kohdeluettelo-toteumat/toteumat]])
+   [paallystysilmoitukset/paallystysilmoitukset]
+
+
+   "Paikkausilmoitukset"
+   :paikkausilmoitukset
+   (when (= :paikkaus (:tyyppi ur))
+     ^{:key "paikkaukset"}
+     [paikkausilmoitukset/paikkausilmoitukset ur])])
 

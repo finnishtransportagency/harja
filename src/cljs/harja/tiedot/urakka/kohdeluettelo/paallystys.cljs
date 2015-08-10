@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.paallystys
+(ns harja.tiedot.urakka.kohdeluettelo.paallystys
   "Tämä nimiavaruus hallinnoi urakan päällystystietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
@@ -13,7 +13,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defonce yhteenvetonakymassa? (atom false))
-(defonce toteumanakymassa? (atom false))
+(defonce paallystysilmoitukset-nakymassa? (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
   (k/post! :urakan-paallystyskohteet {:urakka-id urakka-id

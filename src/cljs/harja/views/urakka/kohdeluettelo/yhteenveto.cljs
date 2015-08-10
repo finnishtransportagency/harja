@@ -11,7 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.navigaatio :as nav]

@@ -17,7 +17,7 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :refer [lomake]]
-            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset])
@@ -27,7 +27,7 @@
 
 (defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                          [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                         nakymassa? @paallystys/toteumanakymassa?]
+                                         nakymassa? @paallystys/paallystysilmoitukset-nakymassa?]
                                         (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                           (log "PÄÄ Haetaan päällystystoteumat.")
                                           (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
@@ -478,7 +478,7 @@
          (yhteenveto)
          (tallennus valmis-tallennettavaksi?)]))))
 
-(defn toteumaluettelo
+(defn ilmoitusluettelo
   []
   (let []
 
@@ -487,7 +487,7 @@
         [:div
          [grid/grid
           {:otsikko  "Päällystysilmoitukset"
-           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan toteumia..."] "Ei toteumia")
+           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
@@ -527,11 +527,11 @@
                             4))
             @toteumarivit)]]))))
 
-(defn toteumat []
+(defn paallystysilmoitukset []
   (komp/luo
-    (komp/lippu paallystys/toteumanakymassa?)
+    (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn []
       (if @lomakedata
         [paallystysilmoituslomake]
-        [toteumaluettelo]))))
+        [ilmoitusluettelo]))))
