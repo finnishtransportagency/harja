@@ -115,7 +115,7 @@
            {:otsikko     "Selitys"
             :nimi        :perustelu-tekninen-osa
             :tyyppi      :text
-            :koko        [80 4]
+            :koko        [60 3]
             :pituus-max  2048
             :leveys-col  6
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
@@ -144,7 +144,7 @@
            {:otsikko     "Selitys"
             :nimi        :perustelu-taloudellinen-osa
             :tyyppi      :text
-            :koko        [80 4]
+            :koko        [60 3]
             :pituus-max  2048
             :leveys-col  6
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]

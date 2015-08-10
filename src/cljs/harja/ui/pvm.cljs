@@ -72,7 +72,8 @@ Seuraavat optiot ovat mahdollisia:
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
            [:table.pvm-valinta (if sijainti
                                  (let [[x y w] sijainti]
-                                   {:style {:left x :top y
+                                   {:style {:left x
+                                            :top y
                                             :width w
                                             :position "absolute"
                                             :z-index 100}})
