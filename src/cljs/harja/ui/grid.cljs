@@ -211,7 +211,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 "pull-left"
                                 "pull-right")}
                  [:div {:style {:position "absolute" :display "inline-block"}}
-                  [:button {:class    (str "nappi-toissijainen nappi-gridin-sisalla" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
+                  [:button {:class    (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
                             :title    (:tayta-tooltip s)
                             :style    {:position "absolute"
                                        :left     (when (= :oikea (:tasaa s)) 0)
