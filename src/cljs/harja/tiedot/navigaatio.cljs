@@ -47,9 +47,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   [{:nimi "Hoito" :arvo :hoito }
    {:nimi "Tiemerkintä" :arvo :tiemerkinta }
    {:nimi "Päällystys" :arvo :paallystys }
+   {:nimi "Paikkaus" :arvo :paikkaus }
    {:nimi "Valaistus" :arvo :valaistus }])
-
-
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden 

@@ -49,9 +49,10 @@
 
      "Kohdeluettelo"
      :kohdeluettelo
-     (when (= :paallystys (:tyyppi ur))
+     (when (or (= :paallystys (:tyyppi ur))
+               (= :paikkaus (:tyyppi ur)))
        ^{:key "kohdeluettelo"}
-       [kohdeluettelo/kohdeluettelo])
+       [kohdeluettelo/kohdeluettelo ur])
 
      "Laadunseuranta"
      :laadunseuranta
@@ -78,5 +79,4 @@
      "Turvallisuus"
      :turvallisuus
      ^{:key "turvallisuus"}
-     [turvallisuus/turvallisuus ur]
-     ]))
+     [turvallisuus/turvallisuus ur]]))
