@@ -2,63 +2,75 @@
 
 // Leveä Harja on parempi
 .container {
-	width: 100%;
-	padding: 2px;
+  width: 100%;
+  padding: 2px;
 }
+
+.row { // Jostain syystä välillä negatiiviset marginit, joka aiheuttaa ongelmia mm. lomakkeen kanssa.
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.col-sisalto, .col-kartta { // Sarakkeilla saa olla paddingia, mutta ei pääsisällöllä.
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .form-control {
-	color: @harmaa1;
-	padding: 2px 6px;
+  color: @harmaa1;
+  padding: 2px 6px;
 }
+
 .navbar {
-	border: none;
-	background-color: @harjan-taustavari;
-	a:hover,
-	a:focus {
-		color: @sininen2;
-	}
+  border: none;
+  background-color: @harjan-taustavari;
+  a:hover,
+  a:focus {
+    color: @sininen2;
+  }
 }
+
 .navbar-brand {
-	width: 100px;
+  width: 100px;
 }
+
 .navbar-form {
-	margin: 8px 0;
+  margin: 8px 0;
 }
+
 .panel {
-	background-color: @harjan-taustavari;
+  background-color: @harjan-taustavari;
 }
+
 .panel.panel-default {
-	border: none;
+  border: none;
 }
+
 .panel-default > .panel-heading {
-	background-color: @harjan-taustavari;
-	border: none;
+  background-color: @harjan-taustavari;
+  border: none;
 }
 
 li.active > a {
-	font-weight: bold;
+  font-weight: bold;
 }
+
 .nav-tabs > li.active > a,
 .nav-tabs > li.active > a:hover,
 .nav-tabs > li.active > a:focus {
-	background-color: @harjan-taustavari;
+  background-color: @harjan-taustavari;
 }
 
 // BS itse yliratsastaa nappityylit modaalissa käyttäen btn-luokkaa
 // meillä käytössä button-elementti, jolla oma luokka, esim. nappi-ensisijainen
 // Properly space out buttons
 .modal-footer {
-	button + button {
-		margin-left: @harja-nappien-valinen-etaisyys;
-		margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
-	}
-	// but override that for button groups
-	.btn-group button + button {
-		margin-left: -1px;
-	}
-}
-/* Small devices (tablets, 768px and up) */
-@media (max-width: @screen-sm-min) {
-	.lomake {
-		padding: 0 30px;
-	}
+  button + button {
+    margin-left: @harja-nappien-valinen-etaisyys;
+    margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
+  }
+  // but override that for button groups
+  .btn-group button + button {
+    margin-left: -1px;
+  }
 }

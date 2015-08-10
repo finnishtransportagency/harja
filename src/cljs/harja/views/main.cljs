@@ -98,8 +98,8 @@
                  :L ["hide" "col-sm-12"])]
            ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
            [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-            [:div.row
-             [:div {:class sisallon-luokka}
+            [:div.row.row-sisalto
+             [:div {:class (str "col-sisalto " sisallon-luokka)}
               (case sivu
                 :urakat [urakat/urakat]
                 :raportit [raportit/raportit]
@@ -108,7 +108,7 @@
                 :hallinta [hallinta/hallinta]
                 :about [about/about]
                 )]
-             [:div#kartta-container {:class kartan-luokka}
+             [:div#kartta-container {:class (str "col-kartta " kartan-luokka)}
               (if (= :S kartan-koko)
                 [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
                  [:span.livicon-expand " Avaa kartta"]]
