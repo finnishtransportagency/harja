@@ -23,10 +23,14 @@
   [:span " Automaattinen päivittäminen päällä."])
 
 (defn urakan-sivulle-nappi
-  []
-  (when @tiedot/valittu-urakka
+  [ilmoitus]
+  (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
     [:button.nappi-toissijainen
-     {:on-click #(reset! nav/sivu :urakat)}
+     {:on-click (fn [e]
+                  (.stopPropagation e)
+                  (reset! nav/valittu-hallintayksikko-id (:hallintayksikko ilmoitus))
+                  (reset! nav/valittu-urakka-id (:urakka ilmoitus))
+                  (reset! nav/sivu :urakat))}
      "Urakan sivulle"]))
 
 (defn parsi-tierekisteri
@@ -109,7 +113,7 @@
   []
   [:div
    [napit/takaisin "Takaisin" #(reset! tiedot/valittu-ilmoitus nil)]
-   (urakan-sivulle-nappi)
+   (urakan-sivulle-nappi @tiedot/valittu-ilmoitus)
    (when @tiedot/pollaus-id (pollauksen-merkki))
    [bs/panel {}
     (capitalize (name (:ilmoitustyyppi @tiedot/valittu-ilmoitus)))

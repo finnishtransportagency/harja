@@ -2,6 +2,7 @@
 SELECT
   i.id,
   i.urakka,
+  (SELECT hallintayksikko FROM urakka WHERE id = i.urakka) AS hallintayksikko,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
