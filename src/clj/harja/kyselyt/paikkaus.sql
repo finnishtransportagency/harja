@@ -5,9 +5,9 @@ SELECT
   tila,
   pk.nimi,
   pk.kohdenumero,
-  paatos,
+  paatos
 FROM paikkausilmoitus
-  RIGHT JOIN paallystyskohde pk ON pk.id = paikkausilmoitus.paallystyskohde
+  RIGHT JOIN paallystyskohde pk ON pk.id = paikkausilmoitus.paikkauskohde
                                    AND pk.urakka = :urakka
                                    AND pk.sopimus = :sopimus
                                    AND pk.poistettu IS NOT TRUE
@@ -26,9 +26,9 @@ SELECT
   ilmoitustiedot,
   paatos,
   perustelu,
-  kasittelyaika,
+  kasittelyaika
 FROM paikkausilmoitus
-  JOIN paallystyskohde pk ON pk.id = paikkausilmoitus.paallystyskohde
+  JOIN paallystyskohde pk ON pk.id = paikkausilmoitus.paikkauskohde
                              AND pk.urakka = :urakka
                              AND pk.sopimus = :sopimus
                              AND pk.poistettu IS NOT TRUE
