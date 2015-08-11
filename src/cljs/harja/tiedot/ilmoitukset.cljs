@@ -74,12 +74,22 @@
              :hakuehto        @hakuehto}]
     ret))
 
+(defn jarjesta-ilmoitukset [tulos]
+  (sort-by
+    :ilmoitettu
+    pvm/ennen?
+    (mapv
+      (fn [ilmo]
+        (assoc ilmo :kuittaukset
+                    (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+      tulos)))
+
 (defn hae-ilmoitukset
   []
   (go
     (let [tulos (<! (k/post! :hae-ilmoitukset (kasaa-parametrit)))]
       (when-not (k/virhe? tulos)
-        (reset! haetut-ilmoitukset tulos))
+        (reset! haetut-ilmoitukset (jarjesta-ilmoitukset tulos)))
       (reset! filttereita-vaihdettu? false)
 
       tulos)))
