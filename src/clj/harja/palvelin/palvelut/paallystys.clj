@@ -296,5 +296,11 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-paallystyskohteet)
+      :urakan-paallystyskohteet
+      :urakan-paallystyskohdeosat
+      :urakan-paallystystoteumat
+      :urakan-paallystysilmoitus-paallystyskohteella
+      :tallenna-paallystysilmoitus
+      :tallenna-paallystyskohteet
+      :tallenna-paallystyskohdeosat)
     this))
