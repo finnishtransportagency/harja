@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.sopimustiedot
-  "Tämä nimiavaruus hallinnoi urakan yhteystietoja ja päivystäjiä."
+  "Tämä nimiavaruus hallinnoi urakan sopimuksia."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]])
