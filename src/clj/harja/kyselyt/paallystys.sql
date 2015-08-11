@@ -22,22 +22,22 @@ WHERE
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
 SELECT
-  pk.id AS paallystyskohde_id,
-  tila,
-  pk.nimi,
-  pk.kohdenumero,
-  paatos_tekninen_osa,
-  paatos_taloudellinen_osa,
-  pk.sopimuksen_mukaiset_tyot,
-  pk.arvonvahennykset,
-  pk.bitumi_indeksi,
-  pk.kaasuindeksi
-FROM paallystysilmoitus
-  RIGHT JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
-                                   AND pk.urakka = :urakka
-                                   AND pk.sopimus = :sopimus
-                                   AND pk.poistettu IS NOT TRUE
-WHERE paallystysilmoitus.poistettu IS NOT TRUE;
+  paallystyskohde.id AS paallystyskohde_id,
+  pi.tila,
+  nimi,
+  kohdenumero,
+  pi.paatos_tekninen_osa,
+  pi.paatos_taloudellinen_osa,
+  sopimuksen_mukaiset_tyot,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi
+FROM paallystyskohde
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+  AND pi.poistettu IS NOT TRUE
+WHERE urakka = :urakka
+AND sopimus = :sopimus
+AND paallystyskohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
