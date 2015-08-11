@@ -281,7 +281,7 @@
                                (:valmispvm_paallystys @lomakedata)
                                (:valmispvm_kohde @lomakedata)
                                (= :aloitettu (:tila @lomakedata)))
-                         "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina.")
+                         "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
               :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
