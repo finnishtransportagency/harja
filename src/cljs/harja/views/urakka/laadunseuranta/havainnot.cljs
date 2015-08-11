@@ -307,7 +307,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         "Tallenna havainto")
                      
                        #(tallenna-havainto @havainto)
-                       {:ikoni (ikonit/check)
+                       {:ikoni (ikonit/tallenna)
                         :disabled (not (validi-havainto? @havainto))
                         :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
            [
