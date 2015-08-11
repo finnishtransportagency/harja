@@ -50,6 +50,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    {:nimi "Paikkaus" :arvo :paikkaus }
    {:nimi "Valaistus" :arvo :valaistus }])
 
+(defn nayta-urakkatyyppi [tyyppi]
+  (:nimi (first
+           (filter #(= tyyppi (:arvo %))
+                   +urakkatyypit+))))
+
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden 
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
