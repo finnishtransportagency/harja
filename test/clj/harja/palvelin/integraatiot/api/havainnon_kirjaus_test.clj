@@ -19,43 +19,16 @@
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
-(def portti nil)
 (def kayttaja "yit-rakennus")
-(def urakka nil)
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'portti (fn [_] (arvo-vapaa-portti)))
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])
-
-                        :todennus (component/using
-                                    (todennus/http-todennus)
-                                    [:db :klusterin-tapahtumat])
-                        :http-palvelin (component/using
-                                         (http-palvelin/luo-http-palvelin portti true)
-                                         [:todennus])
-                        :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
-                        :liitteiden-hallinta (component/using
-                                               (liitteet/->Liitteet)
-                                               [:db])
-                        :api-havainnot (component/using
-                                         (api-havainnot/->Havainnot)
-                                         [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))))
-
-  (alter-var-root #'urakka
-                  (fn [_]
-                    (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" kayttaja "') "
-                                    " AND tyyppi='hoito'::urakkatyyppi")))))
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea kayttaja
+                                           :liitteiden-hallinta (component/using
+                                                                 (liitteet/->Liitteet)
+                                                                 [:db])
+                                           :api-havainnot (component/using
+                                                           (api-havainnot/->Havainnot)
+                                                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
