@@ -102,7 +102,7 @@ WHERE
     (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
   )
-ORDER BY k.kuitattu ASC;
+ORDER BY i.ilmoitettu ASC, k.kuitattu ASC;
 
 
 -- name: hae-id-ilmoitus-idlla
