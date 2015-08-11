@@ -8,32 +8,13 @@
             [harja.kyselyt.konversio :as konv]))
 
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-    (fn [_]
-      (component/start
-        (component/system-map
-          :db (apply tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :urakan-erilliskustannukset (component/using
-                                        (->Toteumat)
-                                        [:http-palvelin :db])
-          :tallenna-erilliskustannus (component/using
-                                       (->Toteumat)
-                                       [:http-palvelin :db])
-          :tallenna-muiden-toiden-toteuma (component/using
-                                            (->Toteumat)
-                                            [:http-palvelin :db])
-          :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat (component/using
-                                                                  (->Toteumat)
-                                                                  [:http-palvelin :db])
-          :tallenna-toteuma-ja-toteumamateriaalit (component/using
-                                                    (->Toteumat)
-                                                    [:http-palvelin :db])))))
-
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
-
+(def jarjestelma-fixture (laajenna-jarjestema-fixture "fastroi"
+                                                      :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat (component/using
+                                                                                                             (->Toteumat)
+                                                                                                             [:http-palvelin :db])
+                                                      :tallenna-toteuma-ja-toteumamateriaalit (component/using
+                                                                                               (->Toteumat)
+                                                                                               [:http-palvelin :db])))
 
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
@@ -224,4 +205,4 @@
       (is (= 8712 (int (ffirst (q "SELECT maara FROM toteuma_materiaali WHERE id="(second tmidt))))))
 
       (u "DELETE FROM toteuma_materiaali WHERE id in ("(clojure.string/join "," tmidt )")")
-      (u "DELETE FROM toteuma WHERE id="tid))))
+      (u "DELETE FROM toteuma WHERE id=" tid))))
