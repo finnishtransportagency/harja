@@ -26,22 +26,32 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-; FIXME Testin vuoksi atomissa on tyhjä mappi, jotta lomake saadaan näkyviin. Myöhemmin tulee atom nil.
-(def lomakedata (atom {})) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
+(def lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
 (defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                    nakymassa? @paikkaus/paikkausilmoitukset-nakymassa?]
                                   (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                     (log "PAI Haetaan paikkausilmoitukset")
-                                    []
-                                    ; TODO palvelu puuttuu
-                                    #_(paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+                                    (paikkaus/hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
+
+(defn nayta-tila [tila]
+  (case tila
+    :aloitettu "Aloitettu"
+    :valmis "Valmis"
+    :lukittu "Lukittu"
+    "-"))
+
+(defn nayta-paatos [tila]
+  (case tila
+    :hyvaksytty [:span.paallystysilmoitus-hyvaksytty "Hyväksytty"]
+    :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
+    ""))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -256,7 +266,11 @@
            :tunniste :kohdenumero}
           [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                             (nayta-tila (:tila rivi)))}
+           {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                              (nayta-paatos (:paatos rivi)))}
+           {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          ; TODO
                                                                                                          #_(let [urakka-id (:id @nav/valittu-urakka)

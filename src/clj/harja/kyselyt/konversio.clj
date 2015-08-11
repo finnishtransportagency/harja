@@ -169,6 +169,11 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   [rivi & kentat]
   (muunna rivi kentat keyword))
 
+(defn string->avain [data avainpolku]
+  "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
+  (-> data
+      (assoc-in avainpolku (keyword (get-in data avainpolku)))))
+
 (defn decimal->double
   "Muuntaa postgresin tarkan numerotyypin doubleksi."
   [rivi & kentat]
@@ -225,8 +230,3 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
       (assoc-in avainpolku
                 (when-let [dt (some-> json (get-in avainpolku))]
                   (coerce/to-date (format/parse (format/formatters :date-time) dt))))))
-
-(defn string->avain [data avainpolku]
-  "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
-  (-> data
-      (assoc-in avainpolku (keyword (get-in data avainpolku)))))
