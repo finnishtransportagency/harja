@@ -152,14 +152,33 @@
 
        [:div.container
 
-        (when @tiedot/valittu-urakka
+        ;; FIXME: Näyttää huonolle koska ei ole taulukko2 rakenteessa
+        ;; Label on enemmän vasemmalla kuin taulukko2 kentät.
+        (when-not @tiedot/valittu-urakka [:label "Saapunut:"])
+        (if @tiedot/valittu-urakka
           [:div.row
            [:div.col-md-12
             [urakan-hoitokausi-ja-aikavali
              @tiedot/valittu-urakka
              (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
-             tiedot/valittu-aikavali]
-            (urakan-sivulle-nappi)]])
+             tiedot/valittu-aikavali]]]
+
+          [:span
+           [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :pvm-leveys "100%"}
+            (r/wrap
+              (first @tiedot/valittu-aikavali)
+              (fn [uusi-arvo]
+                (reset! tiedot/valittu-aikavali
+                        [uusi-arvo
+                         (second @tiedot/valittu-aikavali)])))]
+
+           [:label " \u2014 "]
+           [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
+                                                       (second @tiedot/valittu-aikavali)
+                                                       (fn [uusi-arvo]
+                                                         (swap! tiedot/valittu-aikavali
+                                                                (fn [[alku _]]
+                                                                  [alku uusi-arvo]))))]])
 
         [yleiset/taulukko2
          3 9
@@ -167,25 +186,6 @@
          [:label "Hae ilmoituksia: "]
          [tee-kentta {:tyyppi      :string
                       :placeholder "Hae tekstillä..."} tiedot/hakuehto]
-
-         [:label "Saapunut:"]
-         (when-not @tiedot/valittu-urakka
-           [:span
-            [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :pvm-leveys "100%"}
-             (r/wrap
-               (first @tiedot/valittu-aikavali)
-               (fn [uusi-arvo]
-                 (reset! tiedot/valittu-aikavali
-                         [uusi-arvo
-                          (second @tiedot/valittu-aikavali)])))]
-
-            [:label " \u2014 "]
-            [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
-                                                        (second @tiedot/valittu-aikavali)
-                                                        (fn [uusi-arvo]
-                                                          (swap! tiedot/valittu-aikavali
-                                                                 (fn [[alku _]]
-                                                                   [alku uusi-arvo]))))]])
 
          [:label "Tilat:"]
          [:span
