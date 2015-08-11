@@ -103,8 +103,11 @@
      "Kuittaaja: " (parsi-henkilo (:kuittaaja kuittaus))
      "Puhelinnumero: " (parsi-puhelinnumero (:kuittaaja kuittaus))
      "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
-    [:br]
-    [yleiset/tietoja {}
+    ;;[:br]
+    ;; Otettu pois 11.8.2015 asiakkaan kommenttien perusteella. Pelkäsivät että tämä siirtää vastuuta
+    ;; pois urakoitsijalta, ja antaa tekosyyn syyttää aliurakoitsijaa.
+    ;; Jätin tämän tänne, koska voihan olla että mieli esim. käyttäjätesteissä muuttuu..
+    #_[yleiset/tietoja {}
      "Käsittelijä: " (parsi-henkilo (:kasittelija kuittaus))
      "Puhelinnumero: " (parsi-puhelinnumero (:kasittelija kuittaus))
      "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])]]])
