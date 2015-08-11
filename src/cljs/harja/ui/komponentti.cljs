@@ -83,9 +83,9 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
 
 (defn lippu
   "Mixin, joka asettaa annetun atomin tilan joko true tai false sen mukaan onko komponentti näkyvissä."
-  [lippu-atom]
-  (sisaan-ulos #(reset! lippu-atom true)
-               #(reset! lippu-atom false)))
+  [& lippu-atomit]
+  (sisaan-ulos #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom true))
+               #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom false))))
 
 (defn kun-muuttuu
   "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
