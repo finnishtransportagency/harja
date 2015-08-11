@@ -147,8 +147,8 @@
   (komp/luo
     (fn []
       [:span
-       
-       
+
+
 
        [:div.container
 
@@ -165,7 +165,7 @@
          3 9
 
          [:label "Hae ilmoituksia: "]
-         [tee-kentta {:tyyppi :string
+         [tee-kentta {:tyyppi      :string
                       :placeholder "Hae tekstillä..."} tiedot/hakuehto]
 
          [:label "Saapunut:"]
@@ -173,19 +173,19 @@
            [:span
             [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :pvm-leveys "100%"}
              (r/wrap
-              (first @tiedot/valittu-aikavali)
-              (fn [uusi-arvo]
-                (reset! tiedot/valittu-aikavali
-                        [uusi-arvo
-                         (second @tiedot/valittu-aikavali)])))]
-            
+               (first @tiedot/valittu-aikavali)
+               (fn [uusi-arvo]
+                 (reset! tiedot/valittu-aikavali
+                         [uusi-arvo
+                          (second @tiedot/valittu-aikavali)])))]
+
             [:label " \u2014 "]
             [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
-                                                       (second @tiedot/valittu-aikavali)
-                                                       (fn [uusi-arvo]
-                                                         (swap! tiedot/valittu-aikavali
-                                                                (fn [[alku _]]
-                                                                  [alku uusi-arvo]))))]])
+                                                        (second @tiedot/valittu-aikavali)
+                                                        (fn [uusi-arvo]
+                                                          (swap! tiedot/valittu-aikavali
+                                                                 (fn [[alku _]]
+                                                                   [alku uusi-arvo]))))]])
 
          [:label "Tilat:"]
          [:span
@@ -194,11 +194,11 @@
             [tee-kentta
              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
              (r/wrap
-              (second ehto)
-              (fn [uusi-tila]
-                (reset! tiedot/valitut-tilat
-                        (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]
-        
+               (second ehto)
+               (fn [uusi-tila]
+                 (reset! tiedot/valitut-tilat
+                         (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]
+
          [:label "Ilmoituksen tyyppi:"]
          [:span
           (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
@@ -206,37 +206,36 @@
             [tee-kentta
              {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
              (r/wrap
-              (second ehto)
-              (fn [uusi-tila]
-                (reset! tiedot/valitut-ilmoitusten-tyypit
-                        (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]
-         
-       [palvelinkutsu-nappi
-        "Hae ilmoitukset"
-        #(tiedot/hae-ilmoitukset)
-        {:ikoni        (harja.ui.ikonit/search)
-         :kun-onnistuu #(tiedot/aloita-pollaus)}]
+               (second ehto)
+               (fn [uusi-tila]
+                 (reset! tiedot/valitut-ilmoitusten-tyypit
+                         (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]
 
-       (when @tiedot/pollaus-id (pollauksen-merkki))
+        [palvelinkutsu-nappi
+         "Hae ilmoitukset"
+         #(tiedot/hae-ilmoitukset)
+         {:ikoni        (harja.ui.ikonit/search)
+          :kun-onnistuu #(tiedot/aloita-pollaus)}]
+
+        (when @tiedot/pollaus-id (pollauksen-merkki))
 
 
-       [grid
-        {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-         :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
+        [grid
+         {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
+          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
 
-        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
-         {:otsikko "Sijainti" :nimi :tierekisteri :hae #(parsi-tierekisteri (:tr %)) :leveys "20%"}
-         {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-          :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
-         {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
+         [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
+          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
+          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(parsi-tierekisteri (:tr %)) :leveys "20%"}
+          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
+           :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
+          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
 
-        @tiedot/haetut-ilmoitukset]]])))
+         @tiedot/haetut-ilmoitukset]]])))
 
 (defn ilmoitukset []
   (komp/luo
-    (komp/lippu tiedot/ilmoitusnakymassa?)
-    (komp/lippu tiedot/taso-ilmoitukset)
+    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/taso-ilmoitukset nav/pakota-nakyviin?)
 
     (fn []
       (if @tiedot/valittu-ilmoitus
