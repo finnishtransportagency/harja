@@ -20,7 +20,8 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.paallystys.pot :as pot])
+            [harja.domain.paallystys.pot :as pot]
+            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -220,11 +221,11 @@
             {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
             {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
             {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}
-            {:otsikko "Tienpäällysteen leveys" :nimi :aet :tyyppi :numero :leveys "10%"}
-            {:otsikko "Tiepäällysteen neliöt" :nimi :aet :tyyppi :numero :leveys "10%"}
-            {:otsikko "Paikkausneliöt" :nimi :aet :tyyppi :numero :leveys "10%"}
-            {:otsikko "Paikkaus-%" :nimi :aet :tyyppi :numero :leveys "10%"}]
+            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (paallystysilmoitukset/laske-tien-pituus rivi))}
+            {:otsikko "Tienpäällysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+            {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+            {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+            {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
            toteutuneet-osoitteet]
 
           #_[grid/muokkaus-grid TODO

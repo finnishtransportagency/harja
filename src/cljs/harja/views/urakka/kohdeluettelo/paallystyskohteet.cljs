@@ -1,5 +1,5 @@
-(ns harja.views.urakka.kohdeluettelo.yhteenveto
-  "Urakan kohdeluettelon yhteenveto"
+(ns harja.views.urakka.kohdeluettelo.paallystyskohteet
+  "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.ui.grid :as grid]
@@ -13,6 +13,7 @@
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -83,7 +84,8 @@
          {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (- (:tr_loppuetaisyys rivi) (:tr_alkuetaisyys rivi))))
+         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
+                                                                                                                                                   :losa (:tr_loppuosa rivi)})))
           :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko       "Nykyinen päällyste"
