@@ -13,12 +13,12 @@
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            
+
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [cljs-time.core :as t]
             [harja.domain.roolit :as roolit]
-            )
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
  
@@ -75,16 +75,17 @@
         true)))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
-  (go (let [res
-            (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
-        (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
-        true)))
+  (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
+        (if-not (k/virhe? res)
+          (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
+          true))))
 
 (defn tallenna-urakkatyyppi [ur uusi-urakkatyyppi]
-  (go (let [res
-            (<! (urakka/vaihda-urakkatyyppi (:id ur) (name uusi-urakkatyyppi)))]
-        (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
-        true)))
+  ; TODO Vahvistus-modal
+  (go (let [res (<! (urakka/vaihda-urakkatyyppi (:id ur) (name uusi-urakkatyyppi)))]
+        (if-not (k/virhe? res)
+          (nav/paivita-urakka (:id ur) assoc :tyyppi res)
+          true))))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
