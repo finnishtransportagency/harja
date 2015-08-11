@@ -261,7 +261,7 @@
         [:div.paallystysilmoituslomake
 
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
-          (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
+          (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
 
          [:h2 "Päällystysilmoitus"]
 
