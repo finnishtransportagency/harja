@@ -1,5 +1,5 @@
-(ns harja.views.urakka.kohdeluettelo
-  "Urakan 'Kohdeluettelo' välilehti:"
+(ns harja.views.urakka.paallystyksen-kohdeluettelo
+  "Päällystysurakan 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [bootstrap :as bs]
             [harja.ui.grid :as grid]
@@ -46,19 +46,9 @@
 
    "Päällystyskohteet"
    :yhteenveto
-   (when (= :paallystys (:tyyppi ur))
-     ^{:key "paallystykset"}
-     [paallystyskohteet-yhteenveto/paallystyskohteet])
+   [paallystyskohteet-yhteenveto/paallystyskohteet]
 
    "Päällystysilmoitukset"
    :paallystysilmoitukset
-   (when (= :paallystys (:tyyppi ur))
-     ^{:key "paallystykset"}
-      [paallystysilmoitukset/paallystysilmoitukset])
-
-   "Paikkausilmoitukset"
-   :paikkausilmoitukset
-   (when (= :paikkaus (:tyyppi ur))
-     ^{:key "paikkaukset"}
-     [paikkausilmoitukset/paikkausilmoitukset ur])])
+   [paallystysilmoitukset/paallystysilmoitukset]])
 
