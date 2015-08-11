@@ -3,7 +3,7 @@
             [compojure.core :refer [POST]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]))
 
 (def +tyokone-seurantakirjaus-url+ "/api/seuranta/tyokone")
 
@@ -15,7 +15,7 @@
   (start [{http :http-palvelin
            db :db
            integraatioloki :integraatioloki :as this}]
-    (julkaise-palvelu http :tallenna-tyokoneenseurantakirjaus
+    (julkaise-reitti http :tallenna-tyokoneenseurantakirjaus
                       (POST +tyokone-seurantakirjaus-url+ request
                             (kasittele-kutsu db integraatioloki
                                              :tallenna-tyokoneenseurantakirjaus
