@@ -69,10 +69,14 @@ WHERE
           WHERE id = :hallintayksikko),
          i.sijainti :: GEOMETRY)) OR
 
-    -- Tai urakan tasolla
-    (st_contains((SELECT alue
-                  FROM urakoiden_alueet
-                  WHERE id = :urakka), i.sijainti :: GEOMETRY))
+    -- Tai urakan tasolla..
+    -- Joko ilmoituksen urakka-id osuu valittuun urakkaan..
+    (i.urakka = :urakka OR
+    -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
+     (i.urakka IS NULL AND
+      st_contains((SELECT alue
+                   FROM urakoiden_alueet
+                   WHERE id = :urakka), i.sijainti :: GEOMETRY)))
   ) AND
 
   -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
@@ -192,6 +196,6 @@ SELECT u.id
 FROM urakoiden_alueet ua
   JOIN urakka u ON ua.id = u.id
 WHERE
-  ua.tyyppi = :urakkatyyppi::urakkatyyppi AND
+  ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
   (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
   (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
