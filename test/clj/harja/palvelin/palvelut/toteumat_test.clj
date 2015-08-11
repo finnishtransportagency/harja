@@ -8,7 +8,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 
-(def jarjestelma-fixture (laajenna-jarjestema-fixture "fastroi"
+(def jarjestelma-fixture (laajenna-integraatiojarjestelmafixturea "fastroi"
                                                       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat (component/using
                                                                                                              (->Toteumat)
                                                                                                              [:http-palvelin :db])

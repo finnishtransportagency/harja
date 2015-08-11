@@ -4,7 +4,10 @@
     [clojure.test :refer :all]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 (def jarjestelma nil)
@@ -323,7 +326,7 @@
                                     (todennus/http-todennus)
                                     [:db :klusterin-tapahtumat])
                          :http-palvelin (component/using
-                                         (http-palvelin/luo-http-palvelin portti true)
+                                         (http/luo-http-palvelin portti true)
                                          [:todennus])
                          :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
