@@ -12,7 +12,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce yhteenvetonakymassa? (atom false))
+(defonce paallystyskohteet-nakymassa (atom false))
 (defonce paallystysilmoitukset-nakymassa? (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]

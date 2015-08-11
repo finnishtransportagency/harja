@@ -31,7 +31,7 @@
 
 (defonce paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                            [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                           nakymassa? @paallystys/yhteenvetonakymassa?]
+                                           nakymassa? @paallystys/paallystyskohteet-nakymassa]
                                           (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                             (log "PÄÄ Haetaan päällystyskohteet.")
                                             (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
@@ -125,7 +125,7 @@
                                              kohdenumerot))]
 
     (komp/luo
-      (komp/lippu paallystys/yhteenvetonakymassa?)
+      (komp/lippu paallystys/paallystyskohteet-nakymassa)
       (fn []
         [:div
          [grid/grid
