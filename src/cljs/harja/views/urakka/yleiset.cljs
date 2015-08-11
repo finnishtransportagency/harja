@@ -98,8 +98,10 @@
                                                                      (vaihda-urakkatyyppi))}
                             "Vaihda"]
                            ]}
-                [:div (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur)) "-tyyppisen urakan "
-                           (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi?")])))
+                [:div
+                 [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur)) "-tyyppisen urakan "
+                             (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi?")]
+                 [:p (str "Vaihtamisen jälkeen tämäntyyppiseen urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, mutta eivät enää ole näkyvissä.")]])))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
