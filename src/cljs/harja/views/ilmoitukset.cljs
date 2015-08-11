@@ -109,6 +109,11 @@
      "Puhelinnumero: " (parsi-puhelinnumero (:kasittelija kuittaus))
      "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])]]])
 
+(defn luo-ilmoituksen-otsikko [ilm]
+  (case (:ilmoitustyyppi ilm)
+    :kysely "Tieliikennekeskukseen saapunut kysely"
+    (capitalize (name (:ilmoitustyyppi ilm)))))
+
 (defn ilmoituksen-tiedot
   []
   [:div
@@ -116,7 +121,7 @@
    (urakan-sivulle-nappi @tiedot/valittu-ilmoitus)
    (when @tiedot/pollaus-id (pollauksen-merkki))
    [bs/panel {}
-    (capitalize (name (:ilmoitustyyppi @tiedot/valittu-ilmoitus)))
+    (luo-ilmoituksen-otsikko @tiedot/valittu-ilmoitus)
     [:span
      [yleiset/tietoja {}
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu @tiedot/valittu-ilmoitus))
