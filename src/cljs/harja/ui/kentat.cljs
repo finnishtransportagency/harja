@@ -402,7 +402,7 @@
              :style    {:display "inline-block"}}
             [:input.pvm {:class       (when lomake? "form-control")
                          :value       nykyinen-teksti
-                         :on-focus    #(do (on-focus) (reset! auki true) nil)
+                         :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
                          :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
