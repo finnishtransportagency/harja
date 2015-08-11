@@ -120,12 +120,16 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyissä."
   (atom #{}))
 
+(def pakota-nakyviin? (atom false))
+
+(def tarvitaanko-tai-onko-pakotettu-nakyviin?
+  (reaction (not (and (empty? @tarvitsen-karttaa) (not @pakota-nakyviin?)))))
+
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
-                  tk @tarvitsen-karttaa
                   sivu @sivu]
-              (if-not (empty? tk)
+              (if @tarvitaanko-tai-onko-pakotettu-nakyviin?
                 ;; joku tarvitsee karttaa, pakotetaan M kokoon
                 :M
 
@@ -209,7 +213,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                       
                (fn [urakka]
                  ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
-                 (when (empty? @tarvitsen-karttaa)
+                 (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
                    (valitse-urakka urakka)))))
               
 ;; Quick and dirty history configuration.
