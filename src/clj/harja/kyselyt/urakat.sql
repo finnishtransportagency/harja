@@ -107,9 +107,21 @@ UPDATE urakka
 SET sopimustyyppi = :sopimustyyppi :: sopimustyyppi
 WHERE id = :urakka;
 
+-- name: tallenna-urakan-tyyppi!
+-- Vaihtaa urakan tyypin
+UPDATE urakka
+SET tyyppi = :urakkatyyppi::urakkatyyppi
+WHERE id = :urakka;
+
 -- name: hae-urakan-sopimustyyppi
 -- Hakee urakan sopimustyypin
 SELECT sopimustyyppi
+FROM urakka
+WHERE id = :urakka;
+
+-- name: hae-urakan-tyyppi
+-- Hakee urakan tyypin
+SELECT tyyppi
 FROM urakka
 WHERE id = :urakka;
 

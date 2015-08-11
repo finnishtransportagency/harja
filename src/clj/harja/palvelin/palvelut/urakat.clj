@@ -72,10 +72,18 @@
 (defn hae-urakan-sopimustyyppi [db user urakka-id]
   (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
 
+(defn hae-urakan-tyyppi [db user urakka-id]
+  (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id))))
+
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
+
+(defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (q/tallenna-urakan-tyyppi! db urakkatyyppi urakka-id)
+  (hae-urakan-tyyppi db user urakka-id))
 
 (defn hae-yksittainen-urakka [db user urakka-id]
   (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
@@ -106,6 +114,9 @@
       (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
                         (fn [user tiedot]
                           (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
+      (julkaise-palvelu http :tallenna-urakan-tyyppi
+                        (fn [user tiedot]
+                          (tallenna-urakan-tyyppi (:db this) user tiedot)))
       this))
 
   (stop [this]
@@ -114,4 +125,5 @@
     (poista-palvelu (:http-palvelin this) :hae-urakoita)
     (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
+    (poista-palvelu (:http-palvelin this) :tallenna-urakan-tyyppi)
     this))

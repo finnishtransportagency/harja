@@ -192,7 +192,6 @@ ja viimeinen voivat olla vajaat)."
                              (= :muut-tyot toteuman-sivu)))
                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
-
 (defonce muut-tyot-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                sopimus-id (first @valittu-sopimusnumero)
@@ -208,3 +207,8 @@ ja viimeinen voivat olla vajaat)."
               (when (and ur aikavali (= :erilliskustannukset sivu))
                 (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
+(defn vaihda-urakkatyyppi
+  [urakka-id uusi-urakkatyyppi]
+  (k/post! :tallenna-urakan-tyyppi
+           {:urakka-id urakka-id
+            :urakkatyyppi uusi-urakkatyyppi}))

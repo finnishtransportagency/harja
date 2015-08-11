@@ -6,6 +6,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
@@ -80,8 +81,10 @@
         true)))
 
 (defn tallenna-urakkatyyppi [ur uusi-urakkatyyppi]
-  ; TODO
-  )
+  (go (let [res
+            (<! (urakka/vaihda-urakkatyyppi (:id ur) (name uusi-urakkatyyppi)))]
+        (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
+        true)))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
