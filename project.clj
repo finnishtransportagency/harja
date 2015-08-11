@@ -108,7 +108,7 @@
 
 
   :profiles {:dev {:dependencies []
-                   :plugins [[com.jakemccrary/lein-test-refresh "0.10.0"]
+                   :plugins [[com.solita/lein-test-refresh "0.10.1"]
                              [test2junit "1.1.0"]]}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
