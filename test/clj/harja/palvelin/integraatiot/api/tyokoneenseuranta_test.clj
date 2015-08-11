@@ -23,5 +23,4 @@
 
 (deftest tallenna-tyokoneen-seurantakirjaus
   (let [kutsu (api-tyokalut/post-kutsu ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
-    (is (= 200) (:status kutsu))
-    (is (= "Hello world" (:body kutsu)))))
+    (is (= 200) (:status kutsu))))
