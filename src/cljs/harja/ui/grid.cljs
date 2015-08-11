@@ -853,3 +853,10 @@ Optiot on mappi optioita:
   (filter
     #(not (and (true? (:poistettu %))
                (neg? (:id %)))) (vals rivit)))
+
+(defn poista-idt
+  "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
+  Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu id"
+  [lomake polku] (assoc-in lomake polku (mapv
+                                          (fn [rivi] (dissoc rivi :id))
+                                          (get-in lomake polku))))

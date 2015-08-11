@@ -166,11 +166,7 @@
                                           :else
                                           nil)))
         urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero
-        poista-idt (fn [lomake polku] (assoc-in lomake polku
-                                                (mapv
-                                                  (fn [rivi] (dissoc rivi :id))
-                                                  (get-in lomake polku))))]
+        [sopimus-id _] @u/valittu-sopimusnumero]
 
     [:div.pot-tallennus
      (when @huomautusteksti
@@ -179,10 +175,10 @@
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
       #(let [lomake @lomakedata
-             lahetettava-data (-> (poista-idt lomake [:ilmoitustiedot :osoitteet])
-                                  (poista-idt [:ilmoitustiedot :kiviaines])
-                                  (poista-idt [:ilmoitustiedot :alustatoimet])
-                                  (poista-idt [:ilmoitustiedot :tyot]))]
+             lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
+                                  (grid/poista-idt [:ilmoitustiedot :kiviaines])
+                                  (grid/poista-idt [:ilmoitustiedot :alustatoimet])
+                                  (grid/poista-idt [:ilmoitustiedot :tyot]))]
         (log "PÄÄ Lomake-data: " (pr-str @lomakedata))
         (log "PÄÄ Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data))
