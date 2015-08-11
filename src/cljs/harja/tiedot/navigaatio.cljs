@@ -158,6 +158,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
            #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
                                                        :hoito @urk/urakoitsijat-hoito
                                                        :paallystys @urk/urakoitsijat-paallystys
+                                                       :paikkaus @urk/urakoitsijat-paikkaus
                                                        :tiemerkinta @urk/urakoitsijat-tiemerkinta
                                                        :valaistus @urk/urakoitsijat-valaistus)]
              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
