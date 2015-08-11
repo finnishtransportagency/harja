@@ -192,8 +192,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (log "VALITTIIN URAKKA: " (pr-str ur))
-  (paivita-url)  
-  (reset! kartan-kokovalinta :S))
+  (paivita-url)
+  (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
+    (reset! kartan-kokovalinta :S)))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]
@@ -213,8 +214,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                       
                (fn [urakka]
                  ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
-                 (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
-                   (valitse-urakka urakka)))))
+                 (valitse-urakka urakka))))
               
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
