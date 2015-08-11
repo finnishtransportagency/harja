@@ -1,38 +1,43 @@
 @import "livi_tyylit";
 
 .alasveto-gridin-kentta {
-	.livi-alasveto(100%, auto);
-	.valittu {
-		max-height: 100%; //vähän häkki
-	}
+  .livi-alasveto(100%, auto);
+  .valittu {
+    max-height: 100%; //vähän häkki
+  }
 }
-.alasveto-sopimustyyppi {
-	margin: 1px 0;
-	.livi-alasveto(150px);
+
+.alasveto-yleiset-tiedot {
+  margin: 1px 0;
+  .livi-alasveto(150px);
 }
+
 .alasveto-urakkatyyppi,
 .alasveto-urakoitsija {
-	.livi-alasveto(200px);
+  .livi-alasveto(200px);
 }
+
 .label-ja-alasveto.alasveto-sillan-tarkastaja {
-	@leveys: 330px;
-	width: @leveys;
-	.livi-alasveto(@valintakontrollin-leveys);
+  @leveys: 330px;
+  width: @leveys;
+  .livi-alasveto(@valintakontrollin-leveys);
 }
+
 #footer {
-	background-color: @harjan-taustavari;
-	clear: both;
-	text-align: center;
-	position: absolute;
+  background-color: @harjan-taustavari;
+  clear: both;
+  text-align: center;
+  position: absolute;
 }
+
 #footer-content {
-	height: 60px;
-	margin: 0 auto;
-	padding: 20px 0 10px;
-	width: 90%;
-	a {
-		color: @harmaa2;
-	}
+  height: 60px;
+  margin: 0 auto;
+  padding: 20px 0 10px;
+  width: 90%;
+  a {
+    color: @harmaa2;
+  }
 }
 
 ul#sivut {
@@ -44,98 +49,110 @@ div.valilehti {
 }
 
 .haku-container {
-	> input {
-		color: @harmaa1;
-		padding: 3px 6px;
-	}
-	margin-top: 10px;
-	max-width: 450px;
+  > input {
+    color: @harmaa1;
+    padding: 3px 6px;
+  }
+  margin-top: 10px;
+  max-width: 450px;
 }
-.haku-lista{
-	border: 1px solid @sininen5;
-	overflow-y: auto;
-	padding: 0;
+
+.haku-lista {
+  border: 1px solid @sininen5;
+  overflow-y: auto;
+  padding: 0;
 }
 
 .haku-lista-item-nimi {
-	background-color: @valkoinen;
-	border-color: @harmaa7;
-	color: @sininen4;
-	padding: 3px 6px;
-	&:hover,
-	&:focus,
-		&.focus,
-	&:active {
-		background-color: @sininen5;
-		color:            @valkoinen;
-	}
+  background-color: @valkoinen;
+  border-color: @harmaa7;
+  color: @sininen4;
+  padding: 3px 6px;
+  &:hover,
+  &:focus,
+  &.focus,
+  &:active {
+    background-color: @sininen5;
+    color: @valkoinen;
+  }
 }
+
 .haku-lista-ryhma {
-	border: 1px solid @sininen5;
-	.haku-lista {
-		border: none;
-		margin-bottom: 0;
-	}
+  border: 1px solid @sininen5;
+  .haku-lista {
+    border: none;
+    margin-bottom: 0;
+  }
 }
+
 .haku-vinkki {
-	background-color: @valkoinen;
-	border: 1px solid @sininen5;
-	color: @sininen4;
-	padding: 3px 6px;
+  background-color: @valkoinen;
+  border: 1px solid @sininen5;
+  color: @sininen4;
+  padding: 3px 6px;
 }
+
 .haku-lista-ryhman-otsikko {
-	background-color: @valkoinen;
-	color: @sininen4;
-	font-weight: bold;
-	padding: 3px 6px;
+  background-color: @valkoinen;
+  color: @sininen4;
+  font-weight: bold;
+  padding: 3px 6px;
 }
+
 #harja-brand-icon {
-    position: relative;
-    top: 9px;
-	height: 32px;
-	width: 90px;
+  position: relative;
+  top: 9px;
+  height: 32px;
+  width: 90px;
 }
+
 .selected {
-	color: blue;
+  color: blue;
 }
 
 .korostettu {
-   background-color: wheat;
+  background-color: wheat;
 }
+
 .muokkaustoiminnot {
-	> span {
-		padding: 5px;
-	}
+  > span {
+    padding: 5px;
+  }
 }
+
 .murupolku {
-	height: 65px;
-	.urakoitsija-otsikko {
-		display: inline-block;
-	}
-	> li {
-		height: 65px;
-		margin-top: 15px;
-	}
+  height: 65px;
+  .urakoitsija-otsikko {
+    display: inline-block;
+  }
+  > li {
+    height: 65px;
+    margin-top: 15px;
+  }
 }
+
 .murupolku-suotimet {
-	position: relative;
-	top: -6px;
-	> * {
-		display: inline-block;
-		margin-left: 10px;
-	}
+  position: relative;
+  top: -6px;
+  > * {
+    display: inline-block;
+    margin-left: 10px;
+  }
 }
+
 .murupolku-radiovalinta {
-	margin: 0 5px;
-	> label {
-		padding: 5px;
-	}
+  margin: 0 5px;
+  > label {
+    padding: 5px;
+  }
 }
+
 .nayta-kayttajat-valinta {
-	input {
-		margin: 5px 5px 5px 30px;
-	}
+  input {
+    margin: 5px 5px 5px 30px;
+  }
 }
+
 div.toimenpidekoodit select {
   min-width: 480px;
   max-width: 700px;
@@ -146,6 +163,7 @@ div.toimenpidekoodit select#taso2 {
   margin-left: 20px;
   min-width: 460px;
 }
+
 div.toimenpidekoodit select#taso3 {
   margin-left: 40px;
   min-width: 440px;
@@ -156,67 +174,73 @@ tr.uusitehtavakoodi td {
 }
 
 .label-ja-alasveto {
-	display: inline-block;
-	margin: 10px 5px 20px;
-	.alasvedon-otsikko {
-		display: inline-block;
-		font-weight: bold;
-	}
-	.livi-alasveto(@valintakontrollin-leveys);
+  display: inline-block;
+  margin: 10px 5px 20px;
+  .alasvedon-otsikko {
+    display: inline-block;
+    font-weight: bold;
+  }
+  .livi-alasveto(@valintakontrollin-leveys);
 }
 
 .label-ja-aikavali {
-	display: inline-block;
-	margin: 10px 5px 20px;
-	width: @valintakontrollin-leveys;
-	.pvm {
-		height: @valintakontrollin-korkeus;
-		position: relative;
-		top: 1px;
-		width: 139px;
-	}
+  display: inline-block;
+  margin: 10px 5px 20px;
+  width: @valintakontrollin-leveys;
+  .pvm {
+    height: @valintakontrollin-korkeus;
+    position: relative;
+    top: 1px;
+    width: 139px;
+  }
 }
 
 .flash-viesti {
-    text-align: center;
-    position: absolute;
-    top: 40%;
-    left: 15%;
-    width: 60%;
+  text-align: center;
+  position: absolute;
+  top: 40%;
+  left: 15%;
+  width: 60%;
 }
+
 .hoitokauden-kustannukset {
-	> div.summa {
-		font-weight: bold;
-		margin: 6px;
-		text-align: right;
-	}
-	div.piirakka {
-	  text-align: center;
-	}
+  > div.summa {
+    font-weight: bold;
+    margin: 6px;
+    text-align: right;
+  }
+  div.piirakka {
+    text-align: center;
+  }
 }
+
 .siltatarkastus-kontrollit {
-	> * {
-		margin-right: 10px;
-	}
+  > * {
+    margin-right: 10px;
+  }
 }
+
 .tasaa-oikealle {
   text-align: right;
   > input {
-	text-align: right;
+    text-align: right;
   }
 }
 
 // FIXME: tilapäinen hack, koska kartta meni "muokkaa" napin päälle
-div.valitavoitteet { margin-top: 100px; }
+div.valitavoitteet {
+  margin-top: 100px;
+}
 
 .mukana-urakoissa {
-	margin-left: 2px;
-	.rooli {
-		margin-left: 2px;
-	}
+  margin-left: 2px;
+  .rooli {
+    margin-left: 2px;
+  }
 }
+
 .valitavoite {
-	.pvm-kentta {
-		margin-left: 20px;
-	}
+  .pvm-kentta {
+    margin-left: 20px;
+  }
 }

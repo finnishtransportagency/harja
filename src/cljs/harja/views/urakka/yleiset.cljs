@@ -9,6 +9,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
+            [harja.tiedot.navigaatio :as navigaatio]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             
@@ -72,11 +73,15 @@
         (reset! paivystajat res)
         true)))
 
-(defn tallenna-sopimustyyppi [ur sopimustyyppi uusi-sopimustyyppi]
+(defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res
             (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
         (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
         true)))
+
+(defn tallenna-urakkatyyppi [ur uusi-urakkatyyppi]
+  ; TODO
+  )
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
@@ -100,12 +105,24 @@
        ;; päällystys --> kokonaisurakka
        "Sopimustyyppi: "
        (when-not (= :hoito (:tyyppi ur))
-         [yleiset/livi-pudotusvalikko {:class      "alasveto-sopimustyyppi"
+         [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
                                        :valinta    @sopimustyyppi
                                        :format-fn  #(if % (str/capitalize (name %)) "Ei sopimustyyppiä")
-                                       :valitse-fn #(tallenna-sopimustyyppi ur sopimustyyppi %)
+                                       :valitse-fn #(tallenna-sopimustyyppi ur %)
                                        :disabled   (not (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur)))}
-          sopimus/+sopimustyypit+])]]
+          sopimus/+sopimustyypit+])
+       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+       (when (or (= :paikkaus (:tyyppi ur))
+                 (= :paallystys (:tyyppi ur)))
+         [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
+                                       :valinta    (:tyyppi ur)
+                                       :format-fn  (fn [tyyppi]
+                                                     (:nimi (first
+                                                              (filter #(= tyyppi (:arvo %))
+                                                                      navigaatio/+urakkatyypit+))))
+                                       :valitse-fn #(tallenna-urakkatyyppi ur %)
+                                       :disabled   (not (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur)))}
+          [:paallystys :paikkaus]])]]
 
      [grid/grid
       {:otsikko "Urakkaan liitetyt käyttäjät"
