@@ -86,7 +86,9 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paallystysilmoitus! db tila encoodattu-ilmoitustiedot
+    (q/paivita-paallystysilmoitus! db
+                                   tila
+                                   encoodattu-ilmoitustiedot
                                    (konv/sql-date aloituspvm)
                                    (konv/sql-date valmispvm_kohde)
                                    (konv/sql-date valmispvm_paallystys)

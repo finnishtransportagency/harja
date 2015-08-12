@@ -289,7 +289,7 @@
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
                                                                                                          (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                                               vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paikkauskohde_id rivi)))]
                                                                                                            (log "PAI Rivi: " (pr-str rivi))
                                                                                                            (log "PAI Vastaus: " (pr-str vastaus))
                                                                                                            (if-not (k/virhe? vastaus)

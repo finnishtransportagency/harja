@@ -63,7 +63,9 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paikkausilmoitus! db tila encoodattu-ilmoitustiedot
+    (q/paivita-paikkausilmoitus! db
+                                 tila
+                                 encoodattu-ilmoitustiedot
                                  (konv/sql-date aloituspvm)
                                  (konv/sql-date valmispvm_kohde)
                                  (konv/sql-date valmispvm_paikkaus)
@@ -151,7 +153,7 @@
       (julkaise-palvelu http :urakan-paikkausilmoitus-paikkauskohteella
                         (fn [user tiedot]
                           (hae-urakan-paikkausilmoitus-paikkauskohteella db user tiedot)))
-      (julkaise-palvelu http :tallenna-paikkaussilmoitus
+      (julkaise-palvelu http :tallenna-paikkausilmoitus
                         (fn [user tiedot]
                           (tallenna-paikkausilmoitus db user tiedot)))
       this))

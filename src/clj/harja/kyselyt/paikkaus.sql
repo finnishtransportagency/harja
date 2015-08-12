@@ -1,7 +1,7 @@
 -- name: hae-urakan-paikkaustoteumat
 -- Hakee urakan kaikki paikkaustoteumat
 SELECT
-  paallystyskohde.id AS paallystyskohde_id,
+  paallystyskohde.id AS paikkauskohde_id,
   pi.id,
   pi.tila,
   nimi,
@@ -40,10 +40,11 @@ WHERE paikkauskohde = :paikkauskohde
 -- Päivittää paikkausilmoituksen
 UPDATE paikkausilmoitus
 SET
-  tila                              = :tila::paikkaustila,
+  tila                              = :tila::paikkausilmoituksen_tila,
   ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
   aloituspvm                        = :aloituspvm,
-  valmispvm                         = :valmispvm,
+  valmispvm_kohde                   = :valmispvm_kohde,
+  valmispvm_paikkaus                = :valmispvm_paikkaus,
   paatos                            = :paatos::paikkausilmoituksen_paatostyyppi,
   perustelu                         = :perustelu,
   kasittelyaika                     = :kasittelyaika,
@@ -56,7 +57,7 @@ WHERE paikkauskohde = :id;
 -- Luo uuden paikkausilmoituksen
 INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
 VALUES (:paikkauskohde,
-        :tila::paallystystila,
+        :tila::paikkaustila,
         :ilmoitustiedot::JSONB,
         :aloituspvm,
         :valmispvm_kohde,
