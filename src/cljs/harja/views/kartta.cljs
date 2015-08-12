@@ -149,19 +149,18 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                          :harja.ui.openlayers/fit-bounds true)])
                            @tasot/geometriat)
 
-
-      :geometry-fn (fn [asia-kartalla]
-                     (when-let [alue (:alue asia-kartalla)]
+      :geometry-fn (fn [piirrettava]
+                     (when-let [alue (:alue piirrettava)]
                        (when (map? alue)
                          (assoc alue
-                           :fill (if (:valittu asia-kartalla) false true)
-                           :stroke (when (or (:valittu asia-kartalla)
-                                             (= :silta (:type asia-kartalla)))
+                           :fill (if (:valittu piirrettava) false true)
+                           :stroke (when (or (:valittu piirrettava)
+                                             (= :silta (:type piirrettava)))
                                      {:width 3})
-                           :harja.ui.openlayers/fit-bounds (:valittu asia-kartalla) ;; kerro kartalle, että siirtyy valittuun
+                           :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                            :color (or (:color alue)
-                                      (nth +varit+ (mod (hash (:nimi asia-kartalla)) (count +varit+))))
-                           :zindex (or (:zindex alue) (case (:type asia-kartalla)
+                                      (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
+                           :zindex (or (:zindex alue) (case (:type piirrettava)
                                                         :hy 0
                                                         :ur 1
                                                         :pohjavesialueet 2
