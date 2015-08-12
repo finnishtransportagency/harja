@@ -36,6 +36,34 @@ FROM paikkausilmoitus
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
 
+-- name: paivita-paikkausilmoitus!
+-- Päivittää paikkausilmoituksen
+UPDATE paikkausilmoitus
+SET
+  tila                              = :tila::paikkaustila,
+  ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
+  aloituspvm                        = :aloituspvm,
+  valmispvm                         = :valmispvm,
+  paatos                            = :paatos::paikkausilmoituksen_paatostyyppi,
+  perustelu                         = :perustelu,
+  kasittelyaika                     = :kasittelyaika,
+  muokattu                          = NOW(),
+  muokkaaja                         = :muokkaaja,
+  poistettu                         = FALSE
+WHERE paikkauskohde = :id;
+
+-- name: luo-paikkausilmoitus<!
+-- Luo uuden paikkausilmoituksen
+INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
+VALUES (:paikkauskohde,
+        :tila::paallystystila,
+        :ilmoitustiedot::JSONB,
+        :aloituspvm,
+        :valmispvm_kohde,
+        :valmispvm_paikkaus,
+        NOW(),
+        :kayttaja, FALSE);
+
 -- name: hae-paikkausilmoituksen-kommentit
 -- Hakee annetun paikkausilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
 -- kommentin mahdollisen liitteen tiedot. Kommentteja on vaikea hakea
@@ -60,3 +88,7 @@ WHERE k.poistettu = FALSE
                    FROM paikkausilmoitus_kommentti pk
                    WHERE pk.ilmoitus = :id)
 ORDER BY k.luotu ASC;
+
+-- name: liita-kommentti<!
+-- Liittää paikkausilmoitukseen uuden kommentin
+INSERT INTO paikkausilmoitus_kommentti (paikkausilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);

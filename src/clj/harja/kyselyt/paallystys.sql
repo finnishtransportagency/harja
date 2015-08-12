@@ -106,7 +106,7 @@ SET
   kasittelyaika_taloudellinen_osa   = :kasittelyaika_taloudellinen_osa,
   muokattu                          = NOW(),
   muokkaaja                         = :muokkaaja,
-poistettu                           = FALSE
+  poistettu                         = FALSE
 WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!

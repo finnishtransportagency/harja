@@ -144,7 +144,7 @@
       ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
       (if (or
             (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) (or (:paatos_tekninen_osa paallystysilmoitus) nil)))
-            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) (or (:paatos_taloudellinen_osa paallystysilmoitus) nil))))
+            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) (or (:paatos_taloudellinen_osa paallystysilmoitus) nil)))) ; FIXME Pitää varmistaa ja testata, ettei myöskään selitystä voi muuttaa ilman oikeuksia
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
       ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
