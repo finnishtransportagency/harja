@@ -51,8 +51,7 @@
                                            (dissoc kommentti :liite)))))
                             (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
         (log/debug "Kommentit saatu: " kommentit)
-        (assoc paikkausilmoitus :kommentit kommentit))
-      (assoc paikkausilmoitus :kommentit []))))
+        (assoc paikkausilmoitus :kommentit kommentit)))))
 
 
 (defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]

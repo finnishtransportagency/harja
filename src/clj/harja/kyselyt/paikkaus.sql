@@ -92,4 +92,4 @@ ORDER BY k.luotu ASC;
 
 -- name: liita-kommentti<!
 -- Liittää paikkausilmoitukseen uuden kommentin
-INSERT INTO paikkausilmoitus_kommentti (paikkausilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);
+INSERT INTO paikkausilmoitus_kommentti (ilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);
