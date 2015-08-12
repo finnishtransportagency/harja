@@ -23,3 +23,8 @@
   (k/post! :urakan-paikkausilmoitus-paikkauskohteella {:urakka-id        urakka-id
                                                        :sopimus-id       sopimus-id
                                                        :paikkauskohde-id paikkauskohde-id}))
+
+(defn tallenna-paikkausilmoitus [urakka-id sopimus-id lomakedata]
+  (k/post! :tallenna-paikkausilmoitus {:urakka-id urakka-id
+                                         :sopimus-id sopimus-id
+                                         :paikkausilmoitus lomakedata}))

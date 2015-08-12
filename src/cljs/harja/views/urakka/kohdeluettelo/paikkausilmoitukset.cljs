@@ -130,7 +130,7 @@
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
         (log "PAI Lomake-data: " (pr-str @lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
-        #_(paikkaus/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data)) ; TODO Palvelu puuttuu
+        (paikkaus/tallenna-paikkausilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
