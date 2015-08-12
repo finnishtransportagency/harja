@@ -49,8 +49,8 @@
 
 (defn nayta-paatos [tila]
   (case tila
-    :hyvaksytty [:span.paallystysilmoitus-hyvaksytty "Hyväksytty"]
-    :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
+    :hyvaksytty [:span.paikkausilmoitus-hyvaksytty "Hyväksytty"]
+    :hylatty [:span.paikkausilmoitus-hylatty "Hylätty"]
     ""))
 
 (defn kasittely
@@ -192,11 +192,11 @@
              {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paikkaus :tyyppi :pvm}
              {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
               :vihje   (when (and
-                               (:valmispvm_paallystys @lomakedata)
+                               (:valmispvm_paikkaus @lomakedata)
                                (:valmispvm_kohde @lomakedata)
                                (= :aloitettu (:tila @lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-              :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
+              :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
              {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
                        (= :lukittu (:tila @lomakedata)))
