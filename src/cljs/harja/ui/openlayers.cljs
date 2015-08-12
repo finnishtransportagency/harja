@@ -90,7 +90,7 @@
 (defn geometria-avain
   "Funktio, joka muuntaa geometrian tiedon avaimeksi mäppiä varten."
   [g]
-  (str (:type g) "__" (:id g)))
+  (identity g))
 
 
 (defn luo-tilegrid []
@@ -383,6 +383,7 @@
                             (let [new-shape  (luo-feature geom)]
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
+                              (aseta-tyylit new-shape geom)
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
                               ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
@@ -390,7 +391,7 @@
                                   (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
                                                                 [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
                               new-shape))]
-              (aseta-tyylit shape geom)
+
               ;;(log "OL3: " (pr-str avain) " = " (pr-str geom))
               ;; If geometry has ::fit-bounds value true, then zoom to this
               ;; only 1 item should have this
