@@ -38,6 +38,7 @@
    [{:suorite                    +paikkaustyo+
      :yksikko                    s/Str
      :maara                      s/Num
-     :yks_hinta_alv0             s/Str
-     :yks_hinta_alv24            s/Num
+     :yks_hint_alv_0             s/Num
+     :yks_hint_alv_24            s/Num
+     :takuupvm                   s/Str
      (s/optional-key :poistettu) s/Bool}]})

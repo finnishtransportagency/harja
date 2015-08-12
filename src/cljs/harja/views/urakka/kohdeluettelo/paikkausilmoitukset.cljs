@@ -259,8 +259,8 @@
              :hae (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
-            {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hinta_alv0 :tyyppi :numero :leveys "10%"}
-            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hinta_alv24 :leveys "10%" :tyyppi :numero}
+            {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
+            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
              :hae (fn [rivi] (* (:yks_hinta_alv0 rivi) (:maara rivi)))}
             #_{:otsikko "Takuupvm" :nimi :takuupvm :leveys "20%" :tyyppi :pvm}]

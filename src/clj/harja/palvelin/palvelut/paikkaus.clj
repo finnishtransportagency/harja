@@ -8,7 +8,7 @@
             [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.kommentit :as kommentit]
-            [harja.domain.paallystys.pot :as pot]
+            [harja.domain.paikkaus.minipot :as minipot]
 
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
@@ -102,7 +102,7 @@
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
-  #_(skeema/validoi pot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus)) ; FIXME Skeemavalidointi puuttuu
+  #_(skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus)) ; TODO Takuupvm ei toimi oikein
 
   (jdbc/with-db-transaction [c db]
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella c user {:urakka-id        urakka-id
