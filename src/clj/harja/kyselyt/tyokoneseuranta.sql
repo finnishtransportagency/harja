@@ -11,9 +11,9 @@ SELECT tallenna_tai_paivita_tyokonehavainto(
        CAST(ST_MakePoint(:xkoordinaatti, :ykoordinaatti) as point),
        CAST(:urakkaid AS integer),
        CAST(:sopimusid AS integer),
-       CAST(:tehtavat AS suoritettavatehtava[]));
+       CAST(:tehtavat AS suoritettavatehtava[]))
 
 -- name: tyokoneet-alueella
 -- Etsii työkoneet annetulta alueelta
-SELECT * from tyokonehavainto
-  WHERE ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry));
+SELECT * FROM tyokonehavainto
+  WHERE ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))

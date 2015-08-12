@@ -47,6 +47,7 @@
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
+    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -207,6 +208,10 @@
       :raportit (component/using
                  (raportit/->Raportit)
                  [:http-palvelin :raportointi])
+
+      :tyokoneenseuranta (component/using
+                          (tyokoneenseuranta/->TyokoneseurantaHaku)
+                          [:http-palvelin :db])
       
       ;; Harja API
       :api-urakat (component/using
