@@ -95,7 +95,7 @@
 
          (when (:paatos @paatostiedot)
            {:otsikko     "Selitys"
-            :nimi        :perustelu-tekninen-osa
+            :nimi        :perustelu
             :tyyppi      :text
             :koko        [60 3]
             :pituus-max  2048
@@ -161,11 +161,13 @@
         toteutuneet-maarat-virheet (atom {})
 
         valmis-tallennettavaksi? (reaction
-                                   (let [toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
+                                   (let [toteutuneet-osoitteet @toteutuneet-osoitteet
+                                         toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          tila (:tila @lomakedata)]
                                      (and
                                        (not (= tila :lukittu))
+                                       (not (empty? toteutuneet-osoitteet))
                                        (empty? toteutuneet-osoitteet-virheet)
                                        (empty? toteutuneet-maarat-virheet))))
         valmis-kasiteltavaksi? (reaction
