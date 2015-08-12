@@ -65,8 +65,10 @@
          {:otsikko "Työtehtävä" :nimi :tyotehtava :leveys 1 :tyyppi :string}
          {:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
          {:otsikko "Vammat" :nimi :vammat :leveys 1 :tyyppi :string}
-         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys 1 :tyyppi :positiivinen-numero}
-         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys 1 :tyyppi :positiivinen-numero}
+         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys 1
+          :tyyppi :positiivinen-numero :kokonaisluku? true}
+         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys 1
+          :tyyppi :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti muokattu)
