@@ -189,7 +189,7 @@
                                 (reset! kohteen-tiedot uusi))}
             [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-             {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
+             {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paikkaus :tyyppi :pvm}
              {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
               :vihje   (when (and
                                (:valmispvm_paallystys @lomakedata)
