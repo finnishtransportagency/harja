@@ -4,6 +4,7 @@ Tähän nimiavaruuteen voi kerätä yleisiä. Yleisesti konversioiden tulee olla
 yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia."
   (:require [cheshire.core :as cheshire]
             [clj-time.coerce :as coerce]
+            [taoensso.timbre :as log]
             [clj-time.format :as format]))
 
 
@@ -222,11 +223,3 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                      avain
                      .getValue
                      (cheshire/decode true)))))
-
-(defn parsi-json-pvm
-  "Muuntaa JSONissa olevan pvm:n Clojurelle sopivaan muotoon."
-  [json avainpolku]
-  (-> json
-      (assoc-in avainpolku
-                (when-let [dt (some-> json (get-in avainpolku))]
-                  (coerce/to-date (format/parse (format/formatters :date-time) dt))))))

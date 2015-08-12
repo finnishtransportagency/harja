@@ -17,7 +17,8 @@
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [clj-time.format :as format]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan paikkaustoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -36,6 +37,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                            (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
                                             (map #(konv/string->avain % [:tila]))
                                             (map #(konv/string->avain % [:paatos])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]

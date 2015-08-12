@@ -263,7 +263,7 @@
             {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
              :hae (fn [rivi] (* (:yks_hinta_alv0 rivi) (:maara rivi)))}
-            #_{:otsikko "Takuupvm" :nimi :takuupvm :leveys "20%" :tyyppi :pvm}]
+            {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
             toteutuneet-maarat]]
 
          (tallennus valmis-tallennettavaksi?)]))))
