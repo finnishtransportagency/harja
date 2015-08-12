@@ -1,14 +1,14 @@
 {
   "otsikko": {
     "lahettaja": {
-      "jarjestelma": "Urakoitsijan järjestelmä",
+      "jarjestelma": "Urakoitsijan järjestelmä 2",
       "organisaatio": {
         "nimi": "Destia Oy",
         "ytunnus": "2163026-3"
       }
     },
     "viestintunniste": {
-      "id": 123
+      "id": 1234
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
@@ -16,20 +16,19 @@
     {
       "havainto": {
         "tyokone": {
-          "id": 31337,
+          "id": 666,
           "tyyppi": "aura-auto"
         },
         "sijainti": {
           "koordinaatit": {
-            "x": 64.9,
-            "y": 25.5
+            "x": 65.9,
+            "y": 26.5
           }
         },
         "havaintoaika": "2016-01-30T12:00:00Z",
         "urakkaid": 4,
         "sopimusid": 7,
         "tehtavat": [
-          "pistehiekoitus",
           "suolaus"
         ]
       }

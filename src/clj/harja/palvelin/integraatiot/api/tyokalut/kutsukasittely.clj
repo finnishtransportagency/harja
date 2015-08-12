@@ -140,6 +140,7 @@
                       (kasittele-sisainen-kasittelyvirhe virheet))
                     (catch Exception e
                       (log/error "Tapahtui poikkeus: " e)
+                      (log/error "NextException: " (.getNextException e))
                       (kasittele-sisainen-kasittelyvirhe
                         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                           :viesti (.getMessage e)}])))]

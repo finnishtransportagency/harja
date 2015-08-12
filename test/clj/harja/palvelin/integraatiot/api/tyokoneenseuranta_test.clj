@@ -21,6 +21,18 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
 
-(deftest tallenna-tyokoneen-seurantakirjaus
-  (let [kutsu (api-tyokalut/post-kutsu ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
-    (is (= 200) (:status kutsu))))
+(deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
+  (let [kutsu (api-tyokalut/post-kutsu
+               ;; tyokone 31337 on jo kannassa, katsotaan muuttuuko raportoidut koordinaatit esimerkin mukaiseksi
+               ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
+    (let [s (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=31337"))]
+      (is (= 200 (:status kutsu)))
+      (is (= (str s) "(64.9,25.5)")))))
+
+(deftest tallenna-tyokoneen-seurantakirjaus-uusi
+  (let [kutsu (api-tyokalut/post-kutsu
+               ;; kokonaan uusi tyokone, kantaan pitäisi tulla uusi rivi
+               ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta_uusi.json"))]
+    (let [s (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))]
+      (is (= 200 (:status kutsu)))
+      (is (= (str s) "(65.9,26.5)")))))
