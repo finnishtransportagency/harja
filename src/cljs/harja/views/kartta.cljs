@@ -29,9 +29,9 @@
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))
 
 (defonce kartta-kuuntelija
-  (t/kuuntele! :hallintayksikkovalinta-poistettu
-               #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
-                    (reset! zoom-taso +koko-suomi-zoom-taso+))))
+         (t/kuuntele! :hallintayksikkovalinta-poistettu
+                      #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
+                           (reset! zoom-taso +koko-suomi-zoom-taso+))))
 
 #_(defonce kartan-alueen-asetus
     (run! (let [hal @nav/valittu-hallintayksikko
@@ -57,32 +57,32 @@
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
-  (run! (do @nav/kartan-koko
-            @yleiset/ikkunan-koko
-            (log "Päivitetään openlayers koko!")
-            (openlayers/invalidate-size!))))
+         (run! (do @nav/kartan-koko
+                   @yleiset/ikkunan-koko
+                   (log "Päivitetään openlayers koko!")
+                   (openlayers/invalidate-size!))))
 
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
     [:span.kartan-koko-kontrollit {:class (when-not (empty? @nav/tarvitsen-karttaa) "hide")}
-     [:span.livicon-compress.kartta-kontrolli {:class (when (= koko :S) "hide")
-                           :on-click #(nav/vaihda-kartan-koko! (case koko
-                                                                 :S :S
-                                                                 :M :S
-                                                                 :L :M))}]
-     [:span.livicon-expand.kartta-kontrolli {:class (case koko
-                                    :L "hide"
-                                    :M ""
-                                    :S "kulmassa-kelluva"
-                                    :hidden "")
-                           :on-click #(nav/vaihda-kartan-koko!
-                                       (case koko
-                                         :hidden :S
-                                         :S :M
-                                         :M :L
-                                         :L :L))}]]))
+     [:span.livicon-compress.kartta-kontrolli {:class    (when (= koko :S) "hide")
+                                               :on-click #(nav/vaihda-kartan-koko! (case koko
+                                                                                     :S :S
+                                                                                     :M :S
+                                                                                     :L :M))}]
+     [:span.livicon-expand.kartta-kontrolli {:class    (case koko
+                                                         :L "hide"
+                                                         :M ""
+                                                         :S "kulmassa-kelluva"
+                                                         :hidden "")
+                                             :on-click #(nav/vaihda-kartan-koko!
+                                                         (case koko
+                                                           :hidden :S
+                                                           :S :M
+                                                           :M :L
+                                                           :L :L))}]]))
 
 (defn nayta-popup!
   "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
@@ -102,69 +102,77 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                :M
                koko)]
     [openlayers
-     {:id "kartta"
-      :width (if (= koko :S) "160px" "100%")
-      :height (if (= koko :S) "150px"
-                  (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
-      :style (when (= koko :S)
-               {:display "none"})
-      :view kartta-sijainti
-      :zoom zoom-taso
-      :selection nav/valittu-hallintayksikko
-      :on-drag (fn [_ newextent]
-                 ; (log "Move, uusi extent: " newextent)
-                 (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
-                                                         :ymin (aget newextent 1)
-                                                         :xmax (aget newextent 2)
-                                                         :ymax (aget newextent 3)}))
-      :on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
-      :on-select (fn [item event]
-                   (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                     (log "TÄLLAISEN VALITSIT :: " (pr-str (dissoc item :alue)))
-                     (condp = (:type item)
-                       :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-                             (nav/valitse-hallintayksikko item))
-                       :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-                             (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                       (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
-      :tooltip-fn (fn [geom]
-                    (and geom
-                         [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
+
+     {:id          "kartta"
+      :width       (if (= koko :S) "160px" "100%")
+      :height      (if (= koko :S) "150px"
+                                   (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
+      :style       (when (= koko :S)
+                     {:display "none"})
+      :view        kartta-sijainti
+      :zoom        zoom-taso
+      :selection   nav/valittu-hallintayksikko
+      :on-drag     (fn [_ newextent]
+                     ; (log "Move, uusi extent: " newextent)
+                     (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
+                                                             :ymin (aget newextent 1)
+                                                             :xmax (aget newextent 2)
+                                                             :ymax (aget newextent 3)}))
+      :on-click    (fn [at] (.log js/console "CLICK: " (pr-str at)))
+      :on-select   (fn [item event]
+                     (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
+                       (log "TÄLLAISEN VALITSIT :: " (pr-str (dissoc item :alue)))
+                       (condp = (:type item)
+                         :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+                               (nav/valitse-hallintayksikko item))
+                         :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
+                               (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+                         (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+      :tooltip-fn  (fn [geom]
+                     (and geom
+                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
-      (concat (cond
-                ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                (nil? v-hal)
-                hals
+                   (concat (cond
+                             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                             (nil? v-hal)
+                             hals
 
-                ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                (nil? @nav/valittu-urakka)
-                (vec (concat [(assoc v-hal
-                                     :valittu true)]
-                             @nav/urakat-kartalla))
+                             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                             (nil? @nav/valittu-urakka)
+                             (vec (concat [(assoc v-hal
+                                             :valittu true)]
+                                          @nav/urakat-kartalla))
 
-                ;; Valittu urakka, mitä näytetään?
-                :default [(assoc @nav/valittu-urakka
-                                 :valittu true
-                                 :harja.ui.openlayers/fit-bounds true)])
-              @tasot/geometriat)
+                             ;; Valittu urakka, mitä näytetään?
+                             :default [(assoc @nav/valittu-urakka
+                                         :valittu true
+                                         :harja.ui.openlayers/fit-bounds true)])
+                           @tasot/geometriat)
 
-      :geometry-fn (fn [hy]
-                     (when-let [alue (:alue hy)]
+
+      :geometry-fn (fn [asia-kartalla]
+                     (when-let [alue (:alue asia-kartalla)]
                        (when (map? alue)
                          (assoc alue
-                                :fill (if (:valittu hy) false true)
-                                :stroke (when (or (:valittu hy)
-                                                  (= :silta (:type hy)))
-                                          {:width 3})
-                                :harja.ui.openlayers/fit-bounds (:valittu hy) ;; kerro kartalle, että siirtyy valittuun
-                                :color (or (:color alue)
-                                           (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))
-                                ;;:marker (= :silta (:type hy))
-                                ))))
+                           :fill (if (:valittu asia-kartalla) false true)
+                           :stroke (when (or (:valittu asia-kartalla)
+                                             (= :silta (:type asia-kartalla)))
+                                     {:width 3})
+                           :harja.ui.openlayers/fit-bounds (:valittu asia-kartalla) ;; kerro kartalle, että siirtyy valittuun
+                           :color (or (:color alue)
+                                      (nth +varit+ (mod (hash (:nimi asia-kartalla)) (count +varit+))))
+                           :zindex (or (:zindex alue) (case (:type asia-kartalla)
+                                                        :hy 0
+                                                        :ur 1
+                                                        :pohjavesialueet 2
+                                                        :sillat 3
+                                                        4))
+                           ;;:marker (= :silta (:type hy))
+                           ))))
 
-      :layers [{:type :mml
-                :url (str (k/wmts-polku) "maasto/wmts")
-                :layer "taustakartta"}]
+      :layers      [{:type  :mml
+                     :url   (str (k/wmts-polku) "maasto/wmts")
+                     :layer "taustakartta"}]
 
       }]))
 

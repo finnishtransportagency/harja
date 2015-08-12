@@ -310,13 +310,17 @@
 
 (defmulti luo-feature :type)
 
-(defn- aseta-tyylit [feature {:keys [fill color stroke marker] :as geom}]
+(defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
                 #js {:fill (when fill (ol.style.Fill. #js {:color (or color "red")
                                                            :opacity 0.5}))
                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                    :width (or (:width stroke) 1)})}))))
+                                                    :width (or (:width stroke) 1)})
+                     ;; Default zindex asetetaan harja.views.kartta:ssa.
+                     ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                     ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                     :zIndex (or zindex 0)}))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
