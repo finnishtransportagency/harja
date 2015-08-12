@@ -53,6 +53,12 @@
     :hylatty [:span.paikkausilmoitus-hylatty "Hylätty"]
     ""))
 
+(defn lisaa-puuttuvat-suoritteet [toteumat]
+  (when (or (nil? toteumat) (empty? toteumat))
+    (mapv
+      (fn [tyo] {:suorite (:koodi tyo)})
+      (minipot/+paikkaustyot+))))
+
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -142,7 +148,7 @@
                                                         (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
 
         toteutuneet-osoitteet
-        (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
+        (r/wrap (zipmap (iterate inc 1) (lisaa-puuttuvat-suoritteet (:osoitteet (:ilmoitustiedot @lomakedata))))
                 (fn [uusi-arvo] (reset! lomakedata
                                         (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
         toteutuneet-maarat
@@ -242,6 +248,9 @@
            {:otsikko "Toteutuneet suoritemäärät"
             :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
                                    (= :hyvaksytty (:paatos @lomakedata))))
+            :voi-lisata?  false
+            :voi-kumota?  false
+            :voi-poistaa? (constantly false)
             :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
            [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
              :hae (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
