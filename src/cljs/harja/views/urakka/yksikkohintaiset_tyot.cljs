@@ -57,7 +57,7 @@
                     "Muut tehtävät"))
         otsikon-mukaan (group-by otsikko tyorivit)]
     (mapcat (fn [[otsikko rivit]]
-              (concat [(grid/otsikko otsikko)] rivit))
+              (concat [(grid/otsikko otsikko)]  (sort-by :tehtavan_nimi rivit)))
             (seq otsikon-mukaan))))
 
 (defn hoidon-sarakkeet []
@@ -128,11 +128,11 @@
                                          (filter (fn [tp]
                                                    (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
 
-                    (sort-by :tehtavan_nimi
-                             (ryhmittele-tehtavat
-                               @toimenpiteet-ja-tehtavat
-                               (vec (concat (mapcat second tehtavien-rivit)
-                                            tyhjat-tyot))))))
+
+                    (ryhmittele-tehtavat
+                      @toimenpiteet-ja-tehtavat
+                      (vec (concat (mapcat second tehtavien-rivit)
+                                   tyhjat-tyot)))))
         
         kaikkien-hoitokausien-kustannukset
         (reaction (transduce (comp (mapcat second)
