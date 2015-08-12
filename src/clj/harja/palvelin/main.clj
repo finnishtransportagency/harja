@@ -14,6 +14,9 @@
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
 
+    ;; Raportointi
+    [harja.palvelin.raportointi :as raportointi]
+    
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
     [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
@@ -43,7 +46,8 @@
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
-
+    [harja.palvelin.palvelut.raportit :as raportit]
+    
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
     [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
@@ -106,6 +110,10 @@
                                              (:ilmoituskuittausjono (:tloik asetukset)))
                               [:sonja :db :integraatioloki])
 
+      :raportointi (component/using
+                    (raportointi/luo-raportointi)
+                    [:db])
+      
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
                         (kayttajatiedot/->Kayttajatiedot)
@@ -196,7 +204,10 @@
       :integraatioloki-palvelu (component/using
                                 (integraatioloki-palvelu/->Integraatioloki)
                                 [:http-palvelin :db])
-
+      :raportit (component/using
+                 (raportit/->Raportit)
+                 [:http-palvelin :raportointi])
+      
       ;; Harja API
       :api-urakat (component/using
                     (api-urakat/->Urakat)
