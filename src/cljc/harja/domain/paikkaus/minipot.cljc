@@ -13,7 +13,31 @@
    {:nimi "Puhallus-sip" :lyhenne "" :koodi 6}
    {:nimi "Muu" :lyhenne "" :koodi 7}])
 
+(def +paikkaustyo+ "Paikkaustyön valinta koodilla"
+  (apply s/enum (map :koodi +paikkaustyot+)))
+
 (defn hae-paikkaustyo-koodilla
   "Hakee paikkaustyön nimen koodilla"
   [koodi]
   (:nimi (first (filter #(= (:koodi %) koodi) +paikkaustyot+))))
+
+(def +paikkausilmoitus+
+  {:osoitteet
+   [{:tie                        s/Int
+     :aosa                       s/Int
+     :aet                        s/Int
+     :losa                       s/Int
+     :let                        s/Int
+     :paallysteen_leveys         s/Num
+     :paallysteen_neliot         s/Num
+     :paikkausneliot             s/Num
+     :paikkausprosentti          s/Num
+     (s/optional-key :poistettu) s/Bool}]
+
+   :toteumat
+   [{:suorite                    +paikkaustyo+
+     :yksikko                    s/Str
+     :maara                      s/Num
+     :yks_hinta_alv0             s/Str
+     :yks_hinta_alv24            s/Num
+     (s/optional-key :poistettu) s/Bool}]})
