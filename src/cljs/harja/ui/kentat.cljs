@@ -158,6 +158,45 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
+(defmethod tee-kentta :positiivinen-numero [kentta data]
+  (let [teksti (atom (str @data))]
+    (r/create-class
+      {:component-will-receive-props
+       (fn [_ [_ _ data]]
+         (swap! teksti
+                (fn [olemassaoleva-teksti]
+                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ei korvata.
+                  ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
+                  ;; numeron syöttö (esim. "4," arvo ennen desimaalin kirjoittamista ylikirjoittuu
+                  (let [uusi (str @data)]
+                    (if (or (= olemassaoleva-teksti (str uusi ","))
+                            (= olemassaoleva-teksti (str uusi ".")))
+                      olemassaoleva-teksti
+                      uusi)))))
+
+       :reagent-render
+       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
+         (let [nykyinen-teksti @teksti]
+           [:input {:class       (when lomake? "form-control")
+                    :type        "text"
+                    :placeholder (:placeholder kentta)
+                    :on-focus    (:on-focus kentta)
+                    :on-blur     #(reset! teksti (str @data))
+                    :value       nykyinen-teksti
+                    :on-change   #(let [v (-> % .-target .-value)]
+                                   (when (or (= v "")
+                                             (re-matches (if kokonaisluku?
+                                                           #"\d{1,10}"
+                                                           #"\d{1,10}((\.|,)\d{0,2})?") v))
+                                     (reset! teksti v)
+
+                                     (let [numero (if kokonaisluku?
+                                                    (js/parseInt v)
+                                                    (js/parseFloat (str/replace v #"," ".")))]
+                                       (reset! data
+                                               (when (not (js/isNaN numero))
+                                                 numero)))))}]))})))
+
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
     (r/create-class
