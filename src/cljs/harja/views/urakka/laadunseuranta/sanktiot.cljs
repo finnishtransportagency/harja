@@ -125,7 +125,7 @@
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :numero
+         {:otsikko "Summa" :nimi :summa :leveys 2 :tyyppi :positiivinen-numero
           :validoi [[:ei-tyhja "Anna summa"]]}
          {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 2
           :tyyppi :valinta
