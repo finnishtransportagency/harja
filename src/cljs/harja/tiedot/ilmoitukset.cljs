@@ -38,6 +38,7 @@
     :alue {:type        :circle
            :coordinates (:sijainti %)
            :color        (if (= (:id %) (:id @valittu-ilmoitus)) "green" "blue")
+           :radius      5000
            :stroke      {:color "black" :width 10}}))
 
 (defonce ilmoitusta-klikattu
