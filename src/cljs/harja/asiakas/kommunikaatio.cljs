@@ -31,7 +31,7 @@
                    :params          parametrit
                    :format          (transit-request-format transit/write-optiot)
                    :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                              :raw true})
+                                                              :raw    true})
                    :handler         cb
                    :error-handler   (fn [[_ error]]
                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
@@ -59,7 +59,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   [vastaus]
   (or (roolit/ei-oikeutta? vastaus)
       (and (map? vastaus)
-           (not (nil? (get vastaus :failure))))))
+           (or
+             (not (nil? (get vastaus :failure)))
+             (not (nil? (get vastaus :virhe)))))))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
