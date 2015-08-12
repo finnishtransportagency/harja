@@ -227,7 +227,7 @@
           [:legend "Ilmoitustiedot"]
 
           [grid/muokkaus-grid
-           {:otsikko      "Päikatut tierekisteriosoitteet"
+           {:otsikko      "Paikatut tierekisteriosoitteet"
             :tunniste     :tie
             :voi-muokata? (do
                             (log "PAI tila " (pr-str (:tila @lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @lomakedata)))
@@ -262,7 +262,7 @@
             {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
             {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
-             :hae (fn [rivi] (* (:yks_hinta_alv0 rivi) (:maara rivi)))}
+             :hae (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
             {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
             toteutuneet-maarat]]
 
