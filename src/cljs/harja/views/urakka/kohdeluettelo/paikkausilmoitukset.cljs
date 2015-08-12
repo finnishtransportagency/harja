@@ -53,11 +53,12 @@
     :hylatty [:span.paikkausilmoitus-hylatty "Hylätty"]
     ""))
 
-(defn lisaa-puuttuvat-suoritteet [toteumat]
-  (when (or (nil? toteumat) (empty? toteumat))
+(defn lisaa-suoritteet-tyhjaan-toteumaan [toteumat]
+  (if (or (nil? toteumat) (empty? toteumat))
     (mapv
       (fn [tyo] {:suorite (:koodi tyo)})
-      (minipot/+paikkaustyot+))))
+      minipot/+paikkaustyot+)
+    toteumat))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -148,11 +149,11 @@
                                                         (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
 
         toteutuneet-osoitteet
-        (r/wrap (zipmap (iterate inc 1) (lisaa-puuttuvat-suoritteet (:osoitteet (:ilmoitustiedot @lomakedata))))
+        (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
                                         (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
         toteutuneet-maarat
-        (r/wrap (zipmap (iterate inc 1) (:toteumat (:ilmoitustiedot @lomakedata)))
+        (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @lomakedata))))
                 (fn [uusi-arvo] (reset! lomakedata
                                         (assoc-in @lomakedata [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
@@ -295,7 +296,7 @@
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)
                                                                                                                             :paikkauskohde-id   (:paikkauskohde_id rivi)})}
-                                                      [:span " Tee paikkausilmoitus"]]))}]
+                                                      [:span "Aloita paikkausilmoitus"]]))}]
           (sort-by
             (fn [toteuma] (case (:tila toteuma)
                             :lukittu 0

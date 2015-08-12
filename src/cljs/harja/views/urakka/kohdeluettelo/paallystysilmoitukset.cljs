@@ -517,7 +517,7 @@
                                                                                                                                                    (:arvonvahennykset rivi)
                                                                                                                                                    (:bitumi_indeksi rivi)
                                                                                                                                                    (:kaasuindeksi rivi))})}
-                                                      [:span " Aloita päällystysilmoitus"]]))}]
+                                                      [:span "Aloita päällystysilmoitus"]]))}]
           (sort-by
             (fn [toteuma] (case (:tila toteuma)
                             :lukittu 0
