@@ -1,0 +1,1 @@
+(ns harja.tiedot.tilannekuva)

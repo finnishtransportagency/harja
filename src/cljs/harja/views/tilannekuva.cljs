@@ -1,8 +1,9 @@
 (ns harja.views.tilannekuva
   "Harjan tilannekuvan pääsivu."
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.tilannekuva :as tiedot]))
 
 (defn tilannekuva []
   (komp/luo
