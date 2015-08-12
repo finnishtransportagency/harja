@@ -35,54 +35,53 @@
   - kun-onnistuu: kutsutaan, kun palvelinkutsu onnistuu."
 
   (let [kysely-kaynnissa? (atom false)
-        nayta-virheviesti? (atom false)
-        luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
-        ikoni (:ikoni asetukset)
-        virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
-        virheen-esitystapa (case (:virheen-esitystapa asetukset)
-                             :modal :modal
-                             :flash :flash
-                             :vertical :vertical
-                             :horizontal :horizontal
-                             :vertical)
-        suljettava-virhe? (if (nil? (:suljettava-virhe? asetukset)) true false)
-        sulkemisfunktio #(reset! nayta-virheviesti? false)
-        kun-valmis (:kun-valmis asetukset)
-        kun-virhe (:kun-virhe asetukset)
-        kun-onnistuu (:kun-onnistuu asetukset)
-        ]
-
+        nayta-virheviesti? (atom false)]
     (fn [teksti kysely asetukset]
-      [:span
-       [:button
-        {:class    (if (or @kysely-kaynnissa? (:disabled asetukset))
-                     (str luokka " disabled")
-                     luokka)
-         :on-click #(do
-                     (.preventDefault %)
-                     (reset! kysely-kaynnissa? true)
-                     (reset! nayta-virheviesti? false)
-                     (go (let [tulos (<! (kysely))]
-                           (when kun-valmis (kun-valmis tulos))
-                           (if (not (k/virhe? tulos))
-                             (do
-                               (reset! kysely-kaynnissa? false)
-                               (when kun-onnistuu (kun-onnistuu tulos)))
-                             (do
-                               (reset! kysely-kaynnissa? false)
-                               (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                               (reset! nayta-virheviesti? true)
-                               (when kun-virhe (kun-virhe tulos)))))))}
+      (let [luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
+            ikoni (:ikoni asetukset)
+            virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
+            virheen-esitystapa (case (:virheen-esitystapa asetukset)
+                                 :modal :modal
+                                 :flash :flash
+                                 :vertical :vertical
+                                 :horizontal :horizontal
+                                 :vertical)
+            suljettava-virhe? (if (nil? (:suljettava-virhe? asetukset)) true false)
+            sulkemisfunktio #(reset! nayta-virheviesti? false)
+            kun-valmis (:kun-valmis asetukset)
+            kun-virhe (:kun-virhe asetukset)
+            kun-onnistuu (:kun-onnistuu asetukset)]
+        
+        [:span
+         [:button
+          {:class    (if (or @kysely-kaynnissa? (:disabled asetukset))
+                       (str luokka " disabled")
+                       luokka)
+           :on-click #(do
+                        (.preventDefault %)
+                        (reset! kysely-kaynnissa? true)
+                        (reset! nayta-virheviesti? false)
+                        (go (let [tulos (<! (kysely))]
+                              (when kun-valmis (kun-valmis tulos))
+                              (if (not (k/virhe? tulos))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (when kun-onnistuu (kun-onnistuu tulos)))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                  (reset! nayta-virheviesti? true)
+                                  (when kun-virhe (kun-virhe tulos)))))))}
 
-        (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
-       (when @nayta-virheviesti?
-         (case virheen-esitystapa
-           :flash (do (viesti/nayta! virheviesti :warning 20000) nil) ;20 sekunttia
-           :modal (do (modal/nayta! {:otsikko "Virhe tapahtui"} virheviesti) nil)
-           :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
-           :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
-           ))
-       ])))
+          (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
+         (when @nayta-virheviesti?
+           (case virheen-esitystapa
+             :flash (do (viesti/nayta! virheviesti :warning 20000) nil) ;20 sekunttia
+             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui"} virheviesti) nil)
+             :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
+             :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
+             ))
+         ]))))
 
 (defn takaisin [teksti takaisin-fn]
   [:button.nappi-toissijainen {:on-click #(takaisin-fn)}

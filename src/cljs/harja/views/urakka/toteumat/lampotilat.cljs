@@ -106,10 +106,9 @@
             (when (roolit/rooli-urakassa? roolit/urakanvalvoja
                                           (:id @urakka))
               [napit/palvelinkutsu-nappi "Hae ilmatieteenlaitokselta"
-               #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id @urakka) (pvm/vuosi (first @u/valittu-hoitokausi)))
+               #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id @urakka) (pvm/vuosi (first hoitokausi)))
                {:ikoni true
                 :kun-onnistuu (fn [{:keys [keskilampotila ilmastollinen-keskiarvo]}]
-                                (log "SAATIIN ilmatieteenlaitokselta " keskilampotila " ja " ilmastollinen-keskiarvo)
                                 (if (and keskilampotila ilmastollinen-keskiarvo)
                                   (swap! muokatut-lampotilat update-in [hoitokausi]
                                          (fn [lampotilat]
