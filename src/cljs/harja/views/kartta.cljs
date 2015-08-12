@@ -57,10 +57,16 @@
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
+<<<<<<< HEAD
          (run! (do @nav/kartan-koko
                    @yleiset/ikkunan-koko
                    (log "Päivitetään openlayers koko!")
                    (openlayers/invalidate-size!))))
+=======
+  (run! (do @nav/kartan-koko
+            @yleiset/ikkunan-koko
+            (openlayers/invalidate-size!))))
+>>>>>>> Poista vanhoja loggauksia kartasta
 
 (defn kartan-koko-kontrollit
   []
@@ -118,10 +124,11 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                                              :ymin (aget newextent 1)
                                                              :xmax (aget newextent 2)
                                                              :ymax (aget newextent 3)}))
-      :on-click    (fn [at] (.log js/console "CLICK: " (pr-str at)))
+
+      ;:on-click    (fn [at] (.log js/console "CLICK: " (pr-str at)))
       :on-select   (fn [item event]
                      (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                       (log "TÄLLAISEN VALITSIT :: " (pr-str (dissoc item :alue)))
+                       #_(log "TÄLLAISEN VALITSIT :: " (pr-str (dissoc item :alue)))
                        (condp = (:type item)
                          :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
                                (nav/valitse-hallintayksikko item))
