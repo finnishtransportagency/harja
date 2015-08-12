@@ -272,18 +272,13 @@
                                                                                                                               (nayta-paatos (:paatos rivi)))}
            {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
             :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
-                                                                                                         ; TODO
-                                                                                                         #_(let [urakka-id (:id @nav/valittu-urakka)
+                                                                                                         (let [urakka-id (:id @nav/valittu-urakka)
                                                                                                                [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                                               vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
                                                                                                            (log "PAI Rivi: " (pr-str rivi))
                                                                                                            (log "PAI Vastaus: " (pr-str vastaus))
                                                                                                            (if-not (k/virhe? vastaus)
-                                                                                                             (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
-                                                                                                                                    (assoc :kokonaishinta (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                                                             (:arvonvahennykset rivi)
-                                                                                                                                                             (:bitumi_indeksi rivi)
-                                                                                                                                                             (:kaasuindeksi rivi))))))))}
+                                                                                                             (reset! lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
                                                       [:span (ikonit/eye-open) " Paikkausilmoitus"]]
                                                      [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
                                                                                                                             :kohdenimi          (:nimi rivi)

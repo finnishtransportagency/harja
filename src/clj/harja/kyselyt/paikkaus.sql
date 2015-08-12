@@ -17,7 +17,7 @@ WHERE urakka = :urakka
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella
 -- Hakee urakan paikkausilmoituksen paikkauskohteen id:llä
 SELECT
-  paikkauskohde.id,
+  paikkausilmoitus.id,
   tila,
   aloituspvm,
   valmispvm_kohde,

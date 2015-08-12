@@ -41,7 +41,6 @@
                                         (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
     (when paikkausilmoitus
-      (assoc paikkausilmoitus :kommentit [])
       (log/debug "Haetaan kommentit...") ; TODO
       #_(let [kommentit (into []
                             (comp (map konv/alaviiva->rakenne)
@@ -52,7 +51,8 @@
                                            (dissoc kommentti :liite)))))
                             (q/hae-paallystysilmoituksen-kommentit db (:id paikkausilmoitus)))]
         (log/debug "Kommentit saatu: " kommentit)
-        (assoc paikkausilmoitus :kommentit kommentit)))))
+        (assoc paikkausilmoitus :kommentit kommentit))
+        (assoc paikkausilmoitus :kommentit []))))
 
 (defrecord Paikkaus []
   component/Lifecycle

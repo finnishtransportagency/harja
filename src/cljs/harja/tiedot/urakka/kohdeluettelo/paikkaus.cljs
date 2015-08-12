@@ -18,3 +18,8 @@
 (defn hae-paikkaustoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paikkaustoteumat {:urakka-id  urakka-id
                                      :sopimus-id sopimus-id}))
+
+(defn hae-paikkausilmoitus-paikkauskohteella [urakka-id sopimus-id paikkauskohde-id]
+  (k/post! :urakan-paikkausilmoitus-paikkauskohteella {:urakka-id        urakka-id
+                                                       :sopimus-id       sopimus-id
+                                                       :paikkauskohde-id paikkauskohde-id}))
