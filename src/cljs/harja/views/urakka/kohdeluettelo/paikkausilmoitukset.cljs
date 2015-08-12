@@ -127,7 +127,7 @@
       "Tallenna"
       #(let [lomake @lomakedata
              lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :tyot]))]
+                                  (grid/poista-idt [:ilmoitustiedot :toteumat]))]
         (log "PAI Lomake-data: " (pr-str @lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
         (paikkaus/tallenna-paikkausilmoitus urakka-id sopimus-id lahetettava-data))
@@ -155,7 +155,7 @@
         toteutuneet-maarat
         (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @lomakedata))))
                 (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+                                        (assoc-in @lomakedata [:ilmoitustiedot :toteumat] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
         toteutuneet-osoitteet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})

@@ -104,7 +104,7 @@
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
-  #_(skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus)) ; TODO Takuupvm ei toimi oikein
+  (skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella c user {:urakka-id        urakka-id
