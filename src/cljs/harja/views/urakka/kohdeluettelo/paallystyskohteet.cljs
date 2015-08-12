@@ -129,7 +129,7 @@
       (fn []
         [:div
          [grid/grid
-          {:otsikko      "Päällystyskohteet"
+          {:otsikko      "Kohteet"
            :tyhja        (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
            :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
