@@ -270,42 +270,40 @@
 
 (defn ilmoitusluettelo
   []
-  (let []
-
-    (komp/luo
-      (fn []
-        [:div
-         [grid/grid
-          {:otsikko  "Paikkausilmoitukset"
-           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-           :tunniste :kohdenumero}
-          [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                             (nayta-tila (:tila rivi)))}
-           {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
-                                                                                                                              (nayta-paatos (:paatos rivi)))}
-           {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-            :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
-                                                                                                         (let [urakka-id (:id @nav/valittu-urakka)
-                                                                                                               [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paikkauskohde_id rivi)))]
-                                                                                                           (log "PAI Rivi: " (pr-str rivi))
-                                                                                                           (log "PAI Vastaus: " (pr-str vastaus))
-                                                                                                           (if-not (k/virhe? vastaus)
-                                                                                                             (reset! lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
-                                                      [:span (ikonit/eye-open) " Paikkausilmoitus"]]
-                                                     [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
-                                                                                                                            :kohdenimi          (:nimi rivi)
-                                                                                                                            :paikkauskohde-id   (:paikkauskohde_id rivi)})}
-                                                      [:span "Aloita paikkausilmoitus"]]))}]
-          (sort-by
-            (fn [toteuma] (case (:tila toteuma)
-                            :lukittu 0
-                            :valmis 1
-                            :aloitettu 3
-                            4))
-            @toteumarivit)]]))))
+  (komp/luo
+    (fn []
+      [:div
+       [grid/grid
+        {:otsikko  "Paikkausilmoitukset"
+         :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+         :tunniste :kohdenumero}
+        [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
+         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                           (nayta-tila (:tila rivi)))}
+         {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                            (nayta-paatos (:paatos rivi)))}
+         {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
+                                                                                                       (let [urakka-id (:id @nav/valittu-urakka)
+                                                                                                             [sopimus-id _] @u/valittu-sopimusnumero
+                                                                                                             vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paikkauskohde_id rivi)))]
+                                                                                                         (log "PAI Rivi: " (pr-str rivi))
+                                                                                                         (log "PAI Vastaus: " (pr-str vastaus))
+                                                                                                         (if-not (k/virhe? vastaus)
+                                                                                                           (reset! lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
+                                                    [:span (ikonit/eye-open) " Paikkausilmoitus"]]
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero      (:kohdenumero rivi)
+                                                                                                                          :kohdenimi        (:nimi rivi)
+                                                                                                                          :paikkauskohde-id (:paikkauskohde_id rivi)})}
+                                                    [:span "Aloita paikkausilmoitus"]]))}]
+        (sort-by
+          (fn [toteuma] (case (:tila toteuma)
+                          :lukittu 0
+                          :valmis 1
+                          :aloitettu 3
+                          4))
+          @toteumarivit)]])))
 
 (defn paikkausilmoitukset []
   (komp/luo

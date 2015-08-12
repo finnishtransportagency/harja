@@ -479,52 +479,50 @@
 
 (defn ilmoitusluettelo
   []
-  (let []
-
-    (komp/luo
-      (fn []
-        [:div
-         [grid/grid
-          {:otsikko  "Päällystysilmoitukset"
-           :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-           :tunniste :kohdenumero}
-          [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                             (nayta-tila (:tila rivi)))}
-           {:otsikko "Päätös (tekninen)" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
-                                                                                                                                         (nayta-paatos (:paatos_tekninen_osa rivi)))}
-           {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
-                                                                                                                                                   (nayta-paatos (:paatos_taloudellinen_osa rivi)))}
-           {:otsikko "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-            :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
-                                                                                                         (let [urakka-id (:id @nav/valittu-urakka)
-                                                                                                               [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                               vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
-                                                                                                           (log "PÄÄ Rivi: " (pr-str rivi))
-                                                                                                           (log "PÄÄ Vastaus: " (pr-str vastaus))
-                                                                                                           (if-not (k/virhe? vastaus)
-                                                                                                             (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
-                                                                                                                                    (assoc :kokonaishinta (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                                                             (:arvonvahennykset rivi)
-                                                                                                                                                             (:bitumi_indeksi rivi)
-                                                                                                                                                             (:kaasuindeksi rivi))))))))}
-                                                      [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                                                     [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
-                                                                                                                            :kohdenimi          (:nimi rivi)
-                                                                                                                            :paallystyskohde-id (:paallystyskohde_id rivi)
-                                                                                                                            :kokonaishinta      (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                                                   (:arvonvahennykset rivi)
-                                                                                                                                                   (:bitumi_indeksi rivi)
-                                                                                                                                                   (:kaasuindeksi rivi))})}
-                                                      [:span "Aloita päällystysilmoitus"]]))}]
-          (sort-by
-            (fn [toteuma] (case (:tila toteuma)
-                            :lukittu 0
-                            :valmis 1
-                            :aloitettu 3
-                            4))
-            @toteumarivit)]]))))
+  (komp/luo
+    (fn []
+      [:div
+       [grid/grid
+        {:otsikko  "Päällystysilmoitukset"
+         :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+         :tunniste :kohdenumero}
+        [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
+         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+                                                                                                           (nayta-tila (:tila rivi)))}
+         {:otsikko "Päätös (tekninen)" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                                                    (nayta-paatos (:paatos_tekninen_osa rivi)))}
+         {:otsikko "Päätös (taloudellinen)" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+                                                                                                                                                              (nayta-paatos (:paatos_taloudellinen_osa rivi)))}
+         {:otsikko     "Päällystysilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
+                                                                                                       (let [urakka-id (:id @nav/valittu-urakka)
+                                                                                                             [sopimus-id _] @u/valittu-sopimusnumero
+                                                                                                             vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id (:paallystyskohde_id rivi)))]
+                                                                                                         (log "PÄÄ Rivi: " (pr-str rivi))
+                                                                                                         (log "PÄÄ Vastaus: " (pr-str vastaus))
+                                                                                                         (if-not (k/virhe? vastaus)
+                                                                                                           (reset! lomakedata (-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
+                                                                                                                                  (assoc :kokonaishinta (+ (:sopimuksen_mukaiset_tyot rivi)
+                                                                                                                                                           (:arvonvahennykset rivi)
+                                                                                                                                                           (:bitumi_indeksi rivi)
+                                                                                                                                                           (:kaasuindeksi rivi))))))))}
+                                                    [:span (ikonit/eye-open) " Päällystysilmoitus"]]
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero        (:kohdenumero rivi)
+                                                                                                                          :kohdenimi          (:nimi rivi)
+                                                                                                                          :paallystyskohde-id (:paallystyskohde_id rivi)
+                                                                                                                          :kokonaishinta      (+ (:sopimuksen_mukaiset_tyot rivi)
+                                                                                                                                                 (:arvonvahennykset rivi)
+                                                                                                                                                 (:bitumi_indeksi rivi)
+                                                                                                                                                 (:kaasuindeksi rivi))})}
+                                                    [:span "Aloita päällystysilmoitus"]]))}]
+        (sort-by
+          (fn [toteuma] (case (:tila toteuma)
+                          :lukittu 0
+                          :valmis 1
+                          :aloitettu 3
+                          4))
+          @toteumarivit)]])))
 
 (defn paallystysilmoitukset []
   (komp/luo
