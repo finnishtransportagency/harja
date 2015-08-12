@@ -41,15 +41,15 @@
                                         (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
     (when paikkausilmoitus
-      (log/debug "Haetaan kommentit...") ; TODO
-      #_(let [kommentit (into []
+      (log/debug "Haetaan kommentit...")
+      (let [kommentit (into []
                             (comp (map konv/alaviiva->rakenne)
                                   (map (fn [{:keys [liite] :as kommentti}]
                                          (if (:id
                                                liite)
                                            kommentti
                                            (dissoc kommentti :liite)))))
-                            (q/hae-paallystysilmoituksen-kommentit db (:id paikkausilmoitus)))]
+                            (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
         (log/debug "Kommentit saatu: " kommentit)
         (assoc paikkausilmoitus :kommentit kommentit))
         (assoc paikkausilmoitus :kommentit []))))

@@ -35,3 +35,28 @@ FROM paikkausilmoitus
                              AND pk.poistettu IS NOT TRUE
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
+
+-- name: hae-paikkausilmoituksen-kommentit
+-- Hakee annetun paikkausilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
+-- kommentin mahdollisen liitteen tiedot. Kommentteja on vaikea hakea
+-- array aggregoimalla itse havainnon hakukyselyssä.
+SELECT
+  k.id,
+  k.tekija,
+  k.kommentti,
+  k.luoja,
+  k.luotu                              AS aika,
+  CONCAT(ka.etunimi, ' ', ka.sukunimi) AS tekijanimi,
+  l.id                                 AS liite_id,
+  l.tyyppi                             AS liite_tyyppi,
+  l.koko                               AS liite_koko,
+  l.nimi                               AS liite_nimi,
+  l.liite_oid                          AS liite_oid
+FROM kommentti k
+  JOIN kayttaja ka ON k.luoja = ka.id
+  LEFT JOIN liite l ON l.id = k.liite
+WHERE k.poistettu = FALSE
+      AND k.id IN (SELECT pk.kommentti
+                   FROM paikkausilmoitus_kommentti pk
+                   WHERE pk.ilmoitus = :id)
+ORDER BY k.luotu ASC;
