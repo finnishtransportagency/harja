@@ -37,12 +37,16 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce kohdeluettelo-valilehti (atom :paikkausilmoitukset))
+(defonce kohdeluettelo-valilehti (atom :paikkauskohteet))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
   [ur]
   [bs/tabs {:active kohdeluettelo-valilehti}
+
+   "Paikkauskohteet"
+   :paikkauskohteet
+   [paallystyskohteet-yhteenveto/paallystyskohteet]
 
    "Paikkausilmoitukset"
    :paikkausilmoitukset

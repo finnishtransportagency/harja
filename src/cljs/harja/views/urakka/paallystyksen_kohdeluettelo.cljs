@@ -37,7 +37,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce kohdeluettelo-valilehti (atom :yhteenveto))
+(defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
@@ -45,7 +45,7 @@
   [bs/tabs {:active kohdeluettelo-valilehti}
 
    "Päällystyskohteet"
-   :yhteenveto
+   :paallystyskohteet
    [paallystyskohteet-yhteenveto/paallystyskohteet]
 
    "Päällystysilmoitukset"
