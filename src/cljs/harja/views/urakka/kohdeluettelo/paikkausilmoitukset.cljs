@@ -20,7 +20,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.paallystys.pot :as pot]
+            [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -146,7 +146,7 @@
                 (fn [uusi-arvo] (reset! lomakedata
                                         (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
         toteutuneet-maarat
-        (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot @lomakedata)))
+        (r/wrap (zipmap (iterate inc 1) (:toteumat (:ilmoitustiedot @lomakedata)))
                 (fn [uusi-arvo] (reset! lomakedata
                                         (assoc-in @lomakedata [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
@@ -238,18 +238,21 @@
             {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
            toteutuneet-osoitteet]
 
-          #_[grid/muokkaus-grid TODO
+          [grid/muokkaus-grid
            {:otsikko "Toteutuneet suoritemäärät"
             :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                   (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
-            :muutos  #(reset! osoiteet-virheet (grid/hae-virheet %))}
-           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256}
-            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
-            {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
-            {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
-            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:let rivi) (:losa rivi)))}
-
-           osoiteet]]]
+                                   (= :hyvaksytty (:paatos @lomakedata))))
+            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
+           [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
+             :hae (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
+            {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
+            {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
+            {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hinta_alv0 :tyyppi :numero :leveys "10%"}
+            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hinta_alv24 :leveys "10%" :tyyppi :numero}
+            {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
+             :hae (fn [rivi] (* (:yks_hinta_alv0 rivi) (:maara rivi)))}
+            #_{:otsikko "Takuupvm" :nimi :takuupvm :leveys "20%" :tyyppi :pvm}]
+            toteutuneet-maarat]]
 
          (tallennus valmis-tallennettavaksi?)]))))
 
