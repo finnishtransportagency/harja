@@ -39,6 +39,5 @@
      :yksikko                    s/Str
      :maara                      s/Num
      :yks_hint_alv_0             s/Num
-     :yks_hint_alv_24            s/Num
      :takuupvm                   s/Inst
      (s/optional-key :poistettu) s/Bool}]})

@@ -56,7 +56,6 @@
                            :yksikko         "km"
                            :maara           5
                            :yks_hint_alv_0  5
-                           :yks_hint_alv_24 45
                            :takuupvm        (java.sql.Date. 105 9 1)}]}})
 
 

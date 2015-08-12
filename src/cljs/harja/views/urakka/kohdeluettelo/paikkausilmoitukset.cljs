@@ -60,6 +60,9 @@
       minipot/+paikkaustyot+)
     toteumat))
 
+(defn laske-tyon-alv [rivi]
+  (* (:yks_hint_alv_0 rivi) 1.24))
+
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -260,7 +263,7 @@
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
             {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
-            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero}
+            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv rivi))}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
              :hae (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
             {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
