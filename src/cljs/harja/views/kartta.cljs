@@ -66,8 +66,7 @@
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
-    [:span.kartan-koko-kontrollit {:class (when (or (not (empty? @nav/tarvitsen-karttaa))
-                                                    (= sivu :tilannekuva)) "hide")}
+    [:span.kartan-koko-kontrollit {:class (when-not (empty? @nav/tarvitsen-karttaa) "hide")}
      [:span.livicon-compress.kartta-kontrolli {:class (when (= koko :S) "hide")
                            :on-click #(nav/vaihda-kartan-koko! (case koko
                                                                  :S :S

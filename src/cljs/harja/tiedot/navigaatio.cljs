@@ -137,7 +137,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                 ;; tai palautetaan käyttäjän valitsema koko
                 (cond (= sivu :hallinta) :hidden
                       (= sivu :about) :hidden
-                      (= sivu :tilannekuva) :L
                       :default valittu-koko)))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
