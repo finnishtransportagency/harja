@@ -29,7 +29,7 @@
                                    (get-in havainto [:havainto :urakkaid])
                                    (get-in havainto [:havainto :sopimusid])
                                    (arrayksi db (get-in havainto [:havainto :tehtavat]))))
-  {:ilmoitukset "Havainnon tallennus onnistui"})
+  {:ilmoitukset "Kirjauksen tallennus onnistui"})
 
 (defrecord Tyokoneenseuranta []
   component/Lifecycle

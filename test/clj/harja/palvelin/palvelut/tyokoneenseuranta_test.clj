@@ -26,10 +26,15 @@
 
 (deftest testaa-tyokoneseurantahaku []
   (let [tyokoneet (kutsu 0 0 9000000 9000000)
+        yksi-kone (kutsu 7211200 427800 7211340 427961)
         ei-koneita (kutsu 0 0 50 50)]
     (testing "tyokoneita pitäisi löytyä envelopen sisältä"
       (is (= (count tyokoneet) 3)))
-    (testing "tyokoneita ei pitäisi löytyä alueelta jossa niitä ei ole"
+    (testing "yhden tyokoneen palautetut tiedot about oikein"
+      (is (= (count yksi-kone) 1))
+      (let [kone (first yksi-kone)]
+        (is (= (:tyokoneid kone) 31338))
+        (is (= (:tyokonetyyppi kone) "aura-auto"))
+        (is (= (:jarjestelma "Urakoitsijan järjestelmä 1")))))
+    (testing "tyokoneita ei pitäisi löytyä alueelta jossa niitä ei ole (surprise!)"
       (is (= (count ei-koneita) 0)))))
-
-
