@@ -33,9 +33,11 @@
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :indeksit +kayttaja-tero+)
         maku-2005-2013 (get indeksit ["MAKU 2005" 2013])]
-    (is (= (count indeksit) 4))
+    (is (> (count indeksit) 0))
+    (is (= (count maku-2005-2013) 13))
+    (is (every? some? maku-2005-2013))
     (is (= (:vuosi maku-2005-2013) 2013))
-    (is (= (get maku-2005-2013 12) (float 110.1))))) ;; <- odota ongelmia floatien kanssa
+    (is (= (get maku-2005-2013 12) (float 105.2))))) ;; <- odota ongelmia floatien kanssa
 
 
 
