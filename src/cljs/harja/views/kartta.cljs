@@ -57,22 +57,16 @@
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
-<<<<<<< HEAD
          (run! (do @nav/kartan-koko
                    @yleiset/ikkunan-koko
-                   (log "Päivitetään openlayers koko!")
                    (openlayers/invalidate-size!))))
-=======
-  (run! (do @nav/kartan-koko
-            @yleiset/ikkunan-koko
-            (openlayers/invalidate-size!))))
->>>>>>> Poista vanhoja loggauksia kartasta
 
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
-    [:span.kartan-koko-kontrollit {:class (when-not (empty? @nav/tarvitsen-karttaa) "hide")}
+    [:span.kartan-koko-kontrollit {:class (when (or @nav/tarvitaanko-tai-onko-pakotettu-nakyviin?
+                                                    (= sivu :tilannekuva)) "hide")}
      [:span.livicon-compress.kartta-kontrolli {:class    (when (= koko :S) "hide")
                                                :on-click #(nav/vaihda-kartan-koko! (case koko
                                                                                      :S :S

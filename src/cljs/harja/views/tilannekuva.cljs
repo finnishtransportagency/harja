@@ -28,7 +28,7 @@
 (defn tilannekuva []
   (komp/luo
     {:component-will-mount
-     (fn [] (when (or (= @nav/kartan-koko :hidden) (= @nav/kartan-koko :S)) (nav/vaihda-kartan-koko! :M)))}
+     (fn [] #_(when (or (= @nav/kartan-koko :hidden) (= @nav/kartan-koko :S)) (nav/vaihda-kartan-koko! :M)))}
     (fn []
       [:div "Tänne tulee myöhemmin tilannekuva..."]
       (harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
