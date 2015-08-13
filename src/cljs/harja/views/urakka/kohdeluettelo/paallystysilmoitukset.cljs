@@ -404,12 +404,12 @@
            :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
                                   (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
-          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%"}
-           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
-           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%"}
-           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string :pituus-max 256}
-           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
-           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string :pituus-max 256}]
+          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
           kiviaines]
 
          [grid/muokkaus-grid
@@ -417,10 +417,10 @@
            :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
                                   (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
            :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
-          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256}
-           {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%"}
-           {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%"}
-           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero}
+          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}
            {:otsikko       "Käsittelymenetelmä"
             :nimi          :kasittelymenetelma
@@ -431,22 +431,22 @@
                                (str (:lyhenne rivi)  " - " (:nimi rivi))
                                "- Valitse menetelmä -"))
             :valinnat      pot/+alustamenetelmat+
-            :leveys        "30%"}
-           {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero}
+            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+           {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Verkkotyyppi"
             :nimi          :verkkotyyppi
             :tyyppi        :valinta
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
             :valinnat      pot/+verkkotyypit+
-            :leveys        "30%"}
+            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko       "Tekninen toimenpide"
             :nimi          :tekninen-toimenpide
             :tyyppi        :valinta
             :valinta-arvo  :koodi
             :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
             :valinnat      pot/+tekniset-toimenpiteet+
-            :leveys        "30%"}]
+            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
           alustalle-tehdyt-toimet]]
 
          [:fieldset.lomake-osa
@@ -463,7 +463,7 @@
             :valinta-arvo  :avain
             :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
             :valinnat      pot/+paallystystyon-tyypit+
-            :leveys        "30%"}
+            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
