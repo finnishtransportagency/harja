@@ -30,4 +30,3 @@
     (poista-palvelu (:http-palvelin this) :hae-tyokoneseurantatiedot)
     this))
 
-(def foo (hae-tyokoneet-alueelta (harja.testi/luo-testitietokanta) "jvh" {:xmin 0 :ymin 0 :xmax 9000000 :ymax 9000000}))
