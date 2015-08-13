@@ -10,126 +10,39 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]))
 
-(defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
-  (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
-  (let [mankeloitava (into []
-                           (comp (map konv/alaviiva->rakenne)
+(def turvallisuuspoikkeama-xf
+  (comp (map konv/alaviiva->rakenne)
                                  (harja.geo/muunna-pg-tulokset :sijainti)
                                  (map #(konv/array->vec % :tyyppi))
                                  (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
-                                 (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi])))))
-                           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+                                 (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
 
-        ;; Tässä tehdään suhteellisen monimutkaisia mankelointeja.
-        ;; Yhdella turvallisuuspoikkeamalla (tp:llä) voi olla useampia kommentteja,
-        ;; useampia liitteitä, sekä kommentteja joilla on liitteitä.
-        ;; Tietokantahaku luonnollisesti palauttaa yhden kommentin/liitteen per rivi,
-        ;; joten ensimmäisenä kaivetaan ulos uniikit tp:t, ja yhdistetään niiden
-        ;; kommentit yhteen taulukkoon
-        ;;
-        ;; Itse asiassa tämä tehtiin turhankin monimutkaisesti, koska nykyisellään ei voi
-        ;; olla liitteitä, jotka eivät liity kommenttiin - tämä ei kuitenkaan ole tietomallin aiheuttama
-        ;; rajoite, vaan käyttöliittymän. Ehkä ei siis ollut hukkaan heitettyä aikaa? ;)
-        kommentteineen (mapv
-                         #(assoc % :kommentit
-                                   (into []
-                                         (keep
-                                           (fn [tp]
-                                             (when
-                                               (and (not (nil? (get-in tp [:kommentti :id])))
-                                                    (= (:id tp) (:id %)))
-                                               (:kommentti tp)))
-                                           mankeloitava)))
-                         (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
-
-        ;; Sitten sama tehdään liitteille
-        liitteineen (mapv
-                      #(assoc % :liitteet
-                                (into []
-                                      (keep
-                                        (fn [tp]
-                                          (when
-                                            (and (not (nil? (get-in tp [:liite :id])))
-                                                 (= (:id tp) (:id %)))
-                                            (:liite tp)))
-                                        mankeloitava)))
-                      (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
-
-        ;; Korjaavat toimenpiteet
-        korjaavineen (mapv
-                       #(assoc % :korjaavattoimenpiteet
-                                 (into []
-                                       (keep
-                                         (fn [tp]
-                                           (when
-                                             (and (not (nil? (get-in tp [:korjaavatoimenpide :id])))
-                                                  (= (:id tp) (:id %)))
-                                             (:korjaavatoimenpide tp)))
-                                         mankeloitava)))
-                       (set (map #(dissoc % :kommentti :liite :korjaavatoimenpide) mankeloitava)))
-
-        ;; Joillain kommenteilla on viittaus liitteen id:hen.
-        ;; Korvataan id itse liitteellä.
-        liitteet-kommenteissa (mapv
-                                (fn [tp]
-                                  (assoc tp :kommentit
-                                            (mapv
-                                              (fn [kommentti]
-                                                (if-not (:liite kommentti)
-                                                  kommentti
-
-                                                  (assoc
-                                                    kommentti
-                                                    :liite
-                                                    (some
-                                                      (fn [liite]
-                                                        (when (= (:id liite) (:liite kommentti)) liite))
-                                                      (flatten (map :liitteet liitteineen)))))
-                                                )
-                                              (:kommentit tp)))
-                                  )
-                                kommentteineen)
-
-        ;; Osa liitteistä on nyt liitetty mukaan kommenttiin.
-        ;; TP:n liitteet-vektorista voidaan siis poistaa liitteet, jotka liittyvät
-        ;; johonkin kommenttiin
-        ilman-redundantteja-liitteita (mapv
-                                        (fn [tp]
-                                          (assoc tp :liitteet
-                                                    (vec (remove nil? (map
-                                                                        (fn [liite]
-                                                                          (when-not
-                                                                            (some
-                                                                              (fn [kommentti]
-                                                                                (= (get-in kommentti [:liite :id]) (:id liite)))
-                                                                              (flatten (map :kommentit liitteet-kommenteissa)))
-                                                                            liite))
-                                                                        (:liitteet tp))))))
-                                        liitteineen)
-
-        ;; Lopuksi tehdään tp, jolla on molemmat kommentit- ja liitteet-vektorit
-        liitteet-ja-kommentit (mapv
-                                (fn [tp]
-                                  (assoc tp :liitteet
-                                            (some
-                                              (fn [tpl]
-                                                (when (= (:id tpl) (:id tp)) (:liitteet tpl)))
-                                              ilman-redundantteja-liitteita)))
-                                liitteet-kommenteissa)
-
-        yhdistetty (mapv
-                     (fn [tp]
-                       (assoc tp :korjaavattoimenpiteet
-                                 (some
-                                   (fn [kp]
-                                     (when (= (:id kp) (:id tp)) (:korjaavattoimenpiteet kp)))
-                                   korjaavineen)))
-                     liitteet-ja-kommentit)
-
-        tulos yhdistetty]
+(defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
+  (let [tulos (into []
+                    turvallisuuspoikkeama-xf
+                    (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))]
     (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
     tulos))
 
+(defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
+  (-> (first (konv/sarakkeet-vektoriin (into []
+                                             turvallisuuspoikkeama-xf
+                                             (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                       {:kommentti :kommentit
+                                        :korjaavatoimenpide :korjaavattoimenpiteet
+                                        :liite :liitteet}))
+
+      (update-in [:kommentit]
+                 (fn [kommentit]
+                   (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                          (dissoc % :liite)
+                                          %)
+                                       kommentit))))))
+  
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
 
@@ -222,6 +135,10 @@
                        (fn [user tiedot]
                          (hae-turvallisuuspoikkeamat (:db this) user tiedot))
 
+                       :hae-turvallisuuspoikkeama
+                       (fn [user tiedot]
+                         (hae-turvallisuuspoikkeama (:db this) user tiedot))
+                       
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
                          (tallenna-turvallisuuspoikkeama (:db this) user tiedot)))

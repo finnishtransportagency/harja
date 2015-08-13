@@ -20,10 +20,15 @@
                                         :alku      alku
                                         :loppu     loppu}))
 
+(defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
+  (k/post! :hae-turvallisuuspoikkeama {:urakka-id urakka-id
+                                       :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
+
+  
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi
-                                                    _ @nakymassa?]
-                                                   (when @nakymassa?
+                                                    nakymassa? @nakymassa?]
+                                                   (when nakymassa?
                                                      (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
 
 (def taso-turvallisuuspoikkeamat (atom false))

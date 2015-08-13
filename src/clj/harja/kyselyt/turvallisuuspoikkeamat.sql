@@ -17,6 +17,31 @@ SELECT
   t.tr_loppuetaisyys,
   t.tr_alkuosa,
   t.tr_loppuosa,
+  t.tyyppi
+ FROM turvallisuuspoikkeama t
+WHERE t.urakka = :urakka
+  AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+
+-- name: hae-turvallisuuspoikkeama
+-- Hakee yksittäisen urakan turvallisuuspoikkeaman
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
   t.tyyppi,
 
   k.id                   AS korjaavatoimenpide_id,
@@ -27,11 +52,16 @@ SELECT
   kom.id                 AS kommentti_id,
   kom.tekija             AS kommentti_tekija,
   kom.kommentti          AS kommentti_kommentti,
-  kom.liite              AS kommentti_liite,
   kom.luotu              AS kommentti_aika,
   (SELECT CONCAT(etunimi, ' ', sukunimi)
-   FROM kayttaja
-   WHERE id = kom.luoja) AS kommentti_tekijanimi,
+     FROM kayttaja
+    WHERE id = kom.luoja) AS kommentti_tekijanimi,
+
+  koml.id                AS kommentti_liite_id,
+  koml.tyyppi            AS kommentti_liite_tyyppi,
+  koml.koko              AS kommentti_liite_koko,
+  koml.nimi              AS kommentti_liite_nimi,
+  koml.liite_oid         AS kommentti_liite_oid,
 
   l.id                   AS liite_id,
   l.tyyppi               AS liite_tyyppi,
@@ -40,22 +70,28 @@ SELECT
   l.liite_oid            AS liite_oid,
   l.pikkukuva            AS liite_pikkukuva
 
-FROM turvallisuuspoikkeama t
-  LEFT JOIN korjaavatoimenpide k
-    ON t.id = k.turvallisuuspoikkeama
+ FROM turvallisuuspoikkeama t
+      LEFT JOIN korjaavatoimenpide k
+      ON t.id = k.turvallisuuspoikkeama
 
-  LEFT JOIN turvallisuuspoikkeama_liite tl
-    ON t.id = tl.turvallisuuspoikkeama
-  LEFT JOIN liite l
-    ON l.id = tl.liite
+      LEFT JOIN turvallisuuspoikkeama_liite tl
+      ON t.id = tl.turvallisuuspoikkeama
+      LEFT JOIN liite l
+      ON l.id = tl.liite
 
-  LEFT JOIN turvallisuuspoikkeama_kommentti tpk
-    ON t.id = tpk.turvallisuuspoikkeama
-  LEFT JOIN kommentti kom
-    ON tpk.kommentti = kom.id
-       AND kom.poistettu IS NOT TRUE
-WHERE t.urakka = :urakka
-      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+      LEFT JOIN turvallisuuspoikkeama_kommentti tpk
+       ON t.id = tpk.turvallisuuspoikkeama
+      LEFT JOIN kommentti kom
+       ON tpk.kommentti = kom.id
+        AND kom.poistettu IS NOT TRUE
+
+  LEFT JOIN liite koml ON kom.liite = koml.id
+
+WHERE t.id = :id AND t.urakka = :urakka
+
+
+  
+
 
 -- name: liita-kommentti<!
 INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)

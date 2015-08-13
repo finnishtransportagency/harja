@@ -11,9 +11,11 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.kommentit :as kommentit])
+            [harja.ui.kommentit :as kommentit]
+            [cljs.core.async :refer [<!]])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
@@ -109,7 +111,9 @@
    [grid/grid
     {:otsikko       "Turvallisuuspoikkeamat"
      :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
-     :rivi-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %)}
+     :rivi-klikattu #(go (reset! tiedot/valittu-turvallisuuspoikkeama
+                                 (<! (tiedot/hae-turvallisuuspoikkeama (:id @nav/valittu-urakka)
+                                                                       (:id %)))))}
     [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
      {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
      {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
