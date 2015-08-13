@@ -66,6 +66,12 @@
   [tyon-hinta alv]
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
+(defn laske-kokonaishinta [tyot]
+  (reduce +
+          (map
+            (fn [tyo] (* (:yks_hint_alv_0 tyo) (:maara tyo)))
+            tyot)))
+
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -212,7 +218,7 @@
                                (= :aloitettu (:tila @lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
               :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
-             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
+             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(laske-kokonaishinta toteumarivit) :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
                        (= :lukittu (:tila @lomakedata)))
                {:otsikko     "Kommentit" :nimi :kommentit
