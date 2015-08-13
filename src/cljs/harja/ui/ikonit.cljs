@@ -6,8 +6,6 @@
 
 (defn asterisk []
   [:span.glyphicon.glyphicon-asterisk])
-(defn plus []
-  [:span.glyphicon.glyphicon-plus])
 (defn euro []
   [:span.glyphicon.glyphicon-euro])
 (defn eur []
@@ -60,7 +58,7 @@
   [:span.glyphicon.glyphicon-home])
 (defn file []
   [:span.glyphicon.glyphicon-file])
-(defn time []
+(defn aika [] ;; aika koska clj coressa on time myös
   [:span.glyphicon.glyphicon-time])
 (defn road []
   [:span.glyphicon.glyphicon-road])
@@ -168,10 +166,6 @@
   [:span.glyphicon.glyphicon-step-forward])
 (defn eject []
   [:span.glyphicon.glyphicon-eject])
-(defn chevron-left []
-  [:span.glyphicon.glyphicon-chevron-left])
-(defn chevron-right []
-  [:span.glyphicon.glyphicon-chevron-right])
 (defn plus-sign []
   [:span.glyphicon.glyphicon-plus-sign])
 (defn minus-sign []
@@ -226,7 +220,7 @@
   [:span.glyphicon.glyphicon-calendar])
 (defn random []
   [:span.glyphicon.glyphicon-random])
-(defn comment []
+(defn kommentti [] ; koska comment on myös coressa
   [:span.glyphicon.glyphicon-comment])
 (defn magnet []
   [:span.glyphicon.glyphicon-magnet])

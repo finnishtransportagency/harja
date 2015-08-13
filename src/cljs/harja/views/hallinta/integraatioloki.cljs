@@ -132,7 +132,7 @@
                {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
              {:otsikko     "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
               :komponentti #(if (nil? (:paattynyt %))
-                              [:span.integraatioloki-varoitus (ikonit/time) " Kesken"]
+                              [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
                                   [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
              {:otsikko "Alkanut" :nimi :alkanut :leveys 15
