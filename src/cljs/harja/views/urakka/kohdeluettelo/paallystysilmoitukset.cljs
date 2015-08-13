@@ -54,7 +54,7 @@
               (log "PÄÄ Muutokset kokonaishintaan laskettu: " tulos)
               tulos)))
 
-(def yhteensa (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
+(def toteuman-kokonaishinta (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
 
 
 (tarkkaile! "PÄÄ Lomakedata: " lomakedata)
@@ -64,7 +64,7 @@
     [yleiset/taulukkotietonakyma {}
      "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))
      "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
-     "Yhteensä: " (fmt/euro-opt @yhteensa)]))
+     "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
 
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
@@ -282,7 +282,7 @@
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
               :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)) :muokattava? (constantly false)}
+             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
                        (= :lukittu (:tila @lomakedata)))
                {:otsikko     "Kommentit" :nimi :kommentit
