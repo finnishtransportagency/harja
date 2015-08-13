@@ -14,6 +14,12 @@ SELECT tallenna_tai_paivita_tyokonehavainto(
        CAST(:tehtavat AS suoritettavatehtava[]))
 
 -- name: tyokoneet-alueella
--- Etsii työkoneet annetulta alueelta
+-- Etsii kaikki työkoneet annetulta alueelta
 SELECT * FROM tyokonehavainto
   WHERE ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))
+
+-- name: urakan-tyokoneet-alueella
+-- Etsii urakkaan liittyvät työkoneet annetulta alueelta
+SELECT * FROM tyokonehavainto
+  WHERE urakkaid = :urakkaid
+    AND ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))

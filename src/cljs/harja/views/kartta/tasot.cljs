@@ -5,6 +5,7 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.views.tyokoneseuranta :as tyokoneseuranta]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
@@ -15,6 +16,7 @@
                                          @laadunseuranta/urakan-tarkastukset
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                                         @tyokoneseuranta/alueen-tyokoneet
                                          )]
                    (if-not g
                      (persistent! geometriat)
@@ -27,6 +29,7 @@
     :sillat sillat/taso-sillat
     :tarkastukset laadunseuranta/taso-tarkastukset
     :ilmoitukset ilmoitukset/taso-ilmoitukset
+    :tyokoneet tyokoneseuranta/tyokonetaso-paalla
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat))
     
 (defn taso-paalle! [nimi]
@@ -37,6 +40,3 @@
 
 (defn taso-paalla? [nimi]
   @(taso-atom nimi))
-
-
- 

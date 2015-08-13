@@ -102,36 +102,32 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                :M
                koko)]
     [openlayers
-
-     {:id          "kartta"
-      :width       (if (= koko :S) "160px" "100%")
-      :height      (if (= koko :S) "150px"
-                                   (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
-      :style       (when (= koko :S)
-                     {:display "none"})
-      :view        kartta-sijainti
-      :zoom        zoom-taso
-      :selection   nav/valittu-hallintayksikko
-      :on-drag     (fn [_ newextent]
-                     ; (log "Move, uusi extent: " newextent)
-                     (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
-                                                             :ymin (aget newextent 1)
-                                                             :xmax (aget newextent 2)
-                                                             :ymax (aget newextent 3)}))
-
-      ;:on-click    (fn [at] (.log js/console "CLICK: " (pr-str at)))
-      :on-select   (fn [item event]
-                     (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                       #_(log "TÄLLAISEN VALITSIT :: " (pr-str (dissoc item :alue)))
-                       (condp = (:type item)
-                         :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-                               (nav/valitse-hallintayksikko item))
-                         :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-                               (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                         (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
-      :tooltip-fn  (fn [geom]
-                     (and geom
-                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
+     {:id "kartta"
+      :width (if (= koko :S) "160px" "100%")
+      :height (if (= koko :S) "150px"
+                  (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
+      :style (when (= koko :S)
+               {:display "none"})
+      :view kartta-sijainti
+      :zoom zoom-taso
+      :selection nav/valittu-hallintayksikko
+      :on-drag (fn [_ newextent]
+                 (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
+                                                         :ymin (aget newextent 1)
+                                                         :xmax (aget newextent 2)
+                                                         :ymax (aget newextent 3)}))
+      ;;:on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
+      :on-select (fn [item event]
+                   (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
+                     (condp = (:type item)
+                       :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+                             (nav/valitse-hallintayksikko item))
+                       :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
+                             (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+                       (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+      :tooltip-fn (fn [geom]
+                    (and geom
+                         [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
                    (concat (cond
                              ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
