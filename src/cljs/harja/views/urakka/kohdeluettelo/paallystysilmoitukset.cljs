@@ -197,8 +197,7 @@
   (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
                                 :valmispvm_kohde (:valmispvm_kohde @lomakedata)
                                 :valmispvm_paallystys (:valmispvm_paallystys @lomakedata)
-                                :takuupvm       (:takuupvm @lomakedata)
-                                :hinta          (fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan))}
+                                :takuupvm       (:takuupvm @lomakedata)}
                                (fn [uusi-arvo]
                                  (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
                                                         (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
@@ -283,7 +282,7 @@
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
               :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :muokattava? (constantly false)}
+             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)) :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
                        (= :lukittu (:tila @lomakedata)))
                {:otsikko     "Kommentit" :nimi :kommentit
