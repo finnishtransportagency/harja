@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! timeout]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn liitetiedosto
@@ -49,7 +50,7 @@ Optiot voi sisältää:
           
           ;; Tiedostoa ei vielä valittu
           [:div.file-upload.btn.btn-primary
-           [:span "Valitse tiedosto"]
+           [:span (ikonit/upload) " Valitse tiedosto"]
            [:input.upload
             {:type "file"
              :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]

@@ -68,8 +68,6 @@
   [:span.glyphicon.glyphicon-download-alt])
 (defn download []
   [:span.glyphicon.glyphicon-download])
-(defn upload []
-  [:span.glyphicon.glyphicon-upload])
 (defn inbox []
   [:span.glyphicon.glyphicon-inbox])
 (defn play-circle []
@@ -547,3 +545,6 @@
   [:span.livicon-trash])
 (defn trash-disabled [tooltip]
   [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
+
+(defn upload []
+  [:span.livicon-upload])
