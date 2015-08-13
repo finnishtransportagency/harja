@@ -2,6 +2,7 @@
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
+            [clojure.string :as string]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
@@ -82,9 +83,10 @@
           true))))
 
 (defn vahvista-urakkatyypin-vaihtaminen [ur uusi-urakkatyyppi]
+  (when-not (= uusi-urakkatyyppi (:tyyppi ur))
   (let [vaihda-urakkatyyppi (fn [] (go (let [res (<! (urakka/vaihda-urakkatyyppi (:id ur) (name uusi-urakkatyyppi)))]
                                      (if-not (k/virhe? res)
-                                       (nav/paivita-urakka (:id ur) assoc :tyyppi res) ; FIXME Tiedot päivittyy vasta kun Harja ladataan uudelleen?
+                                       (nav/paivita-urakka (:id ur) assoc :tyyppi res)
                                        true))))]
   (modal/nayta! {:otsikko "Vaihdetaanko urakkatyyppi?"
                  :footer  [:span
@@ -99,9 +101,9 @@
                             "Vaihda"]
                            ]}
                 [:div
-                 [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur)) "-tyyppisen urakan "
-                             (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi?")]
-                 [:p (str "Vaihtamisen jälkeen tämäntyyppiseen urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, mutta eivät enää ole näkyvissä.")]])))
+                 [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur)) "-tyyppisen urakan ")
+                             [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]
+                 [:p (str "Vaihtamisen jälkeen nykyiseen " (string/lower-case (navigaatio/nayta-urakkatyyppi (:tyyppi ur))) "urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, mutta ne eivät enää ole näkyvissä.")]]))))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
