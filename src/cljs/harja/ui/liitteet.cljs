@@ -48,15 +48,18 @@ Optiot voi sisältää:
           [:progress {:value edistyminen :max 100}]
           
           ;; Tiedostoa ei vielä valittu
-          [:input {:type "file"
-                   :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
-                                 (go
-                                   (loop [ed (<! ch)]
-                                     (if (number? ed)
-                                       (do (reset! edistyminen ed)
-                                           (recur (<! ch)))
+          [:div.file-upload.btn.btn-primary
+           [:span "Valitse tiedosto"]
+           [:input.upload
+            {:type "file"
+             :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
+                           (go
+                             (loop [ed (<! ch)]
+                               (if (number? ed)
+                                 (do (reset! edistyminen ed)
+                                     (recur (<! ch)))
 
-                                       (liite-ladattu (reset! tiedosto ed))))))}])))))
+                                 (liite-ladattu (reset! tiedosto ed))))))}]])))))
           
                                    
                                  
