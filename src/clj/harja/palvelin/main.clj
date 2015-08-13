@@ -42,6 +42,7 @@
     [harja.palvelin.palvelut.lampotilat :as lampotilat]
     [harja.palvelin.palvelut.maksuerat :as maksuerat]
     [harja.palvelin.palvelut.liitteet :as liitteet]
+    [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
