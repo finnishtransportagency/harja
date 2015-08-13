@@ -73,7 +73,7 @@
   (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
 
 (defn hae-urakan-tyyppi [db user urakka-id]
-  (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id))))
+  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
