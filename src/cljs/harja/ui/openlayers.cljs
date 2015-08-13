@@ -69,6 +69,9 @@
 (defn ^:export invalidate-size []
   (.invalidateSize @the-kartta))
 
+(defn kartan-extent []
+  (let [k @the-kartta]
+    (.calculateExtent (.getView k) (.getSize k))))
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
@@ -131,6 +134,12 @@
                                                    second)]
                                 (reset! geom g))))
     @geom))
+
+(defn- aseta-drag-kasittelija [this ol3 on-move]
+  (.on ol3 "pointerdrag" (fn [e]
+                           (when on-move
+                             (let [newextent (.calculateExtent (.getView ol3) (.getSize ol3))]
+                               (on-move e newextent))))))
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "click" (fn [e]
@@ -240,14 +249,10 @@
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
     (aseta-hover-kasittelija this ol3)
+    (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     ;; Add callback for ol3 pos/zoom changes
     ;; watcher for pos/zoom atoms
-    (.on ol3 "move" (fn [e]
-                      (log "liikkui " e)
-                      (let [c (.getCenter ol3)]
-                        (log "MOVE callback ja zoom on: " (.getZoom ol3))
-                        ;;(reset! zoom (.getZoom ol3)) ;; FIXME: tämä heittelee zoomia miten sattuu (move eventissä zoom ei ole oikein)
-                        (reset! view [(.-lat c) (.-lng c)]))))
+    
     ;; TÄMÄ WATCHERI aiheuttaa nykimistä pannatessa
     ;;(add-watch view ::view-update
     ;,           (fn [_ _ old-view new-view]

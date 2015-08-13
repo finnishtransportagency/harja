@@ -4,6 +4,7 @@
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
+            [harja.views.tyokoneseuranta :as tyokoneenseuranta]
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
@@ -111,6 +112,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
       :view kartta-sijainti
       :zoom zoom-taso
       :selection nav/valittu-hallintayksikko
+      :on-drag (fn [_ newextent]
+                 ; (log "Move, uusi extent: " newextent)
+                 (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
+                                                         :ymin (aget newextent 1)
+                                                         :xmax (aget newextent 2)
+                                                         :ymax (aget newextent 3)}))
       :on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
       :on-select (fn [item event]
                    (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
@@ -126,35 +133,35 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
       (concat (cond
-               ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-               (nil? v-hal)
-               hals
+                ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                (nil? v-hal)
+                hals
 
-               ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-               (nil? @nav/valittu-urakka)
-               (vec (concat [(assoc v-hal
-                                    :valittu true)]
-                            @nav/urakat-kartalla))
+                ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                (nil? @nav/valittu-urakka)
+                (vec (concat [(assoc v-hal
+                                     :valittu true)]
+                             @nav/urakat-kartalla))
 
-               ;; Valittu urakka, mitä näytetään?
-               :default [(assoc @nav/valittu-urakka
-                           :valittu true
-                           :harja.ui.openlayers/fit-bounds true)])
+                ;; Valittu urakka, mitä näytetään?
+                :default [(assoc @nav/valittu-urakka
+                                 :valittu true
+                                 :harja.ui.openlayers/fit-bounds true)])
               @tasot/geometriat)
 
       :geometry-fn (fn [hy]
                      (when-let [alue (:alue hy)]
                        (when (map? alue)
                          (assoc alue
-                           :fill (if (:valittu hy) false true)
-                           :stroke (when (or (:valittu hy)
-                                             (= :silta (:type hy)))
-                                     {:width 3})
-                           :harja.ui.openlayers/fit-bounds (:valittu hy) ;; kerro kartalle, että siirtyy valittuun
-                           :color (or (:color alue)
-                                      (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))
-                           ;;:marker (= :silta (:type hy))
-                           ))))
+                                :fill (if (:valittu hy) false true)
+                                :stroke (when (or (:valittu hy)
+                                                  (= :silta (:type hy)))
+                                          {:width 3})
+                                :harja.ui.openlayers/fit-bounds (:valittu hy) ;; kerro kartalle, että siirtyy valittuun
+                                :color (or (:color alue)
+                                           (nth +varit+ (mod (hash (:nimi hy)) (count +varit+))))
+                                ;;:marker (= :silta (:type hy))
+                                ))))
 
       :layers [{:type :mml
                 :url (str (k/wmts-polku) "maasto/wmts")

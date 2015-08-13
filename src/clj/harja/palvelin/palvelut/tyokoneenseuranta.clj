@@ -12,11 +12,12 @@
       (konversiot/array->set :tehtavat)))
 
 (defn hae-tyokoneet-alueelta [db user hakuehdot]
+  (log/debug "Haetaan tyokoneet alueelta: " hakuehdot)
   (map formatoi-vastaus (tks/tyokoneet-alueella db
-                                                (:xmin hakuehdot)
                                                 (:ymin hakuehdot)
-                                                (:xmax hakuehdot)
-                                                (:ymax hakuehdot))))
+                                                (:xmin hakuehdot)
+                                                (:ymax hakuehdot)
+                                                (:xmax hakuehdot))))
 
 (defrecord TyokoneseurantaHaku []
   component/Lifecycle
