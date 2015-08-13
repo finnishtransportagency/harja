@@ -8,6 +8,8 @@
    [harja.app-test]
    [harja.tiedot.urakka.suunnittelu-test]
    [harja.views.urakka.siltatarkastukset-test]
+   [harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test]
+   [harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test]
    [harja.pvm-test]))
 
 
@@ -50,6 +52,8 @@
                   'harja.app-test  
                   'harja.tiedot.urakka.suunnittelu-test
                   'harja.views.urakka.siltatarkastukset-test
+                  'harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test
+                  'harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
                   'harja.pvm-test)) 
  
  

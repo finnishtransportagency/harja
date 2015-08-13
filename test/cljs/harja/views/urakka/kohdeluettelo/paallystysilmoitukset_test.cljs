@@ -4,9 +4,19 @@
     [cljs.test :as test :refer-macros [deftest is]]
 
     [harja.pvm :refer [->pvm] :as pvm]
-    [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as pot]
-    [harja.loki :refer [log]]))
+    [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
+    [harja.loki :refer [log]]
+    [harja.domain.paallystys.pot :as pot]))
 
 (deftest tien-pituus-laskettu-oikein
   (let [tie {:let 5 :losa 3}]
-    (is (= (pot/laske-tien-pituus tie) 2))))
+    (is (= (paallystysilmoitukset/laske-tien-pituus tie) 2))))
+
+(deftest muutos-kokonaishintaan-laskettu-oikein
+  (let [tyot [{:tilattu-maara 10 :toteutunut-maara 15 :yksikkohinta 1}
+              {:tilattu-maara 15 :toteutunut-maara 15  :yksikkohinta 666}
+              {:tilattu-maara 4 :toteutunut-maara 5 :yksikkohinta 8}]
+    tyot2 [{:tilattu-maara 4 :toteutunut-maara 2 :yksikkohinta 15}]]
+    (log "Lasketaan muutos")
+    (is (= (pot/laske-muutokset-kokonaishintaan tyot) 13))
+    (is (= (pot/laske-muutokset-kokonaishintaan tyot2) -30))))

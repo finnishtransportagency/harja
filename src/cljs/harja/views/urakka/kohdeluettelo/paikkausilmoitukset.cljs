@@ -60,8 +60,11 @@
       minipot/+paikkaustyot+)
     toteumat))
 
-(defn laske-tyon-alv [rivi]
-  (* (:yks_hint_alv_0 rivi) 1.24))
+
+(defn laske-tyon-alv
+  "Ottaa työn hinnan (esim 100) ja arvolisäveron (esim. 24) palauttaa työn hinnan alv:n kera"
+  [tyon-hinta alv]
+  (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -263,7 +266,7 @@
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
             {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
-            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv rivi))}
+            {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv (:yks_hint_alv_0 rivi) 24))}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
              :hae (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
             {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
