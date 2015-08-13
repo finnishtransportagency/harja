@@ -141,8 +141,9 @@
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                 (reset! paallystyskohderivit vastaus)))
-           :esta-poistaminen? (fn [rivi] (not (nil? (:paallystysilmoitus_id rivi))))
-           :esta-poistaminen-tooltip (fn [rivi] "Päällystyskohteelle on luotu päällystysilmoitus, kohdetta ei voi poistaa.")}
+           :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
+                                             (not (nil? (:paikkausilmoitus_id rivi)))))
+           :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko     "YHA ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
             :validoi [[:ei-tyhja "Anna arvo"]
@@ -174,8 +175,9 @@
                                     vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                 (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                 (reset! paallystyskohderivit vastaus)))
-           :esta-poistaminen? (fn [rivi] (not (nil? (:paallystysilmoitus_id rivi))))
-           :esta-poistaminen-tooltip (fn [rivi] "Päällystyskohteelle on luotu päällystysilmoitus, kohdetta ei voi poistaa.")}
+           :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
+                                             (not (nil? (:paikkausilmoitus_id rivi)))))
+           :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
           [{:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "35%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}

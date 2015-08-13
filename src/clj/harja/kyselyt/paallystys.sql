@@ -3,6 +3,7 @@
 SELECT
   paallystyskohde.id,
   pi.id as paallystysilmoitus_id,
+  pai.id as paikkausilmoitus_id,
   kohdenumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,
@@ -14,6 +15,8 @@ SELECT
 FROM paallystyskohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
   AND pi.poistettu IS NOT TRUE
+LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = paallystyskohde.id
+  AND pai.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
