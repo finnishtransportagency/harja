@@ -31,10 +31,7 @@
     (is (oikeat-sarakkeet-palvelussa?
           [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyotehtava :kuvaus
            :vammat :sairauspoissaolopaivat :sairaalavuorokaudet :sijainti :tyyppi
-           [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]
-           [:korjaavattoimenpiteet 0 :id] [:korjaavattoimenpiteet 0 :kuvaus] [:korjaavattoimenpiteet 0 :suoritettu]
-           [:korjaavattoimenpiteet 0 :vastaavahenkilo]
-           :kommentit :liitteet]
+           [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]
 
           :hae-turvallisuuspoikkeamat
           {:urakka-id @oulun-alueurakan-id
@@ -63,10 +60,7 @@
     (is (oikeat-sarakkeet-palvelussa?
           [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyotehtava :kuvaus
            :vammat :sairauspoissaolopaivat :sairaalavuorokaudet :sijainti :tyyppi
-           [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]
-           [:korjaavattoimenpiteet 0 :id] [:korjaavattoimenpiteet 0 :kuvaus] [:korjaavattoimenpiteet 0 :suoritettu]
-           [:korjaavattoimenpiteet 0 :vastaavahenkilo]
-           :kommentit :liitteet]
+           [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]
 
            :tallenna-turvallisuuspoikkeama
            {:tp                    tp
