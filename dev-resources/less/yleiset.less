@@ -2,30 +2,32 @@
 
 /* harja.ui.yleiset namespacessa olevien yleisten komponenttien tyylejä */
 #app {
-	background-color: @harmaa10
+  background-color: @harmaa10
 }
+
 .alasveto-ei-loydoksia {
-	padding: 3px 8px;
+  padding: 3px 8px;
 }
 
 div.tietorivi {
-    border-bottom: solid 1px lightGray;
+  border-bottom: solid 1px lightGray;
 }
+
 div.tietokentta {
-    font-weight: bold;
-    min-width: 150px;
+  font-weight: bold;
+  min-width: 150px;
 }
 
 span.tietokentta {
-    font-weight: bold;
-    min-width: 150px;
-    display: inline-block;
+  font-weight: bold;
+  min-width: 150px;
+  display: inline-block;
 }
 
 span.tietoarvo {
-    div.dropdown {
-        display: inline-block;
-    }
+  div.dropdown {
+    display: inline-block;
+  }
 }
 
 .taulukko-tietonakyma {
@@ -39,35 +41,37 @@ span.tietoarvo {
   font-weight: bold;
   text-align: right;
 }
+
 .murupolku {
-    background-color: @harmaa9;
-    padding: 8px 15px;
-    margin-bottom: 1.25rem;
-    list-style: none;
-	.dropdown-menu {
-		top: 24px; // BS-default 100% => valikko jäisi koko murupolun alle ja jää iso väli
-	}
-    .disabled {
-        .livicon-chevron-down {
-            color: @harmaa7;
-        }
-    }
+  background-color: @harmaa9;
+  padding: 8px 15px;
+  margin-bottom: 1.25rem;
+  list-style: none;
+  .dropdown-menu {
+    top: 24px; // BS-default 100% => valikko jäisi koko murupolun alle ja jää iso väli
+  }
+  .disabled {
     .livicon-chevron-down {
-        color: @sininen4;
+      color: @harmaa7;
     }
-    > li {
-        display: inline-block;
-        margin-top: 10px;
-    }
-    > li:nth-child(2) {
-        margin: 0 .5rem;
-    }
-}
-.murupolkuteksti {
-    background-color:      @harjan-taustavari;
-    border: 1px solid @harmaa7;
+  }
+  .livicon-chevron-down {
+    color: @sininen4;
+  }
+  > li {
     display: inline-block;
-    padding: 5px 8px;
+    margin-top: 10px;
+  }
+  > li:nth-child(2) {
+    margin: 0 .5rem;
+  }
+}
+
+.murupolkuteksti {
+  background-color: @harjan-taustavari;
+  border: 1px solid @harmaa7;
+  display: inline-block;
+  padding: 5px 8px;
 }
 
 button .ajax-loader {
@@ -88,63 +92,136 @@ button .ajax-loader {
 .keskita {
   text-align: center;
 }
+
 .korosta {
-	-webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
-	-webkit-animation-duration: 4s; /* Chrome, Safari, Opera */
-	animation-name: rivin-korostusanimaatio;
-	animation-duration: 4s;
+  -webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
+  -webkit-animation-duration: 4s; /* Chrome, Safari, Opera */
+  animation-name: rivin-korostusanimaatio;
+  animation-duration: 4s;
 }
 
 .korostettu div.haku-lista-item-nimi {
   background-color: wheat;
 }
-  
+
 /* Chrome, Safari, Opera */
 @-webkit-keyframes rivin-korostusanimaatio {
-	from {background-color: @onnistuminen;}
-	to {background-color: @harjan-taustavari;}
+  from {
+    background-color: @onnistuminen;
+  }
+  to {
+    background-color: @harjan-taustavari;
+  }
 }
 
 /* Standard syntax */
 @keyframes rivin-korostusanimaatio {
-	from {background-color: @onnistuminen;}
-	to {background-color: @harjan-taustavari;}
+  from {
+    background-color: @onnistuminen;
+  }
+  to {
+    background-color: @harjan-taustavari;
+  }
 }
 
 .label-ja-kentta {
-    display: inline-block;
-    margin: 10px 5px 20px;
-    .kentan-otsikko { font-weight: bold; }
-    .livi-alasveto(@valintakontrollin-leveys, @valintakontrollin-leveys);
-    input {
-        height: @valintakontrollin-korkeus;
-        width: @valintakontrollin-leveys;
-    }
-}
-.modal-body {
-    .kuvaus {
-        margin-bottom: 30px;
-    }
-}
-.modal-content.yhteystieto {
-    width: 500px;
-}
-.harja-modal {
-    .modal-content {
-        max-height: 1000px;
-        overflow-y: scroll;
-    }
-}
-//vain "demo-koodia"
-.harjan-ikonit {
-    -webkit-column-count: 4; /* Chrome, Safari, Opera */
-    -moz-column-count: 4; /* Firefox */
-    column-count: 4;
-    > div {
-        margin: 5px 0;
-    }
+  display: inline-block;
+  margin: 10px 5px 20px;
+  .kentan-otsikko {
+    font-weight: bold;
+  }
+  .livi-alasveto(@valintakontrollin-leveys, @valintakontrollin-leveys);
+  input {
+    height: @valintakontrollin-korkeus;
+    width: @valintakontrollin-leveys;
+  }
 }
 
+.modal-body {
+  .kuvaus {
+    margin-bottom: 30px;
+  }
+}
+
+.modal-content.yhteystieto {
+  width: 500px;
+}
+
+.harja-modal {
+  .modal-content {
+    max-height: 1000px;
+    overflow-y: scroll;
+  }
+}
+
+//vain "demo-koodia"
+.harjan-ikonit {
+  -webkit-column-count: 4; /* Chrome, Safari, Opera */
+  -moz-column-count: 4; /* Firefox */
+  column-count: 4;
+  > div {
+    margin: 5px 0;
+  }
+}
+
+.harja-haitari.leijuva {
+  position: fixed;
+  z-index: 10;
+}
+
+//Koko haitari
+.harja-haitari {
+
+  .haitari-otsikko {
+    margin-left: 8px;
+    font-size: 16px;
+  }
+
+  .haitari {
+    border: 1px ridge @harmaa7;
+    margin: 5px 5px 5px 5px;
+    background-color: @harmaa10;
+  }
+
+  //Yksittäinen haitarin rivi
+  .haitari-rivi {
+
+  }
+
+  //Haitarin otsikko - "klikattava alue"
+  .haitari-heading {
+    border: 1px ridge @harmaa3;
+  }
+
+  // Caret
+  .haitarin-tila {
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  // Tekstimuotoinen otsikko
+  .haitari-title {
+    margin-right: 5px;
+    vertical-align: middle;
+    display: inline-block;
+    font-size: 16px;
+    line-height: 29px;
+  }
+
+  .haitari-title.haitari-piilossa {
+    display: none;
+  }
+
+  .haitari-sisalto {
+    padding: 6px 10px 0 25px;
+  }
+
+  .haitari-kiinni {
+    display: none;
+  }
+}
 div.file-upload {
    position: relative;
    overflow: hidden;
