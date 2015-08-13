@@ -26,7 +26,7 @@
 
 (deftest testaa-tyokoneseurantahaku []
   (let [tyokoneet (kutsu 0 0 9000000 9000000)
-        yksi-kone (kutsu 7211200 427800 7211340 427961)
+        yksi-kone (kutsu 427800 7211200 427961 7211340)
         ei-koneita (kutsu 0 0 50 50)]
     (testing "tyokoneita pitäisi löytyä envelopen sisältä"
       (is (= (count tyokoneet) 3)))
