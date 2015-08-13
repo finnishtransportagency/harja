@@ -218,7 +218,7 @@
                                (= :aloitettu (:tila @lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
               :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
-             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(laske-kokonaishinta toteumarivit) :muokattava? (constantly false)}
+             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(laske-kokonaishinta @toteumarivit) :muokattava? (constantly false)}
              (when (or (= :valmis (:tila @lomakedata))
                        (= :lukittu (:tila @lomakedata)))
                {:otsikko     "Kommentit" :nimi :kommentit
