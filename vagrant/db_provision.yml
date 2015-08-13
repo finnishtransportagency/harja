@@ -8,6 +8,8 @@
     apt_repository: repo='deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' state=present
   - name: Add postgresql repository key
     apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+  - name: Copy .bash_profile
+    template: src=templates/bash_profile.conf.j2 dest=/home/vagrant/.bash_profile
   - name: Add PostGIS repository key
     apt_key: keyserver=keyserver.ubuntu.com id=6B827C12C2D425E227EDCA75089EBE08314DF160
   - name: Add PostGIS repository
