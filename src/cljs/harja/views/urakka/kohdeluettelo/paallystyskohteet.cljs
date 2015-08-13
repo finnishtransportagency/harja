@@ -132,9 +132,8 @@
           {:otsikko      "Kohteet"
            :tyhja        (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :kohdenumero (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
            :muutos       #(reset! paallystyskohteet-virheet (grid/hae-virheet %))
-           :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
@@ -144,8 +143,9 @@
                                 (reset! paallystyskohderivit vastaus)))
            :voi-poistaa? (fn [rivi] (nil? (:paallystysilmoitus_id rivi)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko     "YHA ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]
-                                                                                        [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
+           {:otsikko     "YHA ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
+            :validoi [[:ei-tyhja "Anna arvo"]
+                      [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
             :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}

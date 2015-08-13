@@ -56,8 +56,6 @@
   [:span.glyphicon.glyphicon-signal])
 (defn cog []
   [:span.glyphicon.glyphicon-cog])
-(defn trash []
-  [:span.glyphicon.glyphicon-trash])
 (defn home []
   [:span.glyphicon.glyphicon-home])
 (defn file []
@@ -545,3 +543,5 @@
   [:span.livicon-plus])
 (defn warning-sign []
   [:span.livicon-exclamation-triangle])
+(defn trash []
+  [:span.livicon-trash])

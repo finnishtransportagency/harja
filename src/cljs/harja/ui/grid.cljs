@@ -238,7 +238,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
       [:span.klikattava {:on-click #(do (.preventDefault %)
                                         (muokkaa! id assoc :poistettu true))}
-       (ikonit/trash)])]])
+       (ikonit/trash)])
+    (when-not (empty? rivin-virheet) ; true ;-not (empty? rivin-virheet)
+      [:span.rivilla-virheita 
+       (ikonit/warning-sign)])]])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot]} skeema rivi]
   [:tr {:class    luokka
@@ -340,16 +343,21 @@ Optiot on mappi optioita:
                                               (vals uudet-tiedot))))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                   (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
+                   (let [id (or ((or tunniste :id) rivin-tiedot) (swap! uusi-id dec))
                          vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          vanhat-varoitukset @varoitukset
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut assoc id
                                              ((or uusi-rivi identity)
-                                               (merge rivin-tiedot {:id id :koskematon true})))
+                                               (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))
                          uusi-jarjestys (swap! jarjestys conj id)]
                      (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
+                     (swap! virheet (fn [virheet]
+                                      (validoi-ja-anna-virheet virheet uudet-tiedot :validoi)))
+                     (swap! varoitukset (fn [varoitukset]
+                                          (validoi-ja-anna-virheet varoitukset uudet-tiedot :varoita)))
+                     (log "VIRHEET: " (pr-str @virheet))
                      (when muutos
                        (muutos this))))
                  (hae-muokkaustila [_]
@@ -519,13 +527,7 @@ Optiot on mappi optioita:
                                                                                               (lisaa-rivi! ohjaus {}))}
                                         [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
 
-                                     [:span {:class (str (if (empty? @virheet)
-                                                           "hide"
-                                                           "taulukossa-virheita"))}
-                                      [:span.hidden-xs (if (> (count @virheet) 1)
-                                                         "Korjaa virheet ennen tallennusta "
-                                                         "Korjaa virhe ennen tallennusta ")]
-                                      (ikonit/warning-sign)]
+                                     
                                      (when-not muokkaa-aina
                                        [:button.nappi-myonteinen.grid-tallenna
                                         {:disabled (not (empty? @virheet))
@@ -840,7 +842,10 @@ Optiot on mappi optioita:
                                                (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                                       [:span.klikattava {:on-click #(do (.preventDefault %)
                                                                         (muokkaa! muokatut-atom id assoc :poistettu true))}
-                                       (ikonit/trash)])]]
+                                       (ikonit/trash)])
+                                    (when-not (empty? rivin-virheet)
+                                      [:span.rivilla-virheita
+                                       (ikonit/warning-sign)])]]
 
                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
                            (if jarjesta
