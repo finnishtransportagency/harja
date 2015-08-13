@@ -169,7 +169,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 
 
-(defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset voi-poistaa?
+(defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset voi-poistaa? esta-poistaminen? esta-poistaminen-tooltip
                               fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
   [:tr.muokataan {:class luokka}
    (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi] :as s} skeema]
@@ -236,12 +236,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             ((or fmt str) (hae rivi))]))))
    [:td.toiminnot
     (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-      [:span.klikattava {:on-click #(do (.preventDefault %)
-                                        (muokkaa! id assoc :poistettu true))}
-       (ikonit/trash)])
-    (when-not (empty? rivin-virheet) ; true ;-not (empty? rivin-virheet)
-      [:span.rivilla-virheita 
-       (ikonit/warning-sign)])]])
+      (if (or (nil? esta-poistaminen?) (false? (esta-poistaminen? rivi)))
+        [:span.klikattava {:on-click #(do (.preventDefault %)
+                                          (muokkaa! id assoc :poistettu true))}
+         (ikonit/trash)]
+        [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]))
+      (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
+        [:span.rivilla-virheita
+         (ikonit/warning-sign)])]])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot]} skeema rivi]
   [:tr {:class    luokka
@@ -282,7 +284,9 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :fmt             kentän näyttämis fn (oletus str)
   :otsikko         ihmiselle näytettävä otsikko
   :tunniste        rivin tunnistava kenttä, oletuksena :id
-  :voi-poistaa?    voiko rivin poistaa
+  :voi-poistaa?    voiko rivin poistaa (funktio)
+  :esta-poistaminen?          funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
+  :esta-poistaminen-tooltip   funktio, joka palauttaa tooltipin. ks. ylempi.
   :voi-lisata?     voiko rivin lisätä (boolean)
   :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus          gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
@@ -312,7 +316,7 @@ Optiot on mappi optioita:
 
   
   "
-  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
+  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka napit-alaskin? prosessoi-muutos
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
@@ -527,7 +531,7 @@ Optiot on mappi optioita:
                                                                                               (lisaa-rivi! ohjaus {}))}
                                         [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
 
-                                     
+
                                      (when-not muokkaa-aina
                                        [:button.nappi-myonteinen.grid-tallenna
                                         {:disabled (not (empty? @virheet))
@@ -593,19 +597,21 @@ Optiot on mappi optioita:
                                                     rivin-varoitukset (get kaikki-varoitukset id)]
                                                 (when-not (:poistettu rivi)
                                                   [^{:key id}
-                                                  [muokkaus-rivi {:ohjaus            ohjaus
-                                                                  :vetolaatikot      vetolaatikot
-                                                                  :muokkaa!          muokkaa!
-                                                                  :luokka            (str (if (even? (+ i 1))
-                                                                                            "parillinen"
-                                                                                            "pariton"))
-                                                                  :id                id
-                                                                  :rivin-virheet     rivin-virheet
-                                                                  :rivin-varoitukset rivin-varoitukset
-                                                                  :voi-poistaa?      voi-poistaa?
-                                                                  :fokus             nykyinen-fokus
-                                                                  :aseta-fokus!      #(reset! fokus %)
-                                                                  :tulevat-rivit     (tulevat-rivit i)}
+                                                  [muokkaus-rivi {:ohjaus                   ohjaus
+                                                                  :vetolaatikot             vetolaatikot
+                                                                  :muokkaa!                 muokkaa!
+                                                                  :luokka                   (str (if (even? (+ i 1))
+                                                                                                   "parillinen"
+                                                                                                   "pariton"))
+                                                                  :id                       id
+                                                                  :rivin-virheet            rivin-virheet
+                                                                  :rivin-varoitukset        rivin-varoitukset
+                                                                  :voi-poistaa?             voi-poistaa?
+                                                                  :esta-poistaminen?        esta-poistaminen?
+                                                                  :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                                                  :fokus                    nykyinen-fokus
+                                                                  :aseta-fokus!             #(reset! fokus %)
+                                                                  :tulevat-rivit            (tulevat-rivit i)}
                                                    skeema rivi]
                                                    (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                                           jarjestys))))))

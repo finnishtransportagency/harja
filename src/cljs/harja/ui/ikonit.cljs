@@ -545,3 +545,5 @@
   [:span.livicon-exclamation-triangle])
 (defn trash []
   [:span.livicon-trash])
+(defn trash-disabled [tooltip]
+  [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
