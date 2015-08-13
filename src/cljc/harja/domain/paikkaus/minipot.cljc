@@ -35,9 +35,9 @@
      (s/optional-key :poistettu) s/Bool}]
 
    :toteumat
-   [{:suorite                    +paikkaustyo+
-     :yksikko                    s/Str
-     :maara                      s/Num
-     :yks_hint_alv_0             s/Num
-     :takuupvm                   s/Inst
-     (s/optional-key :poistettu) s/Bool}]})
+   [{:suorite                         +paikkaustyo+
+     (s/optional-key :yksikko)        s/Str
+     (s/optional-key :maara)          s/Num
+     (s/optional-key :yks_hint_alv_0) s/Num
+     (s/optional-key :takuupvm)       (s/maybe s/Inst)
+     (s/optional-key :poistettu)      s/Bool}]})
