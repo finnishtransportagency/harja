@@ -305,11 +305,12 @@ Optiot on mappi optioita:
                    jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                    rivin alla
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :napit-alaskin?  Boolean: näytetäänkö taulukon muokkauskontrollit alhaallakin. Oletus: false
 
   
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu
-           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos
+           muokkaa-footer muokkaa-aina muutos rivin-luokka napit-alaskin? prosessoi-muutos
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
@@ -491,64 +492,66 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka napit-alaskin? uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
-               muokataan (not (nil? @muokatut))]
+               muokataan (not (nil? @muokatut))
+               muokkauspaneeli (fn [nayta-otsikko?]
+                                 [:div.panel-heading
+                                  (if-not muokataan
+                                    [:span.pull-right.muokkaustoiminnot
+                                     (when tallenna
+                                       [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
+                                                                     {:disabled (= :ei-mahdollinen tallenna)}
+                                                                     {:on-click #(do (.preventDefault %)
+                                                                                     (aloita-muokkaus! tiedot))})
+                                        [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
+                                    [:span.pull-right.muokkaustoiminnot
+                                     [:button.nappi-toissijainen
+                                      {:disabled (empty? @historia)
+                                       :on-click #(do (.stopPropagation %)
+                                                      (.preventDefault %)
+                                                      (peru!))}
+                                      [:span.livicon-rotate-left " Kumoa"]]
+
+                                     (when-not (= false voi-lisata?)
+                                       [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                                              (lisaa-rivi! ohjaus {}))}
+                                        [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
+
+                                     [:span {:class (str (if (empty? @virheet)
+                                                           "hide"
+                                                           "taulukossa-virheita"))}
+                                      [:span.hidden-xs (if (> (count @virheet) 1)
+                                                         "Korjaa virheet ennen tallennusta "
+                                                         "Korjaa virhe ennen tallennusta ")]
+                                      (ikonit/warning-sign)]
+                                     (when-not muokkaa-aina
+                                       [:button.nappi-myonteinen.grid-tallenna
+                                        {:disabled (not (empty? @virheet))
+                                         :on-click #(let [kaikki-rivit (mapv second @muokatut)
+                                                          tallennettavat
+                                                          (if tallenna-vain-muokatut
+                                                            (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
+                                                            kaikki-rivit)]
+                                                     (do (.preventDefault %)
+                                                         (go (if (<! (tallenna tallennettavat)))
+                                                             (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                        [:span.livicon-check " Tallenna"]])
+
+                                     (when-not muokkaa-aina
+                                       [:button.nappi-kielteinen.grid-peru
+                                        {:on-click #(do
+                                                     (.preventDefault %)
+                                                     (nollaa-muokkaustiedot!)
+                                                     (when peruuta (peruuta))
+                                                     nil)}
+                                        [:span.livicon-ban " Peruuta"]])
+                                     ])
+                                  (when nayta-otsikko? [:h6.panel-title otsikko])
+                                  ])]
            [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
-            [:div.panel-heading
-             (if-not muokataan
-               [:span.pull-right.muokkaustoiminnot
-                (when tallenna
-                  [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
-                                                {:disabled (= :ei-mahdollinen tallenna)}
-                                                {:on-click #(do (.preventDefault %)
-                                                                (aloita-muokkaus! tiedot))})
-                   [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
-               [:span.pull-right.muokkaustoiminnot
-                [:button.nappi-toissijainen
-                 {:disabled (empty? @historia)
-                  :on-click #(do (.stopPropagation %)
-                                 (.preventDefault %)
-                                 (peru!))}
-                 [:span.livicon-rotate-left " Kumoa"]]
-
-                (when-not (= false voi-lisata?)
-                  [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                         (lisaa-rivi! ohjaus {}))}
-                   [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
-
-                [:span {:class (str (if (empty? @virheet)
-                                      "hide"
-                                      "taulukossa-virheita"))}
-                 [:span.hidden-xs (if (> (count @virheet) 1)
-                                    "Korjaa virheet ennen tallennusta "
-                                    "Korjaa virhe ennen tallennusta ")]
-                 (ikonit/warning-sign)]
-                (when-not muokkaa-aina
-                  [:button.nappi-myonteinen.grid-tallenna
-                   {:disabled (not (empty? @virheet))
-                    :on-click #(let [kaikki-rivit (mapv second @muokatut)
-                                     tallennettavat
-                                     (if tallenna-vain-muokatut
-                                       (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
-                                       kaikki-rivit)]
-                                (do (.preventDefault %)
-                                    (go (if (<! (tallenna tallennettavat)))
-                                        (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                   [:span.livicon-check " Tallenna"]])
-
-                (when-not muokkaa-aina
-                  [:button.nappi-kielteinen.grid-peru
-                   {:on-click #(do
-                                (.preventDefault %)
-                                (nollaa-muokkaustiedot!)
-                                (when peruuta (peruuta))
-                                nil)}
-                   [:span.livicon-ban " Peruuta"]])
-                ])
-             [:h6.panel-title otsikko]
-             ]
+            (muokkauspaneeli true)
             [:div.panel-body
              (if (nil? tiedot)
                (ajax-loader)
@@ -558,7 +561,7 @@ Optiot on mappi optioita:
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
                     [:th {:width (or leveys "5%")} otsikko])
-                    [:th.toiminnot {:width "5%"} " "]]]
+                  [:th.toiminnot {:width "5%"} " "]]]
 
                 [:tbody
                  (if muokataan
@@ -634,8 +637,11 @@ Optiot on mappi optioita:
                                                ])))
                                         rivit))))))]])
              (when (and muokataan muokkaa-footer)
-               [muokkaa-footer ohjaus])
-             ]]))})))
+               [muokkaa-footer ohjaus])]
+            ;taulukon allekin saa muokkaustoiminnot jos haluaa, tähän panel-heading ilman otsikkoa
+            (when napit-alaskin?
+              [:span.gridin-napit-alhaalla
+               (muokkauspaneeli false)])]))})))
 
 
 (defn muokkaus-grid

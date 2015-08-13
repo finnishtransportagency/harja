@@ -202,7 +202,7 @@
                                 (let [rivit (seq rivit)]
                                   (zipmap (map first rivit)
                                           (map (comp paivita-hoitorivin-summat second) rivit)))))
-          }
+          :napit-alaskin? (> (count @tyorivit) 20)}
 
          ;; sarakkeet
          (if (= :hoito (:tyyppi ur))
