@@ -9,13 +9,13 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn muodosta-lukon-id [nakyma item-id]
+(defn muodosta-lukon-id
   "nakyma Näkymän nimi, joka halutaan lukita. Esim. paallystysilmoitus.
   item-id Vapaaehtoinen lukittavan itemin id (tämä on sama id jolla item yksilöidään tietokannassa)."
   ([nakyma]
-   nakyma
+   nakyma)
   ([nakyma item-id]
-   (str nakyma "_" item-id))))
+   (str nakyma "_" item-id)))
 
 (defn hae-lukko-idlla [id]
   (k/post! :hae-lukko-idlla {:id  id}))

@@ -6,6 +6,7 @@
    ;; require kaikki testit
    [cljs.test :as test]
    [harja.app-test]
+   [harja.tiedot.muokkauslukko-test]
    [harja.tiedot.urakka.suunnittelu-test]
    [harja.views.urakka.siltatarkastukset-test]
    [harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test]
@@ -51,6 +52,7 @@
                          {:reporter :harja})
                   'harja.app-test  
                   'harja.tiedot.urakka.suunnittelu-test
+                  'harja.tiedot.muokkauslukko-test
                   'harja.views.urakka.siltatarkastukset-test
                   'harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test
                   'harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
