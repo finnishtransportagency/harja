@@ -153,6 +153,9 @@
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
+      :muokkauslukko (component/using
+                    (muokkauslukko/->Muokkauslukko)
+                    [:http-palvelin :db])
       :paikkaus (component/using
                     (paikkaus/->Paikkaus)
                     [:http-palvelin :db])

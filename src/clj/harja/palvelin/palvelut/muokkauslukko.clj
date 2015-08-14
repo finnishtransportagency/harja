@@ -10,14 +10,14 @@
   (log/debug "Haetaan lukko id:llä " id)
   (q/hae-lukko-idlla db id))
 
-(defn lukitse [db user {:keys [id kayttaja]}]
+(defn lukitse [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Yritetään lukita " id)
     (let [lukko (q/hae-lukko-idlla db id)]
       (if (not lukko)
         (do
           (log/debug "Lukitaan " id)
-          (let [vastaus (q/lukitse<! db id kayttaja)]
+          (let [vastaus (q/lukitse<! db id user)]
             {:lukko-id (:id vastaus)}))
         (do
           (log/debug "Ei voida lukita " id " koska on jo lukittu!")
