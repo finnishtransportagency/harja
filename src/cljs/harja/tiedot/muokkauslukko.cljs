@@ -40,8 +40,14 @@
 
 (defn tarkista-lukitustila
   "Hakee näkymään liitetyn lukon.
-  Jos lukko löytyy, tarkistaa kuuluuko se tälle käyttäjälle. Jos kuuluu, palauttaa true. Jos ei, false.
-  Jos lukkoa ei löydy, lukitsee näkymän ja palauttaa true."
+
+  Palauttaa true jos:
+  - Näkymällä on lukko ja se kuuluu käyttäjälle
+  - Näkymä lukittiin tälle käyttäjälle
+
+  Palauttaa false jos:
+  - Näkymällä on lukko ja se kuuluu toiselle käyttäjälle
+  - Näkymän lukitus epäonnistuu"
   [lukko-id]
   (log "Tarkistetaan lukon " lukko-id " tila")
   (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
