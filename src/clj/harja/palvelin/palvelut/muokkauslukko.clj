@@ -6,14 +6,17 @@
             [clj-time.coerce :as coerce]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.muokkauslukko :as q])
-  (:import (java.util Date)))
+            [harja.kyselyt.muokkauslukko :as q]))
 
-(defn lukko-vanhentunut? [lukko]
+(def suurin-sallittu-lukon-ika-minuuteissa 5)
+
+(defn lukko-vanhentunut?
+  "Kertoo onko lukon suurin salittu ikä ylittynyt. true tai false"
+  [lukko]
   (log/debug "Tarkistetaan lukon ikä")
   (let [lukon-aikaleima (coerce/from-sql-time (:aikaleima lukko))
         aika-nyt (t/now)
-        lukko-vanhentunut (t/after? aika-nyt (t/plus lukon-aikaleima (t/minutes 5)))]
+        lukko-vanhentunut (t/after? aika-nyt (t/plus lukon-aikaleima (t/minutes suurin-sallittu-lukon-ika-minuuteissa)))]
         (if lukko-vanhentunut
           (do (log/debug "Lukko on vanhentunut")
               true)
