@@ -27,7 +27,7 @@
                ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
     (let [s (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=31337"))]
       (is (= 200 (:status kutsu)))
-      (is (= (str s) "(64.9,25.5)")))))
+      (is (= (str s) "(7198151.0,429005.0)")))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [kutsu (api-tyokalut/post-kutsu
@@ -35,4 +35,4 @@
                ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta_uusi.json"))]
     (let [s (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))]
       (is (= 200 (:status kutsu)))
-      (is (= (str s) "(65.9,26.5)")))))
+      (is (= (str s) "(7198161.0,429015.0)")))))

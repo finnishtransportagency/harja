@@ -35,5 +35,7 @@
                 nil)))
 
 (defn aloita-tyokoneiden-paivitys []
-  (ha/paivita-periodisesti alueen-tyokoneet 10000))
+  (ha/paivita-periodisesti alueen-tyokoneet 5000))
 
+
+(aloita-tyokoneiden-paivitys)
