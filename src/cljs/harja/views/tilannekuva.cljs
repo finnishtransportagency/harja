@@ -17,7 +17,9 @@
                                    }} tiedot/historiasuodattimen-asetukset])
 
 (defn livesuodatin []
-  [:p "Livesuodatin"])
+  [kentat/tee-kentta {:tyyppi :radio
+                      :valinnat ["0-4h" "0-12h" "0-24h"]}
+   tiedot/livesuodattimen-asetukset])
 
 (defonce suodattimet-rivit (atom {1 {:auki (= :live @tiedot/valittu-aikasuodatin)
                                      :otsikko "Live" :sisalto [livesuodatin]}
