@@ -13,6 +13,7 @@
 
 ; Kun tietyn näkymän lukkoa pyydetään, se asetetaan tähän atomiin.
 ; Oletetaan, että käyttäjä voi lukita vain yhden näkymän kerrallaan.
+; FIXME Entä jos on Harja auki useassa tabissa? --> Fuufuu
 (def nykyinen-lukko (atom nil))
 
 (defn- kayttaja-omistaa-lukon? [lukko]
@@ -52,15 +53,16 @@
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
   (reset! nykyinen-lukko nil)
-  (go (log "Tarkistetaan lukon " lukko-id " tila")
+  (go (log "Tarkistetaan lukon " lukko-id " tila tietokannasta")
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
-        (log "Lukko saatu: " (pr-str vanha-lukko))
         (if vanha-lukko
-          (reset! nykyinen-lukko vanha-lukko)
+          (do
+            (log "Vanha lukko löytyi: " (pr-str vanha-lukko))
+            (reset! nykyinen-lukko vanha-lukko))
           (do
             (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
             (let [uusi-lukko (<! (lukitse lukko-id))]
               (if uusi-lukko
                 (reset! nykyinen-lukko uusi-lukko)
-                (do (log "Lukitus epäonnistui, joku muu ehti lukita näkymän!")
+                (do (log "Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
                     (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?

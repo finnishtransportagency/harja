@@ -39,7 +39,7 @@
   [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Haetaan lukko id:llä " id)
-    (let [lukko (q/hae-lukko-idlla c id)]
+    (let [lukko (first (q/hae-lukko-idlla c id))]
       (log/debug "Lukko saatu: " (pr-str lukko))
       (if lukko
         (if (lukko-vanhentunut? lukko)
