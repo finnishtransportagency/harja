@@ -7,10 +7,16 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]))
 
-(defrecord Ryhma [otsikko skeemat])
+(defrecord Ryhma [otsikko optiot skeemat])
 
-(defn ryhma [otsikko & skeemat]
-  (->Ryhma otsikko skeemat))
+(defn ryhma [otsikko-tai-optiot & skeemat]
+  (if-let [optiot (and (map? otsikko-tai-optiot) otsikko-tai-optiot)]
+    (->Ryhma (:otsikko optiot)
+             (merge {:ulkoasu :oletus}
+                    optiot)
+             skeemat)
+    (->Ryhma otsikko-tai-optiot
+             {:ulkoasu :oletus} skeemat)))
 
 (defn ryhma? [x]
   (instance? Ryhma x))
@@ -73,6 +79,40 @@
                   (harja.ui.ikonit/info-sign)
                   (str " " vihje)]]]))
 
+(defmulti kenttaryhma (fn [lomake-luokka ryhma skeemat luo-kentta] [lomake-luokka (:ulkoasu (:optiot ryhma))]))
+
+(defmethod kenttaryhma [:horizontal :oletus] [_ ryhma skeemat luo-kentta]
+  ^{:key (:otsikko ryhma)}
+  [:fieldset
+   [:legend (:otsikko ryhma)]
+   (doall (map (comp (fn [[kentta otsikko komponentti]]
+                       ^{:key (:nimi kentta)}
+                       [:div.form-group {:class (when (:pakollinen? kentta) "required")}
+                        [:div.row
+                         otsikko
+                         komponentti]])
+                     luo-kentta)
+               skeemat))])
+          
+          
+
+(defmethod kenttaryhma [:horizontal :rivi] [_ ryhma skeemat luo-kentta]
+  ^{:key (:otsikko ryhma)}
+  [:div.form-group
+   [:div.row
+    [:label.col-md-2.control-label (:otsikko ryhma)]
+    (doall
+     (for [skeema skeemat
+           :let [[kentta otsikko komponentti] (luo-kentta (assoc skeema :lomake? :rivi))]]
+       ^{:key (:nimi kentta)}
+       [:div {:class (str "col-md-" (or (:leveys (:optiot ryhma))
+                                        (:leveys-col skeema)
+                                        2))}
+        [:div
+         [:label.control-label otsikko]
+         komponentti]]))]])
+
+  
 (def +ei-otsikkoa+ #{:boolean})
 
 (defn yleinen-huomautus
@@ -140,49 +180,58 @@
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
             _ (paivita-ulkoinen-validointitila! virheet kaikki-virheet varoitukset kaikki-varoitukset)
-            kentta (fn [{:keys [muokattava? fmt hae nimi pakollinen? validoi-heti?] :as kentta}]
+            kentta-ui (fn [kentta otsikko komponentti yksikko vihje]
+                        ^{:key (:nimi kentta)}
+                        [:div.form-group {:class (when (:pakollinen? kentta) "required")}
+                         [:div.row
+                          otsikko
+                          komponentti
+                          yksikko
+                          vihje]])
+            kentta (fn [kentan-komponentti {:keys [muokattava? fmt hae nimi pakollinen? validoi-heti?] :as kentta}]
                      (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
                      (let [kentan-virheet (get kaikki-virheet nimi)
                            kentan-varoitukset (get kaikki-varoitukset nimi)
-                           kentta (assoc kentta :lomake? true)
+                           kentta (if (contains? kentta :lomake?)
+                                    kentta
+                                    (assoc kentta :lomake? true))
                            arvo (atomina kentta data (fn [uudet-tiedot]
                                                        (swap! muokatut conj nimi)
                                                        (muokkaa! uudet-tiedot)))
                            kentan-tunniste nimi]
-                        ^{:key (:nimi kentta)}
-                        [:div.form-group {:class (when pakollinen? "required")}
-                         [:div.row
-                          (if (+ei-otsikkoa+ (:tyyppi kentta))
-                            [tyhja-otsikko luokka]
-                            [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
-                          [kentan-komponentti luokka kentta
-                           (if-let [komponentti (:komponentti kentta)]
-                             komponentti
-                             (if (and voi-muokata?
-                                      (or (nil? muokattava?)
-                                          (muokattava? data)))
-                               ;; Muokattava tieto, tehdään sille kenttä
-                               [:div {:class (str (when-not (empty? kentan-virheet)
-                                                     "sisaltaa-virheen")
-                                                   (when-not (empty? kentan-varoitukset)
-                                                     "sisaltaa-varoituksen"))}
-                                (if (and (not (empty? kentan-virheet))
-                                         (or validoi-heti?
-                                             (@muokatut nimi)))
-                                  (virheen-ohje kentan-virheet :virhe)
-                                  (if (and (not (empty? kentan-varoitukset))
-                                           (@muokatut nimi))
-                                    (virheen-ohje kentan-varoitukset :varoitus)))
-                                [tee-kentta (assoc kentta
-                                              :focus (= @nykyinen-fokus kentan-tunniste)
-                                              :on-focus #(aseta-fokus! kentan-tunniste)) arvo]]
 
-                               ;; Ei muokattava, näytetään
-                               [:div.form-control-static
-                                (if fmt
-                                  (fmt ((or hae #(get % nimi)) data))
-                                  (nayta-arvo kentta arvo))]))]
-                          [kentan-yksikko luokka kentta]]
+                       [kentta
+                        (if (+ei-otsikkoa+ (:tyyppi kentta))
+                           [tyhja-otsikko luokka]
+                           [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
+                        (kentan-komponentti
+                          (if-let [komponentti (:komponentti kentta)]
+                            komponentti
+                            (if (and voi-muokata?
+                                     (or (nil? muokattava?)
+                                         (muokattava? data)))
+                              ;; Muokattava tieto, tehdään sille kenttä
+                              [:div {:class (str (when-not (empty? kentan-virheet)
+                                                   "sisaltaa-virheen")
+                                                 (when-not (empty? kentan-varoitukset)
+                                                   "sisaltaa-varoituksen"))}
+                               (if (and (not (empty? kentan-virheet))
+                                        (or validoi-heti?
+                                            (@muokatut nimi)))
+                                 (virheen-ohje kentan-virheet :virhe)
+                                 (if (and (not (empty? kentan-varoitukset))
+                                          (@muokatut nimi))
+                                   (virheen-ohje kentan-varoitukset :varoitus)))
+                               [tee-kentta (assoc kentta
+                                                  :focus (= @nykyinen-fokus kentan-tunniste)
+                                                  :on-focus #(aseta-fokus! kentan-tunniste)) arvo]]
+
+                              ;; Ei muokattava, näytetään
+                              [:div.form-control-static
+                               (if fmt
+                                 (fmt ((or hae #(get % nimi)) data))
+                                 (nayta-arvo kentta arvo))])))
+                         [kentan-yksikko luokka kentta]
                          [kentan-vihje luokka kentta]]))]
         [:form.lomake {:class (case luokka
                                 :inline "form-inline"
@@ -192,12 +241,14 @@
          (doall
           (for [skeema (keep identity skeema)]
             (if-let [ryhma (and (ryhma? skeema) skeema)]
-              ^{:key (:otsikko ryhma)}
-              [:fieldset
-               [:legend (:otsikko ryhma)]
-               (doall (map kentta (keep identity (:skeemat ryhma))))]
+              (do (log "kenttäryhmä " (:otsikko ryhma))
+                  ^{:key (:otsikko ryhma)}
+                  (kenttaryhma luokka ryhma (:skeemat ryhma) #(kentta identity %)))
 
-              (kentta skeema))))
+              ^{:key (:nimi skeema)}
+              (apply kentta-ui (kentta (fn [k]
+                                         (kentan-komponentti luokka skeema k))
+                                       skeema)))))
 
          (if footer-fn
            [lomake-footer luokka (footer-fn kaikki-virheet kaikki-varoitukset)]

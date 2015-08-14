@@ -64,6 +64,7 @@
   [elt]
   (let [[x1 y1 w1 h1] (sijainti elt)
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
+    (log "SAILIO: " (.-parentNode elt))
     [(- x1 x2) (- y1 y2) w1 h1]))
 
 
@@ -442,3 +443,4 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
+

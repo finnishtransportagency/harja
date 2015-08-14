@@ -421,7 +421,7 @@
              (when x
                (if lomake?
                  ;; asemointi, koska col-sm-* divissä
-                 (reset! sijainti [15 h w])
+                 (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39 0)) w])
 
                  ;; irrallinen suoraan sijainnin mukaan
                  (reset! sijainti [(- w) (+ y h) w]))))))
@@ -463,7 +463,7 @@
            (pvm/pvm p)
            "")])
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? leveys]} data]
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? leveys pvm-sijainti]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -479,7 +479,8 @@
                                    (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
                                    (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
-        sijainti (atom nil)]
+        sijainti (atom nil)
+        pvm-sijainti (or pvm-sijainti :alas)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
@@ -498,9 +499,11 @@
                                          (aget 0)
                                          yleiset/sijainti-sailiossa)
                              [x y w h] sij]
+                         (log "lomake? " (pr-str lomake?) " SIJAINTI: " (pr-str sij))
                          (when x
-                           ;; PENDING: hardcoded 15px toimii lomakkeella ok
-                           (reset! sijainti [15 (+ y h) w])))))
+                           ;; PENDIN: kovakoodattua asemointia!
+                           (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39))
+                                             w h])))))
 
        :reagent-render
        (fn [_ data]
@@ -551,18 +554,31 @@
                              :on-change   #(muuta-pvm! (-> % .-target .-value))
                              ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                              :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                            (reset! auki false)
-                                            %)
-                             :on-blur     #(do (koske-pvm!) (aseta!))}]]
+                                             (reset! auki false)
+                                             %)
+                             :on-blur     #(do (koske-pvm!) (aseta!))}]
+                (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
+                  (let [[x y w h] @sijainti]
+                    [:div.aikavalinta {:style (merge {:position "absolute" :z-index 100}
+                                                     (case pvm-sijainti
+                                                       :oikea {:top 0 :left w}
+                                                       :ylos {:bottom h :left x}))}
+                     [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
+                                                      (muuta-pvm! (pvm/pvm %)))
+                                       :leveys (when (= :ylos pvm-sijainti) w)
+                                                 
+                                       :pvm      naytettava-pvm}]]))]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
                          :on-change   #(muuta-aika! (-> % .-target .-value))
-                         :on-blur     #(do (koske-aika!) (aseta!))}]]]]]
+                         :on-blur     #(do (koske-aika!) (aseta!))}]
+                
+                ]]]]
 
-            (when @auki
+            (when (and (= :alas pvm-sijainti) @auki)
               [:div.aikavalinta
                [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
                                                 (muuta-pvm! (pvm/pvm %)))

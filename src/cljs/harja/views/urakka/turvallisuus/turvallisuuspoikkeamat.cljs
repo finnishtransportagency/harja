@@ -55,21 +55,24 @@
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
-         {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]] :varoita [[:urakan-aikana]]}
-         {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                    [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
-         {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
-          :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                    [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]}
-         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :leveys 1 :tyyppi :string}
-         {:otsikko "Työtehtävä" :nimi :tyotehtava :leveys 1 :tyyppi :string}
-         {:otsikko "Kuvaus" :nimi :kuvaus :leveys 1 :tyyppi :string}
-         {:otsikko "Vammat" :nimi :vammat :leveys 1 :tyyppi :string}
-         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys 1
+
+         (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
+                       {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm :leveys 1 :tyyppi :pvm
+                        :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]] :varoita [[:urakan-aikana]]}
+                       {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
+                        :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                                  [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
+                       {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm-aika
+                        :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                                  [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
+         
+         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :leveys-col 3}
+         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys-col 3}
+         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4}
+         {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :leveys-col 4}
+         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys-col 1
           :tyyppi :positiivinen-numero :kokonaisluku? true}
-         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys 1
+         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys-col 1
           :tyyppi :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
