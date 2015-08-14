@@ -100,7 +100,7 @@
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
 
-#_(run! (when @filttereita-vaihdettu? (lopeta-pollaus)))
+(run! (when @filttereita-vaihdettu? (lopeta-pollaus)))
 
 (defn aloita-pollaus
   []

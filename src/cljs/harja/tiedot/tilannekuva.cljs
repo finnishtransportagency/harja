@@ -115,4 +115,4 @@
   (when @pollaus-id (lopeta-pollaus))
   (reset! pollaus-id (js/setInterval hae-asiat +intervalli+)))
 
-(run! (if @nakymassa? (aloita-pollaus) (lopeta-pollaus)))
+#_(run! (if @nakymassa? (aloita-pollaus) (lopeta-pollaus)))
