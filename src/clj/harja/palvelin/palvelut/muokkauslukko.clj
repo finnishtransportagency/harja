@@ -21,13 +21,20 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn hae-lukko-idlla [db user {:keys [id]}]
-  (log/debug "Haetaan lukko id:llä")
+  (log/debug "Haetaan lukko id:llä " id)
   (q/hae-lukko-idlla db id))
 
 (defn lukitse [db user {:keys [id kayttaja]}]
-  ; FIXME Tarkista ettei id:llä ole jo lukkoa olemassa
-  (log/debug "Lukitaan")
-  (q/lukitse<! db id kayttaja))
+  (jdbc/with-db-transaction [c db]
+    (log/debug "Yritetään lukita " id)
+    (let [lukko (q/hae-lukko-idlla db id)]
+      (if (not lukko)
+        (do
+          (log/debug "Lukitaan " id)
+          (q/lukitse<! db id kayttaja))
+        (do
+          (log/debug "Ei voida lukita " id " koska on jo lukittu!")
+          (q/lukitse<! db id kayttaja))))))
 
 (defn virkista-lukko [db user {:keys [id]}]
   (log/debug "Virkistetään lukko")
