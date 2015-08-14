@@ -16,11 +16,9 @@
         y (sijainti 0)]
     (assoc kone
            :type :tyokone
-           :alue {:type :circle
-                  :coordinates [x y]
-                  :color "red"
-                  :radius 200
-                  :stroke {:color "black" :width 10}})))
+           :alue {:type :icon
+                  :img "images/tyokone.png"
+                  :coordinates [x y]})))
 
 (def alueen-tyokoneet
   (reaction<! [alue @nav/kartalla-nakyva-alue

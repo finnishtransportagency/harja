@@ -309,14 +309,14 @@
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
-                 #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
-                                                              :opacity 0.5}))
-                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                     :width (or (:width stroke) 1)})
-                      ;; Default zindex asetetaan harja.views.kartta:ssa.
-                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
-                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                      :zIndex (or zindex 0)}))))
+                #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
+                                                             :opacity 0.5}))
+                     :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
+                                                    :width (or (:width stroke) 1)})
+                     ;; Default zindex asetetaan harja.views.kartta:ssa.
+                     ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                     ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                     :zIndex (or zindex 0)}))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
@@ -333,6 +333,14 @@
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
 
+(defmethod luo-feature :icon [{:keys [coordinates img]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
+                                                                 :anchor       #js [0.5 35]
+                                                                 :opacity 0.75
+                                                                 :anchorXUnits "fraction"
+                                                                 :anchorYUnits "pixels"})}))))
+
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
 
@@ -342,13 +350,6 @@
 
 (defmethod luo-feature :line [{:keys [points] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
-
-(defn luo-marker [geometry]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js (keskipiste geometry)))})
-    (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          "images/marker.png"
-                                                                 :anchor       #js [0.5 35]
-                                                                 :anchorXUnits "fraction"
-                                                                 :anchorYUnits "pixels"})}))))
 
 
 (defn- update-ol3-geometries [component items]
@@ -382,7 +383,10 @@
                             (let [new-shape (luo-feature geom)]
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
-                              (aseta-tyylit new-shape geom)
+
+                              ;; ikoneilla on jo oma tyyli, luo-feature tekee
+                              (when (not (= :icon (:type geom)))
+                                (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
                               ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
