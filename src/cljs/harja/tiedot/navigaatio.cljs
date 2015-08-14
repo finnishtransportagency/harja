@@ -30,6 +30,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
+(defonce kartalla-nakyva-alue (atom nil))
+
 ;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
 

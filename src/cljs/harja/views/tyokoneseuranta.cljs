@@ -4,8 +4,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log]]
             [harja.atom :as ha]
-            [harja.atom :refer-macros [reaction<!]]
-            [harja.views.kartta :as kartta])
+            [harja.atom :refer-macros [reaction<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ; {:xmin 0 :ymin 0 :xmax 0 :ymax 0 }
@@ -24,7 +23,7 @@
                   :stroke {:color "black" :width 10}})))
 
 (def alueen-tyokoneet
-  (reaction<! [alue @kartta/nakyva-alue
+  (reaction<! [alue @nav/kartalla-nakyva-alue
                paalla? @tyokonetaso-paalla
                urakka @nav/valittu-urakka-id]
               {:odota 1000}
