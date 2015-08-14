@@ -18,10 +18,10 @@
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id istunto/kayttaja)))
 
-(defn valittu-nakyma-lukittu? []
-  (log "Tarkistetaan nykyisen lukon tila: " (pr-str @nykyinen-lukko))
+(defn kayttaja-omistaa-nykyisen-lukon? []
+  (log "Tarkistetaan omistaako käyttäjä nykyisen lukon: " (pr-str @nykyinen-lukko))
   (if (nil? nykyinen-lukko)
-    false
+    true
     (kayttaja-omistaa-lukon? @nykyinen-lukko)))
 
 (defn muodosta-lukon-id
@@ -51,15 +51,16 @@
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
+  (reset! nykyinen-lukko nil)
   (go (log "Tarkistetaan lukon " lukko-id " tila")
-  (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
-    (log "Lukko saatu: " (pr-str vanha-lukko))
-    (if vanha-lukko
-      (reset! nykyinen-lukko vanha-lukko)
-      (do
-        (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
-        (let [uusi-lukko (<! (lukitse lukko-id))]
-          (if uusi-lukko
-            (reset! nykyinen-lukko uusi-lukko)
-            (do (log "Lukitus epäonnistui, joku muu ehti lukita näkymän!")
-                (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
+      (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
+        (log "Lukko saatu: " (pr-str vanha-lukko))
+        (if vanha-lukko
+          (reset! nykyinen-lukko vanha-lukko)
+          (do
+            (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
+            (let [uusi-lukko (<! (lukitse lukko-id))]
+              (if uusi-lukko
+                (reset! nykyinen-lukko uusi-lukko)
+                (do (log "Lukitus epäonnistui, joku muu ehti lukita näkymän!")
+                    (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
