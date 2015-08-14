@@ -22,7 +22,7 @@
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :live))
 (defonce livesuodattimen-asetukset (atom {}))
-(defonce historiasuodattimen-asetukset (atom {}))
+(defonce historiasuodattimen-asetukset (atom {:pvm nil :kellonaika "12:00" :plusmiinus 12}))
 (defonce haettavat-urakat (atom []))
 (defonce haettavat-hallintayksikot (atom []))
 

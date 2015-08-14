@@ -11,9 +11,10 @@
 
 
 (defn historiasuodatin []
-  [yleiset/taulukko2
-   [:label "Etsi vanhoja tapahtumia"]
-   [kentat/tee-kentta {:tyyppi :aikavalitsin} (atom {:pvm nil})]])
+  [kentat/tee-kentta {:tyyppi :aikavalitsin
+                      :kellonaika {
+                                   :valinnat ["00:00" "06:00" "12:00" "18:00"]
+                                   }} tiedot/historiasuodattimen-asetukset])
 
 (defn livesuodatin []
   [:p "Livesuodatin"])
@@ -42,9 +43,9 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/taso-tilannekuva)
     (fn []
-      (harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                                 :leijuva?             300})
-
       (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @suodattimet-rivit [1 :auki])
                                                       :live
-                                                      :historia))))))
+                                                      :historia)))
+
+      [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
+                                                 :leijuva?             300}])))
