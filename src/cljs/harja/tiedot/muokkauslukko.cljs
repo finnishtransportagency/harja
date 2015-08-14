@@ -11,11 +11,19 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn nykyinen-lukko (atom nil))
+
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id istunto/kayttaja)))
 
+(defn valittu-nakyma-lukittu? []
+  (if (nil? nykyinen-lukko)
+    false
+    (kayttaja-omistaa-lukon? nykyinen-lukko)))
+
 (defn muodosta-lukon-id
-  "nakyma Näkymän nimi, joka halutaan lukita. Esim. paallystysilmoitus.
+  "Ottaa näkymän ja item-id:n, joilla muodostetaan lukon id.
+  nakyma Näkymän nimi, joka halutaan lukita. Esim. paallystysilmoitus.
   item-id Vapaaehtoinen lukittavan itemin id (tämä on sama id jolla item yksilöidään tietokannassa)."
   ([nakyma]
    nakyma)
@@ -26,9 +34,7 @@
   (k/post! :hae-lukko-idlla {:id lukko-id}))
 
 (defn- lukitse
-  "Merkitsee tietyn näkymän lukituksi, tarkoituksena että vain näkymän lukinnut käyttäjä voi muokata sitä.
-  Jos onnistuu, palauttaa mapin, jossa lukon id.
-  Jos epäonnistuu, palauttaa mapin, jossa lukon id on nill"
+  "Merkitsee tietyn näkymän lukituksi, tarkoituksena että vain näkymän lukinnut käyttäjä voi muokata sitä."
   [id]
   (k/post! :lukitse {:id id}))
 
@@ -38,25 +44,18 @@
 (defn vapauta-lukko [lukko-id]
   (k/post! :vapauta-lukko {:id lukko-id}))
 
-(defn tarkista-lukitustila
-  "Hakee näkymään liitetyn lukon.
-
-  Palauttaa true jos:
-  - Näkymällä on lukko ja se kuuluu käyttäjälle
-  - Näkymä lukittiin tälle käyttäjälle
-
-  Palauttaa false jos:
-  - Näkymällä on lukko ja se kuuluu toiselle käyttäjälle
-  - Näkymän lukitus epäonnistuu"
+(defn paivita-lukko
+  "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
   (log "Tarkistetaan lukon " lukko-id " tila")
   (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
     (log "Lukko saatu: " (pr-str vanha-lukko))
     (if vanha-lukko
-      (kayttaja-omistaa-lukon? vanha-lukko)
+      (reset! nykyinen-lukko vanha-lukko)
       (do
         (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
         (let [uusi-lukko (<! (lukitse lukko-id))]
           (if uusi-lukko
-            true
-            (do (log "Lukitus epäonnistui!") false)))))))
+            (reset! nykyinen-lukko uusi-lukko)
+            (do (log "Lukitus epäonnistui!")
+                (reset! nykyinen-lukko nil))))))))
