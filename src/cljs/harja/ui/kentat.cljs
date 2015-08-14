@@ -362,18 +362,19 @@
 
 (defmethod tee-kentta :aikavalitsin [{:keys [pvm kellonaika plusmiinus] :as asetukset} data]
   [:div {:style {:vertical-align "middle"}}
-  [:div {:style {:padding "5px" :display "inline-block"}}
-   [tee-kentta (assoc pvm :tyyppi :pvm) (r/wrap
-                                          (:pvm @data)
-                                          #(swap! data assoc :pvm %))]]
+   [:div {:style {:margin-right "5px" :display "inline-block"}}
+    [tee-kentta (assoc pvm :tyyppi :pvm)
+     (r/wrap
+       (:pvm @data)
+       #(swap! data assoc :pvm %))]]
 
    [:div {:style {:width "65px" :display "inline-block" :margin "5px"}}
     [tee-kentta (assoc kellonaika :tyyppi :valinta
-                                 :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
-                                 :alasveto-luokka "inline-block")
-    (r/wrap
-      (:kellonaika @data)
-      #(swap! data assoc :kellonaika %))]]
+                                  :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
+                                  :alasveto-luokka "inline-block")
+     (r/wrap
+       (:kellonaika @data)
+       #(swap! data assoc :kellonaika %))]]
 
    [:span {:style {:margin-right "3px"}} "\u00B1"]
    [tee-kentta (assoc plusmiinus :tyyppi :positiivinen-numero) (r/wrap
