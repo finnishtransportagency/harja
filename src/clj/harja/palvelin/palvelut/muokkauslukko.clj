@@ -13,11 +13,12 @@
 (defn lukitse [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Yritetään lukita " id)
-    (let [lukko (q/hae-lukko-idlla db id)]
+    (let [lukko (q/onko-olemassa-idlla? c id)]
+      (log/debug "Tarkistettiin vanha lukko. Tulos: " (pr-str lukko))
       (if (not lukko)
         (do
           (log/debug "Lukitaan " id)
-          (let [vastaus (q/lukitse<! db id user)]
+          (let [vastaus (q/lukitse<! c id (:id user))]
             {:lukko-id (:id vastaus)}))
         (do
           (log/debug "Ei voida lukita " id " koska on jo lukittu!")
@@ -25,11 +26,11 @@
 
 (defn virkista-lukko [db user {:keys [id]}]
   (log/debug "Virkistetään lukko")
-  (q/virkista-lukko! db id user))
+  (q/virkista-lukko! db id (:id user)))
 
 (defn vapauta-lukko [db user {:keys [id]}]
   (log/debug "Vapautetaan lukko")
-  (q/vapauta-lukko! db id user))
+  (q/vapauta-lukko! db id (:id user)))
 
 (defrecord Muokkauslukko []
   component/Lifecycle

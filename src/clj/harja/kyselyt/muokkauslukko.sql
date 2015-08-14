@@ -1,3 +1,10 @@
+-- name: onko-olemassa-idlla
+-- Tarkistaa löytyykö lukkoaa id:llä
+SELECT exists(
+    SELECT id
+    FROM muokkauslukko
+    WHERE id = :id);
+
 -- name: hae-lukko-idlla
 -- Hakee lukon id:llä
 SELECT * FROM muokkauslukko
