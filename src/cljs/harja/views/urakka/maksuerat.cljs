@@ -7,7 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.maksuerat :as maksuerat]
-            [harja.views.urakka.toteumat.lampotilat :refer [lampotilat]]
+            [harja.views.urakka.toteumat.lampotilat :refer [suolasakot]]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]

@@ -433,3 +433,12 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
              (when (and (not (:auki uusi)) aina-joku-auki?)
                (when-not (some (fn [[_ r]] (:auki r)) @rivit)
                  (swap! rivit assoc-in [avain :auki] true)))))))]])))
+
+(def +valitse-kuukausi+
+  "- Valitse kuukausi -")
+
+(def +valitse-indeksi+
+  "- Valitse indeksi -")
+
+(def +ei-sidota-indeksiin+
+  "Ei sidota indeksiin")

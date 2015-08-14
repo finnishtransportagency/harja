@@ -22,8 +22,6 @@
   [:span.glyphicon.glyphicon-glass])
 (defn music []
   [:span.glyphicon.glyphicon-music])
-;(defn search []
- ; [:span.glyphicon.glyphicon-search])
 (defn heart []
   [:span.glyphicon.glyphicon-heart])
 (defn star []
@@ -64,8 +62,6 @@
   [:span.glyphicon.glyphicon-road])
 (defn download-alt []
   [:span.glyphicon.glyphicon-download-alt])
-(defn download []
-  [:span.glyphicon.glyphicon-download])
 (defn inbox []
   [:span.glyphicon.glyphicon-inbox])
 (defn play-circle []
@@ -212,8 +208,6 @@
   [:span.glyphicon.glyphicon-eye-open])
 (defn eye-close []
   [:span.glyphicon.glyphicon-eye-close])
-;(defn warning-sign []
-; [:span.glyphicon.glyphicon-warning-sign])
 (defn plane []
   [:span.glyphicon.glyphicon-plane])
 (defn calendar []
@@ -224,10 +218,6 @@
   [:span.glyphicon.glyphicon-comment])
 (defn magnet []
   [:span.glyphicon.glyphicon-magnet])
-;(defn chevron-up []
-;  [:span.glyphicon.glyphicon-chevron-up])
-;(defn chevron-down []
-;  [:span.glyphicon.glyphicon-chevron-down])
 (defn retweet []
   [:span.glyphicon.glyphicon-retweet])
 (defn shopping-cart []
@@ -523,6 +513,8 @@
   [:span.livicon-chevron-down])
 (defn chevron-left []
   [:span.livicon-chevron-left])
+(defn download []
+  [:span.livicon-download])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []
@@ -539,6 +531,5 @@
   [:span.livicon-trash])
 (defn trash-disabled [tooltip]
   [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
-
 (defn upload []
   [:span.livicon-upload])

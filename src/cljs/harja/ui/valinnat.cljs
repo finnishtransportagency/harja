@@ -6,7 +6,8 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko]]))
+            [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.fmt :as fmt]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -25,8 +26,7 @@
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                          ;;\u2014 on väliviivan unikoodi
-                         :format-fn  #(if % (str (pvm/pvm (first %))
-                                                 " \u2014 " (pvm/pvm (second %))) "Valitse")
+                         :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
                          }

@@ -52,5 +52,13 @@
     (pvm p)
     ""))
 
-    
-  
+
+(defn pvm-vali [[alku loppu]]
+  (str (pvm/pvm alku)
+       " \u2014 "
+       (pvm/pvm loppu)))
+
+(defn pvm-vali-opt [vali]
+  (if vali
+    (pvm-vali vali)
+    ""))

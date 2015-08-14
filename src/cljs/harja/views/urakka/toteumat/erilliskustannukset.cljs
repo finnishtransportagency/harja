@@ -9,6 +9,7 @@
                                       livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.indeksit :as i]
@@ -33,17 +34,11 @@
 
 (defonce valittu-kustannus (atom nil))
 
-(def +valitse-indeksi+
-     "- Valitse indeksi -")
-
-(def +ei-sidota-indeksiin+
-     "Ei sidota indeksiin")
-
 (defn tallenna-erilliskustannus [muokattu]
   (go (let [sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (= +ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
+            indeksi (if (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
                       nil
                       (:indeksin_nimi muokattu))
             rahasumma (if (= (:maksaja muokattu) :urakoitsija)
@@ -125,7 +120,7 @@
                            :sopimus @u/valittu-sopimusnumero
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi
                            :maksaja :tilaaja
-                           :indeksin_nimi +ei-sidota-indeksiin+)))
+                           :indeksin_nimi yleiset/+ei-sidota-indeksiin+)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
                                              (not (and
                                                     (:toimenpideinstanssi m)
@@ -216,8 +211,8 @@
            {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
-            :valinnat      (conj @i/indeksien-nimet +ei-sidota-indeksiin+)
-            :fmt           #(if (nil? %) +valitse-indeksi+ str)
+            :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+            :fmt           #(if (nil? %) yleiset/+valitse-indeksi+ str)
             :leveys-col    3
             }
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
