@@ -360,6 +360,12 @@
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
                                                        (reset! auki false))]])]]))))
 
+(defmethod tee-kentta :aikavalitsin [{:keys [] :as asetukset} data]
+  [:span
+   [tee-kentta (assoc asetukset :tyyppi :pvm) (r/wrap
+                                                (:pvm @data)
+                                                #(swap! data assoc :pvm %))]])
+
 ;; Regexiä käytetään tunnistamaan, millaisia merkkejä pvm-kenttään voi syöttää.
 ;; Regex sallii esim muotoa ".10.2009" muotoa olevan merkkijonon, koska tällaiseen voidaan helposti
 ;; päätyä, jos käyttäjä pyyhkii päivän pois validin pvm:n alusta - eikä tätä tietenkään haluta estää.

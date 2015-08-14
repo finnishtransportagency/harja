@@ -4,12 +4,16 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva :as tiedot]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 
 (defn historiasuodatin []
-  [:p "Historiasuodatin"])
+  [yleiset/taulukko2
+   [:label "Etsi vanhoja tapahtumia"]
+   [kentat/tee-kentta {:tyyppi :aikavalitsin} (atom {:pvm nil})]])
 
 (defn livesuodatin []
   [:p "Livesuodatin"])
@@ -39,7 +43,8 @@
     (komp/lippu tiedot/nakymassa? tiedot/taso-tilannekuva)
     (fn []
       (harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                                 :leijuva?             300
-                                                 :otsikko (if (get-in @suodattimet-rivit [1 :auki])
-                                                            "Livesuodatus"
-                                                            "Vanhoja tapahtumia")}))))
+                                                 :leijuva?             300})
+
+      (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @suodattimet-rivit [1 :auki])
+                                                      :live
+                                                      :historia))))))

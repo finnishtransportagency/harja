@@ -21,7 +21,8 @@
 
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :live))
-(defonce aikasuodattimen-asetukset (atom {}))
+(defonce livesuodattimen-asetukset (atom {}))
+(defonce historiasuodattimen-asetukset (atom {}))
 (defonce haettavat-urakat (atom []))
 (defonce haettavat-hallintayksikot (atom []))
 
