@@ -1,24 +1,10 @@
 (ns harja.palvelin.palvelut.muokkauslukko
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
-            [harja.domain.roolit :as roolit]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.kommentit :as kommentit]
-            [harja.domain.paikkaus.minipot :as minipot]
-
-            [harja.kyselyt.muokkauslukko :as q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
-
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
-            [cheshire.core :as cheshire]
-            [harja.domain.skeema :as skeema]
-            [clj-time.format :as format]
-            [clj-time.coerce :as coerce]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
+            [harja.kyselyt.muokkauslukko :as q]))
 
 (defn hae-lukko-idlla [db user {:keys [id]}]
   (log/debug "Haetaan lukko id:llä " id)
