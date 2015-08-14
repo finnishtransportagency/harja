@@ -43,7 +43,9 @@
       (log/debug "Lukko saatu: " (pr-str lukko))
       (if lukko
         (if (lukko-vanhentunut? lukko)
-          (vapauta-lukko db user {:id (:id lukko)})
+          (do
+            (vapauta-lukko db user {:id (:id lukko)})
+            nil)
           lukko)))))
 
 (defn lukitse

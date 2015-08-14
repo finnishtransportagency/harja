@@ -13,7 +13,6 @@
 
 ; Kun tietyn näkymän lukkoa pyydetään, se asetetaan tähän atomiin.
 ; Oletetaan, että käyttäjä voi lukita vain yhden näkymän kerrallaan.
-; FIXME Entä jos on Harja auki useassa tabissa? --> Fuufuu
 (def nykyinen-lukko (atom nil))
 
 (defn- kayttaja-omistaa-lukon? [lukko]
