@@ -4,7 +4,6 @@
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.views.tyokoneseuranta :as tyokoneenseuranta]
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
@@ -27,6 +26,8 @@
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))
+
+(defonce nakyva-alue (atom nil))
 
 (defonce kartta-kuuntelija
          (t/kuuntele! :hallintayksikkovalinta-poistettu
@@ -112,7 +113,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
       :zoom zoom-taso
       :selection nav/valittu-hallintayksikko
       :on-drag (fn [_ newextent]
-                 (reset! tyokoneenseuranta/valittu-alue {:xmin (aget newextent 0)
+                 (reset! nakyva-alue {:xmin (aget newextent 0)
                                                          :ymin (aget newextent 1)
                                                          :xmax (aget newextent 2)
                                                          :ymax (aget newextent 3)}))

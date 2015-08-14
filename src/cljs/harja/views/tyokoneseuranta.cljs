@@ -4,11 +4,11 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log]]
             [harja.atom :as ha]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ; {:xmin 0 :ymin 0 :xmax 0 :ymax 0 }
-(defonce valittu-alue (atom false))
 (defonce tyokonetaso-paalla (atom true))
 
 (defn tyokone-xf [kone]
@@ -24,7 +24,7 @@
                   :stroke {:color "black" :width 10}})))
 
 (def alueen-tyokoneet
-  (reaction<! [alue @valittu-alue
+  (reaction<! [alue @kartta/nakyva-alue
                paalla? @tyokonetaso-paalla
                urakka @nav/valittu-urakka-id]
               {:odota 1000}
