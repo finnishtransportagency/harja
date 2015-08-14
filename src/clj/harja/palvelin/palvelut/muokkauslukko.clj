@@ -45,7 +45,11 @@
           (vapauta-lukko db user {:id (:id lukko)})
           lukko)))))
 
-(defn lukitse [db user {:keys [id]}]
+(defn lukitse
+  "Yrittää luoda uuden lukon annetulla id:llä.
+  Jos onnistuu, palauttaa lukon id:n.
+  Jos epäonnistuu, palauttaa nil"
+  [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Yritetään lukita " id)
     (let [lukko (first (q/hae-lukko-idlla db id))]
@@ -54,14 +58,14 @@
         (do
           (log/debug "Lukitaan " id)
           (let [vastaus (q/luo-lukko<! c id (:id user))]
-            {:lukko-id (:id vastaus)}))
+            (:id vastaus)))
         (do
           (if (lukko-vanhentunut? lukko)
             (do
               (vapauta-lukko db user {:id (:id lukko)})
               (q/luo-lukko<! c id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
-                {:lukko-id nil})))))))
+                nil)))))))
 
 (defrecord Muokkauslukko []
   component/Lifecycle

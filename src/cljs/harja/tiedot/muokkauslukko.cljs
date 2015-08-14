@@ -5,7 +5,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [tarkkaile!]]
-            
+            [harja.loki :refer [log tarkkaile!]]
+
             [cljs.core.async :refer [chan <! >! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -22,7 +23,7 @@
    (str nakyma "_" item-id)))
 
 (defn- hae-lukko-idlla [lukko-id]
-  (k/post! :hae-lukko-idlla {:id  lukko-id}))
+  (k/post! :hae-lukko-idlla {:id lukko-id}))
 
 (defn- lukitse
   "Merkitsee tietyn näkymän lukituksi, tarkoituksena että vain näkymän lukinnut käyttäjä voi muokata sitä.
@@ -37,13 +38,19 @@
 (defn vapauta-lukko [lukko-id]
   (k/post! :vapauta-lukko {:id lukko-id}))
 
-(defn tarkista-muokkauslukko
+(defn tarkista-lukitustila
   "Hakee näkymään liitetyn lukon.
   Jos lukko löytyy, tarkistaa kuuluuko se tälle käyttäjälle. Jos kuuluu, palauttaa true. Jos ei, false.
   Jos lukkoa ei löydy, lukitsee näkymän ja palauttaa true."
   [lukko-id]
-  (let [lukko (hae-lukko-idlla lukko-id)]
-        (if lukko
-          (kayttaja-omistaa-lukon? lukko)
-          (do (lukitse lukko-id)
-              true))))
+  (log "Tarkistetaan lukon " lukko-id " tila")
+  (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
+    (log "Lukko saatu: " (pr-str vanha-lukko))
+    (if vanha-lukko
+      (kayttaja-omistaa-lukon? vanha-lukko)
+      (do
+        (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
+        (let [uusi-lukko (<! (lukitse lukko-id))]
+          (if uusi-lukko
+            true
+            (do (log "Lukitus epäonnistui!") false)))))))
