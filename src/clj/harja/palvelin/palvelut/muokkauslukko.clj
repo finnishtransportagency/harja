@@ -17,10 +17,11 @@
       (if (not lukko)
         (do
           (log/debug "Lukitaan " id)
-          (q/lukitse<! db id kayttaja))
+          (let [vastaus (q/lukitse<! db id kayttaja)]
+            {:lukko-id (:id vastaus)}))
         (do
           (log/debug "Ei voida lukita " id " koska on jo lukittu!")
-          (q/lukitse<! db id kayttaja))))))
+          {:lukko-id nil})))))
 
 (defn virkista-lukko [db user {:keys [id]}]
   (log/debug "Virkistetään lukko")
