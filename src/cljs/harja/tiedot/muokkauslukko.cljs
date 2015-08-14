@@ -21,7 +21,9 @@
   (k/post! :hae-lukko-idlla {:id  id}))
 
 (defn lukitse
-  "Merkitsee tietyn näkymän lukituksi, tarkoituksena että vain näkymän lukinnut käyttäjä voi muokata sitä."
+  "Merkitsee tietyn näkymän lukituksi, tarkoituksena että vain näkymän lukinnut käyttäjä voi muokata sitä.
+  Jos onnistuu, palauttaa mapin, jossa lukon id.
+  Jos epäonnistuu, palauttaa mapin, jossa lukon id on nill"
   [id]
    (k/post! :lukitse {:id id}))
 

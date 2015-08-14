@@ -10,7 +10,12 @@ SELECT exists(
 SELECT * FROM muokkauslukko
 WHERE id = :id;
 
--- name: lukitse<!
+-- name: luo-lukko<!
+-- Tekee uuden lukon
+INSERT INTO muokkauslukko (id, kayttaja, aikaleima)
+VALUES (:id, :kayttaja, NOW());
+
+-- name: luo-lukko<!
 -- Tekee uuden lukon
 INSERT INTO muokkauslukko (id, kayttaja, aikaleima)
 VALUES (:id, :kayttaja, NOW());
