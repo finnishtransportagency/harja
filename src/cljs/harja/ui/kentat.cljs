@@ -360,11 +360,25 @@
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
                                                        (reset! auki false))]])]]))))
 
-(defmethod tee-kentta :aikavalitsin [{:keys [] :as asetukset} data]
-  [:span
-   [tee-kentta (assoc asetukset :tyyppi :pvm) (r/wrap
-                                                (:pvm @data)
-                                                #(swap! data assoc :pvm %))]])
+(defmethod tee-kentta :aikavalitsin [{:keys [pvm kellonaika plusmiinus] :as asetukset} data]
+  [:div {:style {:vertical-align "middle"}}
+  [:div {:style {:padding "5px" :display "inline-block"}}
+   [tee-kentta (assoc pvm :tyyppi :pvm) (r/wrap
+                                          (:pvm @data)
+                                          #(swap! data assoc :pvm %))]]
+
+   [:div {:style {:width "65px" :display "inline-block" :margin "5px"}}
+    [tee-kentta (assoc kellonaika :tyyppi :valinta
+                                 :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
+                                 :alasveto-luokka "inline-block")
+    (r/wrap
+      (:kellonaika @data)
+      #(swap! data assoc :kellonaika %))]]
+
+   [:span {:style {:margin-right "3px"}} "\u00B1"]
+   [tee-kentta (assoc plusmiinus :tyyppi :positiivinen-numero) (r/wrap
+                                                                 (:plusmiinus @data)
+                                                                 #(swap! data assoc :plusmiinus %))]])
 
 ;; Regexiä käytetään tunnistamaan, millaisia merkkejä pvm-kenttään voi syöttää.
 ;; Regex sallii esim muotoa ".10.2009" muotoa olevan merkkijonon, koska tällaiseen voidaan helposti
@@ -560,8 +574,8 @@
                              :on-change   #(muuta-pvm! (-> % .-target .-value))
                              ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                              :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                             (reset! auki false)
-                                             %)
+                                            (reset! auki false)
+                                            %)
                              :on-blur     #(do (koske-pvm!) (aseta!))}]
                 (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
                   (let [[x y w h] @sijainti]
@@ -569,11 +583,11 @@
                                                      (case pvm-sijainti
                                                        :oikea {:top 0 :left w}
                                                        :ylos {:bottom h :left x}))}
-                     [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                                      (muuta-pvm! (pvm/pvm %)))
-                                       :leveys (when (= :ylos pvm-sijainti) w)
-                                                 
-                                       :pvm      naytettava-pvm}]]))]
+                     [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                                     (muuta-pvm! (pvm/pvm %)))
+                                       :leveys  (when (= :ylos pvm-sijainti) w)
+
+                                       :pvm     naytettava-pvm}]]))]
                [:td
                 [:input {:class       (when lomake? "form-control")
                          :placeholder "tt:mm"
@@ -581,7 +595,7 @@
                          :value       nykyinen-aika-teksti
                          :on-change   #(muuta-aika! (-> % .-target .-value))
                          :on-blur     #(do (koske-aika!) (aseta!))}]
-                
+
                 ]]]]
 
             (when (and (= :alas pvm-sijainti) @auki)
