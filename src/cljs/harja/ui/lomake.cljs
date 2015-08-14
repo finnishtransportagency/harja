@@ -90,7 +90,8 @@
                        [:div.form-group {:class (when (:pakollinen? kentta) "required")}
                         [:div.row
                          otsikko
-                         komponentti]])
+                         [:div {:class (str "col-md-" (or (:leveys-col kentta) 10))}
+                          komponentti]]])
                      luo-kentta)
                skeemat))])
           
@@ -189,7 +190,7 @@
                           yksikko
                           vihje]])
             kentta (fn [kentan-komponentti {:keys [muokattava? fmt hae nimi pakollinen? validoi-heti?] :as kentta}]
-                     (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Otsikko: " (:otsikko kentta)))
+                     (assert (not (nil? nimi)) (str "Virheellinen kentän määrittely, :nimi arvo nil. Kenttä: " kentta))
                      (let [kentan-virheet (get kaikki-virheet nimi)
                            kentan-varoitukset (get kaikki-varoitukset nimi)
                            kentta (if (contains? kentta :lomake?)
@@ -243,7 +244,7 @@
             (if-let [ryhma (and (ryhma? skeema) skeema)]
               (do (log "kenttäryhmä " (:otsikko ryhma))
                   ^{:key (:otsikko ryhma)}
-                  (kenttaryhma luokka ryhma (:skeemat ryhma) #(kentta identity %)))
+                  (kenttaryhma luokka ryhma (keep identity (:skeemat ryhma)) #(kentta identity %)))
 
               ^{:key (:nimi skeema)}
               (apply kentta-ui (kentta (fn [k]
