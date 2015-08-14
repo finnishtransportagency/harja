@@ -380,7 +380,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                    (partition 2 otsikot-ja-arvot))]))
 
 (defn- luo-haitarin-rivi [piiloita? rivi]
-  (log "Haitari piillossa? " piiloita?)
   ^{:key (:otsikko @rivi)}
   [:div.haitari-rivi
    [:div.haitari-heading.klikattava

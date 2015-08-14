@@ -57,9 +57,9 @@
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
-         (run! (do @nav/kartan-koko
-                   @yleiset/ikkunan-koko
-                   (openlayers/invalidate-size!))))
+  (run! (do @nav/kartan-koko
+            @yleiset/ikkunan-koko
+            (openlayers/invalidate-size!))))
 
 (defn kartan-koko-kontrollit
   []
