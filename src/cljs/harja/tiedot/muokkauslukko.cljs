@@ -11,15 +11,18 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn nykyinen-lukko (atom nil))
+; Kun tietyn näkymän lukkoa pyydetään, se asetetaan tähän atomiin.
+; Oletetaan, että käyttäjä voi lukita vain yhden näkymän kerrallaan.
+(def nykyinen-lukko (atom nil))
 
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id istunto/kayttaja)))
 
 (defn valittu-nakyma-lukittu? []
+  (log "Tarkistetaan nykyisen lukon tila: " (pr-str @nykyinen-lukko))
   (if (nil? nykyinen-lukko)
     false
-    (kayttaja-omistaa-lukon? nykyinen-lukko)))
+    (kayttaja-omistaa-lukon? @nykyinen-lukko)))
 
 (defn muodosta-lukon-id
   "Ottaa näkymän ja item-id:n, joilla muodostetaan lukon id.
@@ -39,15 +42,16 @@
   (k/post! :lukitse {:id id}))
 
 (defn virkista-lukko [lukko-id]
-  (k/post! :virkista-lukko {:id lukko-id}))
+  (k/post! :virkista-lukko {:id lukko-id})) ; FIXME Virkistä nykyinen-lukko muuttuja myös
 
 (defn vapauta-lukko [lukko-id]
-  (k/post! :vapauta-lukko {:id lukko-id}))
+  (k/post! :vapauta-lukko {:id lukko-id})
+  (reset! nykyinen-lukko nil))
 
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
-  (log "Tarkistetaan lukon " lukko-id " tila")
+  (go (log "Tarkistetaan lukon " lukko-id " tila")
   (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
     (log "Lukko saatu: " (pr-str vanha-lukko))
     (if vanha-lukko
@@ -57,5 +61,5 @@
         (let [uusi-lukko (<! (lukitse lukko-id))]
           (if uusi-lukko
             (reset! nykyinen-lukko uusi-lukko)
-            (do (log "Lukitus epäonnistui!")
-                (reset! nykyinen-lukko nil))))))))
+            (do (log "Lukitus epäonnistui, joku muu ehti lukita näkymän!")
+                (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
