@@ -17,11 +17,11 @@
   (let [lukon-aikaleima (coerce/from-sql-time (:aikaleima lukko))
         aika-nyt (t/now)
         lukko-vanhentunut (t/after? aika-nyt (t/plus lukon-aikaleima (t/minutes suurin-sallittu-lukon-ika-minuuteissa)))]
-        (if lukko-vanhentunut
-          (do (log/debug "Lukko on vanhentunut")
-              true)
-          (do (log/debug "Lukko ei ole vanhentunut")
-              false))))
+    (if lukko-vanhentunut
+      (do (log/debug "Lukko on vanhentunut")
+          true)
+      (do (log/debug "Lukko ei ole vanhentunut")
+          false))))
 
 (defn virkista-lukko [db user {:keys [id]}]
   (log/debug "Virkistetään lukko")
@@ -30,17 +30,6 @@
 (defn vapauta-lukko [db user {:keys [id]}]
   (log/debug "Vapautetaan lukko")
   (q/vapauta-lukko! db id (:id user)))
-
-(defn tarkista-ja-poista-vanhentunut-lukko
-  "Ottaa tietokannasta tulleen lukon.
-  Jos lukko on vanhentunut, poistaa sen ja palauttaa nil
-  Jos lukko ei ole vanhentunut, palauttaa lukon"
-  [db user lukko]
-  (if (lukko-vanhentunut? lukko)
-    (do
-      (vapauta-lukko db user {:id (:id lukko)}))
-    nil)
-  lukko)
 
 (defn hae-lukko-idlla
   "Hakee lukon id:llä.
@@ -51,7 +40,10 @@
   (jdbc/with-db-transaction [c db]
     (log/debug "Haetaan lukko id:llä " id)
     (let [lukko (q/hae-lukko-idlla c id)]
-      (tarkista-ja-poista-vanhentunut-lukko c user lukko))))
+      (if lukko
+        (if (lukko-vanhentunut? lukko)
+          (vapauta-lukko db user {:id (:id lukko)})
+          lukko)))))
 
 (defn lukitse [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]

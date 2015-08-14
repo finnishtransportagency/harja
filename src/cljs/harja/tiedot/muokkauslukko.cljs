@@ -45,4 +45,5 @@
   (let [lukko (hae-lukko-idlla lukko-id)]
         (if lukko
           (kayttaja-omistaa-lukon? lukko)
-          (lukitse lukko-id))))
+          (do (lukitse lukko-id)
+              true))))
