@@ -4,6 +4,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]
+            [cljs.core.async :refer [<! >! timeout chan]]
             [harja.loki :refer [tarkkaile!]]
             [harja.loki :refer [log tarkkaile!]]
 
@@ -14,6 +15,7 @@
 ; Kun tietyn näkymän lukkoa pyydetään, se asetetaan tähän atomiin.
 ; Oletetaan, että käyttäjä voi lukita vain yhden näkymän kerrallaan.
 (def nykyinen-lukko (atom nil))
+(def pollaus-kaynnissa (atom false))
 
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id istunto/kayttaja)))
@@ -42,11 +44,30 @@
   (k/post! :lukitse {:id id}))
 
 (defn virkista-lukko [lukko-id]
-  (k/post! :virkista-lukko {:id lukko-id})) ; FIXME Virkistä nykyinen-lukko muuttuja myös
+  (k/post! :virkista-lukko {:id lukko-id}))                 ; FIXME Virkistä nykyinen-lukko muuttuja myös
 
 (defn vapauta-lukko [lukko-id]
   (k/post! :vapauta-lukko {:id lukko-id})
   (reset! nykyinen-lukko nil))
+
+(defn pollaa []
+  (log "Pollataan muokkauslukko.")
+  (let [lukko-id (:id @nykyinen-lukko)]
+    (if (kayttaja-omistaa-nykyisen-lukon?)
+      (virkista-lukko lukko-id)
+      (hae-lukko-idlla lukko-id))))
+
+(defn aloita-pollaus []
+  (if (not @pollaus-kaynnissa)
+    (go
+      (reset! pollaus-kaynnissa true)
+      (loop []
+        (<! (timeout 10000))
+        (if (not (nil? @nykyinen-lukko))
+          (do
+            (pollaa)
+            (recur))
+          (reset! aloita-pollaus false))))))
 
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
@@ -57,11 +78,14 @@
         (if vanha-lukko
           (do
             (log "Vanha lukko löytyi: " (pr-str vanha-lukko))
-            (reset! nykyinen-lukko vanha-lukko))
+            (reset! nykyinen-lukko vanha-lukko)
+            (aloita-pollaus))
           (do
-            (log "Annetulla id:llä ei ole lukkoa. Yritetään lukita näkymä.")
+            (log "Annetulla id:llä ei ole lukkoa. Lukitaan näkymä.")
             (let [uusi-lukko (<! (lukitse lukko-id))]
               (if uusi-lukko
-                (reset! nykyinen-lukko uusi-lukko)
+                (do
+                  (reset! nykyinen-lukko uusi-lukko)
+                  (aloita-pollaus))
                 (do (log "Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
                     (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?

@@ -29,7 +29,8 @@
 
 (defn vapauta-lukko [db user {:keys [id]}]
   (log/debug "Vapautetaan lukko")
-  (q/vapauta-lukko! db id (:id user)))
+  (q/vapauta-lukko! db id (:id user))
+  (log/debug "Lukko vapautettu"))
 
 (defn hae-lukko-idlla
   "Hakee lukon id:llä.
@@ -45,6 +46,7 @@
         (if (lukko-vanhentunut? lukko)
           (do
             (vapauta-lukko db user {:id (:id lukko)})
+
             nil)
           lukko)))))
 
