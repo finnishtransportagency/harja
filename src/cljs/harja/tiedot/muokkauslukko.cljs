@@ -36,6 +36,7 @@
    (str nakyma "_" item-id)))
 
 (defn- hae-lukko-idlla [lukko-id]
+  (log "Haetaan lukko id:llä: " lukko-id)
   (k/post! :hae-lukko-idlla {:id lukko-id}))
 
 (defn- lukitse
@@ -44,14 +45,15 @@
   (k/post! :lukitse {:id id}))
 
 (defn virkista-lukko [lukko-id]
-  (k/post! :virkista-lukko {:id lukko-id}))                 ; FIXME Virkistä nykyinen-lukko muuttuja myös
+  (log "Virkistetään lukko")
+  (k/post! :virkista-lukko {:id lukko-id}))                 ; FIXME Paluuarvosta uudet tiedot nykyinen-lukko -muuttujaan
 
 (defn vapauta-lukko [lukko-id]
   (k/post! :vapauta-lukko {:id lukko-id})
   (reset! nykyinen-lukko nil))
 
 (defn pollaa []
-  (log "Pollataan muokkauslukko.")
+  (log "Pollataan muokkauslukko")
   (let [lukko-id (:id @nykyinen-lukko)]
     (if (kayttaja-omistaa-nykyisen-lukon?)
       (virkista-lukko lukko-id)
@@ -67,7 +69,9 @@
           (do
             (pollaa)
             (recur))
-          (reset! aloita-pollaus false))))))
+          (do
+            (log "Lopetetaan muokkauslukon pollaus")
+            (reset! aloita-pollaus false)))))))
 
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
