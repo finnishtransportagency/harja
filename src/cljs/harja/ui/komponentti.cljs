@@ -2,6 +2,7 @@
   "Apureita, joilla voi kasata komponentteja mixin osista."
   (:require [reagent.core :as r :refer [atom]]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.muokkauslukko :as lukko]
             [harja.ui.yleiset :as yleiset]))
 
 (defn luo
@@ -86,6 +87,12 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
   [& lippu-atomit]
   (sisaan-ulos #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom true))
                #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom false))))
+
+(defn lukko
+  "Mixin, joka hoitaa muokkauslukkoon liittyvät toimenpiteet."
+  [lukko-id]
+  (sisaan-ulos #(lukko/paivita-lukko lukko-id)
+               #(lukko/vapauta-lukko lukko-id)))
 
 (defn kun-muuttuu
   "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
