@@ -49,7 +49,9 @@
   (k/post! :virkista-lukko {:id lukko-id}))                 ; FIXME Paluuarvosta uudet tiedot nykyinen-lukko -muuttujaan
 
 (defn vapauta-lukko [lukko-id]
-  (k/post! :vapauta-lukko {:id lukko-id})
+  (log "Vapautetaan lukko")
+  (if (kayttaja-omistaa-nykyisen-lukon?)
+    (k/post! :vapauta-lukko {:id lukko-id}))
   (reset! nykyinen-lukko nil))
 
 (defn pollaa []
@@ -71,11 +73,12 @@
             (recur))
           (do
             (log "Lopetetaan muokkauslukon pollaus")
-            (reset! aloita-pollaus false)))))))
+            (reset! pollaus-kaynnissa false)))))))
 
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
+  (log "Päivitetään lukko")
   (reset! nykyinen-lukko nil)
   (go (log "Tarkistetaan lukon " lukko-id " tila tietokannasta")
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
@@ -92,4 +95,4 @@
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
-                    (paivita-lukko lukko-id))))))))) ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
+                    (paivita-lukko lukko-id)))))))))        ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
