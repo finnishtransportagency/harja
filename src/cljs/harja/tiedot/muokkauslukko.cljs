@@ -17,6 +17,8 @@
 (def nykyinen-lukko (atom nil))
 (def pollaus-kaynnissa (atom false))
 
+(declare paivita-lukko)
+
 (tarkkaile! "[LUKKO] Nykyinen lukko: " nykyinen-lukko)
 
 (defn- kayttaja-omistaa-lukon? [lukko]
@@ -67,18 +69,16 @@
 
 (defn- pollaa []
   (if @nykyinen-lukko
-    (go
+    (do
       (log "[LUKKO] Suoritetaan pollaus nykyiselle lukolle: " (pr-str @nykyinen-lukko))
       (let [lukko-id (:id @nykyinen-lukko)]
         (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
-          (virkista-nykyinen-lukko lukko-id))))
-          ;; Jos käyttäjä ei omista lukkoa, voitaisiin pollata vanha lukko kannasta.
-          ;; Jos vanhaa lukkoa ei kuitenkaan löydy, pitäisi suorittaa näkymän välitön lukitus kun näkymässä jo ollaan
-          ;; Tämä voi toimia, mutta katsoin paremmaksi jättää sen toistaiseksi implementoimatta.
+          (virkista-nykyinen-lukko lukko-id)
+          (paivita-lukko lukko-id))))
     (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
 
 (defn- aloita-pollaus []
-  (if (not @pollaus-kaynnissa)
+  (if (false? @pollaus-kaynnissa)
     (go
       (reset! pollaus-kaynnissa true)
       (loop []
@@ -95,7 +95,6 @@
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
   (log "[LUKKO] Päivitetään lukko")
-  (reset! nykyinen-lukko nil)
   (go (log "[LUKKO] Tarkistetaan lukon " lukko-id " tila tietokannasta")
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
         (if vanha-lukko
