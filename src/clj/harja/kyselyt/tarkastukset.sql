@@ -25,7 +25,7 @@ SELECT t.id, t.sopimus, t.aika,
        stm.sivukaltevuus as soratiemittaus_sivukaltevuus,
        thm.talvihoitoluokka as talvihoitomittaus_hoitoluokka,
        thm.lumimaara as talvihoitomittaus_lumimaara,
-       thm.epatasaisuus as talvihoitomittaus_epatasaisuus,
+       thm.tasaisuus as talvihoitomittaus_epatasaisuus,
        thm.kitka as talvihoitomittaus_kitka,
        thm.lampotila as talvihoitomittaus_lampotila,
        thm.ajosuunta as talvihoitomittaus_ajosuunta,
@@ -69,15 +69,15 @@ UPDATE tarkastus
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.
 INSERT
   INTO talvihoitomittaus
-       (talvihoitoluokka, lumimaara, epatasaisuus, kitka, lampotila, ajosuunta, tarkastus)
-VALUES (:talvihoitoluokka, :lumimaara, :epatasaisuus, :kitka, :lampotila, :ajosuunta, :tarkastus)
+       (talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila, ajosuunta, tarkastus)
+VALUES (:talvihoitoluokka, :lumimaara, :tasaisuus, :kitka, :lampotila, :ajosuunta, :tarkastus)
 
 -- name: paivita-talvihoitomittaus!
 -- Päivittää tarkastuksen aiemmin luodun talvihoitomittauksen.
 UPDATE talvihoitomittaus
    SET talvihoitoluokka = :talvihoitoluokka,
        lumimaara = :lumimaara,
-       epatasaisuus = :epatasaisuus,
+       tasaisuus = :tasaisuus,
        kitka = :kitka,
        lampotila = :lampotila,
        ajosuunta = :ajosuunta

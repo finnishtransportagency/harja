@@ -27,19 +27,19 @@
         id)))
 
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
-                                         {:keys [talvihoitoluokka lumimaara epatasaisuus
+                                         {:keys [talvihoitoluokka lumimaara tasaisuus
                                                  kitka lampotila ajosuunta] :as talvihoitomittaus}]
   (if uusi?
     (do (log/info "PARAMS:"  db
-                  (or talvihoitoluokka "") lumimaara epatasaisuus
+                  (or talvihoitoluokka "") lumimaara tasaisuus
                   kitka lampotila (or ajosuunta 0)
                   tarkastus)
         (luo-talvihoitomittaus<! db
-                                 (or talvihoitoluokka "") lumimaara epatasaisuus
+                                 (or talvihoitoluokka "") lumimaara tasaisuus
                                  kitka lampotila (or ajosuunta 0)
                                  tarkastus))
     (paivita-talvihoitomittaus! db
-                                (or talvihoitoluokka "") lumimaara epatasaisuus
+                                (or talvihoitoluokka "") lumimaara tasaisuus
                                 kitka lampotila (or ajosuunta 0)
                                 tarkastus)))
 

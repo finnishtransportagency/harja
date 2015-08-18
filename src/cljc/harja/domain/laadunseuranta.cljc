@@ -50,7 +50,7 @@
 
 (def Talvihoitomittaus
   {:lampotila                    s/Num
-   :epatasaisuus                 s/Num
+   :tasaisuus                 s/Num
    :kitka                        s/Num
    :lumimaara                    s/Num
    (s/optional-key :hoitoluokka) (s/maybe s/Str)
