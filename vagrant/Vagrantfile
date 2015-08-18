@@ -11,7 +11,7 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 8000, host: 8000
   # ActiveMQ web UI & JSM portit
   config.vm.network "forwarded_port", guest: 8161, host: 8161
-  config.vm.network "forwarded_port", guest: 8094, host: 8094
+  config.vm.network "forwarded_port", guest: 61616, host: 61616
 
   # config.vm.network "private_network", ip: "192.168.33.10"
 
@@ -25,7 +25,6 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "ansible" do |ansible|
-    ansible.verbose = "vvv"
     ansible.playbook = "db_provision.yml"
   end
 end
