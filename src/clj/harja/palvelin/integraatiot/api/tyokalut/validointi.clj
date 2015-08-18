@@ -27,6 +27,13 @@
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia organisaatioon: " ytunnus)}]})))
 
+(defn tarkista-onko-kayttaja-organisaation-jarjestelma [db ytunnus kayttaja]
+  (tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
+  (when (not (:jarjestelma kayttaja))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+                        :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) "ei ole järjestelmä")}]})))
+
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
   (tarkista-urakka db urakka-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))

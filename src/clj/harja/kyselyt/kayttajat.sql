@@ -120,7 +120,8 @@ SELECT
                                                                                                                AND
                                                                                                                poistettu
                                                                                                                =
-                                                                                                               FALSE)) AS roolit
+                                                                                                               FALSE)) AS roolit,
+  k.jarjestelma
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE
@@ -268,7 +269,8 @@ SELECT
          AND
          poistettu
          =
-         FALSE)) AS roolit
+         FALSE)) AS roolit,
+  k.jarjestelma
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE

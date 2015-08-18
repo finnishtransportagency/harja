@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.konversio :as konversiot]
             [harja.kyselyt.tyokoneseuranta :as tks]))
 

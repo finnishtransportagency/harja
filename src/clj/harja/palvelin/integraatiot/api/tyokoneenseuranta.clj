@@ -5,6 +5,7 @@
             [harja.kyselyt.tyokoneseuranta :as tks]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [taoensso.timbre :as log]))
 
@@ -15,6 +16,9 @@
     (.createArrayOf conn "text" (to-array v))))
 
 (defn- tallenna-seurantakirjaus [parametrit data kayttaja db]
+  (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
+                                                               (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
+                                                               kayttaja)
   (doseq [havainto (:havainnot data)]
     (tks/tallenna-tyokonehavainto db
                                    (get-in data [:otsikko :lahettaja :jarjestelma])
