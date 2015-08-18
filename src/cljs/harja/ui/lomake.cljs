@@ -121,6 +121,10 @@
   [teksti]
   [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
 
+(defn lomake-lukittu-huomautus
+  []
+  [:div.lomake-lukittu-huomautus (harja.ui.ikonit/info-sign) " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä muokkaa parhaillaan lomaketta."])
+
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
   Ottaa kolme parametria: optiot, skeeman (vektori kenttiä) sekä datan (mäppi).
