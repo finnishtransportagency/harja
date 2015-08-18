@@ -20,8 +20,6 @@
 (tarkkaile! "[LUKKO] Nykyinen lukko: " nykyinen-lukko)
 
 (defn- kayttaja-omistaa-lukon? [lukko]
-  (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
-  (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja lukko)))
   (= (:kayttaja lukko) (:id @istunto/kayttaja)))
 
 (defn nykyinen-nakyma-lukittu? []
@@ -31,6 +29,9 @@
       false)
     (do
       (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? @nykyinen-lukko)]
+        (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
+        (log (str "[LUKKO] Nykyinen lukko " (pr-str @nykyinen-lukko)))
+        (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja @nykyinen-lukko)))
         (log "[LUKKO] Käyttäjä omistaa lukon: " kayttajan-oma-lukko)
         (false? kayttajan-oma-lukko)))))
 
@@ -53,8 +54,9 @@
   (k/post! :lukitse {:id id}))
 
 (defn virkista-lukko [lukko-id]
-  (log "[LUKKO] Virkistetään lukko")
-  (reset! nykyinen-lukko (k/post! :virkista-lukko {:id lukko-id})))
+  (go
+    (log "[LUKKO] Virkistetään lukko")
+    (reset! nykyinen-lukko (<! (k/post! :virkista-lukko {:id lukko-id})))))
 
 (defn vapauta-lukko [lukko-id]
   (log "[LUKKO] Vapautetaan lukko")

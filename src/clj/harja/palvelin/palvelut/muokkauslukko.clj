@@ -25,7 +25,7 @@
 
 (defn virkista-lukko [db user {:keys [id]}]
   (log/debug "Virkistetään lukko")
-  (q/virkista-lukko! db id (:id user)))
+  (q/virkista-lukko<! db id (:id user)))
 
 (defn vapauta-lukko [db user {:keys [id]}]
   (log/debug "Vapautetaan lukko")

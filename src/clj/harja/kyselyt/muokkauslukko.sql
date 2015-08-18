@@ -8,7 +8,7 @@ WHERE id = :id;
 INSERT INTO muokkauslukko (id, kayttaja, aikaleima)
 VALUES (:id, :kayttaja, NOW());
 
--- name: virkista-lukko!
+-- name: virkista-lukko<!
 -- Virkistää lukon aikaleiman
 UPDATE muokkauslukko
    SET aikaleima = NOW()
