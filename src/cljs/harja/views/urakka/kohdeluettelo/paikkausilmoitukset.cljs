@@ -30,6 +30,9 @@
 
 (def lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
+(def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
+                                               (lukko/nykyinen-nakyma-lukittu?))))
+
 (defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                    nakymassa? @paikkaus/paikkausilmoitukset-nakymassa?]
@@ -77,9 +80,10 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [muokattava? (constantly (and
+  (let [voi-muokata (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
-                                  (and (not (= (:tila @lomakedata) :lukittu)))))
+                                  (not= (:tila @lomakedata) :lukittu)
+                                  (false? @lomake-lukittu-muokkaukselta?)))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
                               :kasittelyaika (:kasittelyaika @lomakedata)}
@@ -93,7 +97,7 @@
         {:luokka       :horizontal
          :muokkaa!     (fn [uusi]
                          (reset! paatostiedot uusi))
-         :voi-muokata? (muokattava?)}
+         :voi-muokata? (voi-muokata)}
         [{:otsikko "Käsitelty"
           :nimi    :kasittelyaika
           :tyyppi  :pvm
@@ -104,7 +108,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (voi-muokata) "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos @paatostiedot)
@@ -154,9 +158,7 @@
                        (reset! lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
-  (let [lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
-                                                  (lukko/nykyinen-nakyma-lukittu?)))
-        kokonaishinta (reaction (laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
+  (let [kokonaishinta (reaction (laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
         kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @lomakedata)
                                 :valmispvm_kohde    (:valmispvm_kohde @lomakedata)
                                 :valmispvm_paikkaus (:valmispvm_paikkaus @lomakedata)}
@@ -181,12 +183,14 @@
                                    (let [toteutuneet-osoitteet @toteutuneet-osoitteet
                                          toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
-                                         tila (:tila @lomakedata)]
+                                         tila (:tila @lomakedata)
+                                         lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
                                      (and
                                        (not (= tila :lukittu))
                                        (not (empty? toteutuneet-osoitteet))
                                        (empty? toteutuneet-osoitteet-virheet)
-                                       (empty? toteutuneet-maarat-virheet))))
+                                       (empty? toteutuneet-maarat-virheet)
+                                       (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi? (reaction
                                  (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
                                        tila (:tila @lomakedata)]
@@ -214,7 +218,8 @@
           [:div.col-md-6
            [:h3 "Perustiedot"]
            [lomake {:luokka       :horizontal
-                    :voi-muokata? (not= :lukittu (:tila @lomakedata))
+                    :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                                       (false? @lomake-lukittu-muokkaukselta?))
                     :muokkaa!     (fn [uusi]
                                     (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                     (reset! kohteen-tiedot uusi))}

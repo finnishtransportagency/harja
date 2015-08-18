@@ -20,7 +20,8 @@
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.muokkauslukko :as lukko])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -31,6 +32,9 @@
                                         (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                           (log "PÄÄ Haetaan päällystystoteumat.")
                                           (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+
+(def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
+                                               (lukko/nykyinen-nakyma-lukittu?))))
 
 (defn nayta-tila [tila]
   (case tila
@@ -79,7 +83,8 @@
   [valmis-kasiteltavaksi?]
   (let [muokattava? (constantly (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
-                                  (and (not (= (:tila @lomakedata) :lukittu)))))
+                                  (not= (:tila @lomakedata) :lukittu)
+                                  (false? @lomake-lukittu-muokkaukselta?)))
         paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @lomakedata)
                                            :perustelu-tekninen-osa     (:perustelu_tekninen_osa @lomakedata)
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
@@ -255,19 +260,24 @@
                                         (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
+      (komp/lukko (str "paallystysilmoitus " (:kohdenumero @lomakedata)))
       (fn []
         [:div.paallystysilmoituslomake
 
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
           (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
 
+         (when @lomake-lukittu-muokkaukselta?
+           (lomake/lomake-lukittu-huomautus))
+         
          [:h2 "Päällystysilmoitus"]
 
          [:div.row
           [:div.col-md-6
            [:h3 "Perustiedot"]
            [lomake {:luokka   :horizontal
-                    :voi-muokata? (not= :lukittu (:tila @lomakedata))
+                    :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                                       (false? @lomake-lukittu-muokkaukselta?))
                     :muokkaa! (fn [uusi]
                                 (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                                 (reset! kohteen-tiedot uusi))}
@@ -307,8 +317,9 @@
            :tunniste     :tie
            :voi-muokata? (do
                            (log "PÄÄ tila " (pr-str (:tila @lomakedata)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa @lomakedata)))
-                           (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata)))))
+                           (and (not= :lukittu (:tila @lomakedata))
+                                (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
+                                (false? @lomake-lukittu-muokkaukselta?)))
            :rivinumerot? true
            :muutos       (fn [g]
                            (let [grid-data (vals @toteutuneet-osoitteet)]
@@ -355,8 +366,9 @@
            :voi-lisata?  false
            :voi-kumota?  false
            :voi-poistaa? (constantly false)
-           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
+           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                              (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
+                              (false? @lomake-lukittu-muokkaukselta?))
            :rivinumerot? true
            :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällyste"
@@ -399,10 +411,11 @@
             :leveys        "30%"}]
           toteutuneet-osoitteet]
 
-         [grid/muokkaus-grid
-          {:otsikko "Kiviaines ja sideaine"
-           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
+          [grid/muokkaus-grid
+           {:otsikko      "Kiviaines ja sideaine"
+            :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                               (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
+                               (false? @lomake-lukittu-muokkaukselta?))
            :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
           [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -413,9 +426,10 @@
           kiviaines]
 
          [grid/muokkaus-grid
-          {:otsikko "Alustalle tehdyt toimet"
-           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_tekninen_osa @lomakedata))))
+          {:otsikko      "Alustalle tehdyt toimet"
+           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                              (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
+                              (false? @lomake-lukittu-muokkaukselta?))
            :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
           [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
            {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -454,8 +468,9 @@
 
          [grid/muokkaus-grid
           {:otsikko "Toteutuneet määrät"
-           :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                  (= :hyvaksytty (:paatos_taloudellinen_osa @lomakedata))))
+           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                              (not= :hyvaksytty (:paatos_taloudellinen_osa @lomakedata))
+                              (false? @lomake-lukittu-muokkaukselta?))
            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
           [{:otsikko       "Päällystetyön tyyppi"
             :nimi          :tyyppi
