@@ -20,7 +20,9 @@
 (tarkkaile! "[LUKKO] Nykyinen lukko: " nykyinen-lukko)
 
 (defn- kayttaja-omistaa-lukon? [lukko]
-  (= (:kayttaja lukko) (:id istunto/kayttaja)))
+  (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
+  (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja lukko)))
+  (= (:kayttaja lukko) (:id @istunto/kayttaja)))
 
 (defn nykyinen-nakyma-lukittu? []
   (if (nil? @nykyinen-lukko)

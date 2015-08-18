@@ -60,11 +60,13 @@
       (log/debug "Tarkistettiin vanha lukko. Tulos: " (pr-str lukko))
       (if (nil? lukko)
         (do
-          (log/debug "Lukitaan " id)
+          (log/debug "Ei vanhaa lukkoa. Lukitaan " id)
           (q/luo-lukko<! c id (:id user)))
         (do
+          (log/debug "Vanha lukko löytyi. Tarkistetaan sen ikä.")
           (if (lukko-vanhentunut? lukko)
             (do
+              (log/debug "Vanha lukko on vanhentunut. Poistetaan se ja luodaan uusi..")
               (vapauta-lukko db user {:id (:id lukko)})
               (q/luo-lukko<! c id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
