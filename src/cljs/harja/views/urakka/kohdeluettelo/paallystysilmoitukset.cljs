@@ -242,14 +242,16 @@
                                          alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          kiviaines-virheet @kiviaines-virheet
-                                         tila (:tila @lomakedata)]
+                                         tila (:tila @lomakedata)
+                                         lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
                                      (and
                                        (not (= tila :lukittu))
                                        ;(empty? alikohteet-virheet) FIXME Ei validoi oikein kun lisätään rivi? Liittyy jotenkin tienumeron kopiointiin muille riveille.
                                        ;(empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
-                                       (empty? kiviaines-virheet))))
+                                       (empty? kiviaines-virheet)
+                                       (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi? (reaction
                                  (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
                                        tila (:tila @lomakedata)]
@@ -269,7 +271,7 @@
 
          (when @lomake-lukittu-muokkaukselta?
            (lomake/lomake-lukittu-huomautus))
-         
+
          [:h2 "Päällystysilmoitus"]
 
          [:div.row
