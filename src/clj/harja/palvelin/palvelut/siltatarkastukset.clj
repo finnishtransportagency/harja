@@ -154,4 +154,5 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
     (poista-palvelut (:http-palvelin this) :hae-urakan-sillat)
     (poista-palvelut (:http-palvelin this) :hae-sillan-tarkastukset)
     (poista-palvelut (:http-palvelin this) :tallenna-siltatarkastus)
-    (poista-palvelut (:http-palvelin this) :poista-siltatarkastus)))
+    (poista-palvelut (:http-palvelin this) :poista-siltatarkastus)
+    this))

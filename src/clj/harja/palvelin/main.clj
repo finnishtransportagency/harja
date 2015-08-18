@@ -243,27 +243,34 @@
 
 (defonce harja-jarjestelma nil)
 
-(defn -main [& argumentit]
+(defn kaynnista-jarjestelma [asetusfile]
   (alter-var-root #'harja-jarjestelma
                   (constantly
-                    (-> (lue-asetukset (or (first argumentit) "asetukset.edn"))
-                        luo-jarjestelma
-                        component/start)))
-  (.addShutdownHook (Runtime/getRuntime)
-                    (Thread. (fn []
-                               (component/stop harja-jarjestelma)))))
+                   (-> (lue-asetukset asetusfile)
+                       luo-jarjestelma
+                       component/start))))
+
+(defn sammuta-jarjestelma []
+  (when harja-jarjestelma
+    (alter-var-root #'harja-jarjestelma (fn [s]
+                                          (component/stop s)
+                                          nil))))
+
+(defn -main [& argumentit]
+  (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn"))
+  (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []
-  (alter-var-root #'harja-jarjestelma component/start))
+  (if harja-jarjestelma
+    (println "Harja on jo käynnissä!")
+    (kaynnista-jarjestelma "asetukset.edn")))
 
 (defn dev-stop []
-  (when harja-jarjestelma
-    (alter-var-root #'harja-jarjestelma component/stop)))
+  (sammuta-jarjestelma))
 
 (defn dev-restart []
   (dev-stop)
-  (-main))
-
+  (dev-start))
 
 
 (defn dev-julkaise
