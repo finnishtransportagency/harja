@@ -337,7 +337,7 @@
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
                                                                  :anchor       #js [0.5 35]
-                                                                 :opacity 0.75
+                                                                 :opacity 1
                                                                  :anchorXUnits "fraction"
                                                                  :anchorYUnits "pixels"})}))))
 
