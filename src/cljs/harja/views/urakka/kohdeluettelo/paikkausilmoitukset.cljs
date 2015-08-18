@@ -8,6 +8,8 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
 
+            [harja.tiedot.muokkauslukko :as lukko]
+
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
@@ -88,14 +90,14 @@
       [:div.paikkausilmoitus-kasittely
        [:h3 "Käsittely"]
        [lomake/lomake
-        {:luokka   :horizontal
-         :muokkaa! (fn [uusi]
-                     (reset! paatostiedot uusi))
+        {:luokka       :horizontal
+         :muokkaa!     (fn [uusi]
+                         (reset! paatostiedot uusi))
          :voi-muokata? (muokattava?)}
-        [{:otsikko     "Käsitelty"
-          :nimi        :kasittelyaika
-          :tyyppi      :pvm
-          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+        [{:otsikko "Käsitelty"
+          :nimi    :kasittelyaika
+          :tyyppi  :pvm
+          :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
 
          {:otsikko       "Päätös"
           :nimi          :paatos
@@ -106,13 +108,13 @@
           :leveys-col    3}
 
          (when (:paatos @paatostiedot)
-           {:otsikko     "Selitys"
-            :nimi        :perustelu
-            :tyyppi      :text
-            :koko        [60 3]
-            :pituus-max  2048
-            :leveys-col  6
-            :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
+           {:otsikko    "Selitys"
+            :nimi       :perustelu
+            :tyyppi     :text
+            :koko       [60 3]
+            :pituus-max 2048
+            :leveys-col 6
+            :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot]])))
 
 (defn tallennus
@@ -145,16 +147,18 @@
         (paikkaus/tallenna-paikkausilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
-       :ikoni (ikonit/tallenna)
+       :ikoni        (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PAI Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (reset! toteumarivit vastaus)
                        (reset! lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
-  (let [kokonaishinta (reaction (laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
-        kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
-                                :valmispvm_kohde (:valmispvm_kohde @lomakedata)
+  (let [lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
+                                                  (lukko/nykyinen-nakyma-lukittu?)))
+        kokonaishinta (reaction (laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
+        kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @lomakedata)
+                                :valmispvm_kohde    (:valmispvm_kohde @lomakedata)
                                 :valmispvm_paikkaus (:valmispvm_paikkaus @lomakedata)}
                                (fn [uusi-arvo]
                                  (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
@@ -193,22 +197,27 @@
                                         (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
+      (komp/lukko (str "paikkausilmoitus " (:kohdenumero @lomakedata)))
       (fn []
+
         [:div.paikkausilmoituslomake
 
          [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
           (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
+
+         (when @lomake-lukittu-muokkaukselta?
+           (lomake/lomake-lukittu-huomautus))
 
          [:h2 "Paikkausilmoitus"]
 
          [:div.row
           [:div.col-md-6
            [:h3 "Perustiedot"]
-           [lomake {:luokka   :horizontal
+           [lomake {:luokka       :horizontal
                     :voi-muokata? (not= :lukittu (:tila @lomakedata))
-                    :muokkaa! (fn [uusi]
-                                (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
-                                (reset! kohteen-tiedot uusi))}
+                    :muokkaa!     (fn [uusi]
+                                    (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
+                                    (reset! kohteen-tiedot uusi))}
             [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
              {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paikkaus :tyyppi :pvm}
@@ -244,8 +253,9 @@
             :tunniste     :tie
             :voi-muokata? (do
                             (log "PAI tila " (pr-str (:tila @lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @lomakedata)))
-                            (not (or (= :lukittu (:tila @lomakedata))
-                                     (= :hyvaksytty (:paatos @lomakedata)))))
+                            (and (not= :lukittu (:tila @lomakedata))
+                                 (not= :hyvaksytty (:paatos @lomakedata))
+                                 (false? @lomake-lukittu-muokkaukselta?)))
             :muutos       (fn [g]
                             (reset! toteutuneet-osoitteet-virheet (grid/hae-virheet g)))}
            [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -261,23 +271,24 @@
            toteutuneet-osoitteet]
 
           [grid/muokkaus-grid
-           {:otsikko "Toteutuneet suoritemäärät"
-            :voi-muokata? (not (or (= :lukittu (:tila @lomakedata))
-                                   (= :hyvaksytty (:paatos @lomakedata))))
+           {:otsikko      "Toteutuneet suoritemäärät"
+            :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                               (not= :hyvaksytty (:paatos @lomakedata))
+                               (false? @lomake-lukittu-muokkaukselta?))
             :voi-lisata?  false
             :voi-kumota?  false
             :voi-poistaa? (constantly false)
-            :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
+            :muutos       #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
            [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
-             :hae (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
+             :hae     (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
             {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
             {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
             {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv (:yks_hint_alv_0 rivi) 24))}
             {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
-             :hae (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
+             :hae     (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
             {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
-            toteutuneet-maarat]]
+           toteutuneet-maarat]]
 
          (tallennus valmis-tallennettavaksi?)]))))
 
