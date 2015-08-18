@@ -74,3 +74,17 @@
     sudo_user: postgres
     args:
        chdir: /harja/checkout
+  - name: Download ActiveMQ
+    get_url: dest=/harja/activemq.tar.gz url=http://www.nic.funet.fi/pub/mirrors/apache.org/activemq/5.12.0/apache-activemq-5.12.0-bin.tar.gz
+    register: get_activemq
+  - name: Create ActiveMQ directory
+    file: state=directory path=/harja/activemq mode=0777
+  - name: Extract ActiveMQ
+    unarchive: dest=/harja/activemq src=/harja/activemq.tar.gz copy=no
+    when: get_activemq|changed
+  - name: Start ActiveMQ
+    async: 10
+    poll: 0
+    command: /harja/activemq/apache-activemq-5.12.0/bin/activemq restart
+    args:
+      chdir: "/harja/activemq/apache-activemq-5.12.0"
