@@ -135,8 +135,8 @@
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
                  :nimi :lumimaara :leveys-col 1
                  :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
-                {:otsikko "Epätasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :epatasaisuus :leveys-col 1
+                {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
+                 :nimi :tasaisuus :leveys-col 1
                  :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
                 {:otsikko "Kitka" :tyyppi :numero
                  :nimi :kitka :leveys-col 1
