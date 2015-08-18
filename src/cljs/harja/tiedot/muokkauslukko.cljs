@@ -52,11 +52,11 @@
 
 (defn virkista-lukko [lukko-id]
   (log "[LUKKO] Virkistetään lukko")
-  (k/post! :virkista-lukko {:id lukko-id}))                 ; FIXME Paluuarvosta uudet tiedot nykyinen-lukko -muuttujaan
+  (reset! nykyinen-lukko (k/post! :virkista-lukko {:id lukko-id})))
 
 (defn vapauta-lukko [lukko-id]
   (log "[LUKKO] Vapautetaan lukko")
-  (if (nykyinen-nakyma-lukittu?)
+  (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
     (k/post! :vapauta-lukko {:id lukko-id}))
   (reset! nykyinen-lukko nil)
   (log "[LUKKO] Lukko vapautettu. Uusi lukon tila: " (pr-str @nykyinen-lukko)))
