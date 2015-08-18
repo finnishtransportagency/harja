@@ -98,7 +98,7 @@
 (def historiakuvan-asiat-kartalla
   (reaction
     @haetut-asiat
-    (when @taso-tilannekuva
+    (when @taso-historiakuva
       (into [] (map kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []

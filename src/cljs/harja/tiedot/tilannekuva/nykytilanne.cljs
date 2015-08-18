@@ -65,7 +65,7 @@
 (def nykytilanteen-asiat-kartalla
   (reaction
     @haetut-asiat
-    (when @taso-tilannekuva
+    (when @taso-nykytilanne
       (into [] (map kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []
