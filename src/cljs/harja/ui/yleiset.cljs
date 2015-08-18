@@ -48,7 +48,7 @@
   ([] (ajax-loader nil))
   ([viesti]
    [:div.ajax-loader
-    [:img {:src "/images/ajax-loader.gif"}]
+    [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
 
