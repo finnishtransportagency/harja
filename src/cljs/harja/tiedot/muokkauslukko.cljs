@@ -53,29 +53,31 @@
   [id]
   (k/post! :lukitse {:id id}))
 
-(defn virkista-lukko [lukko-id]
+(defn- virkista-nykyinen-lukko [lukko-id]
   (go
-    (log "[LUKKO] Virkistetään lukko")
+    (log "[LUKKO] Virkistetään nykyinen lukko")
     (reset! nykyinen-lukko (<! (k/post! :virkista-lukko {:id lukko-id})))))
 
 (defn vapauta-lukko [lukko-id]
-  (log "[LUKKO] Vapautetaan lukko")
+  (log "[LUKKO] Vapautetaan nykyinen lukko")
   (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
     (k/post! :vapauta-lukko {:id lukko-id}))
   (reset! nykyinen-lukko nil)
   (log "[LUKKO] Lukko vapautettu. Uusi lukon tila: " (pr-str @nykyinen-lukko)))
 
-(defn pollaa []
+(defn- pollaa []
   (if @nykyinen-lukko
-    (do
-      (log "[LUKKO] Pollataan muokkauslukko: " (pr-str @nykyinen-lukko))
+    (go
+      (log "[LUKKO] Suoritetaan pollaus nykyiselle lukolle: " (pr-str @nykyinen-lukko))
       (let [lukko-id (:id @nykyinen-lukko)]
         (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
-          (virkista-lukko lukko-id)
-          (hae-lukko-idlla lukko-id))))
+          (virkista-nykyinen-lukko lukko-id))))
+          ;; Jos käyttäjä ei omista lukkoa, voitaisiin pollata vanha lukko kannasta.
+          ;; Jos vanhaa lukkoa ei kuitenkaan löydy, pitäisi suorittaa näkymän välitön lukitus kun näkymässä jo ollaan
+          ;; Tämä voi toimia, mutta katsoin paremmaksi jättää sen toistaiseksi implementoimatta.
     (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
 
-(defn aloita-pollaus []
+(defn- aloita-pollaus []
   (if (not @pollaus-kaynnissa)
     (go
       (reset! pollaus-kaynnissa true)
