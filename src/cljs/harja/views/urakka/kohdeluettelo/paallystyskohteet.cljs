@@ -145,7 +145,7 @@
                                              (not (nil? (:paikkausilmoitus_id rivi)))))
            :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko     "YHA ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
+           {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
             :validoi [[:ei-tyhja "Anna arvo"]
                       [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
             :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
@@ -167,7 +167,6 @@
           {:otsikko      "Muut työt" ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
            :tyhja        (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
            :muutos       #(reset! muut-tyot-virheet (grid/hae-virheet %))
-           :tunniste     :kohdenumero
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
