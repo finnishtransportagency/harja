@@ -201,7 +201,7 @@
                                         (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
-      (komp/lukko (str "paikkausilmoitus " (:kohdenumero @lomakedata)))
+      (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @lomakedata)))
       (fn []
 
         [:div.paikkausilmoituslomake

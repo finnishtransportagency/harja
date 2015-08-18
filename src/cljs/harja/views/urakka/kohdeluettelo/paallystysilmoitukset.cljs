@@ -262,7 +262,7 @@
                                         (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
-      (komp/lukko (str "paallystysilmoitus " (:kohdenumero @lomakedata)))
+      (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" (:kohdenumero @lomakedata)))
       (fn []
         [:div.paallystysilmoituslomake
 
