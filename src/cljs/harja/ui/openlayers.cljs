@@ -336,10 +336,10 @@
 (defmethod luo-feature :icon [{:keys [coordinates img]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
-                                                                 :anchor       #js [0.5 35]
+                                                                 :anchor       #js [0.5 0.5]
                                                                  :opacity 1
                                                                  :anchorXUnits "fraction"
-                                                                 :anchorYUnits "pixels"})}))))
+                                                                 :anchorYUnits "fraction"})}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
