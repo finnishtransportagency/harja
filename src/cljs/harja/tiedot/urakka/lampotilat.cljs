@@ -22,3 +22,8 @@
 (defn hae-lampotilat-ilmatieteenlaitokselta [urakka-id vuosi]
   (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:urakka-id urakka-id
                                                    :vuosi vuosi}))
+
+
+(defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
+  (log "hae-urakan-suolasakot-ja-lampotilat [urakka-id]" urakka-id)
+  (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))

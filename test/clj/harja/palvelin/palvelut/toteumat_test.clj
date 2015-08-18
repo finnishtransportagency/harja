@@ -29,7 +29,10 @@
                                                                   [:http-palvelin :db])
           :tallenna-toteuma-ja-toteumamateriaalit (component/using
                                                     (->Toteumat)
-                                                    [:http-palvelin :db])))))
+                                                    [:http-palvelin :db])
+          :hae-urakan-suolasakot-ja-lampotilat (component/using
+                                                 (->Toteumat)
+                                                 [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

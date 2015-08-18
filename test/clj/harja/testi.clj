@@ -162,6 +162,7 @@
 
 (def testikayttajien-lkm (atom nil))
 (def oulun-alueurakan-id (atom nil))
+(def oulun-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
 (def muhoksen-paallystysurakan-id (atom nil))
@@ -176,6 +177,11 @@
   (ffirst (q (str "SELECT id
                                FROM   urakka
                                WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+
+(defn hae-oulun-alueurakan-2014-2019-id []
+  (ffirst (q (str "SELECT id
+                               FROM   urakka
+                               WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -221,6 +227,7 @@
   (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
+  (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! muhoksen-paikkausurakan-id (hae-muhoksen-paikkausurakan-id))

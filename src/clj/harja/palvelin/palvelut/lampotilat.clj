@@ -4,6 +4,7 @@
             [harja.kyselyt.lampotilat :as q]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]))
 
@@ -61,7 +62,18 @@
                %)
             (ilmatieteenlaitos/hae-talvikausi url vuosi)))))
 
-    
+(defn hae-urakan-suolasakot-ja-lampotilat
+  [db user urakka-id]
+  (log/debug "hae-urakan-suolasakot-ja-lampotilat")
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (comp
+          (map #(konv/decimal->double % :maara))
+          (map #(konv/decimal->double % :keskilampotila))
+          (map #(konv/decimal->double % :pitkakeskilampotila))
+          (map #(konv/decimal->double % :lampotilaerotus)))
+          (q/hae-urakan-suokasakot-ja-lampotilat db urakka-id)))
+
 (defrecord Lampotilat [ilmatieteenlaitos-url]
   component/Lifecycle
   (start [this]
@@ -76,10 +88,14 @@
       (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
                         (fn [user {:keys [urakka-id vuosi]}]
                           (hae-lampotilat-ilmatieteenlaitokselta (:db this) ilmatieteenlaitos-url urakka-id vuosi)))
+      (julkaise-palvelu http :hae-urakan-suolasakot-ja-lampotilat
+                        (fn [user urakka-id]
+                          (hae-urakan-suolasakot-ja-lampotilat (:db this) user urakka-id)))
       this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :urakan-lampotilat :tallenna-lampotilat!
-                     :hae-lampotilat-ilmatieteenlaitokselta)
+                     :hae-lampotilat-ilmatieteenlaitokselta
+                     :hae-urakan-suolasakot-ja-lampotilat)
     this))

@@ -19,7 +19,7 @@
                                     {}
                                     (hae-raportit raportointi)))
                        
-                       :suorita-raporti
+                       :suorita-raportti
                        (fn [user raportti]
                          (suorita-raportti raportointi user raportti)))
      
