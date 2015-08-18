@@ -47,7 +47,7 @@
 
 (defn nykytilanne []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tiedot/taso-tilannekuva)
+    (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
     (fn []
       [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
                                         :leijuva?             300}])))

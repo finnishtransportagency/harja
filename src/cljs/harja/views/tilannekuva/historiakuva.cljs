@@ -98,7 +98,7 @@
 
 (defn historiakuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tiedot/taso-tilannekuva)
+    (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
     (fn []
       (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                       :lyhyt
