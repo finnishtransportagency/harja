@@ -17,14 +17,20 @@
 (def nykyinen-lukko (atom nil))
 (def pollaus-kaynnissa (atom false))
 
+(tarkkaile! "[LUKKO] Nykyinen lukko: " nykyinen-lukko)
+
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id istunto/kayttaja)))
 
-(defn kayttaja-omistaa-nykyisen-lukon? []
-  (log "[LUKKO] Tarkistetaan omistaako käyttäjä nykyisen lukon: " (pr-str @nykyinen-lukko))
-  (if (nil? nykyinen-lukko)
-    true
-    (kayttaja-omistaa-lukon? @nykyinen-lukko)))
+(defn nykyinen-nakyma-lukittu? []
+  (if (nil? @nykyinen-lukko)
+    (do
+      (log "[LUKKO] Nykyistä lukkoa ei ole. Näkymä ei ole lukittu.")
+      false)
+    (do
+      (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? @nykyinen-lukko)]
+        (log "[LUKKO] Käyttäjä omistaa lukon: " kayttajan-oma-lukko)
+        (false? kayttajan-oma-lukko)))))
 
 (defn muodosta-lukon-id
   "Ottaa näkymän ja item-id:n, joilla muodostetaan lukon id.
@@ -50,16 +56,20 @@
 
 (defn vapauta-lukko [lukko-id]
   (log "[LUKKO] Vapautetaan lukko")
-  (if (kayttaja-omistaa-nykyisen-lukon?)
+  (if (nykyinen-nakyma-lukittu?)
     (k/post! :vapauta-lukko {:id lukko-id}))
-  (reset! nykyinen-lukko nil))
+  (reset! nykyinen-lukko nil)
+  (log "[LUKKO] Lukko vapautettu. Uusi lukon tila: " (pr-str @nykyinen-lukko)))
 
 (defn pollaa []
-  (log "[LUKKO] Pollataan muokkauslukko")
-  (let [lukko-id (:id @nykyinen-lukko)]
-    (if (kayttaja-omistaa-nykyisen-lukon?)
-      (virkista-lukko lukko-id)
-      (hae-lukko-idlla lukko-id))))
+  (if @nykyinen-lukko
+    (do
+      (log "[LUKKO] Pollataan muokkauslukko: " (pr-str @nykyinen-lukko))
+      (let [lukko-id (:id @nykyinen-lukko)]
+        (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
+          (virkista-lukko lukko-id)
+          (hae-lukko-idlla lukko-id))))
+    (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
 
 (defn aloita-pollaus []
   (if (not @pollaus-kaynnissa)
@@ -92,6 +102,7 @@
             (let [uusi-lukko (<! (lukitse lukko-id))]
               (if uusi-lukko
                 (do
+                  (log "[LUKKO] Näkymä lukittu. Lukon tiedot: " (pr-str @nykyinen-lukko))
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")

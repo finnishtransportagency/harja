@@ -46,13 +46,12 @@
         (if (lukko-vanhentunut? lukko)
           (do
             (vapauta-lukko db user {:id (:id lukko)})
-
             nil)
           lukko)))))
 
 (defn lukitse
   "Yrittää luoda uuden lukon annetulla id:llä.
-  Jos onnistuu, palauttaa lukon id:n.
+  Jos onnistuu, palauttaa lukon tiedot
   Jos epäonnistuu, palauttaa nil"
   [db user {:keys [id]}]
   (jdbc/with-db-transaction [c db]
@@ -62,8 +61,7 @@
       (if (nil? lukko)
         (do
           (log/debug "Lukitaan " id)
-          (let [vastaus (q/luo-lukko<! c id (:id user))]
-            (:id vastaus)))
+          (q/luo-lukko<! c id (:id user)))
         (do
           (if (lukko-vanhentunut? lukko)
             (do
