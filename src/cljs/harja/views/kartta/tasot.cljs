@@ -7,7 +7,8 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.views.tyokoneseuranta :as tyokoneseuranta]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.tiedot.tilannekuva :as tilannekuva])
+            [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
+            [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def geometriat (reaction
@@ -18,7 +19,8 @@
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          @tyokoneseuranta/alueen-tyokoneet
-                                         @tilannekuva/tilannekuvan-asiat-kartalla)]
+                                         @historiakuva/historiakuvan-asiat-kartalla
+                                         @nykytilanne/nykytilanteen-asiat-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))
@@ -32,7 +34,8 @@
     :ilmoitukset ilmoitukset/taso-ilmoitukset
     :tyokoneet tyokoneseuranta/tyokonetaso-paalla
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
-    :tilannekuva tilannekuva/taso-tilannekuva))
+    :historiakuva historiakuva/taso-historiakuva
+    :nykytilanne nykytilanne/taso-nykytilanne))
     
 (defn taso-paalle! [nimi]
   (reset! (taso-atom nimi) true))

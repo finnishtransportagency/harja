@@ -17,7 +17,7 @@
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
-            [harja.views.tilannekuva :as tilannekuva]
+            [harja.views.tilannekuva.tilannekuva :as tilannekuva]
             [harja.views.ilmoitukset :as ilmoitukset]
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
