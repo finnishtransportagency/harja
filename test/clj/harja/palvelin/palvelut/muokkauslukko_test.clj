@@ -72,14 +72,27 @@
                           :lukitse
                           +kayttaja-jvh+ {:id "tyhmalukko_007"})
         lukko-oli-olemassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-lukko-idlla
-                              +kayttaja-jvh+ {:id "tyhmalukko_007"})
+                                           :hae-lukko-idlla
+                                           +kayttaja-jvh+ {:id "tyhmalukko_007"})
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :vapauta-lukko
                           +kayttaja-jvh+ {:id "tyhmalukko_007"})
         lukko-vapautui (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-lukko-idlla
-                                                     +kayttaja-jvh+ {:id "tyhmalukko_007"})]
+                                       :hae-lukko-idlla
+                                       +kayttaja-jvh+ {:id "tyhmalukko_007"})]
     (is (not (nil? lukko-oli-olemassa)))
     (is (= (:id lukko-oli-olemassa) "tyhmalukko_007"))
     (is (nil? lukko-vapautui))))
+
+(deftest lukon-virkistaminen-toimii
+  (let [vanha-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :lukitse
+                                    +kayttaja-jvh+ {:id "tyhmalukko_2015"})
+        _ (Thread/sleep 1000)
+        virkistetty-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :virkista-lukko
+                                          +kayttaja-jvh+ {:id "tyhmalukko_2015"})]
+    (is (not (nil? vanha-lukko)))
+    (is (not (nil? virkistetty-lukko)))
+    (is (true? (t/after? (coerce/from-sql-time (:aikaleima virkistetty-lukko))
+                         (coerce/from-sql-time (:aikaleima vanha-lukko)))))))
