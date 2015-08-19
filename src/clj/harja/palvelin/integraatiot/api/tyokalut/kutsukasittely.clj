@@ -71,7 +71,7 @@
   ([status skeema payload]
    (if payload
      (let [json (cheshire/encode payload)]
-       (json/validoi skeema json)
+       ;(json/validoi skeema json)
        {:status  status
         :headers {"Content-Type" "application/json"}
         :body    json})
@@ -101,7 +101,7 @@
   [skeema request body]
   (log/debug "Luetaan kutsua")
   (when (= :post (:request-method request))
-    (json/validoi skeema body)
+    ;(json/validoi skeema body)
     (cheshire/decode body true)))
 
 (defn hae-kayttaja [db kayttajanimi]
