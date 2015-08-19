@@ -10,22 +10,25 @@
 (defn- formatoi-vastaus [tyokone]
   (-> tyokone
       (update-in [:sijainti] geo/pg->clj)
+      (assoc :tyyppi :tyokone)
       (konversiot/array->set :tehtavat)))
 
 (defn hae-tyokoneet-alueelta [db user hakuehdot]
-  (log/debug "Haetaan tyokoneet alueelta: " hakuehdot)
-  (map formatoi-vastaus (if-let [urakka (:urakkaid hakuehdot)] 
-                          (tks/urakan-tyokoneet-alueella db
-                                                         urakka
-                                                         (:ymin hakuehdot)
-                                                         (:xmin hakuehdot)
-                                                         (:ymax hakuehdot)
-                                                         (:xmax hakuehdot))
-                          (tks/tyokoneet-alueella db
-                                                  (:ymin hakuehdot)
-                                                  (:xmin hakuehdot)
-                                                  (:ymax hakuehdot)
-                                                  (:xmax hakuehdot)))))
+  (let [alue (:alue hakuehdot)
+        urakka (:urakka hakuehdot)]
+    (log/debug "Haetaan tyokoneet alueelta: " alue " urakka " urakka)
+    (map formatoi-vastaus (if urakka
+                            (tks/urakan-tyokoneet-alueella db
+                                                           urakka
+                                                           (:ymin alue)
+                                                           (:xmin alue)
+                                                           (:ymax alue)
+                                                           (:xmax alue))
+                            (tks/tyokoneet-alueella db
+                                                    (:ymin alue)
+                                                    (:xmin alue)
+                                                    (:ymax alue)
+                                                    (:xmax alue))))))
 
 (defrecord TyokoneseurantaHaku []
   component/Lifecycle

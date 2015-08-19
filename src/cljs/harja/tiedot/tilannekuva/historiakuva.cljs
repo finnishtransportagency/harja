@@ -136,37 +136,26 @@
                   #_(when (some (fn [_ k] k) @haettavat-toteumatyypit) (<! (k/post! :hae-kaikki-toteumat (kasaa-parametrit)))))]
       (reset! haetut-asiat tulos))))
 
-;; Käytetään timeouttia (kerran) ja intervallia (toistuva)
-;; Timeouttia käytetään siihen, että kun käyttäjä muuttaa suodattimia,
-;; odotetaan jonkin aikaa kunnes tehdään ensimmäinen haku, ja sen jälkeen
-;; jatketaan intervallilla, jolloin päivitysten aika on pidempi.
 (def pollaus-id (atom nil))
-(def pollauksen-aloitus-id (atom nil))
 (def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
-(def +intervalli+ (* 10 +sekuntti+))
+(def +intervalli+ (* 5 +sekuntti+))
 
 (defn lopeta-pollaus
   []
   (when @pollaus-id
+    (log "lopetetaan pollaus")
     (js/clearInterval @pollaus-id)
     (reset! pollaus-id nil)))
 
-(defn peru-pollauksen-aloitus []
-  (when @pollauksen-aloitus-id
-    (js/clearTimeout @pollauksen-aloitus-id)
-    (reset! pollauksen-aloitus-id nil)))
-
-(defn tasoita-pollauksen-tahti []
-  (reset! pollaus-id (js/setInterval hae-asiat +intervalli+)))
-
 (defn aloita-pollaus
   []
-  (when @pollauksen-aloitus-id (peru-pollauksen-aloitus))
-  (when @pollaus-id (lopeta-pollaus))
-  (reset! pollauksen-aloitus-id (js/setTimeout
-                                  (do (hae-asiat) (tasoita-pollauksen-tahti))
-                                  (* 2 +sekuntti+))))
+  (when @pollaus-id
+    (log "aloitetaan pollaus")
+    (hae-asiat)
+    (reset! pollaus-id (js/setInterval hae-asiat +intervalli+))))
 
 (run! (if @nakymassa? (aloita-pollaus) (lopeta-pollaus)))
-(run! (when @filtterit-muuttui? (aloita-pollaus)))
+
+(run! (when @filtterit-muuttui?
+        (hae-asiat)))
+

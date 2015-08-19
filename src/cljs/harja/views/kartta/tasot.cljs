@@ -5,7 +5,6 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
-            [harja.views.tyokoneseuranta :as tyokoneseuranta]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne])
@@ -18,7 +17,6 @@
                                          @laadunseuranta/urakan-tarkastukset
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                                         @tyokoneseuranta/alueen-tyokoneet
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla)]
                    (if-not g
@@ -32,7 +30,6 @@
     :sillat sillat/taso-sillat
     :tarkastukset laadunseuranta/taso-tarkastukset
     :ilmoitukset ilmoitukset/taso-ilmoitukset
-    :tyokoneet tyokoneseuranta/tyokonetaso-paalla
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
     :historiakuva historiakuva/taso-historiakuva
     :nykytilanne nykytilanne/taso-nykytilanne))

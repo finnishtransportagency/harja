@@ -245,6 +245,9 @@
     (.setView ol3 (ol.View. #js {:center (clj->js @view)
                                  :zoom   @zoom}))
 
+    ; alustetaan kartalla näkyvä alue ettei jää tyhjäksi alussa
+    (apply (:on-mount mapspec) (laske-kartan-alue ol3))
+    
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3            ol3
                              :geometries-map {}
