@@ -123,7 +123,7 @@
 
 (defn lomake-lukittu-huomautus
   []
-  [:div.lomake-lukittu-huomautus (harja.ui.ikonit/info-sign) " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä muokkaa parhaillaan lomaketta."])
+  [:div.lomake-lukittu-huomautus (harja.ui.ikonit/info-sign) " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen."])
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.

@@ -74,7 +74,10 @@
       (let [lukko-id (:id @nykyinen-lukko)]
         (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
           (virkista-nykyinen-lukko lukko-id)
-          (paivita-lukko lukko-id))))
+          #_(paivita-lukko lukko-id))))
+          ; Lukkoa itselleen odottava käyttäjä voisi päivittää lukon tiedot ja jos lukkoa ei ole, lukita näkymän itselleen.
+          ; Tällöin pitäisi kuitenkin päivittää näkymään uudet tiedot. Tämä vaatisi tiedon siitä, että lukko vapautui ja
+          ; näkymä voidaan päivittää.
     (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
 
 (defn- aloita-pollaus []
@@ -111,4 +114,4 @@
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
-                    (paivita-lukko lukko-id)))))))))        ; FIXME Entä jos epäonnistuu myös uudella yrityksellä?
+                    (paivita-lukko lukko-id)))))))))
