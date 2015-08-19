@@ -8,16 +8,16 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  t.luoja as luoja_id,
-  o.nimi as organisaatio,
+  t.luoja       AS luoja_id,
+  o.nimi        AS organisaatio,
   k.kayttajanimi,
-  k.jarjestelma as jarjestelman_lisaama,
+  k.jarjestelma AS jarjestelman_lisaama,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
          AND tt.poistettu IS NOT TRUE)
-    AS tehtavat
+                AS tehtavat
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
@@ -26,7 +26,7 @@ WHERE
   AND t.sopimus = :sopimus
   AND t.alkanut >= :alkupvm
   AND t.paattynyt <= :loppupvm
-  AND t.tyyppi = :tyyppi::toteumatyyppi
+  AND t.tyyppi = :tyyppi :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
 
@@ -40,16 +40,16 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  t.luoja as luoja_id,
-  o.nimi as organisaatio,
+  t.luoja       AS luoja_id,
+  o.nimi        AS organisaatio,
   k.kayttajanimi,
-  k.jarjestelma as jarjestelman_lisaama,
+  k.jarjestelma AS jarjestelman_lisaama,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
          AND tt.poistettu IS NOT TRUE)
-    AS tehtavat
+                AS tehtavat
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
@@ -62,8 +62,8 @@ GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarje
 -- name: listaa-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
-  toimenpidekoodi as tpk_id,
-  SUM(tt.maara) AS maara,
+          toimenpidekoodi AS tpk_id,
+          SUM(tt.maara)   AS maara,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE tpk.id = tt.toimenpidekoodi)
@@ -73,7 +73,7 @@ FROM toteuma_tehtava tt
                     AND sopimus = :sopimus
                     AND alkanut >= :alkanut
                     AND paattynyt <= :paattynyt
-                    AND tyyppi = :tyyppi::toteumatyyppi
+                    AND tyyppi = :tyyppi :: toteumatyyppi
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
 GROUP BY toimenpidekoodi;
@@ -133,43 +133,43 @@ FROM toteuma_tehtava tt
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
-                          AND tyyppi = :tyyppi::toteumatyyppi
+                          AND tyyppi = :tyyppi :: toteumatyyppi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
 
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
-  tt.id                           AS tehtava_id,
-  tt.toteuma                      AS toteuma_id,
-  tt.toimenpidekoodi              AS tehtava_toimenpidekoodi,
-  tt.maara                        AS tehtava_maara,
-  tt.lisatieto                    AS tehtava_lisatieto,
-  tt.paivan_hinta                 AS tehtava_paivanhinta,
+  tt.id              AS tehtava_id,
+  tt.toteuma         AS toteuma_id,
+  tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
+  tt.maara           AS tehtava_maara,
+  tt.lisatieto       AS tehtava_lisatieto,
+  tt.paivan_hinta    AS tehtava_paivanhinta,
   t.tyyppi,
   t.alkanut,
   t.paattynyt,
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  tpk.emo                         AS tehtava_emo,
-  tpk.nimi AS tehtava_nimi,
-  o.nimi as organisaatio,
+  tpk.emo            AS tehtava_emo,
+  tpk.nimi           AS tehtava_nimi,
+  o.nimi             AS organisaatio,
   k.kayttajanimi,
-  k.jarjestelma as jarjestelmasta
+  k.jarjestelma      AS jarjestelmasta
 FROM toteuma_tehtava tt
-    JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
-    INNER JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
+  INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
-                          AND tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi,
-                                         'lisatyo'::toteumatyyppi, 'muutostyo'::toteumatyyppi)
+                          AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
+                                         'lisatyo' :: toteumatyyppi, 'muutostyo' :: toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
-          LEFT JOIN kayttaja k ON k.id = t.luoja
-          LEFT JOIN organisaatio o ON o.id = k.organisaatio;
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät tietyllä toimenpidekoodilla
@@ -193,32 +193,107 @@ FROM toteuma_tehtava tt
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
-                          AND tyyppi = :tyyppi::toteumatyyppi
+                          AND tyyppi = :tyyppi :: toteumatyyppi
                           AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
 
+-- name: hae-toteumat-historiakuvaan
+-- Hakee toteumat historiakuvaan toimenpidekoodin perusteella.
+-- Hakua saatetaan suodattaa myös hallintayksikön, urakan, tai päivämäärän perusteella
+SELECT
+  t.id,
+  t.urakka,
+  t.sopimus,
+  t.alkanut,
+  t.paattynyt,
+  t.tyyppi,
+  t.lisatieto,
+  t.suorittajan_ytunnus                   AS suorittaja_ytunnus,
+  t.suorittajan_nimi                      AS suorittaja_nimi,
+  t.ulkoinen_id                           AS ulkoinenid,
+
+  tt.id                                   AS tehtava_id,
+  tt.toimenpidekoodi                      AS tehtava_toimenpidekoodi,
+  tt.maara                                AS tehtava_maara,
+  tt.paivan_hinta                         AS tehtava_paivanhinta,
+  tt.lisatieto                            AS tehtava_lisatieto,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi)         AS tehtava_toimenpide,
+
+  tm.id                                   AS materiaali_id,
+  tm.maara                                AS materiaali_maara,
+
+  mk.id                                   AS materiaali_materiaali_id,
+  mk.nimi                                 AS materiaali_materiaali_nimi,
+  mk.kohdistettava                        AS materiaali_materiaali_kohdistettava,
+
+  rp.id                                   AS reittipiste_id,
+  rp.aika                                 AS reittipiste_aika,
+  (SELECT st_makepoint(rp.x, rp.y, rp.z)) AS reittipiste_sijainti,
+
+  rt.id                                   AS reittipiste_tehtava_id,
+  rt.toimenpidekoodi                      AS reittipiste_tehtava_toimenpidekoodi,
+  rt.maara                                AS reittipiste_tehtava_maara,
+
+  rm.id                                   AS reittipiste_materiaali_id,
+  rm.materiaalikoodi                      AS reittipiste_materiaali_materiaalikoodi,
+  rm.maara                                AS reittipiste_materiaali_maara
+FROM toteuma_tehtava tt
+  INNER JOIN toteuma t ON tt.toteuma = t.id
+                          AND t.urakka = :urakka OR :urakka_annettu IS FALSE
+                                                    AND t.alkanut >= :alkupvm
+                                                    AND t.paattynyt <= :loppupvm
+                                                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                                                    AND tt.poistettu IS NOT TRUE
+                                                    AND t.poistettu IS NOT TRUE
+  INNER JOIN reittipiste rp ON rp.toteuma = t.id
+                               -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
+                               AND (st_contains(:alue, st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY))
+                               -- Sen jälkeen tarkastetaan hallintayksiköllä/urakalla suodattaminen
+                               AND (
+                                 -- Joko ei suodateta HY:llä/urakalla
+                                 (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
+                                 -- tai suodatetaan vain HY:llä..
+                                 (:urakka_annettu IS FALSE AND
+                                  st_contains((SELECT alue
+                                               FROM organisaatio
+                                               WHERE id = :hallintayksikko),
+                                              st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY)) OR
+                                 -- Tai suodatetaan urakalla
+                                 (st_contains((SELECT alue
+                                               FROM urakoiden_alueet
+                                               WHERE id = :urakka),
+                                              st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY)))
+  LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
+  LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
+  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+                                     AND tm.poistettu IS NOT TRUE
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id;
+
+
 -- name: paivita-toteuma!
 UPDATE toteuma
-SET alkanut = :alkanut,
-  paattynyt = :paattynyt,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja,
-  suorittajan_nimi = :suorittajan_nimi,
+SET alkanut           = :alkanut,
+  paattynyt           = :paattynyt,
+  muokattu            = NOW(),
+  muokkaaja           = :kayttaja,
+  suorittajan_nimi    = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
-  lisatieto = :lisatieto
+  lisatieto           = :lisatieto
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
-SET alkanut = :alkanut,
-  paattynyt = :paattynyt,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja,
-  suorittajan_nimi = :suorittajan_nimi,
+SET alkanut           = :alkanut,
+  paattynyt           = :paattynyt,
+  muokattu            = NOW(),
+  muokkaaja           = :kayttaja,
+  suorittajan_nimi    = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
-  lisatieto = :lisatieto,
-  tyyppi = :tyyppi::toteumatyyppi
+  lisatieto           = :lisatieto,
+  tyyppi              = :tyyppi :: toteumatyyppi
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 
@@ -228,7 +303,7 @@ INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id)
-VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi::toteumatyyppi, NOW(), :kayttaja,
+VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
         FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id);
 
 -- name: poista-toteuma!
@@ -245,13 +320,13 @@ VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhint
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
-   SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
- WHERE toteuma =:id AND poistettu IS NOT TRUE;
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE toteuma = :id AND poistettu IS NOT TRUE;
 
 -- name: poista-tehtava!
 UPDATE toteuma_tehtava
-   SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
- WHERE id IN (:id) AND poistettu IS NOT TRUE;
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö toteumaa ulkoisella id:llä
@@ -308,7 +383,7 @@ WHERE id = :id;
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
 UPDATE toteuma_tehtava
-SET poistettu = true
+SET poistettu = TRUE
 WHERE id = :id;
 
 -- name: merkitse-toteuman-maksuera-likaiseksi!
@@ -316,7 +391,7 @@ WHERE id = :id;
 UPDATE maksuera
 SET likainen = TRUE
 WHERE
-  tyyppi = :tyyppi::maksueratyyppi  AND
+  tyyppi = :tyyppi :: maksueratyyppi AND
   toimenpideinstanssi IN (SELECT tpi.id
                           FROM toimenpideinstanssi tpi
                             JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
@@ -335,7 +410,7 @@ WHERE
                JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                JOIN toteuma_tehtava tt ON tt.toimenpidekoodi = tpk.id
                JOIN toteuma t ON t.id = tt.toteuma
-             WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi::TEXT = m.tyyppi :: TEXT);
+             WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi :: TEXT = m.tyyppi :: TEXT);
 
 -- name: merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi!
 -- Merkitsee erilliskustannuksia vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
@@ -353,39 +428,50 @@ INSERT INTO reittipiste (toteuma, aika, luotu, sijainti) VALUES (:toteuma, :aika
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
-DELETE FROM reittipiste WHERE toteuma = :id;
+DELETE FROM reittipiste
+WHERE toteuma = :id;
 
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto) VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto)
+VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto);
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
-DELETE FROM toteuma_tehtava WHERE toteuma = :id;
+DELETE FROM toteuma_tehtava
+WHERE toteuma = :id;
 
 -- name: luo-toteuma_materiaali<!
 -- Luo uuden toteuman materiaalin
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja) VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
+VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
 
 -- name: poista-toteuma_materiaali-toteuma-idlla!
 -- Poistaa toteuman materiaalit
-DELETE FROM toteuma_materiaali WHERE toteuma = :id;
+DELETE FROM toteuma_materiaali
+WHERE toteuma = :id;
 
 -- name: luo-reitti_tehtava<!
 -- Luo uuden reitin tehtävän
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara) VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
 
 -- name: poista-reitti_tehtava-reittipiste-idlla!
 -- Poistaa reitin tehtävät
-DELETE FROM reitti_tehtava WHERE reittipiste = :id;
+DELETE FROM reitti_tehtava
+WHERE reittipiste = :id;
 
 -- name: luo-reitti_materiaali<!
 -- Luo uuden reitin materiaalin
-INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara) VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
+INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara)
+VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
 
 -- name: poista-reitti_materiaali-reittipiste-idlla!
 -- Poistaa reitin materiaalit
-DELETE FROM reitti_materiaali WHERE reittipiste = :id;
+DELETE FROM reitti_materiaali
+WHERE reittipiste = :id;
 
 -- name: hae-toteuman-reittipisteet-idlla
-SELECT * FROM reittipiste WHERE toteuma = :id;
+SELECT *
+FROM reittipiste
+WHERE toteuma = :id;
