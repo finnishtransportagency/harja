@@ -96,3 +96,13 @@
     (is (not (nil? virkistetty-lukko)))
     (is (true? (t/after? (coerce/from-sql-time (:aikaleima virkistetty-lukko))
                          (coerce/from-sql-time (:aikaleima vanha-lukko)))))))
+
+(deftest kayttajan-A-lukitseman-nakyman-lukitseminen-ei-onnistu-kayttajalta-B
+  (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :lukitse
+                                    +kayttaja-jvh+ {:id "jvh_2015"})
+        tero-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :lukitse
+                                  +kayttaja-tero+ {:id "jvh_2015"})]
+    (is (not (nil? jvh-lukko)))
+    (is (nil? tero-lukko))))
