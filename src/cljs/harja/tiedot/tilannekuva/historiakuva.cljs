@@ -87,7 +87,13 @@
 (defmethod kartalla-xf :toteuma [toteuma]
   (assoc toteuma
     :type :toteuma
-    :alue (oletusalue toteuma)))
+    :alue {
+           :type        :line
+           :coordinates (map :sijainti (sort-by
+                                         :aika
+                                         pvm/jalkeen?
+                                         (:reittipisteet toteuma)))
+           }))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   (assoc tp
@@ -103,6 +109,8 @@
   (assoc pt
     :type :paikkaustyo
     :alue (oletusalue pt)))
+
+(defmethod kartalla-xf :default [_])
 
 (def historiakuvan-asiat-kartalla
   (reaction
@@ -142,7 +150,11 @@
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit))))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot (kasaa-parametrit))))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot (kasaa-parametrit))))
-                  #_(when (some (fn [_ k] k) @haettavat-toteumatyypit) (<! (k/post! :hae-kaikki-toteumat (kasaa-parametrit)))))]
+                  (when-not (empty? @haettavat-toteumatyypit)
+                    (<! (k/post! :hae-kaikki-toteumat (assoc
+                                                        (kasaa-parametrit)
+                                                        :toimenpidekoodit
+                                                        @haettavat-toteumatyypit)))))]
       (reset! haetut-asiat tulos))))
 
 (def pollaus-id (atom nil))

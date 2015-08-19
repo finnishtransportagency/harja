@@ -118,6 +118,7 @@
     (konv/sarakkeet-vektoriin
       (into []
             (comp
+              (map assoc :tyyppi :toteuma)
               (map konv/alaviiva->rakenne)
               (harja.geo/muunna-pg-tulokset :reittipiste_sijainti))
             (q/hae-toteumat-historiakuvaan db urakka urakka_annettu (konv/sql-date alku) (konv/sql-date loppu)

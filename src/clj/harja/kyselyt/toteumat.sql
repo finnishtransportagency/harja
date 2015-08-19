@@ -270,7 +270,8 @@ FROM toteuma_tehtava tt
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
-  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id;
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+ORDER BY rp.aika ASC;
 
 
 -- name: paivita-toteuma!
