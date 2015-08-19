@@ -108,7 +108,7 @@
                               [:sonja :db :integraatioloki])
 
       ;; T-LOIK
-      :sampo (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
+      :tloik (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
                                              (:ilmoituskuittausjono (:tloik asetukset)))
                               [:sonja :db :integraatioloki])
 
