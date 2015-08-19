@@ -134,11 +134,18 @@
                                 (reset! geom g))))
     @geom))
 
+(defn- laske-kartan-alue [ol3]
+  (.calculateExtent (.getView ol3) (.getSize ol3)))
+
+(defn- aseta-zoom-kasittelija [this ol3 on-zoom]
+  (.on (.getView ol3) "change:resolution" (fn [e] 
+                                            (when on-zoom
+                                              (on-zoom e (laske-kartan-alue ol3))))))
+
 (defn- aseta-drag-kasittelija [this ol3 on-move]
   (.on ol3 "pointerdrag" (fn [e]
                            (when on-move
-                             (let [newextent (.calculateExtent (.getView ol3) (.getSize ol3))]
-                               (on-move e newextent))))))
+                             (on-move e (laske-kartan-alue ol3))))))
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "click" (fn [e]
@@ -249,6 +256,8 @@
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
+    (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
+    
     ;; Add callback for ol3 pos/zoom changes
     ;; watcher for pos/zoom atoms
 

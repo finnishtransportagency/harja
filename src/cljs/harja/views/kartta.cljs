@@ -91,6 +91,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   (openlayers/show-popup! sijainti sisalto-hiccup))
 
 
+(defn- paivita-extent [newextent]
+  (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
+                                    :ymin (aget newextent 1)
+                                    :xmax (aget newextent 2)
+                                    :ymax (aget newextent 3)}))
+
 (defn kartta-openlayers []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko
@@ -110,11 +116,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
       :view kartta-sijainti
       :zoom zoom-taso
       :selection nav/valittu-hallintayksikko
-      :on-drag (fn [_ newextent]
-                 (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
-                                                   :ymin (aget newextent 1)
-                                                   :xmax (aget newextent 2)
-                                                   :ymax (aget newextent 3)}))
+      :on-zoom (fn [_ newextent] (paivita-extent newextent))
+      :on-drag (fn [_ newextent] (paivita-extent newextent))
       ;;:on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
       :on-select (fn [item event]
                    (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
