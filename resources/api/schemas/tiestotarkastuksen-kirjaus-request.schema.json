@@ -26,6 +26,7 @@
         "kuvaus": {
           "id": "urn:harja/tarkastus/havainto/kuvaus",
           "type": "string",
+          "maxLength": 4096,
           "required": true
         }
       }

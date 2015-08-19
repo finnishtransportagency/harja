@@ -33,6 +33,7 @@
     "kuvaus": {
       "id": "urn:harja/kuvaus",
       "type": "string",
+      "maxLength": 4096,
       "required": true
     },
     "kirjaaja": {
