@@ -42,7 +42,7 @@
     (is (= 200 (:status vastaus)))
 
     (let [havainnot-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))
-          liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.png';")))
+          liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))
           havainto-id (ffirst (q (str "SELECT id FROM havainto WHERE kohde = 'testikohde36934853';")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'Testikommentti323353435';")))]
       (log/debug "liite-id: " liite-id)
