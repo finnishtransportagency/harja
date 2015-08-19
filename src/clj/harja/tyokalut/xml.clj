@@ -16,9 +16,8 @@
   String, joka on sisältö."
   [xsd-polku xsd xml]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisätö on:" xml)
-  (let
-    [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
-
+  (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
+    
     (.setResourceResolver schema-factory
                           (reify LSResourceResolver
                             (resolveResource [this type namespaceURI publicId systemId baseURI]
@@ -32,7 +31,7 @@
                                   (getEncoding [_] "UTF-8")
                                   (getStringData [_] (slurp xsd-file)))))))
     (try (-> schema-factory
-             (.newSchema (StreamSource. (io/input-stream (io/file xsd-polku xsd))))
+             (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-polku xsd)))))
              .newValidator
              (.validate (StreamSource. (ByteArrayInputStream. (.getBytes xml)))))
          true
