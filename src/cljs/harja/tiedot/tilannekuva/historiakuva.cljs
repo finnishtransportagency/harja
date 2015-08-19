@@ -23,10 +23,6 @@
 (defonce hae-paikkaustyot? (atom true))
 (defonce hae-paallystystyot? (atom true))
 
-(def +toteumatyypit+ [:kokonaishintaiset :yksikkohintaiset])
-(defonce haettavat-toteumatyypit (atom #{:kokonaishintaiset :yksikkohintaiset}))
-
-
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :lyhyt))
 (defonce lyhyen-suodattimen-asetukset (atom {:pvm nil :kellonaika "12:00" :plusmiinus 12}))
@@ -34,6 +30,17 @@
 
 (defonce nakymassa? (atom false))
 (defonce taso-historiakuva (atom false))
+
+;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
+(defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
+                                      (when nakymassa?
+                                        (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
+                                              res)))))
+
+(defonce naytettavat-toteumatyypit (reaction
+                                     (mapv :nimi @toimenpidekoodit)))
+
+(defonce haettavat-toteumatyypit (atom #{}))
 
 (defonce filtterit-muuttui?
          (reaction @hae-toimenpidepyynnot?
