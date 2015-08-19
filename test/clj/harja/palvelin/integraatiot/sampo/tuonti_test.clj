@@ -14,7 +14,7 @@
             [harja.jms :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]))
 
-(def +xsd-polku+ "resources/xsd/sampo/inbound/")
+(def +xsd-polku+ "xsd/sampo/inbound/")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
