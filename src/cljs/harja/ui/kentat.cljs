@@ -376,7 +376,7 @@
        (:kellonaika @data)
        #(swap! data assoc :kellonaika %))]]
 
-   [:span {:style {:margin-right "3px"}} "\u00B1"]tur
+   [:span {:style {:margin-right "3px"}} "\u00B1"]
    [tee-kentta (assoc plusmiinus :tyyppi :positiivinen-numero) (r/wrap
                                                                  (:plusmiinus @data)
                                                                  #(swap! data assoc :plusmiinus %))]])
