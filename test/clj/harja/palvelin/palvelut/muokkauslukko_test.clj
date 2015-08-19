@@ -1,8 +1,7 @@
 (ns harja.palvelin.palvelut.muokkauslukko-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.paallystys :refer :all]
+            [harja.palvelin.palvelut.muokkauslukko :refer :all]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
