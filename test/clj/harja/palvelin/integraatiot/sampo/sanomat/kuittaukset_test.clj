@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.sampo.sanomat.kuittaukset_test
+(ns harja.palvelin.integraatiot.sampo.sanomat.kuittaukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sisaan-sanoma]))
 
