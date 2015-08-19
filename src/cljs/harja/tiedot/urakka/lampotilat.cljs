@@ -27,3 +27,8 @@
 (defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
   (log "hae-urakan-suolasakot-ja-lampotilat [urakka-id]" urakka-id)
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
+
+(defn tallenna-suolasakko-ja-lampotilat!
+  [tiedot]
+  (log "tallenna-suolasakko-ja-lampotilat!" tiedot)
+  (k/post! :tallenna-suolasakko-ja-lampotilat tiedot))

@@ -26,28 +26,11 @@
 
 (defonce suolasakot-nakyvissa? (atom false))
 
-;; Nykyiset lämpötilat hoitokausittain, mäppäys [alku loppu] => {:id ... :keskilampo ... :pitkalampo ...}
-(defonce nykyiset-lampotilat (reaction<! [ur @nav/valittu-urakka]
-                                         (when ur
-                                           (go
-                                             (let [lampotilat (<! (lampotilat/hae-urakan-lampotilat (:id ur)))]
-                                               (log "LAMPOTILAT HAETTU: " (pr-str lampotilat))
-                                               (zipmap (map (juxt :alkupvm :loppupvm) lampotilat)
-                                                       lampotilat))))))
-
-(defonce muokatut-lampotilat (reaction @nykyiset-lampotilat))
-
 (defonce suolasakot-ja-lampotilat (reaction<! [ur @nav/valittu-urakka]
                                               (when (and ur suolasakot-nakyvissa?)
                                                 (lampotilat/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (tarkkaile! "suolasakot-ja-lampotilat" suolasakot-ja-lampotilat)
-
-(defn tallenna-muutos [hoitokausi tulos]
-  (let [uusi-lampo tulos]
-    (when-not (k/virhe? uusi-lampo)
-      (swap! nykyiset-lampotilat
-             assoc hoitokausi tulos))))
 
 
 (defn lampotila-lomake
@@ -79,19 +62,15 @@
                                 [:div.col-md-4
                                  [napit/palvelinkutsu-nappi
                                   "Tallenna"
-                                  #(lampotilat/tallenna-lampotilat!
-                                    (:lt_id @valitun-hoitokauden-tiedot)
-                                    (:id urakka)
-                                    hoitokausi
-                                    (:keskilampotila @valitun-hoitokauden-tiedot)
-                                    (:pitkakeskilampotila @valitun-hoitokauden-tiedot))
+                                  #(lampotilat/tallenna-suolasakko-ja-lampotilat!
+                                    @valitun-hoitokauden-tiedot)
                                   {:luokka       "nappi-ensisijainen"
                                    :disabled     (or (not= true (:muokattu @valitun-hoitokauden-tiedot))
                                                      (not (empty? virheet)))
                                    :ikoni        (ikonit/tallenna)
                                    :kun-onnistuu #(do
                                                    (viesti/nayta! "Tallentaminen onnistui" :success 1500)
-                                                   (tallenna-muutos hoitokausi %))}]]])])}
+                                                   (log "tallennus onnistui, nyt resetoi UI" %))}]]])])}
        [{:otsikko "Suolasakko" :nimi :maara :tyyppi :numero :leveys-col 2 :yksikko "€ / 5% rajan ylittävä tonni"}
         {:otsikko       "Maksu kuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
          :valinta-arvo  first
@@ -108,10 +87,10 @@
          :validoi [[:lampotila]] :yksikko "\u2103"}
         {:otsikko "Pitkän aikavälin sydäntalven keskilämpötila" :nimi :pitkakeskilampotila :tyyppi :numero :leveys-col 1
          :validoi [[:lampotila]] :yksikko "\u2103"}
-        {:otsikko "" :nimi :haku :tyyppi :komponentti
+        {:otsikko "Lämpötilat ilmatieteenlaitokselta" :nimi :haku :tyyppi :komponentti
          :komponentti (when (roolit/rooli-urakassa? roolit/urakanvalvoja
                                                     (:id urakka))
-                        [napit/palvelinkutsu-nappi "Hae lämpötilat ilmatieteenlaitokselta"
+                        [napit/palvelinkutsu-nappi "Hae"
                          #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id @urakka) (pvm/vuosi (first hoitokausi)))
                          {:ikoni        (ikonit/download)
                           :luokka       "nappi-ensisijainen nappi-hae-itl"
@@ -132,7 +111,7 @@
                         (.toFixed @lampotilaerotus 1))
          :tyyppi      :numero :leveys-col 1
          :muokattava? (constantly false) :yksikko "\u2103"
-         :vihje       (when (> (:lampotilaerotus @valitun-hoitokauden-tiedot) 2)
+         :vihje       (when (> @lampotilaerotus 2)
                         "Yli 2 astetta tavanomaista lämpimämpi sydäntalvi nostaa sallittua suolankäytön määrää.")}]
        @valitun-hoitokauden-tiedot]
       ])))
@@ -141,12 +120,8 @@
   (komp/luo
     (komp/lippu suolasakot-nakyvissa?)
     (fn []
-      (let [ur @nav/valittu-urakka
-            hoitokausi @u/valittu-hoitokausi]
-        (if (nil? @nykyiset-lampotilat)
-          [ajax-loader]
-          [:span
-           [:div "Osio on työn alla, älä raportoi bugeja."]
-           [valinnat/urakan-hoitokausi ur]
-           (if @u/valittu-hoitokausi
-             [lampotila-lomake])])))))
+      (let [ur @nav/valittu-urakka]
+        [:span.suolasakot
+         [valinnat/urakan-hoitokausi ur]
+         (when @u/valittu-hoitokausi
+           [lampotila-lomake])]))))

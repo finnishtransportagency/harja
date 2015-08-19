@@ -39,3 +39,14 @@ FROM suolasakko ss
                              AND (ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
                                   OR lt.id IS null)
   WHERE ss.id = :urakka;
+
+
+-- name: luo-suolasakko<!
+INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja)
+    VALUES (:maara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja);
+
+-- name: paivita-suolasakko!
+UPDATE suolasakko
+   SET maara = :maara, hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi, maksukuukausi = :maksukuukausi,
+       indeksi = :indeksi, urakka = :urakka, muokattu = NOW(), muokkaaja = :kayttaja, id = :id
+ WHERE id = :id;
