@@ -66,3 +66,20 @@
     (log/debug "Lukko: " (pr-str lukko))
     (is (not (nil? lukko)))
     (is (= (:id lukko) "tyhmalukko_666"))))
+
+(deftest lukon-vapauttaminen-toimii
+  (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :lukitse
+                          +kayttaja-jvh+ {:id "tyhmalukko_007"})
+        lukko-oli-olemassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-lukko-idlla
+                              +kayttaja-jvh+ {:id "tyhmalukko_007"})
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :vapauta-lukko
+                          +kayttaja-jvh+ {:id "tyhmalukko_007"})
+        lukko-vapautui (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-lukko-idlla
+                                                     +kayttaja-jvh+ {:id "tyhmalukko_007"})]
+    (is (not (nil? lukko-oli-olemassa)))
+    (is (= (:id lukko-oli-olemassa) "tyhmalukko_007"))
+    (is (nil? lukko-vapautui))))
