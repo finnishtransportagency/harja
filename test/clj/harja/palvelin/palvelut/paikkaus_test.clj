@@ -86,16 +86,16 @@
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
-      #_(is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+      (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :tallenna-paikkausilmoitus
                                                     +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                     :sopimus-id         sopimus-id
                                                                     :paikkausilmoitus paikkausilmoitus})))
-      #_(let [maara-pyynnon-jalkeen (ffirst (q
+      (let [maara-pyynnon-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM paikkausilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
-        #_(is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
+        (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
 (deftest tallenna-uusi-paikkausilmoitus-kantaan
   (let [paikkauskohde-id paikkauskohde-id-jolla-ei-ilmoitusta]
