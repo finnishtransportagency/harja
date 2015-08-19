@@ -36,6 +36,7 @@
              (log/debug "JSON data on validia")
              (kasittele-validointivirheet validointiraportti))))
        (catch Exception e
+         (log/error "JSON validoinnissa tapahtui poikkeus: " e)
          (throw+ {:type virheet/+invalidi-json+ :virheet
                         [{:koodi  virheet/+invalidi-json-koodi+
                           :viesti "JSON ei ole validia"}]}))))
