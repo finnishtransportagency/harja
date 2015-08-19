@@ -22,7 +22,7 @@
 
 (defn- kutsu [xmin ymin xmax ymax]
   (kutsu-http-palvelua :hae-tyokoneseurantatiedot +kayttaja-jvh+
-                       {:xmin xmin :ymin ymin :xmax xmax :ymax ymax}))
+                       {:alue {:xmin xmin :ymin ymin :xmax xmax :ymax ymax}}))
 
 (deftest testaa-tyokoneseurantahaku []
   (let [tyokoneet (kutsu 0 0 9000000 9000000)
