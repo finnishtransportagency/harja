@@ -49,7 +49,20 @@
                               :lukitse
                               +kayttaja-jvh+ {:id "tyhmanakyma_123"})]
     (log/debug "Lukko: " (pr-str lukko))
-  (is (not (nil? lukko)))
+    (is (not (nil? lukko)))
     (is (= (:id lukko) "tyhmanakyma_123"))
     (is (= (:kayttaja lukko) (:id +kayttaja-jvh+)))
-    (is (false? (t/before? (coerce/from-sql-time (:aikaleima lukko)) aika-nyt)))))
+    (is (= (t/day (coerce/from-sql-time (:aikaleima lukko))) (t/day aika-nyt)))
+    (is (= (t/month (coerce/from-sql-time (:aikaleima lukko))) (t/month aika-nyt)))
+    (is (= (t/year (coerce/from-sql-time (:aikaleima lukko))) (t/year aika-nyt)))))
+
+(deftest lukon-hakeminen-toimii
+  (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :lukitse
+                          +kayttaja-jvh+ {:id "tyhmalukko_666"})
+        lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-lukko-idlla
+                              +kayttaja-jvh+ {:id "tyhmalukko_666"})]
+    (log/debug "Lukko: " (pr-str lukko))
+    (is (not (nil? lukko)))
+    (is (= (:id lukko) "tyhmalukko_666"))))
