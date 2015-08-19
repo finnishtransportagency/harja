@@ -7,7 +7,7 @@
   (:import (java.text SimpleDateFormat ParseException)
            (java.sql Date)))
 
-(def +xsd-polku+ "resources/xsd/sampo/inbound/")
+(def +xsd-polku+ "xsd/sampo/inbound/")
 
 (defn parsi-paivamaara [teksti]
   (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") teksti)))

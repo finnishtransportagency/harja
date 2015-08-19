@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]))
 
-(def +xsd-polku+ "resources/xsd/tloik/")
+(def +xsd-polku+ "xsd/tloik/")
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))

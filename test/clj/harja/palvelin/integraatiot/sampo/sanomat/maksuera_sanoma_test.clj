@@ -10,7 +10,7 @@
   (:import (java.io ByteArrayInputStream)
            (java.text SimpleDateFormat)))
 
-(def +xsd-polku+ "resources/xsd/sampo/outbound/")
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))

@@ -12,7 +12,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
-(def +xsd-polku+ "resources/xsd/sampo/outbound/")
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
   (sonja/laheta sonja lahetysjono sanoma-xml))

@@ -10,7 +10,7 @@
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
 
-(def +xsd-polku+ "resources/xsd/tloik/")
+(def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +testi-ilmoitus-sanoma+ "<ilmoitus>

@@ -6,7 +6,7 @@
   (:import (java.text SimpleDateFormat)
            (java.util Date)))
 
-(def +xsd-polku+ "resources/xsd/sampo/inbound/")
+(def +xsd-polku+ "xsd/sampo/inbound/")
 
 (defn formatoi-paivamaara [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") paivamaara))

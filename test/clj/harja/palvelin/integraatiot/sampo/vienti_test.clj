@@ -17,7 +17,7 @@
 (def +lahetysjono-ulos+ "lahetysjono-ulos")
 (def +kuittausjono-ulos+ "kuittausjono-ulos")
 
-(def +xsd-polku+ "resources/xsd/sampo/outbound/")
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
