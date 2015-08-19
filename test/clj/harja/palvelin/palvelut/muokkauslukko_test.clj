@@ -40,7 +40,7 @@
 
 
 (use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
+                      (compose-fixtures jarjestelma-fixture tietokanta-fixture)
                       urakkatieto-fixture))
 
 (deftest nakyman-lukitseminen-toimii
@@ -106,3 +106,31 @@
                                   +kayttaja-tero+ {:id "jvh_2015"})]
     (is (not (nil? jvh-lukko)))
     (is (nil? tero-lukko))))
+
+(deftest kayttajan-A-ei-voi-virkistaa-kayttajan-B-lukkoa
+  (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :lukitse
+                                  +kayttaja-jvh+ {:id "jvh_lukko_2015"})
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :virkista-lukko
+                                   +kayttaja-tero+ {:id "jvh_lukko_2015"})
+        jvh-lukko-uudestaan (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-lukko-idlla
+                                  +kayttaja-jvh+ {:id "jvh_lukko_2015"})]
+    (is (not (nil? jvh-lukko)))
+    (is (not (nil? jvh-lukko-uudestaan)))
+    (is (true? (t/equal? (coerce/from-sql-time (:aikaleima jvh-lukko))
+                         (coerce/from-sql-time (:aikaleima jvh-lukko-uudestaan)))))))
+
+(deftest kayttajan-A-ei-voi-vapauttaa-kayttajan-B-lukkoa
+  (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :lukitse
+                                  +kayttaja-jvh+ {:id "jvhlukko_2015"})
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :vapauta-lukko
+                          +kayttaja-tero+ {:id "jvhlukko_2015"})
+        jvh-lukko-uudestaan (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-lukko-idlla
+                                            +kayttaja-jvh+ {:id "jvhlukko_2015"})]
+    (is (not (nil? jvh-lukko)))
+    (is (not (nil? jvh-lukko-uudestaan)))))
