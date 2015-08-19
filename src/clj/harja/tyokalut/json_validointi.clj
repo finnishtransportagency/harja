@@ -7,7 +7,9 @@
   (:import
     (com.github.fge.jsonschema.main JsonSchemaFactory)
     (com.github.fge.jackson JsonLoader)
-    (com.github.fge.jsonschema.core.report ProcessingReport)))
+    (com.github.fge.jsonschema.core.report ProcessingReport)
+    (com.github.fge.jsonschema.core.load.configuration LoadingConfiguration)
+    (com.github.fge.jsonschema.core.load.uri URITranslatorConfiguration)))
 
 (defn kasittele-validointivirheet
   [^ProcessingReport validointiraportti]
@@ -27,7 +29,16 @@
   (try (->
          (let
            [skeema (JsonLoader/fromURL (io/resource skeemaresurssin-polku))
-            validaattori-rakentaja (JsonSchemaFactory/byDefault)
+            validaattori-rakentaja (-> (JsonSchemaFactory/newBuilder)
+                                       (.setLoadingConfiguration
+                                        (-> (LoadingConfiguration/newBuilder)
+                                            (.setURITranslatorConfiguration
+                                             (-> (URITranslatorConfiguration/newBuilder)
+                                                 (.addPathRedirect (java.net.URI. "file:/resources/api/")
+                                                                   (.toURI (io/resource "api/")))
+                                                 .freeze))
+                                            .freeze))
+                                       .freeze)
             validaattori (.getJsonSchema validaattori-rakentaja skeema)
             json-data (JsonLoader/fromString json)
             validointiraportti (.validate validaattori json-data)]
