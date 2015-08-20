@@ -26,12 +26,8 @@
 
 (defn tallenna-lampotilat!
   [db user arvot]
-  (let [{:keys [urakka id alku loppu keskilampo pitkalampo]} arvot
-        kl (or keskilampo nil)
-        pl (or pitkalampo nil)]
+  (let [{:keys [urakka id alku loppu keskilampo pitkalampo]} arvot]
     (log/debug "Tallennetaan lämpötilaa")
-    ;(log/debug (java.lang.Float/parseFloat keskilampo) (type (java.lang.Float/parseFloat keskilampo)))
-    ;(log/debug (java.lang.Float/parseFloat pitkalampo))
     (if (roolit/rooli-urakassa? user "urakanvalvoja" urakka)
       (if (:id arvot)
         (do
@@ -41,8 +37,8 @@
                                                 urakka
                                                 (konv/sql-timestamp alku)
                                                 (konv/sql-timestamp loppu)
-                                                kl
-                                                pl
+                                                keskilampo
+                                                pitkalampo
                                                 id)))
 
         (do
@@ -52,8 +48,8 @@
                                                 urakka
                                                 (konv/sql-timestamp alku)
                                                 (konv/sql-timestamp loppu)
-                                                kl
-                                                pl)))))))
+                                                keskilampo
+                                                pitkalampo)))))))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [db url urakka-id vuosi]
   ;; Haetaan urakan id:n perusteella alueurakan tunnus, jota ilmatieteenlaitos käyttää
@@ -82,20 +78,22 @@
     (:id uusi)))
 
 (defn paivita-suolasakko
-  [params]
-  (log/debug "päivitä suolasakko" params)
-  (apply q/paivita-suolasakko! params)
-  (:id params))
+  [tiedot id]
+  (log/debug "päivitä suolasakko" tiedot)
+  (let [params (into [] (concat tiedot [id]))]
+    (apply q/paivita-suolasakko! params))
+  id)
 
 
 
 (defn tallenna-suolasakko
   [db user tiedot]
+  (log/debug "tallenna suolasakko" tiedot)
   (let [params [db (:maara tiedot) (:hoitokauden_alkuvuosi tiedot)
                 (:maksukuukausi tiedot) (:indeksi tiedot) (:urakka tiedot)
                 (:id user)]
   id (if (:id tiedot)
-       (paivita-suolasakko (into [] (concat params [(:id tiedot)])))
+       (paivita-suolasakko params (:id tiedot))
        (luo-suolasakko params))]
     id))
 
@@ -105,22 +103,18 @@
                                #{roolit/urakanvalvoja}
                                (:urakka tiedot))
   (jdbc/with-db-transaction [db db]
-                            (let [_ (log/debug "suolasakon tiedot" tiedot)
+                            (let [_ (log/debug "tallenna-suolasakko-ja-lampotilat" tiedot)
                                   suolasakon-id (tallenna-suolasakko db user tiedot)
-                                  ; {:maksukuukausi 8, :urakka 4, :lt_id 1, :indeksi "MAKU 2010",
-                                  ; :hoitokauden_alkuvuosi 2014, :lt_alkupvm #object[Object 20141001T000000], :maara 303, :id 1,
-                                  ; :keskilampotila -6.2, :lt_loppupvm #object[Object 20150930T000000],
-                                  ; :muokattu true, :pitkakeskilampotila -9}
 
-                                  ;--> urakka id alku loppu keskilampo pitkalampo
+                                  ; mäpätään kenttien nimet syömäkelpoiseksi aiemmin tehdylle funktiolle
+                                  ; --> urakka id alku loppu keskilampo pitkalampo
                                   lampotila (assoc tiedot
                                               :id (:lt_id tiedot)
                                               :alku (:lt_alkupvm tiedot)
                                               :loppu (:lt_loppupvm tiedot)
                                               :keskilampo (:keskilampotila tiedot)
-                                              :pitkalampo (:pitkakeskilampotila tiedot))
-                                  lampotilan-id (tallenna-lampotilat! db user lampotila)
-                                  _ (log/debug "suola-sakon id" suolasakon-id)])
+                                              :pitkalampo (:pitkakeskilampotila tiedot))]
+                              (tallenna-lampotilat! db user lampotila))
                             (hae-urakan-suolasakot-ja-lampotilat db user (:urakka tiedot))))
 
 (defrecord Lampotilat [ilmatieteenlaitos-url]

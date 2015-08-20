@@ -11,13 +11,6 @@
 (defn hae-urakan-lampotilat [urakka-id]
   (k/post! :urakan-lampotilat urakka-id))
 
-(defn tallenna-lampotilat! [id urakka-id [alku loppu] keskilampo pitkalampo]
-  (k/post! :tallenna-lampotilat! {:urakka urakka-id
-                                  :id id
-                                  :alku alku
-                                  :loppu loppu
-                                  :keskilampo (str keskilampo)
-                                  :pitkalampo (str pitkalampo)}))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [urakka-id vuosi]
   (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:urakka-id urakka-id
@@ -25,10 +18,4 @@
 
 
 (defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
-  (log "hae-urakan-suolasakot-ja-lampotilat [urakka-id]" urakka-id)
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
-
-(defn tallenna-suolasakko-ja-lampotilat!
-  [tiedot]
-  (log "tallenna-suolasakko-ja-lampotilat!" tiedot)
-  (k/post! :tallenna-suolasakko-ja-lampotilat tiedot))

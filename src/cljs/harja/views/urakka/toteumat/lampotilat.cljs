@@ -30,8 +30,15 @@
                                               (when (and ur suolasakot-nakyvissa?)
                                                 (lampotilat/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
-(tarkkaile! "suolasakot-ja-lampotilat" suolasakot-ja-lampotilat)
-
+(defn tallenna-suolasakko-ja-lampotilat
+  [tiedot]
+  (log "tallenna-suolasakko-ja-lampotilat" (pr-str tiedot))
+  (let [ehostettu-data (assoc tiedot
+                         :hoitokauden_alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+                         :lt_alkupvm (first @u/valittu-hoitokausi)
+                         :lt_lopppvm (second @u/valittu-hoitokausi)
+                         :urakka (:id @nav/valittu-urakka))]
+    (k/post! :tallenna-suolasakko-ja-lampotilat ehostettu-data)))
 
 (defn lampotila-lomake
   []
@@ -46,14 +53,12 @@
         lampotilaerotus (reaction (- (:keskilampotila @valitun-hoitokauden-tiedot)
                                      (:pitkakeskilampotila @valitun-hoitokauden-tiedot)))]
 
-    (tarkkaile! "suola valitun-hoitokauden-tiedot" valitun-hoitokauden-tiedot)
     (fn []
       [:span.suolasakkolomake
-      [lomake {:luokka   :horizontal
-               :muokkaa! (fn [uusi]
-                           (log "muokkaa vanha " (pr-str valitun-hoitokauden-tiedot))
-                           (log "muokkaa uusi " (pr-str uusi))
-                           (reset! valitun-hoitokauden-tiedot (assoc uusi :muokattu true)))
+      [lomake {:luokka    :horizontal
+               :muokkaa!  (fn [uusi]
+                            (log "lomaketta muokattu, tiedot:" (pr-str uusi))
+                            (reset! valitun-hoitokauden-tiedot (assoc uusi :muokattu true)))
                :footer-fn (fn [virheet _]
                             (log "virheet: " (pr-str virheet) ", muokattu? " (:muokattu @valitun-hoitokauden-tiedot))
                             [:span.lampotilalomake-footer
@@ -62,7 +67,7 @@
                                 [:div.col-md-4
                                  [napit/palvelinkutsu-nappi
                                   "Tallenna"
-                                  #(lampotilat/tallenna-suolasakko-ja-lampotilat!
+                                  #(tallenna-suolasakko-ja-lampotilat
                                     @valitun-hoitokauden-tiedot)
                                   {:luokka       "nappi-ensisijainen"
                                    :disabled     (or (not= true (:muokattu @valitun-hoitokauden-tiedot))
@@ -70,9 +75,9 @@
                                    :ikoni        (ikonit/tallenna)
                                    :kun-onnistuu #(do
                                                    (viesti/nayta! "Tallentaminen onnistui" :success 1500)
-                                                   (log "tallennus onnistui, nyt resetoi UI" %))}]]])])}
+                                                   (reset! suolasakot-ja-lampotilat %))}]]])])}
        [{:otsikko "Suolasakko" :nimi :maara :tyyppi :numero :leveys-col 2 :yksikko "€ / 5% rajan ylittävä tonni"}
-        {:otsikko       "Maksu kuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
+        {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
          :valinta-arvo  first
          :valinta-nayta #(if (nil? %) yleiset/+valitse-kuukausi+ (second %))
          :valinnat      [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
