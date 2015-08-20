@@ -45,7 +45,7 @@
   - name: Checkout harja-tietokanta
     sudo: yes
     sudo_user: postgres
-    git: repo=deveo@deus.solita.fi:Solita/projects/harja/repositories/git/harja-tietokanta
+    git: repo=deveo@deus.solita.fi:Solita/projects/harja/repositories/git/harja
          dest=/harja/checkout
          version=develop
          key_file=/harja/id_rsa_harjavagrant
@@ -55,25 +55,25 @@
     sudo: yes
     sudo_user: postgres
     args:
-       chdir: /harja/checkout
+       chdir: /harja/checkout/tietokanta
   - name: Install test database template
     command: sh testikanta_template.sh
     sudo: yes
     sudo_user: postgres
     args:
-       chdir: /harja/checkout
+       chdir: /harja/checkout/tietokanta
   - name: Install database
     command: sh kanta_uusiksi.sh
     sudo: yes
     sudo_user: postgres
     args:
-       chdir: /harja/checkout
+       chdir: /harja/checkout/tietokanta
   - name: Install test database
     command: sh testikanta_uusiksi.sh
     sudo: yes
     sudo_user: postgres
     args:
-       chdir: /harja/checkout
+       chdir: /harja/checkout/tietokanta
   - name: Download ActiveMQ
     get_url: dest=/harja/activemq.tar.gz url=http://www.nic.funet.fi/pub/mirrors/apache.org/activemq/5.12.0/apache-activemq-5.12.0-bin.tar.gz
     register: get_activemq
