@@ -181,8 +181,8 @@
           {:otsikko                  "Yhteensä"
            :tyhja                    (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
-           {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%"}
+           {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
+           {:otsikko "" :nimi :nimi :tyyppi :string :leveys "25%"}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Muutokset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
