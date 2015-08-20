@@ -2,32 +2,20 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
-            [taoensso.timbre :as log]
-            [clojure.data.json :as json]
-            [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma])
-  (:import (java.util Date)
-           (java.text SimpleDateFormat)))
+            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]))
 
 (def kayttaja "fastroi")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
                                            :api-pistetoteuma (component/using
-                                                              (api-pistetoteuma/->Pistetoteuma)
-                                                              [:http-palvelin :db :integraatioloki])
-                                           :api-reittitoteuma (component/using
-                                                               (api-reittitoteuma/->Reittitoteuma)
+                                                               (api-pistetoteuma/->Pistetoteuma)
                                                                [:http-palvelin :db :integraatioloki])
+                                           :api-reittitoteuma (component/using
+                                                                (api-reittitoteuma/->Reittitoteuma)
+                                                                [:http-palvelin :db :integraatioloki])
                                            ))
 
 (use-fixtures :once jarjestelma-fixture)
@@ -40,11 +28,11 @@
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                               (-> "test/resurssit/api/pistetoteuma.json"
-                                                   slurp
-                                                   (.replace "__ID__" (str ulkoinen-id))
-                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
-                                                   (.replace "__TOTEUMA_TYYPPI__" "yksikkohintainen")))]
+                                                (-> "test/resurssit/api/pistetoteuma.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                                                    (.replace "__TOTEUMA_TYYPPI__" "yksikkohintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
@@ -54,11 +42,11 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                     (-> "test/resurssit/api/pistetoteuma.json"
-                                                         slurp
-                                                         (.replace "__ID__" (str ulkoinen-id))
-                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
-                                                         (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
+                                                      (-> "test/resurssit/api/pistetoteuma.json"
+                                                          slurp
+                                                          (.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
+                                                          (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
@@ -72,20 +60,20 @@
 (deftest tallenna-reittitoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                               (-> "test/resurssit/api/reittitoteuma.json"
-                                                   slurp
-                                                   (.replace "__ID__" (str ulkoinen-id))
-                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+                                                (-> "test/resurssit/api/reittitoteuma.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                     (-> "test/resurssit/api/reittitoteuma.json"
-                                                         slurp
-                                                         (.replace "__ID__" (str ulkoinen-id))
-                                                         (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
+                                                      (-> "test/resurssit/api/reittitoteuma.json"
+                                                          slurp
+                                                          (.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))

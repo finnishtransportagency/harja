@@ -24,11 +24,11 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
                                            :liitteiden-hallinta (component/using
-                                                                 (liitteet/->Liitteet)
-                                                                 [:db])
+                                                                  (liitteet/->Liitteet)
+                                                                  [:db])
                                            :api-havainnot (component/using
-                                                           (api-havainnot/->Havainnot)
-                                                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))
+                                                            (api-havainnot/->Havainnot)
+                                                            [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -42,7 +42,7 @@
     (is (= 200 (:status vastaus)))
 
     (let [havainnot-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM havainto;")))
-          liite-id  (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))
+          liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))
           havainto-id (ffirst (q (str "SELECT id FROM havainto WHERE kohde = 'testikohde36934853';")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'Testikommentti323353435';")))]
       (log/debug "liite-id: " liite-id)
@@ -60,9 +60,7 @@
       (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
       (u (str "DELETE FROM havainto WHERE kuvaus = 'testihavainto36934853';")))))
 
-
-;; Kommentoitu pois JSON-validoinnin korjauksen ajaksi
-#_(deftest tallenna-havainto-virheellisella-liitteella
+(deftest tallenna-havainto-virheellisella-liitteella
   (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
                                          (-> "test/resurssit/api/havainto-virheellinen-liite.json"
                                              slurp))]

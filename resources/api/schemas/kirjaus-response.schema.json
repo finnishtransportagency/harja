@@ -11,8 +11,8 @@
       "id": "urn:harja/varoitukset",
       "type": "string"
     },
-    "tiedotukset": {
-      "id": "urn:harja/tiedotukset",
+    "ilmoitukset": {
+      "id": "urn:harja/ilmoitukset",
       "type": "string"
     },
     "huomiot": {
@@ -59,15 +59,15 @@
               }
             }
           },
-          "tiedotukset": {
-            "id": "urn:harja/huomiot/0/tiedotukset",
+          "ilmoitukset": {
+            "id": "urn:harja/huomiot/0/ilmoitukset",
             "type": "array",
             "items": {
-              "id": "urn:harja/huomiot/0/tiedotukset/0",
+              "id": "urn:harja/huomiot/0/ilmoitukset/0",
               "type": "object",
               "properties": {
                 "tiedotus": {
-                  "id": "urn:harja/huomiot/0/tiedotukset/0/tiedotus",
+                  "id": "urn:harja/huomiot/0/ilmoitukset/0/ilmoitus",
                   "type": "string"
                 }
               }

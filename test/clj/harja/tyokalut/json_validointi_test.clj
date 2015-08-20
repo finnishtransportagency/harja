@@ -24,8 +24,8 @@
 
 (deftest urakkahaun-vastaus
   (try+
-   (json/validoi skeemat/+urakan-haku-vastaus+
-                 (slurp (io/resource "api/examples/urakan-haku-response.json")))
-   (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-     (println virheet)
-     (is (.contains (:viesti (first virheet)) "JSON ei ole validia")))))
+    (json/validoi skeemat/+urakan-haku-vastaus+
+                  (slurp (io/resource "api/examples/urakan-haku-response.json")))
+    (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+      (println virheet)
+      (is (.contains (:viesti (first virheet)) "JSON ei ole validia")))))

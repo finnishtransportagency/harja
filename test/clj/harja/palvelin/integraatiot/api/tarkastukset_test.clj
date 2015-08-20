@@ -22,8 +22,8 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
                                            :api-pistetoteuma (component/using
-                                                              (api-tarkastukset/->Tarkastukset)
-                                                              [:http-palvelin :db :integraatioloki])))
+                                                               (api-tarkastukset/->Tarkastukset)
+                                                               [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -33,17 +33,17 @@
 (defn hae-vapaa-tarkastus-ulkoinen-id []
   (let [id (rand-int 10000)
         vastaus (q (str "SELECT * FROM tarkastus t WHERE t.ulkoinen_id = " id ";"))]
-  (if (empty? vastaus) id (recur))))
+    (if (empty? vastaus) id (recur))))
 
 (deftest tallenna-soratietarkastus
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
 
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
-                           (-> "test/resurssit/api/soratietarkastus.json"
-                               slurp
-                               (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                               (.replace "__ID__" (str id))))]
+                                         (-> "test/resurssit/api/soratietarkastus.json"
+                                             slurp
+                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
+                                             (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))
     (is (str/blank? (slurp (:body vastaus))))
@@ -65,26 +65,23 @@
       (u (str "DELETE FROM tarkastus WHERE id=" t-id))
       (u (str "DELETE FROM havainto WHERE id=" h-id)))))
 
-
-;; Kommentoitu pois JSON-validoinnin korjauksen ajaksi
-#_(deftest tallenna-virheellinen-soratietarkastus
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]  kayttaja portti
-                           (-> "test/resurssit/api/soratietarkastus-virhe.json"
-                               slurp))]
+(deftest tallenna-virheellinen-soratietarkastus
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
+                                         (-> "test/resurssit/api/soratietarkastus-virhe.json"
+                                             slurp))]
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (some-> vastaus :body json/read-str
                                    (get "virheet") first (get "virhe") (get "koodi"))))))
-
 
 (deftest tallenna-talvihoitotarkastus
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
 
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]  kayttaja portti
-                           (-> "test/resurssit/api/talvihoitotarkastus.json"
-                               slurp
-                               (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                               (.replace "__ID__" (str id))))]
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         (-> "test/resurssit/api/talvihoitotarkastus.json"
+                                             slurp
+                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
+                                             (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))
     (is (str/blank? (slurp (:body vastaus))))
