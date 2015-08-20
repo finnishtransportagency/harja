@@ -350,8 +350,10 @@
     (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
                                                                  :anchor       #js [0.5 0.5]
                                                                  :opacity 1
+                                                                 :size #js [32 32]
                                                                  :anchorXUnits "fraction"
-                                                                 :anchorYUnits "fraction"})}))))
+                                                                 :anchorYUnits "fraction"})
+                                     :zIndex 10000}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))

@@ -7,6 +7,7 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
+            [harja.views.tilannekuva.tyokoneet :as tyokoneet]
             [reagent.core :as r])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 

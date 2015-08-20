@@ -111,7 +111,7 @@
 
 (defn aloita-pollaus
   []
-  (when @pollaus-id
+  (when (not @pollaus-id)
     (log "aloitetaan pollaus")
     (hae-asiat)
     (reset! pollaus-id (js/setInterval hae-asiat +intervalli+))))
