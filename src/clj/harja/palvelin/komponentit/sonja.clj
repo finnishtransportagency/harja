@@ -35,7 +35,9 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
 (defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
-  (log/info "Yhdistetään JMS-brokeriin (tyyppi:" tyyppi ") URL:lla:" url )
+  (log/info "Yhdistetään "
+            (if (= tyyppi :activemq) "ActiveMQ" "Sonic")
+            " JMS-brokeriin URL:lla:" url)
   (let [qcf (if (= tyyppi :activemq)
               (org.apache.activemq.ActiveMQConnectionFactory.)
               (doto (QueueConnectionFactory. url)
