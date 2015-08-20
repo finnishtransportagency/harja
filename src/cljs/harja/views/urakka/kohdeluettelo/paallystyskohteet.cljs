@@ -103,10 +103,10 @@
 
 (defn paallystyskohteet []
   (let [paallystyskohteet (reaction (let [kohteet @paallystyskohderivit]
-                                            (filter #(false? (:muu_tyo %))
-                                                    kohteet)))
+                                      (filter #(false? (:muu_tyo %))
+                                              kohteet)))
         muut-tyot (reaction (let [kohteet @paallystyskohderivit]
-                             (filter #(true? (:muu_tyo %)) kohteet)))
+                              (filter #(true? (:muu_tyo %)) kohteet)))
         valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @paallystyskohderivit)
                                                  kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
                                              (log "PÄÄ rivit: " (pr-str rivit))
@@ -118,24 +118,24 @@
       (fn []
         [:div
          [grid/grid
-          {:otsikko      "Kohteet"
-           :tyhja        (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-           :luokat       ["paallysteurakka-kohteet-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
-           :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
-                                    [sopimus-id _] @u/valittu-sopimusnumero
-                                    payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
-                                    _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
-                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
-                                (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paallystyskohderivit vastaus)))
-           :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
-                                             (not (nil? (:paikkausilmoitus_id rivi)))))
+          {:otsikko                  "Kohteet"
+           :tyhja                    (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+           :luokat                   ["paallysteurakka-kohteet-paasisalto"]
+           :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
+           :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
+                                                [sopimus-id _] @u/valittu-sopimusnumero
+                                                payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
+                                                _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
+                                                vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
+                                            (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                            (reset! paallystyskohderivit vastaus)))
+           :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
+                                                    (not (nil? (:paikkausilmoitus_id rivi)))))
            :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
-            :validoi [[:ei-tyhja "Anna arvo"]
-                      [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
+            :validoi     [[:ei-tyhja "Anna arvo"]
+                          [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
             :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -143,26 +143,26 @@
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-           {:otsikko "Kokonaishinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                                                 (:muutoshinta rivi)
-                                                                                                                                                 (:arvonvahennykset rivi)
-                                                                                                                                                 (:bitumi_indeksi rivi)
-                                                                                                                                                 (:kaasuindeksi rivi)))
-            :tyyppi  :numero :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
+           {:otsikko "Kokonaishinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"
+            :hae     (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
+                                   (:muutoshinta rivi)
+                                   (:arvonvahennykset rivi)
+                                   (:bitumi_indeksi rivi)
+                                   (:kaasuindeksi rivi)))}]
           @paallystyskohteet]
 
          [grid/grid
-          {:otsikko      "Muut työt" ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
-           :tyhja        (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
-           :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
-                                    [sopimus-id _] @u/valittu-sopimusnumero
-                                    payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
-                                    _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
-                                    vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
-                                (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paallystyskohderivit vastaus)))
-           :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
-                                             (not (nil? (:paikkausilmoitus_id rivi)))))
+          {:otsikko                  "Muut työt"            ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
+           :tyhja                    (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
+           :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
+                                                [sopimus-id _] @u/valittu-sopimusnumero
+                                                payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
+                                                _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
+                                                vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
+                                            (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                            (reset! paallystyskohderivit vastaus)))
+           :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
+                                                    (not (nil? (:paikkausilmoitus_id rivi)))))
            :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
           [{:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "35%" :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -171,11 +171,12 @@
            {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-           {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                                                                                 (:muutoshinta rivi)
-                                                                                                                 (:arvonvahennykset rivi)
-                                                                                                                 (:bitumi_indeksi rivi)
-                                                                                                                 (:kaasuindeksi rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+           {:otsikko "Kokonaishinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "20%"
+            :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
+                               (:muutoshinta rivi)
+                               (:arvonvahennykset rivi)
+                               (:bitumi_indeksi rivi)
+                               (:kaasuindeksi rivi)))}]
           @muut-tyot]
 
          (yhteenveto)]))))
