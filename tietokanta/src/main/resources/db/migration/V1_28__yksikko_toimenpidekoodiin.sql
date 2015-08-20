@@ -1,0 +1,1 @@
+ALTER TABLE toimenpidekoodi ADD COLUMN yksikko varchar(32);

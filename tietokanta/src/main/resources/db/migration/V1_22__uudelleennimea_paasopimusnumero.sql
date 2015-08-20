@@ -1,0 +1,1 @@
+ALTER TABLE sopimus RENAME COLUMN paasopimusnumero TO paasopimus;

@@ -1,0 +1,1 @@
+ALTER TABLE yhteyshenkilo_urakka ADD COLUMN yhteyshenkilo_sampoid varchar(16);

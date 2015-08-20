@@ -1,0 +1,1 @@
+ALTER TABLE toimenpidekoodi ADD CONSTRAINT uniikki_koodi UNIQUE (koodi);

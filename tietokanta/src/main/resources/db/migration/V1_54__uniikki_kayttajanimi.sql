@@ -1,0 +1,1 @@
+ALTER TABLE kayttaja ADD CONSTRAINT uniikki_kayttajanimi UNIQUE (kayttajanimi);

@@ -1,0 +1,1 @@
+ALTER TABLE silta ADD CONSTRAINT uniikki_siltanro UNIQUE (siltanro);

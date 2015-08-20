@@ -1,0 +1,2 @@
+ALTER table paallystysilmoitus RENAME COLUMN paatos TO paatos_tekninen_osa;
+ALTER table paallystysilmoitus ADD COLUMN paatos_taloudellinen_osa paallystysilmoituksen_paatostyyppi;

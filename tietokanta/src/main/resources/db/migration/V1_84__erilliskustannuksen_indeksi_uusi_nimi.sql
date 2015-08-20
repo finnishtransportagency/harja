@@ -1,0 +1,1 @@
+ALTER TABLE erilliskustannus RENAME COLUMN nimi TO indeksin_nimi;

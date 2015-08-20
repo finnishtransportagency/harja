@@ -1,0 +1,1 @@
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN tr_alkuetaisyys INTEGER;

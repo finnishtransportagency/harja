@@ -1,0 +1,1 @@
+ALTER TABLE sopimus ADD COLUMN paasopimusnumero integer references sopimus(id);

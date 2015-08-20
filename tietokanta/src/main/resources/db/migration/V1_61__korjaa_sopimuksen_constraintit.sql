@@ -1,0 +1,2 @@
+ALTER TABLE sopimus ALTER sampoid SET NOT NULL;
+ALTER TABLE sopimus ALTER urakka DROP NOT NULL;

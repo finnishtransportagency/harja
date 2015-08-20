@@ -1,0 +1,1 @@
+ALTER TABLE toimenpideinstanssi ADD CONSTRAINT uniikki_urakka_toimenpidekoodi UNIQUE (urakka, toimenpide, alkupvm, loppupvm);

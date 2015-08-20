@@ -1,0 +1,1 @@
+ALTER TABLE silta RENAME COLUMN numero to tr_numero;

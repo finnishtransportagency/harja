@@ -1,0 +1,1 @@
+ALTER TABLE sanktio ADD COLUMN suorasanktio BOOLEAN;

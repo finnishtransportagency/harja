@@ -1,0 +1,1 @@
+ALTER TABLE toimenpideinstanssi ADD COLUMN sampoid varchar(16);

@@ -1,0 +1,2 @@
+ALTER TABLE yksikkohintainen_tyo DROP CONSTRAINT "yksikkohintainen_tyo_urakka_tehtava_alkupvm_loppupvm_key";
+ALTER TABLE yksikkohintainen_tyo ADD CONSTRAINT uniikki_ykshint_tyo UNIQUE (urakka, tehtava, alkupvm, loppupvm, sopimus);

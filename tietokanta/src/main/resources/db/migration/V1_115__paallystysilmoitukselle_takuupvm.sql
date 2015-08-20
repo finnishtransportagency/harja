@@ -1,0 +1,1 @@
+ALTER TABLE paallystysilmoitus ADD COLUMN takuupvm date;

@@ -1,0 +1,1 @@
+ALTER TABLE yhteyshenkilo ADD COLUMN ulkoinen_id varchar(64);

@@ -1,0 +1,1 @@
+ALTER TABLE yksikkohintainen_tyo ADD COLUMN sopimus integer references sopimus(id);

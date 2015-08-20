@@ -1,0 +1,1 @@
+ALTER TABLE paallystyskohde RENAME COLUMN lisatyo TO muu_tyo;

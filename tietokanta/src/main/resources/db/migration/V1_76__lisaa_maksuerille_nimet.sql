@@ -1,0 +1,1 @@
+ALTER TABLE maksuera ADD COLUMN nimi varchar(255);

@@ -1,0 +1,1 @@
+ALTER TABLE toimenpideinstanssi ADD COLUMN talousosasto_id varchar(128); -- Talousosaston id toimenpideinstanssille. Tarvitaan maksuerälähetykseen. Saadaan Samposta.

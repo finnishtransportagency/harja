@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX uniikki_paasopimus on sopimus (urakka) WHERE paasopimus IS NULL; 

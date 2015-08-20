@@ -1,0 +1,1 @@
+ALTER TABLE toteuma ADD CONSTRAINT toteuma_luoja_fkey FOREIGN KEY (luoja) REFERENCES kayttaja (id);

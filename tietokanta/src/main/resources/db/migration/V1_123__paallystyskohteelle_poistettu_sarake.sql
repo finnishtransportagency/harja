@@ -1,0 +1,1 @@
+ALTER TABLE paallystyskohde ADD COLUMN poistettu boolean default false;

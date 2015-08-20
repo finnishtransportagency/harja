@@ -1,0 +1,1 @@
+ALTER TABLE siltatarkastuskohde ADD CONSTRAINT uniikki_tarkastuskohde UNIQUE (siltatarkastus, kohde);

@@ -1,0 +1,1 @@
+ALTER TABLE paikkausilmoitus ADD COLUMN luoja integer REFERENCES kayttaja (id);

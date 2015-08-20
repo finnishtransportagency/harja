@@ -1,0 +1,1 @@
+ALTER TABLE toimenpideinstanssi ADD CONSTRAINT uniikki_urakka_sampoid_toimenpide_nimi UNIQUE (urakka_sampoid, toimenpide, nimi);

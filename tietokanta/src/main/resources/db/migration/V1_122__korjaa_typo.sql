@@ -1,0 +1,1 @@
+ALTER TABLE paallystysilmoitus_kommentti RENAME COLUMN havainto TO paallystysilmoitus;

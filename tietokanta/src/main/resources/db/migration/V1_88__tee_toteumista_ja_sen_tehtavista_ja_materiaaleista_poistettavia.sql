@@ -1,0 +1,14 @@
+ALTER TABLE toteuma
+ADD COLUMN poistettu BOOLEAN,
+ADD COLUMN muokkaaja INTEGER,
+ADD COLUMN muokattu TIMESTAMP;
+
+ALTER TABLE toteuma_materiaali
+ADD COLUMN poistettu BOOLEAN,
+ADD COLUMN muokkaaja INTEGER,
+ADD COLUMN muokattu TIMESTAMP;
+
+ALTER TABLE toteuma_tehtava
+ADD COLUMN poistettu BOOLEAN,
+ADD COLUMN muokkaaja INTEGER,
+ADD COLUMN muokattu TIMESTAMP;
