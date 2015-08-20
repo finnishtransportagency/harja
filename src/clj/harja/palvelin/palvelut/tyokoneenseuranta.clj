@@ -10,6 +10,7 @@
 (defn- formatoi-vastaus [tyokone]
   (-> tyokone
       (update-in [:sijainti] geo/pg->clj)
+      (update-in [:sijainti] (fn [[x y]] [y x])) ; swapataan koordinaatit
       (assoc :tyyppi :tyokone)
       (konversiot/array->set :tehtavat)))
 

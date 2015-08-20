@@ -15,11 +15,37 @@ SELECT tallenna_tai_paivita_tyokonehavainto(
 
 -- name: tyokoneet-alueella
 -- Etsii kaikki työkoneet annetulta alueelta
-SELECT * FROM tyokonehavainto
+SELECT t.tyokoneid,
+       t.jarjestelma,
+       t.organisaatio,
+       (SELECT nimi FROM organisaatio WHERE id=t.organisaatio) AS organisaationimi,
+       t.viestitunniste,
+       t.lahetysaika,
+       t.vastaanotettu,
+       t.tyokonetyyppi,
+       t.sijainti,
+       t.urakkaid,
+       (SELECT nimi FROM urakka WHERE id=t.urakkaid) AS urakkanimi,
+       t.sopimusid,
+       t.tehtavat
+FROM tyokonehavainto t
   WHERE ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))
 
 -- name: urakan-tyokoneet-alueella
 -- Etsii urakkaan liittyvät työkoneet annetulta alueelta
-SELECT * FROM tyokonehavainto
+SELECT t.tyokoneid,
+       t.jarjestelma,
+       t.organisaatio,
+       (SELECT nimi FROM organisaatio WHERE id=t.organisaatio) AS organisaationimi,
+       t.viestitunniste,
+       t.lahetysaika,
+       t.vastaanotettu,
+       t.tyokonetyyppi,
+       t.sijainti,
+       t.urakkaid,
+       (SELECT nimi FROM urakka WHERE id=t.urakkaid) AS urakkanimi,
+       t.sopimusid,
+       t.tehtavat
+FROM tyokonehavainto t
   WHERE urakkaid = :urakkaid
     AND ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))

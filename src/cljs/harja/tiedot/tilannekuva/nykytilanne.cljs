@@ -64,8 +64,7 @@
   (assoc tyokone
     :type :tyokone
     :alue {:type :icon
-           :coordinates (let [pos (:sijainti tyokone)]
-                          [(pos 1) (pos 0)])
+           :coordinates (:sijainti tyokone)
            :img "images/tyokone.png"}))
 
 (def nykytilanteen-asiat-kartalla

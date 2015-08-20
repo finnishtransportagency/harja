@@ -4,18 +4,15 @@
             [clojure.string :as str]
             [harja.views.kartta :as kartta]))
 
-(defn kaanna-sijainti [[x y]]
-  [y x])
-
 (def tyokonetta-klikattu
   (tapahtumat/kuuntele! :tyokone-klikattu
-                        (fn [tapahtuma]
-                          (log "tyokonetta klikattu" (clj->js tapahtuma))
-                          (kartta/nayta-popup! (kaanna-sijainti (:sijainti tapahtuma))
-                                               [:div
+                        (fn [tapahtuma] 
+                          (kartta/nayta-popup! (:sijainti tapahtuma)
+                                               [:div.kartta-tyokone-popup
                                                 [:p [:b "Työkone"]]
                                                 [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
-                                                [:div "Organisaatio: " (:organisaatio tapahtuma)]
+                                                [:div "Organisaatio: " (:organisaationimi tapahtuma)]
+                                                [:div "Urakka: " (:urakkanimi tapahtuma)]
                                                 [:div "Tehtävät: "
                                                  (let [tehtavat (str/join "," (:tehtavat tapahtuma))]
                                                    [:span tehtavat])]]))))
