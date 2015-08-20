@@ -39,7 +39,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
             (if (= tyyppi :activemq) "ActiveMQ" "Sonic")
             " JMS-brokeriin URL:lla:" url)
   (let [qcf (if (= tyyppi :activemq)
-              (org.apache.activemq.ActiveMQConnectionFactory.)
+              (org.apache.activemq.ActiveMQConnectionFactory. url)
               (doto (QueueConnectionFactory. url)
                 (.setFaultTolerant true)
                 (.setFaultTolerantReconnectTimeout (int 30))))
