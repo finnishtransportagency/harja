@@ -107,17 +107,6 @@
                                                     kohteet)))
         muut-tyot (reaction (let [kohteet @paallystyskohderivit]
                              (filter #(true? (:muu_tyo %)) kohteet)))
-
-        paallystyskohteet-virheet (atom {})
-        muut-tyot-virheet (atom {})
-
-        paallystyskohteet-valmis-tallennettavaksi? (reaction
-                                                     (let [paallystyskohteet-virheet @paallystyskohteet-virheet]
-                                                       (empty? paallystyskohteet-virheet)))
-        muut-tyot-valmis-tallennettavaksi? (reaction
-                                             (let [muut-tyot-virheet @muut-tyot-virheet]
-                                                 (empty? muut-tyot-virheet)))
-
         valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @paallystyskohderivit)
                                                  kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
                                              (log "PÄÄ rivit: " (pr-str rivit))
@@ -133,7 +122,6 @@
            :tyhja        (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :luokat       ["paallysteurakka-kohteet-paasisalto"]
            :vetolaatikot (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
-           :muutos       #(reset! paallystyskohteet-virheet (grid/hae-virheet %))
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
@@ -166,7 +154,6 @@
          [grid/grid
           {:otsikko      "Muut työt" ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
            :tyhja        (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
-           :muutos       #(reset! muut-tyot-virheet (grid/hae-virheet %))
            :tallenna     #(go (let [urakka-id (:id @nav/valittu-urakka)
                                     [sopimus-id _] @u/valittu-sopimusnumero
                                     payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
