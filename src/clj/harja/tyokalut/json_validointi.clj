@@ -2,38 +2,20 @@
   (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [clojure.string :as str])
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import
-    (com.github.fge.jsonschema.main JsonSchemaFactory)
-    (com.github.fge.jackson JsonLoader)
-    (com.github.fge.jsonschema.core.report ProcessingReport)
-    (com.github.fge.jsonschema.core.load.configuration LoadingConfiguration)
-    (com.github.fge.jsonschema.core.load.uri URITranslator URITranslatorConfiguration)))
+            [clojure.string :as str]
+            [webjure.json-schema.validator :refer [validate]]
+            [cheshire.core :as cheshire])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-validointivirheet
-  [^ProcessingReport validointiraportti]
-  (let [validointi-virheet (str/join validointiraportti)]
-    (log/error "JSON ei ole validia. Validointivirheet: " validointi-virheet)
-    (throw+ {:type virheet/+invalidi-json+
-             :virheet [{:koodi  virheet/+invalidi-json-koodi+
-                        :viesti (str/replace (str/replace validointi-virheet "\n" "") "\"" "'")}]})))
+  [virheet]
+  (log/error "JSON ei ole validia. Validointivirheet: " virheet)
+  (throw+ {:type virheet/+invalidi-json+
+           :virheet [{:koodi  virheet/+invalidi-json-koodi+
+                      :virheet virheet
+                      :viesti "JSON ei ole validia"}]}))
 
-(defn polun-skeemat [polku]
-  (->> polku
-       io/resource
-       io/file
-       .listFiles
-       (filter #(not (.isDirectory %)))))
 
-(defn preload-schemat []
-  (concat
-   (for [skeematiedosto (polun-skeemat "api/schemas/")]
-     [(str "file:resources/api/schemas/" (.getName skeematiedosto))
-      (JsonLoader/fromFile skeematiedosto)])
-   (for [skeematiedosto (polun-skeemat "api/schemas/entities/")]
-     [(str "file:resources/api/schemas/entities/" (.getName skeematiedosto))
-      (JsonLoader/fromFile skeematiedosto)])))
 
 (defn validoi
   "Validoi annetun JSON sisällön vasten annettua JSON-skeemaa. JSON-skeeman tulee olla tiedosto annettussa
@@ -43,22 +25,19 @@
   (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku ". Data: " json)
 
   (try (->
-         (let
-           [skeema (JsonLoader/fromURL (io/resource skeemaresurssin-polku))
-            validaattori-rakentaja (-> (JsonSchemaFactory/newBuilder)
-                                       (.setLoadingConfiguration
-                                        (let [lcb (LoadingConfiguration/newBuilder)]
-                                          (doseq [[uri skeema] (preload-schemat)]
-                                            (.preloadSchema lcb uri skeema))
-                                          (.freeze lcb)))
-                                       .freeze)
-            validaattori (.getJsonSchema validaattori-rakentaja skeema)
-            json-data (JsonLoader/fromString json)
-            validointiraportti (.validate validaattori json-data)]
-
-           (if (.isSuccess validointiraportti)
-             (log/debug "JSON data on validia")
-             (kasittele-validointivirheet validointiraportti))))
+        (let [virheet (validate (cheshire/parse-string (slurp (io/resource skeemaresurssin-polku)))
+                                (cheshire/parse-string json)
+                                {:draft3-required true
+                                 :ref-resolver (fn [uri]
+                                                 (log/debug "Ladataan linkattu schema: " uri)
+                                                 (let [resurssipolku (.substring uri (count "file:resources/"))]
+                                                   (log/debug "Resurssipolku: " resurssipolku)
+                                                   (let [ladattu (cheshire/parse-string (slurp (io/resource resurssipolku)))]
+                                                     (log/debug "Ladattiin: " ladattu)
+                                                     ladattu)))})]
+          (if-not virheet
+            (log/debug "JSON data on validia")
+            (kasittele-validointivirheet virheet))))
        (catch Exception e
          (log/error e "JSON validoinnissa tapahtui poikkeus.")
          (throw+ {:type virheet/+invalidi-json+ :virheet

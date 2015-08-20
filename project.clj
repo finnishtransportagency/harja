@@ -91,8 +91,7 @@
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [com.github.fge/json-schema-validator "2.2.6"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.5.3"]
+                 [webjure/json-schema "0.3"]
 
                  [org.clojure/test.check "0.7.0"]
                  
