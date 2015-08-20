@@ -81,7 +81,7 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [muokattava? (constantly (and
+  (let [muokattava? (reaction (and
                                   (roolit/roolissa? roolit/urakanvalvoja)
                                   (not= (:tila @lomakedata) :lukittu)
                                   (false? @lomake-lukittu-muokkaukselta?)))
@@ -105,7 +105,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-tekninen-osa uusi))
-         :voi-muokata? (muokattava?)}
+         :voi-muokata? @muokattava?}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-tekninen-osa
           :tyyppi      :pvm
@@ -116,7 +116,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @muokattava? "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos-tekninen @paatostiedot-tekninen-osa)
@@ -134,7 +134,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-taloudellinen-osa uusi))
-         :voi-muokata? (muokattava?)}
+         :voi-muokata? @muokattava?}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-taloudellinen-osa
           :tyyppi      :pvm
@@ -145,7 +145,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (muokattava?) "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @muokattava? "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)

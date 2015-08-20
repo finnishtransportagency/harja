@@ -80,10 +80,10 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [voi-muokata (constantly (and
-                                  (roolit/roolissa? roolit/urakanvalvoja)
-                                  (not= (:tila @lomakedata) :lukittu)
-                                  (false? @lomake-lukittu-muokkaukselta?)))
+  (let [voi-muokata (reaction (and
+                                (roolit/roolissa? roolit/urakanvalvoja)
+                                (not= (:tila @lomakedata) :lukittu)
+                                (false? @lomake-lukittu-muokkaukselta?)))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
                               :kasittelyaika (:kasittelyaika @lomakedata)}
@@ -97,7 +97,7 @@
         {:luokka       :horizontal
          :muokkaa!     (fn [uusi]
                          (reset! paatostiedot uusi))
-         :voi-muokata? (voi-muokata)}
+         :voi-muokata? @voi-muokata}
         [{:otsikko "Käsitelty"
           :nimi    :kasittelyaika
           :tyyppi  :pvm
@@ -108,7 +108,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if (voi-muokata) "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @voi-muokata "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos @paatostiedot)
