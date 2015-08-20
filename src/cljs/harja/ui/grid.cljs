@@ -567,7 +567,7 @@ Optiot on mappi optioita:
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
                     [:th {:width (or leveys "5%")} otsikko])
-                  [:th.toiminnot {:width "5%"} " "]]]
+                  [:th.toiminnot {:width "40px"} " "]]]
 
                 [:tbody
                  (if muokataan
@@ -787,11 +787,11 @@ Optiot on mappi optioita:
              [:table.grid
               [:thead
                [:tr
-                (if rivinumerot? [:th {:width "5%"} " "])
+                (if rivinumerot? [:th {:width "40px"} " "])
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
                   [:th {:width (or leveys "5%")} otsikko])
-                [:th.toiminnot {:width "5%"} " "]]]
+                [:th.toiminnot {:width "40px"} " "]]]
 
               [:tbody
                (let [muokatut-atom muokatut
