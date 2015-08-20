@@ -98,12 +98,13 @@
                                                     arvonvahennykset-yhteensa
                                                     bitumi-indeksi-yhteensa
                                                     kaasuindeksi-yhteensa)]
-                             [{:sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot-yhteensa
-                              :muutoshinta muutoshinta-yhteensa
-                              :arvonvahennykset arvonvahennykset-yhteensa
-                              :bitumi_indeksi bitumi-indeksi-yhteensa
-                              :kaasuindeksi kaasuindeksi-yhteensa
-                              :kokonaishinta kokonaishinta}]))
+                             [{:id                       0
+                               :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot-yhteensa
+                               :muutoshinta              muutoshinta-yhteensa
+                               :arvonvahennykset         arvonvahennykset-yhteensa
+                               :bitumi_indeksi           bitumi-indeksi-yhteensa
+                               :kaasuindeksi             kaasuindeksi-yhteensa
+                               :kokonaishinta            kokonaishinta}]))
         valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @paallystyskohderivit)
                                                  kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
                                              (log "PÄÄ rivit: " (pr-str rivit))
