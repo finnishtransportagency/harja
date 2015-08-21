@@ -50,29 +50,31 @@
     (str minuutit ":" sekunnit)))
 
 (defn nayta-varoitus-aikakatkaisusta []
-  (modal/nayta! {:otsikko "Haluatko jatkaa käyttöä?"
-                 :footer  [:span
-                           [:button.nappi-kielteinen {:type     "button"
-                                                      :on-click #(do (.preventDefault %)
-                                                                     (kirjaudu-ulos)
-                                                                     (modal/piilota!))}
-                            "Kirjaudu ulos"]
-                           [:button.nappi-myonteinen {:type     "button"
-                                                      :on-click #(do (.preventDefault %)
-                                                                     (resetoi-ajastin)
-                                                                     (modal/piilota!))}
-                            "Jatka käyttöä"]
-                           ]}
-                [:div
-                 (if (> @kayttoaikaa-jaljella-sekunteina 0)
-                   [:span
-                    [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, sinut kirjataan ulos. Haluatko jatkaa käyttöä?")]
-                    [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
-                 [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])]))
+  (let [kayttoaikaa-jaljella? (> @kayttoaikaa-jaljella-sekunteina 0)]
+    (modal/nayta! {:otsikko (if kayttoaikaa-jaljella? "Haluatko jatkaa käyttöä?" "Käyttö aikakatkaistu")
+                   :footer  (if kayttoaikaa-jaljella?
+                              [:span
+                               [:button.nappi-kielteinen {:type     "button"
+                                                          :on-click #(do (.preventDefault %)
+                                                                         (kirjaudu-ulos)
+                                                                         (modal/piilota!))}
+                                "Kirjaudu ulos"]
+                               [:button.nappi-myonteinen {:type     "button"
+                                                          :on-click #(do (.preventDefault %)
+                                                                         (resetoi-ajastin)
+                                                                         (modal/piilota!))}
+                                "Jatka käyttöä"]])
+                   }
+                  [:div
+                   (if kayttoaikaa-jaljella?
+                     [:span
+                      [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, sinut kirjataan ulos. Haluatko jatkaa käyttöä?")]
+                      [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
+                     [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])])))
 
 (defn varoita-jos-kayttoaika-umpeutumassa []
   (if (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
-    (nayta-varoitus-aikakatkaisusta)))
+    (nayta-varoitus-aikakatkaisusta))) ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
 
 (defn kaynnista-ajastin []
   (if (false? @ajastin-kaynnissa)
