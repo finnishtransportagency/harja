@@ -94,7 +94,7 @@
                                                         :on-click #(do (.preventDefault %)
                                                                        (modal/piilota!))}
                             "Peruuta"]
-                           [:button.nappi-kielteinen {:type     "button"
+                           [:button.nappi-myonteinen {:type     "button"
                                                       :on-click #(do (.preventDefault %)
                                                                      (modal/piilota!)
                                                                      (vaihda-urakkatyyppi))}
