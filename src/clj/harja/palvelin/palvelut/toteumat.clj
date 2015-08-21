@@ -113,10 +113,6 @@
 
 (defn hae-toteumat-historiakuvaan [db user {:keys [hallintayksikko urakka alku loppu toimenpidekoodit alue]}]
   (log/debug "Haetaan toteumia historiakuvaan.")
-  (log/debug "hallintayksikkö " (pr-str hallintayksikko))
-  (log/debug "urakka " (pr-str urakka))
-  (log/debug "toimenpidekoodit" (pr-str toimenpidekoodit))
-  (log/debug "alue " (pr-str alue))
 
   (when urakka (roolit/vaadi-lukuoikeus-urakkaan user urakka))
   (let [urakka_annettu (annettu? urakka)
@@ -136,7 +132,6 @@
                   {:tehtava     :tehtavat
                    :materiaali  :materiaalit
                    :reittipiste :reittipisteet})]
-      (log/debug (pr-str tulos))
       (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa historiakuvaan."))
 
       tulos)))
