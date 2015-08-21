@@ -27,7 +27,7 @@
 
 (def kayttoaikaa-jaljella-sekunteina (atom kayttoaika-ilman-kayttajasyotteita-sekunteina))
 
-(defn kaynnista-ajastin
+(defn kaynnista-ajastin []
   (if (false? @ajastin-kaynnissa)
     (go
       (reset! ajastin-kaynnissa true)
