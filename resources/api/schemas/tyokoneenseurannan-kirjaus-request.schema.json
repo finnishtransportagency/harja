@@ -50,6 +50,10 @@
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
+              "suunta": {
+                "id": "urn:harja/havainnot/0/suunta",
+                "type": "number"
+              },
               "havaintoaika": {
                 "id": "urn:harja/havainnot/0/havaintoaika",
                 "type": "string",

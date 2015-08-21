@@ -2,6 +2,8 @@
 <b>Julkaistu: 10.6.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.5. Julkaistu: - . Muutokset:
+    - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
 - Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
     - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
 - Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:
