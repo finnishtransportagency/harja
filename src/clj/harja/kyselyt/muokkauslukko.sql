@@ -1,7 +1,14 @@
 -- name: hae-lukko-idlla
 -- Hakee lukon id:llä
-SELECT * FROM muokkauslukko
-WHERE id = :id;
+SELECT
+muokkauslukko.id as "id",
+muokkauslukko.kayttaja as "kayttaja",
+aikaleima,
+etunimi,
+sukunimi
+FROM muokkauslukko
+  JOIN kayttaja ON kayttaja.id = muokkauslukko.kayttaja
+WHERE muokkauslukko.id = :id;
 
 -- name: luo-lukko<!
 -- Tekee uuden lukon

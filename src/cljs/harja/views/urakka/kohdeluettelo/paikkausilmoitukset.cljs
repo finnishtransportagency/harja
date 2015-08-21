@@ -210,7 +210,7 @@
           (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
 
          (when @lomake-lukittu-muokkaukselta?
-           (lomake/lomake-lukittu-huomautus))
+           (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
          [:h2 "Paikkausilmoitus"]
 
