@@ -46,8 +46,8 @@
 (defn lisaa-ajastin-tapahtumakuuntelijat []
   (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
   (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
-  #_(events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)) ; FIXME Ei toimi?
-  #_(events/listen (dom/getWindow) (.-SCROLL events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)) ; FIXME Ei toimi?
+  (events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
+  (events/listen (dom/getWindow) (.-SCROLL events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
   (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
 (defn aikakatkaise-istunto []
