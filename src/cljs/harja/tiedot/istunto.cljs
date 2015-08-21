@@ -5,7 +5,7 @@
 
             [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
-            [cljs-time.core :as t])
+            [cljs.core.async :refer [<! >! timeout chan]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
