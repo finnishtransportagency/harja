@@ -74,52 +74,55 @@
   "Harjan UI:n pääkomponentti"
   []
   (let [sivu @nav/sivu
+        aikakatkaistu? @istunto/istunto-aikakatkaistu
         kartan-koko @nav/kartan-koko
         korkeus @yleiset/korkeus
         kayttaja @istunto/kayttaja]
 
-    (if (nil? kayttaja)
-      [ladataan]
-      (if (or (:poistettu kayttaja)
-              (empty? (:roolit kayttaja)))
-        [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+    (if aikakatkaistu?
+      [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
+      (if (nil? kayttaja)
+        [ladataan]
+        (if (or (:poistettu kayttaja)
+                (empty? (:roolit kayttaja)))
+          [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
 
-        [:span
-         [:div.container
-          [header sivu]]
-         [:div.container
-          [murupolku/murupolku]]
+          [:span
+           [:div.container
+            [header sivu]]
+           [:div.container
+            [murupolku/murupolku]]
 
-         (let [[sisallon-luokka kartan-luokka]
-               (case kartan-koko
-                 :hidden ["col-sm-12" "hide"]
-                 :S ["col-sm-12" "kulma-kartta"]            ;piilota-kartta"]
-                 :M ["col-sm-6" "col-sm-6"]
-                 :L ["hide" "col-sm-12"])]
-           ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-           [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-            [:div.row.row-sisalto
+           (let [[sisallon-luokka kartan-luokka]
+                 (case kartan-koko
+                   :hidden ["col-sm-12" "hide"]
+                   :S ["col-sm-12" "kulma-kartta"]          ;piilota-kartta"]
+                   :M ["col-sm-6" "col-sm-6"]
+                   :L ["hide" "col-sm-12"])]
+             ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
+             [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+              [:div.row.row-sisalto
 
 
-             ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
-             ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska kartan kontrollien pitäisi
-             ;; pysyä kartan päällä.
-             [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
-              (case sivu
-                :urakat [urakat/urakat]
-                :raportit [raportit/raportit]
-                :ilmoitukset [ilmoitukset/ilmoitukset]
-                :hallinta [hallinta/hallinta]
-                :tilannekuva [tilannekuva/tilannekuva]
-                :about [about/about]
-                )]
-             [:div#kartta-container {:class (str "col-kartta " kartan-luokka)}
-              (if (= :S kartan-koko)
-                [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
-                 [:span.livicon-expand " Avaa kartta"]]
-                [kartta/kartta])]]])
-         [footer]
-         [modal-container]
-         [viesti-container]
-         ]))))
+               ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
+               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska kartan kontrollien pitäisi
+               ;; pysyä kartan päällä.
+               [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
+                (case sivu
+                  :urakat [urakat/urakat]
+                  :raportit [raportit/raportit]
+                  :ilmoitukset [ilmoitukset/ilmoitukset]
+                  :hallinta [hallinta/hallinta]
+                  :tilannekuva [tilannekuva/tilannekuva]
+                  :about [about/about]
+                  )]
+               [:div#kartta-container {:class (str "col-kartta " kartan-luokka)}
+                (if (= :S kartan-koko)
+                  [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
+                   [:span.livicon-expand " Avaa kartta"]]
+                  [kartta/kartta])]]])
+           [footer]
+           [modal-container]
+           [viesti-container]
+           ])))))
 

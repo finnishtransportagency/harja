@@ -8,7 +8,6 @@
             [cljs.core.async :refer [<! >! timeout chan]]
             [harja.ui.modal :as modal]
             [goog.dom :as dom]
-            [harja.views.main :as main-view]
             [goog.events :as events]
             [reagent.core :as reagent])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -28,6 +27,8 @@
 
 (def oletuskayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
 
+(def istunto-aikakatkaistu (atom false))
+
 (def ajastin-kaynnissa (atom false))
 
 (def kayttoaikaa-jaljella-sekunteina (atom oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
@@ -45,11 +46,11 @@
 (defn lisaa-ajastin-tapahtumakuuntelijat []
   (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
   (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
-  #_(events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
+  #_(events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)) ; FIXME Ei toimi?
   (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
 (defn kirjaudu-ulos []
-  (reagent/unmount-component-at-node (.getElementById js/document "app"))) ; FIXME Unmounttaa myös modalin :(
+  (reset! istunto-aikakatkaistu true))
 
 (defn kirjaudu-ulos-jos-kayttoaika-umpeutunut []
   (when (<= @kayttoaikaa-jaljella-sekunteina 0)
