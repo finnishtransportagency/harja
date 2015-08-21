@@ -96,7 +96,7 @@
          :komponentti (when (roolit/rooli-urakassa? roolit/urakanvalvoja
                                                     (:id urakka))
                         [napit/palvelinkutsu-nappi "Hae"
-                         #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id @urakka) (pvm/vuosi (first hoitokausi)))
+                         #(lampotilat/hae-lampotilat-ilmatieteenlaitokselta (:id urakka) (pvm/vuosi (first hoitokausi)))
                          {:ikoni        (ikonit/download)
                           :luokka       "nappi-ensisijainen nappi-hae-itl"
                           :kun-onnistuu (fn [{:keys [keskilampotila ilmastollinen-keskiarvo]}]
