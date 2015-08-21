@@ -15,7 +15,12 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus tapahtuma-id lisatietoja]
-  (integraatioloki/kirjaa-lahteva-jms-kuittaus integraatioloki kuittaus tapahtuma-id (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus) lisatietoja)
+  (integraatioloki/kirjaa-lahteva-jms-kuittaus
+    integraatioloki
+    kuittaus
+    tapahtuma-id
+    (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus)
+    lisatietoja)
   (sonja/laheta sonja kuittausjono kuittaus))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
@@ -43,4 +48,10 @@
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id (str virheet)))
       (catch Exception e
-        (log/error e "Tapahtui poikkeus luettaessa sisään viestiä Samposta.")))))
+        (integraatioloki/kirjaa-epaonnistunut-integraatio
+          integraatioloki
+          "Sampo sisäänluvussa tapahtui poikkeus"
+          (str "Poikkeus: " (.getMessage e))
+          tapahtuma-id
+          nil)
+        (log/error "Sampo sisäänluvussa tapahtui poikkeus." e)))))
