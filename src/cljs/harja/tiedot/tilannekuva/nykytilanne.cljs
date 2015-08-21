@@ -19,7 +19,6 @@
 (defonce hae-kaluston-gps? (atom true))
 (defonce hae-havainnot? (atom true))
 (defonce hae-onnettomuudet? (atom true))
-(defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
 (defonce livesuodattimen-asetukset (atom "0-4h"))
@@ -34,7 +33,6 @@
                    @hae-kaluston-gps?
                    @hae-havainnot?
                    @hae-onnettomuudet?
-                   @hae-tyokoneet?
                    @nav/valittu-hallintayksikko
                    @nav/valittu-urakka
                    @livesuodattimen-asetukset))
@@ -102,7 +100,7 @@
     (let [yhdista (fn [& tulokset]
                     (concat (remove k/virhe? tulokset)))
           tulos (yhdista
-                 (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
+                 (when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
                   #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
                   #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt (kasaa-parametrit))))
