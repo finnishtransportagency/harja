@@ -2,12 +2,13 @@
   "Harjan istunnon tiedot"
   (:require [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
-            
+
             [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
- 
+
 (def kayttaja (atom nil))
 
 (def kayttajan-nimi
@@ -20,3 +21,25 @@
   (reset! kayttaja k)
   (t/julkaise! (merge {:aihe :kayttajatiedot} k)))
 
+(def kayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
+
+(def ajastin-kaynnissa (atom false))
+
+(def kayttoaikaa-jaljella-sekunteina (atom kayttoaika-ilman-kayttajasyotteita-sekunteina))
+
+(defn kaynnista-ajastin
+  (if (false? @ajastin-kaynnissa)
+    (go
+      (reset! ajastin-kaynnissa true)
+      (loop []
+        (<! (timeout 1000))
+        (if @ajastin-kaynnissa
+          (do
+            (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
+            (recur)))))))
+
+(defn pysayta-ajastin []
+  (reset! ajastin-kaynnissa false))
+
+(defn resetoi-ajastin []
+  (reset! kayttoaikaa-jaljella-sekunteina kayttoaika-ilman-kayttajasyotteita-sekunteina))
