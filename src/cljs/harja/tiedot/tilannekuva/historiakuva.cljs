@@ -72,11 +72,10 @@
     :type :toteuma
     :alue {
            :type        :line
-           :coordinates (map :sijainti (sort-by
+           :points (mapv :sijainti (sort-by
                                          :aika
                                          pvm/jalkeen?
-                                         (:reittipisteet toteuma)))
-           }))
+                                         (:reittipisteet toteuma)))}))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   (assoc tp
@@ -107,6 +106,7 @@
    :alue            @nav/kartalla-nakyva-alue
    :alku            (if (= @valittu-aikasuodatin :lyhyt)
                       (t/minus (pvm/->pvm-aika (str (pvm/pvm (:pvm @lyhyen-suodattimen-asetukset))
+                                                    " "
                                                     (:kellonaika @lyhyen-suodattimen-asetukset)))
                                (t/hours (:plusmiinus @lyhyen-suodattimen-asetukset)))
 
@@ -114,16 +114,17 @@
 
    :loppu           (if (= @valittu-aikasuodatin :lyhyt)
                       (t/plus (pvm/->pvm-aika (str (pvm/pvm (:pvm @lyhyen-suodattimen-asetukset))
+                                                   " "
                                                    (:kellonaika @lyhyen-suodattimen-asetukset)))
                               (t/hours (:plusmiinus @lyhyen-suodattimen-asetukset)))
 
                       (:loppu @pitkan-suodattimen-asetukset))})
 
 (defn hae-asiat []
-  (log "Hae historia!")
+  (log "Hae historia! " (pr-str @valittu-aikasuodatin))
   (go
     (let [yhdista (fn [& tulokset]
-                    (concat (remove k/virhe? tulokset)))
+                    (apply (comp vec concat) (remove k/virhe? tulokset)))
           tulos (yhdista
                   #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
                   #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
@@ -135,7 +136,7 @@
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot (kasaa-parametrit))))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot (kasaa-parametrit))))
                   (when-not (empty? @haettavat-toteumatyypit)
-                    (<! (k/post! :hae-kaikki-toteumat (assoc
+                    (<! (k/post! :hae-toteumat-historiakuvaan (assoc
                                                         (kasaa-parametrit)
                                                         :toimenpidekoodit
                                                         @haettavat-toteumatyypit)))))]
@@ -163,9 +164,20 @@
                       _ @valittu-aikasuodatin
                       _ @lyhyen-suodattimen-asetukset
                       _ @pitkan-suodattimen-asetukset
-                      _ @nakymassa?]
+                      _ @nakymassa?
+                      _ @nav/kartalla-nakyva-alue
+                      _ @nav/valittu-urakka
+                      _ @nav/valittu-hallintayksikko-id]
                      {:odota +bufferi+}
-                     (when @nakymassa? (hae-asiat))))
+                     (when (and @nakymassa?
+                                (or
+                                  (and
+                                    (= @valittu-aikasuodatin :lyhyt)
+                                    (not (some nil? (vals @lyhyen-suodattimen-asetukset))))
+                                  (and
+                                    (= @valittu-aikasuodatin :pitka)
+                                    (not (some nil? (vals @pitkan-suodattimen-asetukset))))))
+                       (hae-asiat))))
 
 (def lopeta-asioiden-haku (paivita-periodisesti asioiden-haku +intervalli+))
 

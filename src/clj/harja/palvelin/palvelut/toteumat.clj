@@ -112,21 +112,34 @@
         (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
 (defn hae-toteumat-historiakuvaan [db user {:keys [hallintayksikko urakka alku loppu toimenpidekoodit alue]}]
+  (log/debug "Haetaan toteumia historiakuvaan.")
+  (log/debug "hallintayksikkö " (pr-str hallintayksikko))
+  (log/debug "urakka " (pr-str urakka))
+  (log/debug "toimenpidekoodit" (pr-str toimenpidekoodit))
+  (log/debug "alue " (pr-str alue))
+
   (when urakka (roolit/vaadi-lukuoikeus-urakkaan user urakka))
   (let [urakka_annettu (annettu? urakka)
         hallintayksikko_annettu (annettu? hallintayksikko)]
-    (konv/sarakkeet-vektoriin
-      (into []
-            (comp
-              (map assoc :tyyppi :toteuma)
-              (map konv/alaviiva->rakenne)
-              (harja.geo/muunna-pg-tulokset :reittipiste_sijainti))
-            (q/hae-toteumat-historiakuvaan db urakka urakka_annettu (konv/sql-date alku) (konv/sql-date loppu)
-                                           toimenpidekoodit alue
-                                           hallintayksikko_annettu hallintayksikko))
-      {:tehtava :tehtavat
-       :materiaali :materiaalit
-       :reittipiste :reittipisteet})))
+    (let [kyselyn_tulos (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                       toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                       urakka urakka_annettu
+                                                       hallintayksikko_annettu hallintayksikko)
+          mankeloitava (into []
+                             (comp
+                               (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                               (map konv/alaviiva->rakenne)
+                               (map #(assoc % :tyyppi :toteuma)))
+                             kyselyn_tulos)
+          tulos (konv/sarakkeet-vektoriin
+                  mankeloitava
+                  {:tehtava     :tehtavat
+                   :materiaali  :materiaalit
+                   :reittipiste :reittipisteet})]
+      (log/debug (pr-str tulos))
+      (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa historiakuvaan."))
+
+      tulos)))
 
 (defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
@@ -518,5 +531,6 @@
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
-      :poista-tehtava!)
+      :poista-tehtava!
+      :hae-toteumat-historiakuvaan)
     this))

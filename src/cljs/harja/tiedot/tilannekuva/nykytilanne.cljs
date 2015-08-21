@@ -18,6 +18,7 @@
 (defonce hae-tiedoitukset? (atom true))
 (defonce hae-havainnot? (atom true))
 (defonce hae-onnettomuudet? (atom true))
+(defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
 (defonce livesuodattimen-asetukset (atom "0-4h"))
@@ -86,7 +87,7 @@
   (log "ASD Hae!")
   (go
     (let [yhdista (fn [& tulokset]
-                    (concat (remove k/virhe? tulokset)))
+                    (apply (comp vec concat) (remove k/virhe? tulokset)))
           tulos (yhdista
                   (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))

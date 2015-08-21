@@ -11,7 +11,8 @@
          tallenna-tehtavat
          lisaa-toimenpidekoodi
          poista-toimenpidekoodi
-         muokkaa-toimenpidekoodi)
+         muokkaa-toimenpidekoodi
+         hae-toimenpidekoodit-historiakuvaan)
 
 
 (defrecord Toimenpidekoodit []
@@ -25,13 +26,20 @@
                                                (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
            (julkaise-palvelu
              :tallenna-tehtavat (fn [user tiedot]
-                                  (tallenna-tehtavat (:db this) user tiedot))))
+                                  (tallenna-tehtavat (:db this) user tiedot)))
+
+           (julkaise-palvelu
+             :hae-toimenpidekoodit-historiakuvaan (fn [user tiedot]
+                                                    (hae-toimenpidekoodit-historiakuvaan (:db this) user tiedot))))
          this)
   
   (stop [this]
         (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat]]
           (poista-palvelu (:http-palvelin this) p))
         this))
+
+(defn hae-toimenpidekoodit-historiakuvaan [db user {:keys [urakka]}]
+  (q/hae-toimenpidekoodit-historiakuvaan db (not (nil? urakka)) urakka))
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]

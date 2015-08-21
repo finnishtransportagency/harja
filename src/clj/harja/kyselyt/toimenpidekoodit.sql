@@ -16,4 +16,17 @@ UPDATE toimenpidekoodi SET muokkaaja=:kayttajaid, muokattu=NOW(), nimi=:nimi, yk
 
 -- name: viimeisin-muokkauspvm
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista
-SELECT MAX(muokattu) as muokattu FROM toimenpidekoodi
+SELECT MAX(muokattu) as muokattu FROM toimenpidekoodi;
+
+--name: hae-neljannen-tason-toimenpidekoodit
+SELECT id,koodi,nimi,emo,taso,yksikko FROM toimenpidekoodi
+WHERE poistettu IS NOT TRUE AND
+    emo = :emo;
+
+--name: hae-toimenpidekoodit-historiakuvaan
+SELECT tpk.id, tpk.koodi, tpk.nimi, tpk.emo, tpk.taso, tpk.yksikko
+FROM toimenpidekoodi tpk
+  INNER JOIN toimenpideinstanssi tpi ON tpk.emo = tpi.toimenpide
+  AND :urakka_annettu IS FALSE OR tpi.urakka IN (:urakat)
+WHERE poistettu IS NOT TRUE
+AND tpk.taso = 4;

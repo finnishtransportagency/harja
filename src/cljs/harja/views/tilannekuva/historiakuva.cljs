@@ -23,15 +23,15 @@
   [:span
    [kentat/tee-kentta {:tyyppi :pvm}
     (r/wrap (:alku @tiedot/pitkan-suodattimen-asetukset)
-            (fn [u] (swap! assoc :alku u)))]
+            (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :alku u)))]
 
    [kentat/tee-kentta {:tyyppi :pvm}
     (r/wrap (:loppu @tiedot/pitkan-suodattimen-asetukset)
-            (fn [u] (swap! assoc :loppu u)))]])
+            (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :loppu u)))]])
 
-(defonce aikasuodattimet-rivit (atom {1 {:auki    (= :live @tiedot/valittu-aikasuodatin)
+(defonce aikasuodattimet-rivit (atom {1 {:auki    (= :lyhyt @tiedot/valittu-aikasuodatin)
                                          :otsikko "Lyhyt aikaväli" :sisalto [lyhytsuodatin]}
-                                      2 {:auki    (not (= :live @tiedot/valittu-aikasuodatin))
+                                      2 {:auki    (not (= :lyhyt @tiedot/valittu-aikasuodatin))
                                          :otsikko "Pitkä aikaväli" :sisalto [pitkasuodatin]}}))
 
 (defonce aikasuodattimet [harja.ui.yleiset/haitari aikasuodattimet-rivit {:vain-yksi-auki? true
@@ -93,9 +93,17 @@
 
 (defn historiakuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
+    {:component-will-mount
+     (fn [_]
+       (reset! tiedot/nakymassa? true)
+       (reset! tiedot/taso-historiakuva true))
+     :component-will-unmount
+     (fn [_]
+       (reset! tiedot/nakymassa? false)
+       (reset! tiedot/taso-historiakuva false)
+       (tiedot/lopeta-asioiden-haku))}
     (fn []
-      (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
+      (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                       :lyhyt
                                                       :pitka)))
 

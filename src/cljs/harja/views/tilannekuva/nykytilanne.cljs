@@ -30,15 +30,15 @@
           [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
            (when @tiedot/hae-kyselyt? :kyselyt)
            (when @tiedot/hae-tiedoitukset? :tiedoitukset)
-           (when @tiedot/hae-kaluston-gps? :kalusto)
            (when @tiedot/hae-onnettomuudet? :onnettomuudet)
+           (when @tiedot/hae-tyokoneet? :tyokoneet)
            (when @tiedot/hae-havainnot? :havainnot)])
     
     (fn [uusi]
       (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
       (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
+      (reset! tiedot/hae-tyokoneet? (:tyokoneet uusi))
       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
-      (reset! tiedot/hae-kaluston-gps? (:kalusto uusi))
       (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
       (reset! tiedot/hae-havainnot? (:havainnot uusi))))])
 
@@ -50,7 +50,15 @@
 
 (defn nykytilanne []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
+    {:component-will-mount
+     (fn [_]
+       (reset! tiedot/nakymassa? true)
+       (reset! tiedot/taso-nykytilanne true))
+     :component-will-unmount
+     (fn [_]
+       (reset! tiedot/nakymassa? false)
+       (reset! tiedot/taso-nykytilanne false)
+       (tiedot/lopeta-asioiden-haku))}
     (fn []
       [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
                                         :leijuva?             300}])))

@@ -209,68 +209,68 @@ SELECT
   t.paattynyt,
   t.tyyppi,
   t.lisatieto,
-  t.suorittajan_ytunnus                   AS suorittaja_ytunnus,
-  t.suorittajan_nimi                      AS suorittaja_nimi,
-  t.ulkoinen_id                           AS ulkoinenid,
+  t.suorittajan_ytunnus           AS suorittaja_ytunnus,
+  t.suorittajan_nimi              AS suorittaja_nimi,
+  t.ulkoinen_id                   AS ulkoinenid,
 
-  tt.id                                   AS tehtava_id,
-  tt.toimenpidekoodi                      AS tehtava_toimenpidekoodi,
-  tt.maara                                AS tehtava_maara,
-  tt.paivan_hinta                         AS tehtava_paivanhinta,
-  tt.lisatieto                            AS tehtava_lisatieto,
+  tt.id                           AS tehtava_id,
+  tt.toimenpidekoodi              AS tehtava_toimenpidekoodi,
+  tt.maara                        AS tehtava_maara,
+  tt.paivan_hinta                 AS tehtava_paivanhinta,
+  tt.lisatieto                    AS tehtava_lisatieto,
   (SELECT nimi
    FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi)         AS tehtava_toimenpide,
+   WHERE id = tt.toimenpidekoodi) AS tehtava_toimenpide,
 
-  tm.id                                   AS materiaali_id,
-  tm.maara                                AS materiaali_maara,
+  tm.id                           AS materiaali_id,
+  tm.maara                        AS materiaali_maara,
 
-  mk.id                                   AS materiaali_materiaali_id,
-  mk.nimi                                 AS materiaali_materiaali_nimi,
-  mk.kohdistettava                        AS materiaali_materiaali_kohdistettava,
+  mk.id                           AS materiaali_materiaali_id,
+  mk.nimi                         AS materiaali_materiaali_nimi,
+  mk.kohdistettava                AS materiaali_materiaali_kohdistettava,
 
-  rp.id                                   AS reittipiste_id,
-  rp.aika                                 AS reittipiste_aika,
-  (SELECT st_makepoint(rp.x, rp.y, rp.z)) AS reittipiste_sijainti,
+  rp.id                           AS reittipiste_id,
+  rp.aika                         AS reittipiste_aika,
+  rp.sijainti                     AS reittipiste_sijainti,
 
-  rt.id                                   AS reittipiste_tehtava_id,
-  rt.toimenpidekoodi                      AS reittipiste_tehtava_toimenpidekoodi,
-  rt.maara                                AS reittipiste_tehtava_maara,
+  rt.id                           AS reittipiste_tehtava_id,
+  rt.toimenpidekoodi              AS reittipiste_tehtava_toimenpidekoodi,
+  rt.maara                        AS reittipiste_tehtava_maara,
 
-  rm.id                                   AS reittipiste_materiaali_id,
-  rm.materiaalikoodi                      AS reittipiste_materiaali_materiaalikoodi,
-  rm.maara                                AS reittipiste_materiaali_maara
+  rm.id                           AS reittipiste_materiaali_id,
+  rm.materiaalikoodi              AS reittipiste_materiaali_materiaalikoodi,
+  rm.maara                        AS reittipiste_materiaali_maara
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
-                          AND t.urakka = :urakka OR :urakka_annettu IS FALSE
-                                                    AND t.alkanut >= :alkupvm
-                                                    AND t.paattynyt <= :loppupvm
-                                                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-                                                    AND tt.poistettu IS NOT TRUE
-                                                    AND t.poistettu IS NOT TRUE
+                          AND t.alkanut >= :alkupvm
+                          AND t.paattynyt <= :loppupvm
+                          AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                          AND tt.poistettu IS NOT TRUE
+                          AND t.poistettu IS NOT TRUE
   INNER JOIN reittipiste rp ON rp.toteuma = t.id
                                -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
-                               AND (st_contains(:alue, st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY))
-                               -- Sen jälkeen tarkastetaan hallintayksiköllä/urakalla suodattaminen
-                               AND (
-                                 -- Joko ei suodateta HY:llä/urakalla
-                                 (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
-                                 -- tai suodatetaan vain HY:llä..
-                                 (:urakka_annettu IS FALSE AND
-                                  st_contains((SELECT alue
-                                               FROM organisaatio
-                                               WHERE id = :hallintayksikko),
-                                              st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY)) OR
-                                 -- Tai suodatetaan urakalla
-                                 (st_contains((SELECT alue
-                                               FROM urakoiden_alueet
-                                               WHERE id = :urakka),
-                                              st_makepoint(rp.x, rp.y, rp.z) :: GEOMETRY)))
+                               AND (st_contains((ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)), rp.sijainti :: GEOMETRY))
   LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+WHERE t.urakka = :urakka OR :urakka_annettu IS FALSE
+                            -- Sen jälkeen tarkastetaan hallintayksiköllä/urakalla suodattaminen
+                            AND (
+                              -- Joko ei suodateta HY:llä/urakalla
+                              (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
+                              -- tai suodatetaan vain HY:llä..
+                              (:urakka_annettu IS FALSE AND
+                               st_contains((SELECT alue
+                                            FROM organisaatio
+                                            WHERE id = :hallintayksikko),
+                                           rp.sijainti :: GEOMETRY)) OR
+                              -- Tai suodatetaan urakalla
+                              (st_contains((SELECT alue
+                                            FROM urakoiden_alueet
+                                            WHERE id = :urakka),
+                                           rp.sijainti :: GEOMETRY)))
 ORDER BY rp.aika ASC;
 
 
