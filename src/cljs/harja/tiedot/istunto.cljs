@@ -50,14 +50,14 @@
   #_(events/listen (dom/getWindow) (.-SCROLL events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)) ; FIXME Ei toimi?
   (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
-(defn kirjaudu-ulos []
+(defn aikakatkaise-istunto []
   (reset! istunto-aikakatkaistu true))
 
-(defn kirjaudu-ulos-jos-kayttoaika-umpeutunut []
+(defn aikakatkaise-istunto-jos-kayttoaika-umpeutunut []
   (when (<= @kayttoaikaa-jaljella-sekunteina 0)
-    (log "Käyttöaika umpeutunut.")
+    (log "Käyttöaika umpeutui.")
     (reset! ajastin-kaynnissa false)
-    (kirjaudu-ulos)))
+    (aikakatkaise-istunto)))
 
 (defn nayta-kayttoaika []
   (let [minuutit (int (/ @kayttoaikaa-jaljella-sekunteina 60))
@@ -71,7 +71,7 @@
                               [:span
                                [:button.nappi-kielteinen {:type     "button"
                                                           :on-click #(do (.preventDefault %)
-                                                                         (kirjaudu-ulos)
+                                                                         (aikakatkaise-istunto)
                                                                          (modal/piilota!))}
                                 "Kirjaudu ulos"]
                                [:button.nappi-myonteinen {:type     "button"
@@ -83,7 +83,7 @@
                   [:div
                    (if kayttoaikaa-jaljella?
                      [:span
-                      [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, sinut kirjataan ulos. Haluatko jatkaa käyttöä?")]
+                      [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, Harja suljetaan. Haluatko jatkaa käyttöä?")]
                       [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
                      [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])])))
 
@@ -101,5 +101,5 @@
           (do
             (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
             (varoita-jos-kayttoaika-umpeutumassa)
-            (kirjaudu-ulos-jos-kayttoaika-umpeutunut)
+            (aikakatkaise-istunto-jos-kayttoaika-umpeutunut)
             (recur)))))))
