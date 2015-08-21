@@ -59,9 +59,3 @@
       (u (str "DELETE FROM kommentti WHERE kommentti = 'Testikommentti323353435';"))
       (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
       (u (str "DELETE FROM havainto WHERE kuvaus = 'testihavainto36934853';")))))
-
-(deftest tallenna-havainto-virheellisella-liitteella
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
-                                         (-> "test/resurssit/api/havainto-virheellinen-liite.json"
-                                             slurp))]
-    (is (= 400 (:status vastaus)))))
