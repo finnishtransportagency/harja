@@ -181,8 +181,8 @@
 
     (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema data]
       (let [voi-muokata? (if (some? voi-muokata?)
-                       voi-muokata?
-                       true)
+                           voi-muokata?
+                           true)
             kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
