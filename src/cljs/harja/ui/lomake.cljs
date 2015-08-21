@@ -158,9 +158,6 @@
 
   [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata?] :as opts} skeema data]
   (let [luokka (or luokka :default)
-        voi-muokata? (if (some? voi-muokata?)
-                       voi-muokata?
-                       true)
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
         nykyinen-fokus (atom nil)
@@ -183,7 +180,10 @@
                                                         (validointi/validoi-rivi nil data skeema :varoita)))
 
     (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema data]
-      (let [kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
+      (let [voi-muokata? (if (some? voi-muokata?)
+                       voi-muokata?
+                       true)
+            kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
             _ (paivita-ulkoinen-validointitila! virheet kaikki-virheet varoitukset kaikki-varoitukset)

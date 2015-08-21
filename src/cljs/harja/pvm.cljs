@@ -100,6 +100,12 @@
   [pvm]
   (df/unparse fi-pvm-aika pvm))
 
+(defn pvm-aika-opt
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
+  [p]
+  (if p
+    (pvm-aika p)
+    ""))
 (defn pvm-aika-sek
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa sekuntitarkkuudella"
   [pvm]
