@@ -1,0 +1,1 @@
+ALTER TABLE integraatiotapahtuma ALTER COLUMN ulkoinenid TYPE varchar(128);
