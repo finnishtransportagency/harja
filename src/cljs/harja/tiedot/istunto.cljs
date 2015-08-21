@@ -8,7 +8,9 @@
             [cljs.core.async :refer [<! >! timeout chan]]
             [harja.ui.modal :as modal]
             [goog.dom :as dom]
-            [goog.events :as events])
+            [harja.views.main :as main-view]
+            [goog.events :as events]
+            [reagent.core :as reagent])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -33,20 +35,25 @@
 (defn pysayta-ajastin []
   (reset! ajastin-kaynnissa false))
 
+(defn resetoi-ajastin-jos-modalia-ei-nakyvissa []
+  (when (false? (:nakyvissa? @modal/modal-sisalto))
+    (reset! kayttoaikaa-jaljella-sekunteina oletuskayttoaika-ilman-kayttajasyotteita-sekunteina)))
+
 (defn resetoi-ajastin []
   (reset! kayttoaikaa-jaljella-sekunteina oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
 
 (defn lisaa-ajastin-tapahtumakuuntelijat []
-  (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin))
-  (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin))
-  (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin)))
+  (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
+  (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
+  #_(events/listen (dom/getWindow) (.-TOUCHMOVE events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa))
+  (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
 (defn kirjaudu-ulos []
-  ;; TODO Unmounttaa komponentit
-  )
+  #_(reagent/unmount-component-at-node (.getElementById js/document "app")))
 
 (defn kirjaudu-ulos-jos-kayttoaika-umpeutunut []
-  (if (<= @kayttoaikaa-jaljella-sekunteina 0)
+  (when (<= @kayttoaikaa-jaljella-sekunteina 0)
+    (log "Käyttöaika umpeutunut.")
     (reset! ajastin-kaynnissa false)
     (kirjaudu-ulos)))
 
@@ -79,8 +86,8 @@
                      [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])])))
 
 (defn varoita-jos-kayttoaika-umpeutumassa []
-  (if (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
-    (nayta-varoitus-aikakatkaisusta))) ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
+  (when (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
+    (nayta-varoitus-aikakatkaisusta)))                      ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
 
 (defn kaynnista-ajastin []
   (if (false? @ajastin-kaynnissa)
