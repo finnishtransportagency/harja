@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.muokkauslukko :refer :all]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.muokkauslukko :as lukko]
             [clj-time.core :as t]
             [clj-time.coerce :as coerce]
             [com.stuartsierra.component :as component]
@@ -99,11 +100,11 @@
 
 (deftest kayttajan-A-lukitseman-nakyman-lukitseminen-ei-onnistu-kayttajalta-B
   (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lukitse
-                                    +kayttaja-jvh+ {:id "jvh_2015"})
-        tero-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :lukitse
-                                  +kayttaja-tero+ {:id "jvh_2015"})]
+                                  +kayttaja-jvh+ {:id "jvh_2015"})
+        tero-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :lukitse
+                                   +kayttaja-tero+ {:id "jvh_2015"})]
     (is (not (nil? jvh-lukko)))
     (is (nil? tero-lukko))))
 
@@ -112,11 +113,11 @@
                                   :lukitse
                                   +kayttaja-jvh+ {:id "jvh_lukko_2015"})
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                   :virkista-lukko
-                                   +kayttaja-tero+ {:id "jvh_lukko_2015"})
+                          :virkista-lukko
+                          +kayttaja-tero+ {:id "jvh_lukko_2015"})
         jvh-lukko-uudestaan (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-lukko-idlla
-                                  +kayttaja-jvh+ {:id "jvh_lukko_2015"})]
+                                            :hae-lukko-idlla
+                                            +kayttaja-jvh+ {:id "jvh_lukko_2015"})]
     (is (not (nil? jvh-lukko)))
     (is (not (nil? jvh-lukko-uudestaan)))
     (is (true? (t/equal? (coerce/from-sql-time (:aikaleima jvh-lukko))
@@ -134,3 +135,20 @@
                                             +kayttaja-jvh+ {:id "jvhlukko_2015"})]
     (is (not (nil? jvh-lukko)))
     (is (not (nil? jvh-lukko-uudestaan)))))
+
+(deftest vanha-lukko-lasketaan-oikein
+  (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))}
+        vanha-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 10)))}]
+    (is (false? (lukko/lukko-vanhentunut? tuore-lukko)))
+    (is (true? (lukko/lukko-vanhentunut? vanha-lukko)))))
+
+(deftest vanhentunut-lukko-tuhotaan-jos-se-haetaan
+  (let [lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :lukitse
+                              +kayttaja-jvh+ {:id "vanheneva_lukko"})
+        _ (u (str "UPDATE muokkauslukko SET aikaleima = '2000-12-20 00:00:00+02' WHERE id = 'vanheneva_lukko';"))
+        poistettu-vanha-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :hae-lukko-idlla
+                                              +kayttaja-jvh+ {:id "vanheneva_lukko"})]
+    (is (not (nil? lukko)))
+    (is (nil? poistettu-vanha-lukko))))
