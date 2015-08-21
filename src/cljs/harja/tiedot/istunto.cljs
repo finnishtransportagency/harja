@@ -6,7 +6,9 @@
             [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [cljs.core.async :refer [<! >! timeout chan]]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [goog.dom :as dom]
+            [goog.events :as events])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,9 +33,13 @@
 (defn pysayta-ajastin []
   (reset! ajastin-kaynnissa false))
 
-; TODO Lisää tälle event listener
 (defn resetoi-ajastin []
   (reset! kayttoaikaa-jaljella-sekunteina oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
+
+(defn lisaa-ajastin-tapahtumakuuntelijat []
+  (events/listen (dom/getWindow) (.-MOUSEMOVE events/EventType) #(resetoi-ajastin))
+  (events/listen (dom/getWindow) (.-KEYDOWN events/EventType) #(resetoi-ajastin))
+  (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin)))
 
 (defn kirjaudu-ulos []
   ;; TODO Unmounttaa komponentit
