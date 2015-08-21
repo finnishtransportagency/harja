@@ -11,9 +11,11 @@
 (defmethod formatoi-virhe :wrong-type [polku virhe]
   (str polku ": Väärä tyyppi. Tyyppi: " (:expected virhe) ", arvo: " (pr-str (:data virhe))))
 (defmethod formatoi-virhe :missing-property [polku _]
-  (str polku ": Arvo puuttuu"))
+  (str polku ": Pakollinen arvo puuttuu"))
 (defmethod formatoi-virhe :additional-properties [polku virhe]
   (str polku ": Ylimääräisiä kenttiä: " (str/join ", " (:property-names virhe))))
+(defmethod formatoi-virhe :out-of-bounds [polku virhe]
+  (str polku ": Ei-sallittu arvoalue. Minimi: " (:minimum ) ", maksimi: " (:maximum) ", arvo" (pr-str (:data virhe)) ))
 (defmethod formatoi-virhe :properties [polku virhe]
   (str/join "\n"
             (for [[avain virhe] (seq (:properties virhe))]
