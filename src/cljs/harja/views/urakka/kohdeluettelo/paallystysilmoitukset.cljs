@@ -16,7 +16,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
@@ -49,7 +48,7 @@
     :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
     ""))
 
-(def lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:kokonaishinta @lomakedata)))
 (def muutokset-kokonaishintaan
@@ -81,10 +80,10 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [muokattava? (reaction (and
-                                  (roolit/roolissa? roolit/urakanvalvoja)
-                                  (not= (:tila @lomakedata) :lukittu)
-                                  (false? @lomake-lukittu-muokkaukselta?)))
+  (let [muokattava? (and
+                      (roolit/roolissa? roolit/urakanvalvoja)
+                      (not= (:tila @lomakedata) :lukittu)
+                      (false? @lomake-lukittu-muokkaukselta?))
         paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @lomakedata)
                                            :perustelu-tekninen-osa     (:perustelu_tekninen_osa @lomakedata)
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
@@ -97,6 +96,7 @@
                                                (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
                                                                                       (assoc :perustelu_taloudellinen_osa (:perustelu-taloudellinen-osa uusi-arvo))
                                                                                       (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
+
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely"]
@@ -105,7 +105,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-tekninen-osa uusi))
-         :voi-muokata? @muokattava?}
+         :voi-muokata? muokattava?}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-tekninen-osa
           :tyyppi      :pvm
@@ -116,7 +116,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos-tekninen @paatostiedot-tekninen-osa)
@@ -134,7 +134,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-taloudellinen-osa uusi))
-         :voi-muokata? @muokattava?}
+         :voi-muokata? muokattava?}
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-taloudellinen-osa
           :tyyppi      :pvm
@@ -145,7 +145,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)
@@ -277,7 +277,7 @@
          [:div.row
           [:div.col-md-6
            [:h3 "Perustiedot"]
-           [lomake {:luokka   :horizontal
+           [lomake/lomake {:luokka   :horizontal
                     :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
                                        (false? @lomake-lukittu-muokkaukselta?))
                     :muokkaa! (fn [uusi]

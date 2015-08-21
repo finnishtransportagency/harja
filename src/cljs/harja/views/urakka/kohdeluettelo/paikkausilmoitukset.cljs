@@ -17,11 +17,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :refer [lomake]]
             [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
-            [harja.ui.yleiset :as yleiset]
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -80,10 +78,10 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
-  (let [voi-muokata (reaction (and
-                                (roolit/roolissa? roolit/urakanvalvoja)
-                                (not= (:tila @lomakedata) :lukittu)
-                                (false? @lomake-lukittu-muokkaukselta?)))
+  (let [muokattava? (and
+                      (roolit/roolissa? roolit/urakanvalvoja)
+                      (not= (:tila @lomakedata) :lukittu)
+                      (false? @lomake-lukittu-muokkaukselta?))
         paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
                               :perustelu     (:perustelu @lomakedata)
                               :kasittelyaika (:kasittelyaika @lomakedata)}
@@ -97,7 +95,7 @@
         {:luokka       :horizontal
          :muokkaa!     (fn [uusi]
                          (reset! paatostiedot uusi))
-         :voi-muokata? @voi-muokata}
+         :voi-muokata? muokattava?}
         [{:otsikko "Käsitelty"
           :nimi    :kasittelyaika
           :tyyppi  :pvm
@@ -108,7 +106,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if @voi-muokata "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :leveys-col    3}
 
          (when (:paatos @paatostiedot)
@@ -217,7 +215,7 @@
          [:div.row
           [:div.col-md-6
            [:h3 "Perustiedot"]
-           [lomake {:luokka       :horizontal
+           [lomake/lomake {:luokka       :horizontal
                     :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
                                        (false? @lomake-lukittu-muokkaukselta?))
                     :muokkaa!     (fn [uusi]

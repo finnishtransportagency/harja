@@ -182,7 +182,7 @@
                                       varoitukset (into {}
                                                         (validointi/validoi-rivi nil data skeema :varoita)))
 
-    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset] :as opts} skeema data]
+    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema data]
       (let [kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
