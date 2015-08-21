@@ -689,7 +689,8 @@ INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa
 
 -- Tyokoneseurannan havainnot
 
-INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, urakkaid, sopimusid, tehtavat) VALUES (
+INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, suunta,
+urakkaid, sopimusid, tehtavat) VALUES (
   'Urakoitsijan järjestelmä 1',
   (SELECT id FROM organisaatio WHERE nimi='Destia Oy'),
   123,
@@ -697,12 +698,13 @@ INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysa
   31337,
   'aura-auto',
   ST_MakePoint(7207739,429493)::POINT,
+  45,
   (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
   (SELECT id FROM sopimus WHERE nimi = 'Muhoksen pääsopimus' AND urakka=12),
   ARRAY['harjaus', 'suolaus']::suoritettavatehtava[]
 );
 
-INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti,
+INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, suunta,
 urakkaid, sopimusid, tehtavat) VALUES (
   'Urakoitsijan järjestelmä 1',
   (SELECT id FROM organisaatio WHERE nimi='NCC Roads Oy'),
@@ -711,12 +713,13 @@ urakkaid, sopimusid, tehtavat) VALUES (
   31338,
   'aura-auto',
   ST_MakePoint(7211247,427861)::POINT,
+  45,
   (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
   (SELECT id FROM sopimus WHERE nimi = 'Muhoksen pääsopimus' AND urakka=12),
   ARRAY['pistehiekoitus']::suoritettavatehtava[]
 );
 
-INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti,
+INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, suunta,
 urakkaid, sopimusid, tehtavat) VALUES (
   'Urakoitsijan järjestelmä 1',
   (SELECT id FROM organisaatio WHERE nimi='Destia Oy'),
@@ -725,6 +728,7 @@ urakkaid, sopimusid, tehtavat) VALUES (
   31339,
   'aura-auto',
   ST_MakePoint(7249077,499399)::POINT,
+  45,
   (SELECT id FROM urakka WHERE nimi = 'Pudasjärven alueurakka 2007-2012'),
   (SELECT id FROM sopimus WHERE nimi = 'Pudasjärvi pääsopimus'),
   ARRAY['muu']::suoritettavatehtava[]

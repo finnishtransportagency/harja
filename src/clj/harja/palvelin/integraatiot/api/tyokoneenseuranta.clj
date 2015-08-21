@@ -30,6 +30,7 @@
                                    (get-in havainto [:havainto :tyokone :tyyppi])
                                    (get-in havainto [:havainto :sijainti :koordinaatit :x])
                                    (get-in havainto [:havainto :sijainti :koordinaatit :y])
+                                   (get-in havainto [:havainto :suunta])
                                    (get-in havainto [:havainto :urakkaid])
                                    (get-in havainto [:havainto :sopimusid])
                                    (arrayksi db (get-in havainto [:havainto :tehtavat]))))
