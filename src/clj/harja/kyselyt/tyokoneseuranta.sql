@@ -9,7 +9,7 @@ SELECT tallenna_tai_paivita_tyokonehavainto(
        CAST(:tyokoneid AS integer),
        CAST(:tyokonetyyppi AS character varying),
        CAST(ST_MakePoint(:xkoordinaatti, :ykoordinaatti) as point),
-       CAST(:suunta AS real)
+       CAST(:suunta AS real),
        CAST(:urakkaid AS integer),
        CAST(:sopimusid AS integer),
        CAST(:tehtavat AS suoritettavatehtava[]))
