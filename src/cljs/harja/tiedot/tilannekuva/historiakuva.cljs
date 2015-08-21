@@ -4,7 +4,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [cljs-time.core :as t])
@@ -25,7 +25,7 @@
 
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :lyhyt))
-(defonce lyhyen-suodattimen-asetukset (atom {:pvm nil :kellonaika "12:00" :plusmiinus 12}))
+(defonce lyhyen-suodattimen-asetukset (atom {:pvm (pvm/nyt) :kellonaika "12:00" :plusmiinus 12}))
 (defonce pitkan-suodattimen-asetukset (atom {:alku nil :loppu nil}))
 
 (defonce nakymassa? (atom false))
@@ -41,23 +41,6 @@
                                      (mapv :nimi @toimenpidekoodit)))
 
 (defonce haettavat-toteumatyypit (atom #{}))
-
-(defonce filtterit-muuttui?
-         (reaction @hae-toimenpidepyynnot?
-                   @hae-kyselyt?
-                   @hae-tiedoitukset?
-                   @hae-turvallisuuspoikkeamat?
-                   @hae-tarkastukset?
-                   @hae-havainnot?
-                   @hae-onnettomuudet?
-                   @hae-paikkaustyot?
-                   @hae-paallystystyot?
-                   @haettavat-toteumatyypit
-                   @nav/valittu-hallintayksikko
-                   @nav/valittu-urakka
-                   @valittu-aikasuodatin
-                   @lyhyen-suodattimen-asetukset
-                   @pitkan-suodattimen-asetukset))
 
 (def haetut-asiat (atom nil))
 
@@ -137,6 +120,7 @@
                       (:loppu @pitkan-suodattimen-asetukset))})
 
 (defn hae-asiat []
+  (log "Hae historia!")
   (go
     (let [yhdista (fn [& tulokset]
                     (concat (remove k/virhe? tulokset)))
@@ -157,26 +141,31 @@
                                                         @haettavat-toteumatyypit)))))]
       (reset! haetut-asiat tulos))))
 
-(def pollaus-id (atom nil))
 (def +sekuntti+ 1000)
-(def +intervalli+ (* 5 +sekuntti+))
+(def +minuutti+ (* 60 +sekuntti+))
 
-(defn lopeta-pollaus
-  []
-  (when @pollaus-id
-    (log "lopetetaan pollaus")
-    (js/clearInterval @pollaus-id)
-    (reset! pollaus-id nil)))
+(def +intervalli+ (* 1 +minuutti+))
+(def +bufferi+ (* 1 +sekuntti+))
 
-(defn aloita-pollaus
-  []
-  (when @pollaus-id
-    (log "aloitetaan pollaus")
-    (hae-asiat)
-    (reset! pollaus-id (js/setInterval hae-asiat +intervalli+))))
+(def asioiden-haku (reaction<!
+                     [_ @hae-toimenpidepyynnot?
+                      _ @hae-kyselyt?
+                      _ @hae-tiedoitukset?
+                      _ @hae-turvallisuuspoikkeamat?
+                      _ @hae-tarkastukset?
+                      _ @hae-havainnot?
+                      _ @hae-onnettomuudet?
+                      _ @hae-paikkaustyot?
+                      _ @hae-paallystystyot?
+                      _ @toimenpidekoodit
+                      _ @naytettavat-toteumatyypit
+                      _ @haettavat-toteumatyypit
+                      _ @valittu-aikasuodatin
+                      _ @lyhyen-suodattimen-asetukset
+                      _ @pitkan-suodattimen-asetukset
+                      _ @nakymassa?]
+                     {:odota +bufferi+}
+                     (when @nakymassa? (hae-asiat))))
 
-(run! (if @nakymassa? (aloita-pollaus) (lopeta-pollaus)))
-
-(run! (when @filtterit-muuttui?
-        (hae-asiat)))
+(def lopeta-asioiden-haku (paivita-periodisesti asioiden-haku +intervalli+))
 
