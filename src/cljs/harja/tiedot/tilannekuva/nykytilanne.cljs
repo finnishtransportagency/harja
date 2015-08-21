@@ -60,11 +60,25 @@
     :type :havainto
     :alue (oletusalue havainto)))
 
+(defn suunta-radiaaneina [tyokone]
+  (let [sijainti (:sijainti tyokone)
+        edellinensijainti (or (:edellinensijainti tyokone) sijainti)
+        lat1 (sijainti 0)
+        lon1 (sijainti 1)
+        lat2 (edellinensijainti 0)
+        lon2 (edellinensijainti 1)]
+    (mod (Math/atan2 (* (Math/sin (- lon2 lon1))
+                        (Math/cos lat2))
+                     (- (* (Math/cos lat1) (Math/sin lat2))
+                        (* (Math/sin lat1) (Math/cos lat2) (Math/cos (- lon2 lon1)))))
+         (* 2 Math/PI))))
+
 (defmethod kartalla-xf :tyokone [tyokone]
   (assoc tyokone
     :type :tyokone
     :alue {:type :icon
            :coordinates (:sijainti tyokone)
+           :direction (- (suunta-radiaaneina tyokone))
            :img "images/tyokone.png"}))
 
 (def nykytilanteen-asiat-kartalla

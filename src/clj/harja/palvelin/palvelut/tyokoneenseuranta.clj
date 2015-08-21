@@ -7,10 +7,16 @@
             [harja.kyselyt.konversio :as konversiot]
             [harja.kyselyt.tyokoneseuranta :as tks]))
 
+(defn- swap-coords [[x y]]
+  [y x])
+
 (defn- formatoi-vastaus [tyokone]
   (-> tyokone
       (update-in [:sijainti] geo/pg->clj)
-      (update-in [:sijainti] (fn [[x y]] [y x])) ; swapataan koordinaatit
+      (update-in [:sijainti] swap-coords) ; swapataan koordinaatit
+      (update-in [:edellinensijainti] (fn [pos] (if pos
+                                                  (swap-coords (geo/pg->clj pos))
+                                                  nil)))
       (assoc :tyyppi :tyokone)
       (konversiot/array->set :tehtavat)))
 

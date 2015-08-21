@@ -16,3 +16,5 @@
                                                 [:div "Tehtävät: "
                                                  (let [tehtavat (str/join "," (:tehtavat tapahtuma))]
                                                    [:span tehtavat])]]))))
+
+

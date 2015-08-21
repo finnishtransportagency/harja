@@ -345,12 +345,13 @@
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
 
-(defmethod luo-feature :icon [{:keys [coordinates img]}]
+(defmethod luo-feature :icon [{:keys [coordinates img direction]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
                                                                  :anchor       #js [0.5 0.5]
                                                                  :opacity 1
                                                                  :size #js [32 32]
+                                                                 :rotation (or direction 0)
                                                                  :anchorXUnits "fraction"
                                                                  :anchorYUnits "fraction"})
                                      :zIndex 10000}))))
