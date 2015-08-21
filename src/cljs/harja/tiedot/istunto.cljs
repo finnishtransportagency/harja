@@ -49,7 +49,7 @@
   (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
 (defn kirjaudu-ulos []
-  #_(reagent/unmount-component-at-node (.getElementById js/document "app")))
+  (reagent/unmount-component-at-node (.getElementById js/document "app"))) ; FIXME Unmounttaa myös modalin :(
 
 (defn kirjaudu-ulos-jos-kayttoaika-umpeutunut []
   (when (<= @kayttoaikaa-jaljella-sekunteina 0)
@@ -60,7 +60,7 @@
 (defn nayta-kayttoaika []
   (let [minuutit (int (/ @kayttoaikaa-jaljella-sekunteina 60))
         sekunnit (- @kayttoaikaa-jaljella-sekunteina (* minuutit 60))]
-    (str minuutit ":" sekunnit)))
+    (str minuutit ":" (when (< sekunnit 10) "0") sekunnit)))
 
 (defn nayta-varoitus-aikakatkaisusta []
   (let [kayttoaikaa-jaljella? (> @kayttoaikaa-jaljella-sekunteina 0)]
@@ -87,7 +87,7 @@
 
 (defn varoita-jos-kayttoaika-umpeutumassa []
   (when (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
-    (nayta-varoitus-aikakatkaisusta)))                      ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
+    (nayta-varoitus-aikakatkaisusta))) ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
 
 (defn kaynnista-ajastin []
   (if (false? @ajastin-kaynnissa)
