@@ -35,40 +35,43 @@
 (defn resetoi-ajastin []
   (reset! kayttoaikaa-jaljella-sekunteina oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
 
-(def varoitus-nakyvissa (atom false))
-
 (defn kirjaudu-ulos []
   ;; TODO Unmounttaa komponentit
   )
 
 (defn kirjaudu-ulos-jos-kayttoaika-umpeutunut []
   (if (<= @kayttoaikaa-jaljella-sekunteina 0)
+    (reset! ajastin-kaynnissa false)
     (kirjaudu-ulos)))
 
+(defn nayta-kayttoaika []
+  (let [minuutit (int (/ @kayttoaikaa-jaljella-sekunteina 60))
+        sekunnit (- @kayttoaikaa-jaljella-sekunteina (* minuutit 60))]
+    (str minuutit ":" sekunnit)))
+
 (defn nayta-varoitus-aikakatkaisusta []
-  (reset! varoitus-nakyvissa true)
   (modal/nayta! {:otsikko "Haluatko jatkaa käyttöä?"
                  :footer  [:span
                            [:button.nappi-kielteinen {:type     "button"
                                                       :on-click #(do (.preventDefault %)
-                                                                     (reset! varoitus-nakyvissa false)
                                                                      (kirjaudu-ulos)
                                                                      (modal/piilota!))}
                             "Kirjaudu ulos"]
                            [:button.nappi-myonteinen {:type     "button"
                                                       :on-click #(do (.preventDefault %)
-                                                                     (reset! varoitus-nakyvissa false)
                                                                      (resetoi-ajastin)
                                                                      (modal/piilota!))}
-                            "Jatka"]
+                            "Jatka käyttöä"]
                            ]}
                 [:div
-                 [:p (str "Et ole käyttänyt Harjaa aktiivisesti vähään aikaan. Sinut kirjataan pian ulos. Haluatko jatkaa käyttöä?")]
-                 [:p (str "Käyttöaikaa jäljellä: " "XX:XX")]])) ; TODO Näytä käyttöaika ja jos 0, tekstinä: Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.
+                 (if (> @kayttoaikaa-jaljella-sekunteina 0)
+                   [:span
+                    [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, sinut kirjataan ulos. Haluatko jatkaa käyttöä?")]
+                    [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
+                 [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])]))
 
 (defn varoita-jos-kayttoaika-umpeutumassa []
-  (if (and (< @kayttoaikaa-jaljella-sekunteina (* 60 15))
-           (false? @varoitus-nakyvissa))
+  (if (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
     (nayta-varoitus-aikakatkaisusta)))
 
 (defn kaynnista-ajastin []
