@@ -35,7 +35,6 @@
         (<! (timeout 1000))
         (if @ajastin-kaynnissa
           (do
-            (log "Käyttöaikaa jäljellä sekunteina: @kayttoaikaa-jaljella-sekunteina")
             (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
             (recur)))))))
 
