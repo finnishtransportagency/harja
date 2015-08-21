@@ -85,7 +85,7 @@
     (go
       (reset! pollaus-kaynnissa true)
       (loop []
-        (<! (timeout 10000))
+        (<! (timeout 50000))
         (if (not (nil? @nykyinen-lukko))
           (do
             (pollaa)
