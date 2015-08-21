@@ -1,6 +1,6 @@
 (ns harja.tiedot.istunto
   "Harjan istunnon tiedot"
-  (:require [harja.asiakas.tapahtumat :as t]
+  (:require [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.loki :refer [log]]
 
             [reagent.core :refer [atom]]
@@ -19,7 +19,7 @@
 
 (defn- aseta-kayttaja [k]
   (reset! kayttaja k)
-  (t/julkaise! (merge {:aihe :kayttajatiedot} k)))
+  (tapahtumat/julkaise! (merge {:aihe :kayttajatiedot} k)))
 
 (def kayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
 
@@ -35,6 +35,7 @@
         (<! (timeout 1000))
         (if @ajastin-kaynnissa
           (do
+            (log "Käyttöaikaa jäljellä sekunteina: @kayttoaikaa-jaljella-sekunteina")
             (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
             (recur)))))))
 

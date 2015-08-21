@@ -26,7 +26,7 @@
                                      (log "VIRHE RENDERISSÄ")))})
   (render)
 
-  ;; Jotkut komponentit haluavat body klikkauksia kuunnella
+  ;; Jotkut komponentit haluavat body-klikkauksia kuunnella
   (set! (.-onclick js/document.body)
         (fn [e]
           (t/julkaise! {:aihe      :body-klikkaus
@@ -46,6 +46,7 @@
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
   (go
+    (istunto/kaynnista-ajastin)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
 
