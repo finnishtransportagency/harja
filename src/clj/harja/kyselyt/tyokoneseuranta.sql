@@ -54,3 +54,7 @@ SELECT t.tyokoneid,
 FROM tyokonehavainto t
   WHERE urakkaid = :urakkaid
     AND ST_Contains(ST_MakeEnvelope(:xmin,:ymin,:xmax,:ymax), CAST(sijainti AS geometry))
+
+-- name: poista-vanhentuneet-havainnot!
+-- Poistaa vanhentuneet havainnot työkoneseurannasta
+DELETE FROM tyokonehavainto WHERE vastaanotettu<NOW()-INTERVAL '2 hours'
