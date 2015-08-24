@@ -25,20 +25,22 @@
                                     :onnettomuudet
                                     :havainnot]}
    (r/wrap
-     [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
-      (when @tiedot/hae-kyselyt? :kyselyt)
-      (when @tiedot/hae-tiedoitukset? :tiedoitukset)
-      (when @tiedot/hae-kaluston-gps? :kalusto)
-      (when @tiedot/hae-onnettomuudet? :onnettomuudet)
-      (when @tiedot/hae-havainnot? :havainnot)]
-
-     (fn [uusi]
-       (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot (set uusi)))
-       (reset! tiedot/hae-kyselyt? (:kyselyt (set uusi)))
-       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset (set uusi)))
-       (reset! tiedot/hae-kaluston-gps? (:kalusto (set uusi)))
-       (reset! tiedot/hae-onnettomuudet? (:onnettomuudet (set uusi)))
-       (reset! tiedot/hae-havainnot? (:havainnot (set uusi)))))])
+    (into #{}
+          (keep identity)
+          [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
+           (when @tiedot/hae-kyselyt? :kyselyt)
+           (when @tiedot/hae-tiedoitukset? :tiedoitukset)
+           (when @tiedot/hae-kaluston-gps? :kalusto)
+           (when @tiedot/hae-onnettomuudet? :onnettomuudet)
+           (when @tiedot/hae-havainnot? :havainnot)])
+    
+    (fn [uusi]
+      (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
+      (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
+      (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
+      (reset! tiedot/hae-kaluston-gps? (:kalusto uusi))
+      (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
+      (reset! tiedot/hae-havainnot? (:havainnot uusi))))])
 
 (defonce suodattimet [:span
                       [aikavalinta]
