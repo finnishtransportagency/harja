@@ -19,10 +19,6 @@
         :pitkalampo (if (nil? pl) pl (float pl)))
       :pitka_keskilampotila :keskilampotila)))
 
-(defn urakan-lampotilat [db user urakka-id]
-  (log/debug "Haetaan urakan lämpotilat urakalle: " urakka-id)
-  ;(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (map keskilampo-ja-pitkalampo-floatiksi (q/hae-lampotilat db urakka-id)))
 
 (defn tallenna-lampotilat!
   [db user arvot]
@@ -121,10 +117,6 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)]
-      (julkaise-palvelu http :urakan-lampotilat
-                        (fn [user urakka-id]
-                          (urakan-lampotilat (:db this) user urakka-id)))
-
       (julkaise-palvelu http :tallenna-lampotilat!
                         (fn [user arvot]
                           (tallenna-lampotilat! (:db this) user arvot)))
@@ -141,7 +133,7 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :urakan-lampotilat :tallenna-lampotilat!
+                     :tallenna-lampotilat!
                      :hae-lampotilat-ilmatieteenlaitokselta
                      :hae-urakan-suolasakot-ja-lampotilat
                      :tallenna-suolasakko-ja-lampotilat)
