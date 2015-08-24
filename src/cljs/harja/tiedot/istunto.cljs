@@ -28,7 +28,7 @@
 (def oletuskayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
 (def istunto-aikakatkaistu (atom false))
 (def ajastin-paalla (atom false))
-(defn ajastimen-paivitys-paalla (atom false))
+(def ajastimen-paivitys-paalla (atom false))
 (def kayttoaikaa-jaljella-sekunteina (atom oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
 
 (defn pysayta-ajastin []
