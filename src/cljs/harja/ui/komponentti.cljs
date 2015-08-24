@@ -3,6 +3,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.muokkauslukko :as lukko]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.yleiset :as yleiset]))
 
 (defn luo
@@ -93,6 +94,12 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
   [lukko-id]
   (sisaan-ulos #(lukko/paivita-lukko lukko-id)
                #(lukko/vapauta-lukko lukko-id)))
+
+(defn pysayta-ajastin
+  "Mixin, joka pysäyttää aikakatkaisun ajastimen komponentin ollessa aktiivinen."
+  []
+  (sisaan-ulos #(istunto/pysayta-ajastin)
+               #(istunto/kaynnista-ajastin)))
 
 (defn kun-muuttuu
   "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
