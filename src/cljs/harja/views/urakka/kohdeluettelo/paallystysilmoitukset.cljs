@@ -11,7 +11,7 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
@@ -81,21 +81,27 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                      (roolit/roolissa? roolit/urakanvalvoja)
-                      (not= (:tila @lomakedata) :lukittu)
-                      (false? @lomake-lukittu-muokkaukselta?))
+                     (roolit/roolissa? roolit/urakanvalvoja)
+                     (not= (:tila @lomakedata) :lukittu)
+                     (false? @lomake-lukittu-muokkaukselta?))
         paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @lomakedata)
                                            :perustelu-tekninen-osa     (:perustelu_tekninen_osa @lomakedata)
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
-                                          (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
-                                                                                 (assoc :perustelu_tekninen_osa (:perustelu-tekninen-osa uusi-arvo))
-                                                                                 (assoc :kasittelyaika_tekninen_osa (:kasittelyaika-tekninen-osa uusi-arvo))))))
+                                          (fn [uusi-arvo]
+                                            (swap! lomakedata
+                                                   #(-> % 
+                                                        (assoc :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
+                                                        (assoc :perustelu_tekninen_osa (:perustelu-tekninen-osa uusi-arvo))
+                                                        (assoc :kasittelyaika_tekninen_osa (:kasittelyaika-tekninen-osa uusi-arvo))))))
         paatostiedot-taloudellinen-osa (r/wrap {:paatos-taloudellinen            (:paatos_taloudellinen_osa @lomakedata)
                                                 :perustelu-taloudellinen-osa     (:perustelu_taloudellinen_osa @lomakedata)
                                                 :kasittelyaika-taloudellinen-osa (:kasittelyaika_taloudellinen_osa @lomakedata)}
-                                               (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
-                                                                                      (assoc :perustelu_taloudellinen_osa (:perustelu-taloudellinen-osa uusi-arvo))
-                                                                                      (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
+                                               (fn [uusi-arvo]
+                                                 (swap! lomakedata
+                                                        #(-> %
+                                                             (assoc :paatos_taloudellinen_osa (:paatos-taloudellinen uusi-arvo))
+                                                             (assoc :perustelu_taloudellinen_osa (:perustelu-taloudellinen-osa uusi-arvo))
+                                                             (assoc :kasittelyaika_taloudellinen_osa (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
@@ -199,38 +205,7 @@
                        (reset! lomakedata nil))}]]))
 
 (defn paallystysilmoituslomake []
-  (let [kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm @lomakedata)
-                                :valmispvm_kohde (:valmispvm_kohde @lomakedata)
-                                :valmispvm_paallystys (:valmispvm_paallystys @lomakedata)
-                                :takuupvm       (:takuupvm @lomakedata)}
-                               (fn [uusi-arvo]
-                                 (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                        (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
-                                                        (assoc :valmispvm_paallystys (:valmispvm_paallystys uusi-arvo))
-                                                        (assoc :takuupvm (:takuupvm uusi-arvo))
-                                                        (assoc :hinta (:hinta uusi-arvo))))))
-
-        ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
-        toteutuneet-osoitteet
-        (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
-                (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
-
-        ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
-        kiviaines
-        (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot @lomakedata)))
-                (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :kiviaines] (grid/filteroi-uudet-poistetut uusi-arvo)))))
-        alustalle-tehdyt-toimet
-        (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot @lomakedata)))
-                (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :alustatoimet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
-        toteutuneet-maarat
-        (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot @lomakedata)))
-                (fn [uusi-arvo] (reset! lomakedata
-                                        (assoc-in @lomakedata [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))
-
-        alikohteet-virheet (atom {})
+  (let [alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
         alustalle-tehdyt-toimet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})
@@ -244,10 +219,12 @@
                                          kiviaines-virheet @kiviaines-virheet
                                          tila (:tila @lomakedata)
                                          lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
+                                     (log "ALIKOHTEET VIRHEET: " (pr-str alikohteet-virheet))
+                                     (log "PAALLYSTYSTOIMENPIDE VIRHEET: " (pr-str paallystystoimenpide-virheet))
                                      (and
-                                       (not (= tila :lukittu))
-                                       ;(empty? alikohteet-virheet) ; FIXME HAR-506 Ei validoi oikein: kun lisätään uusi rivi ja syötetään arvot oikein, tallenna on disabloitu? Liittyy jotenkin tienumeron kopiointiin muille riveille, sillä jos tienumero jätetään kopioimatta, tämä toimii.
-                                       ;(empty? paallystystoimenpide-virheet)
+                                      (not (= tila :lukittu))
+                                      (empty? alikohteet-virheet) ; FIXME HAR-506 Ei validoi oikein: kun lisätään uusi rivi ja syötetään arvot oikein, tallenna on disabloitu? Liittyy jotenkin tienumeron kopiointiin muille riveille, sillä jos tienumero jätetään kopioimatta, tämä toimii.
+                                       (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
                                        (empty? kiviaines-virheet)
@@ -264,234 +241,271 @@
     (komp/luo
       (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" (:kohdenumero @lomakedata)))
       (fn []
-        [:div.paallystysilmoituslomake
+        (let [lomakedata-nyt @lomakedata
+              kohteen-tiedot (r/wrap {:aloituspvm     (:aloituspvm lomakedata-nyt)
+                                      :valmispvm_kohde (:valmispvm_kohde lomakedata-nyt)
+                                      :valmispvm_paallystys (:valmispvm_paallystys lomakedata-nyt)
+                                      :takuupvm       (:takuupvm lomakedata-nyt)}
+                                     (fn [uusi-arvo]
+                                       (reset! lomakedata (-> (assoc lomakedata-nyt :aloituspvm (:aloituspvm uusi-arvo))
+                                                              (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
+                                                              (assoc :valmispvm_paallystys (:valmispvm_paallystys uusi-arvo))
+                                                              (assoc :takuupvm (:takuupvm uusi-arvo))
+                                                              (assoc :hinta (:hinta uusi-arvo))))))
+              
+                                        ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
+              toteutuneet-osoitteet
+              (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
+                      (fn [uusi-arvo]
+                        (let [tie (some :tie (vals uusi-arvo))]
+                          (reset! lomakedata
+                                  (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
+                                            (mapv (fn [rivi]
+                                                    (assoc rivi :tie tie))
+                                                  (grid/filteroi-uudet-poistetut uusi-arvo)))))))
+              
+                                        ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
+              kiviaines
+              (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot lomakedata-nyt)))
+                      (fn [uusi-arvo] (reset! lomakedata
+                                              (assoc-in @lomakedata [:ilmoitustiedot :kiviaines] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+              alustalle-tehdyt-toimet
+              (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
+                      (fn [uusi-arvo] (reset! lomakedata
+                                              (assoc-in @lomakedata [:ilmoitustiedot :alustatoimet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+              toteutuneet-maarat
+              (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot lomakedata-nyt)))
+                      (fn [uusi-arvo] (reset! lomakedata
+                                              (assoc-in lomakedata-nyt [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))]
+          [:div.paallystysilmoituslomake
 
-         [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
-          (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
+           [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
+            (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
 
-         (when @lomake-lukittu-muokkaukselta?
-           (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
+           (when @lomake-lukittu-muokkaukselta?
+             (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
-         [:h2 "Päällystysilmoitus"]
+           [:h2 "Päällystysilmoitus"]
 
-         [:div.row
-          [:div.col-md-6
-           [:h3 "Perustiedot"]
-           [lomake/lomake {:luokka   :horizontal
-                    :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                                       (false? @lomake-lukittu-muokkaukselta?))
-                    :muokkaa! (fn [uusi]
-                                (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
-                                (reset! kohteen-tiedot uusi))}
-            [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
-             {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-             {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
-             {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
-              :vihje   (when (and
-                               (:valmispvm_paallystys @lomakedata)
-                               (:valmispvm_kohde @lomakedata)
-                               (= :aloitettu (:tila @lomakedata)))
-                         "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-              :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
-             {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-             {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
-             (when (or (= :valmis (:tila @lomakedata))
-                       (= :lukittu (:tila @lomakedata)))
-               {:otsikko     "Kommentit" :nimi :kommentit
-                :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                                   :voi-liittaa      false
-                                                   :leveys-col       40
-                                                   :placeholder      "Kirjoita kommentti..."
-                                                   :uusi-kommentti   (r/wrap (:uusi-kommentti @lomakedata)
-                                                                             #(swap! lomakedata assoc :uusi-kommentti %))}
-                              (:kommentit @lomakedata)]})
-             ]
-            @kohteen-tiedot]]
+           [:div.row
+            [:div.col-md-6
+             [:h3 "Perustiedot"]
+             [lomake/lomake {:luokka   :horizontal
+                             :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+                                                (false? @lomake-lukittu-muokkaukselta?))
+                             :muokkaa! (fn [uusi]
+                                         (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
+                                         (swap! lomakedata merge uusi))}
+              [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt))) :muokattava? (constantly false)}
+               {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
+               {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
+               {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
+                :vihje   (when (and
+                                (:valmispvm_paallystys lomakedata-nyt)
+                                (:valmispvm_kohde lomakedata-nyt)
+                                (= :aloitettu (:tila lomakedata-nyt)))
+                           "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
+                :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+               {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
+               (when (or (= :valmis (:tila lomakedata-nyt))
+                         (= :lukittu (:tila lomakedata-nyt)))
+                 {:otsikko     "Kommentit" :nimi :kommentit
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                     :voi-liittaa      false
+                                                     :leveys-col       40
+                                                     :placeholder      "Kirjoita kommentti..."
+                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti lomakedata-nyt)
+                                                                               #(swap! lomakedata assoc :uusi-kommentti %))}
+                                (:kommentit lomakedata-nyt)]})
+               ]
+              @kohteen-tiedot]]
 
-          [:div.col-md-6
-           (kasittely valmis-kasiteltavaksi?)]]
+            [:div.col-md-6
+             (kasittely valmis-kasiteltavaksi?)]]
 
-         [:fieldset.lomake-osa
-          [:legend "Tekninen osa"]
+           [:fieldset.lomake-osa
+            [:legend "Tekninen osa"]
 
-         [grid/muokkaus-grid
-          {:otsikko      "Päällystetyt tierekisteriosoitteet"
-           :tunniste     :tie
-           :voi-muokata? (do
-                           (log "PÄÄ tila " (pr-str (:tila @lomakedata)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa @lomakedata)))
-                           (and (not= :lukittu (:tila @lomakedata))
-                                (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
-                                (false? @lomake-lukittu-muokkaukselta?)))
-           :rivinumerot? true
-           :muutos       (fn [g]
-                           (let [grid-data (vals @toteutuneet-osoitteet)]
-                             (reset! toteutuneet-osoitteet (zipmap (iterate inc 1)
-                                                                   (mapv
-                                                                     (fn [rivi] (assoc rivi :tie (:tie (first grid-data))))
-                                                                     grid-data)))
-                             (reset! alikohteet-virheet (grid/hae-virheet g))))}
-          [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
-            :muokattava? (fn [rivi index] (if (> index 0) false true))}
-           {:otsikko       "Ajorata"
-            :nimi          :ajorata
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
-            :valinnat      pot/+ajoradat+
-            :leveys        "20%"
-            :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Suunta"
-            :nimi          :suunta
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse suunta -")
-            :valinnat      pot/+suunnat+
-            :leveys        "20%"
-            :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Kaista"
-            :nimi          :kaista
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
-            :valinnat      pot/+kaistat+
-            :leveys        "20%"
-            :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}]
-          toteutuneet-osoitteet]
+            [grid/muokkaus-grid
+             {:otsikko      "Päällystetyt tierekisteriosoitteet"
+              :tunniste     :tie
+              :voi-muokata? (do
+                              (log "PÄÄ tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa lomakedata-nyt)))
+                              (and (not= :lukittu (:tila lomakedata-nyt))
+                                   (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
+                                   (false? @lomake-lukittu-muokkaukselta?)))
+              :rivinumerot? true
+              #_:muutos       #_(fn [g]
+                                  (log "UUSI kopsitaan")
+                                  (let [grid-data (vals @toteutuneet-osoitteet)]
+                                    (reset! toteutuneet-osoitteet (zipmap (iterate inc 1)
+                                                                          (mapv
+                                                                           (fn [rivi] (assoc rivi :tie (:tie (first grid-data))))
+                                                                           grid-data)))
+                                (reset! alikohteet-virheet (grid/hae-virheet g))))}
+             [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
+               :muokattava? (fn [rivi index] (if (> index 0) false true))}
+              {:otsikko       "Ajorata"
+               :nimi          :ajorata
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
+               :valinnat      pot/+ajoradat+
+               :leveys        "20%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Suunta"
+               :nimi          :suunta
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta #(if % (:nimi %) "- Valitse suunta -")
+               :valinnat      pot/+suunnat+
+               :leveys        "20%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Kaista"
+               :nimi          :kaista
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
+               :valinnat      pot/+kaistat+
+               :leveys        "20%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}]
+             toteutuneet-osoitteet]
 
-         [grid/muokkaus-grid
-          {:otsikko      "Päällystystoimenpiteen tiedot"
-           :voi-lisata?  false
-           :voi-kumota?  false
-           :voi-poistaa? (constantly false)
-           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                              (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
-                              (false? @lomake-lukittu-muokkaukselta?))
-           :rivinumerot? true
-           :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
-          [{:otsikko       "Päällyste"
-            :nimi          :paallystetyyppi
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (str (:lyhenne rivi)  " - " (:nimi rivi))
-                               "- Valitse päällyste -"))
-            :valinnat      pot/+paallystetyypit+
-            :leveys        "30%"
-            :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Pääl. työmenetelmä"
-            :nimi          :tyomenetelma
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (str (:lyhenne rivi)  " - " (:nimi rivi))
-                               "- Valitse menetelmä -"))
-            :valinnat      pot/+tyomenetelmat+
-            :leveys        "30%"
-            :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Edellinen päällyste"
-            :nimi          :edellinen-paallystetyyppi
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (str (:lyhenne rivi)  " - " (:nimi rivi))
-                               "- Valitse päällyste -"))
-            :valinnat      pot/+paallystetyypit+
-            :leveys        "30%"}]
-          toteutuneet-osoitteet]
+            [grid/muokkaus-grid
+             {:otsikko      "Päällystystoimenpiteen tiedot"
+              :voi-lisata?  false
+              :voi-kumota?  false
+              :voi-poistaa? (constantly false)
+              :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+                                 (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
+                                 (false? @lomake-lukittu-muokkaukselta?))
+              :rivinumerot? true
+              :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
+             [{:otsikko       "Päällyste"
+               :nimi          :paallystetyyppi
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (str (:lyhenne rivi)  " - " (:nimi rivi))
+                                  "- Valitse päällyste -"))
+               :valinnat      pot/+paallystetyypit+
+               :leveys        "30%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Raekoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Pääl. työmenetelmä"
+               :nimi          :tyomenetelma
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (str (:lyhenne rivi)  " - " (:nimi rivi))
+                                  "- Valitse menetelmä -"))
+               :valinnat      pot/+tyomenetelmat+
+               :leveys        "30%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Edellinen päällyste"
+               :nimi          :edellinen-paallystetyyppi
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (str (:lyhenne rivi)  " - " (:nimi rivi))
+                                  "- Valitse päällyste -"))
+               :valinnat      pot/+paallystetyypit+
+               :leveys        "30%"}]
+             toteutuneet-osoitteet]
 
-          [grid/muokkaus-grid
-           {:otsikko      "Kiviaines ja sideaine"
-            :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                               (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
-                               (false? @lomake-lukittu-muokkaukselta?))
-           :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
-          [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
-          kiviaines]
+            [grid/muokkaus-grid
+             {:otsikko      "Kiviaines ja sideaine"
+              :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+                                 (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
+                                 (false? @lomake-lukittu-muokkaukselta?))
+              :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
+             [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Sideaine-tyyppi" :nimi :sideainetyyppi :leveys "30%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Lisäaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+             kiviaines]
 
-         [grid/muokkaus-grid
-          {:otsikko      "Alustalle tehdyt toimet"
-           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                              (not= :hyvaksytty (:paatos_tekninen_osa @lomakedata))
-                              (false? @lomake-lukittu-muokkaukselta?))
-           :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
-          [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}
-           {:otsikko       "Käsittelymenetelmä"
-            :nimi          :kasittelymenetelma
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (str (:lyhenne rivi)  " - " (:nimi rivi))
-                               "- Valitse menetelmä -"))
-            :valinnat      pot/+alustamenetelmat+
-            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Verkkotyyppi"
-            :nimi          :verkkotyyppi
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
-            :valinnat      pot/+verkkotyypit+
-            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko       "Tekninen toimenpide"
-            :nimi          :tekninen-toimenpide
-            :tyyppi        :valinta
-            :valinta-arvo  :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-            :valinnat      pot/+tekniset-toimenpiteet+
-            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
-          alustalle-tehdyt-toimet]]
+            [grid/muokkaus-grid
+             {:otsikko      "Alustalle tehdyt toimet"
+              :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+                                 (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
+                                 (false? @lomake-lukittu-muokkaukselta?))
+              :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
+             [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}
+              {:otsikko       "Käsittelymenetelmä"
+               :nimi          :kasittelymenetelma
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (str (:lyhenne rivi)  " - " (:nimi rivi))
+                                  "- Valitse menetelmä -"))
+               :valinnat      pot/+alustamenetelmat+
+               :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Käsittelypaks. (cm)" :nimi :paksuus :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Verkkotyyppi"
+               :nimi          :verkkotyyppi
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
+               :valinnat      pot/+verkkotyypit+
+               :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko       "Tekninen toimenpide"
+               :nimi          :tekninen-toimenpide
+               :tyyppi        :valinta
+               :valinta-arvo  :koodi
+               :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
+               :valinnat      pot/+tekniset-toimenpiteet+
+               :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+             alustalle-tehdyt-toimet]]
 
-         [:fieldset.lomake-osa
-          [:legend "Taloudellinen osa"]
+           [:fieldset.lomake-osa
+            [:legend "Taloudellinen osa"]
 
-         [grid/muokkaus-grid
-          {:otsikko "Toteutuneet määrät"
-           :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                              (not= :hyvaksytty (:paatos_taloudellinen_osa @lomakedata))
-                              (false? @lomake-lukittu-muokkaukselta?))
-           :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
-          [{:otsikko       "Päällystetyön tyyppi"
-            :nimi          :tyyppi
-            :tyyppi        :valinta
-            :valinta-arvo  :avain
-            :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-            :valinnat      pot/+paallystystyon-tyypit+
-            :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-           {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-           {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-          toteutuneet-maarat]]
+            [grid/muokkaus-grid
+             {:otsikko "Toteutuneet määrät"
+              :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+                                 (not= :hyvaksytty (:paatos_taloudellinen_osa lomakedata-nyt))
+                                 (false? @lomake-lukittu-muokkaukselta?))
+              :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
+             [{:otsikko       "Päällystetyön tyyppi"
+               :nimi          :tyyppi
+               :tyyppi        :valinta
+               :valinta-arvo  :avain
+               :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
+               :valinnat      pot/+paallystystyon-tyypit+
+               :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
+              {:otsikko "Yks.hinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
+             toteutuneet-maarat]]
 
-         (yhteenveto)
-         (tallennus valmis-tallennettavaksi?)]))))
+           (yhteenveto)
+           (tallennus valmis-tallennettavaksi?)])))))
 
 (defn ilmoitusluettelo
   []
