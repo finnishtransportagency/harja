@@ -223,7 +223,7 @@
                                      (log "PAALLYSTYSTOIMENPIDE VIRHEET: " (pr-str paallystystoimenpide-virheet))
                                      (and
                                       (not (= tila :lukittu))
-                                      (empty? alikohteet-virheet) ; FIXME HAR-506 Ei validoi oikein: kun lisätään uusi rivi ja syötetään arvot oikein, tallenna on disabloitu? Liittyy jotenkin tienumeron kopiointiin muille riveille, sillä jos tienumero jätetään kopioimatta, tämä toimii.
+                                      (empty? alikohteet-virheet)
                                        (empty? paallystystoimenpide-virheet)
                                        (empty? alustalle-tehdyt-toimet-virheet)
                                        (empty? toteutuneet-maarat-virheet)
