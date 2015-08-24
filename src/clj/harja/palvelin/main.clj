@@ -239,7 +239,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-tyokoneenseuranta (component/using
                               (api-tyokoneenseuranta/->Tyokoneenseuranta)
-                              [:http-palvelin :db :integraatioloki])
+                              [:http-palvelin :db])
       :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
                                                         [:db])
       )))

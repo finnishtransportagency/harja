@@ -124,7 +124,7 @@
   (let [body (if (:body request)
                (slurp (:body request))
                nil)
-        tapahtuma-id (lokita-kutsu integraatioloki resurssi request body)]
+        tapahtuma-id (when integraatioloki (lokita-kutsu integraatioloki resurssi request body))]
     (let [vastaus (try+
                     (let
                       [parametrit (:params request)
@@ -144,5 +144,5 @@
                       (kasittele-sisainen-kasittelyvirhe
                         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                           :viesti (.getMessage e)}])))]
-      (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id)
+      (when integraatioloki (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
