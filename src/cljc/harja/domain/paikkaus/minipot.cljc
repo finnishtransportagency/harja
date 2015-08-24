@@ -41,3 +41,10 @@
      (s/optional-key :yks_hint_alv_0) s/Num
      (s/optional-key :takuupvm)       (s/maybe s/Inst)
      (s/optional-key :poistettu)      s/Bool}]})
+
+
+(defn laske-kokonaishinta [tyot]
+  (reduce +
+          (map
+            (fn [tyo] (* (:yks_hint_alv_0 tyo) (:maara tyo)))
+            tyot)))

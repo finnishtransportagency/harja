@@ -69,12 +69,6 @@
   [tyon-hinta alv]
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
-(defn laske-kokonaishinta [tyot]
-  (reduce +
-          (map
-            (fn [tyo] (* (:yks_hint_alv_0 tyo) (:maara tyo)))
-            tyot)))
-
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -156,7 +150,7 @@
                        (reset! lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
-  (let [kokonaishinta (reaction (laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
+  (let [kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))
         kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @lomakedata)
                                 :valmispvm_kohde    (:valmispvm_kohde @lomakedata)
                                 :valmispvm_paikkaus (:valmispvm_paikkaus @lomakedata)}

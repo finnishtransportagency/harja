@@ -61,12 +61,14 @@
   (let [tila (if (= paatos :hyvaksytty)
                "lukittu"
                (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu"))
+        toteutunut-hinta (minipot/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (q/paivita-paikkausilmoitus! db
                                  tila
                                  encoodattu-ilmoitustiedot
+                                 toteutunut-hinta
                                  (konv/sql-date aloituspvm)
                                  (konv/sql-date valmispvm_kohde)
                                  (konv/sql-date valmispvm_paikkaus)
@@ -82,12 +84,14 @@
   (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
   (log/debug "valmispvm_paikkaus: " (pr-str valmispvm_paikkaus))
   (let [tila (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu")
+        toteutunut-hinta (minipot/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (:id (q/luo-paikkausilmoitus<! db
                                    paikkauskohde-id
                                    tila
                                    encoodattu-ilmoitustiedot
+                                   toteutunut-hinta
                                    (konv/sql-date aloituspvm)
                                    (konv/sql-date valmispvm_kohde)
                                    (konv/sql-date valmispvm_paikkaus)
