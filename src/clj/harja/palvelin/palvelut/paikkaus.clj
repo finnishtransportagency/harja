@@ -65,6 +65,7 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+    (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
     (q/paivita-paikkausilmoitus! db
                                  tila
                                  encoodattu-ilmoitustiedot
@@ -86,7 +87,9 @@
   (let [tila (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu")
         toteutunut-hinta (minipot/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
+    (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+    (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
     (:id (q/luo-paikkausilmoitus<! db
                                    paikkauskohde-id
                                    tila

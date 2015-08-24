@@ -11,10 +11,13 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
-  muutoshinta
+  muutoshinta,
+  pa.toteutunut_hinta
 FROM paallystyskohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
   AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pa ON pa.paikkauskohde = paallystyskohde.id
+  AND pa.poistettu IS NOT TRUE
 LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = paallystyskohde.id
   AND pai.poistettu IS NOT TRUE
 WHERE
