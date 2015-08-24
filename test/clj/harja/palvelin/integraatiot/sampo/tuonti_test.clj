@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.sampo.tuonti-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
@@ -16,24 +16,19 @@
 
 (def +xsd-polku+ "xsd/sampo/inbound/")
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
-                        :sonja (feikki-sonja)
-                        :integraatioloki (component/using (->Integraatioloki nil) [:db])
-                        :sampo (component/using
-                                 (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
-                                 [:db :sonja :integraatioloki])))))
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea
+   "yit"
+   :sonja (feikki-sonja)
+   :sampo (component/using
+           (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
+           [:db :sonja :integraatioloki])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
     (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
@@ -50,8 +45,7 @@
 
       (is (= "NA" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
           "Virheitä ei tapahtunut käsittelyssä.")))
-
-  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
-  (poista-urakka))
+  
+  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
 
 
