@@ -42,7 +42,7 @@ UPDATE paikkausilmoitus
 SET
   tila                              = :tila::paikkausilmoituksen_tila,
   ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
-  toteutunut_hinta                  = :toteutunut_hinta
+  toteutunut_hinta                  = :toteutunut_hinta,
   aloituspvm                        = :aloituspvm,
   valmispvm_kohde                   = :valmispvm_kohde,
   valmispvm_paikkaus                = :valmispvm_paikkaus,
