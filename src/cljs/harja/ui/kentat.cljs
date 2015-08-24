@@ -293,26 +293,18 @@
            "\u2713 "
            "\u2610 ") otsikko])
 
-(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot]} data]
-  [:span
-   (for [v vaihtoehdot]
-     ^{:key (str "boolean-group-" (name v))}
-     [:div.checkbox
-      [:label
-       [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
-                :on-change #(let [valittu? (-> % .-target .-checked)]
-                             (if valittu?
-                               (reset! data (concat @data [v]))
-
-                               (reset! data
-                                       (into []
-                                             (keep
-                                               (fn [vanha] (when-not (= vanha v) vanha))
-                                               @data)))))}
-        ;; :boolean-group tehtiin käyttötapausta varten, jossa alla oleva olettamus on
-        ;; aivan riittävä. Jos joskus tulee tapaus jolloin tämä EI toimi, niin sitten
-        ;; keksitään jotain muuta.
-        (clojure.string/capitalize (name v))]]])])
+(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta]} data]
+  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+                             #(clojure.string/capitalize (name %)))]
+    [:span
+     (for [v vaihtoehdot]
+       ^{:key (str "boolean-group-" (name v))}
+       [:div.checkbox
+        [:label
+         [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
+                  :on-change #(let [valittu? (-> % .-target .-checked)]
+                                (swap! data (if valittu? conj disj) v))}
+          (vaihtoehto-nayta v)]]])]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus]} data]

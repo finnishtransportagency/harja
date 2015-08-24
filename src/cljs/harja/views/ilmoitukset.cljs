@@ -10,7 +10,8 @@
             [harja.loki :refer [log]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
-
+            [harja.ui.lomake :as lomake]
+            [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
 
             [bootstrap :as bs]
@@ -33,31 +34,30 @@
                   (reset! nav/sivu :urakat))}
      "Urakan sivulle"]))
 
-(defn parsi-tierekisteri
+(defn nayta-tierekisteriosoite
   [tr]
   (if tr
     (str "Tie " (:numero tr) " / " (:alkuosa tr) " / " (:alkuetaisyys tr) " / " (:loppuosa tr) " / " (:loppuetaisyys tr))
 
     (str "Ei tierekisteriosoitetta")))
 
-(defn parsi-henkilo
+(defn nayta-henkilo
   "Palauttaa merkkijonon mallia 'Etunimi Sukunimi, Organisaatio Y1234'"
   [henkilo]
-  (let [tulos (when henkilo
-                (str
-                  (:etunimi henkilo)
-                  (when (and (:etunimi henkilo) (:sukunimi henkilo)) " ")
-                  (:sukunimi henkilo)
-                  (when
-                    (and
-                      (or (:etunimi henkilo) (:sukunimi henkilo))
-                      (or (:organisaatio henkilo) (:ytunnus henkilo)))
+  (when henkilo
+    (str
+     (:etunimi henkilo)
+     (when (and (:etunimi henkilo) (:sukunimi henkilo)) " ")
+     (:sukunimi henkilo)
+     (when
+         (and
+          (or (:etunimi henkilo) (:sukunimi henkilo))
+          (or (:organisaatio henkilo) (:ytunnus henkilo)))
 
-                    ", ")
-                  (:organisaatio henkilo)
-                  (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
-                  (:ytunnus henkilo)))]
-    (if (empty? tulos) nil tulos)))
+       ", ")
+     (:organisaatio henkilo)
+     (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
+     (:ytunnus henkilo))))
 
 (defn parsi-puhelinnumero
   [henkilo]
@@ -100,7 +100,7 @@
      "Lisätiedot: " (:vapaateksti kuittaus)]
     [:br]
     [yleiset/tietoja {}
-     "Kuittaaja: " (parsi-henkilo (:kuittaaja kuittaus))
+     "Kuittaaja: " (nayta-henkilo (:kuittaaja kuittaus))
      "Puhelinnumero: " (parsi-puhelinnumero (:kuittaaja kuittaus))
      "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
     ;;[:br]
@@ -108,7 +108,7 @@
     ;; pois urakoitsijalta, ja antaa tekosyyn syyttää aliurakoitsijaa.
     ;; Jätin tämän tänne, koska voihan olla että mieli esim. käyttäjätesteissä muuttuu..
     #_[yleiset/tietoja {}
-     "Käsittelijä: " (parsi-henkilo (:kasittelija kuittaus))
+     "Käsittelijä: " (nayta-henkilo (:kasittelija kuittaus))
      "Puhelinnumero: " (parsi-puhelinnumero (:kasittelija kuittaus))
      "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])]]])
 
@@ -128,12 +128,12 @@
     [:span
      [yleiset/tietoja {}
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu @tiedot/valittu-ilmoitus))
-      "Sijainti: " (parsi-tierekisteri (:tr @tiedot/valittu-ilmoitus))
+      "Sijainti: " (nayta-tierekisteriosoite (:tr @tiedot/valittu-ilmoitus))
       "Lisätiedot: " (:vapaateksti @tiedot/valittu-ilmoitus)]
 
      [:br]
      [yleiset/tietoja {}
-      "Ilmoittaja:" (let [henkilo (parsi-henkilo (:ilmoittaja @tiedot/valittu-ilmoitus))
+      "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja @tiedot/valittu-ilmoitus))
                           tyyppi (capitalize (name (get-in @tiedot/valittu-ilmoitus [:ilmoittaja :tyyppi])))]
                       (if (and henkilo tyyppi)
                         (str henkilo ", " tyyppi)
@@ -143,7 +143,7 @@
 
      [:br]
      [yleiset/tietoja {}
-      "Lähettäjä:" (parsi-henkilo (:lahettaja @tiedot/valittu-ilmoitus))
+      "Lähettäjä:" (nayta-henkilo (:lahettaja @tiedot/valittu-ilmoitus))
       "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja @tiedot/valittu-ilmoitus))
       "Sähköposti: " (get-in @tiedot/valittu-ilmoitus [:lahettaja :sahkoposti])]]]
 
@@ -157,93 +157,85 @@
 (defn ilmoitusten-paanakyma
   []
   (komp/luo
-    (fn []
-      [:span
+   (fn []
+     [:span
+      
+      [lomake/lomake
+       {:luokka :horizontal
+        :muokkaa! (fn [uusi]
+                    (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
+                    (swap! tiedot/valinnat
+                           (fn [vanha]
+                             (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
+                               (assoc uusi
+                                      :aikavali (:hoitokausi uusi))
+                               uusi))))}
+
+       [(when @nav/valittu-urakka
+          {:nimi :hoitokausi
+           :leveys-col 4
+           :otsikko "Hoitokausi"
+           :tyyppi :valinta
+           :valinnat @u/valitun-urakan-hoitokaudet
+           :valinta-nayta fmt/pvm-vali-opt})
+        
+        (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :leveys-col 5}
+                      {:nimi :saapunut-alkaen
+                       :hae (comp first :aikavali)
+                       :aseta #(assoc-in %1 [:aikavali 0] %2)
+                       :otsikko "Alkaen"
+                       :tyyppi :pvm}
+                      
+                      {:nimi :saapunut-paattyen
+                       :otsikko "Päättyen"
+                       :hae (comp second :aikavali)
+                       :aseta #(assoc-in %1 [:aikavali 1] %2)
+                       :tyyppi :pvm})
+
+        {:nimi :hakuehto :otsikko "Hae ilmoituksia"
+         :placeholder "Hae tekstillä..."
+         :tyyppi :string
+         :leveys-col 4}
+
+        {:nimi :tilat :otsikko "Tilat"
+         :tyyppi :boolean-group
+         :vaihtoehdot [:suljetut :avoimet]}
+
+        {:nimi :tyypit :otsikko "Tyyppi"
+         :tyyppi :boolean-group
+         :vaihtoehdot [:kysely :toimenpidepyynto :tiedoitus]
+         :nayta-vaihtoehto #(case %
+                              :kysely "Kysely"
+                              :toimenpidepyynto "Toimenpidepyyntö"
+                              :tiedoitus "Tiedoitus")}
+        ]
+
+       @tiedot/valinnat
+       ]
+      
+      [:div.container
+       
+       [palvelinkutsu-nappi
+        "Hae ilmoitukset"
+        #(tiedot/hae-ilmoitukset)
+        {:ikoni        (harja.ui.ikonit/search)
+         :kun-onnistuu #(tiedot/aloita-pollaus)}]
+
+       (when @tiedot/pollaus-id (pollauksen-merkki))
 
 
+       [grid
+        {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
+         :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
 
-       [:div.container
+        [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
+         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
+         {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "20%"}
+         {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
+          :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
+         {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
 
-        ;; FIXME: Näyttää huonolle koska ei ole taulukko2 rakenteessa
-        ;; Label on enemmän vasemmalla kuin taulukko2 kentät.
-        (when-not @tiedot/valittu-urakka [:label "Saapunut:"])
-        (if @tiedot/valittu-urakka
-          [:div.row
-           [:div.col-md-12
-            [urakan-hoitokausi-ja-aikavali
-             @tiedot/valittu-urakka
-             (u/hoitokaudet @tiedot/valittu-urakka) u/valittu-hoitokausi u/valitse-hoitokausi!
-             tiedot/valittu-aikavali]]]
-
-          [:span
-           [tee-kentta {:tyyppi :pvm :otsikko "Saapunut" :pvm-leveys "100%"}
-            (r/wrap
-              (first @tiedot/valittu-aikavali)
-              (fn [uusi-arvo]
-                (reset! tiedot/valittu-aikavali
-                        [uusi-arvo
-                         (second @tiedot/valittu-aikavali)])))]
-
-           [:label " \u2014 "]
-           [tee-kentta {:tyyppi :pvm :leveys "100%"} (r/wrap
-                                                       (second @tiedot/valittu-aikavali)
-                                                       (fn [uusi-arvo]
-                                                         (swap! tiedot/valittu-aikavali
-                                                                (fn [[alku _]]
-                                                                  [alku uusi-arvo]))))]])
-
-        [yleiset/taulukko2
-         3 9
-
-         [:label "Hae ilmoituksia: "]
-         [tee-kentta {:tyyppi      :string
-                      :placeholder "Hae tekstillä..."} tiedot/hakuehto]
-
-         [:label "Tilat:"]
-         [:span
-          (for [ehto @tiedot/valitut-tilat]
-            ^{:key (str "Tilan " (name (first ehto)) " checkbox")}
-            [tee-kentta
-             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
-             (r/wrap
-               (second ehto)
-               (fn [uusi-tila]
-                 (reset! tiedot/valitut-tilat
-                         (assoc @tiedot/valitut-tilat (first ehto) uusi-tila))))])]
-
-         [:label "Ilmoituksen tyyppi:"]
-         [:span
-          (for [ehto @tiedot/valitut-ilmoitusten-tyypit]
-            ^{:key (str "Tyypin " (name (first ehto)) " checkbox")}
-            [tee-kentta
-             {:tyyppi :boolean :otsikko (capitalize (name (first ehto)))}
-             (r/wrap
-               (second ehto)
-               (fn [uusi-tila]
-                 (reset! tiedot/valitut-ilmoitusten-tyypit
-                         (assoc @tiedot/valitut-ilmoitusten-tyypit (first ehto) uusi-tila))))])]]
-
-        [palvelinkutsu-nappi
-         "Hae ilmoitukset"
-         #(tiedot/hae-ilmoitukset)
-         {:ikoni        (harja.ui.ikonit/search)
-          :kun-onnistuu #(tiedot/aloita-pollaus)}]
-
-        (when @tiedot/pollaus-id (pollauksen-merkki))
-
-
-        [grid
-         {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
-
-         [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
-          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(parsi-tierekisteri (:tr %)) :leveys "20%"}
-          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-           :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
-          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
-
-         @tiedot/haetut-ilmoitukset]]])))
+        @tiedot/haetut-ilmoitukset]]])))
 
 (defn ilmoitukset []
   (komp/luo

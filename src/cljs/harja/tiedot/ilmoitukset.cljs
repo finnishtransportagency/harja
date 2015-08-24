@@ -7,7 +7,7 @@
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.asiakas.tapahtumat :as tapahtumat])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -17,14 +17,48 @@
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
 
-(defonce valittu-hallintayksikko (reaction @nav/valittu-hallintayksikko))
-(defonce valittu-urakka (reaction @nav/valittu-urakka))
-(defonce valitut-tilat (atom {:suljetut true :avoimet true}))
-(defonce valittu-aikavali (reaction [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]))
-(defonce valitut-ilmoitusten-tyypit (atom {:kysely true :toimenpidepyynto true :tiedoitus true}))
-(defonce hakuehto (atom nil))
+(def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
+(def +ilmoitustilat+ #{:suljetut :avoimet})
 
-(defonce haetut-ilmoitukset (atom []))
+(defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+                             :urakka (:id @nav/valittu-urakka)
+                             :hoitokausi @u/valittu-hoitokausi
+                             :aikavali (or @u/valittu-hoitokausi [nil nil])
+                             :tyypit +ilmoitustyypit+
+                             :tilat +ilmoitustilat+
+                             :hakuehto ""}))
+
+(defonce ilmoitushaku (atom 0))
+
+(defn hae-ilmoitukset []
+  (go (swap! ilmoitushaku inc)))
+
+(defn jarjesta-ilmoitukset [tulos]
+  (sort-by
+    :ilmoitettu
+    pvm/ennen?
+    (mapv
+      (fn [ilmo]
+        (assoc ilmo :kuittaukset
+                    (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+      tulos)))
+
+(defonce haetut-ilmoitukset
+  (reaction<! [valinnat @valinnat
+               haku @ilmoitushaku]
+              {:odota 100}
+              (go
+                (if (zero? haku)
+                  []
+                  (let [tulos (<! (k/post! :hae-ilmoitukset
+                                           (-> valinnat
+                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                               (update-in [:tyypit]
+                                                          #(if (empty? %) +ilmoitustyypit+ %))
+                                               (update-in [:tilat]
+                                                          #(if (empty? %) +ilmoitustilat+ %)))))]
+                    (when-not (k/virhe? tulos)
+                      (jarjesta-ilmoitukset tulos)))))))
 
 ;; POLLAUS
 (def pollaus-id (atom nil))
@@ -54,55 +88,12 @@
            (when @taso-ilmoitukset
              (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
 
-(defonce filttereita-vaihdettu? (reaction
-                                  @valittu-hallintayksikko
-                                  @valittu-urakka
-                                  @valitut-tilat
-                                  @valittu-aikavali
-                                  @valitut-ilmoitusten-tyypit
-                                  @hakuehto
-                                  true))
 
-(defn kasaa-parametrit []
-  (let [valitut (vec (keep #(when (val %) (key %)) @valitut-ilmoitusten-tyypit)) ;; Jos ei yhtäkään valittuna,
-        tyypit (if (empty? valitut) (keep key @valitut-ilmoitusten-tyypit) valitut) ;; lähetetään kaikki tyypit.
-        ret {:hallintayksikko (:id @valittu-hallintayksikko)
-             :urakka          (:id @valittu-urakka)
-             :tilat           @valitut-tilat
-             :tyypit          tyypit
-             :aikavali        @valittu-aikavali
-             :hakuehto        @hakuehto}]
-    ret))
-
-(defn jarjesta-ilmoitukset [tulos]
-  (sort-by
-    :ilmoitettu
-    pvm/ennen?
-    (mapv
-      (fn [ilmo]
-        (assoc ilmo :kuittaukset
-                    (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
-      tulos)))
-
-(defn hae-ilmoitukset
-  []
-  (go
-    (let [tulos (<! (k/post! :hae-ilmoitukset (kasaa-parametrit)))]
-      (when-not (k/virhe? tulos)
-        (reset! haetut-ilmoitukset (jarjesta-ilmoitukset tulos)))
-      (reset! filttereita-vaihdettu? false)
-
-      tulos)))
-
-(defn lopeta-pollaus
-  []
-  (when @pollaus-id
-    (js/clearInterval @pollaus-id)
-    (reset! pollaus-id nil)))
-
-(run! (when @filttereita-vaihdettu? (lopeta-pollaus)))
+(defn lopeta-pollaus []
+  (when-let [lopeta @pollaus-id]
+    (lopeta)))
 
 (defn aloita-pollaus
   []
-  (when @pollaus-id (lopeta-pollaus))
-  (reset! pollaus-id (js/setInterval hae-ilmoitukset +intervalli+)))
+  (lopeta-pollaus)
+  (reset! pollaus-id (paivita-periodisesti haetut-ilmoitukset +intervalli+)))
