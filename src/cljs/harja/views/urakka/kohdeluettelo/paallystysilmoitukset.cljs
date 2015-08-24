@@ -335,15 +335,9 @@
                               (and (not= :lukittu (:tila lomakedata-nyt))
                                    (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                    (false? @lomake-lukittu-muokkaukselta?)))
+              :virheet alikohteet-virheet 
               :rivinumerot? true
-              #_:muutos       #_(fn [g]
-                                  (log "UUSI kopsitaan")
-                                  (let [grid-data (vals @toteutuneet-osoitteet)]
-                                    (reset! toteutuneet-osoitteet (zipmap (iterate inc 1)
-                                                                          (mapv
-                                                                           (fn [rivi] (assoc rivi :tie (:tie (first grid-data))))
-                                                                           grid-data)))
-                                (reset! alikohteet-virheet (grid/hae-virheet g))))}
+              :uusi-id (inc (count @toteutuneet-osoitteet))}
              [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
                :muokattava? (fn [rivi index] (if (> index 0) false true))}
               {:otsikko       "Ajorata"
@@ -379,14 +373,15 @@
 
             [grid/muokkaus-grid
              {:otsikko      "Päällystystoimenpiteen tiedot"
+              :validoi-aina? true
               :voi-lisata?  false
               :voi-kumota?  false
               :voi-poistaa? (constantly false)
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :rivinumerot? true
-              :muutos       #(reset! paallystystoimenpide-virheet (grid/hae-virheet %))}
+              :virheet paallystystoimenpide-virheet
+              :rivinumerot? true}
              [{:otsikko       "Päällyste"
                :nimi          :paallystetyyppi
                :tyyppi        :valinta

@@ -668,17 +668,23 @@ Optiot on mappi optioita:
   :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :virheet         atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
+                   luodaan sisäisesti atomi virheille
+  :uusi-id         seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
+                   sarjana -1, -2, -3, ...
+  :validoi-aina?   jos true, validoidaan tiedot aina renderissä (ei vain muutoksessa).
+                   Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta
-           muokkaa-footer muutos uusi-rivi luokat] :as opts} skeema muokatut]
+           muokkaa-footer muutos uusi-rivi luokat validoi-aina?] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
-        virheet (atom {})                                   ;; validointivirheet: (:id rivi) => [virheet]
+        virheet-atom (or (:virheet opts) (atom {}))              ;; validointivirheet: (:id rivi) => [virheet]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
-        ohjaus-fn (fn [muokatut]
+        ohjaus-fn (fn [muokatut virheet]
                     (reify Grid
                       (lisaa-rivi! [this rivin-tiedot]
                         (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
@@ -711,7 +717,7 @@ Optiot on mappi optioita:
                       ))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
-        muokkaa! (fn [muokatut id funktio & argumentit]
+        muokkaa! (fn [muokatut virheet id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          uudet-tiedot (swap! muokatut
@@ -719,7 +725,9 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-
+                     (log "VANHAT TIEDOT: " (pr-str vanhat-tiedot))
+                     (log "UUDET TIEDOT: " (pr-str uudet-tiedot))
+                          
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
@@ -730,34 +738,42 @@ Optiot on mappi optioita:
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
                      (when muutos
-                       (muutos (ohjaus-fn muokatut)))))
+                       (muutos (ohjaus-fn muokatut virheet)))))
 
 
         ;; Peruu yhden muokkauksen
-        peru! (fn [muokatut]
+        peru! (fn [muokatut virheet]
                 (let [[muok virh] (peek @historia)]
                   (reset! muokatut muok)
                   (reset! virheet virh))
                 (swap! historia pop)
                 (when muutos
-                  (muutos (ohjaus-fn muokatut))))
+                  (muutos (ohjaus-fn muokatut virheet))))
 
         ]
 
 
     (r/create-class
       {:component-will-receive-props
-       (fn [this new-argv]
-         ;; HUOM: tätä metodia ei tietenkään tässä versiossa kutsuta, jos parametrinä olevan atomi ei vaihdu
-         ;; atomin *sisällön* muutoksista tätä ei kutsuta, siksi tarvitaan nollaa-historia!
-         )
+       (fn [this [_ {:keys [validoi-aina? virheet]} skeema muokatut]]
+         (when validoi-aina?
+           (let [muokatut @muokatut]
+             (reset! (or virheet virheet-atom)
+                     (into {}
+                           (keep (fn [[id rivi]]
+                                   (let [rivin-virheet (when-not (:poistettu rivi)
+                                                         (validointi/validoi-rivi muokatut rivi skeema))]
+                                     (when-not (empty? rivin-virheet)
+                                       [id rivin-virheet]))))
+                           muokatut)))))
 
        :reagent-render
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota? rivi-klikattu rivinumerot?
-                    muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot] :as opts} skeema muokatut]
-         (let [skeema (laske-sarakkeiden-leveys skeema)
+                    muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot uusi-id validoi-aina?] :as opts} skeema muokatut]
+         (let [virheet (or (:virheet opts) virheet-atom)
+               skeema (laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
-               ohjaus (ohjaus-fn muokatut)
+               ohjaus (ohjaus-fn muokatut virheet)
                voi-muokata? (if (nil? voi-muokata?)
                               true
                               voi-muokata?)
@@ -776,12 +792,15 @@ Optiot on mappi optioita:
                    {:disabled (empty? @historia)
                     :on-click #(do (.stopPropagation %)
                                    (.preventDefault %)
-                                   (peru! muokatut))}
+                                   (peru! muokatut virheet))}
                    (ikonit/peru) " Kumoa"])
                 (when (not= false voi-lisata?)
                   [:button.nappi-toissijainen.grid-lisaa
                    {:on-click #(do (.preventDefault %)
-                                   (lisaa-rivi! ohjaus {}))}
+                                   (lisaa-rivi! ohjaus
+                                                (if uusi-id
+                                                  {:id uusi-id}
+                                                  {})))}
                    (ikonit/plus) (or (:lisaa-rivi opts) " Lisää rivi")])])]
             [:div.panel-body
              [:table.grid
@@ -833,10 +852,10 @@ Optiot on mappi optioita:
                                                               arvo
                                                               (fn [uusi]
                                                                 (if aseta
-                                                                  (muokkaa! muokatut-atom
+                                                                  (muokkaa! muokatut-atom virheet
                                                                             id (fn [rivi]
                                                                                  (aseta rivi uusi)))
-                                                                  (muokkaa! muokatut-atom id assoc nimi uusi))))]
+                                                                  (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
                                               [nayta-arvo s (vain-luku-atomina arvo)])]
 
                                            ^{:key (str nimi)}
@@ -847,7 +866,7 @@ Optiot on mappi optioita:
                                     (when (and (not= false voi-muokata?)
                                                (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                                       [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                        (muokkaa! muokatut-atom id assoc :poistettu true))}
+                                                                        (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
                                        (ikonit/trash)])
                                     (when-not (empty? rivin-virheet)
                                       [:span.rivilla-virheita
