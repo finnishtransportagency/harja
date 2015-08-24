@@ -4,9 +4,10 @@
     [cljs.test :as test :refer-macros [deftest is]]
 
     [harja.pvm :refer [->pvm] :as pvm]
-    [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]
+    [harja.domain.paikkaus.minipot :as minipot]
     [harja.loki :refer [log]]
-    [harja.domain.paallystys.pot :as pot]))
+    [harja.domain.paallystys.pot :as pot]
+    [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]))
 
 
 (deftest hinta-alv-laskettu-oikein
@@ -21,5 +22,5 @@
               {:yks_hint_alv_0 2 :maara 2}]
         tyot2 [{:yks_hint_alv_0 2.4 :maara 6.5}
                {:yks_hint_alv_0 3.3 :maara 2.5}]]
-    (is (= (paikkausilmoitukset/laske-kokonaishinta tyot) 182))
-    (is (= (.toFixed (paikkausilmoitukset/laske-kokonaishinta tyot2) 2) "23.85"))))
+    (is (= (minipot/laske-kokonaishinta tyot) 182))
+    (is (= (.toFixed (minipot/laske-kokonaishinta tyot2) 2) "23.85"))))
