@@ -26,9 +26,11 @@
 
 (defonce suolasakot-nakyvissa? (atom false))
 
-(defonce suolasakot-ja-lampotilat (reaction<! [ur @nav/valittu-urakka]
-                                              (when (and ur suolasakot-nakyvissa?)
-                                                (lampotilat/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
+(defonce suolasakot-ja-lampotilat
+         (reaction<! [ur @nav/valittu-urakka
+                      nakymassa? @suolasakot-nakyvissa?]
+                     (when (and ur nakymassa?)
+                       (lampotilat/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (defn tallenna-suolasakko-ja-lampotilat
   [tiedot]
