@@ -1,0 +1,1 @@
+ALTER TABLE paikkausilmoitus ADD COLUMN toteutunut_hinta numeric;
