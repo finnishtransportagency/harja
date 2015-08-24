@@ -15,19 +15,20 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus tapahtuma-id lisatietoja]
+  (log/debug "Lähetetään kuittaus Sampon jonoon:" kuittaus)
+  (sonja/laheta sonja kuittausjono kuittaus)
   (integraatioloki/kirjaa-lahteva-jms-kuittaus
     integraatioloki
     kuittaus
     tapahtuma-id
     (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus)
-    lisatietoja)
-  (sonja/laheta sonja kuittausjono kuittaus))
+    lisatietoja))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
-  (log/debug "Vastaanotettiin Sampon viestijonosta viesti: " viesti)
+  (log/debug "Vastaanotettiin Sampon viestijonosta viesti:" viesti)
   (let [viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
-        tapahtuma-id (integraatioloki/kirjaa-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id "sisään" viestin-sisalto)]
+        tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id viestin-sisalto)]
     (try+
       (jdbc/with-db-transaction [transaktio db]
         (let [data (sampo-sanoma/lue-viesti viestin-sisalto)

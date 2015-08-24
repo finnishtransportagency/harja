@@ -18,7 +18,7 @@
   (let [viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
         tloik-viesti-id (:viesti-id viestin-sisalto)
-        tapahtuma-id (integraatioloki/kirjaa-jms-viesti integraatioloki "tloik" "ilmoituksen-kirjaus" viesti-id "sisään" viestin-sisalto)]
+        tapahtuma-id  (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki "tloik" "ilmoituksen-kirjaus" viesti-id viestin-sisalto)]
     (try
       (jdbc/with-db-transaction [transaktio db]
         (let [ilmoitus (ilmoitus-sanoma/lue-viesti viestin-sisalto)
@@ -26,9 +26,6 @@
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id true nil)))
       (catch Exception e
         (log/error e "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta.")
-        (let [virhe (str "Tapahtui poikkeus: " e)
+        (let [virhe (str "Poikkeus: " e)
               kuittaus (viestikuittaus/muodosta tloik-viesti-id (.toString (time/now)) "virhe" nil virhe)]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id false virhe))))))
-
-
-

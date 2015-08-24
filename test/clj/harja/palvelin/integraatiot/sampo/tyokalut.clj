@@ -4,7 +4,6 @@
             [clojure.zip :refer [xml-zip]]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma :as sampo-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
@@ -12,8 +11,7 @@
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
-            [harja.testi :as testi]
-            [taoensso.timbre :as log])
+            [harja.testi :as testi])
   (:import (javax.jms TextMessage)))
 
 (def +testihanke-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>

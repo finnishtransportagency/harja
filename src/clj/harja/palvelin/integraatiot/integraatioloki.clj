@@ -9,7 +9,8 @@
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
   (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id])
   (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id])
-  (kirjaa-jms-viesti [integraatioloki jarjestelma integraatio viesti-id suunta sisalto])
+  (kirjaa-jms-viesti [integraatioloki tapahtuma-id viesti-id suunta sisalto])
+  (kirjaa-saapunut-jms-viesti [integraatioloki jarjestelma integraatio viesti-id viesti])
   (kirjaa-lahteva-jms-kuittaus [integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja])
   (kirjaa-saapunut-jms-kuittaus [integraatioloki kuittaus ulkoinen-id integraatio onnistunut]))
 
@@ -42,19 +43,25 @@
       (kirjaa-viesti db tapahtumaid viesti))
     tapahtumaid))
 
-(defn kirjaa-paattynyt-integraatio [db viesti lisatietoja onnistunut tapahtumaid ulkoinen-id]
+(defn kirjaa-paattynyt-integraatio [db viesti lisatietoja onnistunut tapahtuma-id ulkoinen-id]
   (let [kasitellyn-tapahtuman-id
-        (if tapahtumaid
+        (if tapahtuma-id
           (do
-            (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtumaid)
-            tapahtumaid)
+            (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtuma-id)
+            tapahtuma-id)
           (:id (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id)))]
     (when (and viesti kasitellyn-tapahtuman-id)
       (kirjaa-viesti db kasitellyn-tapahtuman-id viesti))))
 
-(defn lokita-jms-viesti [integraatioloki jarjestelma integraatio viesti-id suunta sisalto]
+(defn lokita-jms-viesti [db tapahtuma-id viesti-id suunta sisalto]
   (let [otsikko {:message-id viesti-id}
         lokiviesti (tee-jms-lokiviesti suunta sisalto otsikko)]
+    (kirjaa-viesti db tapahtuma-id lokiviesti)
+    (integraatiloki/aseta-ulkoinen-id-integraatiotapahtumalle! db viesti-id tapahtuma-id)))
+
+(defn lokita-saapunut-jms-viesti [integraatioloki jarjestelma integraatio viesti-id viesti]
+  (let [otsikko {:message-id viesti-id}
+        lokiviesti (tee-jms-lokiviesti "sisään" viesti otsikko)]
     (kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio viesti-id lokiviesti)))
 
 (defn lokita-lahteva-jms-kuittaus [integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja]
@@ -83,6 +90,7 @@
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti] (luo-alkanut-integraatio (:db this) jarjestelma integraation-nimi ulkoinen-id viesti))
   (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja true tapahtumaid ulkoinen-id))
   (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja false tapahtumaid ulkoinen-id))
-  (kirjaa-jms-viesti [this jarjestelma integraatio viesti-id suunta sisalto] (lokita-jms-viesti this jarjestelma integraatio viesti-id suunta sisalto))
+  (kirjaa-jms-viesti [this tapahtuma-id viesti-id suunta sisalto] (lokita-jms-viesti (:db this) tapahtuma-id viesti-id suunta sisalto))
+  (kirjaa-saapunut-jms-viesti [this jarjestelma integraatio viesti-id viesti] (lokita-saapunut-jms-viesti this jarjestelma integraatio viesti-id viesti))
   (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja))
   (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut)))
