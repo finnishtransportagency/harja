@@ -145,18 +145,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
-;fixme tyylit on ihan miten sattuu
 (defn virheviesti-sailio
   "Luo virheviestin 'sivun sisään'. Jos toinen parametri on jotain muuta kuin nil tai false,
   säiliön display asetetaan inline-blockiksi."
   ([viesti] (virheviesti-sailio viesti nil false))
   ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
   ([viesti rasti-funktio inline-block?]
-   (let [sulkemisnappi [:span.inlinenappi {:on-click #(rasti-funktio)} [ikonit/remove]]]
+   (let [sulkemisnappi [:button.inlinenappi.nappi-kielteinen {:on-click #(rasti-funktio)}
+                        [ikonit/remove] " Sulje" ]]
      (if inline-block?
-       [:div {:style {:display :inline-block :background-color "red"}} viesti
+       [:div.virheviesti-sailio {:style {:display :inline-block}} viesti
         (when rasti-funktio sulkemisnappi)]
-       [:div {:style {:background-color "red"}} viesti
+       [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]

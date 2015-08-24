@@ -7,10 +7,12 @@
                           :sisalto nil
                           :footer nil
                           :luokka nil
+                          :sulje nil
                           :nakyvissa? false
                           }))
 
 (defn piilota! []
+  (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 ;;(def ctg (r/adapt-react-class (-> js/React  (aget "addons") (aget "CSSTransitionGroup"))))
@@ -55,8 +57,9 @@
                          :footer footer
                          :sisalto sisalto
                          :luokka luokka
+                         :sulje sulje
                          :nakyvissa? true})
-  (fn [{:keys [sulje]} komponentti]
+  (fn [sulje]
     (if-not (:nakyvissa? @modal-sisalto)
       (do (sulje)
           [:span.modaali-ei-nakyvissa])
@@ -67,5 +70,6 @@
                          :footer footer
                          :sisalto sisalto
                          :luokka luokka
+                         :sulje sulje
                          :nakyvissa? true
                          :leveys leveys}))

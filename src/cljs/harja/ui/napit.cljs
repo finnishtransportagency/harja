@@ -76,8 +76,11 @@
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
            (case virheen-esitystapa
-             :flash (do (viesti/nayta! virheviesti :warning 20000) nil) ;20 sekunttia
-             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui"} virheviesti) nil)
+             :flash (do
+                      (viesti/nayta! virheviesti :warning 5000)
+                      (when suljettava-virhe? (sulkemisfunktio))
+                      nil)
+             :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
              :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
              ))
