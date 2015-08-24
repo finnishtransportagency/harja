@@ -26,15 +26,13 @@
   (tapahtumat/julkaise! (merge {:aihe :kayttajatiedot} k)))
 
 (def oletuskayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
-
 (def istunto-aikakatkaistu (atom false))
-
-(def ajastin-kaynnissa (atom false))
-
+(def ajastin-paalla (atom false))
+(defn ajastimen-paivitys-paalla (atom false))
 (def kayttoaikaa-jaljella-sekunteina (atom oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
 
 (defn pysayta-ajastin []
-  (reset! ajastin-kaynnissa false))
+  (reset! ajastin-paalla false))
 
 (defn resetoi-ajastin-jos-modalia-ei-nakyvissa []
   (when (false? (:nakyvissa? @modal/modal-sisalto))
@@ -51,12 +49,13 @@
   (events/listen (dom/getWindow) (.-CLICK events/EventType) #(resetoi-ajastin-jos-modalia-ei-nakyvissa)))
 
 (defn aikakatkaise-istunto []
-  (reset! istunto-aikakatkaistu true))
+  (reset! istunto-aikakatkaistu true)
+  (reset! ajastimen-paivitys-paalla false))
 
 (defn aikakatkaise-istunto-jos-kayttoaika-umpeutunut []
   (when (<= @kayttoaikaa-jaljella-sekunteina 0)
     (log "Käyttöaika umpeutui.")
-    (reset! ajastin-kaynnissa false)
+    (reset! ajastin-paalla false)
     (aikakatkaise-istunto)))
 
 (defn nayta-kayttoaika []
@@ -89,17 +88,18 @@
 
 (defn varoita-jos-kayttoaika-umpeutumassa []
   (when (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
-    (nayta-varoitus-aikakatkaisusta))) ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
+    (nayta-varoitus-aikakatkaisusta)))                      ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
 
 (defn kaynnista-ajastin []
-  (if (false? @ajastin-kaynnissa)
+  (reset! ajastin-paalla true)
+  (if (false? @ajastimen-paivitys-paalla)
     (go
-      (reset! ajastin-kaynnissa true)
+      (reset! ajastimen-paivitys-paalla true)
       (loop []
         (<! (timeout 1000))
-        (if @ajastin-kaynnissa
-          (do
-            (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
-            (varoita-jos-kayttoaika-umpeutumassa)
-            (aikakatkaise-istunto-jos-kayttoaika-umpeutunut)
-            (recur)))))))
+        (when @ajastin-paalla
+          (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
+          (varoita-jos-kayttoaika-umpeutumassa)
+          (aikakatkaise-istunto-jos-kayttoaika-umpeutunut))
+        (when @ajastimen-paivitys-paalla
+          (recur))))))
