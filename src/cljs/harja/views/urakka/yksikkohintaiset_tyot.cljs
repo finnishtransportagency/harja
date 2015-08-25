@@ -130,10 +130,10 @@
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Kaikki" true
-                                                          "Muut" #_(some (fn [[t1 t2 t3 t4]] ; Näytetään kaikki joille ei löydy TPItä FIXME Ei toimi
-                                                                         (and (= (:id t4) tehtava)
-                                                                              (not-any? #(= (:koodi t2) (:t2_koodi %)) @u/urakan-toimenpideinstanssit)))
-                                                                       @toimenpiteet-ja-tehtavat)
+                                                          ;"Muut" (some (fn [[t1 t2 t3 t4]] ; Näytetään kaikki joille ei löydy TPItä FIXME Ei toimi
+                                                          ;               (and (= (:id t4) tehtava)
+                                                          ;                    (not-any? #(= (:koodi t2) (:t2_koodi %)) @u/urakan-toimenpideinstanssit)))
+                                                          ;             @toimenpiteet-ja-tehtavat)
                                                           (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
                                                                   (and
                                                                     (= (:id t4) tehtava)
