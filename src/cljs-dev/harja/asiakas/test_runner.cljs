@@ -60,23 +60,23 @@
                   'harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
                   'harja.pvm-test)) 
 
-(defmethod ctest/report [:harja-e2e :summary] [event]
-  (.log js/console "E2E-testejä ajettu: " (:test event)))
+(defn change-favicon [ico]
+  (let [link (.createElement js/document "link")
+        oldlink (.getElementById js/document "dynamic-favicon")]
+    (set! (.-id link) "dynamic-favicon")
+    (set! (.-rel link) "shortcut icon")
+    (set! (.-type link) "image/ico")
+    (set! (.-href link) ico)
+    (when oldlink
+      (.removeChild (.-head js/document) oldlink))
+    (.appendChild (.-head js/document) link)))
 
-(defmethod ctest/report [:harja-e2e :fail] [event]
-  (.log js/console "E2E-FAIL: expected" (pr-str (:expected event)) " actual " (pr-str (:actual event)) (:message event)))
-
-(defmethod ctest/report [:harja-e2e :error] [event]
-  (.log js/console "E2E-ERROR: expected " (pr-str (:expected event)) " actual " (pr-str (:actual event)) (:message event)))
-
-(defmethod ctest/report [:harja-e2e :begin-test-ns] [event]
-  (.log js/console "E2E-testit " (pr-str (:ns event))))
-
-(defmethod ctest/report [:harja-e2e :begin-test-var] [event]
-  (.log js/console "E2E TEST: " (test/testing-vars-str (:var event))))
+(defmethod ctest/report :summary [event]
+  (.log js/console "E2E-testejä ajettu: " (:test event) (:fail event) (:error event))
+  (if (not= (+ (:fail event) (:error event)) 0)
+    (change-favicon (str "http://localhost:8000/images/test_fail.ico?x=" (rand-int 1000)))
+    (change-favicon (str "http://localhost:8000/images/test_success.ico?x=" (rand-int 1000)))))
 
 (defn aja-e2e-testit []
-  (ctest/run-tests (merge (test/empty-env)
-                          {:reporter :harja-e2e})
-                   'harja.e2e.test-test)) 
+  (ctest/run-tests 'harja.e2e.test-test)) 
  

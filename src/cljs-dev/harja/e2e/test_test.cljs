@@ -4,7 +4,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
-            [harja.loki :refer [log]]
+            
+            ;; [harja.loki :refer [log]]
             [dommy.core :refer-macros [sel sel1] :as dommy]
             [harja.e2e.testutils :as tu])
   (:require-macros [harja.e2e.macros :refer [wait-reactions]]))
@@ -20,7 +21,18 @@
   (tu/muokkaa-atomia nav/sivu :urakat)
   (tu/muokkaa-atomia u/urakan-valittu-valilehti :laadunseuranta)
   (tu/muokkaa-atomia urakka-laadunseuranta/valittu-valilehti :tarkastukset)
-  (dommy/set-value! (aget (sel [:.col-md-6 :input]) 2) "444") 
-  (test/done))
+  (tu/muokkaa-atomia urakka-laadunseuranta/tienumero 99)
+  (wait-reactions [urakka-laadunseuranta/urakan-tarkastukset] 
+                  (is (= (dommy/text (sel1 [:.grid :td])) "Ei tarkastuksia"))))
+
+
+(deftest ^:async laadunseuranta-toimivalla-tienumerolla
+  (tu/muokkaa-atomia nav/sivu :urakat)
+  (tu/muokkaa-atomia u/urakan-valittu-valilehti :laadunseuranta)
+  (tu/muokkaa-atomia urakka-laadunseuranta/valittu-valilehti :tarkastukset)
+  (tu/muokkaa-atomia urakka-laadunseuranta/tienumero nil)
+  (wait-reactions [urakka-laadunseuranta/urakan-tarkastukset] 
+                  (is (= (dommy/text (sel1 [:.grid :td])) "24.8.2015 17:55"))))
+
 
 
