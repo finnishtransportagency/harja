@@ -139,7 +139,7 @@
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
-            (keep identity [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
               {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
                :validoi     [[:ei-tyhja "Anna arvo"]
                              [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
@@ -160,7 +160,7 @@
                                       (:toteutunut_hinta rivi)
                                       (:arvonvahennykset rivi)
                                       (:bitumi_indeksi rivi)
-                                      (:kaasuindeksi rivi)))}])
+                                      (:kaasuindeksi rivi)))}]
             @paallystyskohteet]
 
            [grid/grid
@@ -176,7 +176,7 @@
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
-            (keep identity [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
              {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
              {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%" :validoi [[:ei-tyhja "Anna arvo"]]}
              (when paallystysnakyma?
@@ -193,13 +193,13 @@
                                      (:muutoshinta rivi)
                                      (:arvonvahennykset rivi)
                                      (:bitumi_indeksi rivi)
-                                     (:kaasuindeksi rivi)))}])
+                                     (:kaasuindeksi rivi)))}]
             @muut-tyot]
 
            [grid/grid
             {:otsikko "Yhteensä"
              :tyhja   (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
-            (keep identity [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
              {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
              {:otsikko "" :nimi :nimi :tyyppi :string :leveys "25%"}
              (when paallystysnakyma?
@@ -210,5 +210,5 @@
              {:otsikko "Arvonväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
              {:otsikko "Bit ind." :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
              {:otsikko "Kaasuindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-             {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "15%"}])
+             {:otsikko "Kokonaishinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "15%"}]
             @yhteensa]])))))
