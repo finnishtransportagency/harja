@@ -21,9 +21,17 @@
                       :vaihtoehdot [:toimenpidepyynnot
                                     :kyselyt
                                     :tiedoitukset
-                                    :kalusto
+                                    :tyokoneet
                                     :onnettomuudet
-                                    :havainnot]}
+                                    :havainnot]
+                      :vaihtoehto-nayta {
+                                         :toimenpidepyynnot "Toimenpidepyynnöt"
+                                         :kyselyt "Kyselyt"
+                                         :tiedoitukset "Tiedoitukset"
+                                         :tyokoneet "Työkoneiden seuranta"
+                                         :onnettomuudet "Onnettomuudet"
+                                         :havainnot "Havainnot"
+                                         }}
    (r/wrap
     (into #{}
           (keep identity)

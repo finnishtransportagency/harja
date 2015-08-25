@@ -47,7 +47,19 @@
                                     :havainnot
                                     :onnettomuudet
                                     :paikkaustyot           ;; ... ja näiden kahden
-                                    :paallystystyot]}
+                                    :paallystystyot]
+
+                      :vaihtoehto-nayta {
+                                         :toimenpidepyynnot "Toimenpidepyynnöt"
+                                         :kyselyt "Kyselyt"
+                                         :tiedoitukset "Tiedoitukset"
+                                         :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
+                                         :tarkastukset "Tarkastukset"
+                                         :havainnot "Havainnot"
+                                         :onnettomuudet "Onnettomuudet"
+                                         :paikkaustyot "Paikkaustyöt"
+                                         :paallystystyot "Päällystystyöt"
+                                         }}
 
    (r/wrap
      (into #{}
