@@ -176,14 +176,12 @@
               toteutuneet-maarat-virheet (atom {})
 
               valmis-tallennettavaksi? (reaction
-                                         (let [toteutuneet-osoitteet @toteutuneet-osoitteet
-                                               toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
+                                         (let [toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                                toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                                tila (:tila @lomakedata)
                                                lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
                                            (and
                                              (not (= tila :lukittu))
-                                             (not (empty? toteutuneet-osoitteet))
                                              (empty? toteutuneet-osoitteet-virheet)
                                              (empty? toteutuneet-maarat-virheet)
                                              (false? lomake-lukittu-muokkaukselta?))))
