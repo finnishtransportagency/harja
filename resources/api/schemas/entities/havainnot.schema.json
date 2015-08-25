@@ -20,10 +20,6 @@
               "type": "string",
               "required": true
             },
-            "korjattavaa": {
-              "id": "urn:harja/havainnot/0/havainto/korjattavaa",
-              "type": "boolean"
-            },
             "liitteet": {
               "id": "urn:harja/tarkastukset/0/liitteet",
               "type": "object",
