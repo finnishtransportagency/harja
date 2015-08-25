@@ -183,7 +183,7 @@
            [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
 
          [grid/grid
-          {:otsikko          (str "Yksikköhintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+          {:otsikko          (str "Yksikköhintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
            :tyhja            (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
            :tallenna         (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                         (:id ur)

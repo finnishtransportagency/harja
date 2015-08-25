@@ -212,7 +212,7 @@
             puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
-           {:otsikko                (str "Kokonaishintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+           {:otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
             :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
             :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                                (:id ur)
