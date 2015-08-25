@@ -8,15 +8,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.havainnot :as havainnot]
             [clojure.java.jdbc :as jdbc]
-            [harja.geo :as geo]
-            [slingshot.slingshot :refer [try+ throw+]]))
+            [slingshot.slingshot :refer [try+ throw+]]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]))
 
 
-(defn kirjaa-tarkastus [db kayttaja tyyppi {id :id} tarkastus]
+(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
   (let [urakka-id (Long/parseLong id)
         ulkoinen-id (-> tarkastus :tunniste :id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -27,30 +26,33 @@
 
         (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
               havainto (merge (:havainto tarkastus)
-                              {:aika aika
-                               :id havainto-id
+                              {:aika   aika
+                               :id     havainto-id
                                :urakka urakka-id
                                :tekija :urakoitsija})
               havainto-id (havainnot/luo-tai-paivita-havainto db kayttaja havainto)
               id (tarkastukset/luo-tai-paivita-tarkastus
-                  db kayttaja urakka-id 
-                  {:id tarkastus-id
-                   :ulkoinen-id ulkoinen-id
-                   :tyyppi tyyppi
-                   :aika aika
-                   :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
-                   :mittaaja (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
-                   :tr (json/sijainti->tr (:sijainti tarkastus))
-                   :sijainti (json/sijainti->point (:sijainti tarkastus))}
-                  havainto-id)]
+                   db kayttaja urakka-id
+                   {:id          tarkastus-id
+                    :ulkoinen-id ulkoinen-id
+                    :tyyppi      tyyppi
+                    :aika        aika
+                    :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
+                    :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
+                    :tr          (json/sijainti->tr (:sijainti tarkastus))
+                    :sijainti    (json/sijainti->point (:sijainti tarkastus))}
+                   havainto-id)
+              liitteet (:liitteet (:havainto tarkastus))]
+
+          (tallenna-liitteet-havainnolle db liitteiden-hallinta urakka-id havainto-id kayttaja liitteet)
 
           (case tyyppi
             :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
-                         db id uusi? (-> tarkastus
-                                         :mittaus
-                                         (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
-                                                                        
-            :soratie  (tarkastukset/luo-tai-paivita-soratiemittaus
+                          db id uusi? (-> tarkastus
+                                          :mittaus
+                                          (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
+
+            :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
                        db id uusi? (:mittaus tarkastus))
             nil)
 
@@ -60,33 +62,33 @@
 
 ;; Määritellään tarkastustyypit, joiden lisäämiselle tehdään API palvelut
 (def tarkastukset
-  [{:palvelu :lisaa-tiestotarkastus
-    :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
+  [{:palvelu       :lisaa-tiestotarkastus
+    :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
     :pyynto-skeema skeemat/+tiestotarkastuksen-kirjaus+
-    :tyyppi :tiesto}
-   {:palvelu :lisaa-talvihoitotarkastus
-    :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
+    :tyyppi        :tiesto}
+   {:palvelu       :lisaa-talvihoitotarkastus
+    :polku         "/api/urakat/:id/tarkastus/talvihoitotarkastus"
     :pyynto-skeema skeemat/+talvihoitotarkastuksen-kirjaus+
-    :tyyppi :talvihoito}
-   {:palvelu :lisaa-soratietarkastus
-    :polku "/api/urakat/:id/tarkastus/soratietarkastus"
+    :tyyppi        :talvihoito}
+   {:palvelu       :lisaa-soratietarkastus
+    :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
     :pyynto-skeema skeemat/+soratietarkastuksen-kirjaus+
-    :tyyppi :soratie}])
+    :tyyppi        :soratie}])
 
 (defrecord Tarkastukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} tarkastukset]
       (julkaise-reitti
-       http palvelu
-       (POST polku request
-             (do
-               (log/info "REQUEST: " (pr-str request))
-               (kasittele-kutsu db integraatioloki palvelu request
-                                pyynto-skeema nil
-                              (fn [parametrit data kayttaja db]
-                                (kirjaa-tarkastus db kayttaja tyyppi parametrit data)))))))
-    
+        http palvelu
+        (POST polku request
+          (do
+            (log/info "REQUEST: " (pr-str request))
+            (kasittele-kutsu db integraatioloki palvelu request
+                             pyynto-skeema nil
+                             (fn [parametrit data kayttaja db]
+                               (kirjaa-tarkastus db liitteiden-hallinta kayttaja tyyppi parametrit data)))))))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
