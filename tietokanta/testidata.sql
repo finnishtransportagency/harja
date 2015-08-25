@@ -742,7 +742,7 @@ VALUES
 (SELECT id FROM sopimus WHERE nimi = 'Pudasjärvi pääsopimus'),
 NOW(),
 '2008-09-09 10:00.00',
-'2008-09-09 10:06.00',
+'2008-09-09 10:09.00',
 'kokonaishintainen'::toteumatyyppi,
 'Tämä on käsin tekaistu juttu',
 'Y1234',
@@ -752,7 +752,7 @@ NOW(),
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto)
 VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
-NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 30, 'Tämä on tekaistu tehtävä');
+NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 40, 'Tämä on tekaistu tehtävä');
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
@@ -772,6 +772,12 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 NOW(),
 st_makepoint(499399, 7249019) :: POINT);
 
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
+'2008-09-09 10:09.00',
+NOW(),
+st_makepoint(499820, 7249885) :: POINT);
+
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:00.00' :: TIMESTAMP ),
 NOW(), 1350, 10);
@@ -783,6 +789,10 @@ NOW(), 1350, 10);
 
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:06.00' :: TIMESTAMP ),
+NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:09.00' :: TIMESTAMP ),
 NOW(), 1350, 10);
 
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
