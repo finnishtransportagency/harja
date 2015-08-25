@@ -138,7 +138,7 @@
   (.calculateExtent (.getView ol3) (.getSize ol3)))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
-  (.on (.getView ol3) "change:resolution" (fn [e] 
+  (.on (.getView ol3) "change:resolution" (fn [e]
                                             (when on-zoom
                                               (on-zoom e (laske-kartan-alue ol3))))))
 
@@ -247,7 +247,7 @@
 
     ; alustetaan kartalla näkyvä alue ettei jää tyhjäksi alussa
     (apply (:on-mount mapspec) (laske-kartan-alue ol3))
-    
+
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3            ol3
                              :geometries-map {}
@@ -260,7 +260,7 @@
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
-    
+
     ;; Add callback for ol3 pos/zoom changes
     ;; watcher for pos/zoom atoms
 
@@ -321,22 +321,43 @@
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
-                #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
-                                                             :opacity 0.5}))
-                     :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                    :width (or (:width stroke) 1)})
-                     ;; Default zindex asetetaan harja.views.kartta:ssa.
-                     ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
-                     ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                     :zIndex (or zindex 0)}))))
+                 #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
+                                                              :opacity 0.5}))
+                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
+                                                     :width (or (:width stroke) 1)})
+                      ;; Default zindex asetetaan harja.views.kartta:ssa.
+                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                      :zIndex (or zindex 0)}))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
+(defmethod luo-feature :arrow-line [{:keys [points] :as line}]
+  (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+        nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
+                                                                                :width 1})
+                                                 :zIndex 4})])]
 
-(defmethod luo-feature :line [{:keys [coordinates color] :as line}]
-  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js coordinates))}))
+    (.forEachSegment
+      (.getGeometry feature)
+      (fn [start end]
+        (swap! nuolityylit conj
+               (ol.style.Style.
+                 #js {:geometry (ol.geom.Point. (clj->js end))
+                      :image    (ol.style.Icon. #js {:src            "images/tyokone.png"
+                                                     :anchor         #js [0.75 0.75]
+                                                     :rotateWithView false
+                                                     :rotation       (- (js/Math.atan2
+                                                                          (- (second end) (second start))
+                                                                          (- (first end) (first start))))})}))
+        false)) ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
+
+    (log @nuolityylit)
+    (doto feature
+      (.setStyle (clj->js @nuolityylit)))))
 
 
 (defmethod luo-feature :point [{:keys [coordinates color]}]
@@ -347,14 +368,14 @@
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style. #js {:image (ol.style.Icon. #js {:src          img
-                                                                 :anchor       #js [0.5 0.5]
-                                                                 :opacity 1
-                                                                 :size #js [32 32]
-                                                                 :rotation (or direction 0)
-                                                                 :anchorXUnits "fraction"
-                                                                 :anchorYUnits "fraction"})
-                                     :zIndex 10000}))))
+    (.setStyle (ol.style.Style. #js {:image  (ol.style.Icon. #js {:src          img
+                                                                  :anchor       #js [0.5 0.5]
+                                                                  :opacity      1
+                                                                  :size         #js [32 32]
+                                                                  :rotation     (or direction 0)
+                                                                  :anchorXUnits "fraction"
+                                                                  :anchorYUnits "fraction"})
+                                     :zIndex 4}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
@@ -400,7 +421,7 @@
                               (.addFeature features new-shape)
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when (not (= :icon (:type geom)))
+                              (when (not (or (= :arrow-line (:type geom)) (= :icon (:type geom))))
                                 (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?

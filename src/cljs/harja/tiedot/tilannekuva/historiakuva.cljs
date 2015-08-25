@@ -72,11 +72,11 @@
   (assoc toteuma
     :type :toteuma
     :alue {
-           :type        :line
+           :type   :arrow-line
            :points (mapv :sijainti (sort-by
-                                         :aika
-                                         pvm/jalkeen?
-                                         (:reittipisteet toteuma)))}))
+                                     :aika
+                                     pvm/ennen?
+                                     (:reittipisteet toteuma)))}))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   (assoc tp
