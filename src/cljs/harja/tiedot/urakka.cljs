@@ -36,18 +36,15 @@
 (defonce urakan-toimenpideinstanssit+lisavalinnat (reaction
                                                     (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
 
-(defonce valittu-toimenpideinstanssi
-         (let [val (atom nil)]
-           (run! (reset! val (first @urakan-toimenpideinstanssit)))
-           val))
+(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
-urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
-ja viimeinen voivat olla vajaat)."
+  urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
+  ja viimeinen voivat olla vajaat)."
   [ur]
   (let [ensimmainen-vuosi (pvm/vuosi (:alkupvm ur))
         viimeinen-vuosi (pvm/vuosi (:loppupvm ur))]
