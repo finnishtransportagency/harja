@@ -120,18 +120,19 @@
         (reaction (let [valittu-hoitokausi @u/valittu-hoitokausi
                         valittu-toimenpide @u/valittu-toimenpideinstanssi
                         alkupvm (first valittu-hoitokausi)
+                        toimenpiteet-ja-tehtavat @toimenpiteet-ja-tehtavat
                         loppupvm (second valittu-hoitokausi)
                         tehtavien-rivit (get @sopimuksen-tyot-hoitokausittain [alkupvm loppupvm])
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Muut" (not-any? (fn [[t1 t2 t3 t4]]
                                                                          (= (:id t4) tehtava))
-                                                                       @toimenpiteet-ja-tehtavat)
+                                                                           toimenpiteet-ja-tehtavat)
                                                           (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
                                                                   (and
                                                                     (= (:id t4) tehtava)
                                                                     (= (:koodi t2) (:t2_koodi valittu-toimenpide))))
-                                                                @toimenpiteet-ja-tehtavat)))
+                                                                toimenpiteet-ja-tehtavat)))
                                                       tehtavien-rivit)]
                     toimenpiteen-tehtavat))
 
