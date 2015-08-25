@@ -129,7 +129,6 @@
                                                    (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
-                                                          "Kaikki" true
                                                           "Muut" (not-any? (fn [[t1 t2 t3 t4]]
                                                                          (= (:id t4) tehtava))
                                                                        @toimenpiteet-ja-tehtavat)

@@ -41,7 +41,6 @@
 (defonce urakan-toimenpideinstanssit+kaikki+muut (reaction
                                                    (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit]
                                                      (-> urakan-toimenpideinstanssit
-                                                         (conj {:tpi_nimi "Kaikki"}) ; FIXME Nosta ekaksi
                                                          (conj {:tpi_nimi "Muut"})))))
 
 (defonce valittu-toimenpideinstanssi
