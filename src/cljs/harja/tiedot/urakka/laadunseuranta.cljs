@@ -4,14 +4,25 @@
             [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.domain.roolit :as roolit])
   (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce laadunseurannassa? (atom false)) ; jos true, laadunseurantaosio nyt käytössä
 
+(defonce voi-kirjata? (reaction
+                       (let [kayttaja @istunto/kayttaja
+                             urakka @nav/valittu-urakka]
+                         (and kayttaja
+                              urakka
+                              (roolit/rooli-urakassa? kayttaja roolit/havaintojen-kirjaus (:id urakka))))))
+
+                         
 (defonce valittu-valilehti (atom :tarkastukset))
 
 ;; Urakan tarkastusten karttataso

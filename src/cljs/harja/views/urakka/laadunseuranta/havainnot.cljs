@@ -113,9 +113,8 @@
 
    [urakka-valinnat/aikavali @nav/valittu-urakka]
 
-
-   [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)]
-
+   (when @laadunseuranta/voi-kirjata?
+     [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
 
    [grid/grid
     {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
@@ -279,51 +278,50 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
     (komp/luo
+     (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
+       (let [muokattava? (constantly (not (paatos? alkuperainen)))
+             uusi? (not (:id alkuperainen))]
+         
+         [:div.havainto
+          (when-not osa-tarkastusta?
+            [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
+             (ikonit/chevron-left) " Takaisin havaintoluetteloon"])
 
-      (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
-        (let [muokattava? (constantly (not (paatos? alkuperainen)))
-              uusi? (not (:id alkuperainen))
-              _ (tarkkaile! "Havaintodata" havainto)]
+          (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
+          [lomake/lomake
+           {:muokkaa! #(reset! havainto %)
+            :luokka :horizontal
+            :voi-muokata? @laadunseuranta/voi-kirjata?
+            :footer (when-not osa-tarkastusta?
+                      [napit/palvelinkutsu-nappi
+                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
+                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
+                       (cond
+                        (and (not (paatos? alkuperainen))
+                             (paatos? @havainto))
+                        "Tallenna ja lukitse havainto"
+                      
+                        :default
+                        "Tallenna havainto")
+                     
+                       #(tallenna-havainto @havainto)
+                       {:ikoni (ikonit/tallenna)
+                        :disabled (not (validi-havainto? @havainto))
+                        :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
+           [
 
-          [:div.havainto
-           (when-not osa-tarkastusta?
-             [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
-              (ikonit/chevron-left) " Takaisin havaintoluetteloon"])
-
-           (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
-           [lomake/lomake
-            {:muokkaa! #(reset! havainto %)
-             :luokka   :horizontal
-             :footer   (when-not osa-tarkastusta?
-                         [napit/palvelinkutsu-nappi
-                          ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
-                          ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
-                          (cond
-                            (and (not (paatos? alkuperainen))
-                                 (paatos? @havainto))
-                            "Tallenna ja lukitse havainto"
-
-                            :default
-                            "Tallenna havainto")
-
-                          #(tallenna-havainto @havainto)
-                          {:ikoni        (ikonit/tallenna)
-                           :disabled     (not (validi-havainto? @havainto))
-                           :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
-            [
-
-             (when-not osa-tarkastusta?
-               {:otsikko    "Havainnon pvm ja aika"
-                :tyyppi     :pvm-aika
-                :nimi       :aika
-                :validoi    [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
-                :varoita    [[:urakan-aikana]]
-                :leveys-col 5})
-
-             {:otsikko       "Tekijä" :nimi :tekija
-              :tyyppi        :valinta
-              :valinnat      [:tilaaja :urakoitsija :konsultti]
-              :valinta-nayta #(case %
+            (when-not osa-tarkastusta?
+              {:otsikko "Havainnon pvm ja aika"
+               :tyyppi :pvm-aika
+               :nimi :aika
+               :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+               :varoita [[:urakan-aikana]]
+               :leveys-col 5})
+            
+            {:otsikko "Tekijä" :nimi :tekija
+             :tyyppi :valinta
+             :valinnat [:tilaaja :urakoitsija :konsultti]
+             :valinta-nayta #(case %
                                :tilaaja "Tilaaja"
                                :urakoitsija "Urakoitsija"
                                :konsultti "Konsultti"

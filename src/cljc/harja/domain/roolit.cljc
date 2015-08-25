@@ -137,24 +137,24 @@ rooleista."
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
-#?(:clj
-   (defn tilaajan-kayttaja?
-     [kayttaja]
-     (roolissa? kayttaja
-                #{jarjestelmavastuuhenkilo
-                  tilaajan-kayttaja
-                  urakanvalvoja
-                  hallintayksikon-vastuuhenkilo
-                  liikennepaivystaja
-                  tilaajan-asiantuntija
-                  tilaajan-laadunvalvontakonsultti})))
+(defn tilaajan-kayttaja?
+  [kayttaja]
+  (roolissa? kayttaja
+             #{jarjestelmavastuuhenkilo
+               tilaajan-kayttaja
+               urakanvalvoja
+               hallintayksikon-vastuuhenkilo
+               liikennepaivystaja
+               tilaajan-asiantuntija
+               tilaajan-laadunvalvontakonsultti}))
 
-#?(:clj
-   (defn lukuoikeus-urakassa?
-     [kayttaja urakka-id]
-     (or (tilaajan-kayttaja? kayttaja)
-         (rooli-urakassa? kayttaja urakoitsijan-paakayttaja urakka-id)
-         (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id))))
+(defn lukuoikeus-urakassa?
+  [kayttaja urakka-id]
+  (or (tilaajan-kayttaja? kayttaja)
+      (rooli-urakassa? kayttaja urakoitsijan-paakayttaja urakka-id)
+      (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
+
+
 
 #?(:clj
    (defn vaadi-lukuoikeus-urakkaan
