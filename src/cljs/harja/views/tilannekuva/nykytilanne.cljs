@@ -7,6 +7,7 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
+            [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [harja.views.tilannekuva.tyokoneet :as tyokoneet]
             [reagent.core :as r])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
@@ -51,6 +52,7 @@
       (reset! tiedot/hae-havainnot? (:havainnot uusi))))])
 
 (defonce suodattimet [:span
+                      [nayta-hallinnolliset-tiedot]
                       [aikavalinta]
                       [haettavien-asioiden-valinta]])
 
