@@ -419,7 +419,8 @@
                                   (str (:lyhenne rivi)  " - " (:nimi rivi))
                                   "- Valitse päällyste -"))
                :valinnat      pot/+paallystetyypit+
-               :leveys        "30%"}]
+               :leveys        "30%"
+               :validoi       [[:ei-tyhja "Tieto puuttuu"]]}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
