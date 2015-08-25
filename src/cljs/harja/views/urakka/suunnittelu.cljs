@@ -41,7 +41,7 @@
          [:span.suunnittelu
           (case @u/suunnittelun-valittu-valilehti
             :kokonaishintaiset [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
-            :yksikkohintaiset [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+            :yksikkohintaiset [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+lisavalinnat ur]
             :muut [valinnat/urakan-sopimus ur]
             :materiaalit [valinnat/urakan-sopimus-ja-hoitokausi ur])
 

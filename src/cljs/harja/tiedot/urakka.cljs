@@ -38,6 +38,11 @@
                      (reset! toimenpideinstanssit nil))))
            toimenpideinstanssit))
 
+(defonce urakan-toimenpideinstanssit+kaikki+muut (reaction
+                                                   (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit]
+                                                     (-> urakan-toimenpideinstanssit
+                                                         (conj {:tpi_nimi "Kaikki"})))))
+
 (defonce valittu-toimenpideinstanssi
          (let [val (atom nil)]
            (run! (reset! val (first @urakan-toimenpideinstanssit)))
@@ -95,11 +100,11 @@ ja viimeinen voivat olla vajaat)."
                          (pvm/valissa? nyt alku loppu))
                        hoitokaudet))))))
 
-        
+
 (defonce valittu-hoitokausi
   (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-  
+
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
@@ -180,7 +185,7 @@ ja viimeinen voivat olla vajaat)."
 
 (defonce urakan-organisaatio
   (reaction<! [ur (:id @nav/valittu-urakka)]
-              (when ur 
+              (when ur
                 (organisaatio/hae-urakan-organisaatio ur))))
 
 (defonce muutoshintaiset-tyot

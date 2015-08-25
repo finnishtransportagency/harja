@@ -26,7 +26,7 @@
 
 
 (def tuleville? (atom false))
-  
+
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot]
   (go (let [muuttuneet
             (into []
@@ -51,13 +51,13 @@
   (let [otsikko (fn [{:keys [tehtava]}]
                   (or
                     (some (fn [[t1 t2 t3 t4]]
-                           (when (= (:id t4) tehtava)
-                             (str (:nimi t2) " / " (:nimi t3))))
-                         toimenpiteet-tasoittain)
+                            (when (= (:id t4) tehtava)
+                              (str (:nimi t2) " / " (:nimi t3))))
+                          toimenpiteet-tasoittain)
                     "Muut tehtävät"))
         otsikon-mukaan (group-by otsikko tyorivit)]
     (mapcat (fn [[otsikko rivit]]
-              (concat [(grid/otsikko otsikko)]  (sort-by :tehtavan_nimi rivit)))
+              (concat [(grid/otsikko otsikko)] (sort-by :tehtavan_nimi rivit)))
             (seq otsikon-mukaan))))
 
 (defn hoidon-sarakkeet []
@@ -83,9 +83,9 @@
         yht-1-9 (and yksikkohinta maara-kkt-1-9
                      (* yksikkohinta maara-kkt-1-9))]
     (assoc rivi
-           :yhteensa-kkt-10-12 yht-10-12
-           :yhteensa-kkt-1-9 yht-1-9
-           :yhteensa (and yht-10-12 yht-1-9 (+ yht-10-12 yht-1-9)))))
+      :yhteensa-kkt-10-12 yht-10-12
+      :yhteensa-kkt-1-9 yht-1-9
+      :yhteensa (and yht-10-12 yht-1-9 (+ yht-10-12 yht-1-9)))))
 
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
@@ -97,25 +97,25 @@
                             ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen urakalle
                             (go (reset! toimenpiteet-ja-tehtavat
                                         (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
-        sopimuksen-tyot 
-        (reaction 
-         (into []
-               (filter (fn [t]
-                         (= (:sopimus t) (first @u/valittu-sopimusnumero))))
-               @urakan-yks-hint-tyot))
-        
+        sopimuksen-tyot
+        (reaction
+          (into []
+                (filter (fn [t]
+                          (= (:sopimus t) (first @u/valittu-sopimusnumero))))
+                @urakan-yks-hint-tyot))
+
 
         sopimuksen-tyot-hoitokausittain
         (reaction (u/ryhmittele-hoitokausittain @sopimuksen-tyot
                                                 @u/valitun-urakan-hoitokaudet))
-        
+
         varoita-ylikirjoituksesta?
         (reaction (let [kopioi? @tuleville?
                         varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-tyot-hoitokausittain @u/valittu-hoitokausi)]
                     (if-not kopioi?
                       false
                       varoita?)))
-        
+
         tyorivit
         (reaction (let [valittu-hoitokausi @u/valittu-hoitokausi
                         valittu-toimenpide @u/valittu-toimenpideinstanssi
@@ -128,13 +128,20 @@
                                          (filter (fn [tp]
                                                    (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
-                                                        (some (fn [[t1 t2 t3 t4]]
-                                                                (and (= (:id t4) tehtava)
-                                                                     (= (:koodi t2) (:t2_koodi valittu-toimenpide))))
-                                                              @toimenpiteet-ja-tehtavat))
+                                                        (case (:tpi_nimi valittu-toimenpide)
+                                                          "Kaikki" true
+                                                          "Muut" #_(some (fn [[t1 t2 t3 t4]] ; Näytetään kaikki joille ei löydy TPItä FIXME Ei toimi
+                                                                         (and (= (:id t4) tehtava)
+                                                                              (not-any? #(= (:koodi t2) (:t2_koodi %)) @u/urakan-toimenpideinstanssit)))
+                                                                       @toimenpiteet-ja-tehtavat)
+                                                          (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
+                                                                  (and
+                                                                    (= (:id t4) tehtava)
+                                                                    (= (:koodi t2) (:t2_koodi valittu-toimenpide))))
+                                                                @toimenpiteet-ja-tehtavat)))
                                                       tehtavien-rivit)]
                     toimenpiteen-tehtavat))
-        
+
         kaikkien-hoitokausien-kustannukset
         (reaction (transduce (comp (mapcat second)
                                    (map #(* (:maara %) (:yksikkohinta %))))
@@ -143,72 +150,72 @@
 
     (hae-urakan-tiedot ur)
     (komp/luo
-     {:component-will-receive-props
-      (fn [_ & [_ ur]]
-        (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
-        (hae-urakan-tiedot ur))
+      {:component-will-receive-props
+       (fn [_ & [_ ur]]
+         (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))
+         (hae-urakan-tiedot ur))
 
-      :component-will-unmount
-      (fn [this]
-        (reset! tuleville? false))}
+       :component-will-unmount
+       (fn [this]
+         (reset! tuleville? false))}
 
-     (fn [ur]
-       [:div.yksikkohintaiset-tyot
-        [:div.hoitokauden-kustannukset
-         [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-          [:div.col-xs-6.piirakka
-           (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
-                 kaikki-kust @kaikkien-hoitokausien-kustannukset]
-               (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
-                   [:span.piirakka-wrapper
-                    [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
-                    [vis/pie
-                     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                     {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-          [:div.col-xs-6.piirakka
-           (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
-                 kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
-               (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
-                   [:span.piirakka-wrapper
-                    [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
-                    [vis/pie
-                     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                     {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
+      (fn [ur]
+        [:div.yksikkohintaiset-tyot
+         [:div.hoitokauden-kustannukset
+          [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
+           [:div.col-xs-6.piirakka
+            (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
+                  kaikki-kust @kaikkien-hoitokausien-kustannukset]
+              (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+                [:span.piirakka-wrapper
+                 [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
+                 [vis/pie
+                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                  {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
+           [:div.col-xs-6.piirakka
+            (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
+                  kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
+              (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
+                [:span.piirakka-wrapper
+                 [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
+                 [vis/pie
+                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
 
-         [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
-          [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-         [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-          [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
-        
-        [grid/grid
-         {:otsikko        (str "Yksikköhintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
-          :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-          :tallenna       (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                     (:id ur)
-                                                     #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                     urakan-yks-hint-tyot %)
-                                                     :ei-mahdollinen)
-          :peruuta #(reset! tuleville? false)
-          :tunniste       :tehtava
-          :voi-lisata?    false
-          :voi-poistaa?   (constantly false)
-          :muokkaa-footer (fn [g]
-                            [raksiboksi "Tallenna tulevillekin hoitokausille"
-                             @tuleville?
-                             #(swap! tuleville? not)
-                             [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                             @varoita-ylikirjoituksesta?])
-          :prosessoi-muutos (when (= :hoito (:tyyppi ur))
-                              (fn [rivit]
-                                (let [rivit (seq rivit)]
-                                  (zipmap (map first rivit)
-                                          (map (comp paivita-hoitorivin-summat second) rivit)))))
-          :napit-alaskin? (> (count @tyorivit) 20)}
+          [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
+           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
+          [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
 
-         ;; sarakkeet
-         (if (= :hoito (:tyyppi ur))
-           (hoidon-sarakkeet)
-           (yllapidon-sarakkeet))
-      
-      
-         @tyorivit]]))))
+         [grid/grid
+          {:otsikko          (str "Yksikköhintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+           :tyhja            (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+           :tallenna         (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                        (:id ur)
+                                                        #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                        urakan-yks-hint-tyot %)
+                                                        :ei-mahdollinen)
+           :peruuta          #(reset! tuleville? false)
+           :tunniste         :tehtava
+           :voi-lisata?      false
+           :voi-poistaa?     (constantly false)
+           :muokkaa-footer   (fn [g]
+                               [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                @tuleville?
+                                #(swap! tuleville? not)
+                                [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                @varoita-ylikirjoituksesta?])
+           :prosessoi-muutos (when (= :hoito (:tyyppi ur))
+                               (fn [rivit]
+                                 (let [rivit (seq rivit)]
+                                   (zipmap (map first rivit)
+                                           (map (comp paivita-hoitorivin-summat second) rivit)))))
+           :napit-alaskin?   (> (count @tyorivit) 20)}
+
+          ;; sarakkeet
+          (if (= :hoito (:tyyppi ur))
+            (hoidon-sarakkeet)
+            (yllapidon-sarakkeet))
+
+
+          @tyorivit]]))))
