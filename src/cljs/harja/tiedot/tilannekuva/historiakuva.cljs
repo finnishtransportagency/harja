@@ -34,13 +34,13 @@
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
 (defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
                                       (when nakymassa?
-                                        (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
+                                        (go (let [res (<! (k/post! :hae-toimenpidekoodit-historiakuvaan {:urakka (:id @nav/valittu-urakka)}))]
                                               res)))))
 
 (defonce naytettavat-toteumatyypit (reaction
                                      (mapv :nimi @toimenpidekoodit)))
 
-(defonce haettavat-toteumatyypit (atom #{}))
+(defonce valitut-toteumatyypit (atom #{}))
 
 (def haetut-asiat (atom nil))
 
@@ -135,11 +135,16 @@
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit))))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot (kasaa-parametrit))))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot (kasaa-parametrit))))
-                  (when-not (empty? @haettavat-toteumatyypit)
+                  (when-not (empty? @valitut-toteumatyypit)
                     (<! (k/post! :hae-toteumat-historiakuvaan (assoc
                                                         (kasaa-parametrit)
                                                         :toimenpidekoodit
-                                                        @haettavat-toteumatyypit)))))]
+                                                        (mapv
+                                                          :id
+                                                          (filter
+                                                            (fn [{:keys [nimi]}]
+                                                              (get @valitut-toteumatyypit nimi))
+                                                            @toimenpidekoodit)))))))]
       (reset! haetut-asiat tulos))))
 
 (def +sekuntti+ 1000)
@@ -160,7 +165,7 @@
                       _ @hae-paallystystyot?
                       _ @toimenpidekoodit
                       _ @naytettavat-toteumatyypit
-                      _ @haettavat-toteumatyypit
+                      _ @valitut-toteumatyypit
                       _ @valittu-aikasuodatin
                       _ @lyhyen-suodattimen-asetukset
                       _ @pitkan-suodattimen-asetukset

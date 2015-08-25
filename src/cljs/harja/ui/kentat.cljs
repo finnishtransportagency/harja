@@ -296,6 +296,7 @@
 (defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))]
+    (log "Tee kentta: " (pr-str vaihtoehdot))
     [:span
      (doall 
       (for [v vaihtoehdot]

@@ -75,8 +75,8 @@
 
 (defn toteuma-suodattimet []
   [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot tiedot/naytettavat-toteumatyypit}
-   tiedot/haettavat-toteumatyypit])
+                      :vaihtoehdot @tiedot/naytettavat-toteumatyypit}
+   tiedot/valitut-toteumatyypit])
 
 (defonce toteumat-rivit (atom {1 {:auki false :otsikko "Toteumat" :sisalto [toteuma-suodattimet]}
                                2 {:auki false :otsikko "Muut" :sisalto [muut-suodattimet]}}))

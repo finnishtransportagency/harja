@@ -255,13 +255,13 @@ FROM toteuma_tehtava tt
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE t.urakka = :urakka OR :urakka_annettu IS FALSE
+WHERE t.urakka = :urakka OR :rajaa_urakalla IS FALSE
                             -- Sen jälkeen tarkastetaan hallintayksiköllä/urakalla suodattaminen
                             AND (
                               -- Joko ei suodateta HY:llä/urakalla
-                              (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
+                              (:hallintayksikko_annettu IS FALSE AND :rajaa_urakalla IS FALSE) OR
                               -- tai suodatetaan vain HY:llä..
-                              (:urakka_annettu IS FALSE AND
+                              (:rajaa_urakalla IS FALSE AND
                                st_contains((SELECT alue
                                             FROM organisaatio
                                             WHERE id = :hallintayksikko),
