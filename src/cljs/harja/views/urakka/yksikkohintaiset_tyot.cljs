@@ -157,8 +157,7 @@
        :component-will-unmount
        (fn [this]
          (reset! tuleville? false)
-         (if (or (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Kaikki")
-                 (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Muut"))
+         (if (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Muut")
            (reset! u/valittu-toimenpideinstanssi (first @u/urakan-toimenpideinstanssit))))}
 
       (fn [ur]

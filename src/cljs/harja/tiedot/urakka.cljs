@@ -38,7 +38,7 @@
                      (reset! toimenpideinstanssit nil))))
            toimenpideinstanssit))
 
-(defonce urakan-toimenpideinstanssit+kaikki+muut (reaction
+(defonce urakan-toimenpideinstanssit+lisavalinnat (reaction
                                                    (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit]
                                                      (-> urakan-toimenpideinstanssit
                                                          (conj {:tpi_nimi "Muut"})))))
