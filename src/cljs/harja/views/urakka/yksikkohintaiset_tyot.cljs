@@ -130,6 +130,10 @@
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Kaikki" true
+                                                          "Muut" (not-any? (fn [[t1 t2 t3 t4]]
+                                                                         (= (:id t4) tehtava))
+                                                                       @toimenpiteet-ja-tehtavat)
+
                                                           (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
                                                                   (and
                                                                     (= (:id t4) tehtava)
@@ -154,7 +158,8 @@
        :component-will-unmount
        (fn [this]
          (reset! tuleville? false)
-         (if (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Kaikki")
+         (if (or (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Kaikki")
+                 (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Muut"))
            (reset! u/valittu-toimenpideinstanssi (first @u/urakan-toimenpideinstanssit))))}
 
       (fn [ur]
