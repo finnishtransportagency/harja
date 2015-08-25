@@ -88,7 +88,8 @@
                               (map #(assoc %
                                      :sakko? (not (nil? (:summa %)))
                                      :summa (some-> % :summa double))))
-                        (sanktiot/hae-havainnon-sanktiot db havainto-id))))))
+                        (sanktiot/hae-havainnon-sanktiot db havainto-id))
+        :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
