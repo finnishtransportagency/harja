@@ -118,21 +118,22 @@
         
         tyorivit
         (reaction (let [valittu-hoitokausi @u/valittu-hoitokausi
+                        valittu-toimenpide @u/valittu-toimenpideinstanssi
                         alkupvm (first valittu-hoitokausi)
                         loppupvm (second valittu-hoitokausi)
-                        tehtavien-rivit (group-by :tehtava
-                                                  (get @sopimuksen-tyot-hoitokausittain [alkupvm loppupvm]))
+                        tehtavien-rivit (get @sopimuksen-tyot-hoitokausittain [alkupvm loppupvm])
                         nelostason-tpt (map #(nth % 3) @toimenpiteet-ja-tehtavat)
-                        kirjatut-tehtavat (into #{} (keys tehtavien-rivit))
+                        kirjatut-tehtavat (into #{} tehtavien-rivit)
                         tyhjat-tyot (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
                                          (filter (fn [tp]
-                                                   (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))]
-
-
-                    (ryhmittele-tehtavat
-                      @toimenpiteet-ja-tehtavat
-                      (vec (concat (mapcat second tehtavien-rivit)
-                                   tyhjat-tyot)))))
+                                                   (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))
+                        toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
+                                                        (some (fn [[t1 t2 t3 t4]]
+                                                                (and (= (:id t4) tehtava)
+                                                                     (= (:koodi t2) (:t2_koodi valittu-toimenpide))))
+                                                              @toimenpiteet-ja-tehtavat))
+                                                      tehtavien-rivit)]
+                    toimenpiteen-tehtavat))
         
         kaikkien-hoitokausien-kustannukset
         (reaction (transduce (comp (mapcat second)
@@ -180,7 +181,7 @@
           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
         
         [grid/grid
-         {:otsikko        "Yksikköhintaiset työt"
+         {:otsikko        (str "Yksikköhintaiset työt: " (:t2_nimi @u/valittu-toimenpideinstanssi) " / " (:t3_nimi @u/valittu-toimenpideinstanssi) " / " (:tpi_nimi @u/valittu-toimenpideinstanssi))
           :tyhja          (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
           :tallenna       (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                      (:id ur)
@@ -210,7 +211,4 @@
            (yllapidon-sarakkeet))
       
       
-         @tyorivit
-         ]]))))
-
-
+         @tyorivit]]))))
