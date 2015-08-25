@@ -345,9 +345,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
-
-             {:otsikko     "Liitteet" :nimi :liitteet
-              :komponentti [:span (for [liite (:liitteet @havainto)] [:span (liitteet/liitetiedosto liite)])]}
+             (when-not (empty? (:liitteet @havainto))
+               {:otsikko     "Liitteet" :nimi :liitteet
+                :komponentti [:span (for [liite (:liitteet @havainto)]
+                                      [:span (liitteet/liitetiedosto liite)])]})
 
              (when-not uusi?
                {:otsikko     "Kommentit" :nimi :kommentit
