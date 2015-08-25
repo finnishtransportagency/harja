@@ -105,7 +105,7 @@
   :dev-dependencies [;; Selain REPL
 
                      ;; Testaus
-
+                     [prismatic/dommy "1.1.0"]
                      ]
 
 
