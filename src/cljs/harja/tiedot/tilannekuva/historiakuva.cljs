@@ -26,7 +26,8 @@
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :lyhyt))
 (defonce lyhyen-suodattimen-asetukset (atom {:pvm (pvm/nyt) :kellonaika "12:00" :plusmiinus 12}))
-(defonce pitkan-suodattimen-asetukset (atom {:alku nil :loppu nil}))
+(defonce pitkan-suodattimen-asetukset (atom {:alku (first (pvm/kuukauden-aikavali (pvm/nyt)))
+                                             :loppu (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
 
 (defonce nakymassa? (atom false))
 (defonce taso-historiakuva (atom false))

@@ -385,7 +385,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys absoluuttinen?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -471,6 +471,7 @@
                                                 (reset! teksti (pvm/pvm %)))
                                  :pvm      naytettava-pvm
                                  :sijainti @sijainti
+                                 :absoluuttinen? absoluuttinen?
                                  :leveys   pvm-leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
