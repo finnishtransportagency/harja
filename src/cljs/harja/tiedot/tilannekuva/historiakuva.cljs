@@ -22,7 +22,9 @@
 (defonce hae-onnettomuudet? (atom true))
 (defonce hae-paikkaustyot? (atom true))
 (defonce hae-paallystystyot? (atom true))
-(defonce haettavat-toteumatyypit (atom {:kokonaishintaiset true :yksikkohintaiset true}))
+
+(def +toteumatyypit+ [:kokonaishintaiset :yksikkohintaiset])
+(defonce haettavat-toteumatyypit (atom #{:kokonaishintaiset :yksikkohintaiset}))
 
 
 ;; Millä ehdoilla haetaan?

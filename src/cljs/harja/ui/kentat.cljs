@@ -297,14 +297,15 @@
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))]
     [:span
-     (for [v vaihtoehdot]
-       ^{:key (str "boolean-group-" (name v))}
-       [:div.checkbox
-        [:label
-         [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
-                  :on-change #(let [valittu? (-> % .-target .-checked)]
-                                (swap! data (if valittu? conj disj) v))}
-          (vaihtoehto-nayta v)]]])]))
+     (doall 
+      (for [v vaihtoehdot]
+        ^{:key (str "boolean-group-" (name v))}
+        [:div.checkbox
+         [:label
+          [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
+                   :on-change #(let [valittu? (-> % .-target .-checked)]
+                                 (swap! data (if valittu? conj disj) v))}
+           (vaihtoehto-nayta v)]]]))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus]} data]

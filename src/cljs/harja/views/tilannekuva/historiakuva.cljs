@@ -39,49 +39,45 @@
 
 (defn muut-suodattimet []
   [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot [:toimenpidepyynnot
+                      :vaihtoehdot [:toimenpidepyynnot ;; FIXME: formatteri, tai tämän Ö:t muuttuu O:ksi UI:ssa...
                                     :kyselyt
                                     :tiedoitukset
                                     :turvallisuuspoikkeamat
                                     :tarkastukset
                                     :havainnot
                                     :onnettomuudet
-                                    :paikkaustyot
+                                    :paikkaustyot   ;; ... ja näiden kahden
                                     :paallystystyot]}
 
    (r/wrap
-     [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
-      (when @tiedot/hae-kyselyt? :kyselyt)
-      (when @tiedot/hae-tiedoitukset? :tiedoitukset)
-      (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
-      (when @tiedot/hae-tarkastukset? :tarkastukset)
-      (when @tiedot/hae-havainnot? :havainnot)
-      (when @tiedot/hae-onnettomuudet? :onnettomuudet)
-      (when @tiedot/hae-paikkaustyot? :paikkaustyot)
-      (when @tiedot/hae-paallystystyot? :paallystystyot)]
+    (into #{}
+          (keep identity)
+          [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
+           (when @tiedot/hae-kyselyt? :kyselyt)
+           (when @tiedot/hae-tiedoitukset? :tiedoitukset)
+           (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
+           (when @tiedot/hae-tarkastukset? :tarkastukset)
+           (when @tiedot/hae-havainnot? :havainnot)
+           (when @tiedot/hae-onnettomuudet? :onnettomuudet)
+           (when @tiedot/hae-paikkaustyot? :paikkaustyot)
+           (when @tiedot/hae-paallystystyot? :paallystystyot)])
 
-     (fn [uusi]
-       (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot (set uusi)))
-       (reset! tiedot/hae-kyselyt? (:kyselyt (set uusi)))
-       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset (set uusi)))
-       (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat (set uusi)))
-       (reset! tiedot/hae-tarkastukset? (:tarkastukset (set uusi)))
-       (reset! tiedot/hae-onnettomuudet? (:onnettomuudet (set uusi)))
-       (reset! tiedot/hae-havainnot? (:havainnot (set uusi)))
-       (reset! tiedot/hae-paikkaustyot? (:paikkaustyot (set uusi)))
-       (reset! tiedot/hae-paallystystyot? (:paallystystyot (set uusi)))))])
+    (fn [uusi]
+      (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
+      (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
+      (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
+      (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat uusi))
+      (reset! tiedot/hae-tarkastukset? (:tarkastukset uusi))
+      (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
+      (reset! tiedot/hae-havainnot? (:havainnot uusi))
+      (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
+      (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
 
 (defn toteuma-suodattimet []
   [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot (vec (keys @tiedot/haettavat-toteumatyypit))}
-   (r/wrap
-     (into [] (keys (filter (fn [[_ k]] k) @tiedot/haettavat-toteumatyypit)))
-     (fn [valitut]
-       (reset! tiedot/haettavat-toteumatyypit
-               (into {} (map
-                          (fn [[a _]]
-                            [a (contains? (set valitut) a)])
-                          @tiedot/haettavat-toteumatyypit)))))])
+                      :vaihtoehdot  tiedot/+toteumatyypit+}
+   tiedot/haettavat-toteumatyypit])
+
 
 (defonce toteumat-rivit (atom {1 {:auki false :otsikko "Toteumat" :sisalto [toteuma-suodattimet]}
                                2 {:auki false :otsikko "Muut" :sisalto [muut-suodattimet]}}))
