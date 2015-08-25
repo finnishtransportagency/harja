@@ -219,8 +219,6 @@
                                          kiviaines-virheet @kiviaines-virheet
                                          tila (:tila @lomakedata)
                                          lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
-                                     (log "ALIKOHTEET VIRHEET: " (pr-str alikohteet-virheet))
-                                     (log "PAALLYSTYSTOIMENPIDE VIRHEET: " (pr-str paallystystoimenpide-virheet))
                                      (and
                                       (not (= tila :lukittu))
                                       (empty? alikohteet-virheet)
@@ -428,7 +426,8 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
+              :virheet kiviaines-virheet
+              :uusi-id (inc (count @kiviaines))}
              [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -442,7 +441,8 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
+              :uusi-id (inc (count @alustalle-tehdyt-toimet))
+              :virheet alustalle-tehdyt-toimet-virheet}
              [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -483,7 +483,9 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_taloudellinen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
+              :validoi-aina? true
+              :uusi-id (inc (count @toteutuneet-maarat))
+              :virheet toteutuneet-maarat-virheet}
              [{:otsikko       "Päällystetyön tyyppi"
                :nimi          :tyyppi
                :tyyppi        :valinta
