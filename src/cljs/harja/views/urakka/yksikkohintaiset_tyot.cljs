@@ -122,17 +122,11 @@
                         alkupvm (first valittu-hoitokausi)
                         loppupvm (second valittu-hoitokausi)
                         tehtavien-rivit (get @sopimuksen-tyot-hoitokausittain [alkupvm loppupvm])
-                        nelostason-tpt (map #(nth % 3) @toimenpiteet-ja-tehtavat)
-                        kirjatut-tehtavat (into #{} tehtavien-rivit)
-                        tyhjat-tyot (map #(luo-tyhja-tyo % ur valittu-hoitokausi)
-                                         (filter (fn [tp]
-                                                   (not (kirjatut-tehtavat (:id tp)))) nelostason-tpt))
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Muut" (not-any? (fn [[t1 t2 t3 t4]]
                                                                          (= (:id t4) tehtava))
                                                                        @toimenpiteet-ja-tehtavat)
-
                                                           (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
                                                                   (and
                                                                     (= (:id t4) tehtava)
