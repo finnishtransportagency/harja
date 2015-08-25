@@ -130,10 +130,6 @@
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Kaikki" true
-                                                          ;"Muut" (some (fn [[t1 t2 t3 t4]] ; Näytetään kaikki joille ei löydy TPItä FIXME Ei toimi
-                                                          ;               (and (= (:id t4) tehtava)
-                                                          ;                    (not-any? #(= (:koodi t2) (:t2_koodi %)) @u/urakan-toimenpideinstanssit)))
-                                                          ;             @toimenpiteet-ja-tehtavat)
                                                           (some (fn [[t1 t2 t3 t4]] ; Näytetään valittu TPI
                                                                   (and
                                                                     (= (:id t4) tehtava)
@@ -157,7 +153,9 @@
 
        :component-will-unmount
        (fn [this]
-         (reset! tuleville? false))}
+         (reset! tuleville? false)
+         (if (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Kaikki")
+           (reset! u/valittu-toimenpideinstanssi (first @u/urakan-toimenpideinstanssit))))}
 
       (fn [ur]
         [:div.yksikkohintaiset-tyot
