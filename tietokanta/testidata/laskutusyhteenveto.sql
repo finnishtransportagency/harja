@@ -48,3 +48,60 @@ INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskila
 -- Suolasakon suuruus ja sidottava indeksi
 INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka)
      VALUES (30.0, 2014, 8, 'MAKU 2010', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+
+-- Maksuerät ja kustannussuunnitelma
+-- Maksuerät Oulun alueurakalle
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'kokonaishintainen', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'yksikkohintainen', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'lisatyo', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'indeksi', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'bonus', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'sakko', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'akillinen-hoitotyo', 'Oulu Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), 'muu', 'Oulu Talvihoito TP ME 2014-2019' );
+
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'kokonaishintainen', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'yksikkohintainen', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'lisatyo', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'indeksi', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'bonus', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'sakko', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'akillinen-hoitotyo', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'), 'muu', 'Oulu Liikenneympäristön hoito TP ME 2014-2019' );
+
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'kokonaishintainen', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'yksikkohintainen', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'lisatyo', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'indeksi', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'bonus', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'sakko', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'akillinen-hoitotyo', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 'muu', 'Oulu Sorateiden hoito TP ME 2014-2019' );
+
+-- Kustannussuunnitelmat Oulun alueurakalle
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019') AND tyyppi = 'muu'));
+
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'muu'));
+
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019') AND tyyppi = 'muu'));

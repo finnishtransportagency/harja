@@ -34,7 +34,6 @@
 
 (defn aikavali
   [valittu-aikavali-atom]
-  ; TODO Harjaa vastaava tyyli tälle
   [:span.label-ja-aikavali
    [:span.alasvedon-otsikko "Aikaväli"]
    [:div.aikavali-valinnat

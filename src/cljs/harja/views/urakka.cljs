@@ -10,6 +10,7 @@
             [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
+            [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
@@ -77,12 +78,18 @@
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
+     "Turvallisuus"
+     :turvallisuus
+     ^{:key "turvallisuus"}
+     [turvallisuus/turvallisuus ur]
+
+     "Laskutusyhteenveto"
+     :laskutusyhteenveto
+     ^{:key "laskutusyhteenveto"}
+     [laskutusyhteenveto/laskutusyhteenveto]
+
      "Maksuerät"
      :maksuerat
      ^{:key "maksuerat"}
      [maksuerat/maksuerat-listaus ur]
-
-     "Turvallisuus"
-     :turvallisuus
-     ^{:key "turvallisuus"}
-     [turvallisuus/turvallisuus ur]]))
+     ]))
