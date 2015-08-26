@@ -74,9 +74,9 @@
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
 
-(defn laske-tien-pituus [{loppuet :let loppuosa :losa}]
-  (if (and loppuet loppuosa)
-    (let [tulos (- loppuet loppuosa)]
+(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
+  (if (and alkuet loppuet)
+    (let [tulos (- loppuet alkuet)]
          (if (>= tulos 0)
            tulos
            0)) ; Tien pituus ei voi olla negatiivinen
