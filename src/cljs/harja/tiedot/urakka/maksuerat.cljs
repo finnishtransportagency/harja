@@ -17,7 +17,5 @@
 
 (def maksuerat (reaction<! [urakan-id (:id @nav/valittu-urakka)
                             sivu @u/urakan-valittu-valilehti]
-                           (when (and urakan-id (or
-                                                  (= sivu :maksuerat)
-                                                  (= sivu :laskutusyhteenveto)))
+                           (when (and urakan-id (= sivu :maksuerat))
                              (hae-urakan-maksuerat urakan-id))))

@@ -15,11 +15,17 @@
   [db user {:keys [urakka-id hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (laskutus-q/hae-laskutusyhteenvedon-tiedot db (konv/sql-date hk_alkupvm)
-                                             (konv/sql-date hk_loppupvm)
-                                             (konv/sql-date aikavali_alkupvm)
-                                             (konv/sql-date aikavali_loppupvm)
-                                             urakka-id))
+  (into []
+        (comp
+          (map #(konv/decimal->double % :kht_laskutettu_hoitokaudella_ennen_aikavalia))
+          (map #(konv/decimal->double % :kht_laskutetaan_aikavalilla))
+          (map #(konv/decimal->double % :yht_laskutettu_hoitokaudella_ennen_aikavalia))
+          (map #(konv/decimal->double % :yht_laskutetaan_aikavalilla)))
+              (laskutus-q/hae-laskutusyhteenvedon-tiedot db (konv/sql-date hk_alkupvm)
+                                              (konv/sql-date hk_loppupvm)
+                                              (konv/sql-date aikavali_alkupvm)
+                                              (konv/sql-date aikavali_loppupvm)
+                                              urakka-id)))
 
 (defrecord Raportit []
   component/Lifecycle
