@@ -70,7 +70,10 @@
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
 (defn laske-paikkausprosentti [paikkausneliot tienpaallysteen-neliot]
-  (* (/ paikkausneliot tienpaallysteen-neliot) 100))
+  (if (and
+        (not (nil? tienpaallysteen-neliot))
+        (not= tienpaallysteen-neliot 0))
+    (* (/ paikkausneliot tienpaallysteen-neliot) 100)))
 
 (defn laske-tienpaallysteen-neliot [pituus tienpaallysteen-leveys]
   (* pituus tienpaallysteen-leveys))
@@ -271,7 +274,8 @@
                                                                                                                                                (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                                                   (laske-paikkausprosentti (:paikkausneliot rivi) (:paallysteen_neliot rivi)))}]
+                                                                                                                                   (laske-paikkausprosentti (:paikkausneliot rivi)
+                                                                                                                                                            (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
