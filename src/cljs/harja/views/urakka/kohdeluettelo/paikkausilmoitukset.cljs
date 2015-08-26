@@ -74,10 +74,12 @@
         (not (nil? tienpaallysteen-neliot))
         (not= tienpaallysteen-neliot 0))
     (let [tulos (* (/ paikkausneliot tienpaallysteen-neliot) 100)]
-      (.toFixed tulos 2))))
+      (.toFixed tulos 0))))
 
 (defn laske-tienpaallysteen-neliot [pituus tienpaallysteen-leveys]
-  (* pituus tienpaallysteen-leveys))
+  (let [pituus (or pituus 0)
+        tienpaallysteen-leveys (or tienpaallysteen-leveys 0)]
+    (* pituus tienpaallysteen-leveys)))
 
 
 (defn kasittely
@@ -261,8 +263,8 @@
                               (and (not= :lukittu (:tila @lomakedata))
                                    (not= :hyvaksytty (:paatos @lomakedata))
                                    (false? @lomake-lukittu-muokkaukselta?)))
-              :virheet toteutuneet-osoitteet-virheet
-              :uusi-id (inc (count @toteutuneet-osoitteet))}
+              :virheet      toteutuneet-osoitteet-virheet
+              :uusi-id      (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -287,8 +289,8 @@
               :voi-lisata?  false
               :voi-kumota?  false
               :voi-poistaa? (constantly false)
-              :virheet toteutuneet-maarat-virheet
-              :uusi-id (inc (count @toteutuneet-maarat))}
+              :virheet      toteutuneet-maarat-virheet
+              :uusi-id      (inc (count @toteutuneet-maarat))}
              [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
                :hae     (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
