@@ -70,8 +70,7 @@
            :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                         (:tehtava rivi))
                                                                       (vals (grid/hae-muokkaustila %)))))
-           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)
-           :tunniste     :tehtava}
+           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)}
 
           [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
             :tyyppi        :valinta
