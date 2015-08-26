@@ -14,7 +14,7 @@
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
@@ -123,6 +123,12 @@
                         toimenpiteet-ja-tehtavat @toimenpiteet-ja-tehtavat
                         loppupvm (second valittu-hoitokausi)
                         tehtavien-rivit (get @sopimuksen-tyot-hoitokausittain [alkupvm loppupvm])
+                        nelostason-tpt (map #(nth % 3) toimenpiteet-ja-tehtavat)
+                        kirjatut-tehtavat (into #{} (map :tehtava tehtavien-rivit))
+                        tyhjat-tyot (mapv #(luo-tyhja-tyo % ur valittu-hoitokausi)
+                                         (filter (fn [tp]
+                                                   (not (kirjatut-tehtavat (:id tp))))
+                                                 nelostason-tpt))
                         toimenpiteen-tehtavat (filter (fn [{:keys [tehtava]}]
                                                         (case (:tpi_nimi valittu-toimenpide)
                                                           "Muut" (not-any? (fn [[t1 t2 t3 t4]]
@@ -133,7 +139,7 @@
                                                                     (= (:id t4) tehtava)
                                                                     (= (:koodi t2) (:t2_koodi valittu-toimenpide))))
                                                                 toimenpiteet-ja-tehtavat)))
-                                                      tehtavien-rivit)]
+                                                      (concat tehtavien-rivit tyhjat-tyot))]
                     toimenpiteen-tehtavat))
 
         kaikkien-hoitokausien-kustannukset

@@ -58,7 +58,7 @@
            ^{:key "yksikkohintaiset-tyot"}
            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
 
-           "Muut työt"
+           "Muutos- ja lisätyöt"
            :muut
            ^{:key "muut-tyot"}
            [muut-tyot/muut-tyot]

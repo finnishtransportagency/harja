@@ -30,7 +30,7 @@
    "Yksikköhintaiset työt" :yksikkohintaiset-tyot
    [yks-hint-tyot/yksikkohintaisten-toteumat]
 
-   "Muut työt" :muut-tyot
+   "Muutos- ja lisätyöt" :muut-tyot
    [muut-tyot/muut-tyot-toteumat]
 
    "Materiaalit" :materiaalit
