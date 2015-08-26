@@ -69,6 +69,13 @@
   [tyon-hinta alv]
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
+(defn laske-paikkausprosentti [paikkausneliot tienpaallysteen-neliot]
+  (* (/ paikkausneliot tienpaallysteen-neliot) 100))
+
+(defn laske-tienpaallysteen-neliot [pituus tienpaallysteen-leveys]
+  (* pituus tienpaallysteen-leveys))
+
+
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -257,11 +264,14 @@
               {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (paallystysilmoitukset/laske-tien-pituus rivi))}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                        (paallystysilmoitukset/laske-tien-pituus rivi))}
               {:otsikko "Tienpäällysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                                               (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                                   (laske-paikkausprosentti (:paikkausneliot rivi) (:paallysteen_neliot rivi)))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
