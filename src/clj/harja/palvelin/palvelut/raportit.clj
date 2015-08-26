@@ -49,13 +49,12 @@
 
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
-                         (hae-laskutusyhteenvedon-tiedot db user tiedot))
-     
-    this))
+                         (hae-laskutusyhteenvedon-tiedot db user tiedot)))
+    this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-raportit
                      :suorita-raportti
-                     :laskutusyhteenveto)
+                     :hae-laskutusyhteenvedon-tiedot)
     this))
