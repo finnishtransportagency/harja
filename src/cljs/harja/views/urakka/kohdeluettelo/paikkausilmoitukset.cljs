@@ -73,7 +73,8 @@
   (if (and
         (not (nil? tienpaallysteen-neliot))
         (not= tienpaallysteen-neliot 0))
-    (* (/ paikkausneliot tienpaallysteen-neliot) 100)))
+    (let [tulos (* (/ paikkausneliot tienpaallysteen-neliot) 100)]
+      (.toFixed tulos 2))))
 
 (defn laske-tienpaallysteen-neliot [pituus tienpaallysteen-leveys]
   (* pituus tienpaallysteen-leveys))
@@ -273,7 +274,7 @@
               {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                                (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                    (laske-paikkausprosentti (:paikkausneliot rivi)
                                                                                                                                                             (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
