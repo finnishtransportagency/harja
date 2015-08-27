@@ -83,8 +83,19 @@
                                                            :M :L
                                                            :L :L))}]]))
 
-(defn kartan-yleiset-kontrollit []
-  [:span.kartan-kontrollit.kartan-yleiset-kontrollit "jepajeejee"])
+(def kartan-yleiset-kontrollit-sisalto (atom nil))
+
+(defn kartan-yleiset-kontrollit
+  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+    [:span.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+
+(defn aseta-yleiset-kontrollit [uusi-sisalto]
+  (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
+
+(defn tyhjenna-yleiset-kontrollit []
+  (reset! kartan-yleiset-kontrollit-sisalto nil))
 
 (defn nayta-popup!
   "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
