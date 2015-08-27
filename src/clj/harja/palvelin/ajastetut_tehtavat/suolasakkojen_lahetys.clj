@@ -1,4 +1,5 @@
 (ns harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
+  "Suolasakkojen lähetys tehdään touko-, kesä-, heinä-, syys- ja elokuun ensimmäisenä päivänä klo 02:00."
   (:require [chime :refer [chime-ch]]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
@@ -15,8 +16,7 @@
                   (withZone (DateTimeZone/forID "Europe/Helsinki")))
                 (t/years 1)))
 
-(def tee-aikataulu
-  "Suolasakkojen lähetys tehdään touko-, kesä-, heinä-, syys- ja elokuun ensimmäisenä päivänä klo 02:00"
+(defn tee-aikataulu []
   (concat
     (tee-sekvenssi-vuoden-ajankohdalle 5 1 2)
     (tee-sekvenssi-vuoden-ajankohdalle 6 1 2)
