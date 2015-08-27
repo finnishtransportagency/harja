@@ -77,14 +77,14 @@
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
-  (toteumat/poista-toteuma_materiaali-toteuma-idlla! db toteuma-id)
+  (toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id) (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
-      (toteumat/luo-toteuma_materiaali<!
+      (toteumat/luo-toteuma-materiaali<!
         db
         toteuma-id
         materiaalikoodi-id

@@ -35,7 +35,7 @@
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
         (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
-      (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
+      (toteumat/luo-reitti-materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
@@ -51,7 +51,6 @@
       (luo-reitin-tehtavat db reittipiste reittipiste-id)
       (log/debug "Aloitetaan reittipisteen materiaalien tallennus.")
       (luo-reitin-materiaalit db reittipiste reittipiste-id))))
-
 
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Selvitetään toteumaan kuuluvat reittipisteet")
