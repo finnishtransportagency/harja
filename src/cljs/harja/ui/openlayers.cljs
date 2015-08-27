@@ -347,7 +347,7 @@
         (swap! nuolityylit conj
                (ol.style.Style.
                  #js {:geometry (ol.geom.Point. (clj->js end))
-                      :image    (ol.style.Icon. #js {:src            "images/tyokone.png"
+                      :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
                                                      :anchor         #js [0.75 0.75]
                                                      :rotateWithView false
                                                      :rotation       (- (js/Math.atan2
