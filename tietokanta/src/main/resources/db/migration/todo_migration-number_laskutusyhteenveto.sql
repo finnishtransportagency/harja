@@ -22,6 +22,12 @@ DECLARE
   khti RECORD;
   aikavalin_kht RECORD;
 
+  yht_laskutettu NUMERIC;
+  yht_laskutettu_ind_kor NUMERIC;
+  yht_laskutetaan NUMERIC;
+  yht_laskutetaan_ind_kor NUMERIC;
+  yhti RECORD;
+
 BEGIN
   -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
   FOR t IN SELECT tpk2.nimi as nimi, tpi.id as tpi
@@ -32,6 +38,10 @@ BEGIN
   LOOP
     kht_laskutettu := 0.0;
     kht_laskutettu_ind_kor := 0.0;
+
+    yht_laskutettu := 0.0;
+    yht_laskutettu_ind_kor := 0.0;
+
 
 
     FOR khti IN SELECT kuukauden_indeksikorotus(to_date(kht.vuosi||'/'||kht.kuukausi||'/1', 'YYYY/MM/DD'), 'MAKU 2010', kht.summa) AS ind,
@@ -60,6 +70,7 @@ BEGIN
           AND maksupvm <= hk_loppupvm
           AND maksupvm >= aikavali_alkupvm
           AND maksupvm <= aikavali_loppupvm;
+
 
     RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor, 1.0, 1.0, 1.0, 1.0);
   END LOOP;
