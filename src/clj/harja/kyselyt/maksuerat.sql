@@ -317,6 +317,12 @@ UPDATE maksuera
 SET tila = 'virhe'
 WHERE numero = :numero;
 
+-- name: merkitse-tyypin-maksuerat-likaisiksi!
+-- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi
+UPDATE maksuera
+SET likainen = TRUE
+WHERE tyyppi = :tyyppi::maksueratyyppi;
+
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
