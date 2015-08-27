@@ -48,8 +48,7 @@
                                 toteuma-id
                                 (pvm-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
                                 (get-in reittipiste [:reittipiste :koordinaatit :x])
-                                (get-in reittipiste [:reittipiste :koordinaatit :y])
-                                (get-in reittipiste [:reittipiste :koordinaatit :z])))]
+                                (get-in reittipiste [:reittipiste :koordinaatit :y])))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
       (luo-reitin-tehtavat db kirjaaja reittipiste reittipiste-id)

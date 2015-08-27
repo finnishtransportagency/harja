@@ -61,8 +61,7 @@
     toteuma-id
     nil
     (get-in sijainti [:koordinaatit :x])
-    (get-in sijainti [:koordinaatit :y])
-    (get-in sijainti [:koordinaatit :z])))
+    (get-in sijainti [:koordinaatit :y])))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")
