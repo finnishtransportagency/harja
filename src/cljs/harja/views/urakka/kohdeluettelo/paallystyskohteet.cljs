@@ -111,12 +111,7 @@
                                :arvonvahennykset         arvonvahennykset-yhteensa
                                :bitumi_indeksi           bitumi-indeksi-yhteensa
                                :kaasuindeksi             kaasuindeksi-yhteensa
-                               :kokonaishinta            kokonaishinta}]))
-        valmiit-kohdenumerot-set (reaction (let [rivit (filter #(not (neg? (:id %))) @kohderivit)
-                                                 kohdenumerot (into #{} (map #(:kohdenumero %) rivit))]
-                                             (log "PÄÄ rivit: " (pr-str rivit))
-                                             (log "PÄÄ kohdenumerot: " (pr-str kohdenumerot))
-                                             kohdenumerot))]
+                               :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
       (komp/lippu paallystys-tai-paikkausnakymassa?)
@@ -141,8 +136,7 @@
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
             [{:tyyppi :vetolaatikon-tila :leveys "5%"}
               {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
-               :validoi     [[:ei-tyhja "Anna arvo"]
-                             [:uusi-arvo-ei-setissa valmiit-kohdenumerot-set "Kohdenumero on jo olemassa!"]]
+               :validoi [[:ei-tyhja  "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]
                :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
               {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%" :validoi [[:ei-tyhja "Anna arvo"]]}
               (when paallystysnakyma?
@@ -177,7 +171,7 @@
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
             [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-             {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"  :validoi [[:ei-tyhja  "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
              {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%" :validoi [[:ei-tyhja "Anna arvo"]]}
              (when paallystysnakyma?
                {:otsikko "Tarjoushinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]})
