@@ -67,6 +67,8 @@
            :direction (- (suunta-radiaaneina tyokone))
            :img "images/tyokone.png"}))
 
+(defmethod kartalla-xf :default [_])
+
 (def nykytilanteen-asiat-kartalla
   (reaction
     @haetut-asiat
