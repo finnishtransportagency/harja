@@ -9,24 +9,20 @@
             [chime :refer [chime-at]])
   (:import (org.joda.time DateTimeZone)))
 
+(defn tee-sekvenssi-vuoden-ajankohdalle [kuukausi paiva tunti]
+  (periodic-seq (..
+                  (t/date-time (t/year (t/now)) kuukausi paiva tunti)
+                  (withZone (DateTimeZone/forID "Europe/Helsinki")))
+                (t/years 1)))
+
 (def tee-aikataulu
   "Suolasakkojen lähetys tehdään touko-, kesä-, heinä-, syys- ja elokuun ensimmäisenä päivänä klo 02:00"
   (concat
-    (periodic-seq (.. (t/date-time (t/year (t/now)) 5 1 2)
-                      (withZone (DateTimeZone/forID "Europe/Helsinki")))
-                  (t/years 1))
-    (periodic-seq (.. (t/date-time (t/year (t/now)) 6 1 2)
-                      (withZone (DateTimeZone/forID "Europe/Helsinki")))
-                  (t/years 1))
-    (periodic-seq (.. (t/date-time (t/year (t/now)) 7 1 2)
-                      (withZone (DateTimeZone/forID "Europe/Helsinki")))
-                  (t/years 1))
-    (periodic-seq (.. (t/date-time (t/year (t/now)) 8 1 2)
-                      (withZone (DateTimeZone/forID "Europe/Helsinki")))
-                  (t/years 1))
-    (periodic-seq (.. (t/date-time (t/year (t/now)) 9 1 2)
-                      (withZone (DateTimeZone/forID "Europe/Helsinki")))
-                  (t/years 1))))
+    (tee-sekvenssi-vuoden-ajankohdalle 5 1 2)
+    (tee-sekvenssi-vuoden-ajankohdalle 6 1 2)
+    (tee-sekvenssi-vuoden-ajankohdalle 7 1 2)
+    (tee-sekvenssi-vuoden-ajankohdalle 8 1 2)
+    (tee-sekvenssi-vuoden-ajankohdalle 9 1 2)))
 
 (defn merkitse-sakkomaksuerat-likaisiksi [db]
   (maksuerat/merkitse-tyypin-maksuerat-likaisiksi! db "sakko"))
@@ -38,7 +34,7 @@
               (log/debug "Merkitään suolasakot likaisiksi seuraavaa Sampo-lähetystä varten")
               (merkitse-sakkomaksuerat-likaisiksi (:db this)))))
 
-(defrecord TyokoneenseurantaPuhdistus []
+(defrecord SuolasakkojenLahetys []
   component/Lifecycle
   (start [this]
     (assoc this :suolasakkojen-lahetys-tehtava (tee-suolasakkojen-lahetys-tehtava this))
