@@ -158,6 +158,11 @@
           ;; Liitä kommentti havaintoon
           (havainnot/liita-kommentti<! c id (:id kommentti))))
 
+      ;; Liitä liite havaintoon
+      (when-let [uusi-liite (:uusi-liite havainto)]
+        (log/info "UUSI LIITE: " uusi-liite)
+        (havainnot/liita-liite<! c id (:id uusi-liite)))
+
 
       (when (:paatos (:paatos havainto))
         ;; Urakanvalvoja voi kirjata päätöksen

@@ -204,6 +204,10 @@ WHERE id = :id;
 -- Liittää havaintoon uuden kommentin
 INSERT INTO havainto_kommentti (havainto, kommentti) VALUES (:havainto, :kommentti);
 
+-- name: liita-liite<!
+-- Liittää havaintoon uuden liitteen
+INSERT INTO havainto_liite (havainto, liite) VALUES (:havainto, :liite);
+
 -- name: liita-havainto<!
 -- Liittää havaintoon uuden liitteen
 INSERT INTO havainto_liite (havainto, liite) VALUES (:havainto, :liite);
