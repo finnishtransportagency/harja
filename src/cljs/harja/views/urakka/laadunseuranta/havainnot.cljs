@@ -308,7 +308,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                               {:ikoni        (ikonit/tallenna)
                                :disabled     (not (validi-havainto? @havainto))
                                :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
-            
+
             [(when-not osa-tarkastusta?
                {:otsikko    "Havainnon pvm ja aika"
                 :tyyppi     :pvm-aika
