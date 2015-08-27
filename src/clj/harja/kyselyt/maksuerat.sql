@@ -93,6 +93,7 @@ SELECT
       (SELECT (sum(sa.maara))
        FROM sanktio sa
        WHERE sa.toimenpideinstanssi = tpi.id)
+    -- Lisää suolasakkojen stored procedure kutsu
 
   WHEN m.tyyppi = 'muu'
     THEN
