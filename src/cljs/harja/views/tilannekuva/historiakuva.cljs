@@ -105,7 +105,7 @@
    aikasuodattimet
    toteumat])
 
-(defonce hallintapaneeli (atom {1 {:auki false :otsikko "Esimerkki" :sisalto [suodattimet]}}))
+(defonce hallintapaneeli (atom {1 {:auki true :otsikko "Historiakuva" :sisalto [suodattimet]}}))
 
 (defn historiakuva []
   (komp/luo

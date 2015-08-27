@@ -58,7 +58,7 @@
                       [aikavalinta]
                       [haettavien-asioiden-valinta]])
 
-(defonce hallintapaneeli (atom {1 {:auki false :otsikko "Nykytilanne" :sisalto suodattimet}}))
+(defonce hallintapaneeli (atom {1 {:auki true :otsikko "Nykytilanne" :sisalto suodattimet}}))
 
 (defn nykytilanne []
   (komp/luo
