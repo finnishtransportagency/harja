@@ -20,12 +20,16 @@
   }
 }
 
+.kartan-kontrollit {
+  position: absolute;
+  z-index: 1; //kartan päällä > 0
+}
+
 .kartan-koko-kontrollit {
   padding-right: 15px;
-  position: absolute;
   right: 0;
   top: 0;
-  z-index: 1; //kartan päällä > 0
+
   button {
     height: 39px;
     width: 44px;
@@ -43,6 +47,11 @@
   .kartta-kontrolli {
     font-size: 32px;
   }
+}
+
+.kartan-yleiset-kontrollit {
+  left: 0;
+  top: 60px;
 }
 
 .kulma-kartta {

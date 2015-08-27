@@ -8,7 +8,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.views.tilannekuva.tyokoneet :as tyokoneet]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 (defn aikavalinta []
@@ -49,8 +50,9 @@
 (defonce hallintapaneeli (atom {1 {:auki false :otsikko "Nykytilanne" :sisalto suodattimet}}))
 
 (defn nykytilanne []
-  (komp/luo
+  (komp/luo {:component-will-mount   (fn [_]
+                                       (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+             :component-will-unmount (fn [_]
+                                       (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
-    (fn []
-      [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                        :leijuva?             300}])))
+    (constantly nil)))
