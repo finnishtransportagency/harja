@@ -53,15 +53,10 @@
 
 (defn tallenna-sijainti [db sijainti toteuma-id]
   (log/debug "Tuhotaan toteuman vanha sijainti")
-  (toteumat/poista-reittipiste-toteuma-idlla!
-    db
-    toteuma-id)
-  (toteumat/luo-reittipiste<!
-    db
-    toteuma-id
-    nil
-    (get-in sijainti [:koordinaatit :x])
-    (get-in sijainti [:koordinaatit :y])))
+  (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
+  (toteumat/luo-reittipiste<! db toteuma-id nil
+                              (get-in sijainti [:koordinaatit :x])
+                              (get-in sijainti [:koordinaatit :y])))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")
@@ -82,9 +77,7 @@
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
-  (toteumat/poista-toteuma_materiaali-toteuma-idlla!
-    db
-    toteuma-id)
+  (toteumat/poista-toteuma_materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")

@@ -33,12 +33,9 @@
   (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
     (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
-      (if (nil? materiaalikoodi-id) (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
-      (toteumat/luo-reitti_materiaali<!
-        db
-        reittipiste-id
-        materiaalikoodi-id
-        (get-in materiaali [:maara :maara])))))
+      (if (nil? materiaalikoodi-id)
+        (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
+      (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
@@ -61,17 +58,11 @@
   (let [reittipisteet (toteumat/hae-toteuman-reittipisteet-idlla db toteuma-id)]
     (log/debug "Poistetaan reittipisteiden tehtävät & materiaalit")
     (doseq [reittipiste reittipisteet]
-      (toteumat/poista-reitti_tehtava-reittipiste-idlla!
-        db
-        (:id reittipiste))
-      (toteumat/poista-reitti_materiaali-reittipiste-idlla!
-        db
-        (:id reittipiste)))
+      (toteumat/poista-reitti_tehtava-reittipiste-idlla! db (:id reittipiste))
+      (toteumat/poista-reitti_materiaali-reittipiste-idlla! db (:id reittipiste)))
 
     (log/debug "Poistetaan reittipisteet")
-    (toteumat/poista-reittipiste-toteuma-idlla!
-      db
-      toteuma-id)))
+    (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)))
 
 (defn tallenna-toteuma-ja-reitti [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
@@ -83,14 +74,15 @@
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman materiaalien tallennus")
       (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman vanhan reitin (jos sellainen on) poistaminen")
+      (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
       (poista-toteuman-reitti transaktio toteuma-id)
       (log/debug "Aloitetaan reitin tallennus")
       (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
-    (log/debug "Kirjataan uusi reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
+    (log/debug "Kirjataan reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
@@ -101,7 +93,12 @@
     (julkaise-reitti
       http :lisaa-reittitoteuma
       (POST "/api/urakat/:id/toteumat/reitti" request
-        (kasittele-kutsu db integraatioloki :lisaa-reittitoteuma request skeemat/+reittitoteuman-kirjaus+ skeemat/+kirjausvastaus+
+        (kasittele-kutsu db
+                         integraatioloki
+                         :lisaa-reittitoteuma
+                         request
+                         skeemat/+reittitoteuman-kirjaus+
+                         skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
