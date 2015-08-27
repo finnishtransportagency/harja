@@ -8,8 +8,10 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
-            [harja.views.tilannekuva.tyokoneet :as tyokoneet]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.views.kartta :as kartta]
+            [clojure.string :as str]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 (defn aikavalinta []
@@ -72,3 +74,15 @@
     (fn []
       [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
                                         :leijuva?             300}])))
+
+(tapahtumat/kuuntele! :tyokone-klikattu
+                      (fn [tapahtuma]
+                        (kartta/nayta-popup! (:sijainti tapahtuma)
+                                             [:div.kartta-tyokone-popup
+                                              [:p [:b "Työkone"]]
+                                              [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
+                                              [:div "Organisaatio: " (:organisaationimi tapahtuma)]
+                                              [:div "Urakka: " (:urakkanimi tapahtuma)]
+                                              [:div "Tehtävät: "
+                                               (let [tehtavat (str/join "," (:tehtavat tapahtuma))]
+                                                 [:span tehtavat])]])))
