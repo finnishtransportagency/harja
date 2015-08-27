@@ -1,20 +1,13 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+  (:require [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.materiaalit :as materiaalit]
-            [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.toteumat :as toteumat]
-            [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc])
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 
