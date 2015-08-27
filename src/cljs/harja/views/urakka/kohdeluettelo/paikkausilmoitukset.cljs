@@ -334,11 +334,15 @@
                                                                                                                           :paikkauskohde-id (:paikkauskohde_id rivi)})}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
-          (fn [toteuma] (case (:tila toteuma)
+          (juxt (fn [toteuma] (case (:tila toteuma)
                           :lukittu 0
                           :valmis 1
                           :aloitettu 3
                           4))
+                (fn [toteuma] (case (:paatos toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3)))
           @toteumarivit)]])))
 
 (defn paikkausilmoitukset []
