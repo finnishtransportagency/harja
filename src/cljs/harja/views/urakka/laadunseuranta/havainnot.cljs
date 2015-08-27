@@ -88,7 +88,8 @@
   (case tekija
     :tilaaja "Tilaaja"
     :urakoitsija "Urakoitsija"
-    :konsultti "Konsultti"))
+    :konsultti "Konsultti"
+    "Ei tiedossa"))
 
 
 (defn havaintolistaus
