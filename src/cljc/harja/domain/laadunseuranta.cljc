@@ -41,6 +41,7 @@
    (s/optional-key :urakka)            s/Any
    (s/optional-key :tekijanimi)        s/Str
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
+   (s/optional-key :uusi-liite)    s/Any
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
    (s/optional-key :id) s/Int
    (s/optional-key :paatos) Paatos
