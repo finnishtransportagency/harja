@@ -54,44 +54,52 @@
 
 (defmulti kartalla-xf :tyyppi)
 (defmethod kartalla-xf :ilmoitus [ilmoitus]
-  (assoc ilmoitus
+  [(assoc ilmoitus
     :type :ilmoitus
-    :alue (oletusalue ilmoitus)))
+    :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
-  (assoc havainto
+  [(assoc havainto
     :type :havainto
-    :alue (oletusalue havainto)))
+    :alue (oletusalue havainto))])
 
 (defmethod kartalla-xf :tarkastus [tarkastus]
-  (assoc tarkastus
+  [(assoc tarkastus
     :type :tarkastus
-    :alue (oletusalue tarkastus)))
+    :alue (oletusalue tarkastus))])
 
 (defmethod kartalla-xf :toteuma [toteuma]
-  (assoc toteuma
-    :type :toteuma
-    :alue {
-           :type   :arrow-line
-           :points (mapv :sijainti (sort-by
-                                     :aika
-                                     pvm/ennen?
-                                     (:reittipisteet toteuma)))}))
+  (conj
+    (mapv
+      (fn [rp]
+        {:type :reittipiste
+         :alue {:type :clickable-area
+                :coordinates (:sijainti rp)
+                :zindex 3}})
+      (:reittipisteet toteuma))
+    (assoc toteuma
+     :type :toteuma
+     :alue {
+            :type       :arrow-line
+            :points     (mapv :sijainti (sort-by
+                                          :aika
+                                          pvm/ennen?
+                                          (:reittipisteet toteuma)))})))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
-  (assoc tp
+  [(assoc tp
     :type :turvallisuuspoikkeama
-    :alue (oletusalue tp)))
+    :alue (oletusalue tp))])
 
 (defmethod kartalla-xf :paallystystyo [pt]
-  (assoc pt
+  [(assoc pt
     :type :paallystystyo
-    :alue (oletusalue pt)))
+    :alue (oletusalue pt))])
 
 (defmethod kartalla-xf :paikkaustyo [pt]
-  (assoc pt
+  [(assoc pt
     :type :paikkaustyo
-    :alue (oletusalue pt)))
+    :alue (oletusalue pt))])
 
 (defmethod kartalla-xf :default [_])
 
@@ -99,7 +107,7 @@
   (reaction
     @haetut-asiat
     (when @taso-historiakuva
-      (into [] (map kartalla-xf) @haetut-asiat))))
+      (into [] (mapcat kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []
   {:hallintayksikko @nav/valittu-hallintayksikko-id

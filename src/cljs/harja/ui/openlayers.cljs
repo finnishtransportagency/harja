@@ -319,16 +319,17 @@
 (defmulti luo-feature :type)
 
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
-  (doto feature
-    (.setStyle (ol.style.Style.
-                 #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
-                                                              :opacity 0.5}))
-                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                     :width (or (:width stroke) 1)})
-                      ;; Default zindex asetetaan harja.views.kartta:ssa.
-                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
-                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                      :zIndex (or zindex 0)}))))
+  (when-not (= :clickable-area (:type geom))
+    (doto feature
+      (.setStyle (ol.style.Style.
+                   #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
+                                                                :opacity 0.5}))
+                        :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
+                                                       :width (or (:width stroke) 1)})
+                        ;; Default zindex asetetaan harja.views.kartta:ssa.
+                        ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                        ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                        :zIndex (or zindex 0)})))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
@@ -348,23 +349,36 @@
                (ol.style.Style.
                  #js {:geometry (ol.geom.Point. (clj->js end))
                       :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
-                                                     :anchor         #js [0.75 0.75]
+                                                     :anchor         #js [0.5 0.5]
+                                                     :opacity        1
+                                                     :scale          0.5
+                                                     :size           #js [32 32]
+                                                     :zIndex         6
                                                      :rotateWithView false
                                                      :rotation       (- (js/Math.atan2
                                                                           (- (second end) (second start))
                                                                           (- (first end) (first start))))})}))
-        false)) ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
+        false))                                             ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
 
     (log @nuolityylit)
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
 
-(defmethod luo-feature :point [{:keys [coordinates color]}]
+(defmethod luo-feature :point [{:keys [coordinates]}]
   (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))}))
 
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
+
+(defmethod luo-feature :clickable-area [{:keys [coordinates zindex]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style. #js {:image  (ol.style.Icon. #js {:src          "images/tyokone.png"
+                                                                  :offsetOrigin "top-left"
+                                                                  :anchor       #js [0.5 0.5]
+                                                                  :opacity      1
+                                                                  :size         #js [62 62]})
+                                     :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
