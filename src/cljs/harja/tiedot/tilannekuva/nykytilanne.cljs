@@ -73,7 +73,7 @@
   (reaction
     @haetut-asiat
     (when @taso-nykytilanne
-      (into [] (map kartalla-xf) (first @haetut-asiat)))))
+      (into [] (map kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []
   {:hallintayksikko @nav/valittu-hallintayksikko-id
@@ -86,7 +86,6 @@
                                         "0-24h" (t/hours 24)))})
 
 (defn hae-asiat []
-  (log "ASD Hae!")
   (go
     (let [yhdista (fn [& tulokset]
                     (apply (comp vec concat) (remove k/virhe? tulokset)))
