@@ -18,11 +18,10 @@ DECLARE
   kht_laskutettu NUMERIC;
   kht_laskutettu_ind_kor NUMERIC;
   kht_laskutetaan NUMERIC;
+  kht_laskutetaan_ind_kor NUMERIC;
   khti RECORD;
-  yht_laskutettu NUMERIC;
-  yht_laskutettu_ind_kor NUMERIC;
-  yht_laskutetaan NUMERIC;
-  yhti RECORD;
+  aikavalin_kht RECORD;
+
 BEGIN
   -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
   FOR t IN SELECT tpk2.nimi as nimi, tpi.id as tpi
@@ -46,7 +45,7 @@ BEGIN
       kht_laskutettu_ind_kor := kht_laskutettu_ind_kor + khti.ind;
     END LOOP;
 
-    SELECT SUM(summa) INTO kht_laskutetaan
+    SELECT summa, vuosi, kuukausi INTO aikavalin_kht
       FROM kokonaishintainen_tyo
      WHERE toimenpideinstanssi = t.tpi
        AND maksupvm >= hk_alkupvm
@@ -54,7 +53,15 @@ BEGIN
        AND maksupvm >= aikavali_alkupvm
        AND maksupvm <= aikavali_loppupvm;
 
-    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, kht_laskutetaan, 1.0, 1.0, 1.0, 1.0, 1.0);
+    SELECT kuukauden_indeksikorotus(to_date(aikavalin_kht.vuosi||'/'||aikavalin_kht.kuukausi||'/1', 'YYYY/MM/DD'), 'MAKU 2010', aikavalin_kht.summa) INTO kht_laskutetaan_ind_kor
+    FROM kokonaishintainen_tyo
+    WHERE toimenpideinstanssi = t.tpi
+          AND maksupvm >= hk_alkupvm
+          AND maksupvm <= hk_loppupvm
+          AND maksupvm >= aikavali_alkupvm
+          AND maksupvm <= aikavali_loppupvm;
+
+    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor, 1.0, 1.0, 1.0, 1.0);
   END LOOP;
 
 END;
