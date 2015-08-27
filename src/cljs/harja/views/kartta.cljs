@@ -127,7 +127,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                (nav/valitse-hallintayksikko item))
                          :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
                                (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                         (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+                         (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))
+                                                  :klikkaus (js->clj (.-coordinate event)))))))
       :tooltip-fn  (fn [geom]
                      (and geom
                           [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
