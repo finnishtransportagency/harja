@@ -19,7 +19,7 @@
   (let [vastauksen-data {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn luo-reitin-tehtavat [db kirjaaja reittipiste reittipiste-id]
+(defn luo-reitin-tehtavat [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin tehtävät")
   (doseq [tehtava (get-in reittipiste [:reittipiste :tehtavat])]
     (toteumat/luo-reitti_tehtava<!
@@ -28,7 +28,7 @@
       (get-in tehtava [:tehtava :id])
       (get-in tehtava [:tehtava :maara :maara]))))
 
-(defn luo-reitin-materiaalit [db kirjaaja reittipiste reittipiste-id]
+(defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
   (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
     (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
@@ -40,7 +40,7 @@
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])))))
 
-(defn luo-reitti [db kirjaaja reitti toteuma-id]
+(defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
   (doseq [reittipiste reitti]
     (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
@@ -51,9 +51,9 @@
                                 (get-in reittipiste [:reittipiste :koordinaatit :y])))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
-      (luo-reitin-tehtavat db kirjaaja reittipiste reittipiste-id)
+      (luo-reitin-tehtavat db reittipiste reittipiste-id)
       (log/debug "Aloitetaan reittipisteen materiaalien tallennus.")
-      (luo-reitin-materiaalit db kirjaaja reittipiste reittipiste-id))))
+      (luo-reitin-materiaalit db reittipiste reittipiste-id))))
 
 
 (defn poista-toteuman-reitti [db toteuma-id]
@@ -86,7 +86,7 @@
       (log/debug "Aloitetaan toteuman vanhan reitin (jos sellainen on) poistaminen")
       (poista-toteuman-reitti transaktio toteuma-id)
       (log/debug "Aloitetaan reitin tallennus")
-      (luo-reitti transaktio kirjaaja reitti toteuma-id))))
+      (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
