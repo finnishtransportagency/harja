@@ -1,59 +1,17 @@
 -- Hakee ja laskee tietoja kannasta laskutusyhteenvetoa varten
+DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+ur INTEGER );
+DROP  TYPE laskutusyhteenveto_rivi;
+
+
+CREATE TYPE laskutusyhteenveto_rivi AS (nimi VARCHAR,
+  kht_laskutettu NUMERIC, kht_laskutettu_ind_kor NUMERIC,  kht_laskutetaan NUMERIC, kht_laskutetaan_ind_kor NUMERIC,
+  yht_laskutettu NUMERIC, yht_laskutettu_ind_kor NUMERIC,  yht_laskutetaan NUMERIC, yht_laskutetaan_ind_kor NUMERIC);
 
 CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
   ur         INTEGER)
-  RETURNS TABLE(nimi VARCHAR, kht_laskutettu NUMERIC, kht_laskutettu_ind_kor NUMERIC, kht_laskutetaan_aikavalilla NUMERIC) AS $$
-DECLARE
-  kerroin NUMERIC;
-BEGIN
-  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
-  RETURN QUERY SELECT
-                 tpk2.nimi,
-                 (SELECT SUM(summa)
-                  FROM kokonaishintainen_tyo
-                  WHERE toimenpideinstanssi = tpi.id
-                        AND maksupvm >= hk_alkupvm
-                        AND maksupvm <= hk_loppupvm
-                        AND maksupvm < aikavali_alkupvm)
-                   AS kht_laskutettu_hoitokaudella_ennen_aikavalia,
-
-                 (SELECT SUM(summa)
-                  FROM kokonaishintainen_tyo
-                  WHERE toimenpideinstanssi = tpi.id
-                        AND maksupvm >= hk_alkupvm
-                        AND maksupvm <= hk_loppupvm
-                        AND maksupvm >= aikavali_alkupvm
-                        AND maksupvm <= aikavali_loppupvm)
-                   AS kht_laskutetaan_aikavalilla
-
-               FROM toimenpideinstanssi tpi
-                 JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                 JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
-               WHERE tpi.urakka = ur;
-END;
-$$ LANGUAGE plpgsql;
-
-
-DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-ur INTEGER );
-
-SELECT *
-FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);
-
-
-DROP  TYPE laskyht_rivi;
-DROP FUNCTION laskyht(
-hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-ur         INTEGER);
-
-
-CREATE TYPE laskyht_rivi AS (nimi VARCHAR, kht_laskutettu NUMERIC, kht_laskutettu_ind_kor NUMERIC,  kht_laskutetaan NUMERIC);
-
-CREATE OR REPLACE FUNCTION laskyht(
-  hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-  ur         INTEGER)
-  RETURNS SETOF laskyht_rivi AS $$
+  RETURNS SETOF laskutusyhteenveto_rivi AS $$
 DECLARE
   kerroin NUMERIC;
   t RECORD;
@@ -61,6 +19,10 @@ DECLARE
   kht_laskutettu_ind_kor NUMERIC;
   kht_laskutetaan NUMERIC;
   khti RECORD;
+  yht_laskutettu NUMERIC;
+  yht_laskutettu_ind_kor NUMERIC;
+  yht_laskutetaan NUMERIC;
+  yhti RECORD;
 BEGIN
   -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
   FOR t IN SELECT tpk2.nimi as nimi, tpi.id as tpi
@@ -92,15 +54,21 @@ BEGIN
        AND maksupvm >= aikavali_alkupvm
        AND maksupvm <= aikavali_loppupvm;
 
-    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, kht_laskutetaan);
+    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, kht_laskutetaan, 1.0, 1.0, 1.0, 1.0, 1.0);
   END LOOP;
 
 END;
 $$ LANGUAGE plpgsql;
 
 
+-- ^ yllä tuotantokoodi ^
+-- Alla helppereitä
+
 SELECT *
-FROM laskyht('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);
+FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);
+
+
+
 
 
 SELECT kuukauden_indeksikorotus('2015-07-01', 'MAKU 2010', 123);
