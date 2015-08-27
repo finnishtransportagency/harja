@@ -103,4 +103,4 @@
       (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                       :lyhyt
                                                       :pitka)))
-      [:span])))
+      nil)))

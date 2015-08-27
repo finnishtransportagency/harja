@@ -55,5 +55,4 @@
              :component-will-unmount (fn [_]
                                        (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
-    (fn []
-      [:span])))
+    (constantly nil)))
