@@ -39,7 +39,7 @@
                                               res)))))
 
 (defonce naytettavat-toteumatyypit (reaction
-                                     (vec (set (map :nimi @toimenpidekoodit)))))
+                                     (vec (sort (set (map :nimi @toimenpidekoodit))))))
 
 (defonce valitut-toteumatyypit (atom #{}))
 
