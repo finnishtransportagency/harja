@@ -360,7 +360,6 @@
                                                                           (- (first end) (first start))))})}))
         false))                                             ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
 
-    (log @nuolityylit)
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 

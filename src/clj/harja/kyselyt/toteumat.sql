@@ -236,10 +236,15 @@ SELECT
   rt.id                           AS reittipiste_tehtava_id,
   rt.toimenpidekoodi              AS reittipiste_tehtava_toimenpidekoodi,
   rt.maara                        AS reittipiste_tehtava_maara,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS reittipiste_tehtava_toimenpide,
+
 
   rm.id                           AS reittipiste_materiaali_id,
   rm.materiaalikoodi              AS reittipiste_materiaali_materiaalikoodi,
-  rm.maara                        AS reittipiste_materiaali_maara
+  rm.maara                        AS reittipiste_materiaali_maara,
+  mk.nimi                         AS reittipiste_materiaali_nimi
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND t.alkanut >= :alkupvm
@@ -425,7 +430,8 @@ WHERE
 
 -- name: luo-reittipiste<!
 -- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti) VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y, :z)::POINT);
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y, :z) :: POINT);
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet

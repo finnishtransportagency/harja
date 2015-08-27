@@ -72,10 +72,11 @@
   (conj
     (mapv
       (fn [rp]
-        {:type :reittipiste
-         :alue {:type :clickable-area
-                :coordinates (:sijainti rp)
-                :zindex 3}})
+        (assoc rp
+          :type :reittipiste
+          :alue {:type        :clickable-area
+                 :coordinates (:sijainti rp)
+                 :zindex      3}))
       (:reittipisteet toteuma))
     (assoc toteuma
      :type :toteuma

@@ -8,7 +8,11 @@
             [harja.ui.yleiset :as yleiset]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [harja.ui.kentat :as kentat]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.views.kartta :as kartta]
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 
@@ -38,27 +42,27 @@
                                                                           :aina-joku-auki? true}])
 
 (defn muut-suodattimet []
-  [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot [:toimenpidepyynnot      ;; FIXME: formatteri, tai tämän Ö:t muuttuu O:ksi UI:ssa...
-                                    :kyselyt
-                                    :tiedoitukset
-                                    :turvallisuuspoikkeamat
-                                    :tarkastukset
-                                    :havainnot
-                                    :onnettomuudet
-                                    :paikkaustyot           ;; ... ja näiden kahden
-                                    :paallystystyot]
+  [kentat/tee-kentta {:tyyppi           :boolean-group
+                      :vaihtoehdot      [:toimenpidepyynnot ;; FIXME: formatteri, tai tämän Ö:t muuttuu O:ksi UI:ssa...
+                                         :kyselyt
+                                         :tiedoitukset
+                                         :turvallisuuspoikkeamat
+                                         :tarkastukset
+                                         :havainnot
+                                         :onnettomuudet
+                                         :paikkaustyot      ;; ... ja näiden kahden
+                                         :paallystystyot]
 
                       :vaihtoehto-nayta {
-                                         :toimenpidepyynnot "Toimenpidepyynnöt"
-                                         :kyselyt "Kyselyt"
-                                         :tiedoitukset "Tiedoitukset"
+                                         :toimenpidepyynnot      "Toimenpidepyynnöt"
+                                         :kyselyt                "Kyselyt"
+                                         :tiedoitukset           "Tiedoitukset"
                                          :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
-                                         :tarkastukset "Tarkastukset"
-                                         :havainnot "Havainnot"
-                                         :onnettomuudet "Onnettomuudet"
-                                         :paikkaustyot "Paikkaustyöt"
-                                         :paallystystyot "Päällystystyöt"
+                                         :tarkastukset           "Tarkastukset"
+                                         :havainnot              "Havainnot"
+                                         :onnettomuudet          "Onnettomuudet"
+                                         :paikkaustyot           "Paikkaustyöt"
+                                         :paallystystyot         "Päällystystyöt"
                                          }}
 
    (r/wrap
@@ -116,8 +120,52 @@
        (tiedot/lopeta-asioiden-haku))}
     (fn []
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
-                                                      :lyhyt
-                                                      :pitka)))
+                                                  :lyhyt
+                                                  :pitka)))
 
       [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
                                                  :leijuva?             300}])))
+
+(tapahtumat/kuuntele! :toteuma-klikattu
+                      (fn [tapahtuma]
+                        (log (pr-str (dissoc tapahtuma :reittipisteet)))
+                        (log (pr-str (:tehtava tapahtuma)))
+                        (log (pr-str (get-in tapahtuma [:tehtava :id])))
+                        (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+                                             [:div.kartta-toteuma-popup
+                                              [:p [:b "Toteuma"]]
+                                              [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                              (when (:suorittaja tapahtuma)
+                                                [:span
+                                                 [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                                              (when-not (empty? (:tehtavat tapahtuma))
+                                                (doall
+                                                  (for [tehtava (:tehtavat tapahtuma)]
+                                                        [:span
+                                                         [:p "Toimenpide: " (:toimenpide tehtava)]
+                                                         [:p "Määrä: " (:maara tehtava)]
+                                                         [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                                         [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                                              (when-not (empty? (:materiaalit tapahtuma))
+                                                (doall
+                                                  (for [toteuma (:materiaalit tapahtuma)]
+                                                    [:span
+                                                     [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                     [:p "Määrä: " (:maara toteuma)]])))
+                                              (when (:lisatieto tapahtuma)
+                                                [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
+
+(tapahtumat/kuuntele! :reittipiste-klikattu
+                      (fn [tapahtuma]
+                        (kartta/nayta-popup! (:sijainti tapahtuma)
+                                             [:div.kartta-reittipiste-popup
+                                              [:p [:b "Reittipiste"]]
+                                              [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
+                                              (when (get-in tapahtuma [:tehtava :id])
+                                                [:span
+                                                 [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
+                                                 [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
+                                              (when (get-in tapahtuma [:materiaali :id])
+                                                [:span
+                                                 [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
+                                                 [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])])))
