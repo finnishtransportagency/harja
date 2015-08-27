@@ -28,6 +28,12 @@
           "type": "string",
           "maxLength": 4096,
           "required": true
+        },
+        "liitteet": {
+          "id": "urn:harja/liitteet",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     },

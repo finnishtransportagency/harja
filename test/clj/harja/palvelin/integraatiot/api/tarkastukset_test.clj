@@ -2,28 +2,23 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
             [clojure.data.json :as json]
-            [taoensso.timbre :as log]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut])
-  (:import (java.util Date)
-           (java.text SimpleDateFormat)))
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.palvelin.komponentit.liitteet :as liitteet])
+  (:import (java.util Date)))
 
 (def kayttaja "fastroi")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-pistetoteuma (component/using
-                                                               (api-tarkastukset/->Tarkastukset)
-                                                               [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :api-pistetoteuma (component/using
+                        (api-tarkastukset/->Tarkastukset)
+                        [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -49,20 +44,25 @@
     (is (str/blank? (slurp (:body vastaus))))
 
     ;; varmistetaan että tarkastus löytyy tietokannasta
-    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, stm.kiinteys "
+    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, stm.kiinteys, l.nimi "
                               "  FROM tarkastus t "
                               "       JOIN havainto h ON t.havainto=h.id "
                               "       JOIN soratiemittaus stm ON stm.tarkastus=t.id "
+                              "       JOIN havainto_liite hl ON h.id = hl.havainto"
+                              "       JOIN liite l ON hl.liite = l.id"
                               " WHERE t.ulkoinen_id = " id
                               "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["soratie" "jotain outoa" 3]) (str "Tarkastuksen data tallentunut ok " id)))
+      (is (= tark ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
 
     (let [t-id (ffirst (q (str "SELECT id FROM tarkastus"
                                " WHERE ulkoinen_id=" id
                                "   AND luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
-          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))]
+          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))
+          l-id (ffirst (q (str "SELECT liite FROM havainto_liite  WHERE havainto=" h-id)))]
       (u (str "DELETE FROM soratiemittaus WHERE tarkastus=" t-id))
       (u (str "DELETE FROM tarkastus WHERE id=" t-id))
+      (u (str "DELETE FROM havainto_liite WHERE havainto = " h-id))
+      (u (str "DELETE FROM liite WHERE id= " l-id))
       (u (str "DELETE FROM havainto WHERE id=" h-id)))))
 
 (deftest tallenna-virheellinen-soratietarkastus
@@ -87,20 +87,25 @@
     (is (str/blank? (slurp (:body vastaus))))
 
     ;; varmistetaan että tarkastus löytyy tietokannasta
-    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, thm.lumimaara "
+    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, thm.lumimaara, l.nimi "
                               "  FROM tarkastus t "
                               "       JOIN havainto h ON t.havainto=h.id "
                               "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
+                              "       JOIN havainto_liite hl ON h.id = hl.havainto"
+                              "       JOIN liite l ON hl.liite = l.id"
                               " WHERE t.ulkoinen_id = " id
                               "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M]) (str "Tarkastuksen data tallentunut ok " id)))
+      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
 
     (let [t-id (ffirst (q (str "SELECT id FROM tarkastus"
                                " WHERE ulkoinen_id=" id
                                "   AND luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
-          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))]
+          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))
+          l-id (ffirst (q (str "SELECT liite FROM havainto_liite  WHERE havainto=" h-id)))]
       (u (str "DELETE FROM talvihoitomittaus WHERE tarkastus=" t-id))
       (u (str "DELETE FROM tarkastus WHERE id=" t-id))
+      (u (str "DELETE FROM havainto_liite WHERE havainto = " h-id))
+      (u (str "DELETE FROM liite WHERE id= " l-id))
       (u (str "DELETE FROM havainto WHERE id=" h-id)))))
     
                                

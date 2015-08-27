@@ -23,7 +23,7 @@
                 }
 
  ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
- ;; tarvii SSH-tunnelin testi-Sonjaan
+ ;; tarvii SSH-tunnelin testi-Sonjaan!!
  :sonja
                {:url      ""                                ;"tcp://localhost:61616"
                 :kayttaja "harja"

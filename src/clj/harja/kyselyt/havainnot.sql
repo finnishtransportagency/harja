@@ -153,6 +153,19 @@ WHERE k.poistettu = FALSE
 ORDER BY k.luotu ASC;
 
 
+-- name: hae-havainnon-liitteet
+-- Hakee annetun havainnon kaikki liitteet
+SELECT
+  l.id                                 AS id,
+  l.tyyppi                             AS tyyppi,
+  l.koko                               AS koko,
+  l.nimi                               AS nimi,
+  l.liite_oid                          AS oid
+FROM liite l
+  JOIN havainto_liite hl on l.id = hl.liite
+WHERE hl.havainto = :havaintoid
+ORDER BY l.luotu ASC;
+
 -- name: paivita-havainnon-perustiedot<!
 -- Päivittää aiemmin luodun havainnon perustiedot
 UPDATE havainto

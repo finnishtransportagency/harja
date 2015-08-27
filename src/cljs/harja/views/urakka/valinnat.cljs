@@ -38,6 +38,13 @@
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+lisavalinnat [ur]
+  (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
+    ur
+    u/valittu-sopimusnumero u/valitse-sopimusnumero!
+    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/urakan-toimenpideinstanssit+lisavalinnat u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (valinnat/urakan-hoitokausi-ja-toimenpide
     ur

@@ -70,8 +70,7 @@
            :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                         (:tehtava rivi))
                                                                       (vals (grid/hae-muokkaustila %)))))
-           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)
-           :tunniste     :tehtava}
+           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)}
 
           [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
             :tyyppi        :valinta
@@ -97,9 +96,9 @@
                                       :tehtava (:id (urakan-toimenpiteet/tehtava-nimella %2 tehtavat))
                                       :yksikko (:yksikko (urakan-toimenpiteet/tehtava-nimella %2 tehtavat)))
             :leveys        "45%"}
-           {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
-           {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna yksikköhinta"]]
+           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
+           {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna muutoshinta / yksikkö"]]
             :tyyppi :numero :fmt fmt/euro-opt :leveys "20%"}]
 
           @ryhmitellyt-muutoshintaiset-tyot]]))))

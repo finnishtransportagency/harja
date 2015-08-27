@@ -467,9 +467,9 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, aloituspvm, valmispvm_koh
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, ilmoitustiedot, paatos_tekninen_osa, paatos_taloudellinen_osa, perustelu_tekninen_osa, perustelu_taloudellinen_osa, kasittelyaika_tekninen_osa, kasittelyaika_taloudellinen_osa) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi'), 'valmis'::paallystystila, '2005-11-14 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-20 00:00:00+02', 2000, '{"osoitteet":[{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":0,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":16,"massa":100,"rc%":0,"tyomenetelma":12,"leveys":6.5,"massamaara":1781,"edellinen-paallystetyyppi":12,"pinta-ala":15},{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":1,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":10,"massa":512,"rc%":0,"tyomenetelma":12,"leveys":4,"massamaara":1345,"edellinen-paallystetyyppi":11,"pinta-ala":9}],"kiviaines":[{"esiintyma":"KAMLeppäsenoja","km-arvo":"An14","muotoarvo":"Fi20","sideainetyyppi":"B650/900","pitoisuus":4.3,"lisaaineet":"Tartuke"}],"alustatoimet":[{"aosa":22,"aet":3,"losa":5,"let":4785,"kasittelymenetelma":13,"paksuus":30,"verkkotyyppi":1,"tekninen-toimenpide":2}],"tyot":[{"tyyppi":"ajoradan-paallyste","tyo":"AB 16/100 LTA","tilattu-maara":10000,"toteutunut-maara":10100,"yksikkohinta":20, "yksikko": "km"}]}', 'hylatty'::paallystysilmoituksen_paatostyyppi, 'hylatty'::paallystysilmoituksen_paatostyyppi, 'Ei tässä ole mitään järkeä', 'Ei tässä ole mitään järkeä', '2005-12-20 00:00:00+02', '2005-12-20 00:00:00+02');
 
 -- Paikkausilmoitukset
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Leppäjärven ramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paallysteen_neliot":2,"paikkausneliot":2,"paikkausprosentti":15}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'aloitettu'::paikkausilmoituksen_tila);
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Tie 358'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paallysteen_neliot":2,"paikkausneliot":2,"paikkausprosentti":15}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', '2005-11-17 00:00:00+02', NOW(), 'hylatty'::paikkausilmoituksen_paatostyyppi, 'Tämä ei nyt ole oikein hyvä', '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paallysteen_neliot":2,"paikkausneliot":2,"paikkausprosentti":15}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
+INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Leppäjärven ramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'aloitettu'::paikkausilmoituksen_tila);
+INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Tie 358'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', '2005-11-17 00:00:00+02', NOW(), 'hylatty'::paikkausilmoituksen_paatostyyppi, 'Tämä ei nyt ole oikein hyvä', '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
+INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
 
 -- Ilmoitukset ja kuittaukset
 -- Ensimmäinen ilmoitus: Oulun alueella, kysely
@@ -742,7 +742,7 @@ VALUES
 (SELECT id FROM sopimus WHERE nimi = 'Pudasjärvi pääsopimus'),
 NOW(),
 '2008-09-09 10:00.00',
-'2008-09-09 10:06.00',
+'2008-09-09 10:09.00',
 'kokonaishintainen'::toteumatyyppi,
 'Tämä on käsin tekaistu juttu',
 'Y1234',
@@ -752,7 +752,7 @@ NOW(),
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto)
 VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
-NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 30, 'Tämä on tekaistu tehtävä');
+NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 40, 'Tämä on tekaistu tehtävä');
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
@@ -772,6 +772,12 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 NOW(),
 st_makepoint(499399, 7249019) :: POINT);
 
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
+'2008-09-09 10:09.00',
+NOW(),
+st_makepoint(499820, 7249885) :: POINT);
+
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:00.00' :: TIMESTAMP ),
 NOW(), 1350, 10);
@@ -783,6 +789,10 @@ NOW(), 1350, 10);
 
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:06.00' :: TIMESTAMP ),
+NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:09.00' :: TIMESTAMP ),
 NOW(), 1350, 10);
 
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case

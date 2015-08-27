@@ -26,7 +26,9 @@
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
         lomakkeen-virheet (atom {})
+        voi-muokata? @laadunseuranta/voi-kirjata?
         voi-tallentaa? (reaction (and
+                                  voi-muokata?
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count @tiedot/+uusi-sanktio+))))]
     (fn []
@@ -45,6 +47,7 @@
         {:luokka   :horizontal
          :muokkaa! #(reset! muokattu %)
          :virheet lomakkeen-virheet
+         :voi-muokata? voi-muokata?
          :footer   [napit/palvelinkutsu-nappi
                     "Tallenna sanktio"
                     #(tiedot/tallenna-sanktio @muokattu)
@@ -177,9 +180,10 @@
   []
   [:div.sanktiot
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
-    (ikonit/plus) " Lisää sanktio"]
+   (when @laadunseuranta/voi-kirjata?
+     [:button.nappi-ensisijainen
+      {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
+      (ikonit/plus) " Lisää sanktio"])
    [grid/grid
     {:otsikko       "Sanktiot"
      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])

@@ -5,6 +5,8 @@
    [harja.loki :refer [log]]
    ;; require kaikki testit
    [cljs.test :as test]
+   [cemerick.cljs.test :as ctest]
+   [harja.e2e.test-test]
    [harja.app-test]
    [harja.tiedot.muokkauslukko-test]
    [harja.tiedot.urakka.suunnittelu-test]
@@ -57,6 +59,24 @@
                   'harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test
                   'harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
                   'harja.pvm-test)) 
- 
- 
+
+(defn change-favicon [ico]
+  (let [link (.createElement js/document "link")
+        oldlink (.getElementById js/document "dynamic-favicon")]
+    (set! (.-id link) "dynamic-favicon")
+    (set! (.-rel link) "shortcut icon")
+    (set! (.-type link) "image/ico")
+    (set! (.-href link) ico)
+    (when oldlink
+      (.removeChild (.-head js/document) oldlink))
+    (.appendChild (.-head js/document) link)))
+
+(defmethod ctest/report :summary [event]
+  (.log js/console "E2E-testejä ajettu: " (:test event) (:fail event) (:error event))
+  (if (not= (+ (:fail event) (:error event)) 0)
+    (change-favicon (str "http://localhost:8000/images/test_fail.ico?x=" (rand-int 1000)))
+    (change-favicon (str "http://localhost:8000/images/test_success.ico?x=" (rand-int 1000)))))
+
+(defn aja-e2e-testit []
+  (ctest/run-tests 'harja.e2e.test-test)) 
  

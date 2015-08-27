@@ -97,10 +97,11 @@
                                           :pistokoe "Pistokoe")}
             laadunseuranta/tarkastustyyppi]]]]
 
-        [:div.row
-         [:div.col-md-10]
-         [:div.col-md-2 [napit/uusi "Uusi tarkastus"
-                         #(reset! valittu-tarkastus (uusi-tarkastus)) {}]]]
+        (when @laadunseuranta/voi-kirjata?
+          [:div.row
+           [:div.col-md-10]
+           [:div.col-md-2 [napit/uusi "Uusi tarkastus"
+                           #(reset! valittu-tarkastus (uusi-tarkastus)) {}]]])
         
         [grid/grid
          {:otsikko "Tarkastukset"
@@ -185,7 +186,8 @@
 
      [lomake/lomake
       {:luokka :horizontal
-       :muokkaa! #(reset! tarkastus-atom %)}
+       :muokkaa! #(reset! tarkastus-atom %)
+       :voi-muokata? @laadunseuranta/voi-kirjata?}
 
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :validoi [[:urakan-aikana]]}

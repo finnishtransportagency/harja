@@ -270,7 +270,7 @@
                :tyyppi        :valinta
                :valinta-arvo  first
                :valinta-nayta second
-               :valinnat      [[:yksikkohinta "Sopimushinta"] [:paivanhinta "Päivän hinta"]]
+               :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                :leveys-col 3}
               {:otsikko "Määrä" :nimi :maara :tyyppi :numero
                :hae     #(get-in % [:tehtava :maara])
@@ -399,13 +399,13 @@
               :leveys "10%"}
              {:otsikko "Yksikkö"
               :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
-             {:otsikko "Yksikköhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+             {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
               :hae #(if (get-in % [:tehtava :paivanhinta])
                      nil
                      (:yksikkohinta %))
               :muokattava? (constantly false) :fmt fmt/euro-opt :leveys "10%"}
              {:otsikko "Hinnoittelu" :tyyppi :string :nimi :hinnoittelu
-              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Yksikköhinta") :leveys "10%"}
+              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Muutoshinta") :leveys "10%"}
              {:otsikko "Kustannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
               ;; kustannus on päivän hinta jos se on annettu, muutoin yksikköhinta * määrä
               :hae     #(if (get-in % [:tehtava :paivanhinta])

@@ -193,7 +193,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
-  (log "VALITTIIN URAKKA: " (pr-str ur))
+  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
   (paivita-url)
   (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
     (reset! kartan-kokovalinta :S)))

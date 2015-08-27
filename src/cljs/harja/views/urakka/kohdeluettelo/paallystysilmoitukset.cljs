@@ -74,8 +74,13 @@
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
 
-(defn laske-tien-pituus [tie]
-  (- (:let tie) (:losa tie)))
+(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
+  (if (and alkuet loppuet)
+    (let [tulos (- loppuet alkuet)]
+         (if (>= tulos 0)
+           tulos
+           0)) ; Tien pituus ei voi olla negatiivinen
+    0))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -89,7 +94,7 @@
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
                                           (fn [uusi-arvo]
                                             (swap! lomakedata
-                                                   #(-> % 
+                                                   #(-> %
                                                         (assoc :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
                                                         (assoc :perustelu_tekninen_osa (:perustelu-tekninen-osa uusi-arvo))
                                                         (assoc :kasittelyaika_tekninen_osa (:kasittelyaika-tekninen-osa uusi-arvo))))))
@@ -219,8 +224,6 @@
                                          kiviaines-virheet @kiviaines-virheet
                                          tila (:tila @lomakedata)
                                          lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
-                                     (log "ALIKOHTEET VIRHEET: " (pr-str alikohteet-virheet))
-                                     (log "PAALLYSTYSTOIMENPIDE VIRHEET: " (pr-str paallystystoimenpide-virheet))
                                      (and
                                       (not (= tila :lukittu))
                                       (empty? alikohteet-virheet)
@@ -252,7 +255,7 @@
                                                               (assoc :valmispvm_paallystys (:valmispvm_paallystys uusi-arvo))
                                                               (assoc :takuupvm (:takuupvm uusi-arvo))
                                                               (assoc :hinta (:hinta uusi-arvo))))))
-              
+
                                         ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
               toteutuneet-osoitteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
@@ -263,7 +266,7 @@
                                             (mapv (fn [rivi]
                                                     (assoc rivi :tie tie))
                                                   (grid/filteroi-uudet-poistetut uusi-arvo)))))))
-              
+
                                         ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
               kiviaines
               (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot lomakedata-nyt)))
@@ -335,7 +338,7 @@
                               (and (not= :lukittu (:tila lomakedata-nyt))
                                    (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                    (false? @lomake-lukittu-muokkaukselta?)))
-              :virheet alikohteet-virheet 
+              :virheet alikohteet-virheet
               :rivinumerot? true
               :uusi-id (inc (count @toteutuneet-osoitteet))}
              [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
@@ -428,7 +431,8 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! kiviaines-virheet (grid/hae-virheet %))}
+              :virheet kiviaines-virheet
+              :uusi-id (inc (count @kiviaines))}
              [{:otsikko "Kiviaines-esiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Muotoarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256 :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -442,7 +446,8 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! alustalle-tehdyt-toimet-virheet (grid/hae-virheet %))}
+              :uusi-id (inc (count @alustalle-tehdyt-toimet))
+              :virheet alustalle-tehdyt-toimet-virheet}
              [{:otsikko "Alkutieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkuetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Lopputieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -483,7 +488,9 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_taloudellinen_osa lomakedata-nyt))
                                  (false? @lomake-lukittu-muokkaukselta?))
-              :muutos  #(reset! toteutuneet-maarat-virheet (grid/hae-virheet %))}
+              :validoi-aina? true
+              :uusi-id (inc (count @toteutuneet-maarat))
+              :virheet toteutuneet-maarat-virheet}
              [{:otsikko       "Päällystetyön tyyppi"
                :nimi          :tyyppi
                :tyyppi        :valinta

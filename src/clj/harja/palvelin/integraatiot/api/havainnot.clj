@@ -10,7 +10,7 @@
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -63,24 +63,13 @@
           kommentti-id (:id kommentti)]
       (havainnot/liita-kommentti<! db havainto-id kommentti-id))))
 
-(defn tallenna-liitteet [db liitteiden-hallinta urakan-id havainto-id kirjaaja liitteet]
-  (doseq [liitteen-data liitteet]
-    (when (:sisalto (:liite liitteen-data))
-      (let [liite (:liite liitteen-data)
-            tyyppi (:tyyppi liite)
-            tiedostonimi (:nimi liite)
-            data (dekoodaa-base64 (:sisalto liite))
-            koko (alength data)
-            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
-        (havainnot/liita-havainto<! db havainto-id liite-id)))))
-
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
     (let [havainto-id (tallenna-havainto transaktio urakka-id kirjaaja data)
           kommentit (:kommentit data)
           liitteet (:liitteet data)]
       (tallenna-kommentit transaktio havainto-id kirjaaja kommentit)
-      (tallenna-liitteet transaktio liitteiden-hallinta urakka-id havainto-id kirjaaja liitteet))))
+      (tallenna-liitteet-havainnolle transaktio liitteiden-hallinta urakka-id havainto-id kirjaaja liitteet))))
 
 (defn kirjaa-havainto [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

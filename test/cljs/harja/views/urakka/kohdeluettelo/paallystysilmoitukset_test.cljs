@@ -9,7 +9,7 @@
     [harja.domain.paallystys.pot :as pot]))
 
 (deftest tien-pituus-laskettu-oikein
-  (let [tie {:let 5 :losa 3}]
+  (let [tie {:aet 3 :let 5}]
     (is (= (paallystysilmoitukset/laske-tien-pituus tie) 2))))
 
 (deftest muutos-kokonaishintaan-laskettu-oikein

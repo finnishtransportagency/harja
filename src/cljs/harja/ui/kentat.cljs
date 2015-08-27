@@ -680,4 +680,13 @@
                                 [:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)] " "
                                 [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))))
               ]]]])))))
+
+(defmethod nayta-arvo :tierekisteriosoite [_ data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+    [:span.tierekisteriosoite
+     [:span.tie "Tie " numero] " / " 
+     [:span.alkuosa alkuosa] " / "
+     [:span.alkuetaisyys alkuetaisyys]
+     [:span.loppuosa loppuosa] " / "
+     [:span.loppuetaisyys loppuetaisyys]]))
          

@@ -94,6 +94,10 @@
                  [webjure/json-schema "0.3"]
 
                  [org.clojure/test.check "0.7.0"]
+
+                 [prismatic/dommy "1.1.0"]
+
+                 [com.cemerick/clojurescript.test "0.3.3"]
                  
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]]
@@ -101,8 +105,7 @@
   :dev-dependencies [;; Selain REPL
 
                      ;; Testaus
-
-
+                     [prismatic/dommy "1.1.0"]
                      ]
 
 

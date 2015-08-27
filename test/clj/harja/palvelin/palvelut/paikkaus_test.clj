@@ -47,9 +47,7 @@
                            :losa               4
                            :let                6
                            :paallysteen_leveys 6
-                           :paallysteen_neliot 7
-                           :paikkausneliot     4
-                           :paikkausprosentti  45}]
+                           :paikkausneliot     4}]
 
                          :toteumat
                          [{:suorite         3

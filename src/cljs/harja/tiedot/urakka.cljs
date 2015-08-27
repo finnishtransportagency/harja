@@ -29,27 +29,22 @@
   (reset! valittu-sopimusnumero sn))
 
 (defonce urakan-toimenpideinstanssit
-         (let [toimenpideinstanssit (atom nil)]
-           (run! (let [ur @nav/valittu-urakka]
-                   (if ur
-                     (go ;; varo ettei muutu uudestaan!
-                       (when (= ur @nav/valittu-urakka)
-                         (reset! toimenpideinstanssit (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet (:id ur))))))
-                     (reset! toimenpideinstanssit nil))))
-           toimenpideinstanssit))
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce valittu-toimenpideinstanssi
-         (let [val (atom nil)]
-           (run! (reset! val (first @urakan-toimenpideinstanssit)))
-           val))
+(defonce urakan-toimenpideinstanssit+lisavalinnat (reaction
+                                                    (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
+
+(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
-urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
-ja viimeinen voivat olla vajaat)."
+  urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
+  ja viimeinen voivat olla vajaat)."
   [ur]
   (let [ensimmainen-vuosi (pvm/vuosi (:alkupvm ur))
         viimeinen-vuosi (pvm/vuosi (:loppupvm ur))]
@@ -72,8 +67,8 @@ ja viimeinen voivat olla vajaat)."
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
 (defonce valitun-urakan-hoitokaudet
-  (reaction (when-let [ur @nav/valittu-urakka]
-              (hoitokaudet ur))))
+         (reaction (when-let [ur @nav/valittu-urakka]
+                     (hoitokaudet ur))))
 
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
@@ -95,11 +90,11 @@ ja viimeinen voivat olla vajaat)."
                          (pvm/valissa? nyt alku loppu))
                        hoitokaudet))))))
 
-        
-(defonce valittu-hoitokausi
-  (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-  
+(defonce valittu-hoitokausi
+         (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+
+
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
@@ -174,41 +169,41 @@ ja viimeinen voivat olla vajaat)."
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)]
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-organisaatio
-  (reaction<! [ur (:id @nav/valittu-urakka)]
-              (when ur 
-                (organisaatio/hae-urakan-organisaatio ur))))
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (organisaatio/hae-urakan-organisaatio ur))))
 
 (defonce muutoshintaiset-tyot
-  (reaction<! [ur (:id @nav/valittu-urakka)
-               suunnittelun-sivu @suunnittelun-valittu-valilehti
-               toteuman-sivu @toteumat-valilehti]
-              (when (and ur (or
-                             (= :muut suunnittelun-sivu)
-                             (= :muut-tyot toteuman-sivu)))
-                (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      suunnittelun-sivu @suunnittelun-valittu-valilehti
+                      toteuman-sivu @toteumat-valilehti]
+                     (when (and ur (or
+                                     (= :muut suunnittelun-sivu)
+                                     (= :muut-tyot toteuman-sivu)))
+                       (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
 (defonce muut-tyot-hoitokaudella
-  (reaction<! [ur (:id @nav/valittu-urakka)
-               sopimus-id (first @valittu-sopimusnumero)
-               aikavali @valittu-hoitokausi
-               sivu @toteumat-valilehti]
-              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      sopimus-id (first @valittu-sopimusnumero)
+                      aikavali @valittu-hoitokausi
+                      sivu @toteumat-valilehti]
+                     (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+                       (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
-  (reaction<! [ur (:id @nav/valittu-urakka)
-               aikavali @valittu-hoitokausi
-               sivu @toteumat-valilehti]
-              (when (and ur aikavali (= :erilliskustannukset sivu))
-                (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      aikavali @valittu-hoitokausi
+                      sivu @toteumat-valilehti]
+                     (when (and ur aikavali (= :erilliskustannukset sivu))
+                       (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
 (defn vaihda-urakkatyyppi
   [urakka-id uusi-urakkatyyppi]
   (k/post! :tallenna-urakan-tyyppi
-           {:urakka-id urakka-id
+           {:urakka-id    urakka-id
             :urakkatyyppi uusi-urakkatyyppi}))

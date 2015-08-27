@@ -9,12 +9,16 @@
   "Alusta tämän ympäristön vaatimat asiat, Lively reload."
   [options]
   (.log js/console "Alustetaan koodin uudelleenlataus")
+  (when (.-harja_testmode js/window)
+    (.log js/console "E2E test mode"))
   
   (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
                           (when-let [on-reload (:on-reload options)]
                             (on-reload)
-                            (test-runner/aja-testit)
+                            (if (.-harja_testmode js/window)
+                              (test-runner/aja-e2e-testit)
+                              (test-runner/aja-testit))
                             ))})
   
   (.log js/console "Alustetaan less.js uudelleenlataus")

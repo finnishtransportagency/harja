@@ -236,7 +236,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
-                          [:http-palvelin :db :integraatioloki])
+                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tyokoneenseuranta (component/using
                               (api-tyokoneenseuranta/->Tyokoneenseuranta)
                               [:http-palvelin :db])

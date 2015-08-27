@@ -31,35 +31,35 @@
 
 
 (defonce urakan-havainnot
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
-               laadunseurannassa? @laadunseuranta/laadunseurannassa?
-               valilehti @laadunseuranta/valittu-valilehti
-               listaus @listaus]
-              (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
-              (when (and laadunseurannassa? (= :havainnot valilehti)
-                         urakka-id alku loppu)
-                (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu))))
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                      [alku loppu] @tiedot-urakka/valittu-aikavali
+                      laadunseurannassa? @laadunseuranta/laadunseurannassa?
+                      valilehti @laadunseuranta/valittu-valilehti
+                      listaus @listaus]
+                     (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
+                     (when (and laadunseurannassa? (= :havainnot valilehti)
+                                urakka-id alku loppu)
+                       (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu))))
 
-                    
+
 (defonce valittu-havainto-id (atom nil))
 
 (defn uusi-havainto []
   {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
-             
-(defonce valittu-havainto
-  (reaction<! [id @valittu-havainto-id]
-              (when id
-                (go (let [havainto (if (= :uusi id)
-                                     (uusi-havainto)
-                                     (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
-                      (-> havainto
 
-                          ;; Tarvitsemme urakan liitteen linkitystä varten
-                        
-                          (assoc :urakka (:id @nav/valittu-urakka))
-                          (assoc :sanktiot (into {}
-                                                 (map (juxt :id identity) (:sanktiot havainto))))))))))
+(defonce valittu-havainto
+         (reaction<! [id @valittu-havainto-id]
+                     (when id
+                       (go (let [havainto (if (= :uusi id)
+                                            (uusi-havainto)
+                                            (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
+                             (-> havainto
+
+                                 ;; Tarvitsemme urakan liitteen linkitystä varten
+
+                                 (assoc :urakka (:id @nav/valittu-urakka))
+                                 (assoc :sanktiot (into {}
+                                                        (map (juxt :id identity) (:sanktiot havainto))))))))))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
@@ -74,15 +74,15 @@
     :sanktio "Sanktio"
     :ei_sanktiota "Ei sanktiota"
     :hylatty "Hylätty"))
-  
+
 (defn kuvaile-paatos [{:keys [kasittelyaika paatos kasittelytapa]}]
   (when paatos
     (str
-     (pvm/pvm kasittelyaika)
-     " "
-     (kuvaile-paatostyyppi paatos)
-     " ("
-     (kuvaile-kasittelytapa kasittelytapa) ")")))
+      (pvm/pvm kasittelyaika)
+      " "
+      (kuvaile-paatostyyppi paatos)
+      " ("
+      (kuvaile-kasittelytapa kasittelytapa) ")")))
 
 (defn kuvaile-tekija [tekija]
   (case tekija
@@ -101,25 +101,24 @@
 
    [yleiset/pudotusvalikko
     "Näytä havainnot"
-    {:valinta @listaus
+    {:valinta    @listaus
      :valitse-fn #(reset! listaus %)
-     :format-fn #(case %
+     :format-fn  #(case %
                    :kaikki "Kaikki"
                    :kasitellyt "Käsitellyt (päätös tehty)"
                    :selvitys "Odottaa urakoitsijan selvitystä"
                    :omat "Minun kirjaamat / kommentoimat")}
 
     [:kaikki :selvitys :kasitellyt :omat]]
-   
+
    [urakka-valinnat/aikavali @nav/valittu-urakka]
 
+   (when @laadunseuranta/voi-kirjata?
+     [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
 
-   [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)]
-    
-     
    [grid/grid
     {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
-     :tyhja "Ei havaintoja."}
+     :tyhja   "Ei havaintoja."}
     [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
@@ -142,7 +141,7 @@
   [havainto]
   (let [havainto (-> havainto
                      (assoc :sanktiot (vals (:sanktiot havainto))))]
-    (go 
+    (go
       (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
         (if (k/virhe? tulos)
           ;; Palautetaan virhe, jotta nappi näyttää virheviestin
@@ -183,104 +182,102 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     (fn [sanktiot-atom sanktio-virheet]
       [:div.sanktiot
        [grid/muokkaus-grid
-        {:tyhja "Ei kirjattuja sanktioita."
-         :lisaa-rivi " Lisää sanktio"
-         :ohjaus g
-         :uusi-rivi (fn [rivi]
-                      (grid/avaa-vetolaatikko! g (:id rivi))
-                      (assoc rivi :sakko? true))
+        {:tyhja        "Ei kirjattuja sanktioita."
+         :lisaa-rivi   " Lisää sanktio"
+         :ohjaus       g
+         :uusi-rivi    (fn [rivi]
+                         (grid/avaa-vetolaatikko! g (:id rivi))
+                         (assoc rivi :sakko? true))
          :vetolaatikot (into {}
                              (map (juxt first
                                         (fn [[id sanktio]]
                                           [lomake/lomake
-                                           {:otsikko "Sanktion tiedot"
-                                            :luokka :horizontal
+                                           {:otsikko  "Sanktion tiedot"
+                                            :luokka   :horizontal
                                             :muokkaa! (fn [uudet-tiedot]
                                                         (swap! sanktiot-atom
                                                                assoc id uudet-tiedot))
-                                            :virheet (r/wrap (get @sanktio-virheet id)
-                                                             #(swap! sanktio-virheet assoc id %))}
-                                           [{:otsikko "Sakko/muistutus"
-                                             :nimi :sakko?
-                                             :tyyppi :valinta
-                                             :hae #(if (:sakko? %) :sakko :muistutus)
-                                             :aseta #(assoc %1 :sakko? (= :sakko %2))
-                                             :valinnat [:sakko :muistutus]
+                                            :virheet  (r/wrap (get @sanktio-virheet id)
+                                                              #(swap! sanktio-virheet assoc id %))}
+                                           [{:otsikko       "Sakko/muistutus"
+                                             :nimi          :sakko?
+                                             :tyyppi        :valinta
+                                             :hae           #(if (:sakko? %) :sakko :muistutus)
+                                             :aseta         #(assoc %1 :sakko? (= :sakko %2))
+                                             :valinnat      [:sakko :muistutus]
                                              :valinta-nayta #(case %
-                                                               :sakko "Sakko"
-                                                               :muistutus "Muistutus")
-                                             :leveys-col 2}
+                                                              :sakko "Sakko"
+                                                              :muistutus "Muistutus")
+                                             :leveys-col    2}
 
                                             (when (:sakko? sanktio)
-                                              {:otsikko "Toimenpide"
-                                               :nimi :toimenpideinstanssi
-                                               :tyyppi :valinta
-                                               :valinta-arvo :tpi_id
+                                              {:otsikko       "Toimenpide"
+                                               :nimi          :toimenpideinstanssi
+                                               :tyyppi        :valinta
+                                               :valinta-arvo  :tpi_id
                                                :valinta-nayta :tpi_nimi
-                                               :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-                                               :leveys-col 3
-                                               :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]})
+                                               :valinnat      @tiedot-urakka/urakan-toimenpideinstanssit
+                                               :leveys-col    3
+                                               :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]})
 
                                             (when (:sakko? sanktio)
-                                              {:otsikko "Sakko (€)"
-                                               :tyyppi :numero
-                                               :nimi :summa
+                                              {:otsikko    "Sakko (€)"
+                                               :tyyppi     :numero
+                                               :nimi       :summa
                                                :leveys-col 2
-                                               :validoi [[:ei-tyhja "Anna sakon summa euroina"]]})
-                                        
-                                            (when (:sakko? sanktio)
-                                              {:otsikko "Sidotaan indeksiin" :nimi :indeksi :leveys 2
-                                               :tyyppi :valinta
-                                               :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-                                               :valinta-nayta #(or % "Ei sidota indeksiin")
-                                               :leveys-col 3})
+                                               :validoi    [[:ei-tyhja "Anna sakon summa euroina"]]})
 
-                                        
+                                            (when (:sakko? sanktio)
+                                              {:otsikko       "Sidotaan indeksiin" :nimi :indeksi :leveys 2
+                                               :tyyppi        :valinta
+                                               :valinnat      ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+                                               :valinta-nayta #(or % "Ei sidota indeksiin")
+                                               :leveys-col    3})
+
                                             ]
                                            sanktio]))
                                   @sanktiot-atom))}
-                                 
-    [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-     {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2
-      :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
-     {:otsikko "Laji" :tyyppi :valinta :leveys 1
-      :nimi :laji
-      :aseta #(assoc %1
-                :laji %2
-                :tyyppi nil)
-      :valinnat [:A :B :C :muistutus]
-      :valinta-nayta #(case %
-                        :A "Ryhmä A"
-                        :B "Ryhmä B"
-                        :C "Ryhmä C"
-                        "- valitse -")
-      :validoi [[:ei-tyhja "Valitse laji"]]}
-     {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
-      :tyyppi :valinta
-      :aseta (fn [sanktio tyyppi]
-               ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-               (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
-               (assoc sanktio
-                 :tyyppi tyyppi
-                 :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
-                                                                  (:id %))
-                                                              @tiedot-urakka/urakan-toimenpideinstanssit)))))
-      :valinnat-fn #(laadunseuranta/lajin-sanktiotyypit (:laji %))
-      :valinta-nayta :nimi
-      :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]
-      }
-     {:otsikko "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
-      :muokattava? (constantly false)}
-                                  
-     ]
-                                 
-    sanktiot-atom]])))
-  
+
+        [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+         {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2
+          :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
+         {:otsikko       "Laji" :tyyppi :valinta :leveys 1
+          :nimi          :laji
+          :aseta         #(assoc %1
+                           :laji %2
+                           :tyyppi nil)
+          :valinnat      [:A :B :C :muistutus]
+          :valinta-nayta #(case %
+                           :A "Ryhmä A"
+                           :B "Ryhmä B"
+                           :C "Ryhmä C"
+                           "- valitse -")
+          :validoi       [[:ei-tyhja "Valitse laji"]]}
+         {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
+          :tyyppi        :valinta
+          :aseta         (fn [sanktio tyyppi]
+                           ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                           (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
+                           (assoc sanktio
+                             :tyyppi tyyppi
+                             :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
+                                                                              (:id %))
+                                                                          @tiedot-urakka/urakan-toimenpideinstanssit)))))
+          :valinnat-fn   #(laadunseuranta/lajin-sanktiotyypit (:laji %))
+          :valinta-nayta :nimi
+          :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
+          }
+         {:otsikko     "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
+          :muokattava? (constantly false)}
+
+         ]
+
+        sanktiot-atom]])))
+
 (defn havainto [asetukset havainto]
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
     (komp/luo
-     
      (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
        (let [muokattava? (constantly (not (paatos? alkuperainen)))
              uusi? (not (:id alkuperainen))]
@@ -294,6 +291,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           [lomake/lomake
            {:muokkaa! #(reset! havainto %)
             :luokka :horizontal
+            :voi-muokata? @laadunseuranta/voi-kirjata?
             :footer (when-not osa-tarkastusta?
                       [napit/palvelinkutsu-nappi
                        ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
@@ -328,99 +326,104 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                :urakoitsija "Urakoitsija"
                                :konsultti "Konsultti"
                                "- valitse osapuoli -")
-             :leveys-col 4
-             :muokattava? muokattava?
-             :validoi [[:ei-tyhja "Valitse havainnon tehnyt osapuoli"]]}
+              :leveys-col    4
+              :muokattava?   muokattava?
+              :validoi       [[:ei-tyhja "Valitse havainnon tehnyt osapuoli"]]}
 
-            (when-not (= :urakoitsija (:tekija @havainto))
-              {:otsikko "Urakoitsijan selvitystä pyydetään"
-               :nimi :selvitys-pyydetty
-               :tyyppi :boolean})
+             (when-not (= :urakoitsija (:tekija @havainto))
+               {:otsikko "Urakoitsijan selvitystä pyydetään"
+                :nimi    :selvitys-pyydetty
+                :tyyppi  :boolean})
 
-            (when-not osa-tarkastusta?
-              {:otsikko "Kohde" :tyyppi :string :nimi :kohde
-               :leveys-col 4
-               :muokattava? muokattava?
-               :validoi [[:ei-tyhja "Anna havainnon kohde"]]})
+             (when-not osa-tarkastusta?
+               {:otsikko     "Kohde" :tyyppi :string :nimi :kohde
+                :leveys-col  4
+                :muokattava? muokattava?
+                :validoi     [[:ei-tyhja "Anna havainnon kohde"]]})
 
-            {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text
-             :validoi [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
-             :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
+             {:otsikko     "Kuvaus" :nimi :kuvaus :tyyppi :text
+              :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
+              :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
-            (when-not uusi?
-              {:otsikko "Kommentit" :nimi :kommentit
-               :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                        :voi-liittaa true
-                                        :placeholder "Kirjoita kommentti..."
-                                        :uusi-kommentti (r/wrap (:uusi-kommentti @havainto)
-                                                                #(swap! havainto assoc :uusi-kommentti %))}
-                             (:kommentit @havainto)]})
+             (when-not (empty? (:liitteet @havainto))
+               {:otsikko     "Liitteet" :nimi :liitteet
+                :komponentti [:span (for [liite (:liitteet @havainto)]
+                                      [:span (liitteet/liitetiedosto liite)])]})
 
-            ;; Päätös
-            (when (:id alkuperainen)
-              (lomake/ryhma
-               "Käsittely ja päätös"
-           
-               {:otsikko "Käsittelyn pvm"
-                :nimi :paatos-pvm
-                :hae (comp :kasittelyaika :paatos) :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)                
-                :tyyppi :pvm-aika
-                :muokattava? muokattava?}
-           
-               {:otsikko "Käsitelty" :nimi :kasittelytapa
-                :hae (comp :kasittelytapa :paatos)
-                :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
-                :tyyppi :valinta
-                :valinnat [:tyomaakokous :puhelin :kommentit :muu]
-                :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
-                :leveys-col 4
-                :muokattava? muokattava?}
-           
-               (when (= :muu (:kasittelytapa (:paatos @havainto)))
-                 {:otsikko "Muu käsittelytapa"
-                  :nimi :kasittelytapa-selite
-                  :hae (comp :muukasittelytapa :paatos)
-                  :aseta #(assoc-in %1 [:paatos :muukasittelytapa] %2)
-                  :tyyppi :string
-                  :leveys-col 4
-                  :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]
-                  :muokattava? muokattava?})
+             (when-not uusi?
+               {:otsikko     "Kommentit" :nimi :kommentit
+                :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                   :voi-liittaa      true
+                                                   :placeholder      "Kirjoita kommentti..."
+                                                   :uusi-kommentti   (r/wrap (:uusi-kommentti @havainto)
+                                                                             #(swap! havainto assoc :uusi-kommentti %))}
+                              (:kommentit @havainto)]})
 
+             ;; Päätös
+             (when (:id alkuperainen)
+               (lomake/ryhma
+                 "Käsittely ja päätös"
 
-               {:otsikko "Päätös"
-                :nimi :paatos-paatos
-                :tyyppi :valinta
-                :valinnat [:sanktio :ei_sanktiota :hylatty]
-                :hae (comp :paatos :paatos)
-                :aseta #(assoc-in %1 [:paatos :paatos] %2)
-                :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
-                :leveys-col 4
-                :muokattava? muokattava?}
+                 {:otsikko     "Käsittelyn pvm"
+                  :nimi        :paatos-pvm
+                  :hae         (comp :kasittelyaika :paatos) :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
+                  :tyyppi      :pvm-aika
+                  :muokattava? muokattava?}
 
-               (when (:paatos (:paatos @havainto))
-                 {:otsikko "Päätöksen selitys"
-                  :nimi :paatoksen-selitys
-                  :tyyppi :text
-                  :hae (comp :perustelu :paatos)
-                  :koko [80 4]
-                  :leveys-col 6
-                  :aseta #(assoc-in %1 [:paatos :perustelu] %2)
-                  :muokattava? muokattava?
-                  :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})
+                 {:otsikko       "Käsitelty" :nimi :kasittelytapa
+                  :hae           (comp :kasittelytapa :paatos)
+                  :aseta         #(assoc-in %1 [:paatos :kasittelytapa] %2)
+                  :tyyppi        :valinta
+                  :valinnat      [:tyomaakokous :puhelin :kommentit :muu]
+                  :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                  :leveys-col    4
+                  :muokattava?   muokattava?}
+
+                 (when (= :muu (:kasittelytapa (:paatos @havainto)))
+                   {:otsikko     "Muu käsittelytapa"
+                    :nimi        :kasittelytapa-selite
+                    :hae         (comp :muukasittelytapa :paatos)
+                    :aseta       #(assoc-in %1 [:paatos :muukasittelytapa] %2)
+                    :tyyppi      :string
+                    :leveys-col  4
+                    :validoi     [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]
+                    :muokattava? muokattava?})
 
 
-               (when (= :sanktio (:paatos (:paatos @havainto)))
-                 ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
-                 {:otsikko "Sanktiot"
-                  :nimi :sanktiot
-                  :komponentti [havainnon-sanktiot 
-                                (r/wrap (:sanktiot @havainto)
-                                        #(swap! havainto assoc :sanktiot %))
-                                sanktio-virheet]})
-               ))]
-         
-           @havainto]])))))
-  
+                 {:otsikko       "Päätös"
+                  :nimi          :paatos-paatos
+                  :tyyppi        :valinta
+                  :valinnat      [:sanktio :ei_sanktiota :hylatty]
+                  :hae           (comp :paatos :paatos)
+                  :aseta         #(assoc-in %1 [:paatos :paatos] %2)
+                  :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
+                  :leveys-col    4
+                  :muokattava?   muokattava?}
+
+                 (when (:paatos (:paatos @havainto))
+                   {:otsikko     "Päätöksen selitys"
+                    :nimi        :paatoksen-selitys
+                    :tyyppi      :text
+                    :hae         (comp :perustelu :paatos)
+                    :koko        [80 4]
+                    :leveys-col  6
+                    :aseta       #(assoc-in %1 [:paatos :perustelu] %2)
+                    :muokattava? muokattava?
+                    :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})
+
+
+                 (when (= :sanktio (:paatos (:paatos @havainto)))
+                   ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
+                   {:otsikko     "Sanktiot"
+                    :nimi        :sanktiot
+                    :komponentti [havainnon-sanktiot
+                                  (r/wrap (:sanktiot @havainto)
+                                          #(swap! havainto assoc :sanktiot %))
+                                  sanktio-virheet]})
+                 ))]
+
+            @havainto]])))))
+
 
 (defn havainnot []
   (if @valittu-havainto

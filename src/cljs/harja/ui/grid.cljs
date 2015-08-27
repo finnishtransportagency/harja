@@ -327,6 +327,7 @@ Optiot on mappi optioita:
         varoitukset (atom {})                               ;; validointivaroitukset: (:id rivi) => [varoitukset]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
+        skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
                                  tallenna-vain-muokatut)
@@ -505,7 +506,7 @@ Optiot on mappi optioita:
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     muokkaa-footer muokkaa-aina rivin-luokka napit-alaskin? uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
-         (let [skeema (laske-sarakkeiden-leveys skeema)
+         (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
                colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))
                muokkauspaneeli (fn [nayta-otsikko?]
