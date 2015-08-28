@@ -198,7 +198,7 @@
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
-            :varoita [[:urakan-aikana]]
+            :varoita [[:urakan-aikana-ja-hoitokaudella]]
             :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))
             :aseta (fn [rivi arvo]
                      (assoc

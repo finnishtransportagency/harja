@@ -69,7 +69,8 @@
                         :hae     (comp :aika :havainto)
                         :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :aika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
-                        :validoi [[:ei-tyhja "Valitse päivämäärä"]] :varoita [[:urakan-aikana]]}
+                        :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+                        :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                        {:otsikko "Käsitelty" :nimi :kasittelyaika
                         :hae     (comp :kasittelyaika :paatos :havainto)
                         :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelyaika] arvo))

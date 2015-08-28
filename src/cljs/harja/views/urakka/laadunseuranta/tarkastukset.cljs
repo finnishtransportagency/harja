@@ -190,7 +190,7 @@
        :voi-muokata? @laadunseuranta/voi-kirjata?}
 
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
-        :validoi [[:urakan-aikana]]}
+        :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
         :sijainti (r/wrap (:sijainti tarkastus)

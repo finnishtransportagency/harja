@@ -206,8 +206,9 @@
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
             "testit" ["with-profiles" "test" "do" "clean," "compile," "test"]
-
+            
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
+            "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             }
 
 
