@@ -71,8 +71,26 @@ BEGIN
           AND maksupvm >= aikavali_alkupvm
           AND maksupvm <= aikavali_loppupvm;
 
+    FOR yhti IN SELECT kuukauden_indeksikorotus(tot.alkanut::date, 'MAKU 2010', SUM(tt.maara * yht.yksikkohinta)) AS ind,
+                  SUM(tt.maara * yht.yksikkohinta) as yht_summa
+                   FROM toteuma_tehtava tt
+                     JOIN toteuma tot ON tt.toteuma = tot.id
+                     JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
+                                                       AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
+                       -- FIXME: tatu katsoisitko tätä ERROR: missing FROM-clause entry for table "tpk3"
+                                                       AND tpk3.id = (SELECT emo
+                                                                      FROM toimenpidekoodi tt_tpk
+                                                                      WHERE tt_tpk.id = tt.toimenpidekoodi))
+                   WHERE yht.urakka = ur
+                         AND tot.urakka = ur
+                         AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
+                         AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm LOOP
+      yht_laskutettu := yht_laskutettu + yhti.yht_summa;
+      yht_laskutettu_ind_kor := yht_laskutettu_ind_kor + yhti.ind;
+    END LOOP;
 
-    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor, 1.0, 1.0, 1.0, 1.0);
+                  RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor,
+                               yht_laskutettu, yht_laskutettu_ind_kor, 1.0, 1.0);
   END LOOP;
 
 END;
@@ -86,7 +104,7 @@ SELECT *
 FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);
 
 
-
+x
 
 
 SELECT kuukauden_indeksikorotus('2015-07-01', 'MAKU 2010', 123);
