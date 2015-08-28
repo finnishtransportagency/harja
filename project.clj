@@ -106,6 +106,7 @@
 
                      ;; Testaus
                      [prismatic/dommy "1.1.0"]
+                     [org.clojure/test.check "0.8.1"]
                      ]
 
 
