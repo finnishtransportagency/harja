@@ -3,7 +3,7 @@
 
 DROP TYPE kuukauden_indeksikorotus_rivi;
 
-DROP FUNCTION kuukauden_indeksikorotus(v INTEGER, kk INTEGER,
+DROP FUNCTION laske_kuukauden_indeksikorotus(v INTEGER, kk INTEGER,
 indeksinimi VARCHAR, summa NUMERIC );
 
 CREATE TYPE kuukauden_indeksikorotus_rivi AS (
@@ -11,7 +11,7 @@ CREATE TYPE kuukauden_indeksikorotus_rivi AS (
   korotettuna NUMERIC,
   korotus     NUMERIC);
 
-CREATE OR REPLACE FUNCTION kuukauden_indeksikorotus(
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
   v           INTEGER,
   kk          INTEGER,
   indeksinimi VARCHAR,

@@ -24,6 +24,7 @@ DECLARE
   kht_laskutetaan_ind_korotus     NUMERIC;
   khti                            RECORD;
   aikavalin_kht                   RECORD;
+  kht_kk_ind_kor_rivi kuukauden_indeksikorotus_rivi;
 
   yht_laskutettu                  NUMERIC;
   yht_laskutettu_ind_korotettuna  NUMERIC;
@@ -47,17 +48,22 @@ BEGIN
   LOOP
     kht_laskutettu := 0.0;
     kht_laskutettu_ind_korotettuna := 0.0;
+    kht_laskutettu_ind_korotus := 0.0;
 
     yht_laskutettu := 0.0;
     yht_laskutettu_ind_korotettuna := 0.0;
+    yht_laskutettu_ind_korotus := 0.0;
 
     RAISE NOTICE 'Lasketaan urakan % kokonaishintaisten töiden kustannukset hoitokaudella % - %', ur, hk_alkupvm, hk_loppupvm;
 
     -- Hoitokaudella ennen aikaväliä laskutetut kokonaishintaisten töiden kustannukset, myös indeksitarkistuksen kanssa
     FOR khti IN SELECT
                   (SELECT korotus
-                   FROM kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, 'MAKU 2010',
+                   FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, 'MAKU 2010',
                                                  kht.summa)) AS ind,
+                  (SELECT korotettuna
+                   FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, 'MAKU 2010',
+                                                 kht.summa)) AS kor,
                   kht.summa                                  AS kht_summa
                 FROM kokonaishintainen_tyo kht
                 WHERE toimenpideinstanssi = t.tpi
@@ -65,7 +71,8 @@ BEGIN
                       AND maksupvm <= hk_loppupvm
                       AND maksupvm < aikavali_alkupvm LOOP
       kht_laskutettu := kht_laskutettu + khti.kht_summa;
-      kht_laskutettu_ind_korotettuna := kht_laskutettu_ind_korotettuna + khti.ind;
+      kht_laskutettu_ind_korotettuna := kht_laskutettu_ind_korotettuna + khti.kor;
+      kht_laskutettu_ind_korotus := kht_laskutettu_ind_korotus + khti.ind;
     END LOOP;
 
     -- Kokonaishintaiset aikavälillä
@@ -82,15 +89,17 @@ BEGIN
           AND maksupvm <= aikavali_loppupvm;
 
     -- Kokonaishintaiset aikavälillä indeksikorotuksen kanssa
-    SELECT kuukauden_indeksikorotus(to_date(aikavalin_kht.vuosi || '/' || aikavalin_kht.kuukausi || '/1', 'YYYY/MM/DD'),
-                                    'MAKU 2010', aikavalin_kht.summa)
-    INTO kht_laskutetaan_ind_korotettuna
-    FROM kokonaishintainen_tyo
-    WHERE toimenpideinstanssi = t.tpi
-          AND maksupvm >= hk_alkupvm
-          AND maksupvm <= hk_loppupvm
-          AND maksupvm >= aikavali_alkupvm
-          AND maksupvm <= aikavali_loppupvm;
+
+    SELECT * FROM laske_kuukauden_indeksikorotus(aikavalin_kht.vuosi, aikavalin_kht.kuukausi, 'MAKU 2010', aikavalin_kht.summa)
+      INTO kht_kk_ind_kor_rivi;
+
+
+    --FROM kokonaishintainen_tyo
+    --WHERE toimenpideinstanssi = t.tpi
+      --    AND maksupvm >= hk_alkupvm
+        --  AND maksupvm <= hk_loppupvm
+         -- AND maksupvm >= aikavali_alkupvm
+         -- AND maksupvm <= aikavali_loppupvm;
 
     -- Hoitokaudella ennen aikaväliä laskutetut yksikköhintaisten töiden kustannukset, myös indeksitarkistuksen kanssa
     FOR yhti IN SELECT
@@ -156,7 +165,7 @@ BEGIN
 
     RETURN NEXT (t.nimi,
                  kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
-                 aikavalin_kht.summa, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
+                 aikavalin_kht.summa, kht_kk_ind_kor_rivi.korotettuna, kht_kk_ind_kor_rivi.korotus,
                  yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
                  yht_laskutetaan, yht_laskutetaan_ind_korotettuna, yht_laskutetaan_ind_korotus);
   END LOOP;
