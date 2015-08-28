@@ -6,6 +6,7 @@
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
+            [harja.views.kartta :as kartta]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [harja.ui.kentat :as kentat]
             [reagent.core :as r])
@@ -93,12 +94,13 @@
 (defonce hallintapaneeli (atom {1 {:auki false :otsikko "Esimerkki" :sisalto [suodattimet]}}))
 
 (defn historiakuva []
-  (komp/luo
+  (komp/luo {:component-will-mount (fn [_]
+                                     (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+             :component-will-unmount (fn [_]
+                                       (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
     (fn []
       (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                       :lyhyt
                                                       :pitka)))
-
-      [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                                 :leijuva?             300}])))
+      nil)))

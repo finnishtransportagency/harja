@@ -64,7 +64,7 @@
   []
   (let [koko @nav/kartan-koko
         sivu @nav/sivu]
-    [:span.kartan-koko-kontrollit {:class (when (or @nav/tarvitaanko-tai-onko-pakotettu-nakyviin?
+    [:span.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or @nav/tarvitaanko-tai-onko-pakotettu-nakyviin?
                                                     (= sivu :tilannekuva)) "hide")}
      [:span.livicon-compress.kartta-kontrolli {:class    (when (= koko :S) "hide")
                                                :on-click #(nav/vaihda-kartan-koko! (case koko
@@ -82,6 +82,20 @@
                                                            :S :M
                                                            :M :L
                                                            :L :L))}]]))
+
+(def kartan-yleiset-kontrollit-sisalto (atom nil))
+
+(defn kartan-yleiset-kontrollit
+  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+    [:span.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+
+(defn aseta-yleiset-kontrollit [uusi-sisalto]
+  (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
+
+(defn tyhjenna-yleiset-kontrollit []
+  (reset! kartan-yleiset-kontrollit-sisalto nil))
 
 (defn nayta-popup!
   "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
@@ -178,4 +192,5 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn kartta []
   [:span
    [kartan-koko-kontrollit]
+   [kartan-yleiset-kontrollit]
    [kartta-openlayers]])

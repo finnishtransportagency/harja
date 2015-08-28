@@ -88,7 +88,8 @@
   (case tekija
     :tilaaja "Tilaaja"
     :urakoitsija "Urakoitsija"
-    :konsultti "Konsultti"))
+    :konsultti "Konsultti"
+    "Ei tiedossa"))
 
 
 (defn havaintolistaus
@@ -278,50 +279,48 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (let [sanktio-virheet (atom {})
         alkuperainen @havainto]
     (komp/luo
-     (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
-       (let [muokattava? (constantly (not (paatos? alkuperainen)))
-             uusi? (not (:id alkuperainen))]
-         
-         [:div.havainto
-          (when-not osa-tarkastusta?
-            [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
-             (ikonit/chevron-left) " Takaisin havaintoluetteloon"])
+      (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
+        (let [muokattava? (constantly (not (paatos? alkuperainen)))
+              uusi? (not (:id alkuperainen))]
 
-          (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
-          [lomake/lomake
-           {:muokkaa! #(reset! havainto %)
-            :luokka :horizontal
-            :voi-muokata? @laadunseuranta/voi-kirjata?
-            :footer (when-not osa-tarkastusta?
-                      [napit/palvelinkutsu-nappi
-                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
-                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
-                       (cond
-                        (and (not (paatos? alkuperainen))
-                             (paatos? @havainto))
-                        "Tallenna ja lukitse havainto"
-                      
-                        :default
-                        "Tallenna havainto")
-                     
-                       #(tallenna-havainto @havainto)
-                       {:ikoni (ikonit/tallenna)
-                        :disabled (not (validi-havainto? @havainto))
-                        :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
-           [
+          [:div.havainto
+           (when-not osa-tarkastusta?
+             [napit/takaisin "Takaisin havaintoluetteloon" #(reset! valittu-havainto-id nil)])
 
-            (when-not osa-tarkastusta?
-              {:otsikko "Havainnon pvm ja aika"
-               :tyyppi :pvm-aika
-               :nimi :aika
-               :validoi [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
-               :varoita [[:urakan-aikana]]
-               :leveys-col 5})
-            
-            {:otsikko "Tekijä" :nimi :tekija
-             :tyyppi :valinta
-             :valinnat [:tilaaja :urakoitsija :konsultti]
-             :valinta-nayta #(case %
+           (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
+           [lomake/lomake
+            {:muokkaa!     #(reset! havainto %)
+             :luokka       :horizontal
+             :voi-muokata? @laadunseuranta/voi-kirjata?
+             :footer       (when-not osa-tarkastusta?
+                             [napit/palvelinkutsu-nappi
+                              ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
+                              ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
+                              (cond
+                                (and (not (paatos? alkuperainen))
+                                     (paatos? @havainto))
+                                "Tallenna ja lukitse havainto"
+
+                                :default
+                                "Tallenna havainto")
+
+                              #(tallenna-havainto @havainto)
+                              {:ikoni        (ikonit/tallenna)
+                               :disabled     (not (validi-havainto? @havainto))
+                               :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
+
+            [(when-not osa-tarkastusta?
+               {:otsikko    "Havainnon pvm ja aika"
+                :tyyppi     :pvm-aika
+                :nimi       :aika
+                :validoi    [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+                :varoita    [[:urakan-aikana]]
+                :leveys-col 5})
+
+             {:otsikko       "Tekijä" :nimi :tekija
+              :tyyppi        :valinta
+              :valinnat      [:tilaaja :urakoitsija :konsultti]
+              :valinta-nayta #(case %
                                :tilaaja "Tilaaja"
                                :urakoitsija "Urakoitsija"
                                :konsultti "Konsultti"
@@ -345,19 +344,25 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
-             (when-not (empty? (:liitteet @havainto))
-               {:otsikko     "Liitteet" :nimi :liitteet
-                :komponentti [:span (for [liite (:liitteet @havainto)]
-                                      [:span (liitteet/liitetiedosto liite)])]})
+             {:otsikko     "Liitteet" :nimi :liitteet
+              :komponentti [:span (for [liite (:liitteet @havainto)]
+                                    [:span (liitteet/liitetiedosto liite)])
+                            [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
+                                             :liite-ladattu #(swap! havainto assoc :uusi-liite %)
+                                             :nappi-teksti " Lisää liite havaintoon"
+                                             }]]}
 
              (when-not uusi?
-               {:otsikko     "Kommentit" :nimi :kommentit
-                :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                                   :voi-liittaa      true
-                                                   :placeholder      "Kirjoita kommentti..."
-                                                   :uusi-kommentti   (r/wrap (:uusi-kommentti @havainto)
-                                                                             #(swap! havainto assoc :uusi-kommentti %))}
-                              (:kommentit @havainto)]})
+               (lomake/ryhma
+               "Kommentit"
+                 {:otsikko     "" :nimi :kommentit
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                     :voi-liittaa      true
+                                                     :liita-nappi-teksti " Lisää liite kommenttiin"
+                                                     :placeholder      "Kirjoita kommentti..."
+                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @havainto)
+                                                                               #(swap! havainto assoc :uusi-kommentti %))}
+                                (:kommentit @havainto)]}))
 
              ;; Päätös
              (when (:id alkuperainen)

@@ -69,6 +69,19 @@
   [tyon-hinta alv]
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
+(defn laske-paikkausprosentti [paikkausneliot tienpaallysteen-neliot]
+  (if (and
+        (not (nil? tienpaallysteen-neliot))
+        (not= tienpaallysteen-neliot 0))
+    (let [tulos (* (/ paikkausneliot tienpaallysteen-neliot) 100)]
+      (.toFixed tulos 0))))
+
+(defn laske-tienpaallysteen-neliot [pituus tienpaallysteen-leveys]
+  (let [pituus (or pituus 0)
+        tienpaallysteen-leveys (or tienpaallysteen-leveys 0)]
+    (* pituus tienpaallysteen-leveys)))
+
+
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
@@ -250,18 +263,22 @@
                               (and (not= :lukittu (:tila @lomakedata))
                                    (not= :hyvaksytty (:paatos @lomakedata))
                                    (false? @lomake-lukittu-muokkaukselta?)))
-              :virheet toteutuneet-osoitteet-virheet
-              :uusi-id (inc (count @toteutuneet-osoitteet))}
+              :virheet      toteutuneet-osoitteet-virheet
+              :uusi-id      (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (paallystysilmoitukset/laske-tien-pituus rivi))}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                        (paallystysilmoitukset/laske-tien-pituus rivi))}
               {:otsikko "Tienpäällysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                                               (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+                                                                                                                                   (laske-paikkausprosentti (:paikkausneliot rivi)
+                                                                                                                                                            (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
@@ -272,8 +289,8 @@
               :voi-lisata?  false
               :voi-kumota?  false
               :voi-poistaa? (constantly false)
-              :virheet toteutuneet-maarat-virheet
-              :uusi-id (inc (count @toteutuneet-maarat))}
+              :virheet      toteutuneet-maarat-virheet
+              :uusi-id      (inc (count @toteutuneet-maarat))}
              [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
                :hae     (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
@@ -317,11 +334,15 @@
                                                                                                                           :paikkauskohde-id (:paikkauskohde_id rivi)})}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
-          (fn [toteuma] (case (:tila toteuma)
+          (juxt (fn [toteuma] (case (:tila toteuma)
                           :lukittu 0
                           :valmis 1
                           :aloitettu 3
                           4))
+                (fn [toteuma] (case (:paatos toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3)))
           @toteumarivit)]])))
 
 (defn paikkausilmoitukset []

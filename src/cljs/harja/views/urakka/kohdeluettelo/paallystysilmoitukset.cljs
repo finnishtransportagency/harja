@@ -74,8 +74,13 @@
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
 
-(defn laske-tien-pituus [tie]
-  (- (:let tie) (:losa tie)))
+(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
+  (if (and alkuet loppuet)
+    (let [tulos (- loppuet alkuet)]
+         (if (>= tulos 0)
+           tulos
+           0)) ; Tien pituus ei voi olla negatiivinen
+    0))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -89,7 +94,7 @@
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @lomakedata)}
                                           (fn [uusi-arvo]
                                             (swap! lomakedata
-                                                   #(-> % 
+                                                   #(-> %
                                                         (assoc :paatos_tekninen_osa (:paatos-tekninen uusi-arvo))
                                                         (assoc :perustelu_tekninen_osa (:perustelu-tekninen-osa uusi-arvo))
                                                         (assoc :kasittelyaika_tekninen_osa (:kasittelyaika-tekninen-osa uusi-arvo))))))
@@ -250,7 +255,7 @@
                                                               (assoc :valmispvm_paallystys (:valmispvm_paallystys uusi-arvo))
                                                               (assoc :takuupvm (:takuupvm uusi-arvo))
                                                               (assoc :hinta (:hinta uusi-arvo))))))
-              
+
                                         ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
               toteutuneet-osoitteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
@@ -261,7 +266,7 @@
                                             (mapv (fn [rivi]
                                                     (assoc rivi :tie tie))
                                                   (grid/filteroi-uudet-poistetut uusi-arvo)))))))
-              
+
                                         ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
               kiviaines
               (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot lomakedata-nyt)))
@@ -333,7 +338,7 @@
                               (and (not= :lukittu (:tila lomakedata-nyt))
                                    (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                    (false? @lomake-lukittu-muokkaukselta?)))
-              :virheet alikohteet-virheet 
+              :virheet alikohteet-virheet
               :rivinumerot? true
               :uusi-id (inc (count @toteutuneet-osoitteet))}
              [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
@@ -545,11 +550,19 @@
                                                                                                                                                  (:kaasuindeksi rivi))})}
                                                     [:span "Aloita päällystysilmoitus"]]))}]
         (sort-by
-          (fn [toteuma] (case (:tila toteuma)
-                          :lukittu 0
-                          :valmis 1
-                          :aloitettu 3
-                          4))
+          (juxt (fn [toteuma] (case (:tila toteuma)
+                                :lukittu 0
+                                :valmis 1
+                                :aloitettu 3
+                                4))
+                (fn [toteuma] (case (:paatos_tekninen_osa toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3))
+                (fn [toteuma] (case (:paatos_taloudellinen_osa toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3)))
           @toteumarivit)]])))
 
 (defn paallystysilmoitukset []

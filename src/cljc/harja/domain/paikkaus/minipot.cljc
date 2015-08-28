@@ -29,9 +29,7 @@
      :losa                       s/Int
      :let                        s/Int
      :paallysteen_leveys         s/Num
-     :paallysteen_neliot         s/Num
      :paikkausneliot             s/Num
-     :paikkausprosentti          s/Num
      (s/optional-key :poistettu) s/Bool}]
 
    :toteumat
