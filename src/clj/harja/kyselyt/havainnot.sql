@@ -121,7 +121,8 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.perustelu                        AS paatos_perustelu,
-  h.muu_kasittelytapa                AS paatos_muukasittelytapa
+  h.muu_kasittelytapa                AS paatos_muukasittelytapa,
+  h.selvitys_pyydetty                AS selvityspyydetty
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka

@@ -19,6 +19,8 @@
 
 (def havainto-xf (comp
                    (map konv/alaviiva->rakenne)
+                   (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+                   (map #(dissoc % :selvityspyydetty))
                    (map #(assoc % :tekija (keyword (:tekija %))))
                    (map #(update-in % [:paatos :paatos]
                                     (fn [p]
