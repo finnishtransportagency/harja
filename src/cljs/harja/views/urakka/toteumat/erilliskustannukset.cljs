@@ -213,8 +213,8 @@
             :leveys-col    3}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
-            :varoita [[:urakan-aikana]]}
-           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€" :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
+            :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
