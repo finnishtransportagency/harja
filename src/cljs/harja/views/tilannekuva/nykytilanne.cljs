@@ -61,7 +61,8 @@
 
 (defn nykytilanne []
   (komp/luo {:component-will-mount   (fn [_]
-                                       (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+                                       (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}])
+                                       (tiedot/aloita-asioiden-haku))
              :component-will-unmount (fn [_]
                                        (kartta/tyhjenna-yleiset-kontrollit)
                                        (tiedot/lopeta-asioiden-haku))}

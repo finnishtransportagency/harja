@@ -120,4 +120,7 @@
                      {:odota +bufferi+}
                      (when @nakymassa? (hae-asiat))))
 
-(def lopeta-asioiden-haku (paivita-periodisesti asioiden-haku +intervalli+))
+(defn aloita-asioiden-haku []
+  (paivita-periodisesti asioiden-haku +intervalli+))
+
+(def lopeta-asioiden-haku (aloita-asioiden-haku))
