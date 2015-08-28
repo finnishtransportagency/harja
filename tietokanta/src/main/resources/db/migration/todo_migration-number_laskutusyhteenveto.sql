@@ -30,7 +30,7 @@ DECLARE
 
 BEGIN
   -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
-  FOR t IN SELECT tpk2.nimi as nimi, tpi.id as tpi
+  FOR t IN SELECT tpk2.nimi as nimi, tpi.id as tpi, tpk3.id as tpk3_id
                FROM toimenpideinstanssi tpi
                  JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
                  JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
@@ -71,25 +71,30 @@ BEGIN
           AND maksupvm >= aikavali_alkupvm
           AND maksupvm <= aikavali_loppupvm;
 
-    FOR yhti IN SELECT kuukauden_indeksikorotus(tot.alkanut::date, 'MAKU 2010', SUM(tt.maara * yht.yksikkohinta)) AS ind,
-                  SUM(tt.maara * yht.yksikkohinta) as yht_summa
-                   FROM toteuma_tehtava tt
-                     JOIN toteuma tot ON tt.toteuma = tot.id
-                     JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
-                                                       AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
-                       -- FIXME: tatu katsoisitko tätä ERROR: missing FROM-clause entry for table "tpk3"
-                                                       AND tpk3.id = (SELECT emo
-                                                                      FROM toimenpidekoodi tt_tpk
-                                                                      WHERE tt_tpk.id = tt.toimenpidekoodi))
-                   WHERE yht.urakka = ur
-                         AND tot.urakka = ur
-                         AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-                         AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm LOOP
+    FOR yhti IN SELECT
+                  SUM(tt.maara * yht.yksikkohinta) as yht_summa,
+                  tot.alkanut                      as tot_alkanut
+                FROM toteuma_tehtava tt
+                  JOIN toteuma tot ON tt.toteuma = tot.id
+                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+                  JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
+                                                    AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
+                                                    AND tpk3.id = t.tpk3_id)
+                WHERE yht.urakka = ur
+                      AND tot.urakka = ur
+                      AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
+                      AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
+                GROUP BY tot.alkanut
+    LOOP
       yht_laskutettu := yht_laskutettu + yhti.yht_summa;
-      yht_laskutettu_ind_kor := yht_laskutettu_ind_kor + yhti.ind;
+      yht_laskutettu_ind_kor := yht_laskutettu_ind_kor +
+                                kuukauden_indeksikorotus(yhti.tot_alkanut :: date, 'MAKU 2010', yhti.yht_summa);
+
+
     END LOOP;
 
-                  RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor,
+    RETURN NEXT (t.nimi, kht_laskutettu, kht_laskutettu_ind_kor, aikavalin_kht.summa, kht_laskutetaan_ind_kor,
                                yht_laskutettu, yht_laskutettu_ind_kor, 1.0, 1.0);
   END LOOP;
 
