@@ -285,8 +285,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
           [:div.havainto
            (when-not osa-tarkastusta?
-             [:button.nappi-toissijainen {:on-click #(reset! valittu-havainto-id nil)}
-              (ikonit/chevron-left) " Takaisin havaintoluetteloon"])
+             [napit/takaisin "Takaisin havaintoluetteloon" #(reset! valittu-havainto-id nil)])
 
            (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
            [lomake/lomake
@@ -353,9 +352,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                              :nappi-teksti " Lisää liite havaintoon"
                                              }]]}
 
-             (lomake/ryhma
+             (when-not uusi?
+               (lomake/ryhma
                "Kommentit"
-               (when-not uusi?
                  {:otsikko     "" :nimi :kommentit
                   :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                      :voi-liittaa      true
