@@ -4,6 +4,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
+            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
             [harja.views.kartta :as kartta]
@@ -23,6 +24,11 @@
                                    :valinnat ["00:00" "06:00" "12:00" "18:00"]
                                    }}
    tiedot/lyhyen-suodattimen-asetukset])
+
+(def popupien-putsaus
+  (run! (when (= :historiakuva @tilannekuva/valittu-valilehti)
+          (log "välilehti vaihtui historiakuvaan")
+          (kartta/poista-popup!))))
 
 (defn pitkasuodatin []
   [:span
