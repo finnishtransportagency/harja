@@ -66,15 +66,3 @@
                                        (tiedot/lopeta-asioiden-haku))}
             (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
             (constantly nil)))
-
-(tapahtumat/kuuntele! :tyokone-klikattu
-                      (fn [tapahtuma]
-                        (kartta/nayta-popup! (:sijainti tapahtuma)
-                                             [:div.kartta-tyokone-popup
-                                              [:p [:b "Työkone"]]
-                                              [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
-                                              [:div "Organisaatio: " (:organisaationimi tapahtuma)]
-                                              [:div "Urakka: " (:urakkanimi tapahtuma)]
-                                              [:div "Tehtävät: "
-                                               (let [tehtavat (str/join "," (:tehtavat tapahtuma))]
-                                                 [:span tehtavat])]])))
