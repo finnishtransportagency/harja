@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]))
 
 (defn tee-sonja-ilmoitusviestikuuntelija [this ilmoitusviestijono ilmoituskuittausjono]
-  (when ilmoitusviestijono
+  (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele (:sonja this) ilmoitusviestijono
                     (fn [viesti]
