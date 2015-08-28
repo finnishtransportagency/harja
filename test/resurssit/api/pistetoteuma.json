@@ -18,7 +18,6 @@
         "id": __ID__
       },
       "sopimusId": 1,
-      "selite": "Tien paikkaus",
       "suorittaja": {
         "nimi": "__SUORITTAJA_NIMI__",
         "ytunnus": "8765432-1"

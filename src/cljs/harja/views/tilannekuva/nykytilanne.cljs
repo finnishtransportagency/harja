@@ -1,18 +1,16 @@
 (ns harja.views.tilannekuva.nykytilanne
   "Harjan tilannekuvan pääsivu."
   (:require [reagent.core :refer [atom]]
-            [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.nykytilanne :as tiedot]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [reagent.core :as r]
             [harja.views.kartta :as kartta]
             [clojure.string :as str]
             [harja.asiakas.tapahtumat :as tapahtumat])
-  (:require-macros [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [reagent.ratom :refer [run!]]))
 
 (defn aikavalinta []
   [kentat/tee-kentta {:tyyppi   :radio
@@ -61,19 +59,13 @@
 (defonce hallintapaneeli (atom {1 {:auki true :otsikko "Nykytilanne" :sisalto suodattimet}}))
 
 (defn nykytilanne []
-  (komp/luo
-    {:component-will-mount
-     (fn [_]
-       (reset! tiedot/nakymassa? true)
-       (reset! tiedot/taso-nykytilanne true))
-     :component-will-unmount
-     (fn [_]
-       (reset! tiedot/nakymassa? false)
-       (reset! tiedot/taso-nykytilanne false)
-       (tiedot/lopeta-asioiden-haku))}
-    (fn []
-      [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                        :leijuva?             300}])))
+  (komp/luo {:component-will-mount   (fn [_]
+                                       (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+             :component-will-unmount (fn [_]
+                                       (kartta/tyhjenna-yleiset-kontrollit)
+                                       (tiedot/lopeta-asioiden-haku))}
+            (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
+            (constantly nil)))
 
 (tapahtumat/kuuntele! :tyokone-klikattu
                       (fn [tapahtuma]

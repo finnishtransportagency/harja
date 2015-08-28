@@ -6,6 +6,7 @@
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
+            [harja.views.kartta :as kartta]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [harja.ui.kentat :as kentat]
             [reagent.core :as r]
@@ -109,22 +110,17 @@
 
 (defn historiakuva []
   (komp/luo
-    {:component-will-mount
-     (fn [_]
-       (reset! tiedot/nakymassa? true)
-       (reset! tiedot/taso-historiakuva true))
-     :component-will-unmount
-     (fn [_]
-       (reset! tiedot/nakymassa? false)
-       (reset! tiedot/taso-historiakuva false)
-       (tiedot/lopeta-asioiden-haku))}
+    {:component-will-mount (fn [_]
+                             (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+     :component-will-unmount (fn [_]
+                               (tiedot/lopeta-asioiden-haku)
+                               (kartta/tyhjenna-yleiset-kontrollit))}
+    (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
     (fn []
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                   :lyhyt
                                                   :pitka)))
-
-      [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                                 :leijuva?             300}])))
+      nil)))
 
 (tapahtumat/kuuntele! :toteuma-klikattu
                       (fn [tapahtuma]

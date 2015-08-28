@@ -550,11 +550,19 @@
                                                                                                                                                  (:kaasuindeksi rivi))})}
                                                     [:span "Aloita päällystysilmoitus"]]))}]
         (sort-by
-          (fn [toteuma] (case (:tila toteuma)
-                          :lukittu 0
-                          :valmis 1
-                          :aloitettu 3
-                          4))
+          (juxt (fn [toteuma] (case (:tila toteuma)
+                                :lukittu 0
+                                :valmis 1
+                                :aloitettu 3
+                                4))
+                (fn [toteuma] (case (:paatos_tekninen_osa toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3))
+                (fn [toteuma] (case (:paatos_taloudellinen_osa toteuma)
+                                :hyvaksytty 0
+                                :hylatty 1
+                                3)))
           @toteumarivit)]])))
 
 (defn paallystysilmoitukset []

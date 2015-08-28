@@ -16,10 +16,6 @@
       "type": "integer",
       "required": true
     },
-    "selite": {
-      "id": "urn:harja/toteumat/0/toteuma/selite",
-      "type": "string"
-    },
     "alkanut": {
       "id": "urn:harja/toteumat/0/toteuma/alkanut",
       "type": "string",
