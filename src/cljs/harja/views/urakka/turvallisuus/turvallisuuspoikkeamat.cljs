@@ -58,7 +58,8 @@
 
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
                        {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-opt :leveys 1 :tyyppi :pvm
-                        :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]] :varoita [[:urakan-aikana] [:hoitokaudella]]}
+                        :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
+                        :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                        {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika-opt :leveys 1 :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
