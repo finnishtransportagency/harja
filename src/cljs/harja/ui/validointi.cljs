@@ -48,9 +48,6 @@
         urakan-aikana? (and data alkupvm loppupvm
                            (pvm/valissa? data alkupvm loppupvm))
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))]
-    (log "data " data)
-    (log "urakan aikana? " urakan-aikana?)
-    (log "hoitokaudella? " hoitokaudella?)
     (if (false? urakan-aikana?)
       (or viesti
           (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
