@@ -54,6 +54,9 @@
 (defn show-popup! [lat-lng content]
   (go (>! komento-ch [::popup lat-lng content])))
 
+(defn hide-popup! []
+  (go (>! komento-ch [::hide-popup])))
+
 (defn invalidate-size! []
   (go (>! komento-ch [::invalidate-size])))
 
@@ -65,6 +68,9 @@
 
 
 (def ^:export the-kartta (atom nil))
+
+(defn keskita-kartta-pisteeseen! [keskipiste]
+  (.setCenter (.getView @the-kartta) (clj->js keskipiste)))
 
 (defn ^:export invalidate-size []
   (.invalidateSize @the-kartta))
@@ -238,6 +244,7 @@
 
                  ::invalidate-size (.updateSize ol3)
 
+                 ::hide-popup (poista-popup! this)
                  ;:default (log "tuntematon kartan komento: " komento)
                  )
                (recur (alts! [komento-ch unmount-ch]))))

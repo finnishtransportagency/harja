@@ -7,6 +7,7 @@
             [harja.atom :refer-macros [reaction<!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs-time.core :as t])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -107,7 +108,9 @@
                   #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
-      (reset! haetut-asiat tulos))))
+      (reset! haetut-asiat tulos)
+      (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
+                             :tyokoneet (first tulos)}))))
 
 (def pollaus-id (atom nil))
 (def +sekuntti+ 1000)
