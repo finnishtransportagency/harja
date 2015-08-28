@@ -67,7 +67,7 @@
   (case avainsana
     :vahinkojen_korjaukset "Vahinkojen korjaukset"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
-    :akillinen_hoitotyo "Äkillinen hoitotyö"
+    :akillinen-hoitotyo "Äkillinen hoitotyö"
     :muu "Muu"
     :tilaajan_maa-aines "Tilaajan maa-aines"
     +valitse-tyyppi+))
@@ -75,12 +75,12 @@
 ;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
 ;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
 (def +erilliskustannustyypit+
-  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen_hoitotyo :muu])
+  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen-hoitotyo :muu])
 
 (defn luo-kustannustyypit [urakkatyyppi]
   (if (= :hoito urakkatyyppi)
     +erilliskustannustyypit+
-    (remove #{:akillinen_hoitotyo} +erilliskustannustyypit+)))
+    (remove #{:akillinen-hoitotyo} +erilliskustannustyypit+)))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
