@@ -1,11 +1,11 @@
 (ns harja.palvelin.palvelut.toimenpidekoodit
-   (:require [com.stuartsierra.component :as component]
-             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-             [harja.domain.roolit :as roolit]
-             [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]
-             
-             [clojure.java.jdbc :as jdbc]
-             [taoensso.timbre :as log]))
+  (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.domain.roolit :as roolit]
+            [harja.kyselyt.toimenpidekoodit :refer [hae-kaikki-toimenpidekoodit] :as q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [clojure.java.jdbc :as jdbc]
+            [taoensso.timbre :as log]))
 
 (declare hae-toimenpidekoodit
          tallenna-tehtavat
@@ -18,43 +18,53 @@
 (defrecord Toimenpidekoodit []
   component/Lifecycle
   (start [this]
-         (doto (:http-palvelin this)
-           (julkaise-palvelu :hae-toimenpidekoodit
-                             (fn [kayttaja]
-                               (hae-toimenpidekoodit (:db this) kayttaja))
-                             {:last-modified (fn [user]
-                                               (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
-           (julkaise-palvelu
-             :tallenna-tehtavat (fn [user tiedot]
-                                  (tallenna-tehtavat (:db this) user tiedot)))
+    (doto (:http-palvelin this)
+      (julkaise-palvelu :hae-toimenpidekoodit
+                        (fn [kayttaja]
+                          (hae-toimenpidekoodit (:db this) kayttaja))
+                        {:last-modified (fn [user]
+                                          (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
+      (julkaise-palvelu
+        :tallenna-tehtavat (fn [user tiedot]
+                             (tallenna-tehtavat (:db this) user tiedot)))
 
-           (julkaise-palvelu
-             :hae-toimenpidekoodit-historiakuvaan (fn [user tiedot]
-                                                    (hae-toimenpidekoodit-historiakuvaan (:db this) user tiedot))))
-         this)
-  
+      (julkaise-palvelu
+        :hae-toimenpidekoodit-historiakuvaan (fn [user tiedot]
+                                               (hae-toimenpidekoodit-historiakuvaan (:db this) user tiedot))))
+    this)
+
   (stop [this]
-        (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat]]
-          (poista-palvelu (:http-palvelin this) p))
-        this))
+    (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat]]
+      (poista-palvelu (:http-palvelin this) p))
+    this))
 
-(defn hae-toimenpidekoodit-historiakuvaan [db user {:keys [urakka]}]
-  (q/hae-toimenpidekoodit-historiakuvaan db (not (nil? urakka)) urakka))
+(defn hae-toimenpidekoodit-historiakuvaan [db user {:keys [urakka urakan-tyyppi]}]
+  (log/debug "Haetaan toimenpidekoodit historiakuvaan urakalle " urakka ", tyypeille " urakan-tyyppi)
+  (jdbc/with-db-transaction [db db]
+    (q/hae-toimenpidekoodit-historiakuvaan db (if (nil? urakka)
+                                                (let [urakat (mapv :id (filter
+                                                             (fn [{:keys [tyyppi]}]
+                                                               (= (keyword tyyppi) urakan-tyyppi))
+                                                             (urakat-q/hae-kaynnissa-olevat-urakat db)))]
+                                                  (log/debug "Haetaan urakoille: " (pr-str urakat))
+                                                  urakat)
+
+                                                urakka))))
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
   (jdbc/with-db-transaction [c db]
-                            (doseq [rivi lisattavat]
-                              (lisaa-toimenpidekoodi c user rivi)
-                              )
-                            (doseq [rivi muokattavat]
-                              (muokkaa-toimenpidekoodi c user rivi)
-                              )
-                            (doseq [id poistettavat]
-                              (poista-toimenpidekoodi c user id)
-                              )
-                            (hae-kaikki-toimenpidekoodit c)))
+    (doseq [rivi lisattavat]
+      (lisaa-toimenpidekoodi c user rivi)
+      )
+    (doseq [rivi muokattavat]
+      (muokkaa-toimenpidekoodi c user rivi)
+      )
+    (doseq [id poistettavat]
+      (poista-toimenpidekoodi c user id)
+      )
+    (hae-kaikki-toimenpidekoodit c)))
 
 (defn hae-toimenpidekoodit
   "Palauttaa toimenpidekoodit listana"
@@ -66,12 +76,12 @@
   ;;[db {kayttaja :id} {nimi :nimi emo :emo}]
   [db user {:keys [nimi emo yksikko] :as rivi}]
   (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (:id user))]
-    {:taso 4
-     :emo emo
-     :nimi nimi
+    {:taso    4
+     :emo     emo
+     :nimi    nimi
      :yksikko yksikko
-     :id (:id luotu)}))
-        
+     :id      (:id luotu)}))
+
 (defn poista-toimenpidekoodi
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
   [db user id]

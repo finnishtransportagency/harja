@@ -35,10 +35,15 @@
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
 (defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
                                       (when nakymassa?
-                                        (go (let [res (<! (k/post! :hae-toimenpidekoodit-historiakuvaan {:urakka (:id @nav/valittu-urakka)}))]
+                                        (go (let [res (<! (k/post! :hae-toimenpidekoodit-historiakuvaan
+                                                                   {:urakka        (:id @nav/valittu-urakka)
+                                                                    :urakan-tyyppi (:arvo @nav/valittu-urakkatyyppi)}))]
                                               res)))))
 
 (defonce naytettavat-toteumatyypit (reaction
+                                     (group-by :emo @toimenpidekoodit)))
+
+#_(defonce naytettavat-toteumatyypit (reaction
                                      (vec (sort (set (map :nimi @toimenpidekoodit))))))
 
 (defonce valitut-toteumatyypit (atom #{}))

@@ -90,13 +90,22 @@
        (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
        (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
 
-(defn toteuma-suodattimet []
+(defn toteuma-suodattimet [toteumakoodit]
   [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot @tiedot/naytettavat-toteumatyypit}
+                      :vaihtoehdot (vec (sort (set (map :nimi toteumakoodit))))}
    tiedot/valitut-toteumatyypit])
 
-(defonce toteumat-rivit (atom {1 {:auki false :otsikko "Toteumat" :sisalto [toteuma-suodattimet]}
-                               2 {:auki false :otsikko "Muut" :sisalto [muut-suodattimet]}}))
+(defonce toteumat-rivit (reaction
+                         (merge
+                           (into {}
+                                 (keep-indexed
+                                   (fn [index asia] {index asia})
+                                   (mapv (fn [emo] {:otsikko emo
+                                                    :auki false
+                                                    :sisalto [toteuma-suodattimet (get @tiedot/naytettavat-toteumatyypit emo)]})
+                                         (sort (keys @tiedot/naytettavat-toteumatyypit)))))
+                           {(count (keys @tiedot/naytettavat-toteumatyypit))
+                            {:otsikko "Muut" :auki false :sisalto [muut-suodattimet]}})))
 
 (defonce toteumat [harja.ui.yleiset/haitari toteumat-rivit {:otsikko "Muut suodattimet"}])
 
@@ -110,8 +119,8 @@
 
 (defn historiakuva []
   (komp/luo
-    {:component-will-mount (fn [_]
-                             (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+    {:component-will-mount   (fn [_]
+                               (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
      :component-will-unmount (fn [_]
                                (tiedot/lopeta-asioiden-haku)
                                (kartta/tyhjenna-yleiset-kontrollit))}
@@ -137,11 +146,11 @@
                                               (when-not (empty? (:tehtavat tapahtuma))
                                                 (doall
                                                   (for [tehtava (:tehtavat tapahtuma)]
-                                                        [:span
-                                                         [:p "Toimenpide: " (:toimenpide tehtava)]
-                                                         [:p "Määrä: " (:maara tehtava)]
-                                                         [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                                                         [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                                                    [:span
+                                                     [:p "Toimenpide: " (:toimenpide tehtava)]
+                                                     [:p "Määrä: " (:maara tehtava)]
+                                                     [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                                     [:p "Lisätieto: " (:lisatieto tehtava)]])))
                                               (when-not (empty? (:materiaalit tapahtuma))
                                                 (doall
                                                   (for [toteuma (:materiaalit tapahtuma)]
