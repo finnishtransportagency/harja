@@ -85,7 +85,6 @@
   "Muun työn tyypin teksti avainsanaa vastaan"
   (case avainsana
     :muutostyo "Muutostyö"
-    :akillinen-hoitotyo "Äkillinen hoitotyö"
     :lisatyo "Lisätyö"
     +valitse-tyyppi+))
 
@@ -93,12 +92,11 @@
   "Muun työn tyypin teksti avainsanaa vastaan"
   (case avainsana
     :muutostyo "muutostyön"
-    :akillinen-hoitotyo "äkillisen hoitotyön"
     :lisatyo "lisätyön"
     "työn jonka tyyppi on tuntematon"))
 
 (def +muun-tyon-tyypit+
-  [:muutostyo :akillinen-hoitotyo :lisatyo])
+  [:muutostyo :lisatyo])
 
 
 (def korostettavan-rivin-id (atom nil))
@@ -318,8 +316,8 @@
                           :alkanut
                           arvo))
                :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-               :varoita [[:urakan-aikana]]}
-              {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm
+               :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+              {:otsikko     "Lopetus" :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :leveys-col 2
                :validoi [[:ei-tyhja "Valitse päivämäärä"]

@@ -38,7 +38,7 @@ Optiot voi sisältää:
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)]
     
-    (fn [{:keys [liite-ladattu] :as opts}]
+    (fn [{:keys [liite-ladattu nappi-teksti] :as opts}]
       (if-let [tiedosto @tiedosto]
         ;; Tiedosto on jo ladatty palvelimelle, näytetään se
         [liitetiedosto tiedosto]
@@ -49,8 +49,8 @@ Optiot voi sisältää:
           [:progress {:value edistyminen :max 100}]
           
           ;; Tiedostoa ei vielä valittu
-          [:div.file-upload.btn.btn-primary
-           [:span (ikonit/upload) " Valitse tiedosto"]
+          [:div.file-upload.nappi-toissijainen
+           [:span (ikonit/upload) (or nappi-teksti " Valitse tiedosto")]
            [:input.upload
             {:type "file"
              :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]

@@ -171,7 +171,7 @@
                          :alkanut
                          arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-            :varoita [[:urakan-aikana]]}
+            :varoita [[:urakan-aikana-ja-hoitokaudella]]}
            {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                                                                                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
            {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
