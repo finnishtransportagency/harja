@@ -353,9 +353,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                              :nappi-teksti " Lisää liite havaintoon"
                                              }]]}
 
-             (lomake/ryhma
+             (when-not uusi?
+               (lomake/ryhma
                "Kommentit"
-               (when-not uusi?
                  {:otsikko     "" :nimi :kommentit
                   :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                      :voi-liittaa      true
