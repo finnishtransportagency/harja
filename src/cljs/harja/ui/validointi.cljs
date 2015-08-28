@@ -26,7 +26,9 @@
 
 (defmethod validoi-saanto :hoitokaudella [_ _ data _ _ & [viesti]]
   (when (and data (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi))))
-    viesti))
+    (or viesti
+        (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm (first @u/valittu-hoitokausi))
+             " - " (pvm/pvm (second @u/valittu-hoitokausi))))))
 
 (defmethod validoi-saanto :urakan-aikana [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
