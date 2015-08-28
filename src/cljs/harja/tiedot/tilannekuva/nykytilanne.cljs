@@ -106,8 +106,8 @@
 (def +sekuntti+ 1000)
 (def +minuutti+ (* 60 +sekuntti+))
 
-(def +intervalli+ (* 5 +sekuntti+))
-(def +bufferi+ (* 1 +sekuntti+))
+(def +intervalli+ (* 3 +sekuntti+))
+(def +bufferi+ 500)
 
 (def asioiden-haku (reaction<!
                      [_ @hae-toimenpidepyynnot?

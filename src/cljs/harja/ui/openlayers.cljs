@@ -389,9 +389,9 @@
 (defmethod luo-feature :icon [{:keys [coordinates img direction]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style. #js {:image  (ol.style.Icon. #js {:src          img
-                                                                  :anchor       #js [0.5 0.5]
+                                                                  :anchor       #js [0.5 1]
                                                                   :opacity      1
-                                                                  :size         #js [32 32]
+                                                                  :size         #js [40 40]
                                                                   :rotation     (or direction 0)
                                                                   :anchorXUnits "fraction"
                                                                   :anchorYUnits "fraction"})
