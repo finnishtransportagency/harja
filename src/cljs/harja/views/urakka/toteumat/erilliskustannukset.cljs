@@ -55,7 +55,7 @@
                                                           :rahasumma rahasumma
                                                           :indeksin_nimi indeksi)))
             uuden-id (:id (first (filter #(not (vanhat-idt (:id %)))
-                                   res)))]
+                                         res)))]
         (reset! u/erilliskustannukset-hoitokaudella res)
         (or uuden-id true))))
 
@@ -67,6 +67,7 @@
   (case avainsana
     :vahinkojen_korjaukset "Vahinkojen korjaukset"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :akillinen-hoitotyo "Äkillinen hoitotyö"
     :muu "Muu"
     :tilaajan_maa-aines "Tilaajan maa-aines"
     +valitse-tyyppi+))
@@ -74,7 +75,12 @@
 ;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
 ;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
 (def +erilliskustannustyypit+
-  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :muu])
+  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen-hoitotyo :muu])
+
+(defn luo-kustannustyypit [urakkatyyppi]
+  (if (= :hoito urakkatyyppi)
+    +erilliskustannustyypit+
+    (remove #{:akillinen-hoitotyo} +erilliskustannustyypit+)))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -94,7 +100,7 @@
   ([id kesto]
    (reset! korostettavan-rivin-id id)
    (go (<! (timeout kesto))
-     (reset! korostettavan-rivin-id nil))))
+       (reset! korostettavan-rivin-id nil))))
 
 (def +rivin-luokka+ "korosta")
 
@@ -146,14 +152,14 @@
                              [napit/palvelinkutsu-nappi
                               " Tallenna kustannus"
                               #(tallenna-erilliskustannus @muokattu)
-                              {:luokka "nappi-ensisijainen"
-                               :disabled @valmis-tallennettavaksi?
+                              {:luokka       "nappi-ensisijainen"
+                               :disabled     @valmis-tallennettavaksi?
                                :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
                                                (do
                                                  (korosta-rivia muokatun-id)
                                                  (reset! tallennus-kaynnissa false)
                                                  (reset! valittu-kustannus nil)))
-                               :kun-virhe  (reset! tallennus-kaynnissa false)}]
+                               :kun-virhe    (reset! tallennus-kaynnissa false)}]
                              (when (:id @muokattu)
                                [:button.nappi-kielteinen
                                 {:class (when @tallennus-kaynnissa "disabled")
@@ -181,9 +187,9 @@
                                                                                                                      ;; Epäonnistui jostain syystä
                                                                                                                      (reset! tallennus-kaynnissa false)))))}
                                                                     "Poista kustannus"]]}
-                                            [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
-                                                    (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
-                                                    (pvm/pvm (:pvm @muokattu)) "?")]))}
+                                                        [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
+                                                                   (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                                   (pvm/pvm (:pvm @muokattu)) "?")]))}
                                 (ikonit/trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
@@ -201,7 +207,7 @@
            {:otsikko       "Tyyppi" :nimi :tyyppi
             :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat      +erilliskustannustyypit+
+            :valinnat      (luo-kustannustyypit (:tyyppi @nav/valittu-urakka))
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :leveys-col    3}
@@ -221,7 +227,7 @@
             :fmt           #(maksajavalinnan-teksti %)
             :leveys-col    3
             }
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
+           {:otsikko     "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
             :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
            ]
 
@@ -235,9 +241,9 @@
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
                         toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
                     (reverse (sort-by :pvm (filter #(and
-                                             (= sopimus-id (:sopimus %))
-                                             (= (:toimenpideinstanssi %) toimenpideinstanssi))
-                                     @u/erilliskustannukset-hoitokaudella)))))]
+                                                     (= sopimus-id (:sopimus %))
+                                                     (= (:toimenpideinstanssi %) toimenpideinstanssi))
+                                                   @u/erilliskustannukset-hoitokaudella)))))]
 
     (komp/luo
       (fn []
