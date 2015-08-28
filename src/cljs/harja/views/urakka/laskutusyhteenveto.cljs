@@ -63,15 +63,21 @@
             tiedot @laskutusyhteenvedon-tiedot
             kht-yhteenveto {:nimi                        "Kokonaishintaiset työt yhteensä"
                         :yhteenveto                  true
-                        :kht_laskutettu_hoitokaudella_ennen_aikavalia
-                                                     (reduce + (map :kht_laskutettu_hoitokaudella_ennen_aikavalia tiedot))
+                        :kht_laskutettu
+                                                     (reduce + (map :kht_laskutettu tiedot))
                         :kht_laskutetaan_aikavalilla (reduce + (map :kht_laskutetaan_aikavalilla tiedot))}
 
             yht-yhteenveto {:nimi                        "Yksikköhintaiset työt yhteensä"
                             :yhteenveto                  true
-                            :yht_laskutettu_hoitokaudella_ennen_aikavalia
-                                                         (reduce + (map :yht_laskutettu_hoitokaudella_ennen_aikavalia tiedot))
-                            :yht_laskutetaan_aikavalilla (reduce + (map :yht_laskutetaan_aikavalilla tiedot))}]
+                            :yht_laskutettu
+                                                         (reduce + (map :yht_laskutettu tiedot))
+                            :yht_laskutetaan (reduce + (map :yht_laskutetaan tiedot))}
+            kht-ind-tar-yhteenveto {:nimi                        "Kokonaishintaisten töiden indeksitarkistukset yhteensä"
+                                    :yhteenveto                  true
+                                    :kht_laskutettu
+                                                                 (reduce + (map :kht_laskutettu tiedot))
+                                    :kht_laskutetaan_aikavalilla (reduce + (map :kht_laskutetaan_aikavalilla tiedot))}
+            ]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
@@ -86,13 +92,13 @@
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
               {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @aikavali)))
-               :nimi    :kht_laskutettu_hoitokaudella_ennen_aikavalia :tyyppi :numero :leveys "20%"
+               :nimi    :kht_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko (str "Laskutetaan " (pvm/pvm (first @aikavali)) " - " (pvm/pvm (second @aikavali)))
                :nimi    :kht_laskutetaan_aikavalilla :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:kht_laskutettu_hoitokaudella_ennen_aikavalia rivi)
+               :hae     (fn [rivi] (+ (:kht_laskutettu rivi)
                                       (:kht_laskutetaan_aikavalilla rivi)))}]
 
              (sort-by :yhteenveto (conj tiedot kht-yhteenveto))]
@@ -105,20 +111,20 @@
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
               {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @aikavali)))
-               :nimi    :yht_laskutettu_hoitokaudella_ennen_aikavalia :tyyppi :numero :leveys "20%"
+               :nimi    :yht_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko (str "Laskutetaan " (pvm/pvm (first @aikavali)) " - " (pvm/pvm (second @aikavali)))
-               :nimi    :yht_laskutetaan_aikavalilla :tyyppi :numero :leveys "20%"
+               :nimi    :yht_laskutetaan :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:yht_laskutettu_hoitokaudella_ennen_aikavalia rivi)
-                                      (:yht_laskutetaan_aikavalilla rivi)))}]
+               :hae     (fn [rivi] (+ (:yht_laskutettu rivi)
+                                      (:yht_laskutetaan rivi)))}]
 
              (sort-by :yhteenveto (conj @laskutusyhteenvedon-tiedot yht-yhteenveto))]
 
              ;; tähän sakkotaulukot
 
-            #_ [grid/grid
+             [grid/grid
               {:otsikko      "Kokonaishintaisten töiden indeksitarkistukset"
                :tyhja        "Ei indeksitarkistuksia"
                :tunniste     :nimi
@@ -126,13 +132,33 @@
                :voi-muokata? false}
               [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
                {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @aikavali)))
-                :nimi    :kht_ind_laskutettu_hoitokaudella_ennen_aikavalia :tyyppi :numero :leveys "20%"
+                :nimi    :kht_laskutettu_ind_kor :tyyppi :numero :leveys "20%"
                 :fmt     fmt/euro-opt :tasaa :oikea}
                {:otsikko (str "Laskutetaan " (pvm/pvm (first @aikavali)) " - " (pvm/pvm (second @aikavali)))
-                :nimi    :kht_ind_laskutetaan_aikavalilla :tyyppi :numero :leveys "20%"
+                :nimi    :kht_laskutetaan_ind_kor :tyyppi :numero :leveys "20%"
                 :fmt     fmt/euro-opt :tasaa :oikea}
                {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-                :hae     (fn [rivi] (+ (:kht_ind_laskutettu_hoitokaudella_ennen_aikavalia rivi)
+                :hae     (fn [rivi] (+ (:kht_ind_laskutettu rivi)
                                        (:kht_ind_laskutetaan_aikavalilla rivi)))}]
 
-              (sort-by :yhteenveto (conj @laskutusyhteenvedon-tiedot yht-yhteenveto))]])]))))
+              (sort-by :yhteenveto (conj @laskutusyhteenvedon-tiedot kht-ind-tar-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "Yksikköhintaisten töiden indeksitarkistukset"
+              :tyhja        "Ei indeksitarkistuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @aikavali)))
+               :nimi    :yht_laskutettu_ind_kor :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first @aikavali)) " - " (pvm/pvm (second @aikavali)))
+               :nimi    :yht_laskutetaan_ind_kor :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:yht_ind_laskutettu rivi)
+                                      (:yht_ind_laskutetaan_aikavalilla rivi)))}]
+
+             (sort-by :yhteenveto (conj @laskutusyhteenvedon-tiedot yht-ind-tar-yhteenveto))]
+            ])]))))

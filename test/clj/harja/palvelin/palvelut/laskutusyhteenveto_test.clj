@@ -29,24 +29,26 @@
 
 (deftest laskutusyhteenvedon-tietojen-haku
   (testing "laskutusyhteenvedon-tietojen-haku"
-    (let [payload {:urakka-id @oulun-alueurakan-2014-2019-id
-                   :hk_alkupvm (java.sql.Date. 114 9 1)
-                   :hk_loppupvm (java.sql.Date. 115 8 30)
-                   :aikavali_alkupvm (java.sql.Date. 115 6 1)
-                    :aikavali_loppupvm (java.sql.Date. 115 6 30)}
-          tiedot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :hae-laskutusyhteenvedon-tiedot
-                                     +kayttaja-jvh+
-                                     payload)
-          _ (log/debug "tiedot" tiedot)
-          tiedot-talvihoito (first (filter #(= (:nimi  %) "Talvihoito") tiedot))
-          _ (log/debug "tiedot th" tiedot-talvihoito)
-          odotetut [{:nimi "Talvihoito", :kht_laskutettu_hoitokaudella_ennen_aikavalia 31500.0, :kht_laskutetaan_aikavalilla 3500.0, :yht_laskutettu_hoitokaudella_ennen_aikavalia 100.0, :yht_laskutetaan_aikavalilla 20.0}
-                    {:nimi "Liikenneympäristön hoito", :kht_laskutettu_hoitokaudella_ennen_aikavalia nil, :kht_laskutetaan_aikavalilla nil, :yht_laskutettu_hoitokaudella_ennen_aikavalia 500.0, :yht_laskutetaan_aikavalilla nil}
-                    {:nimi "Soratien hoito", :kht_laskutettu_hoitokaudella_ennen_aikavalia nil, :kht_laskutetaan_aikavalilla nil, :yht_laskutettu_hoitokaudella_ennen_aikavalia nil, :yht_laskutetaan_aikavalilla nil}]
-          odotettu-talvihoito (first (filter #(= (:nimi  %) "Talvihoito") odotetut))
-          _ (log/debug "talvihoito" odotettu-talvihoito)]
-      (is (= tiedot-talvihoito odotettu-talvihoito) "laskutusyhteenvedon-tiedot"))))
+    (let [payload {:urakka-id          @oulun-alueurakan-2014-2019-id
+                  :hk_alkupvm         (java.sql.Date. 114 9 1)
+                  :hk_loppupvm        (java.sql.Date. 115 8 30)
+                  :aikavali_alkupvm   (java.sql.Date. 115 6 1)
+                   :aikavali_loppupvm (java.sql.Date. 115 6 30)}
+                 tiedot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-laskutusyhteenvedon-tiedot
+                                        +kayttaja-jvh+
+                                        payload)
+                 _ (log/debug "tiedot" tiedot)
+                 ;                 tiedot-talvihoito (first (filter #(= (:nimi %) "Talvihoito") tiedot))
+                 ;_ (log/debug "tiedot th" tiedot-talvihoito)
+                 odotetut [{:nimi "Talvihoito", :kht_laskutettu 31500.0, :kht_laskutettu_ind_kor 32966.5000000000000000M, :kht_laskutetaan 3500.0, :kht_laskutetaan_ind_kor 3706.5000000000000000M, :yht_laskutettu 100.0, :yht_laskutettu_ind_kor 103.9000000000000000M, :yht_laskutetaan 20.0, :yht_laskutetaan_ind_kor 21.1800000000000000M}
+                            {:nimi "Liikenneympäristön hoito", :kht_laskutettu 0.0, :kht_laskutettu_ind_kor 0.0M, :kht_laskutetaan nil, :kht_laskutetaan_ind_kor nil, :yht_laskutettu 500.0, :yht_laskutettu_ind_kor 519.5000000000000000M, :yht_laskutetaan nil, :yht_laskutetaan_ind_kor nil}
+                            {:nimi "Soratien hoito", :kht_laskutettu 90000.0, :kht_laskutettu_ind_kor 94190.0000000000000000M, :kht_laskutetaan 10000.0, :kht_laskutetaan_ind_kor 10590.0000000000000000M, :yht_laskutettu 0.0, :yht_laskutettu_ind_kor 0.0M, :yht_laskutetaan nil, :yht_laskutetaan_ind_kor nil}]
+
+                       ;                  odotettu-talvihoito (first (filter #(= (:nimi %) "Talvihoito") odotetut))
+                  ;_ (log/debug "talvihoito" odotettu-talvihoito)
+                  ]
+      (is (= tiedot odotetut) "laskutusyhteenvedon-tiedot"))))
 
 
 
