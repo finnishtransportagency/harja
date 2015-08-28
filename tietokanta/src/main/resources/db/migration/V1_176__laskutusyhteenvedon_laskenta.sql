@@ -33,6 +33,7 @@ DECLARE
   yht_laskutetaan                 NUMERIC;
   yht_laskutetaan_ind_korotettuna NUMERIC;
   yht_laskutetaan_ind_korotus     NUMERIC;
+  yht_laskutetaan_rivi            kuukauden_indeksikorotus_rivi;
   yhti                            RECORD;
   yhti_laskutetaan                RECORD;
 
@@ -112,9 +113,10 @@ BEGIN
                       AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
                 GROUP BY tot.alkanut
     LOOP
-      SELECT * FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut)::INTEGER),
-                                                   (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut)::INTEGER),
-                                                   'MAKU 2010', yhti.yht_summa)
+      SELECT *
+      FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
+                                          (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut) :: INTEGER),
+                                          'MAKU 2010', yhti.yht_summa)
       INTO yht_laskutettu_rivi;
       yht_laskutettu :=  yht_laskutettu + yht_laskutettu_rivi.summa;
       yht_laskutettu_ind_korotettuna :=  yht_laskutettu_ind_korotettuna + yht_laskutettu_rivi.korotettuna;
@@ -158,8 +160,14 @@ BEGIN
           AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
     GROUP BY tot.alkanut;
 
-    yht_laskutetaan_ind_korotettuna := kuukauden_indeksikorotus(yhti_laskutetaan.tot_alkanut :: DATE, 'MAKU 2010',
-                                                                yhti_laskutetaan.yht_summa);
+    SELECT *
+    FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
+                                        (SELECT EXTRACT(MONTH FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
+                                        'MAKU 2010', yhti_laskutetaan.yht_summa)
+    INTO yht_laskutetaan_rivi;
+
+    yht_laskutetaan_ind_korotettuna := yht_laskutetaan_rivi.korotettuna;
+    yht_laskutetaan_ind_korotus := yht_laskutetaan_rivi.korotus;
 
     RETURN NEXT (t.nimi,
                  kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
