@@ -7,6 +7,7 @@
             [harja.ui.kentat :as kentat]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [reagent.core :as r]
+            [harja.views.tilannekuva.tyokoneet :as tyokoneet]
             [harja.views.kartta :as kartta]
             [clojure.string :as str]
             [harja.asiakas.tapahtumat :as tapahtumat])
