@@ -100,7 +100,8 @@
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
       (reset! haetut-asiat tulos)
       (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
-                             :tyokoneet (first tulos)}))))
+                             :tyokoneet tulos}))))
+
 
 (def +sekuntti+ 1000)
 (def +minuutti+ (* 60 +sekuntti+))

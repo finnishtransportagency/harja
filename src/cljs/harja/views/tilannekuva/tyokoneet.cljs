@@ -29,7 +29,7 @@
                         [:div "Organisaatio: " (:organisaationimi tapahtuma)]
                         [:div "Urakka: " (:urakkanimi tapahtuma)]
                         [:div "Tehtävät: "
-                         (let [tehtavat (str/join "," (:tehtavat tapahtuma))]
+                         (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
                            [:span tehtavat])]]))
 
 (defonce tyokonedatan-muuttuminen
