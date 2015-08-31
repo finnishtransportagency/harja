@@ -74,14 +74,12 @@
                             :yht_laskutetaan (reduce + (map :yht_laskutetaan tiedot))}
             kht-ind-tar-yhteenveto {:nimi                        "Kokonaishintaisten töiden indeksitarkistukset yhteensä"
                                     :yhteenveto                  true
-                                    :kht_laskutettu
-                                                                 (reduce + (map :kht_laskutettu tiedot))
-                                    :kht_laskutetaan_aikavalilla (reduce + (map :kht_laskutetaan_aikavalilla tiedot))}
+                                    :kht_laskutettu_ind_korotus (reduce + (map :kht_laskutettu_ind_korotus tiedot))
+                                    :kht_laskutetaan_ind_korotus (reduce + (map :kht_laskutetaan_ind_korotus tiedot))}
             yht-ind-tar-yhteenveto {:nimi                        "Yksikköhintaisten töiden indeksitarkistukset yhteensä"
                                     :yhteenveto                  true
-                                    :kht_laskutettu
-                                                                 (reduce + (map :yht_laskutettu_ind_korotus tiedot))
-                                    :kht_laskutetaan_aikavalilla (reduce + (map :yht_laskutetaan_ind_korotus tiedot))}
+                                    :yht_laskutettu_ind_korotus (reduce + (map :yht_laskutettu_ind_korotus tiedot))
+                                    :yht_laskutetaan_ind_korotus (reduce + (map :yht_laskutetaan_ind_korotus tiedot))}
             ]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
