@@ -32,22 +32,32 @@
 (defonce nakymassa? (atom false))
 (defonce taso-historiakuva (atom false))
 
-(defonce valitut-toteumatyypit (atom nil))
-
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
-(defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
+(defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?
+                                       urakka @nav/valittu-urakka
+                                       tyyppi @nav/valittu-urakkatyyppi]
                                       (when nakymassa?
                                         (go (let [res (<! (k/post! :hae-toimenpidekoodit-historiakuvaan
-                                                                   {:urakka        (:id @nav/valittu-urakka)
-                                                                    :urakan-tyyppi (:arvo @nav/valittu-urakkatyyppi)}))]
+                                                                   {:urakka        (:id urakka)
+                                                                    :urakan-tyyppi (:arvo tyyppi)}))]
                                               res)))))
+
+(defonce valitut-toteumatyypit (atom {}))
+
+
+(defonce valitse-uudet-tpkt
+         (run!
+           (let [nimet (into #{} (map :nimi @toimenpidekoodit))]
+             (swap! valitut-toteumatyypit
+                    (fn [nyt-valitut]
+                      (let [olemasaolevat (into #{} (keys nyt-valitut))
+                            kaikki (vec (clojure.set/union olemasaolevat nimet))]
+                        (zipmap kaikki
+                                (map #(get nyt-valitut % true)
+                                     kaikki))))))))
 
 (defonce naytettavat-toteumatyypit (reaction
                                      (group-by :emo @toimenpidekoodit)))
-
-(run! (when (and (nil? @valitut-toteumatyypit) @toimenpidekoodit)
-        (log "Asetetaan valitut toteumatyypit ")
-        (reset! valitut-toteumatyypit (into #{} (map :nimi @toimenpidekoodit)))))
 
 (def haetut-asiat (atom nil))
 
@@ -180,7 +190,6 @@
                       _ @hae-paikkaustyot?
                       _ @hae-paallystystyot?
                       _ @toimenpidekoodit
-                      _ @naytettavat-toteumatyypit
                       _ @valitut-toteumatyypit
                       _ @valittu-aikasuodatin
                       _ @lyhyen-suodattimen-asetukset

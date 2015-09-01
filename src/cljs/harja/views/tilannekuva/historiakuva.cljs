@@ -103,7 +103,14 @@
                       :tyhjenna-kaikki? true
                       :valitse-kaikki?  true
                       :vaihtoehdot      (vec (sort (set (map :nimi toteumakoodit))))}
-   tiedot/valitut-toteumatyypit])
+   (r/wrap
+     (into #{} (keep (fn [[avain arvo]] (when arvo avain)) @tiedot/valitut-toteumatyypit))
+     (fn [uusi]
+       (swap! tiedot/valitut-toteumatyypit
+              (fn [vanha]
+                (let [avaimet (keys vanha)]
+                  (zipmap avaimet
+                          (map (fn [avain] (if (uusi avain) true false)) avaimet)))))))])
 
 (defonce toteumat-rivit (reaction
                           (merge
@@ -139,7 +146,15 @@
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                   :lyhyt
                                                   :pitka)))
-      nil)))
+      nil
+      #_(let [_ @tiedot/toimenpidekoodit]
+        (log "REBDER")
+        (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}])
+
+        (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
+                                                    :lyhyt
+                                                    :pitka)))
+        nil))))
 
 (tapahtumat/kuuntele! :toteuma-klikattu
                       (fn [tapahtuma]
