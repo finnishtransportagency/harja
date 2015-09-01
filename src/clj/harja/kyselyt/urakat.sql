@@ -1,3 +1,9 @@
+-- name: hae-kaynnissa-olevat-urakat
+SELECT
+  u.id, u.nimi, u.tyyppi
+FROM urakka u
+WHERE u.loppupvm IS NULL OR u.loppupvm > NOW();
+
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
 -- PENDING: joinataan mukaan ylläpidon urakat eri taulusta?

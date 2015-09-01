@@ -66,18 +66,22 @@ Seuraavat optiot ovat mahdollisia:
 
 
        :reagent-render
-       (fn [{:keys [pvm valitse sijainti leveys] :as optiot}]
+       (fn [{:keys [pvm valitse sijainti leveys absoluuttinen?] :as optiot}]
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta (if sijainti
-                                 (let [[x y w] sijainti]
-                                   {:style {:left x
-                                            :top y
-                                            :width w
-                                            :position "absolute"
-                                            :z-index 100}})
-                                 (when leveys {:style {:width leveys}}))
+           [:table.pvm-valinta (if absoluuttinen?
+                                 {:style {:position "absolute"
+                                          :z-index 100}}
+
+                                 (if sijainti
+                                  (let [[x y w] sijainti]
+                                    {:style {:left     x
+                                             :top      y
+                                             :width    w
+                                             :position "absolute"
+                                             :z-index  100}})
+                                  (when leveys {:style {:width leveys}})))
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava
@@ -110,16 +114,16 @@ Seuraavat optiot ovat mahdollisia:
                [:tr
                 (for [paiva paivat]
                   ^{:key (pvm/millisekunteina paiva)}
-                  [:td.pvm-paiva.klikattava {:class (str
-                                                     (when (and pvm
-                                                                (= (t/day paiva) (t/day pvm))
-                                                                (= (t/month paiva) (t/month pvm))
-                                                                (= (t/year paiva) (t/year pvm)))
-                                                       "pvm-valittu ")
-                                                     (if (naytettava-kk-paiva? paiva)
-                                                       "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
+                  [:td.pvm-paiva.klikattava {:class    (str
+                                                         (when (and pvm
+                                                                    (= (t/day paiva) (t/day pvm))
+                                                                    (= (t/month paiva) (t/month pvm))
+                                                                    (= (t/year paiva) (t/year pvm)))
+                                                           "pvm-valittu ")
+                                                         (if (naytettava-kk-paiva? paiva)
+                                                           "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
-                                  :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
+                                             :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
                    (t/day paiva)])])]]))})))
 
 
