@@ -32,7 +32,7 @@
 (defonce nakymassa? (atom false))
 (defonce taso-historiakuva (atom false))
 
-(defonce valitut-toteumatyypit (atom #{}))
+(defonce valitut-toteumatyypit (atom nil))
 
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
 (defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
@@ -44,6 +44,10 @@
 
 (defonce naytettavat-toteumatyypit (reaction
                                      (group-by :emo @toimenpidekoodit)))
+
+(run! (when (and (nil? @valitut-toteumatyypit) @toimenpidekoodit)
+        (log "Asetetaan valitut toteumatyypit ")
+        (reset! valitut-toteumatyypit (into #{} (map :nimi @toimenpidekoodit)))))
 
 (def haetut-asiat (atom nil))
 
