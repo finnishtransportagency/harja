@@ -146,15 +146,7 @@
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                   :lyhyt
                                                   :pitka)))
-      nil
-      #_(let [_ @tiedot/toimenpidekoodit]
-        (log "REBDER")
-        (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}])
-
-        (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
-                                                    :lyhyt
-                                                    :pitka)))
-        nil))))
+      nil)))
 
 (tapahtumat/kuuntele! :toteuma-klikattu
                       (fn [tapahtuma]

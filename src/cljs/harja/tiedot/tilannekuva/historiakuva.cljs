@@ -40,7 +40,7 @@
                                         (go (let [res (<! (k/post! :hae-toimenpidekoodit-historiakuvaan
                                                                    {:urakka        (:id urakka)
                                                                     :urakan-tyyppi (:arvo tyyppi)}))]
-                                              res)))))
+                                              (when-not (k/virhe? res) res))))))
 
 (defonce valitut-toteumatyypit (atom {}))
 
