@@ -26,7 +26,7 @@
 ;; Millä ehdoilla haetaan?
 (defonce valittu-aikasuodatin (atom :lyhyt))
 (defonce lyhyen-suodattimen-asetukset (atom {:pvm (pvm/nyt) :kellonaika "12:00" :plusmiinus 12}))
-(defonce pitkan-suodattimen-asetukset (atom {:alku (first (pvm/kuukauden-aikavali (pvm/nyt)))
+(defonce pitkan-suodattimen-asetukset (atom {:alku  (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                              :loppu (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
 
 (defonce nakymassa? (atom false))
@@ -71,18 +71,18 @@
 (defmulti kartalla-xf :tyyppi)
 (defmethod kartalla-xf :ilmoitus [ilmoitus]
   [(assoc ilmoitus
-    :type :ilmoitus
-    :alue (oletusalue ilmoitus))])
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
   [(assoc havainto
-    :type :havainto
-    :alue (oletusalue havainto))])
+     :type :havainto
+     :alue (oletusalue havainto))])
 
 (defmethod kartalla-xf :tarkastus [tarkastus]
   [(assoc tarkastus
-    :type :tarkastus
-    :alue (oletusalue tarkastus))])
+     :type :tarkastus
+     :alue (oletusalue tarkastus))])
 
 (defmethod kartalla-xf :toteuma [toteuma]
   (conj
@@ -95,28 +95,28 @@
                  :zindex      3}))
       (:reittipisteet toteuma))
     (assoc toteuma
-     :type :toteuma
-     :alue {
-            :type       :arrow-line
-            :points     (mapv :sijainti (sort-by
-                                          :aika
-                                          pvm/ennen?
-                                          (:reittipisteet toteuma)))})))
+      :type :toteuma
+      :alue {
+             :type   :arrow-line
+             :points (mapv :sijainti (sort-by
+                                       :aika
+                                       pvm/ennen?
+                                       (:reittipisteet toteuma)))})))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   [(assoc tp
-    :type :turvallisuuspoikkeama
-    :alue (oletusalue tp))])
+     :type :turvallisuuspoikkeama
+     :alue (oletusalue tp))])
 
 (defmethod kartalla-xf :paallystystyo [pt]
   [(assoc pt
-    :type :paallystystyo
-    :alue (oletusalue pt))])
+     :type :paallystystyo
+     :alue (oletusalue pt))])
 
 (defmethod kartalla-xf :paikkaustyo [pt]
   [(assoc pt
-    :type :paikkaustyo
-    :alue (oletusalue pt))])
+     :type :paikkaustyo
+     :alue (oletusalue pt))])
 
 (defmethod kartalla-xf :default [_])
 
@@ -151,6 +151,12 @@
   (go
     (let [yhdista (fn [& tulokset]
                     (apply (comp vec concat) (remove k/virhe? tulokset)))
+          haettavat-toimenpidekoodit (mapv
+                                       :id
+                                       (filter
+                                         (fn [{:keys [nimi]}]
+                                           (get @valitut-toteumatyypit nimi))
+                                         @toimenpidekoodit))
           tulos (yhdista
                   #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
                   #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
@@ -161,16 +167,11 @@
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit))))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot (kasaa-parametrit))))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot (kasaa-parametrit))))
-                  (when-not (empty? @valitut-toteumatyypit)
+                  (when-not (empty? haettavat-toimenpidekoodit)
                     (<! (k/post! :hae-toteumat-historiakuvaan (assoc
-                                                        (kasaa-parametrit)
-                                                        :toimenpidekoodit
-                                                        (mapv
-                                                          :id
-                                                          (filter
-                                                            (fn [{:keys [nimi]}]
-                                                              (get @valitut-toteumatyypit nimi))
-                                                            @toimenpidekoodit)))))))]
+                                                                (kasaa-parametrit)
+                                                                :toimenpidekoodit
+                                                                haettavat-toimenpidekoodit)))))]
       (reset! haetut-asiat tulos))))
 
 (def +sekuntti+ 1000)

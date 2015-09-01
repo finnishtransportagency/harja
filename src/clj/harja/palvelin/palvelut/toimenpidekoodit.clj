@@ -41,15 +41,17 @@
 (defn hae-toimenpidekoodit-historiakuvaan [db user {:keys [urakka urakan-tyyppi]}]
   (log/debug "Haetaan toimenpidekoodit historiakuvaan urakalle " urakka ", tyypeille " urakan-tyyppi)
   (jdbc/with-db-transaction [db db]
-    (q/hae-toimenpidekoodit-historiakuvaan db (if (nil? urakka)
-                                                (let [urakat (mapv :id (filter
-                                                             (fn [{:keys [tyyppi]}]
-                                                               (= (keyword tyyppi) urakan-tyyppi))
-                                                             (urakat-q/hae-kaynnissa-olevat-urakat db)))]
-                                                  (log/debug "Haetaan urakoille: " (pr-str urakat))
-                                                  urakat)
+    (let [ur (if (nil? urakka)
+               (let [urakat (mapv :id (filter
+                                        (fn [{:keys [tyyppi]}]
+                                          (= (keyword tyyppi) urakan-tyyppi))
+                                        (urakat-q/hae-kaynnissa-olevat-urakat db)))]
+                 (when-not (empty? urakat) urakat))
 
-                                                urakka))))
+               (if (vector? urakka) urakka (vec urakka)))]
+      (when ur
+        (log/debug "Haetaan urakoille: " (pr-str ur))
+        (q/hae-toimenpidekoodit-historiakuvaan db ur)))))
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
