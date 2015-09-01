@@ -293,11 +293,20 @@
            "\u2713 "
            "\u2610 ") otsikko])
 
-(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta]} data]
+(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))]
     [:span
-     (doall 
+     ;; Esimerkiksi historiakuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
+     ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
+     ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
+     (when tyhjenna-kaikki?
+       [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
+        [:span.livicon-trash " Tyhjennä kaikki"]])
+     (when valitse-kaikki?
+       [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
+        [:span.livicon-check " Valitse kaikki"]])
+     (doall
       (for [v vaihtoehdot]
         ^{:key (str "boolean-group-" (name v))}
         [:div.checkbox

@@ -50,14 +50,16 @@
 
 (defn muut-suodattimet []
   [kentat/tee-kentta {:tyyppi           :boolean-group
-                      :vaihtoehdot      [:toimenpidepyynnot ;; FIXME: formatteri, tai tämän Ö:t muuttuu O:ksi UI:ssa...
+                      :valitse-kaikki?  true
+                      :tyhjenna-kaikki? true
+                      :vaihtoehdot      [:toimenpidepyynnot
                                          :kyselyt
                                          :tiedoitukset
                                          :turvallisuuspoikkeamat
                                          :tarkastukset
                                          :havainnot
                                          :onnettomuudet
-                                         :paikkaustyot      ;; ... ja näiden kahden
+                                         :paikkaustyot
                                          :paallystystyot]
 
                       :vaihtoehto-nayta {
@@ -97,21 +99,23 @@
        (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
 
 (defn toteuma-suodattimet [toteumakoodit]
-  [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot (vec (sort (set (map :nimi toteumakoodit))))}
+  [kentat/tee-kentta {:tyyppi           :boolean-group
+                      :tyhjenna-kaikki? true
+                      :valitse-kaikki?  true
+                      :vaihtoehdot      (vec (sort (set (map :nimi toteumakoodit))))}
    tiedot/valitut-toteumatyypit])
 
 (defonce toteumat-rivit (reaction
-                         (merge
-                           (into {}
-                                 (keep-indexed
-                                   (fn [index asia] {index asia})
-                                   (mapv (fn [emo] {:otsikko emo
-                                                    :auki false
-                                                    :sisalto [toteuma-suodattimet (get @tiedot/naytettavat-toteumatyypit emo)]})
-                                         (sort (keys @tiedot/naytettavat-toteumatyypit)))))
-                           {(count (keys @tiedot/naytettavat-toteumatyypit))
-                            {:otsikko "Muut" :auki false :sisalto [muut-suodattimet]}})))
+                          (merge
+                            (into {}
+                                  (keep-indexed
+                                    (fn [index asia] {index asia})
+                                    (mapv (fn [emo] {:otsikko emo
+                                                     :auki    false
+                                                     :sisalto [toteuma-suodattimet (get @tiedot/naytettavat-toteumatyypit emo)]})
+                                          (sort (keys @tiedot/naytettavat-toteumatyypit)))))
+                            {(count (keys @tiedot/naytettavat-toteumatyypit))
+                             {:otsikko "Muut" :auki false :sisalto [muut-suodattimet]}})))
 
 (defonce toteumat [harja.ui.yleiset/haitari toteumat-rivit {:otsikko "Muut suodattimet"}])
 

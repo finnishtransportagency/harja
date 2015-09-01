@@ -32,6 +32,8 @@
 (defonce nakymassa? (atom false))
 (defonce taso-historiakuva (atom false))
 
+(defonce valitut-toteumatyypit (atom #{}))
+
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
 (defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?]
                                       (when nakymassa?
@@ -42,11 +44,6 @@
 
 (defonce naytettavat-toteumatyypit (reaction
                                      (group-by :emo @toimenpidekoodit)))
-
-#_(defonce naytettavat-toteumatyypit (reaction
-                                     (vec (sort (set (map :nimi @toimenpidekoodit))))))
-
-(defonce valitut-toteumatyypit (atom #{}))
 
 (def haetut-asiat (atom nil))
 
