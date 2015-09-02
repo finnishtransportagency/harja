@@ -5,6 +5,7 @@
 CREATE TYPE paivamaaravali AS
 (alkupvm DATE, loppupvm DATE);
 
+
 CREATE OR REPLACE FUNCTION urakan_hoitokaudet(urakka_id INTEGER)
   RETURNS SETOF paivamaaravali LANGUAGE plpgsql AS $$
 DECLARE
@@ -25,63 +26,67 @@ BEGIN
   FROM urakka
   WHERE id = urakka_id;
 
-  nyt := urakan_alkupvm;
-
-  -- Hoidon urakat
-  IF urakan_tyyppi = 'hoito'
+  IF urakan_alkupvm IS NOT NULL AND urakan_loppupvm IS NOT NULL
   THEN
-    LOOP
-      IF nyt > urakan_loppupvm
-      THEN
-        EXIT;
-      ELSE
-        RETURN NEXT (nyt, ((EXTRACT(YEAR FROM nyt) + 1) || '-09-30') :: DATE);
-        -- Inkrementoi vuodella
-        nyt := nyt + INTERVAL '1 year';
-      END IF;
-    END LOOP;
 
-  -- Muut urakat
-  ELSE
-    -- Urakka loppuu samana vuonna
-    IF EXTRACT(YEAR FROM urakan_alkupvm) = EXTRACT(YEAR FROM urakan_loppupvm)
+    nyt := urakan_alkupvm;
+
+    -- Hoidon urakat
+    IF urakan_tyyppi = 'hoito'
     THEN
-      RETURN NEXT (urakan_alkupvm, urakan_loppupvm);
-
-    -- Urakka on monivuotinen
-    ELSE
-      nykyinen_hoitokauden_alkupvm := urakan_alkupvm;
-
       LOOP
         IF nyt > urakan_loppupvm
         THEN
           EXIT;
         ELSE
+          RETURN NEXT (nyt, ((EXTRACT(YEAR FROM nyt) + 1) || '-09-30') :: DATE);
+          -- Inkrementoi vuodella
+          nyt := nyt + INTERVAL '1 year';
+        END IF;
+      END LOOP;
 
-          IF EXTRACT(YEAR FROM nykyinen_hoitokauden_alkupvm) != EXTRACT(YEAR FROM nyt)
+    -- Muut urakat
+    ELSE
+      -- Urakka loppuu samana vuonna
+      IF EXTRACT(YEAR FROM urakan_alkupvm) = EXTRACT(YEAR FROM urakan_loppupvm)
+      THEN
+        RETURN NEXT (urakan_alkupvm, urakan_loppupvm);
+
+      -- Urakka on monivuotinen
+      ELSE
+        nykyinen_hoitokauden_alkupvm := urakan_alkupvm;
+
+        LOOP
+          IF nyt > urakan_loppupvm
           THEN
-            hoitokauden_alkupvm := nykyinen_hoitokauden_alkupvm;
-            hoitokauden_loppupvm := nyt - INTERVAL '1 day';
+            EXIT;
+          ELSE
 
-            nykyinen_hoitokauden_alkupvm = nyt;
-
-            RETURN NEXT (hoitokauden_alkupvm, hoitokauden_loppupvm);
-
-          ELSEIF urakan_loppupvm = nyt
+            IF EXTRACT(YEAR FROM nykyinen_hoitokauden_alkupvm) != EXTRACT(YEAR FROM nyt)
             THEN
               hoitokauden_alkupvm := nykyinen_hoitokauden_alkupvm;
-              hoitokauden_loppupvm := nyt;
+              hoitokauden_loppupvm := nyt - INTERVAL '1 day';
 
               nykyinen_hoitokauden_alkupvm = nyt;
 
               RETURN NEXT (hoitokauden_alkupvm, hoitokauden_loppupvm);
 
-          END IF;
+            ELSEIF urakan_loppupvm = nyt
+              THEN
+                hoitokauden_alkupvm := nykyinen_hoitokauden_alkupvm;
+                hoitokauden_loppupvm := nyt;
 
-          -- Inkrementoi päivällä
-          nyt := nyt + INTERVAL '1 day';
-        END IF;
-      END LOOP;
+                nykyinen_hoitokauden_alkupvm = nyt;
+
+                RETURN NEXT (hoitokauden_alkupvm, hoitokauden_loppupvm);
+
+            END IF;
+
+            -- Inkrementoi päivällä
+            nyt := nyt + INTERVAL '1 day';
+          END IF;
+        END LOOP;
+      END IF;
     END IF;
   END IF;
 END
