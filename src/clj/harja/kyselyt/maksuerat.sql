@@ -231,7 +231,7 @@ SELECT
       +
       -- Suolasakot
       coalesce((SELECT *
-                FROM urakan_suolasakot(CAST(:urakkaid AS INTEGER))
+                FROM urakan_suolasakot(CAST(u.id AS INTEGER))
                 WHERE tpk.koodi = '23104'),
                0)
 
