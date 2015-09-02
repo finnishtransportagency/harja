@@ -82,6 +82,7 @@ SELECT
   tr_alkuetaisyys,
   tr_loppuosa,
   tr_loppuetaisyys,
+  sijainti,
   kvl,
   nykyinen_paallyste,
   toimenpide

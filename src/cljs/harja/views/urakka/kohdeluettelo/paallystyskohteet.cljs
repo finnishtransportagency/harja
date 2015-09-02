@@ -11,7 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [kohderivit paallystys-tai-paikkausnakymassa? paivita-kohde!] :as paallystys]
             [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
@@ -32,26 +32,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce paallystys-tai-paikkausnakymassa? (atom false))
-
-(defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 nakymassa? @paallystys-tai-paikkausnakymassa?]
-                                (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                  (log "PÄÄ Haetaan päällystyskohteet.")
-                                  (let [vastaus (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
-                                    (log "PÄÄ Vastaus saatu: " vastaus)
-                                    vastaus))))
-
-(defn paivita-kohde! [id funktio & argumentit]
-  (swap! kohderivit
-         (fn [kohderivit]
-           (into []
-                 (map (fn [kohderivi]
-                        (if (= id (:id kohderivi))
-                          (apply funktio kohderivi argumentit)
-                          kohderivi)))
-                 kohderivit))))
 
 (defn laske-sarakkeen-summa [sarake]
   (reduce + (mapv
@@ -88,7 +68,7 @@
                               sijainnit @tr-sijainnit
                               osat (into []
                                          (map (fn [osa]
-                                                (assoc osa :sijainti (first (sijainnit (tr-osoite osa))))))
+                                                (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                          %)
                               vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
                           (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
@@ -115,7 +95,7 @@
                                      (do (swap! tr-virheet dissoc id)
                                          (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
                                            (grid/poista-virhe! g id kentta))
-                                         (swap! tr-sijainnit assoc osoite sijainti))))))))))))
+                                         (swap! tr-sijainnit assoc osoite (first sijainti)))))))))))))
          
          }
         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}

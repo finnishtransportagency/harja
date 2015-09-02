@@ -72,6 +72,9 @@
 (defn keskita-kartta-pisteeseen! [keskipiste]
   (.setCenter (.getView @the-kartta) (clj->js keskipiste)))
 
+(defn ^:export debug-keskita [x y]
+  (keskita-kartta-pisteeseen! [x y]))
+
 (defn ^:export invalidate-size []
   (.invalidateSize @the-kartta))
 

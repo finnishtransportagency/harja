@@ -30,8 +30,11 @@
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (map #(assoc % :kohdeosat (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
-                                                 db urakka-id sopimus-id (:id %))))
+                      (map #(assoc % :kohdeosat
+                                   (into []
+                                         (geo/muunna-pg-tulokset :sijainti)
+                                         (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                          db urakka-id sopimus-id (:id %)))))
                       (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
