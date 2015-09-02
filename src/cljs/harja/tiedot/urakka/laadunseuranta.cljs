@@ -6,6 +6,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log]]
             [harja.domain.roolit :as roolit])
@@ -13,67 +14,67 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce laadunseurannassa? (atom false)) ; jos true, laadunseurantaosio nyt käytössä
+(defonce laadunseurannassa? (atom false))                   ; jos true, laadunseurantaosio nyt käytössä
 
 (defonce voi-kirjata? (reaction
-                       (let [kayttaja @istunto/kayttaja
-                             urakka @nav/valittu-urakka]
-                         (and kayttaja
-                              urakka
-                              (roolit/rooli-urakassa? kayttaja roolit/havaintojen-kirjaus (:id urakka))))))
+                        (let [kayttaja @istunto/kayttaja
+                              urakka @nav/valittu-urakka]
+                          (and kayttaja
+                               urakka
+                               (roolit/rooli-urakassa? kayttaja roolit/havaintojen-kirjaus (:id urakka))))))
 
-                         
+
 (defonce valittu-valilehti (atom :tarkastukset))
 
 ;; Urakan tarkastusten karttataso
 (defonce taso-tarkastukset (atom false))
 
 (defonce valittu-tarkastus (atom nil))
-  
+
 (defonce sanktiotyypit
-  (reaction<! [laadunseurannassa? @laadunseurannassa?]
-              (when laadunseurannassa?
-                (k/get! :hae-sanktiotyypit))))
+         (reaction<! [laadunseurannassa? @laadunseurannassa?]
+                     (when laadunseurannassa?
+                       (k/get! :hae-sanktiotyypit))))
 
 (defn lajin-sanktiotyypit
   [laji]
   (filter #((:laji %) laji) @sanktiotyypit))
-              
+
 
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
   [urakka-id alkupvm loppupvm tienumero tyyppi]
   (k/post! :hae-urakan-tarkastukset {:urakka-id urakka-id
-                                     :alkupvm alkupvm
-                                     :loppupvm loppupvm
+                                     :alkupvm   alkupvm
+                                     :loppupvm  loppupvm
                                      :tienumero tienumero
-                                     :tyyppi tyyppi}))
+                                     :tyyppi    tyyppi}))
 
 (def tarkastus-xf
   (map #(assoc %
-               :type :tarkastus
-               :alue {:type :icon
-                      :coordinates (:sijainti %)
-                      :direction 0
-                      :img (if (= (:id %) (:id @valittu-tarkastus))
-                             "images/tyokone_highlight.png"
-                             "images/tyokone.png")})))
+         :type :tarkastus
+         :alue {:type        :icon
+                :coordinates (:sijainti %)
+                :direction   0
+                :img         (if (= (:id %) (:id @valittu-tarkastus))
+                               "images/tyokone_highlight.png"
+                               "images/tyokone.png")})))
 
-(defonce tienumero (atom nil)) ;; tienumero, tai kaikki
-(defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+(defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
+(defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
 
 (defonce urakan-tarkastukset
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
-               laadunseurannassa? @laadunseurannassa?
-               valilehti @valittu-valilehti
-               tienumero @tienumero
-               tyyppi @tarkastustyyppi]
-              {:odota 500}
-              (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                         urakka-id alku loppu)
-                (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                      [alku loppu] @tiedot-urakka/valittu-aikavali
+                      laadunseurannassa? @laadunseurannassa?
+                      valilehti @valittu-valilehti
+                      tienumero @tienumero
+                      tyyppi @tarkastustyyppi]
+                     {:odota 500}
+                     (when (and laadunseurannassa? (= :tarkastukset valilehti)
+                                urakka-id alku loppu)
+                       (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
 
 (defonce tarkastukset-kartalla
          (reaction
@@ -92,8 +93,8 @@
     (if (pvm/valissa? aika alkupvm loppupvm)
       ;; Tarkastus on valitulla välillä: päivitetään
       (if sijainti-listassa
-         (swap! urakan-tarkastukset assoc sijainti-listassa tarkastus)
-         (swap! urakan-tarkastukset conj tarkastus))
+        (swap! urakan-tarkastukset assoc sijainti-listassa tarkastus)
+        (swap! urakan-tarkastukset conj tarkastus))
 
       ;; Ei pvm välillä, poistetaan listasta jos se aiemmin oli välillä
       (when sijainti-listassa
@@ -102,26 +103,26 @@
                                            (remove #(= (:id %) id))
                                            tarkastukset)))))))
 
-      
+
 (defn hae-urakan-havainnot
   "Hakee annetun urakan havainnot urakka id:n ja aikavälin perusteella."
   [listaus urakka-id alkupvm loppupvm]
-  (k/post! :hae-urakan-havainnot {:listaus listaus
+  (k/post! :hae-urakan-havainnot {:listaus   listaus
                                   :urakka-id urakka-id
-                                  :alku alkupvm
-                                  :loppu loppupvm}))
+                                  :alku      alkupvm
+                                  :loppu     loppupvm}))
 
 (defn hae-havainnon-tiedot
   "Hakee urakan havainnon tiedot urakan id:n ja havainnon id:n perusteella.
   Palauttaa kaiken tiedon mitä havainnon muokkausnäkymään tarvitaan."
   [urakka-id havainto-id]
-  (k/post! :hae-havainnon-tiedot {:urakka-id urakka-id
+  (k/post! :hae-havainnon-tiedot {:urakka-id   urakka-id
                                   :havainto-id havainto-id}))
 
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
   [urakka-id tarkastus-id]
-  (k/post! :hae-tarkastus {:urakka-id urakka-id
+  (k/post! :hae-tarkastus {:urakka-id    urakka-id
                            :tarkastus-id tarkastus-id}))
 
 (defn tallenna-havainto [havainto]

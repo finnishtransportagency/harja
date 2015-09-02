@@ -62,20 +62,8 @@
                                       sanktiot))))))))
 
 (defn tarkastuslistaus
-  "Tarkastuksien pääkomponentti"
+  "Tarkastuksien listauskomponentti"
   []
-  (komp/luo
-
-   ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
-   ;; tarkastuslistauksessa
-   (komp/lippu laadunseuranta/taso-tarkastukset)
-
-   (komp/kuuntelija
-    :tarkastus-klikattu
-    (fn [e tarkastus]
-      (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))
-      (valitse-tarkastus tarkastus)))
-     
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
@@ -127,7 +115,7 @@
            :leveys 2}
           ]
 
-         @laadunseuranta/urakan-tarkastukset]]))))
+         @laadunseuranta/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
@@ -250,6 +238,19 @@
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   []
-  (if @laadunseuranta/valittu-tarkastus
-    [tarkastus laadunseuranta/valittu-tarkastus]
-    [tarkastuslistaus]))
+  (komp/luo
+
+    ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
+    ;; tarkastuslistauksessa
+    (komp/lippu laadunseuranta/taso-tarkastukset)
+
+    (komp/kuuntelija
+      :tarkastus-klikattu
+      (fn [e tarkastus]
+        (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))
+        (valitse-tarkastus tarkastus)))
+
+    (fn []
+      (if @laadunseuranta/valittu-tarkastus
+        [tarkastus laadunseuranta/valittu-tarkastus]
+        [tarkastuslistaus]))))
