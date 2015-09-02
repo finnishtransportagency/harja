@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.json-esimerkkivalidoinnit
+(ns harja.palvelin.integraatiot.api.json_esimerkkivalidoinnit
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.tyokalut.json_validointi :as json-validointi]
