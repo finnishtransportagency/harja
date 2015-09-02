@@ -27,7 +27,9 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
 
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.views.kartta :as kartta]
+            [harja.geo :as geo])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -63,6 +65,10 @@
        [grid/grid
         {:otsikko  "Tierekisterikohteet"
          :tyhja    (if (empty? kohdeosat) "Tierekisterikohteita ei löydy")
+         :rivi-klikattu (fn [rivi]
+                          (log "KLIKKASIT: " (pr-str rivi))
+                          (when-let [viiva (some-> rivi :sijainti)]
+                            (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
          :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                               [sopimus-id _] @u/valittu-sopimusnumero
                               sijainnit @tr-sijainnit

@@ -83,8 +83,9 @@
                   kohderivit @kohderivit]
               (when (and taso kohderivit)
                 (into []
-                      (mapcat #(map (fn [{sij :sijainti}]
+                      (mapcat #(map (fn [{sij :sijainti nimi :nimi}]
                                       {:type :paallystyskohde
+                                       :nimi (str (:nimi %) ": " nimi)
                                        :alue (assoc sij
                                                     :lines (mapv (fn [l]
                                                                    (assoc l
