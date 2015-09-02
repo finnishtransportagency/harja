@@ -6,49 +6,44 @@
             [harja.palvelin.integraatiot.api.tyokalut.esimerkit :as esimerkit]
             [clojure.java.io :as io]))
 
+(defn validoi [skeemapolku esimerkkipolku]
+  (json-validointi/validoi skeemapolku (slurp (io/resource esimerkkipolku))))
+
 (deftest validoi-jsonit
-  (let [skeemapolku-esimerkkipolku
-        [[skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+]
-         [skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+]
+  (is (nil? (validoi skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+)))
+  (is (nil? (validoi skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+)))
 
-         [skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+]
+  (is (nil? (validoi skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+)))
 
-         [skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+]
-         [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
-         [skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+]
+  (is (nil? (validoi skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+)))
+  (is (nil? (validoi skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+)))
+  (is (nil? (validoi skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+)))
 
-         [skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]
-         [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
+  (is (nil? (validoi skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+)))
+  (is (nil? (validoi skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+)))
 
-         [skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+]
-         [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
+  (is (nil? (validoi skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+)))
+  (is (nil? (validoi skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+)))
 
-         [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
-         [skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+]
+  (is (nil? (validoi skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+)))
+  (is (nil? (validoi skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+)))
 
-         [skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+]
+  (is (nil? (validoi skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+)))
 
-         [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
-         [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
-         [skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+]
-         [skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+]
-         [skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+]
-         [skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+]
+  (is (nil? (validoi skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+)))
+  (is (nil? (validoi skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+)))
+  (is (nil? (validoi skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+)))
+  (is (nil? (validoi skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+)))
+  (is (nil? (validoi skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+)))
+  (is (nil? (validoi skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+)))
 
-         [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
-         [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
-         [skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+]
-         [skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+]
+  (is (nil? (validoi skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+)))
+  (is (nil? (validoi skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+)))
+  (is (nil? (validoi skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+)))
+  (is (nil? (validoi skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+)))
 
-         [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
-         [skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+]
-         [skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+]
+  (is (nil? (validoi skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+)))
+  (is (nil? (validoi skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+)))
+  (is (nil? (validoi skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+)))
 
-         [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
-        skeemapolku-esimerkkidata (mapv
-                                    (fn [[skeemapolku esimerkkipolku]]
-                                      (let [esimerkkidata (slurp (io/resource esimerkkipolku))]
-                                        [skeemapolku esimerkkidata]))
-                                    skeemapolku-esimerkkipolku)]
-    (doseq [validoitava skeemapolku-esimerkkidata]
-      (json-validointi/validoi (first validoitava) (second validoitava)))))
+  (is (nil? (validoi skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+))))
