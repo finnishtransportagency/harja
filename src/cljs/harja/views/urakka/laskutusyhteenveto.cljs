@@ -40,7 +40,6 @@
 (defonce laskutusyhteenvedon-tiedot (reaction<! [ur @nav/valittu-urakka
                                                  [hk_alkupvm hk_loppupvm] @u/valittu-hoitokausi
                                                  [aikavali_alkupvm aikavali_loppupvm] @aikavali]
-                                                (log "haetaan laskutusyhteenvedon tiedot, front")
                                                 ;urakka-id hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm
                                                 (when (and ur hk_alkupvm hk_loppupvm
                                                            aikavali_alkupvm aikavali_loppupvm
@@ -52,7 +51,6 @@
                                                                                                    :urakka-id         (:id ur)}))))
 
 (tarkkaile! "laskutusyhteenvedon-tiedot" laskutusyhteenvedon-tiedot)
-(tarkkaile! "lask aikaväli" aikavali)
 
 (defn laskutusyhteenveto
   []

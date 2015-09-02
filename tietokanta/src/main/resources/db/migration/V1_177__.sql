@@ -1,8 +1,3 @@
--- Hakee ja laskee tietoja kannasta laskutusyhteenvetoa varten
-DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER );
-DROP TYPE laskutusyhteenveto_rivi;
-
-
 CREATE TYPE laskutusyhteenveto_rivi
 AS (nimi            VARCHAR,
     kht_laskutettu  NUMERIC, kht_laskutettu_ind_korotettuna NUMERIC, kht_laskutettu_ind_korotus NUMERIC,
@@ -178,10 +173,3 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
-
-
--- ^ yllä tuotantokoodi ^
--- Alla helppereitä
-
-SELECT *
-FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);

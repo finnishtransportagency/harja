@@ -1,11 +1,5 @@
 -- esim. indeksin arvo 105, summa 1000e:
 -- summa indeksillä korotettuna 1 000 € * (105/100) = 1050,00 €
-
-DROP TYPE kuukauden_indeksikorotus_rivi;
-
-DROP FUNCTION laske_kuukauden_indeksikorotus(v INTEGER, kk INTEGER,
-indeksinimi VARCHAR, summa NUMERIC );
-
 CREATE TYPE kuukauden_indeksikorotus_rivi AS (
   summa       NUMERIC,
   korotettuna NUMERIC,
@@ -32,5 +26,3 @@ BEGIN
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;
-
-SELECT korotus FROM kuukauden_indeksikorotus(2015, 7, 'MAKU 2010', 1000.4);
