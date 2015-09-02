@@ -28,7 +28,7 @@
 ;; Urakan tarkastusten karttataso
 (defonce taso-tarkastukset (atom false))
 
-
+(defonce valittu-tarkastus (atom nil))
   
 (defonce sanktiotyypit
   (reaction<! [laadunseurannassa? @laadunseurannassa?]
@@ -56,7 +56,9 @@
                :alue {:type :icon
                       :coordinates (:sijainti %)
                       :direction 0
-                      :img "images/tyokone.png"})))
+                      :img (if (= (:id %) (:id @valittu-tarkastus))
+                             "images/tyokone_highlight.png"
+                             "images/tyokone.png")})))
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
@@ -74,6 +76,12 @@
                 (go (into []
                           tarkastus-xf
                           (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+
+(defonce tarkastukset-kartalla
+         (reaction
+           @valittu-tarkastus
+           (when @taso-tarkastukset
+             (into [] (map tarkastus-xf) @urakan-tarkastukset))))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

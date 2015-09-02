@@ -44,9 +44,6 @@
     :urakoitsija [:tiesto :talvihoito :soratie]
     +tarkastustyyppi+))
 
-(defonce valittu-tarkastus (atom nil))
-                
-
 (defn uusi-tarkastus []
   {:uusi?      true
    :aika       (pvm/nyt)
@@ -55,7 +52,7 @@
 
 (defn valitse-tarkastus [tarkastus]
   (go
-    (reset! valittu-tarkastus
+    (reset! laadunseuranta/valittu-tarkastus
             (update-in (<! (laadunseuranta/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus)))
                        [:havainto :sanktiot]
                        (fn [sanktiot]
@@ -110,7 +107,7 @@
           [:div.row
            [:div.col-md-10]
            [:div.col-md-2 [napit/uusi "Uusi tarkastus"
-                           #(reset! valittu-tarkastus (uusi-tarkastus)) {}]]])
+                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus)) {}]]])
         
         [grid/grid
          {:otsikko "Tarkastukset"
@@ -245,7 +242,7 @@
         
         {:disabled (not (validi-tarkastus? tarkastus))
          :kun-onnistuu (fn [tarkastus]
-                         (reset! valittu-tarkastus nil)
+                         (reset! laadunseuranta/valittu-tarkastus nil)
                          (laadunseuranta/paivita-tarkastus-listaan! tarkastus))
                          }]]]
      ]))
@@ -253,6 +250,6 @@
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   []
-  (if @valittu-tarkastus
-    [tarkastus valittu-tarkastus]
+  (if @laadunseuranta/valittu-tarkastus
+    [tarkastus laadunseuranta/valittu-tarkastus]
     [tarkastuslistaus]))
