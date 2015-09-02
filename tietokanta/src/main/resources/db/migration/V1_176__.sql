@@ -2,9 +2,6 @@
 -- Kuvaus: Lisää urakoiden hoitokausien laskennan stored proceduren. Parametrinä annetaan urakan id. Paluuarvona
 -- saadaan lista hoitokausien alkamis ja päättymis päivämääristä. Lisää myös päivämäärävälille oman tyypin.
 
-DROP FUNCTION urakan_hoitokaudet(urakka_id INTEGER);
-DROP TYPE paivamaaravali;
-
 CREATE TYPE paivamaaravali AS
 (alkupvm DATE, loppupvm DATE);
 
