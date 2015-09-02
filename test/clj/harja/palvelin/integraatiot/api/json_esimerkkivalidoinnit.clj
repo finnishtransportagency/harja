@@ -22,7 +22,6 @@
   (is (nil? (validoi skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+)))
   (is (nil? (validoi skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+)))
 
-  (is (nil? (validoi skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+)))
   (is (nil? (validoi skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+)))
 
   (is (nil? (validoi skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+)))
