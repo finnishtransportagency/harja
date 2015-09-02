@@ -12,7 +12,16 @@
             [cheshire.core :as cheshire]))
 
 (deftest validoi-jsonit
-  (let [skeemapolku-esimerkkipolku [[skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]]
+  (let [skeemapolku-esimerkkipolku [[skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+]
+                                    [skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+]
+                                    [skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+]
+                                    [skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]
+                                    [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
+                                    [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
+                                    [skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+]
+                                    [skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+]
+                                    [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
+                                    [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
         skeemapolku-esimerkkidata (mapv
                                     (fn [pari]
                                       (let [skeemapolku (first pari)
