@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/vastauksenStatus" version="1.0">
+
+    <xs:simpleType name="vastauksenStatus">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="OK"/>
+            <xs:enumeration value="VIRHE"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

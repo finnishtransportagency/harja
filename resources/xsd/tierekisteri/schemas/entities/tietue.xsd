@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="http://www.solita.fi/harja/tierekisteri/sijainti"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolaji"
+           xmlns:ns3="http://www.solita.fi/harja/tierekisteri/kuntoluokka"
+           xmlns:ns4="http://www.solita.fi/harja/tierekisteri/urakka"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/tietue" version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/sijainti" schemaLocation="sijainti.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolaji" schemaLocation="tietolaji.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/kuntoluokka" schemaLocation="kuntoluokka.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/urakka" schemaLocation="urakka.xsd"/>
+
+    <xs:complexType name="tietue">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="tunniste">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="0"/>
+                        <xs:maxLength value="20"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="1" name="alkupvm" type="xs:date"/>
+            <xs:element minOccurs="0" name="loppupvm" type="xs:date"/>
+            <xs:element minOccurs="1" name="karttapvm" type="xs:date"/>
+            <xs:element minOccurs="1" name="piiri" type="xs:int"/>
+            <xs:element minOccurs="1" name="kuntoluokka" type="ns3:kuntoluokka"/>
+            <xs:element minOccurs="1" name="urakka" type="ns4:urakka"/>
+            <xs:element minOccurs="1" name="sijainti" type="ns1:sijainti"/>
+            <xs:element minOccurs="1" name="tietolaji" type="ns2:tietolaji"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

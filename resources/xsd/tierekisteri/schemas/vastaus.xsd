@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/vastauksenStatus"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
+           xmlns:ns3="http://www.solita.fi/harja/tierekisteri/tietue"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/vastaus"
+           xmlns="http://www.solita.fi/harja/tierekisteri/vastaus"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/vastauksenStatus"
+               schemaLocation="./entities/vastauksenStatus.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
+               schemaLocation="./entities/tietolajikuvaus.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="./entities/tietue.xsd"/>
+
+    <xs:element name="vastaus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" name="status" type="ns1:vastauksenStatus"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="ilmoitukset" type="ilmoitukset"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="varoitukset" type="varoitukset"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="virheet" type="virheet"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="tietolajit" type="tietolajit"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="tietueet" type="tietueet"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="tietueet">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="tietue" nillable="true" type="ns3:tietue"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tietolajit">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="tietolaji" nillable="true"
+                        type="ns2:tietolajikuvaus"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ilmoitukset">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="ilmoitus" nillable="true" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="varoitukset">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="varoitus" nillable="true" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="virheet">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="virhe" nillable="true" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

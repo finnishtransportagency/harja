@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/tietotyyppi" version="1.0">
+
+    <xs:simpleType name="tietotyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="merkkijono"/>
+            <xs:enumeration value="koodisto"/>
+            <xs:enumeration value="numeerinen"/>
+            <xs:enumeration value="paivamaara"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
