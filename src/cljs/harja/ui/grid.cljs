@@ -58,6 +58,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
+  (aseta-virhe! [this rivin-id kentta virheteksti] "Asettaa ulkoisesti virheen rivin kentälle")
+  (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti")
 
   ;; PENDING: lisää tänne tarvittaessa muita metodeja
   )
@@ -102,6 +104,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
 
+      (aseta-virhe! [_ rivin-id kentta virheteksti]
+        (aseta-virhe! @gridi rivin-id kentta virheteksti))
+      (poista-virhe! [_ rivin-id kentta]
+        (poista-virhe! @gridi rivin-id kentta))
 
       GridKahva
       (aseta-grid [_ grid]
@@ -376,6 +382,16 @@ Optiot on mappi optioita:
                  (hae-viimeisin-muokattu-id [_]
                    @viimeisin-muokattu-id)
 
+                 (aseta-virhe! [_ rivin-id kentta virheteksti]
+                   (swap! virheet assoc-in [rivin-id kentta] [virheteksti]))
+                 (poista-virhe! [_ rivin-id kentta]
+                   (swap! virheet
+                          (fn [virheet]
+                            (let [virheet (update-in virheet [rivin-id] dissoc kentta)]
+                              (if (empty? (get virheet rivin-id))
+                                (dissoc virheet rivin-id)
+                                virheet)))))
+                 
                  (muokkaa-rivit! [this funktio args]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
@@ -557,7 +573,7 @@ Optiot on mappi optioita:
                                      ])
                                   (when nayta-otsikko? [:h6.panel-title otsikko])
                                   ])]
-           [(keyword (str "div.panel.panel-default.livi-grid" (str (if (not (empty? luokat)) ".") (clojure.string/join "." luokat))))
+           [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
             (muokkauspaneeli true)
             [:div.panel-body
              (if (nil? tiedot)

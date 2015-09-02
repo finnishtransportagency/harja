@@ -17,7 +17,8 @@
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [clj-time.format :as format]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [harja.geo :as geo]))
 
 (defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json
@@ -224,7 +225,7 @@
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
-(defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+(defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi päällystyskohdeosa, jonka päällystyskohde-id: " paallystyskohde-id)
   (when-not poistettu
     (q/luo-paallystyskohdeosa<! db
@@ -235,11 +236,12 @@
                                 (or tr_alkuetaisyys 0)
                                 (or tr_loppuosa 0)
                                 (or tr_loppuetaisyys 0)
+                                (geo/geometry (geo/clj->pg sijainti))
                                 (or kvl 0)
                                 nykyinen_paallyste
                                 toimenpide)))
 
-(defn paivita-paallystyskohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+(defn paivita-paallystyskohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
   (if poistettu
     (do (log/debug "Poistetaan päällystyskohdeosa")
         (q/poista-paallystyskohdeosa! db id))
@@ -251,6 +253,7 @@
                                        (or tr_alkuetaisyys 0)
                                        (or tr_loppuosa 0)
                                        (or tr_loppuetaisyys 0)
+                                       (geo/geometry (geo/clj->pg sijainti))
                                        (or kvl 0)
                                        nykyinen_paallyste
                                        toimenpide
