@@ -65,9 +65,6 @@
    (komp/kuuntelija
     :tarkastus-klikattu
     (fn [e tarkastus]
-      (kartta/nayta-popup! (:sijainti tarkastus)
-                           [:div.tarkastus-popup "TÄMÄN SISÄLTÖ TOTEUTETAAN KARTTA SPRINTISSÄ!"])
-                           
       (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))))
      
    (fn []
