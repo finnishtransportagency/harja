@@ -82,10 +82,19 @@ SELECT
 
   WHEN m.tyyppi = 'sakko'
     THEN
-      (SELECT (sum(sa.maara))
-       FROM sanktio sa
-       WHERE sa.toimenpideinstanssi = tpi.id)
-    -- Lisää suolasakkojen stored procedure kutsu
+      -- Normaalit sakot
+      coalesce((SELECT (sum(sa.maara))
+                FROM sanktio sa
+                WHERE sa.toimenpideinstanssi = tpi.id),
+               0)
+      +
+      -- Suolasakot
+
+
+      coalesce((SELECT *
+                FROM urakan_suolasakot(CAST(:urakkaid AS INTEGER))
+                WHERE tpk.koodi = '23104'),
+               0)
 
   WHEN m.tyyppi = 'muu'
     THEN
@@ -214,9 +223,17 @@ SELECT
 
   WHEN m.tyyppi = 'sakko'
     THEN
-      (SELECT (sum(sa.maara))
-       FROM sanktio sa
-       WHERE sa.toimenpideinstanssi = tpi.id)
+      -- Normaalisakot
+      coalesce((SELECT (sum(sa.maara))
+                FROM sanktio sa
+                WHERE sa.toimenpideinstanssi = tpi.id),
+               0)
+      +
+      -- Suolasakot
+      coalesce((SELECT *
+                FROM urakan_suolasakot(CAST(:urakkaid AS INTEGER))
+                WHERE tpk.koodi = '23104'),
+               0)
 
   WHEN m.tyyppi = 'muu'
     THEN
@@ -310,7 +327,7 @@ WHERE numero = :numero;
 -- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi
 UPDATE maksuera
 SET likainen = TRUE
-WHERE tyyppi = :tyyppi::maksueratyyppi;
+WHERE tyyppi = :tyyppi :: maksueratyyppi;
 
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.
