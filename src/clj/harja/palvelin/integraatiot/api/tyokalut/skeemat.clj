@@ -9,35 +9,35 @@
 
 (def +havainnon-kirjaus+ "api/schemas/havainnon-kirjaus-request.schema.json")
 
-(def +ilmoituskuittauksen-kirjaaminen+ "api/examples/ilmoituskuittauksen-kirjaaminen-request.schema.json")
-(def +ilmoitusten-haku+ "api/examples/ilmoitusten-haku-response.schema.json")
-(def +tietyoilmoituksen-kirjaus+ "api/examples/tietyoilmoituksen-kirjaus-request.schema.json")
+(def +ilmoituskuittauksen-kirjaaminen+ "api/schemas/ilmoituskuittauksen-kirjaaminen-request.schema.json")
+(def +ilmoitusten-haku+ "api/schemas/ilmoitusten-haku-response.schema.json")
+(def +tietyoilmoituksen-kirjaus+ "api/schemas/tietyoilmoituksen-kirjaus-request.schema.json")
 
 (def +pistetoteuman-kirjaus+ "api/schemas/pistetoteuman-kirjaus-request.schema.json")
 (def +reittitoteuman-kirjaus+ "api/schemas/reittitoteuman-kirjaus-request.schema.json")
 
-(def +poikkeamien-kirjaus+ "api/examples/poikkeamien-kirjaus-request.schema.json")
-(def +turvallisuuspoikkeamien-kirjaus+ "api/examples/turvallisuuspoikkeamien-kirjaus-request.schema.json")
+(def +poikkeamien-kirjaus+ "api/schemas/poikkeamien-kirjaus-request.schema.json")
+(def +turvallisuuspoikkeamien-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
 
-(def +tielupien-haku+ "api/examples/tielupien-haku-request.schema.json")
-(def +tielupien-haku-vastaus+ "api/examples/tielupien-haku-response.schema.json")
+(def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
+(def +tielupien-haku-vastaus+ "api/schemas/tielupien-haku-response.schema.json")
 
-(def +tietolajien-haku+ "api/examples/tietolajien-haku-response.schema.json")
+(def +tietolajien-haku+ "api/schemas/tietolajien-haku-response.schema.json")
 
-(def +varusteen-haku-vastaus+ "api/examples/varusteen-haku-response.schema.json")
-(def +varusteiden-haku-vastaus+ "api/examples/varusteiden-haku-response.schema.json")
-(def +varusteen-lisays+ "api/examples/varusteen-lisays-request.schema.json")
-(def +varusteen-paivitys+ "api/examples/varusteen-paivitys-request.schema.json")
-(def +varusteen-poisto+ "api/examples/varusteen-poisto-request.schema.json")
-(def +varustetoteuman-kirjaus+ "api/examples/varustetoteuman-kirjaus-request.schema.json")
+(def +varusteen-haku-vastaus+ "api/schemas/varusteen-haku-response.schema.json")
+(def +varusteiden-haku-vastaus+ "api/schemas/varusteiden-haku-response.schema.json")
+(def +varusteen-lisays+ "api/schemas/varusteen-lisays-request.schema.json")
+(def +varusteen-paivitys+ "api/schemas/varusteen-paivitys-request.schema.json")
+(def +varusteen-poisto+ "api/schemas/varusteen-poisto-request.schema.json")
+(def +varustetoteuman-kirjaus+ "api/schemas/varustetoteuman-kirjaus-request.schema.json")
 
-(def +siltatarkastuksen-kirjaus+ "api/examples/siltatarkastuksen-kirjaus-request.schema.json")
+(def +siltatarkastuksen-kirjaus+ "api/schemas/siltatarkastuksen-kirjaus-request.schema.json")
 (def +tiestotarkastuksen-kirjaus+ "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json")
 (def +soratietarkastuksen-kirjaus+ "api/schemas/soratietarkastuksen-kirjaus-request.schema.json")
 (def +talvihoitotarkastuksen-kirjaus+ "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json")
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
-(def +paivystajatietojen-haku+ "api/examples/paivystajatietojen-haku-request.schema.json")
-(def +paivystajatietojen-haku-vastaus+ "api/examples/paivystajatietojen-haku-response.schema.json")
+(def +paivystajatietojen-haku+ "api/schemas/paivystajatietojen-haku-request.schema.json")
+(def +paivystajatietojen-haku-vastaus+ "api/schemas/paivystajatietojen-haku-response.schema.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")

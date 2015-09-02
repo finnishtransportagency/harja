@@ -12,36 +12,36 @@
 
                                     #_[skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+] ; FIXME Rikki
 
-                                    #_[skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+] ; FIXME Ei löydy?
-                                    #_[skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+] ; FIXME Ei löydy?
+                                    [skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+]
+                                    [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
                                     [skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+]
 
                                     #_[skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]; FIXME Rikki "JSON ei ole validia: /pistetoteuma/toteuma: Ylimääräisiä kenttiä: selite"
                                     [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
 
-                                    #_[skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+] ; FIXME Ei löydy?
-                                    #_[skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+] ; FIXME Ei löydy?
+                                    #_[skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+] ; FIXME Rikki
+                                    [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
 
-                                    #_[skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+] ; FIXME Ei löydy?
-                                    #_[skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+] ; FIXME Ei löydy?
+                                    [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
+                                    [skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+]
 
-                                    #_[skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+] ; FIXME Ei löydy?
+                                    [skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+]
 
-                                    #_[skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+] ; FIXME Ei löydy?
-                                    #_[skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+] ; FIXME Ei löydy?
-                                    #_[skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+] ; FIXME Ei löydy?
-                                    #_[skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+] ; FIXME Ei löydy?
-                                    #_[skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+] ; FIXME Ei löydy?
-                                    #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Ei löydy?
+                                    [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
+                                    [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
+                                    #_[skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+] ; FIXME Rikki
+                                    #_[skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+] ; FIXME Rikki
+                                    #_[skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+] ; FIXME Rikki
+                                    #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Rikki
 
-                                    #_[skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+] ; FIXME Ei löydy?
+                                    [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
                                     [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
                                     [skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+]
                                     [skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+]
 
                                     [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
-                                    #_[skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+] ; FIXME Ei löydy?
-                                    #_[skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+] ; FIXME Ei löydy?
+                                    [skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+]
+                                    #_[skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+] ; FIXME Rikki
 
                                     [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
         skeemapolku-esimerkkidata (mapv
