@@ -16,10 +16,10 @@
                                     [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
                                     [skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+]
 
-                                    #_[skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]; FIXME Rikki "JSON ei ole validia: /pistetoteuma/toteuma: Ylimääräisiä kenttiä: selite"
+                                    [skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]
                                     [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
 
-                                    #_[skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+] ; FIXME Rikki "JSON ei ole validia: /poikkeamat[0]/poikkeama: Ylimääräisiä kenttiä: kohde"}
+                                    [skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+]
                                     [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
 
                                     [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
@@ -29,9 +29,9 @@
 
                                     [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
                                     [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
-                                    #_[skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+] ; FIXME JSON ei ole validia: /lisaaja: Ylimääräisiä kenttiä: ytunnus"
-                                    #_[skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+] ; FIXME Rikki JSON ei ole validia: /paivittaja: Ylimääräisiä kenttiä: ytunnus
-                                    #_[skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+] ; FIXME Rikki JSON ei ole validia: /paivittaja: Ylimääräisiä kenttiä: ytunnus
+                                    [skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+]
+                                    [skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+]
+                                    [skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+]
                                     #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Rikki JSON ei ole validia: /varustetoteuma/toteuma: Väärä tyyppi. Tyyppi: :array-like, arvo: {\"tunniste\" {\"id\" 3} jne.
 
                                     [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
