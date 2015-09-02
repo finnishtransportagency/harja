@@ -67,7 +67,7 @@
   (case avainsana
     :vahinkojen_korjaukset "Vahinkojen korjaukset"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
-    :akillinen_hoitotyo "Äkillinen hoitotyö"
+    :akillinen-hoitotyo "Äkillinen hoitotyö"
     :muu "Muu"
     :tilaajan_maa-aines "Tilaajan maa-aines"
     +valitse-tyyppi+))
@@ -75,12 +75,12 @@
 ;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
 ;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
 (def +erilliskustannustyypit+
-  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen_hoitotyo :muu])
+  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen-hoitotyo :muu])
 
 (defn luo-kustannustyypit [urakkatyyppi]
   (if (= :hoito urakkatyyppi)
     +erilliskustannustyypit+
-    (remove #{:akillinen_hoitotyo} +erilliskustannustyypit+)))
+    (remove #{:akillinen-hoitotyo} +erilliskustannustyypit+)))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -213,8 +213,8 @@
             :leveys-col    3}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
-            :varoita [[:urakan-aikana]]}
-           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€" :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
+            :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)

@@ -4,12 +4,17 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
+            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
             [harja.views.kartta :as kartta]
             [harja.views.tilannekuva.tilannekuvien-yhteiset-komponentit :refer [nayta-hallinnolliset-tiedot]]
             [harja.ui.kentat :as kentat]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.views.kartta :as kartta]
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 
@@ -20,68 +25,104 @@
                                    }}
    tiedot/lyhyen-suodattimen-asetukset])
 
+(def popupien-putsaus
+  (run! (when (= :historiakuva @tilannekuva/valittu-valilehti)
+          (log "välilehti vaihtui historiakuvaan")
+          (kartta/poista-popup!))))
+
 (defn pitkasuodatin []
   [:span
-   [kentat/tee-kentta {:tyyppi :pvm}
+   [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
     (r/wrap (:alku @tiedot/pitkan-suodattimen-asetukset)
-            (fn [u] (swap! assoc :alku u)))]
+            (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :alku u)))]
 
-   [kentat/tee-kentta {:tyyppi :pvm}
+   [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
     (r/wrap (:loppu @tiedot/pitkan-suodattimen-asetukset)
-            (fn [u] (swap! assoc :loppu u)))]])
+            (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :loppu u)))]])
 
-(defonce aikasuodattimet-rivit (atom {1 {:auki    (= :live @tiedot/valittu-aikasuodatin)
+(defonce aikasuodattimet-rivit (atom {1 {:auki    (= :lyhyt @tiedot/valittu-aikasuodatin)
                                          :otsikko "Lyhyt aikaväli" :sisalto [lyhytsuodatin]}
-                                      2 {:auki    (not (= :live @tiedot/valittu-aikasuodatin))
+                                      2 {:auki    (not (= :lyhyt @tiedot/valittu-aikasuodatin))
                                          :otsikko "Pitkä aikaväli" :sisalto [pitkasuodatin]}}))
 
 (defonce aikasuodattimet [harja.ui.yleiset/haitari aikasuodattimet-rivit {:vain-yksi-auki? true
                                                                           :aina-joku-auki? true}])
 
 (defn muut-suodattimet []
-  [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot [:toimenpidepyynnot ;; FIXME: formatteri, tai tämän Ö:t muuttuu O:ksi UI:ssa...
-                                    :kyselyt
-                                    :tiedoitukset
-                                    :turvallisuuspoikkeamat
-                                    :tarkastukset
-                                    :havainnot
-                                    :onnettomuudet
-                                    :paikkaustyot   ;; ... ja näiden kahden
-                                    :paallystystyot]}
+  [kentat/tee-kentta {:tyyppi           :boolean-group
+                      :valitse-kaikki?  true
+                      :tyhjenna-kaikki? true
+                      :vaihtoehdot      [:toimenpidepyynnot
+                                         :kyselyt
+                                         :tiedoitukset
+                                         :turvallisuuspoikkeamat
+                                         :tarkastukset
+                                         :havainnot
+                                         :onnettomuudet
+                                         :paikkaustyot
+                                         :paallystystyot]
+
+                      :vaihtoehto-nayta {
+                                         :toimenpidepyynnot      "Toimenpidepyynnöt"
+                                         :kyselyt                "Kyselyt"
+                                         :tiedoitukset           "Tiedoitukset"
+                                         :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
+                                         :tarkastukset           "Tarkastukset"
+                                         :havainnot              "Havainnot"
+                                         :onnettomuudet          "Onnettomuudet"
+                                         :paikkaustyot           "Paikkaustyöt"
+                                         :paallystystyot         "Päällystystyöt"
+                                         }}
 
    (r/wrap
-    (into #{}
-          (keep identity)
-          [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
-           (when @tiedot/hae-kyselyt? :kyselyt)
-           (when @tiedot/hae-tiedoitukset? :tiedoitukset)
-           (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
-           (when @tiedot/hae-tarkastukset? :tarkastukset)
-           (when @tiedot/hae-havainnot? :havainnot)
-           (when @tiedot/hae-onnettomuudet? :onnettomuudet)
-           (when @tiedot/hae-paikkaustyot? :paikkaustyot)
-           (when @tiedot/hae-paallystystyot? :paallystystyot)])
+     (into #{}
+           (keep identity)
+           [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
+            (when @tiedot/hae-kyselyt? :kyselyt)
+            (when @tiedot/hae-tiedoitukset? :tiedoitukset)
+            (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
+            (when @tiedot/hae-tarkastukset? :tarkastukset)
+            (when @tiedot/hae-havainnot? :havainnot)
+            (when @tiedot/hae-onnettomuudet? :onnettomuudet)
+            (when @tiedot/hae-paikkaustyot? :paikkaustyot)
+            (when @tiedot/hae-paallystystyot? :paallystystyot)])
 
-    (fn [uusi]
-      (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
-      (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
-      (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
-      (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat uusi))
-      (reset! tiedot/hae-tarkastukset? (:tarkastukset uusi))
-      (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
-      (reset! tiedot/hae-havainnot? (:havainnot uusi))
-      (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
-      (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
+     (fn [uusi]
+       (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
+       (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
+       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
+       (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat uusi))
+       (reset! tiedot/hae-tarkastukset? (:tarkastukset uusi))
+       (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
+       (reset! tiedot/hae-havainnot? (:havainnot uusi))
+       (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
+       (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
 
-(defn toteuma-suodattimet []
-  [kentat/tee-kentta {:tyyppi      :boolean-group
-                      :vaihtoehdot  tiedot/+toteumatyypit+}
-   tiedot/haettavat-toteumatyypit])
+(defn toteuma-suodattimet [toteumakoodit]
+  [kentat/tee-kentta {:tyyppi           :boolean-group
+                      :tyhjenna-kaikki? true
+                      :valitse-kaikki?  true
+                      :vaihtoehdot      (vec (sort (set (map :nimi toteumakoodit))))}
+   (r/wrap
+     (into #{} (keep (fn [[avain arvo]] (when arvo avain)) @tiedot/valitut-toteumatyypit))
+     (fn [uusi]
+       (swap! tiedot/valitut-toteumatyypit
+              (fn [vanha]
+                (let [avaimet (keys vanha)]
+                  (zipmap avaimet
+                          (map (fn [avain] (if (uusi avain) true false)) avaimet)))))))])
 
-
-(defonce toteumat-rivit (atom {1 {:auki false :otsikko "Toteumat" :sisalto [toteuma-suodattimet]}
-                               2 {:auki false :otsikko "Muut" :sisalto [muut-suodattimet]}}))
+(defonce toteumat-rivit (reaction
+                          (merge
+                            (into {}
+                                  (keep-indexed
+                                    (fn [index asia] {index asia})
+                                    (mapv (fn [emo] {:otsikko emo
+                                                     :auki    false
+                                                     :sisalto [toteuma-suodattimet (get @tiedot/naytettavat-toteumatyypit emo)]})
+                                          (sort (keys @tiedot/naytettavat-toteumatyypit)))))
+                            {(count (keys @tiedot/naytettavat-toteumatyypit))
+                             {:otsikko "Muut" :auki false :sisalto [muut-suodattimet]}})))
 
 (defonce toteumat [harja.ui.yleiset/haitari toteumat-rivit {:otsikko "Muut suodattimet"}])
 
@@ -91,16 +132,62 @@
    aikasuodattimet
    toteumat])
 
-(defonce hallintapaneeli (atom {1 {:auki false :otsikko "Esimerkki" :sisalto [suodattimet]}}))
+(defonce hallintapaneeli (atom {1 {:auki true :otsikko "Historiakuva" :sisalto [suodattimet]}}))
 
 (defn historiakuva []
-  (komp/luo {:component-will-mount (fn [_]
-                                     (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
-             :component-will-unmount (fn [_]
-                                       (kartta/tyhjenna-yleiset-kontrollit))}
+  (komp/luo
+    {:component-will-mount   (fn [_]
+                               (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+     :component-will-unmount (fn [_]
+                               (tiedot/lopeta-asioiden-haku)
+                               (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
     (fn []
-      (reaction (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
-                                                      :lyhyt
-                                                      :pitka)))
+      (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
+                                                  :lyhyt
+                                                  :pitka)))
       nil)))
+
+(tapahtumat/kuuntele! :toteuma-klikattu
+                      (fn [tapahtuma]
+                        (log (pr-str (dissoc tapahtuma :reittipisteet)))
+                        (log (pr-str (:tehtava tapahtuma)))
+                        (log (pr-str (get-in tapahtuma [:tehtava :id])))
+                        (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+                                             [:div.kartta-toteuma-popup
+                                              [:p [:b "Toteuma"]]
+                                              [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                              (when (:suorittaja tapahtuma)
+                                                [:span
+                                                 [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                                              (when-not (empty? (:tehtavat tapahtuma))
+                                                (doall
+                                                  (for [tehtava (:tehtavat tapahtuma)]
+                                                    [:span
+                                                     [:p "Toimenpide: " (:toimenpide tehtava)]
+                                                     [:p "Määrä: " (:maara tehtava)]
+                                                     [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                                     [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                                              (when-not (empty? (:materiaalit tapahtuma))
+                                                (doall
+                                                  (for [toteuma (:materiaalit tapahtuma)]
+                                                    [:span
+                                                     [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                     [:p "Määrä: " (:maara toteuma)]])))
+                                              (when (:lisatieto tapahtuma)
+                                                [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
+
+(tapahtumat/kuuntele! :reittipiste-klikattu
+                      (fn [tapahtuma]
+                        (kartta/nayta-popup! (:sijainti tapahtuma)
+                                             [:div.kartta-reittipiste-popup
+                                              [:p [:b "Reittipiste"]]
+                                              [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
+                                              (when (get-in tapahtuma [:tehtava :id])
+                                                [:span
+                                                 [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
+                                                 [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
+                                              (when (get-in tapahtuma [:materiaali :id])
+                                                [:span
+                                                 [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
+                                                 [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])])))

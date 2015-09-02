@@ -4,9 +4,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs-time.core :as t])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -16,27 +17,15 @@
 (defonce hae-toimenpidepyynnot? (atom true))
 (defonce hae-kyselyt? (atom true))
 (defonce hae-tiedoitukset? (atom true))
-(defonce hae-kaluston-gps? (atom true))
 (defonce hae-havainnot? (atom true))
 (defonce hae-onnettomuudet? (atom true))
+(defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
 (defonce livesuodattimen-asetukset (atom "0-4h"))
 
 (defonce nakymassa? (atom false))
 (defonce taso-nykytilanne (atom false))
-
-(defonce filtterit-muuttui?
-         (reaction @hae-toimenpidepyynnot?
-                   @hae-kyselyt?
-                   @hae-tiedoitukset?
-                   @hae-kaluston-gps?
-                   @hae-havainnot?
-                   @hae-onnettomuudet?
-                   @nav/valittu-hallintayksikko
-                   @nav/valittu-urakka
-                   @livesuodattimen-asetukset))
-
 (def haetut-asiat (atom nil))
 
 (defn oletusalue [asia]
@@ -79,11 +68,13 @@
            :direction (- (suunta-radiaaneina tyokone))
            :img "images/tyokone.png"}))
 
+(defmethod kartalla-xf :default [_])
+
 (def nykytilanteen-asiat-kartalla
   (reaction
     @haetut-asiat
     (when @taso-nykytilanne
-      (into [] (map kartalla-xf) (first @haetut-asiat)))))
+      (into [] (map kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []
   {:hallintayksikko @nav/valittu-hallintayksikko-id
@@ -98,35 +89,38 @@
 (defn hae-asiat []
   (go
     (let [yhdista (fn [& tulokset]
-                    (concat (remove k/virhe? tulokset)))
+                    (apply (comp vec concat) (remove k/virhe? tulokset)))
           tulos (yhdista
-                 (when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
+                  (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
                   #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
                   #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt (kasaa-parametrit))))
                   #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
-      (reset! haetut-asiat tulos))))
+      (reset! haetut-asiat tulos)
+      (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
+                             :tyokoneet tulos}))))
 
-(def pollaus-id (atom nil))
+
 (def +sekuntti+ 1000)
-(def +intervalli+ (* 5 +sekuntti+))
+(def +minuutti+ (* 60 +sekuntti+))
 
-(defn lopeta-pollaus
-  []
-  (when @pollaus-id
-    (log "lopetetaan pollaus")
-    (js/clearInterval @pollaus-id)
-    (reset! pollaus-id nil)))
+(def +intervalli+ (* 3 +sekuntti+))
+(def +bufferi+ 500)
 
-(defn aloita-pollaus
-  []
-  (when (not @pollaus-id)
-    (log "aloitetaan pollaus")
-    (hae-asiat)
-    (reset! pollaus-id (js/setInterval hae-asiat +intervalli+))))
+(def asioiden-haku (reaction<!
+                     [_ @hae-toimenpidepyynnot?
+                      _ @hae-kyselyt?
+                      _ @hae-tiedoitukset?
+                      _ @hae-tyokoneet?
+                      _ @hae-havainnot?
+                      _ @hae-onnettomuudet?
+                      _ @livesuodattimen-asetukset]
+                     {:odota +bufferi+}
+                     (when @nakymassa? (hae-asiat))))
 
-(run! (if @nakymassa? (aloita-pollaus) (lopeta-pollaus)))
-(run! (when @filtterit-muuttui?
-        (hae-asiat)))
+(defn aloita-asioiden-haku []
+  (paivita-periodisesti asioiden-haku +intervalli+))
+
+(def lopeta-asioiden-haku (aloita-asioiden-haku))

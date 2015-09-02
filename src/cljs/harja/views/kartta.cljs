@@ -32,25 +32,9 @@
                       #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
                            (reset! zoom-taso +koko-suomi-zoom-taso+))))
 
-#_(defonce kartan-alueen-asetus
-    (run! (let [hal @nav/valittu-hallintayksikko
-              urakka @nav/valittu-urakka
-              koko @nav/kartan-koko]
-          (log "kartan koko, hallintayksikkö tai urakka vaihtui, koko:" koko)
-          (when (not= :S koko)
-            (log "Kartan koko: " koko)
-            (cond
-             (not (nil? urakka))
-             (do
-               (log "Urakka olemassa, zoomataan siihen: " (pr-str (dissoc urakka :alue)))
-               (go (<! (timeout 500))
-                   (openlayers/fit-bounds! urakka)))
-
-             (not (nil? hal))
-             (do
-               (log "HAL vaihtui, zoomataan siihen: " (pr-str (dissoc hal :alue)))
-               (go (<! (timeout 500)) ;; leaflet vaatii hieman armon aikaa ennen kuin zoomataan
-                   (openlayers/fit-bounds! (assoc hal :valittu true)))))))))
+(defonce urakka-kuuntelija
+  (t/kuuntele! :urakka-valittu
+               #(openlayers/hide-popup!)))
 
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
@@ -85,6 +69,8 @@
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
+(def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
+
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
   []
@@ -104,6 +90,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   [sijainti sisalto-hiccup]
   (openlayers/show-popup! sijainti sisalto-hiccup))
 
+(defn poista-popup! []
+  (openlayers/hide-popup!))
 
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
@@ -124,16 +112,18 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
      {:id "kartta"
       :width (if (= koko :S) "160px" "100%")
       :height (if (= koko :S) "150px"
-                  (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
+                              (max (int (* 0.90 (- kork 150))) 350)) ;;"100%" ;; set width/height as CSS units, must set height as pixels!
       :style (when (= koko :S)
                {:display "none"})
       :view kartta-sijainti
       :zoom zoom-taso
       :selection nav/valittu-hallintayksikko
       :on-zoom paivita-extent
-      :on-drag paivita-extent
+      :on-drag (fn [item event]
+                 (paivita-extent item event)
+                 (t/julkaise! {:aihe :karttaa-vedetty}))
       :on-mount (fn [initialextent] (paivita-extent nil initialextent))
-      ;;:on-click (fn [at] (.log js/console "CLICK: " (pr-str at)))
+      :on-click (fn [at] (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at}))
       :on-select (fn [item event]
                    (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
                      (condp = (:type item)
@@ -146,42 +136,51 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                     (and geom
                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
-      (concat (cond
-                ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                (nil? v-hal)
-                hals
+                   (concat (cond
+                             (and (= :tilannekuva @nav/sivu) (nil? v-hal))
+                             nil
 
-                ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                (nil? @nav/valittu-urakka)
-                (vec (concat [(assoc v-hal
-                                     :valittu true)]
-                             @nav/urakat-kartalla))
+                             (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
+                             [(assoc v-hal :valittu true)]
 
-                ;; Valittu urakka, mitä näytetään?
-                :default [(assoc @nav/valittu-urakka
-                                 :valittu true
-                                 :harja.ui.openlayers/fit-bounds true)])
-              @tasot/geometriat)
+                             (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
+                             [(assoc @nav/valittu-urakka :valittu true)]
+
+                             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                             (nil? v-hal)
+                             hals
+
+                             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                             (nil? @nav/valittu-urakka)
+                             (vec (concat [(assoc v-hal
+                                             :valittu true)]
+                                          @nav/urakat-kartalla))
+
+                             ;; Valittu urakka, mitä näytetään?
+                             :default [(assoc @nav/valittu-urakka
+                                         :valittu true
+                                         :harja.ui.openlayers/fit-bounds true)])
+                           @tasot/geometriat)
 
       :geometry-fn (fn [piirrettava]
                      (when-let [alue (:alue piirrettava)]
                        (when (map? alue)
                          (assoc alue
-                                :fill (if (:valittu piirrettava) false true)
-                                :stroke (when (or (:valittu piirrettava)
-                                                  (= :silta (:type piirrettava)))
-                                          {:width 3})
-                                :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
-                                :color (or (:color alue)
-                                           (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
-                                :zindex (or (:zindex alue) (case (:type piirrettava)
-                                                             :hy 0
-                                                             :ur 1
-                                                             :pohjavesialueet 2
-                                                             :sillat 3
-                                                             4))
-                                ;;:marker (= :silta (:type hy))
-                                ))))
+                           :fill (if (:valittu piirrettava) false true)
+                           :stroke (when (or (:valittu piirrettava)
+                                             (= :silta (:type piirrettava)))
+                                     {:width 3})
+                           :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
+                           :color (or (:color alue)
+                                      (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
+                           :zindex (or (:zindex alue) (case (:type piirrettava)
+                                                        :hy 0
+                                                        :ur 1
+                                                        :pohjavesialueet 2
+                                                        :sillat 3
+                                                        4))
+                           ;;:marker (= :silta (:type hy))
+                           ))))
 
       :layers      [{:type  :mml
                      :url   (str (k/wmts-polku) "maasto/wmts")

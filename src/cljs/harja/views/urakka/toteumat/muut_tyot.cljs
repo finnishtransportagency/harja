@@ -316,8 +316,8 @@
                           :alkanut
                           arvo))
                :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-               :varoita [[:urakan-aikana]]}
-              {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm
+               :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+              {:otsikko     "Lopetus" :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :leveys-col 2
                :validoi [[:ei-tyhja "Valitse päivämäärä"]

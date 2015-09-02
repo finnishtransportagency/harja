@@ -32,6 +32,7 @@ SELECT
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
+  h.kuvaus,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -39,7 +40,7 @@ SELECT
                   WHERE hk.havainto = h.id)
    ORDER BY luotu ASC
    OFFSET 0
-   LIMIT 1)                          AS kuvaus
+   LIMIT 1)                          AS kommentti
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.havainto = h.id
@@ -59,6 +60,7 @@ SELECT
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
+  h.kuvaus,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -66,7 +68,7 @@ SELECT
                   WHERE hk.havainto = h.id)
    ORDER BY luotu ASC
    OFFSET 0
-   LIMIT 1)                          AS kuvaus
+   LIMIT 1)                          AS kommentti
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.havainto=h.id
@@ -88,6 +90,7 @@ SELECT
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
+  h.kuvaus,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -95,7 +98,7 @@ SELECT
                   WHERE hk.havainto = h.id)
    ORDER BY luotu ASC
    OFFSET 0
-   LIMIT 1)                          AS kuvaus
+   LIMIT 1)                          AS kommentti
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.havainto = h.id
@@ -121,7 +124,8 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.perustelu                        AS paatos_perustelu,
-  h.muu_kasittelytapa                AS paatos_muukasittelytapa
+  h.muu_kasittelytapa                AS paatos_muukasittelytapa,
+  h.selvitys_pyydetty                AS selvityspyydetty
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka
