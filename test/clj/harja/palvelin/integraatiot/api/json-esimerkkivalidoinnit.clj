@@ -19,7 +19,7 @@
                                     #_[skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]; FIXME Rikki "JSON ei ole validia: /pistetoteuma/toteuma: Ylimääräisiä kenttiä: selite"
                                     [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
 
-                                    #_[skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+] ; FIXME Rikki
+                                    #_[skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+] ; FIXME Rikki "JSON ei ole validia: /poikkeamat[0]/poikkeama: Ylimääräisiä kenttiä: kohde"}
                                     [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
 
                                     [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
@@ -29,10 +29,10 @@
 
                                     [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
                                     [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
-                                    #_[skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+] ; FIXME Rikki
-                                    #_[skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+] ; FIXME Rikki
-                                    #_[skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+] ; FIXME Rikki
-                                    #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Rikki
+                                    #_[skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+] ; FIXME JSON ei ole validia: /lisaaja: Ylimääräisiä kenttiä: ytunnus"
+                                    #_[skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+] ; FIXME Rikki JSON ei ole validia: /paivittaja: Ylimääräisiä kenttiä: ytunnus
+                                    #_[skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+] ; FIXME Rikki JSON ei ole validia: /paivittaja: Ylimääräisiä kenttiä: ytunnus
+                                    #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Rikki JSON ei ole validia: /varustetoteuma/toteuma: Väärä tyyppi. Tyyppi: :array-like, arvo: {\"tunniste\" {\"id\" 3} jne.
 
                                     [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
                                     [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
@@ -41,7 +41,7 @@
 
                                     [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
                                     [skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+]
-                                    #_[skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+] ; FIXME Rikki
+                                    #_[skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+] ; FIXME Rikki "JSON ei ole validia: /urakat[0]/urakka: Ylimääräisiä kenttiä: paivystykset"}
 
                                     [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
         skeemapolku-esimerkkidata (mapv
