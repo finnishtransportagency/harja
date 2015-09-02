@@ -26,13 +26,15 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
+(def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
+
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
                       (map #(assoc % :kohdeosat
                                    (into []
-                                         (geo/muunna-pg-tulokset :sijainti)
+                                         kohdeosa-xf
                                          (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
                                           db urakka-id sopimus-id (:id %)))))
                       (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
@@ -42,7 +44,9 @@
 (defn hae-urakan-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystyskohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into [] (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+  (let [vastaus (into []
+                      kohdeosa-xf
+                      (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
