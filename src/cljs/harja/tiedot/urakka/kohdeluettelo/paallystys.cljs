@@ -76,12 +76,18 @@
 
 (defonce taso-paallystyskohteet (atom false))
 
-
+(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                         nakymassa? @paallystysilmoitukset-nakymassa?]
+                                        (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                                          (log "PÄÄ Haetaan päällystystoteumat.")
+                                          (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @taso-paallystyskohteet
-                  kohderivit @kohderivit]
-              (when (and taso kohderivit)
+                  kohderivit @kohderivit
+                  toteumarivit @toteumarivit]
+              (when taso
                 (into []
                       (mapcat #(map (fn [{sij :sijainti nimi :nimi}]
                                       {:type :paallystyskohde
@@ -94,7 +100,7 @@
                                                                           :stroke {:color "black" :width 100}))
                                                                  (:lines sij)))})
                                     (:kohdeosat %)))
-                      kohderivit)))))
+                      (concat kohderivit toteumarivit))))))
 
   
                   

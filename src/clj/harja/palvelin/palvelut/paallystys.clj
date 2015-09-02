@@ -57,7 +57,12 @@
                       (comp
                         (map #(konv/string->avain % [:paatos_taloudellinen_osa]))
                         (map #(konv/string->avain % [:paatos_tekninen_osa]))
-                        (map #(konv/string->avain % [:tila])))
+                        (map #(konv/string->avain % [:tila]))
+                        (map #(assoc % :kohdeosat
+                                     (into []
+                                           kohdeosa-xf
+                                           (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                            db urakka-id sopimus-id (:paallystyskohde_id %))))))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
