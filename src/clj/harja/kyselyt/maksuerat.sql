@@ -75,18 +75,10 @@ SELECT
 
   WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-              t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'akillinen-hoitotyo')
-
+      (SELECT (sum(ek.rahasumma))
+       FROM erilliskustannus ek
+       WHERE ek.toimenpideinstanssi = tpi.id AND
+             ek.tyyppi = 'akillinen-hoitotyo')
 
   WHEN m.tyyppi = 'sakko'
     THEN
@@ -116,7 +108,8 @@ SELECT
            -- Fixme: indeksien laskenta!
          coalesce((SELECT (sum(ek.rahasumma))
                    FROM erilliskustannus ek
-                   WHERE ek.toimenpideinstanssi = tpi.id),
+                   WHERE ek.toimenpideinstanssi = tpi.id AND
+                         ek.tyyppi != 'akillinen-hoitotyo'),
                   0))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
@@ -214,16 +207,10 @@ SELECT
 
   WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'akillinen-hoitotyo')
+      (SELECT (sum(ek.rahasumma))
+       FROM erilliskustannus ek
+       WHERE ek.toimenpideinstanssi = tpi.id AND
+             ek.tyyppi = 'akillinen-hoitotyo')
 
   WHEN m.tyyppi = 'sakko'
     THEN
@@ -252,7 +239,8 @@ SELECT
         -- Erilliskustannukset
         coalesce((SELECT (sum(ek.rahasumma))
                   FROM erilliskustannus ek
-                  WHERE ek.toimenpideinstanssi = tpi.id)
+                  WHERE ek.toimenpideinstanssi = tpi.id AND
+                        ek.tyyppi != 'akillinen-hoitotyo')
         , 0)))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
@@ -327,4 +315,4 @@ WHERE tyyppi = :tyyppi::maksueratyyppi;
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
-VALUES (:toimenpideinstanssi, :tyyppi::maksueratyyppi, :nimi, true, current_timestamp);
+VALUES (:toimenpideinstanssi, :tyyppi :: maksueratyyppi, :nimi, TRUE, current_timestamp);

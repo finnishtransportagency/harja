@@ -11,8 +11,30 @@
             [harja.kyselyt.toteumat :as q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]))
+
+(defn annettu? [p]
+  (if (nil? p)
+    false
+    (do
+      (if (string? p)
+        (not (empty? p))
+
+        (if (vector? p)
+          (do
+            (if (empty? p)
+              false
+              (some true? (map annettu? p))))
+
+          (if (map? p)
+            (do
+              (if (empty? p)
+                false
+                (some true? (map #(annettu? (val %)) p))))
+
+            true))))))
 
 (def toteuma-xf
   (comp (map #(-> %
@@ -22,7 +44,7 @@
 (def muunna-desimaaliluvut-xf
   (map #(-> %
             (assoc :maara
-                      (or (some-> % :maara double) 0)))))
+                   (or (some-> % :maara double) 0)))))
 
 (defn toteuman-tehtavat->map [toteumat]
   (let [mapattu (map (fn [rivi]
@@ -32,9 +54,9 @@
                                            (log/debug "Mapataan Tehtävä: " (pr-str tehtava))
                                            (let [splitattu (str/split tehtava #"\^")]
                                              {:tehtava-id (Integer/parseInt (first splitattu))
-                                              :tpk-id (Integer/parseInt (second splitattu))
-                                              :nimi   (get splitattu 2)
-                                              :maara  (Integer/parseInt (get splitattu 3))
+                                              :tpk-id     (Integer/parseInt (second splitattu))
+                                              :nimi       (get splitattu 2)
+                                              :maara      (Integer/parseInt (get splitattu 3))
                                               }))
                                          (:tehtavat rivi))))
                      toteumat)]
@@ -90,6 +112,65 @@
         muunna-desimaaliluvut-xf
         (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
+(defn hae-toteumat-historiakuvaan [db user {:keys [hallintayksikko urakka alku loppu toimenpidekoodit alue]}]
+  (log/debug "Haetaan toteumia historiakuvaan.")
+  (log/debug (pr-str hallintayksikko urakka))
+  (log/debug (pr-str alue))
+  (log/debug (pr-str toimenpidekoodit))
+
+  (when urakka (roolit/vaadi-lukuoikeus-urakkaan user urakka))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-idt (if-not (nil? urakka)
+                       (if (vector? urakka) urakka (vec urakka))
+
+                       (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user))))
+          ;; Tuloksia ei rajata urakalla, jos urakkaa ei ole valittu ja käyttäjä on järjestelmavastuuhenkilö
+          rajaa-urakalla? (not (and (nil? urakka) (get (:roolit user) "jarjestelmavastuuhenkilo")))
+          hallintayksikko_annettu (annettu? hallintayksikko)]
+
+      ;; On mahdollista, että käyttäjä on joko järjestelmävastuuhenkilö (= Pääsy kaikkiin urakoihin), tai
+      ;; urakoitsija tms. joka pääsee vain tiettyihin urakoihin.
+      ;; On myös mahdollista, että käyttäjä valitsee käyttöliittymän kautta haettavan urakan, tai hakee
+      ;; kaikista tälle liitetyistä urakoista.
+      ;; - JOS käyttäjä on valinnut urakan, haetaan vain tästä urakasta (lista jossa on yksi elementti).
+      ;;   rajaa-urakalla? on tällöin true
+      ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on 'normaali käyttäjä', ollaan haettu listaan
+      ;;   kaikki käyttäjälle kuuluvat urakat. Tällöin kysely tehdään jokaiselle listassa olevalle urakalle
+      ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on JVH, 'rajaa-urakalla?' on FALSE, urakka-idt on
+      ;;   tyhjä lista ja palautetaan "kaikki asiat".
+      (let [kyselyn_tulos (if-not (empty? urakka-idt)
+                            (do
+                              (log/debug "Haetaan urakoista " (pr-str urakka-idt) " (" (pr-str rajaa-urakalla?) ")")
+                              (apply (comp vec flatten merge)
+                                    (for [urakka-id urakka-idt]
+                                      (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                                     toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                                     urakka-id rajaa-urakalla?
+                                                                     hallintayksikko_annettu hallintayksikko))))
+
+                            (when-not rajaa-urakalla?
+                              (log/debug "Hakua ei rajata urakalla - käyttäjä on järjestelmävastuuhenkilö")
+                              (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                             toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                             0 rajaa-urakalla?
+                                                             hallintayksikko_annettu hallintayksikko)))
+
+            _ (log/debug (pr-str (count kyselyn_tulos)))
+            mankeloitava (into []
+                               (comp
+                                 (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                                 (map konv/alaviiva->rakenne)
+                                 (map #(assoc % :tyyppi :toteuma)))
+                               kyselyn_tulos)
+            tulos (konv/sarakkeet-vektoriin
+                    mankeloitava
+                    {:tehtava     :tehtavat
+                     :materiaali  :materiaalit
+                     :reittipiste :reittipisteet})]
+        (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa historiakuvaan."))
+
+        tulos))))
+
 (defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -123,10 +204,10 @@
     (kasittele-toteumatehtava c user toteuma tehtava)))
 
 (defn paivita-toteuma [c user toteuma]
-    (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                        (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
-    (kasittele-toteuman-tehtavat c user toteuma)
-    (:toteuma-id toteuma))
+  (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
+  (kasittele-toteuman-tehtavat c user toteuma)
+  (:toteuma-id toteuma))
 
 (defn luo-toteuma [c user toteuma]
   (let [toteuman-parametrit (into [] (concat [c] (toteuman-parametrit toteuma user)))
@@ -176,18 +257,18 @@
       (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
 
   (let [paivitetyt-tehtavat (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user
-                                                                                {:urakka-id urakka-id
-                                                                                 :sopimus-id sopimus-id
-                                                                                 :alkupvm alkupvm
-                                                                                 :loppupvm loppupvm
-                                                                                 :tyyppi tyyppi
+                                                                                {:urakka-id       urakka-id
+                                                                                 :sopimus-id      sopimus-id
+                                                                                 :alkupvm         alkupvm
+                                                                                 :loppupvm        loppupvm
+                                                                                 :tyyppi          tyyppi
                                                                                  :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
         paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
-                                                                 {:urakka-id urakka-id
+                                                                 {:urakka-id  urakka-id
                                                                   :sopimus-id sopimus-id
-                                                                  :alkupvm alkupvm
-                                                                  :loppupvm loppupvm
-                                                                  :tyyppi tyyppi})]
+                                                                  :alkupvm    alkupvm
+                                                                  :loppupvm   loppupvm
+                                                                  :tyyppi     tyyppi})]
     (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetyt-tehtavat))
     {:tehtavat paivitetyt-tehtavat :tehtavien-summat paivitetyt-summat}))
 
@@ -212,19 +293,19 @@
 
 (defn tallenna-erilliskustannus [db user ek]
   (roolit/vaadi-rooli-urakassa user
-                            roolit/toteumien-kirjaus
-                            (:urakka-id ek))
+                               roolit/toteumien-kirjaus
+                               (:urakka-id ek))
   (jdbc/with-db-transaction [c db]
-                            (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
-                                              (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
-                              (if (not (:id ek))
-                                (apply q/luo-erilliskustannus<! parametrit)
+    (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
+                      (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
+      (if (not (:id ek))
+        (apply q/luo-erilliskustannus<! parametrit)
 
-                                (apply q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false) (:id ek)]))))
-                            (q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
-                            (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
-                                                                    :alkupvm   (:alkupvm ek)
-                                                                    :loppupvm  (:loppupvm ek)})))
+        (apply q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false) (:id ek)]))))
+    (q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
+    (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
+                                            :alkupvm   (:alkupvm ek)
+                                            :loppupvm  (:loppupvm ek)})))
 
 
 (def muut-tyot-rahasumma-xf
@@ -296,8 +377,8 @@
 (defn tallenna-muiden-toiden-toteuma
   [db user toteuma]
   (roolit/vaadi-rooli-urakassa user
-                            #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
-                            (:urakka-id toteuma))
+                               #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo}
+                               (:urakka-id toteuma))
   (jdbc/with-db-transaction [c db]
     (if (get-in toteuma [:tehtava :id])
       (paivita-muun-tyon-toteuma c user toteuma)
@@ -324,74 +405,74 @@
   materiaalit/tallenna-toteumamateriaaleja! funktioon (todnäk)"
   [db user t toteumamateriaalit hoitokausi sopimus]
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
-                            (:urakka t))
+                               (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
-                            ;; Jos toteumalla on positiivinen id, toteuma on olemassa
-                            (let [toteuma (if (and (:id t) (pos? (:id t)))
-                                            ;; Jos poistettu=true, halutaan toteuma poistaa.
-                                            ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
-                                            (if (:poistettu t)
-                                              (do
-                                                (log/debug "Poistetaan toteuma " (:id t))
-                                                (q/poista-toteuma! c (:id user) (:id t))
-                                                t)
-                                              (do
-                                                (log/debug "Pävitetään toteumaa " (:id t))
-                                                (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
-                                                                    (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
-                                                t))
-                                            ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
-                                            ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
-                                            (do
-                                              (log/debug "Luodaan uusi toteuma")
-                                              (q/luo-toteuma<!
-                                                c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
-                                                (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
-                                                (:suorittajan-nimi t)
-                                                (:suorittajan-ytunnus t)
-                                                (:lisatieto t)
-                                                nil)))]
-                              (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
+    ;; Jos toteumalla on positiivinen id, toteuma on olemassa
+    (let [toteuma (if (and (:id t) (pos? (:id t)))
+                    ;; Jos poistettu=true, halutaan toteuma poistaa.
+                    ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
+                    (if (:poistettu t)
+                      (do
+                        (log/debug "Poistetaan toteuma " (:id t))
+                        (q/poista-toteuma! c (:id user) (:id t))
+                        t)
+                      (do
+                        (log/debug "Pävitetään toteumaa " (:id t))
+                        (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
+                                            (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
+                        t))
+                    ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
+                    ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
+                    (do
+                      (log/debug "Luodaan uusi toteuma")
+                      (q/luo-toteuma<!
+                        c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
+                        (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
+                        (:suorittajan-nimi t)
+                        (:suorittajan-ytunnus t)
+                        (:lisatieto t)
+                        nil)))]
+      (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
-                              (doall
-                                (for [tm toteumamateriaalit]
-                                  ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-                                  (if (and (:id tm) (pos? (:id tm)))
-                                    (if (:poistettu tm)
-                                      (do
-                                        (log/debug "Poistetaan materiaalitoteuma " (:id tm))
-                                        (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
-                                      (do
-                                        (log/debug "Päivitä materiaalitoteuma "
-                                                  (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
-                                        (materiaalit-q/paivita-toteuma-materiaali!
-                                          c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
-                                    (do
-                                      (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
-                                      (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
-                              ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
-                              ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
-                              ;; tarvitaan tätä tietoa. -Teemu K
-                              (when hoitokausi
-                                (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi) sopimus)))))
+      (doall
+        (for [tm toteumamateriaalit]
+          ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
+          (if (and (:id tm) (pos? (:id tm)))
+            (if (:poistettu tm)
+              (do
+                (log/debug "Poistetaan materiaalitoteuma " (:id tm))
+                (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+              (do
+                (log/debug "Päivitä materiaalitoteuma "
+                           (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
+                (materiaalit-q/paivita-toteuma-materiaali!
+                  c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
+            (do
+              (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
+              (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
+      ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
+      ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
+      ;; tarvitaan tätä tietoa. -Teemu K
+      (when hoitokausi
+        (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi) sopimus)))))
 
 (defn poista-toteuma!
   [db user t]
   (roolit/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} ;fixmepaivita roolit??
-                            (:urakka t))
+                               (:urakka t))
   (jdbc/with-db-transaction [c db]
-                            (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))
-                                  tehtavaidt (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
+    (let [mat-ja-teht (q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))
+          tehtavaidt (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
 
-                              (log/debug "Merkitään tehtavien: " tehtavaidt " maksuerät likaisiksi")
-                              (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavaidt)
+      (log/debug "Merkitään tehtavien: " tehtavaidt " maksuerät likaisiksi")
+      (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavaidt)
 
-                              (materiaalit-q/poista-toteuma-materiaali!
-                                c (:id user) (filterv #(not (nil? %)) (map :materiaali_id mat-ja-teht)))
-                              (q/poista-tehtava! c (:id user) tehtavaidt)
-                              (q/poista-toteuma! c (:id user) (:id t))
-                              true)))
+      (materiaalit-q/poista-toteuma-materiaali!
+        c (:id user) (filterv #(not (nil? %)) (map :materiaali_id mat-ja-teht)))
+      (q/poista-tehtava! c (:id user) tehtavaidt)
+      (q/poista-toteuma! c (:id user) (:id t))
+      true)))
 
 (defn poista-tehtava!
   "Poistaa toteuma-tehtävän id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
@@ -452,9 +533,12 @@
       (julkaise-palvelu http :urakan-muut-tyot
                         (fn [user tiedot]
                           (hae-urakan-muut-tyot db user tiedot)))
-      (julkaise-palvelu http  :tallenna-muiden-toiden-toteuma
+      (julkaise-palvelu http :tallenna-muiden-toiden-toteuma
                         (fn [user toteuma]
                           (tallenna-muiden-toiden-toteuma db user toteuma)))
+      (julkaise-palvelu http :hae-toteumat-historiakuvaan
+                        (fn [user tiedot]
+                          (hae-toteumat-historiakuvaan db user tiedot)))
       (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
                         (fn [user tiedot]
                           (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
@@ -477,5 +561,6 @@
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
-      :poista-tehtava!)
+      :poista-tehtava!
+      :hae-toteumat-historiakuvaan)
     this))

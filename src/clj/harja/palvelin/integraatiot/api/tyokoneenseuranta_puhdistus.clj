@@ -7,7 +7,7 @@
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]))
 
-(def vanhojen-poisto-ajat (chime-ch (periodic-seq (t/now) (t/minutes 1))))
+(def vanhojen-poisto-ajat (chime-ch (periodic-seq (t/now) (t/minutes 15))))
 
 (defn poista-vanhat-tyokonesijainnit [db]
   (log/debug "poistetaan vanhentuneet työkonehavainnot")
