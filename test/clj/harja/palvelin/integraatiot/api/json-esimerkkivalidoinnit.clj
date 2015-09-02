@@ -7,43 +7,44 @@
             [clojure.java.io :as io]))
 
 (deftest validoi-jsonit
-  (let [skeemapolku-esimerkkipolku [[skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+]
-                                    [skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+]
+  (let [skeemapolku-esimerkkipolku
+        [[skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+]
+         [skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+]
 
-                                    [skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+]
+         [skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+]
 
-                                    [skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+]
-                                    [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
-                                    [skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+]
+         [skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+]
+         [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
+         [skeemat/+tietyoilmoituksen-kirjaus+ esimerkit/+tietyoilmoituksen-kirjaus+]
 
-                                    [skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]
-                                    [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
+         [skeemat/+pistetoteuman-kirjaus+ esimerkit/+pistetoteuman-kirjaus+]
+         [skeemat/+reittitoteuman-kirjaus+ esimerkit/+reittitoteuman-kirjaus+]
 
-                                    [skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+]
-                                    [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
+         [skeemat/+poikkeamien-kirjaus+ esimerkit/+poikkeamien-kirjaus+]
+         [skeemat/+turvallisuuspoikkeamien-kirjaus+ esimerkit/+turvallisuuspoikkeamien-kirjaus+]
 
-                                    [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
-                                    [skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+]
+         [skeemat/+tielupien-haku+ esimerkit/+tielupien-haku+]
+         [skeemat/+tielupien-haku-vastaus+ esimerkit/+tielupien-haku-vastaus+]
 
-                                    [skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+]
+         [skeemat/+tietolajien-haku+ esimerkit/+tietolajien-haku+]
 
-                                    [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
-                                    [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
-                                    [skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+]
-                                    [skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+]
-                                    [skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+]
-                                    #_[skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+] ; FIXME Rikki JSON ei ole validia: /varustetoteuma/toteuma: Väärä tyyppi. Tyyppi: :array-like, arvo: {\"tunniste\" {\"id\" 3} jne.
+         [skeemat/+varusteen-haku-vastaus+ esimerkit/+varusteen-haku-vastaus+]
+         [skeemat/+varusteiden-haku-vastaus+ esimerkit/+varusteiden-haku-vastaus+]
+         [skeemat/+varusteen-lisays+ esimerkit/+varusteen-lisays+]
+         [skeemat/+varusteen-paivitys+ esimerkit/+varusteen-paivitys+]
+         [skeemat/+varusteen-poisto+ esimerkit/+varusteen-poisto+]
+         [skeemat/+varustetoteuman-kirjaus+ esimerkit/+varustetoteuman-kirjaus+]
 
-                                    [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
-                                    [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
-                                    [skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+]
-                                    [skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+]
+         [skeemat/+siltatarkastuksen-kirjaus+ esimerkit/+siltatarkastuksen-kirjaus+]
+         [skeemat/+tiestotarkastuksen-kirjaus+ esimerkit/+tiestotarkastuksen-kirjaus+]
+         [skeemat/+soratietarkastuksen-kirjaus+ esimerkit/+soratietarkastuksen-kirjaus+]
+         [skeemat/+talvihoitotarkastuksen-kirjaus+ esimerkit/+talvihoitotarkastuksen-kirjaus+]
 
-                                    [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
-                                    [skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+]
-                                    #_[skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+] ; FIXME Rikki "JSON ei ole validia: /urakat[0]/urakka: Ylimääräisiä kenttiä: paivystykset"}
+         [skeemat/+paivystajatietojen-kirjaus+ esimerkit/+paivystajatietojen-kirjaus+]
+         [skeemat/+paivystajatietojen-haku+ esimerkit/+paivystajatietojen-haku+]
+         [skeemat/+paivystajatietojen-haku-vastaus+ esimerkit/+paivystajatietojen-haku-vastaus+]
 
-                                    [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
+         [skeemat/+tyokoneenseuranta-kirjaus+ esimerkit/+tyokoneenseuranta-kirjaus+]]
         skeemapolku-esimerkkidata (mapv
                                     (fn [[skeemapolku esimerkkipolku]]
                                       (let [esimerkkidata (slurp (io/resource esimerkkipolku))]

@@ -23,20 +23,20 @@
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
-              }
-            }
-          },
-          "paivystykset": {
-            "id": "urn:harja/urakat/0/urakka/paivystykset",
-            "type": "array",
-            "items": {
-              "id": "urn:harja/urakat/0/urakka/paivystykset/0",
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "paivystys": {
-                  "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
-                  "required": true
+              },
+              "paivystykset": {
+                "id": "urn:harja/urakat/0/urakka/paivystykset",
+                "type": "array",
+                "items": {
+                  "id": "urn:harja/urakat/0/urakka/paivystykset/0",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "paivystys": {
+                      "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
+                      "required": true
+                    }
+                  }
                 }
               }
             }
