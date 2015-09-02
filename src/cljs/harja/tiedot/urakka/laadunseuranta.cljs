@@ -53,11 +53,10 @@
 (def tarkastus-xf
   (map #(assoc %
                :type :tarkastus
-               :alue {:type :circle
-                      :radius 100
+               :alue {:type :icon
                       :coordinates (:sijainti %)
-                      :fill {:color "green"}
-                      :stroke {:color "black" :width 10}})))
+                      :direction 0
+                      :img "images/tyokone.png"})))
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
