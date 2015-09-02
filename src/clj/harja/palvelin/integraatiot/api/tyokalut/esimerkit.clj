@@ -37,14 +37,12 @@
 (def +varusteen-poisto+ "api/examples/varusteen-poisto-request.json")
 (def +vrustetoteuman-kirjaus+ "api/examples/varustetoteuman-kirjaus-request.json")
 
-
 (def +tiestotarkastuksen-kirjaus+ "api/examples/tiestotarkastuksen-kirjaus-request.json")
 (def +soratietarkastuksen-kirjaus+ "api/examples/soratietarkastuksen-kirjaus-request.json")
 (def +talvihoitotarkastuksen-kirjaus+ "api/examples/talvihoitotarkastuksen-kirjaus-request.json")
 
 (def +paivystajatietojen-haku+ "api/examples/paivystajatietojen-haku-request.json")
 (def +paivystajatietojen-haku-vastaus+ "api/examples/paivystajatietojen-haku-response.json")
-
 (def +paivystajatietojen-kirjaus+ "api/examples/paivystajatietojen-kirjaus-request.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/examples/tyokoneenseurannan-kirjaus-request.json")
