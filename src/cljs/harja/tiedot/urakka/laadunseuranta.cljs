@@ -73,15 +73,13 @@
               {:odota 500}
               (when (and laadunseurannassa? (= :tarkastukset valilehti)
                          urakka-id alku loppu)
-                (go (into []
-                          tarkastus-xf
-                          (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+                (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
 
 (defonce tarkastukset-kartalla
          (reaction
            @valittu-tarkastus
            (when @taso-tarkastukset
-             (into [] (map tarkastus-xf) @urakan-tarkastukset))))
+             (into [] tarkastus-xf @urakan-tarkastukset))))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

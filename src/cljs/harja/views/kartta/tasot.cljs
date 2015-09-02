@@ -14,7 +14,7 @@
                  (loop [geometriat (transient [])
                         [g & gs] (concat @pohjavesialueet/pohjavesialueet
                                          @sillat/sillat
-                                         @laadunseuranta/urakan-tarkastukset
+                                         @laadunseuranta/tarkastukset-kartalla
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
