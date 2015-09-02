@@ -27,10 +27,6 @@
         "raporttinumero": 123456,
         "syy": "",
         "kuvaus": "Kello 15:00. Tie hiekoittamatta.",
-        "kohde": {
-          "sopimusId": 123456789,
-          "tehtavaId": 123456789
-        },
         "sijainti": {
           "tie": {
             "numero": 1234,
