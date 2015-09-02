@@ -40,52 +40,55 @@
                                   (let [vastaus (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
                                     (log "PÄÄ Vastaus saatu: " vastaus)
                                     vastaus))))
+(defn paivita-kohde! [id funktio & argumentit]
+  (swap! kohderivit
+         (fn [kohderivit]
+           (into []
+                 (map (fn [kohderivi]
+                        (if (= id (:id kohderivi))
+                          (apply funktio kohderivi argumentit)
+                          kohderivi)))
+                 kohderivit))))
 
 (defn laske-sarakkeen-summa [sarake]
   (reduce + (mapv
               (fn [rivi] (sarake rivi))
               @kohderivit)))
 
-(defn paallystyskohdeosat [rivi]
-  (let [urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero
-        kohdeosat (atom nil)]
-
-    (go (reset! kohdeosat (<! (paallystys/hae-paallystyskohdeosat urakka-id sopimus-id (:id rivi)))))
-
-    (fn [rivi]
-      [:div
-       [grid/grid
-        {:otsikko  "Tierekisterikohteet"
-         :tyhja    (if (nil? @kohdeosat) [ajax-loader "Haetaan..."] "Tierekisterikohteita ei löydy")
-         :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
-                              [sopimus-id _] @u/valittu-sopimusnumero
-                              vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) %))]
-                          (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
-                          (reset! kohdeosat vastaus)))
-         :luokat   ["paallystyskohdeosat-haitari"]}
-        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
-                                                                                                                                                   :losa (:tr_loppuosa rivi)})))
-          :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko       "Nykyinen päällyste"
-          :nimi          :nykyinen_paallyste
-          :fmt           #(paallystys-pot/hae-paallyste-koodilla %)
-          :tyyppi        :valinta
-          :valinta-arvo  :koodi
-          :valinnat      paallystys-pot/+paallystetyypit+
-          :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
-          :valinta-nayta :nimi
-          :leveys        "20%"
-          }
-         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
-        @kohdeosat]])))
+(defn paallystyskohdeosat [{:keys [kohdeosat id] :as rivi}]
+  [:div
+   [grid/grid
+    {:otsikko  "Tierekisterikohteet"
+     :tyhja    (if (empty? kohdeosat) "Tierekisterikohteita ei löydy")
+     :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
+                          [sopimus-id _] @u/valittu-sopimusnumero
+                            vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) %))]
+                        (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
+                        (paivita-kohde! id assoc :kohdeosat vastaus)))
+     :luokat   ["paallystyskohdeosat-haitari"]}
+    [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
+      :hae (fn [rivi]
+             (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
+                                                            :losa (:tr_loppuosa rivi)})))
+      :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+     {:otsikko       "Nykyinen päällyste"
+      :nimi          :nykyinen_paallyste
+      :fmt           #(paallystys-pot/hae-paallyste-koodilla %)
+      :tyyppi        :valinta
+      :valinta-arvo  :koodi
+      :valinnat      paallystys-pot/+paallystetyypit+
+      :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
+      :valinta-nayta :nimi
+      :leveys        "20%"}
+     {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
+    kohdeosat]])
 
 (defn paallystyskohteet []
   (let [paallystyskohteet (reaction (let [kohteet @kohderivit]
