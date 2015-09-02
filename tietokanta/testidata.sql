@@ -12,6 +12,7 @@ INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '2163026
 INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '0171337-9', 'Savon Kuljetus Oy');
 INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '2050797-6', 'TSE-Tienvieri Oy');
 INSERT INTO organisaatio (tyyppi, ytunnus, nimi, sampoid) VALUES ('urakoitsija', '2138243-1', 'Lemminkäinen Infra Oy','TESTIURAKOITSIJA');
+INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '08851029', 'Carement Oy');
 
 -- Urakoitsijoita, päällystys
 INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '0651792-4', 'Skanska Asfaltti Oy');
@@ -685,7 +686,7 @@ INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, havainto, toimenpid
 
 -- Tarkastukset
 
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(1, 2), 'Ismo', 'Seppo', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
+INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(429293, 7209214), 'Ismo', 'Seppo', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
 
 -- Tyokoneseurannan havainnot
 

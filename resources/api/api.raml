@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 0.1
+version: 0.0.5
 baseUri: https://harja/api/{version}
 protocols: [HTTPS]
 mediaType: application/json
@@ -12,7 +12,6 @@ schemas:
  - reittitoteuman-kirjaus-request: !include schemas/reittitoteuman-kirjaus-request.schema.json
  - pistetoteuman-kirjaus-request: !include schemas/pistetoteuman-kirjaus-request.schema.json
  - varustetoteuman-kirjaus-request: !include schemas/varustetoteuman-kirjaus-request.schema.json
- - poikkeamien-kirjaus-request: !include schemas/poikkeamien-kirjaus-request.schema.json
  - turvallisuuspoikkeamien-kirjaus-request: !include schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json
  - tarkastuksen-kirjaus-request: !include schemas/tarkastuksen-kirjaus-request.schema.json
  - tiestotarkastuksen-kirjaus-request: !include schemas/tiestotarkastuksen-kirjaus-request.schema.json
@@ -173,30 +172,6 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: kirjaus-response
-    /poikkeamat:
-      post:
-        is: [secured]
-        description: Poikkeamien kirjaaminen urakalle.
-        body:
-          application/json:
-            example: !include examples/poikkeamien-kirjaus-request.json
-            schema: poikkeamien-kirjaus-request
-        responses:
-         200:
-          body:
-            application/json:
-              example: !include examples/onnistunut-kirjaus-response.json
-              schema: kirjaus-response
-         400:
-          body:
-            application/json:
-              example: !include examples/virhe-response.json
-              schema: virhe-response
-         500:
-          body:
-            application/json:
-              example: !include examples/virhe-response.json
-              schema: kirjaus-response    
       /turvallisuuspoikkeamat:
           post:
             is: [secured]
