@@ -13,6 +13,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -112,6 +113,10 @@
       :tloik (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
                                              (:ilmoituskuittausjono (:tloik asetukset)))
                               [:sonja :db :integraatioloki])
+
+      ;; Tierekisteri
+      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
+                                     [:db :integraatioloki])
 
       :raportointi (component/using
                     (raportointi/luo-raportointi)
