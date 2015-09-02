@@ -10,7 +10,7 @@
   (let [skeemapolku-esimerkkipolku [[skeemat/+urakan-haku-vastaus+ esimerkit/+urakan-haku-vastaus+]
                                     [skeemat/+urakoiden-haku-vastaus+ esimerkit/+urakoiden-haku-vastaus+]
 
-                                    #_[skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+] ; FIXME Rikki
+                                    [skeemat/+havainnon-kirjaus+ esimerkit/+havainnon-kirjaus+]
 
                                     [skeemat/+ilmoituskuittauksen-kirjaaminen+ esimerkit/+ilmoituskuittauksen-kirjaaminen+]
                                     [skeemat/+ilmoitusten-haku+ esimerkit/+ilmoitusten-haku+]
