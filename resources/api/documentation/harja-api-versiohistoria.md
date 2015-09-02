@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.0.2</b>
-<b>Julkaistu: 10.6.2015</b>
+<b>Nykyinen versio: 0.0.5</b>
+<b>Julkaistu: 2.9.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.5. Julkaistu: 2.9.2015. Muutokset:
+    - Poikkeamat poistetu rajapinnasta
 - Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
     - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
 - Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:
