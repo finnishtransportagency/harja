@@ -12,7 +12,7 @@
 
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm] :as tiedot}]
+  [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
@@ -30,10 +30,10 @@
           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotettuna))
           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotus)))
               (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                         (konv/sql-date hk_alkupvm)
-                                                         (konv/sql-date hk_loppupvm)
-                                                         (konv/sql-date aikavali_alkupvm)
-                                                         (konv/sql-date aikavali_loppupvm)
+                                                         (konv/sql-date hk-alkupvm)
+                                                         (konv/sql-date hk-loppupvm)
+                                                         (konv/sql-date aikavali-alkupvm)
+                                                         (konv/sql-date aikavali-loppupvm)
                                                          urakka-id)))
 
 (defrecord Raportit []
