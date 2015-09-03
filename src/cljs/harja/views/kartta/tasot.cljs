@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
@@ -18,6 +19,7 @@
                                          @laadunseuranta/tarkastukset-kartalla
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                                         @toteumat/yksikkohintainen-toteuma-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla
                                          @paallystys/paallystyskohteet-kartalla)]
@@ -28,14 +30,15 @@
 
 (defn- taso-atom [nimi]
   (case nimi
-    :pohjavesialueet pohjavesialueet/taso-pohjavesialueet
-    :sillat sillat/taso-sillat
-    :tarkastukset laadunseuranta/taso-tarkastukset
-    :ilmoitukset ilmoitukset/taso-ilmoitukset
-    :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
-    :historiakuva historiakuva/taso-historiakuva
-    :nykytilanne nykytilanne/taso-nykytilanne
-    :paallystyskohteet paallystys/taso-paallystyskohteet))
+    :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
+    :sillat sillat/karttataso-sillat
+    :tarkastukset laadunseuranta/karttataso-tarkastukset
+    :ilmoitukset ilmoitukset/karttataso-ilmoitukset
+    :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
+    :historiakuva historiakuva/karttataso-historiakuva
+    :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
+    :nykytilanne nykytilanne/karttataso-nykytilanne
+    :paallystyskohteet paallystys/karttataso-paallystyskohteet))
     
 (defn taso-paalle! [nimi]
   (reset! (taso-atom nimi) true))

@@ -80,12 +80,12 @@
                                (fn [ilmoitus]
                                  (reset! valittu-ilmoitus (dissoc ilmoitus :type :alue)))))
 
-(defonce taso-ilmoitukset (atom false))
+(defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
          (reaction
            @valittu-ilmoitus
-           (when @taso-ilmoitukset
+           (when @karttataso-ilmoitukset
              (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
 
 

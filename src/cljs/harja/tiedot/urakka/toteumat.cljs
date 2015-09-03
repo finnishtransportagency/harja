@@ -7,9 +7,32 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
+
+(def karttataso-yksikkohintainen-toteuma (atom false))
+
+(def yksikkohintainen-toteuma-kartalla-xf
+  (map #(do
+         (log "Asia: " (pr-str %))
+         (assoc %
+         :type :yksikkohintainen-toteuma
+         :alue {:type   :arrow-line
+                :points (mapv :sijainti (sort-by
+                                          :aika
+                                          pvm/ennen?
+                                          (:reittipisteet %)))}))))
+
+(defonce valittu-yksikkohintainen-toteuma (atom nil))
+
+(defonce yksikkohintainen-toteuma-kartalla
+         (reaction
+           @valittu-yksikkohintainen-toteuma
+           (when @karttataso-yksikkohintainen-toteuma
+             (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]))))
 
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))

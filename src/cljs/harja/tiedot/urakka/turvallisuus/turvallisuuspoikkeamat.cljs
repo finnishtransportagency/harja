@@ -31,7 +31,7 @@
                                                    (when nakymassa?
                                                      (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
 
-(def taso-turvallisuuspoikkeamat (atom false))
+(def karttataso-turvallisuuspoikkeamat (atom false))
 
 (def turvallisuuspoikkeama-kartalla-xf
   #(assoc %
@@ -44,7 +44,7 @@
 
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction @valittu-turvallisuuspoikkeama
-                   (when @taso-turvallisuuspoikkeamat
+                   (when @karttataso-turvallisuuspoikkeamat
                      (into [] (map turvallisuuspoikkeama-kartalla-xf) @haetut-turvallisuuspoikkeamat))))
 
 (defonce turvallisuuspoikkeamaa-klikattu

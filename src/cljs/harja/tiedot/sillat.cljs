@@ -7,11 +7,11 @@
             [harja.atom :refer-macros [reaction<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def taso-sillat (atom false))
+(def karttataso-sillat (atom false))
 
 (def listaus (atom :kaikki))
 
-(def sillat (reaction<! [paalla? @taso-sillat
+(def sillat (reaction<! [paalla? @karttataso-sillat
                          urakka @nav/valittu-urakka
                          listaus @listaus]
                         
