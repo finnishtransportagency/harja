@@ -134,11 +134,11 @@
     {:component-will-mount
      (fn []
        (reset! tiedot/nakymassa? true)
-       (reset! tiedot/taso-turvallisuuspoikkeamat true))
+       (reset! tiedot/karttataso-turvallisuuspoikkeamat true))
      :component-will-unmount
      (fn []
        (reset! tiedot/nakymassa? false)
-       (reset! tiedot/taso-turvallisuuspoikkeamat false))}
+       (reset! tiedot/karttataso-turvallisuuspoikkeamat false))}
 
     (fn []
       (if @tiedot/valittu-turvallisuuspoikkeama

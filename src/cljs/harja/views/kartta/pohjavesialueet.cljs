@@ -13,7 +13,7 @@
 ;; NÄIDEN pitäisi olla tiedot namespacessa, ei tasossa?
 
 
-(defonce taso-pohjavesialueet (atom false))
+(defonce karttataso-pohjavesialueet (atom false))
 (defonce pohjavesialueet (atom []))
 
 (def hallintayksikon-pohjavesialueet-haku
@@ -56,7 +56,7 @@
                 :type :pohjavesialue))
         alueet))
     
-(run! (let [nakyvissa? @taso-pohjavesialueet
+(run! (let [nakyvissa? @karttataso-pohjavesialueet
             hal (:id @valittu-hallintayksikko)]
         (if (or (not nakyvissa?)
                 (nil? hal))

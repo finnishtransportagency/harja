@@ -27,14 +27,14 @@
 
 (defn- taso-atom [nimi]
   (case nimi
-    :pohjavesialueet pohjavesialueet/taso-pohjavesialueet
-    :sillat sillat/taso-sillat
-    :tarkastukset laadunseuranta/taso-tarkastukset
-    :ilmoitukset ilmoitukset/taso-ilmoitukset
-    :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
-    :historiakuva historiakuva/taso-historiakuva
+    :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
+    :sillat sillat/karttataso-sillat
+    :tarkastukset laadunseuranta/karttataso-tarkastukset
+    :ilmoitukset ilmoitukset/karttataso-ilmoitukset
+    :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
+    :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
-    :nykytilanne nykytilanne/taso-nykytilanne))
+    :nykytilanne nykytilanne/karttataso-nykytilanne))
     
 (defn taso-paalle! [nimi]
   (reset! (taso-atom nimi) true))
