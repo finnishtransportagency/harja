@@ -82,6 +82,7 @@ SELECT
   tr_alkuetaisyys,
   tr_loppuosa,
   tr_loppuetaisyys,
+  sijainti,
   kvl,
   nykyinen_paallyste,
   toimenpide
@@ -192,7 +193,7 @@ WHERE id = :id;
 
 -- name: luo-paallystyskohdeosa<!
 -- Luo uuden päällystykohdeosan
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide)
+INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
 VALUES (:paallystyskohde,
         :nimi,
         :tr_numero,
@@ -200,6 +201,7 @@ VALUES (:paallystyskohde,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
+	:sijainti,
         :kvl,
         :nykyinen_paallyste,
         :toimenpide);
@@ -214,6 +216,7 @@ SET
   tr_alkuetaisyys       = :tr_alkuetaisyys,
   tr_loppuosa           = :tr_loppuosa,
   tr_loppuetaisyys      = :tr_loppuetaisyys,
+  sijainti              = :sijainti,
   kvl                   = :kvl,
   nykyinen_paallyste    = :nykyinen_paallyste,
   toimenpide            = :toimenpide

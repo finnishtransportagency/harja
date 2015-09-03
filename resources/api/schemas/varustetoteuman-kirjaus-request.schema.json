@@ -22,7 +22,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": true,
-          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
+          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
         "varustekirjaukset": {
           "id": "urn:harja/varustetoteuma/varuste-kirjaukset",

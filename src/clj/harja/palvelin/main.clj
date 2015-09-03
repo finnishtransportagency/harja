@@ -60,7 +60,10 @@
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
-    
+
+    ;; Ajastetut tehtävät
+    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
+
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
   (:gen-class))
@@ -213,7 +216,7 @@
                                 [:http-palvelin :db])
       :raportit (component/using
                  (raportit/->Raportit)
-                 [:http-palvelin :raportointi])
+                 [:http-palvelin :db :raportointi])
 
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
@@ -245,6 +248,8 @@
                                                         [:db])
       :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
                                                         [:http-palvelin :db])
+      :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
+                                                        [:db])
       )))
 
 (defonce harja-jarjestelma nil)
