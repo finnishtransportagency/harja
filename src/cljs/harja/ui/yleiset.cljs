@@ -290,10 +290,10 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
 (defn tietoja
   "Tekee geneerisen tietonäkymän. 
 Optiot on mäppi, joka tukee seuraavia optioita:
-  :otsikot-omalla-rivilla?  jos true, otsikot ovat inline-blockeja (oletus false)"
+  :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
   [optiot & otsikot-ja-arvot]
-  (let [attrs (if (:otsikko-omalla-rivilla? optiot)
-                {:class "inline-block"}
+  (let [attrs (if (:otsikot-omalla-rivilla? optiot)
+                {:style {:display "block"}}
                 {})]
     [:div.tietoja
      (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)

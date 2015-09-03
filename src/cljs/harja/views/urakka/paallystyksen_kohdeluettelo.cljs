@@ -31,15 +31,14 @@
         kohde (:kohde kohdeosa)
         paallystyskohde-id (:paallystyskohde-id kohdeosa)
         {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
-        avaa-ilmoitus #(do (log "mene päällystysilmoitukseen: " (pr-str kohde))
-                           (kartta/poista-popup!)
+        avaa-ilmoitus #(do (kartta/poista-popup!)
                            (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
                            (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))]
     
     (kartta/nayta-popup!
      klikkaus-koordinaatit
      [:div.paallystyskohde
-      [yleiset/tietoja {:otsikko-omalla-rivilla? true}
+      [yleiset/tietoja {:otsikot-omalla-rivilla? true}
        "Kohde" (:nimi kohde)
        "Tierekisterikohde" (:nimi osa)
        "Osoite" (yleiset/tierekisteriosoite tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys)
@@ -53,9 +52,7 @@
         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
          (ikonit/eye-open) " Päällystysilmoitus"]
         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
-         "Aloita päällystysilmoitus"])
-        
-      ])))
+         "Aloita päällystysilmoitus"])])))
 
 
                            
