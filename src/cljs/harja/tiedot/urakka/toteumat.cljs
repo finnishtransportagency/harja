@@ -11,6 +11,8 @@
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
+(def yksikkohintainen-toteuma-kartalla (atom false))
+
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))
 

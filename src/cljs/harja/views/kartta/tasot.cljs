@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne])
   (:require-macros [reagent.ratom :refer [reaction]]))
@@ -32,6 +33,7 @@
     :ilmoitukset ilmoitukset/taso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
     :historiakuva historiakuva/taso-historiakuva
+    :yksikkohintainen-toteuma toteumat/yksikkohintainen-toteuma-kartalla
     :nykytilanne nykytilanne/taso-nykytilanne))
     
 (defn taso-paalle! [nimi]

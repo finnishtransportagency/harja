@@ -93,8 +93,7 @@
 
 (defonce lomakkeessa-muokattava-toteuma (atom nil))
 
-(defn yksikkohintaisen-toteuman-muokkaus
-  "Uuden toteuman syöttäminen"
+(defn yksikkohintainen-toteumalomake
   []
   (let [lomake-toteuma (atom (if (empty? @lomakkeessa-muokattava-toteuma)
                                (if @u/urakan-organisaatio
@@ -123,6 +122,7 @@
     (log "Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
+      (komp/lippu toteumat/yksikkohintainen-toteuma-kartalla)
       (fn [ur]
         [:div.toteuman-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! lomakkeessa-muokattava-toteuma nil)}
@@ -345,5 +345,5 @@
 
     (fn []
       (if @lomakkeessa-muokattava-toteuma
-        [yksikkohintaisen-toteuman-muokkaus]
+        [yksikkohintainen-toteumalomake]
         [yksikkohintaisten-toteumalistaus]))))
