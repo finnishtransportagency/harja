@@ -120,6 +120,7 @@
                                    :tr_alkuetaisyys    1
                                    :tr_loppuosa        123
                                    :tr_loppuetaisyys   1
+                                   :sijainti {:type :multiline :lines [{:type :line :points [[1 2] [3 4]]}]}
                                    :kvl                4
                                    :nykyinen_paallyste 2
                                    :toimenpide         "Ei tehdä mitään"})

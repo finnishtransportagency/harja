@@ -70,6 +70,8 @@
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
+(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
+
 
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
