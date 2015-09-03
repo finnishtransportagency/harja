@@ -391,7 +391,7 @@ INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materia
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, null, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
 
 -- Toteumat
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'Kova tuuli hidasti.');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'Tällä toteumalla on reitti.');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
@@ -756,6 +756,8 @@ VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 40, 'Tämä on tekaistu tehtävä');
 
+-- Reittipisteet kokonaishintaiselle työlle
+
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:00.00',
@@ -777,6 +779,32 @@ st_makepoint(499399, 7249019) :: POINT);
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:09.00',
+NOW(),
+st_makepoint(499820, 7249885) :: POINT);
+
+-- Reittipisteet yksikköhintaiselle työlle
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(498919, 7247099) :: POINT);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(499271, 7248395) :: POINT);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(499399, 7249019) :: POINT);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
+'2005-10-10 10:00.00',
 NOW(),
 st_makepoint(499820, 7249885) :: POINT);
 
