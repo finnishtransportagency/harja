@@ -2,22 +2,23 @@
   (:require [clojure.xml :refer [parse]]
             [clojure.java.io :as io]
             [clojure.zip :refer [xml-zip]]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [hiccup.core :refer [html]])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
            (java.io ByteArrayInputStream)
            (org.w3c.dom.ls LSResourceResolver LSInput)
            (org.xml.sax SAXParseException)
-           ))
+           (java.text SimpleDateFormat)))
 
 (defn validoi
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
   String, joka on sisältö."
   [xsd-polku xsd xml]
-  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisätö on:" xml)
+  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisältö on:" xml)
   (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
-    
+
     (.setResourceResolver schema-factory
                           (reify LSResourceResolver
                             (resolveResource [this type namespaceURI publicId systemId baseURI]
@@ -47,3 +48,12 @@
           (catch SAXParseException e
             (log/error e "Tapahtui poikkeus luettuessa XML-sisältöä: " xml)
             nil)))))
+
+(defn tee-xml-sanoma [sisalto]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
+
+(defn formatoi-aikaleima [paivamaara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") paivamaara))
+
+(defn formatoi-paivamaara [paivamaara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd") paivamaara))
