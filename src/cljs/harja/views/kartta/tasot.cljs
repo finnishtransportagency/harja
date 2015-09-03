@@ -18,6 +18,7 @@
                                          @laadunseuranta/tarkastukset-kartalla
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                                         @toteumat/yksikkohintainen-toteuma-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla)]
                    (if-not g
