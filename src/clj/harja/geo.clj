@@ -65,6 +65,20 @@
 (defn luo-point [[x y]]
   (PGpoint. x y))
 
+(defmulti clj->pg (fn [geometria] (:type geometria)))
+
+(defmethod clj->pg :multiline [{lines :lines}]
+  (MultiLineString. (into-array LineString
+                                (map clj->pg lines))))
+
+(defmethod clj->pg :line [{points :points}]
+  (LineString. (into-array Point
+                           (map (fn [[x y]]
+                                  (Point. x y))
+                                points))))
+(defn geometry [g]
+  (PGgeometry. g))
+
 (defmacro muunna-pg-tulokset
   "Palauttaa transducerin, joka muuntaa jokaisen SQL tulosrivin annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
   [& sarakkeet]

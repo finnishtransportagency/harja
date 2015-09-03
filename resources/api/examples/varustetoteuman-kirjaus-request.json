@@ -18,12 +18,11 @@
         "id": 3
       },
       "sopimusId": 123456789,
-      "selite": "Liikennemerkin korjaus",
       "alkanut": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
       "suorittaja": {
         "nimi": "Tehotekijät Oy",
-        "y-tunnus": "8765432-1"
+        "ytunnus": "8765432-1"
       },
       "tyyppi": "yksikkohintainen",
       "tehtavat": [
@@ -54,6 +53,7 @@
     "liitteet": [
       {
         "liite": {
+          "nimi": "liikennemerkki.png",
           "tyyppi": "image/png",
           "kuvaus": "Kuva liikennemerkistä",
           "sisalto": "... sisältö base64 enkoodattuna  ..."

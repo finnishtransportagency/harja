@@ -11,7 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [kohderivit paallystys-tai-paikkausnakymassa? paivita-kohde!] :as paallystys]
             [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
@@ -20,58 +20,100 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.napit :as napit]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+
+            [harja.tyokalut.vkm :as vkm]
+            [harja.views.kartta :as kartta]
+            [harja.geo :as geo])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce paallystys-tai-paikkausnakymassa? (atom false))
-
-(defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 nakymassa? @paallystys-tai-paikkausnakymassa?]
-                                (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                  (log "PÄÄ Haetaan päällystyskohteet.")
-                                  (let [vastaus (paallystys/hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
-                                    (log "PÄÄ Vastaus saatu: " vastaus)
-                                    vastaus))))
 
 (defn laske-sarakkeen-summa [sarake]
   (reduce + (mapv
               (fn [rivi] (sarake rivi))
               @kohderivit)))
 
-(defn paallystyskohdeosat [rivi]
-  (let [urakka-id (:id @nav/valittu-urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero
-        kohdeosat (atom nil)]
+(defn paallystyskohdeosa-virheet [tr-virheet]
+  [:div.tr-virheet
+   (for [virhe (into #{} (vals @tr-virheet))]
+     ^{:key (hash virhe)}
+     [:div.tr-virhe (ikonit/warning-sign)
+      virhe])])
 
-    (go (reset! kohdeosat (<! (paallystys/hae-paallystyskohdeosat urakka-id sopimus-id (:id rivi)))))
+(defn paallystyskohdeosat [_]
+  (let [tr-osoite (fn [rivi]
+                    (let [arvot (map rivi [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])]
+                      (when (every? #(not (str/blank? %)) arvot)
+                        ;; Tierekisteriosoite on täytetty (ei tyhjiä kenttiä)
+                        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
+                                arvot))))
 
-    (fn [rivi]
+        ;; onnistuneesti haetut TR-sijainnit
+        tr-sijainnit (atom {})
+
+        ;; virheelliset TR sijainnit 
+        tr-virheet (atom {})]
+    (fn [{:keys [kohdeosat id] :as rivi}]
       [:div
        [grid/grid
         {:otsikko  "Tierekisterikohteet"
-         :tyhja    (if (nil? @kohdeosat) [ajax-loader "Haetaan..."] "Tierekisterikohteita ei löydy")
+         :tyhja    (if (empty? kohdeosat) "Tierekisterikohteita ei löydy")
+         :rivi-klikattu (fn [rivi]
+                          (log "KLIKKASIT: " (pr-str rivi))
+                          (when-let [viiva (some-> rivi :sijainti)]
+                            (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
          :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                               [sopimus-id _] @u/valittu-sopimusnumero
-                              vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) %))]
+                              sijainnit @tr-sijainnit
+                              osat (into []
+                                         (map (fn [osa]
+                                                (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
+                                         %)
+                              vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
                           (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
-                          (reset! kohdeosat vastaus)))
-         :luokat   ["paallystyskohdeosat-haitari"]}
+                          (paivita-kohde! id assoc :kohdeosat vastaus)))
+         :luokat   ["paallystyskohdeosat-haitari"]
+         :muutos (fn [g]
+                   (log "VIRHEET:" (pr-str (grid/hae-virheet g)))
+                   (let [haetut (into #{} (keys @tr-sijainnit))]
+                     ;; jos on tullut uusi TR osoite, haetaan sille sijainti
+                     (doseq [[id rivi] (grid/hae-muokkaustila g)]
+                       (if (:poistettu rivi)
+                         (swap! tr-virheet dissoc id)
+                         (let [osoite (tr-osoite rivi)]
+                           (when (not (haetut osoite))
+                             (go
+                               (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
+                               (let [sijainti (<! (vkm/tieosoite-viiva osoite))]
+                                 (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
+                                   (if-let [virhe (and (vkm/virhe? sijainti)
+                                                       (get sijainti "virhe"))]
+                                     (do (swap! tr-virheet assoc id virhe)
+                                         (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
+                                           (grid/aseta-virhe! g id kentta "Tarkista tie")))
+                                     (do (swap! tr-virheet dissoc id)
+                                         (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
+                                           (grid/poista-virhe! g id kentta))
+                                         (swap! tr-sijainnit assoc osoite (first sijainti)))))))))))))
+         
+         }
         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string :hae (fn [rivi] (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
-                                                                                                                                                   :losa (:tr_loppuosa rivi)})))
+         {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
+          :hae (fn [rivi]
+                 (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
+                                                                :losa (:tr_loppuosa rivi)})))
           :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
          {:otsikko       "Nykyinen päällyste"
@@ -82,10 +124,13 @@
           :valinnat      paallystys-pot/+paallystetyypit+
           :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
           :valinta-nayta :nimi
-          :leveys        "20%"
-          }
+          :leveys        "20%"}
          {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
-        @kohdeosat]])))
+        kohdeosat]
+
+       [paallystyskohdeosa-virheet tr-virheet]
+       
+       ])))
 
 (defn paallystyskohteet []
   (let [paallystyskohteet (reaction (let [kohteet @kohderivit]
@@ -114,7 +159,7 @@
                                :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
-      (komp/lippu paallystys-tai-paikkausnakymassa?)
+      (komp/lippu paallystys-tai-paikkausnakymassa? paallystys/taso-paallystyskohteet)
       (fn []
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 

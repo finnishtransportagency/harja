@@ -215,7 +215,7 @@
                                 [:http-palvelin :db])
       :raportit (component/using
                  (raportit/->Raportit)
-                 [:http-palvelin :raportointi])
+                 [:http-palvelin :db :raportointi])
 
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)

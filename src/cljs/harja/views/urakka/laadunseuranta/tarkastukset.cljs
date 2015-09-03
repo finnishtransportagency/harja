@@ -44,32 +44,26 @@
     :urakoitsija [:tiesto :talvihoito :soratie]
     +tarkastustyyppi+))
 
-(defonce valittu-tarkastus (atom nil))
-                
-
 (defn uusi-tarkastus []
   {:uusi?      true
    :aika       (pvm/nyt)
    :tarkastaja @istunto/kayttajan-nimi
    :havainto {:tekija     (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))}})
 
+(defn valitse-tarkastus [tarkastus]
+  (go
+    (reset! laadunseuranta/valittu-tarkastus
+            (update-in (<! (laadunseuranta/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus)))
+                       [:havainto :sanktiot]
+                       (fn [sanktiot]
+                         (when sanktiot
+                           (into {}
+                                 (map (juxt :id identity)
+                                      sanktiot))))))))
+
 (defn tarkastuslistaus
-  "Tarkastuksien pääkomponentti"
+  "Tarkastuksien listauskomponentti"
   []
-  (komp/luo
-
-   ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
-   ;; tarkastuslistauksessa
-   (komp/lippu laadunseuranta/taso-tarkastukset)
-
-   (komp/kuuntelija
-    :tarkastus-klikattu
-    (fn [e tarkastus]
-      (kartta/nayta-popup! (:sijainti tarkastus)
-                           [:div.tarkastus-popup "TÄMÄN SISÄLTÖ TOTEUTETAAN KARTTA SPRINTISSÄ!"])
-                           
-      (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))))
-     
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
@@ -101,20 +95,12 @@
           [:div.row
            [:div.col-md-10]
            [:div.col-md-2 [napit/uusi "Uusi tarkastus"
-                           #(reset! valittu-tarkastus (uusi-tarkastus)) {}]]])
+                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus)) {}]]])
         
         [grid/grid
          {:otsikko "Tarkastukset"
           :tyhja "Ei tarkastuksia"
-          :rivi-klikattu #(go
-                            (reset! valittu-tarkastus
-                                    (update-in (<! (laadunseuranta/hae-tarkastus (:id urakka) (:id %)))
-                                               [:havainto :sanktiot]
-                                               (fn [sanktiot]
-                                                 (when sanktiot
-                                                   (into {}
-                                                         (map (juxt :id identity)
-                                                              sanktiot)))))))}
+          :rivi-klikattu #(valitse-tarkastus %)}
          
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
@@ -129,7 +115,7 @@
            :leveys 2}
           ]
 
-         @laadunseuranta/urakan-tarkastukset]]))))
+         @laadunseuranta/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
@@ -244,7 +230,7 @@
         
         {:disabled (not (validi-tarkastus? tarkastus))
          :kun-onnistuu (fn [tarkastus]
-                         (reset! valittu-tarkastus nil)
+                         (reset! laadunseuranta/valittu-tarkastus nil)
                          (laadunseuranta/paivita-tarkastus-listaan! tarkastus))
                          }]]]
      ]))
@@ -252,6 +238,19 @@
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   []
-  (if @valittu-tarkastus
-    [tarkastus valittu-tarkastus]
-    [tarkastuslistaus]))
+  (komp/luo
+
+    ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
+    ;; tarkastuslistauksessa
+    (komp/lippu laadunseuranta/taso-tarkastukset)
+
+    (komp/kuuntelija
+      :tarkastus-klikattu
+      (fn [e tarkastus]
+        (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))
+        (valitse-tarkastus tarkastus)))
+
+    (fn []
+      (if @laadunseuranta/valittu-tarkastus
+        [tarkastus laadunseuranta/valittu-tarkastus]
+        [tarkastuslistaus]))))
