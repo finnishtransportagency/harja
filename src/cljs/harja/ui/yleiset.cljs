@@ -288,15 +288,20 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
       [:div.col-md-8.tietoarvo arvo]])])
 
 (defn tietoja
-  "Tekee geneerisen tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
+  "Tekee geneerisen tietonäkymän. 
+Optiot on mäppi, joka tukee seuraavia optioita:
+  :otsikot-omalla-rivilla?  jos true, otsikot ovat inline-blockeja (oletus false)"
   [optiot & otsikot-ja-arvot]
-  [:div.tietoja
-   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
-         :when arvo]
-     ^{:key otsikko}
-     [:div.tietorivi
-      [:span.tietokentta otsikko]
-      [:span.tietoarvo arvo]])])
+  (let [attrs (if (:otsikko-omalla-rivilla? optiot)
+                {:class "inline-block"}
+                {})]
+    [:div.tietoja
+     (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
+           :when arvo]
+       ^{:key otsikko}
+       [:div.tietorivi
+        [:span.tietokentta attrs otsikko]
+        [:span.tietoarvo arvo]])]))
 
 (defn taulukkotietonakyma
   "Tekee geneerisen taulukko-tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
@@ -443,3 +448,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
+(defn tierekisteriosoite
+  ([numero alkuosa alkuetaisyys] (tierekisteriosoite numero alkuosa alkuetaisyys nil nil))
+  ([numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
+   [:span.tierekisteriosoite
+    [:span.tie "Tie " numero] " / " 
+    [:span.alkuosa alkuosa] " / "
+    [:span.alkuetaisyys alkuetaisyys]
+    (when (and loppuosa loppuetaisyys)
+      [:span
+       " / " [:span.loppuosa loppuosa]
+       " / " [:span.loppuetaisyys loppuetaisyys]])]))

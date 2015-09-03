@@ -89,18 +89,23 @@
                   toteumarivit @toteumarivit]
               (when taso
                 (into []
-                      (mapcat #(map (fn [{sij :sijainti nimi :nimi}]
+                      (mapcat #(map (fn [{sij :sijainti nimi :nimi :as osa}]
                                       {:type :paallystyskohde
+                                       :kohde %
+                                       :paallystyskohde-id (:paallystyskohde_id %)
+                                       :tila (:tila %)
                                        :nimi (str (:nimi %) ": " nimi)
+                                       :osa osa
                                        :alue (assoc sij
-                                                    :lines (mapv (fn [l]
-                                                                   (assoc l
-                                                                          :color "red"
-                                                                          :fill true
-                                                                          :stroke {:color "black" :width 100}))
-                                                                 (:lines sij)))})
+                                                    :stroke {:color (case (:tila %)
+                                                                      :aloitettu "blue"
+                                                                      :valmis "green"
+                                                                      "orange")
+                                                             :width 6})})
                                     (:kohdeosat %)))
-                      (concat kohderivit toteumarivit))))))
+                      (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                   kohderivit)
+                              toteumarivit))))))
 
   
                   
