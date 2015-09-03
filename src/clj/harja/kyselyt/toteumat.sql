@@ -49,7 +49,11 @@ SELECT
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
          AND tt.poistettu IS NOT TRUE)
-                AS tehtavat
+                AS tehtavat,
+   (SELECT array_agg(concat(rp.sijainti, '^', rp.aika))
+   FROM reittipiste rp
+   WHERE rp.toteuma = t.id)
+                AS reittipisteet
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
