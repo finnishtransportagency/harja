@@ -26,3 +26,4 @@ BEGIN
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;
+

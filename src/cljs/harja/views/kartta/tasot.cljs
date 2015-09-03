@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
-            [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne])
+            [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def geometriat (reaction
@@ -20,7 +21,8 @@
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          @toteumat/yksikkohintainen-toteuma-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
-                                         @nykytilanne/nykytilanteen-asiat-kartalla)]
+                                         @nykytilanne/nykytilanteen-asiat-kartalla
+                                         @paallystys/paallystyskohteet-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))
@@ -35,7 +37,8 @@
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
-    :nykytilanne nykytilanne/karttataso-nykytilanne))
+    :nykytilanne nykytilanne/karttataso-nykytilanne
+    :paallystyskohteet paallystys/karttataso-paallystyskohteet))
     
 (defn taso-paalle! [nimi]
   (reset! (taso-atom nimi) true))

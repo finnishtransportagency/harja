@@ -16,7 +16,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [toteumarivit] :as paallystys]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
@@ -25,12 +25,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                         nakymassa? @paallystys/paallystysilmoitukset-nakymassa?]
-                                        (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                          (log "PÄÄ Haetaan päällystystoteumat.")
-                                          (paallystys/hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+
 
 (def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
                                                (lukko/nykyinen-nakyma-lukittu?))))
@@ -567,7 +562,7 @@
 
 (defn paallystysilmoitukset []
   (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
+    (komp/lippu paallystys/paallystysilmoitukset-nakymassa? paallystys/karttataso-paallystyskohteet)
 
     (fn []
       (if @lomakedata
