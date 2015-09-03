@@ -233,8 +233,9 @@
                                                                                                            :lisatieto            (:lisatieto toteuma)
                                                                                                            :suorittajan-nimi     (:suorittajan_nimi toteuma)
                                                                                                            :suorittajan-ytunnus  (:suorittajan_ytunnus toteuma)
-                                                                                                           :jarjestelman-lisaama (:jarjestelman_lisaama toteuma)
+                                                                                                           :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
                                                                                                            :luoja                (:kayttajanimi toteuma)
+                                                                                                           :reittipisteet        (:reittipisteet toteuma)
                                                                                                            :organisaatio         (:organisaatio toteuma)}]
                                                                                         (reset! lomakkeessa-muokattava-toteuma lomake-tiedot)))))}
                                    (ikonit/eye-open) " Toteuma"])}]

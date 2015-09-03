@@ -40,28 +40,21 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  t.luoja       AS luoja_id,
+  t.luoja       AS luojaid,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
-  k.jarjestelma AS jarjestelman_lisaama,
-  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
-   FROM toteuma_tehtava tt
-     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-   WHERE tt.toteuma = t.id
-         AND tt.poistettu IS NOT TRUE)
-                AS tehtavat,
-   (SELECT array_agg(concat(rp.sijainti, '^', rp.aika))
-   FROM reittipiste rp
-   WHERE rp.toteuma = t.id)
-                AS reittipisteet
+  k.jarjestelma AS jarjestelmanlisaama,
+  rp.id         AS reittipiste_id,
+  rp.aika       AS reittipiste_aika,
+  rp.sijainti   AS reittipiste_sijainti
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
+  LEFT JOIN reittipiste rp ON rp.toteuma = t.id
 WHERE
   t.urakka = :urakka
   AND t.id = :toteuma
-  AND t.poistettu IS NOT TRUE
-GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
+  AND t.poistettu IS NOT TRUE;
 
 -- name: listaa-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.

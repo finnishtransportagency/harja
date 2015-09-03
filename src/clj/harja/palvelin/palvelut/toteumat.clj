@@ -80,11 +80,19 @@
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (first (into []
-               (comp
-                 toteuma-xf
-                 toteumien-tehtavat->map-xf)
-               (q/listaa-urakan-toteuma db urakka-id toteuma-id))))
+  (let [toteuma (into []
+                      (comp
+                        toteuma-xf
+                        toteumien-tehtavat->map-xf
+                        (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                        (map konv/alaviiva->rakenne))
+                      (q/listaa-urakan-toteuma db urakka-id toteuma-id))
+        kasitelty-toteuma (first
+                            (konv/sarakkeet-vektoriin
+                            toteuma
+                            {:reittipiste :reittipisteet}))]
+    (log/debug "Käsitelty toteuma: " (pr-str kasitelty-toteuma))
+    kasitelty-toteuma))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
