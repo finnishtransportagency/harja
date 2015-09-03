@@ -247,7 +247,7 @@
       :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
                                                         [:db])
       :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                        [:http-palvelin :db])
+                                                        [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                                         [:db])
       )))
