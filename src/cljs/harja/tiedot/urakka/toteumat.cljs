@@ -16,13 +16,15 @@
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
 (def yksikkohintainen-toteuma-kartalla-xf
-  #(assoc %
-    :type :yksikkohintainen-toteuma
-    :alue {:type        :icon
-           :coordinates (:sijainti %)
-           :direction   0
-           :stroke      {:color "black" :width 10}
-           :img         "images/tyokone.png"}))
+  (map #(do
+         (log "Asia: " (pr-str %))
+         (assoc %
+         :type :yksikkohintainen-toteuma
+         :alue {:type   :arrow-line
+                :points (mapv :sijainti (sort-by
+                                          :aika
+                                          pvm/ennen?
+                                          (:reittipisteet %)))}))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
@@ -30,7 +32,7 @@
          (reaction
            @valittu-yksikkohintainen-toteuma
            (when @karttataso-yksikkohintainen-toteuma
-             (into [] (map yksikkohintainen-toteuma-kartalla-xf) (:reittipisteet @valittu-yksikkohintainen-toteuma)))))
+             (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]))))
 
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))
