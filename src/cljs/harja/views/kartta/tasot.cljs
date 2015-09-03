@@ -33,7 +33,7 @@
     :ilmoitukset ilmoitukset/taso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/taso-turvallisuuspoikkeamat
     :historiakuva historiakuva/taso-historiakuva
-    :yksikkohintainen-toteuma toteumat/yksikkohintainen-toteuma-kartalla
+    :yksikkohintainen-toteuma toteumat/yksikkohintainen-toteuma-karttataso
     :nykytilanne nykytilanne/taso-nykytilanne))
     
 (defn taso-paalle! [nimi]

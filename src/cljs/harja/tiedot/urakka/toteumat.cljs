@@ -11,7 +11,24 @@
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
-(def yksikkohintainen-toteuma-kartalla (atom false))
+(def yksikkohintainen-toteuma-karttataso (atom false))
+
+(def yksikkohintainen-toteuma-kartalla-xf
+  #(assoc %
+    :type :yksikkohintainen-toteuma
+    :alue {:type        :icon
+           :coordinates (:sijainti %)
+           :direction   0
+           :stroke      {:color "black" :width 10}
+           :img         "images/tyokone.png"}))
+
+(defonce valittu-yksikkohintainen-toteuma (atom nil))
+
+(defonce yksikkohintainen-toteuma-kartalla
+         (reaction
+           @valittu-yksikkohintainen-toteuma
+           (when @yksikkohintainen-toteuma-karttataso
+             (into [] (map yksikkohintainen-toteuma-kartalla-xf) (:reittipisteet @valittu-yksikkohintainen-toteuma)))))
 
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))
