@@ -75,7 +75,7 @@
         (comp
           toteuma-xf
           toteumien-tehtavat->map-xf)
-        (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
+        (q/hae-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
@@ -86,7 +86,7 @@
                         toteumien-tehtavat->map-xf
                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                         (map konv/alaviiva->rakenne))
-                      (q/listaa-urakan-toteuma db urakka-id toteuma-id))
+                      (q/hae-urakan-toteuma db urakka-id toteuma-id))
         kasitelty-toteuma (first
                             (konv/sarakkeet-vektoriin
                             toteuma
@@ -99,7 +99,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/listaa-toteumien-tehtavien-summat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
+        (q/hae-toteumien-tehtavien-summat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)

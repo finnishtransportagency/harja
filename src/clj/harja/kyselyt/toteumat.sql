@@ -1,4 +1,4 @@
--- name: listaa-urakan-toteumat
+-- name: hae-urakan-toteumat
 -- Listaa kaikki urakan toteumat
 SELECT
   t.id,
@@ -30,7 +30,7 @@ WHERE
   AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
 
--- name: listaa-urakan-toteuma
+-- name: hae-urakan-toteuma
 -- Listaa urakan toteuman id:llä
 SELECT
   t.id,
@@ -56,7 +56,7 @@ WHERE
   AND t.id = :toteuma
   AND t.poistettu IS NOT TRUE;
 
--- name: listaa-toteumien-tehtavien-summat
+-- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
           toimenpidekoodi AS tpk_id,
