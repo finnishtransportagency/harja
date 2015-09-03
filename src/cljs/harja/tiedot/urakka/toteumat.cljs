@@ -7,11 +7,13 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
-(def yksikkohintainen-toteuma-karttataso (atom false))
+(def karttataso-yksikkohintainen-toteuma (atom false))
 
 (def yksikkohintainen-toteuma-kartalla-xf
   #(assoc %
@@ -27,7 +29,7 @@
 (defonce yksikkohintainen-toteuma-kartalla
          (reaction
            @valittu-yksikkohintainen-toteuma
-           (when @yksikkohintainen-toteuma-karttataso
+           (when @karttataso-yksikkohintainen-toteuma
              (into [] (map yksikkohintainen-toteuma-kartalla-xf) (:reittipisteet @valittu-yksikkohintainen-toteuma)))))
 
 (defn hae-tehtavat [urakka-id]
