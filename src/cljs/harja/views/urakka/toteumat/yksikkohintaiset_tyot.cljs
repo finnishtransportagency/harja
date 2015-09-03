@@ -93,8 +93,6 @@
 
 (defonce lomakkeessa-muokattava-toteuma (atom nil))
 
-; TODO Jos on aikaa, niin lomakkeen tehtävät voisi toimia paremmin Reagent-wrapin avulla. Nyt tehtävät ja muu lomakedata ovat omissa atomeissaan,
-; jotka yhdistetään lopuksi kun lomake tallennetaan. Reagent wrapilla koko lomake saataisiin pidettyä yhdessä atomissa.
 (defn yksikkohintaisen-toteuman-muokkaus
   "Uuden toteuman syöttäminen"
   []
