@@ -46,7 +46,13 @@ SELECT
   k.jarjestelma AS jarjestelmanlisaama,
   rp.id         AS reittipiste_id,
   rp.aika       AS reittipiste_aika,
-  rp.sijainti   AS reittipiste_sijainti
+  rp.sijainti   AS reittipiste_sijainti,
+    (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
+   FROM toteuma_tehtava tt
+     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+   WHERE tt.toteuma = t.id
+         AND tt.poistettu IS NOT TRUE)
+                AS tehtavat
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
