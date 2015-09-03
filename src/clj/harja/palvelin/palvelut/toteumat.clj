@@ -46,22 +46,17 @@
             (assoc :maara
                    (or (some-> % :maara double) 0)))))
 
-(defn toteuman-tehtavat->map [toteumat]
-  (let [mapattu (map (fn [rivi]
-                       (log/debug "Mapataan rivi: " (pr-str rivi))
-                       (assoc rivi :tehtavat
-                                   (mapv (fn [tehtava]
-                                           (log/debug "Mapataan Tehtävä: " (pr-str tehtava))
-                                           (let [splitattu (str/split tehtava #"\^")]
-                                             {:tehtava-id (Integer/parseInt (first splitattu))
-                                              :tpk-id     (Integer/parseInt (second splitattu))
-                                              :nimi       (get splitattu 2)
-                                              :maara      (Integer/parseInt (get splitattu 3))
-                                              }))
-                                         (:tehtavat rivi))))
-                     toteumat)]
-    (log/debug "Mappaus valmis: " (pr-str mapattu))
-    mapattu))
+(def toteumien-tehtavat->map-xf
+  (map #(-> %
+            (assoc :tehtavat
+                   (mapv (fn [tehtava]
+                           (let [splitattu (str/split tehtava #"\^")]
+                             {:tehtava-id (Integer/parseInt (first splitattu))
+                              :tpk-id     (Integer/parseInt (second splitattu))
+                              :nimi       (get splitattu 2)
+                              :maara      (Integer/parseInt (get splitattu 3))
+                              }))
+                         (:tehtavat %))))))
 
 (defn toteuman-parametrit [toteuma kayttaja]
   [(:urakka-id toteuma) (:sopimus-id toteuma)
@@ -76,18 +71,20 @@
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [rivit (into []
-                    toteuma-xf
-                    (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi)))]
-    (toteuman-tehtavat->map rivit)))
+  (into []
+        (comp
+          toteuma-xf
+          toteumien-tehtavat->map-xf)
+        (q/listaa-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [rivi (first (into []
-                          toteuma-xf
-                          (q/listaa-urakan-toteuma db urakka-id toteuma-id)))]
-    (first (toteuman-tehtavat->map [rivi]))))
+  (first (into []
+               (comp
+                 toteuma-xf
+                 toteumien-tehtavat->map-xf)
+               (q/listaa-urakan-toteuma db urakka-id toteuma-id))))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
@@ -142,11 +139,11 @@
                             (do
                               (log/debug "Haetaan urakoista " (pr-str urakka-idt) " (" (pr-str rajaa-urakalla?) ")")
                               (apply (comp vec flatten merge)
-                                    (for [urakka-id urakka-idt]
-                                      (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
-                                                                     toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                                                                     urakka-id rajaa-urakalla?
-                                                                     hallintayksikko_annettu hallintayksikko))))
+                                     (for [urakka-id urakka-idt]
+                                       (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                                      toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                                      urakka-id rajaa-urakalla?
+                                                                      hallintayksikko_annettu hallintayksikko))))
 
                             (when-not rajaa-urakalla?
                               (log/debug "Hakua ei rajata urakalla - käyttäjä on järjestelmävastuuhenkilö")
