@@ -13,6 +13,12 @@
 (defn urakan-hoitokausi [ur]
   (valinnat/urakan-hoitokausi ur (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!))
 
+(defn hoitokauden-kuukausi []
+  [valinnat/hoitokauden-kuukausi
+   (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)
+   u/valittu-hoitokauden-kuukausi
+   u/valitse-hoitokauden-kuukausi!])
+
 (defn aikavali [ur]
   (valinnat/aikavali u/valittu-aikavali))
 

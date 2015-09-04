@@ -346,6 +346,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
              {:otsikko     "Liitteet" :nimi :liitteet
               :komponentti [:span (for [liite (:liitteet @havainto)]
+                                    ^{:key (:id liite)}
                                     [:span (liitteet/liitetiedosto liite)])
                             [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
                                              :liite-ladattu #(swap! havainto assoc :uusi-liite %)

@@ -12,29 +12,47 @@
 
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm] :as tiedot}]
+  [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (comp
-          (map #(konv/decimal->double % :kht_laskutettu))
-          (map #(konv/decimal->double % :kht_laskutettu_ind_korotettuna))
-          (map #(konv/decimal->double % :kht_laskutettu_ind_korotus))
-          (map #(konv/decimal->double % :kht_laskutetaan))
-          (map #(konv/decimal->double % :kht_laskutetaan_ind_korotettuna))
-          (map #(konv/decimal->double % :kht_laskutetaan_ind_korotus))
-          (map #(konv/decimal->double % :yht_laskutettu))
-          (map #(konv/decimal->double % :yht_laskutettu_ind_korotettuna))
-          (map #(konv/decimal->double % :yht_laskutettu_ind_korotus))
-          (map #(konv/decimal->double % :yht_laskutetaan))
-          (map #(konv/decimal->double % :yht_laskutetaan_ind_korotettuna))
-          (map #(konv/decimal->double % :yht_laskutetaan_ind_korotus)))
-              (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                         (konv/sql-date hk_alkupvm)
-                                                         (konv/sql-date hk_loppupvm)
-                                                         (konv/sql-date aikavali_alkupvm)
-                                                         (konv/sql-date aikavali_loppupvm)
-                                                         urakka-id)))
+  (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
+    (into []
+         (comp
+           (map #(konv/decimal->double % :kht_laskutettu))
+           (map #(konv/decimal->double % :kht_laskutettu_ind_korotettuna))
+           (map #(konv/decimal->double % :kht_laskutettu_ind_korotus))
+           (map #(konv/decimal->double % :kht_laskutetaan))
+           (map #(konv/decimal->double % :kht_laskutetaan_ind_korotettuna))
+           (map #(konv/decimal->double % :kht_laskutetaan_ind_korotus))
+
+           (map #(konv/decimal->double % :yht_laskutettu))
+           (map #(konv/decimal->double % :yht_laskutettu_ind_korotettuna))
+           (map #(konv/decimal->double % :yht_laskutettu_ind_korotus))
+           (map #(konv/decimal->double % :yht_laskutetaan))
+           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotettuna))
+           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotus))
+
+           (map #(konv/decimal->double % :sakot_laskutettu))
+           (map #(konv/decimal->double % :sakot_laskutettu_ind_korotettuna))
+           (map #(konv/decimal->double % :sakot_laskutettu_ind_korotus))
+           (map #(konv/decimal->double % :sakot_laskutetaan))
+           (map #(konv/decimal->double % :sakot_laskutetaan_ind_korotettuna))
+           (map #(konv/decimal->double % :sakot_laskutetaan_ind_korotus))
+
+           (map #(konv/decimal->double % :suolasakot_laskutettu))
+           (map #(konv/decimal->double % :suolasakot_laskutettu_ind_korotettuna))
+           (map #(konv/decimal->double % :suolasakot_laskutettu_ind_korotus))
+           (map #(konv/decimal->double % :suolasakot_laskutetaan))
+           (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotettuna))
+           (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotus))
+           )
+         (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                    (konv/sql-date hk-alkupvm)
+                                                    (konv/sql-date hk-loppupvm)
+                                                    (konv/sql-date aikavali-alkupvm)
+                                                    (konv/sql-date aikavali-loppupvm)
+                                                    urakka-id
+                                                    urakan-indeksi))))
 
 (defrecord Raportit []
   component/Lifecycle
