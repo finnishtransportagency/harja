@@ -39,10 +39,10 @@
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
     :suorita   (fn []
-                 (let [urakka @nav/valittu-urakka
+                 (let [urakka-id (:id @nav/valittu-urakka)
                        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
                        loppupvm (t/plus alkupvm (t/years 30))
-                                        sisalto (go (let [vastaus (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka
+                                        sisalto (go (let [vastaus (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
                                                                                                                               alkupvm
                                                                                                                               loppupvm))]
                                                       (log "[RAPORTTI] Data raportille: " (pr-str vastaus))
