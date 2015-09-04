@@ -34,7 +34,7 @@
       :tyyppi   :valinta
       :validoi [[:ei-tyhja "Anna arvo"]]
       :valinnat :valitun-aikavalin-kuukaudet}]
-    :suorita (constantly nil)}])
+      :suorita (fn [] [:span "Tässä raportti"])}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
@@ -49,26 +49,23 @@
                     :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi - ")))
     kentta))
 
-(defn raporttinakyma []
-  [:div "Tänne tulee myöhemmin raporttinäkymä..."])
-
 (def lomake-tiedot (atom nil))
 (def lomake-virheet (atom nil))
 (tarkkaile! "[RAPORTTI] Lomake-virheet: " lomake-virheet)
 
-(defn luo-raportti []
-  {} ; TODO Luo raportti
-  )
+(defn raporttinakyma []
+  (let [nakyma (:suorita @valittu-raporttityyppi)]
+    (nakyma)))
 
-(def valittu-raportti
+(def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                   lomake-virheet @lomake-virheet]
               (when (and valittu-raporttityyppi
                          (not (nil? lomake-virheet))
                          (empty? lomake-virheet))
-                (luo-raportti)))))
+                true))))
 
-(tarkkaile! "[RAPORTTI] Valittu-raportti" valittu-raportti)
+(tarkkaile! "[RAPORTTI] Valittu-raportti" raportti-valmis-naytettavaksi?)
 
 (defn raporttivalinnat
   []
@@ -105,7 +102,7 @@
 (defn raporttivalinnat-ja-raportti []
   [:span
    [raporttivalinnat]
-   (when @valittu-raportti
+   (when @raportti-valmis-naytettavaksi?
      [raporttinakyma])])
 
 (defn raportit []
