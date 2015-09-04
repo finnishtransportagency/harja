@@ -9,10 +9,13 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt])
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
-(defonce valittu-raportti (atom nil))
 (defonce valittu-raporttityyppi (atom nil))
+(tarkkaile! "[RAPORTTI] Valittu-raporttityyppi" valittu-raporttityyppi)
 
 (def +raporttityypit+
   ; HUOM: Hardcoodattu testidata vectori mappeja
@@ -23,19 +26,16 @@
     [{:otsikko  "Hoitokausi"
       :nimi     :hoitokausi
       :tyyppi   :valinta
+      :validoi [[:ei-tyhja "Anna arvo"]]
       :valinnat :valitun-urakan-hoitokaudet}
      {:otsikko  "Kuukausi"
       :nimi     :kuukausi
       :tyyppi   :valinta
+      :validoi [[:ei-tyhja "Anna arvo"]]
       :valinnat :valitun-aikavalin-kuukaudet}]
     :suorita (constantly nil)}])
 
-(tarkkaile! "[RAPORTTI] Valittu-raportti" valittu-raportti)
-(tarkkaile! "[RAPORTTI] Valittu-raporttityyppi" valittu-raporttityyppi)
-
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
-  (log "[RAPORTTI] Kenttä: " (pr-str kentta))
-  (log "[RAPORTTI] Lomakkeen tiedot: " (pr-str lomakkeen-tiedot))
   (if (= :valinta (:tyyppi kentta))
     (case (:valinnat kentta)
       :valitun-urakan-hoitokaudet
@@ -43,7 +43,7 @@
                     :valinta-nayta fmt/pvm-vali-opt)
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)]
-                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne."
+                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne. Ehkä myös Koko hoitokausi?"
                                 [])
                     :valinta-nayta (comp fmt/pvm-opt first)))
 
@@ -52,39 +52,56 @@
 (defn raporttinakyma []
   [:div "Tänne tulee myöhemmin raporttinäkymä..."])
 
+(def lomake-tiedot (atom nil))
+(def lomake-virheet (atom nil))
+(tarkkaile! "[RAPORTTI] Lomake-virheet: " lomake-virheet)
+
+(defn luo-raportti []
+  {} ; TODO Luo raportti
+  )
+
+(defonce valittu-raportti
+         (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
+                         lomake-virheet @lomake-virheet]
+                     (log "Lomake-virheet: " (pr-str lomake-virheet))
+                     (when (and valittu-raporttityyppi
+                                (not (nil? lomake-virheet))
+                                (empty? lomake-virheet))
+                       (luo-raportti)))))
+
+(tarkkaile! "[RAPORTTI] Valittu-raportti" valittu-raportti)
+
 (defn raporttivalinnat
   []
-  (let [lomakkeen-tiedot (atom nil)
-        lomakkeen-virheet (atom nil)]
-    (komp/luo
-      (fn []
-        [:div.raportit
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Valitse raportti"]
-          [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
-                                ;;\u2014 on väliviivan unikoodi
-                                :format-fn  #(if % (:otsikko %) "Valitse")
-                                :valitse-fn #(reset! valittu-raporttityyppi %)
-                                :class      "valitse-raportti-alasveto"}
-           +raporttityypit+]]
+  (komp/luo
+    (fn []
+      [:div.raportit
+       [:div.label-ja-alasveto
+        [:span.alasvedon-otsikko "Valitse raportti"]
+        [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                              ;;\u2014 on väliviivan unikoodi
+                              :format-fn  #(if % (:otsikko %) "Valitse")
+                              :valitse-fn #(reset! valittu-raporttityyppi %)
+                              :class      "valitse-raportti-alasveto"}
+         +raporttityypit+]]
 
-         (when @valittu-raporttityyppi
-           [lomake/lomake
-            {:luokka   :horizontal
-             :virheet  lomakkeen-virheet
-             :muokkaa! (fn [uusi]
-                         (reset! lomakkeen-tiedot uusi))}
-            (let [lomake-tiedot @lomakkeen-tiedot
-                  kentat (into []
-                               (concat
-                                 [{:otsikko "Kohde" :nimi :kohteen-nimi :hae #(:nimi @nav/valittu-urakka) :muokattava? (constantly false)}]
-                                 (map
-                                   (fn [kentta]
-                                     (tee-lomakekentta kentta lomake-tiedot))
-                                   (:parametrit @valittu-raporttityyppi))))]
-              kentat)
+       (when @valittu-raporttityyppi
+         [lomake/lomake
+          {:luokka   :horizontal
+           :virheet  lomake-virheet
+           :muokkaa! (fn [uusi]
+                       (reset! lomake-tiedot uusi))}
+          (let [lomake-tiedot @lomake-tiedot
+                kentat (into []
+                             (concat
+                               [{:otsikko "Kohde" :nimi :kohteen-nimi :hae #(:nimi @nav/valittu-urakka) :muokattava? (constantly false)}]
+                               (map
+                                 (fn [kentta]
+                                   (tee-lomakekentta kentta lomake-tiedot))
+                                 (:parametrit @valittu-raporttityyppi))))]
+            kentat)
 
-            @lomakkeen-tiedot])]))))
+          @lomake-tiedot])])))
 
 (defn raportit []
   (komp/luo
