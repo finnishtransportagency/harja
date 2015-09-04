@@ -1,18 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tyokalut
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
-            [clojure.data.json :as json]
-            [clojure.string :as str])
-  (:import (java.util Date)
-           (java.text SimpleDateFormat)))
+            [org.httpkit.client :as http]))
 
 (defn post-kutsu
   "Tekee POST-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
@@ -27,5 +16,5 @@
   "Tekee GET-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen."
   [api-polku-vec kayttaja portti]
   @(http/get (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-              {:headers {"OAM_REMOTE_USER" kayttaja
-                         "Content-Type"    "application/json"}}))
+             {:headers {"OAM_REMOTE_USER" kayttaja
+                        "Content-Type"    "application/json"}}))

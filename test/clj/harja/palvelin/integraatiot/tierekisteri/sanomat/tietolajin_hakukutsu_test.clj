@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [clj-time.core :as time]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as tietolajin-hakukutsu])
   (:import (java.text SimpleDateFormat)))

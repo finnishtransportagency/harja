@@ -1,19 +1,21 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
-  (:require [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
-            [com.stuartsierra.component :as component]))
+  (:require
+    [com.stuartsierra.component :as component]
+    [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]))
 
 (defprotocol TierekisteriPalvelut
-  (hae-tietolajit [this tunniste]))
+  (hae-tietolajit [this tunniste muutospvm]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
-  (start [this])
+  (start [this] this)
   (stop [this] this)
 
   TierekisteriPalvelut
-  (hae-tietolajit [this tunniste]
-    (let [tietolajien-haku (if (not (empty? tierekisteri-api-url))
-                             (tietolajit/hae-tietolajit (:integraatioloki this) tierekisteri-api-url tunniste)
-                             (fn []))]
+  (hae-tietolajit [this tunniste muutospvm]
+    (let [tietolajien-haku
+          (if (not (empty? tierekisteri-api-url))
+            (tietolajit/hae-tietolajit (:integraatioloki this) tierekisteri-api-url tunniste muutospvm)
+            (fn []))]
       {:tietolajien-haku tietolajien-haku})))
 
