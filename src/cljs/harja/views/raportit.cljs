@@ -21,6 +21,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valittu-raporttityyppi (atom nil))
+(defonce valitun-raportin-sisalto (atom nil))
+(tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " valitun-raportin-sisalto)
 
 (def +raporttityypit+
   ; HUOM: Hardcoodattu testidata vectori mappeja
@@ -41,17 +43,14 @@
     :suorita   (fn [raporttivalinnat-tiedot]
                  (fn []
                    (let [urakka-id (:id @nav/valittu-urakka)
-                         alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
+                         alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta & renderöi uudelleen jos muuttuu
                          loppupvm (t/plus alkupvm (t/years 30))
-                         sisalto (reaction<! [_ @raporttivalinnat-tiedot]
-                                             (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
-                                                                                                     alkupvm
-                                                                                                     loppupvm))]
-                     (tarkkaile! "[RAPORTTI] Raportin sisältö :" sisalto)
+                         _ (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))]
+                             (reset! valitun-raportin-sisalto toteumat)))]
                      [:span
                       [grid/grid
                        {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                        :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
+                        :tyhja        (if (empty? @valitun-raportin-sisalto) "Raporttia ei voitu luoda.")
                         :voi-muokata? false}
                        [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
                         {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -61,19 +60,19 @@
                         {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                       @sisalto]])))}])
+                       @valitun-raportin-sisalto]])))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
     (case (:valinnat kentta)
       :valitun-urakan-hoitokaudet
       (assoc kentta :valinnat @u/valitun-urakan-hoitokaudet
-                    :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi - "))
+                    :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
                                 (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne. Ehkä myös Koko hoitokausi?"
                                 [])
-                    :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi - ")))
+                    :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi -")))
     kentta))
 
 (def raporttivalinnat-tiedot (atom nil))
