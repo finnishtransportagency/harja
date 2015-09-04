@@ -38,19 +38,19 @@
                  :tyyppi   :valinta
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
-    :suorita   (fn []
+    :suorita   (fn [raporttivalinnat-tiedot]
                  (let [urakka-id (:id @nav/valittu-urakka)
                        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
                        loppupvm (t/plus alkupvm (t/years 30))
-                                        sisalto (go (let [vastaus (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
-                                                                                                                              alkupvm
-                                                                                                                              loppupvm))]
-                                                      (log "[RAPORTTI] Data raportille: " (pr-str vastaus))
-                                                      vastaus))]
+                       sisalto (reaction<! [_ @raporttivalinnat-tiedot]
+                                           (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
+                                                                                                   alkupvm
+                                                                                                   loppupvm))]
+                   (tarkkaile! "[RAPORTTI] Raportin sisältö :" sisalto)
                    [:span
                     [grid/grid
                      {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                      :tyhja        (if (empty? sisalto) "Raporttia ei voitu luoda.")
+                      :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
                       :voi-muokata? false}
                      [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
                       {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -60,7 +60,7 @@
                       {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                     sisalto]]))}])
+                     @sisalto]]))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
@@ -75,20 +75,20 @@
                     :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi - ")))
     kentta))
 
-(def lomake-tiedot (atom nil))
-(def lomake-virheet (atom nil))
+(def raporttivalinnat-tiedot (atom nil))
+(def raporttivalinnat-virheet (atom nil))
+
+(tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raporttivalinnat-tiedot)
 
 (defn raporttinakyma []
-  (let [nakyma (:suorita @valittu-raporttityyppi)]
-    (nakyma)))
+  ((:suorita @valittu-raporttityyppi) raporttivalinnat-tiedot))
 
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                  lomake-virheet @lomake-virheet]
-              (when (and valittu-raporttityyppi
+                  lomake-virheet @raporttivalinnat-virheet]
+              (and valittu-raporttityyppi
                          (not (nil? lomake-virheet))
-                         (empty? lomake-virheet))
-                true))))
+                         (empty? lomake-virheet)))))
 
 (defn raporttivalinnat
   []
@@ -107,10 +107,10 @@
        (when @valittu-raporttityyppi
          [lomake/lomake
           {:luokka   :horizontal
-           :virheet  lomake-virheet
+           :virheet  raporttivalinnat-virheet
            :muokkaa! (fn [uusi]
-                       (reset! lomake-tiedot uusi))}
-          (let [lomake-tiedot @lomake-tiedot
+                       (reset! raporttivalinnat-tiedot uusi))}
+          (let [lomake-tiedot @raporttivalinnat-tiedot
                 kentat (into []
                              (concat
                                [{:otsikko "Kohde" :nimi :kohteen-nimi :hae #(:nimi @nav/valittu-urakka) :muokattava? (constantly false)}]
@@ -120,7 +120,7 @@
                                  (:parametrit @valittu-raporttityyppi))))]
             kentat)
 
-          @lomake-tiedot])])))
+          @raporttivalinnat-tiedot])])))
 
 (defn raporttivalinnat-ja-raportti []
   [:span
