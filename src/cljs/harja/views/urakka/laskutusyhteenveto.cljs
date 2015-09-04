@@ -91,7 +91,7 @@
                                                 :yhteenveto                  true
                                                 :suolasakot_laskutettu_ind_korotus  (reduce + (map :suolasakot_laskutettu_ind_korotus tiedot))
                                                 :suolasakot_laskutetaan_ind_korotus (reduce + (map :suolasakot_laskutetaan_ind_korotus tiedot))}
-            ]
+            valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
@@ -99,7 +99,7 @@
           (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)
           u/valittu-hoitokauden-kuukausi
           u/valitse-hoitokauden-kuukausi!]
-         (when (and ur @u/valittu-hoitokausi @u/valittu-hoitokauden-kuukausi)
+         (when (and ur @u/valittu-hoitokausi valittu-aikavali)
            [:span.tiedot
             [grid/grid
              {:otsikko      "Kokonaishintaiset työt"
@@ -108,10 +108,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :kht_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :kht_laskutetaan :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -127,10 +127,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :yht_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :yht_laskutetaan :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -146,10 +146,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :sakot_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :sakot_laskutetaan :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -165,10 +165,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :suolasakot_laskutettu :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :suolasakot_laskutetaan :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -184,10 +184,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :kht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :kht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -203,10 +203,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :yht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :yht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-opt :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -222,10 +222,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :sakot_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :sakot_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
@@ -241,10 +241,10 @@
               :rivin-luokka #(when (:yhteenveto %) " bold")
               :voi-muokata? false}
              [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
                :nimi    :suolasakot_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first @u/valittu-hoitokauden-kuukausi)) " - " (pvm/pvm (second @u/valittu-hoitokauden-kuukausi)))
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
                :nimi    :suolasakot_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
                :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
               {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
