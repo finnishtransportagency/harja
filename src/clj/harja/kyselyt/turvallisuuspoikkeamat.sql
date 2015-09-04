@@ -18,9 +18,9 @@ SELECT
   t.tr_alkuosa,
   t.tr_loppuosa,
   t.tyyppi
- FROM turvallisuuspoikkeama t
+FROM turvallisuuspoikkeama t
 WHERE t.urakka = :urakka
-  AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
 
 -- name: hae-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
@@ -54,8 +54,8 @@ SELECT
   kom.kommentti          AS kommentti_kommentti,
   kom.luotu              AS kommentti_aika,
   (SELECT CONCAT(etunimi, ' ', sukunimi)
-     FROM kayttaja
-    WHERE id = kom.luoja) AS kommentti_tekijanimi,
+   FROM kayttaja
+   WHERE id = kom.luoja) AS kommentti_tekijanimi,
 
   koml.id                AS kommentti_liite_id,
   koml.tyyppi            AS kommentti_liite_tyyppi,
@@ -70,32 +70,39 @@ SELECT
   l.liite_oid            AS liite_oid,
   l.pikkukuva            AS liite_pikkukuva
 
- FROM turvallisuuspoikkeama t
-      LEFT JOIN korjaavatoimenpide k
-      ON t.id = k.turvallisuuspoikkeama
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k
+    ON t.id = k.turvallisuuspoikkeama
 
-      LEFT JOIN turvallisuuspoikkeama_liite tl
-      ON t.id = tl.turvallisuuspoikkeama
-      LEFT JOIN liite l
-      ON l.id = tl.liite
+  LEFT JOIN turvallisuuspoikkeama_liite tl
+    ON t.id = tl.turvallisuuspoikkeama
+  LEFT JOIN liite l
+    ON l.id = tl.liite
 
-      LEFT JOIN turvallisuuspoikkeama_kommentti tpk
-       ON t.id = tpk.turvallisuuspoikkeama
-      LEFT JOIN kommentti kom
-       ON tpk.kommentti = kom.id
-        AND kom.poistettu IS NOT TRUE
+  LEFT JOIN turvallisuuspoikkeama_kommentti tpk
+    ON t.id = tpk.turvallisuuspoikkeama
+  LEFT JOIN kommentti kom
+    ON tpk.kommentti = kom.id
+       AND kom.poistettu IS NOT TRUE
 
   LEFT JOIN liite koml ON kom.liite = koml.id
 
 WHERE t.id = :id AND t.urakka = :urakka
 
-
-  
-
+-- name: onko-olemassa-ulkoisella-idlla
+-- Tarkistaa löytyykö turvallisuuspoikkeamaa ulkoisella id:llä
+SELECT exists(
+    SELECT tp.id
+    FROM turvallisuuspoikkeama tp
+    WHERE tp.ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
 -- name: liita-kommentti<!
 INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
 VALUES (:turvallisuuspoikkeama, :kommentti);
+
+-- name: liita-liite<!
+INSERT INTO turvallisuuspoikkeama_liite (turvallisuuspoikkeama, liite)
+VALUES (:turvallisuuspoikkeama, :liite);
 
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
@@ -130,7 +137,7 @@ SET urakka               = :urakka,
   muokattu               = NOW()
 WHERE id = :id;
 
---name: aseta-turvallisuuspoikkeaman-sijanti<!
+--name: aseta-turvallisuuspoikkeaman-sijainti<!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20. Ei aseta muokkaajaa ja muokattua, koska:
 -- * kyselyä kutsutaan heti paivita1:sen jälkeen, joka jo asettaa ne
@@ -143,6 +150,42 @@ SET
   tr_loppuetaisyys = :let,
   tr_alkuosa       = :aos,
   tr_loppuosa      = :los
+WHERE id = :id;
+
+--name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
+
+UPDATE turvallisuuspoikkeama
+SET urakka               = :urakka,
+  tapahtunut             = :tapahtunut,
+  paattynyt              = :paattynyt,
+  kasitelty              = :kasitelty,
+  tyontekijanammatti     = :ammatti,
+  tyotehtava             = :tehtava,
+  kuvaus                 = :kuvaus,
+  vammat                 = :vammat,
+  sairauspoissaolopaivat = :poissa,
+  sairaalavuorokaudet    = :sairaalassa,
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
+  muokkaaja              = :kayttaja,
+  muokattu               = NOW()
+WHERE ulkoinen_id = :id AND
+      luoja = :luoja;
+
+--name: aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+UPDATE turvallisuuspoikkeama
+SET
+  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti),
+  tr_numero        = :numero,
+  tr_alkuetaisyys  = :aet,
+  tr_loppuetaisyys = :let,
+  tr_alkuosa       = :aos,
+  tr_loppuosa      = :los
+WHERE ulkoinen_id = :id AND
+      luoja = :luoja;
+
+--name: aseta-ulkoinen-id<!
+UPDATE turvallisuuspoikkeama
+SET ulkoinen_id = :ulk
 WHERE id = :id;
 
 --name: luo-turvallisuuspoikkeama<!
