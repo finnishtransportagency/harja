@@ -60,13 +60,13 @@
   {} ; TODO Luo raportti
   )
 
-(defonce valittu-raportti
-         (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                         lomake-virheet @lomake-virheet]
-                     (when (and valittu-raporttityyppi
-                                (not (nil? lomake-virheet))
-                                (empty? lomake-virheet))
-                       (luo-raportti)))))
+(def valittu-raportti
+  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
+                  lomake-virheet @lomake-virheet]
+              (when (and valittu-raporttityyppi
+                         (not (nil? lomake-virheet))
+                         (empty? lomake-virheet))
+                (luo-raportti)))))
 
 (tarkkaile! "[RAPORTTI] Valittu-raportti" valittu-raportti)
 
@@ -104,8 +104,10 @@
 
 (defn raportit []
   (komp/luo
-    (fn [] ; FIXME Urakan oltava valittuna, muuten ei toimi. Valitse hallintayksikkö -komponentti voisi olla myös täällä geneerisenä komponenttina.
-      [:span
-       [raporttivalinnat]
-       (when @valittu-raportti
-         [raporttinakyma])])))
+    (fn []
+      (if @nav/valittu-urakka
+        [:span
+         [raporttivalinnat]
+         (when @valittu-raportti
+           [raporttinakyma])]
+        [:span "Valitse urakka, josta haluat tehdä raportin"]))))
