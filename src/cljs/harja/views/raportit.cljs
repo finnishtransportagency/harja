@@ -39,28 +39,29 @@
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
     :suorita   (fn [raporttivalinnat-tiedot]
-                 (let [urakka-id (:id @nav/valittu-urakka)
-                       alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
-                       loppupvm (t/plus alkupvm (t/years 30))
-                       sisalto (reaction<! [_ @raporttivalinnat-tiedot]
-                                           (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
-                                                                                                   alkupvm
-                                                                                                   loppupvm))]
-                   (tarkkaile! "[RAPORTTI] Raportin sisältö :" sisalto)
-                   [:span
-                    [grid/grid
-                     {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                      :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
-                      :voi-muokata? false}
-                     [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
-                      {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                     @sisalto]]))}])
+                 (fn []
+                   (let [urakka-id (:id @nav/valittu-urakka)
+                         alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
+                         loppupvm (t/plus alkupvm (t/years 30))
+                         sisalto (reaction<! [_ @raporttivalinnat-tiedot]
+                                             (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id
+                                                                                                     alkupvm
+                                                                                                     loppupvm))]
+                     (tarkkaile! "[RAPORTTI] Raportin sisältö :" sisalto)
+                     [:span
+                      [grid/grid
+                       {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
+                        :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
+                        :voi-muokata? false}
+                       [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
+                        {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                       @sisalto]])))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
@@ -81,7 +82,8 @@
 (tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raporttivalinnat-tiedot)
 
 (defn raporttinakyma []
-  ((:suorita @valittu-raporttityyppi) raporttivalinnat-tiedot))
+  (komp/luo
+    ((:suorita @valittu-raporttityyppi) raporttivalinnat-tiedot)))
 
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
