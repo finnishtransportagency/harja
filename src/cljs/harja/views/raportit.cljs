@@ -63,7 +63,6 @@
 (defonce valittu-raportti
          (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                          lomake-virheet @lomake-virheet]
-                     (log "Lomake-virheet: " (pr-str lomake-virheet))
                      (when (and valittu-raporttityyppi
                                 (not (nil? lomake-virheet))
                                 (empty? lomake-virheet))
@@ -106,6 +105,7 @@
 (defn raportit []
   (komp/luo
     (fn [] ; FIXME Urakan oltava valittuna, muuten ei toimi. Valitse hallintayksikkö -komponentti voisi olla myös täällä geneerisenä komponenttina.
-      (if @valittu-raportti
-        [raporttinakyma]
-        [raporttivalinnat]))))
+      [:span
+       [raporttivalinnat]
+       (when @valittu-raportti
+         [raporttinakyma])])))
