@@ -337,6 +337,7 @@
 
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (when-not (= :clickable-area (:type geom))
+    (log "STROKE: " (pr-str stroke))
     (doto feature
       (.setStyle (ol.style.Style.
                    #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
