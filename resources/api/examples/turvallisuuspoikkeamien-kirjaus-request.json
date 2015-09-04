@@ -52,7 +52,7 @@
         }
       },
       "vaylamuoto": "tie",
-      "luokittelu": "tyotapaturma",
+      "luokittelu": ["tyotapaturma"],
       "ilmoittaja": {
         "id":5468135,
         "etunimi": "Veera",
