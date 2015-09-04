@@ -83,25 +83,29 @@
                                           (log "PÄÄ Haetaan päällystystoteumat.")
                                           (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
+(defonce lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @taso-paallystyskohteet
                   kohderivit @kohderivit
-                  toteumarivit @toteumarivit]
+                  toteumarivit @toteumarivit
+                  avoin-paallystysilmoitus (:paallystyskohde-id @lomakedata)]
               (when taso
                 (into []
                       (mapcat #(map (fn [{sij :sijainti nimi :nimi :as osa}]
-                                      {:type :paallystyskohde
-                                       :kohde %
-                                       :paallystyskohde-id (:paallystyskohde_id %)
-                                       :tila (:tila %)
-                                       :nimi (str (:nimi %) ": " nimi)
-                                       :osa osa
-                                       :alue (assoc sij
-                                                    :stroke {:color (case (:tila %)
-                                                                      :aloitettu "blue"
-                                                                      :valmis "green"
-                                                                      "orange")
-                                                             :width 6})})
+                                      (let [paallystyskohde-id (:paallystyskohde_id %)]
+                                        {:type :paallystyskohde
+                                         :kohde %
+                                         :paallystyskohde-id paallystyskohde-id
+                                         :tila (:tila %)
+                                         :nimi (str (:nimi %) ": " nimi)
+                                         :osa osa
+                                         :alue (assoc sij
+                                                      :stroke {:color (case (:tila %)
+                                                                        :aloitettu "blue"
+                                                                        :valmis "green"
+                                                                        "orange")
+                                                               :width (if (= paallystyskohde-id avoin-paallystysilmoitus) 8 6)})}))
                                     (:kohdeosat %)))
                       (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                    kohderivit)

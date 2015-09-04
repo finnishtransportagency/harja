@@ -17,7 +17,7 @@
             [harja.domain.roolit :as roolit]
             
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [toteumarivit] :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [toteumarivit lomakedata] :as paallystys]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
 
@@ -48,7 +48,7 @@
     :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
     ""))
 
-(defonce lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+
 
 (def urakkasopimuksen-mukainen-kokonaishinta (reaction (:kokonaishinta @lomakedata)))
 (def muutokset-kokonaishintaan
