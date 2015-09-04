@@ -103,11 +103,7 @@
              [:div.container {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
               [:div.row.row-sisalto
 
-
-               ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
-               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska kartan kontrollien pitäisi
-               ;; pysyä kartan päällä.
-               [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
+               [:div {:class (str "col-sisalto " sisallon-luokka)}
                 (case sivu
                   :urakat [urakat/urakat]
                   :raportit [raportit/raportit]
