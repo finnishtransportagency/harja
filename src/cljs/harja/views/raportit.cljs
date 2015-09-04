@@ -41,13 +41,12 @@
     (case (:valinnat kentta)
       :valitun-urakan-hoitokaudet
       (assoc kentta :valinnat @u/valitun-urakan-hoitokaudet
-                    :valinta-nayta fmt/pvm-vali-opt)
+                    :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi - "))
       :valitun-aikavalin-kuukaudet
-      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)]
+      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu. Tähän ei kuitenkaan voi tehdä reactionia?
                                 (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne. Ehkä myös Koko hoitokausi?"
                                 [])
-                    :valinta-nayta (comp fmt/pvm-opt first)))
-
+                    :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi - ")))
     kentta))
 
 (defn raporttinakyma []
