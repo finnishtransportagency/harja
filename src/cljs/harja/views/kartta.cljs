@@ -12,6 +12,7 @@
             ;[harja.]
             [cljs.core.async :refer [timeout <!]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             )
 
   (:require-macros [reagent.ratom :refer [run!]]
@@ -94,6 +95,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn poista-popup! []
   (openlayers/hide-popup!))
+
+(defonce poista-popup-kun-tasot-muuttuvat
+  (tapahtumat/kuuntele! :karttatasot-muuttuneet
+                        (fn [_]
+                          (poista-popup!))))
+   
 
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
