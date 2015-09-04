@@ -140,22 +140,14 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
 
--- name: hae-urakan-toteutuneet-tehtavat
+-- name: hae-urakan-toteutuneet-tehtavat-kuukausiraportille
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät
 SELECT
-  tt.id                           AS tehtava_id,
-  tt.toteuma                      AS toteuma_id,
-  tt.toimenpidekoodi,
-  tt.maara,
-  t.tyyppi,
+  tt.maara as toteutunut_maara,
   t.alkanut,
-  t.paattynyt,
-  t.suorittajan_nimi,
-  t.suorittajan_ytunnus,
-  t.lisatieto,
   (SELECT nimi
    FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide
+   WHERE id = tt.toimenpidekoodi) AS nimi
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka

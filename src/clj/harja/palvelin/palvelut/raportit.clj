@@ -43,7 +43,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-tehtavat (into []
                                    toteumat/muunna-desimaaliluvut-xf
-                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat db
+                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille db
                                                                                urakka-id
                                                                                (konv/sql-timestamp alkupvm)
                                                                                (konv/sql-timestamp loppupvm)
