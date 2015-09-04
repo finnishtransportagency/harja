@@ -10,7 +10,9 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.grid :as grid]
+            [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -20,21 +22,37 @@
 
 (def +raporttityypit+
   ; HUOM: Hardcoodattu testidata vectori mappeja
-  [{:nimi :laskutusyhteenveto
-    :otsikko "Yks.hint. töiden toteumat -raportti"
+  [{:nimi      :laskutusyhteenveto
+    :otsikko   "Yks.hint. töiden toteumat -raportti"
     :konteksti #{:urakka}
     :parametrit
-    [{:otsikko  "Hoitokausi"
-      :nimi     :hoitokausi
-      :tyyppi   :valinta
-      :validoi [[:ei-tyhja "Anna arvo"]]
-      :valinnat :valitun-urakan-hoitokaudet}
-     {:otsikko  "Kuukausi"
-      :nimi     :kuukausi
-      :tyyppi   :valinta
-      :validoi [[:ei-tyhja "Anna arvo"]]
-      :valinnat :valitun-aikavalin-kuukaudet}]
-      :suorita (fn [] [:span "Tässä raportti"])}])
+               [{:otsikko  "Hoitokausi"
+                 :nimi     :hoitokausi
+                 :tyyppi   :valinta
+                 :validoi  [[:ei-tyhja "Anna arvo"]]
+                 :valinnat :valitun-urakan-hoitokaudet}
+                {:otsikko  "Kuukausi"
+                 :nimi     :kuukausi
+                 :tyyppi   :valinta
+                 :validoi  [[:ei-tyhja "Anna arvo"]]
+                 :valinnat :valitun-aikavalin-kuukaudet}]
+    :suorita   (fn []
+                 (let [sisalto (atom nil)]
+                 [:span
+                  [grid/grid
+                   {:otsikko       "Yksikköhintaisten töiden kuukausiraportti"
+                    :tyhja         (if (empty? @sisalto) "Raporttia ei voitu luoda.")
+                    :voi-muokata? false
+                    }
+                   [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
+                    {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                   @sisalto]]))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
