@@ -40,14 +40,14 @@
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
     :suorita   (fn []
-                 (let [urakka @nav/valitse-urakka
-                       alkupvm (t/now)
-                       loppupvm (t/plus alkupvm (t/years 30)) ; FIXME Käytä valittua kuukautta
-                                        sisalto (<! (go (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka alkupvm loppupvm)))]
+                 (let [urakka @nav/valittu-urakka
+                       alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
+                       loppupvm (t/plus alkupvm (t/years 30))
+                                        sisalto (go (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka alkupvm loppupvm)))]
                    [:span
                     [grid/grid
                      {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                      :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
+                      :tyhja        (if (empty? sisalto) "Raporttia ei voitu luoda.")
                       :voi-muokata? false
                       }
                      [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
@@ -58,7 +58,7 @@
                       {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                     @sisalto]]))}])
+                     sisalto]]))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
