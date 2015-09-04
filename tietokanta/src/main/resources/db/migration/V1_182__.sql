@@ -1,7 +1,6 @@
 -- Kuvaus: Laskutusyhteenvedon laskenta
---DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
-DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER, ind VARCHAR(128));
- 
+DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE,
+aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
 DROP TYPE laskutusyhteenveto_rivi;
 
 CREATE TYPE laskutusyhteenveto_rivi
@@ -319,24 +318,3 @@ BEGIN
 
   END;
 $$ LANGUAGE plpgsql;
-
-
-SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4, 'MAKU 2010');
-SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-08-01', '2015-08-31', 4, 'MAKU 2010');
-SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-09-01', '2015-09-30', 4, 'MAKU 2010');
-
-
-select * from sanktio;
-select * from suolasakko;
-SELECT hoitokauden_suolasakko(4, '2014-10-01', '2015-09-30');
-SELECT laske_suolasakko(2014, 'MAKU 2010' ,2280.00);
-
-DECLARE  hoitokauden_suolasakko_rivi RECORD;
-
-
-SELECT *
-FROM suolasakko
-WHERE urakka = 4
-      AND (SELECT EXTRACT(YEAR FROM '2014-10-01'::DATE) :: INTEGER) = 2014;
-
-(SELECT EXTRACT(YEAR FROM '2014-10-01') :: INTEGER);
