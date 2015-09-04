@@ -15,7 +15,7 @@
 (defonce valittu-raporttityyppi (atom nil))
 
 (def +raporttityypit+
-  ; HUOM: Hardcoodattu testidata vectori mappeja, tämä saadaan myöhemmin kannasta
+  ; HUOM: Hardcoodattu testidata vectori mappeja
   [{:nimi :laskutusyhteenveto
     :otsikko "Yks.hint. töiden toteumat -raportti"
     :konteksti #{:urakka}
@@ -33,7 +33,9 @@
 (tarkkaile! "[RAPORTTI] Valittu-raportti" valittu-raportti)
 (tarkkaile! "[RAPORTTI] Valittu-raporttityyppi" valittu-raporttityyppi)
 
-(defn lomake-kentta [kentta lomakkeen-tiedot]
+(defn tee-lomakekentta [kentta lomakkeen-tiedot]
+  (log "[RAPORTTI] Kenttä: " (pr-str kentta))
+  (log "[RAPORTTI] Lomakkeen tiedot: " (pr-str lomakkeen-tiedot))
   (if (= :valinta (:tyyppi kentta))
     (case (:valinnat kentta)
       :valitun-urakan-hoitokaudet
@@ -41,7 +43,7 @@
                     :valinta-nayta fmt/pvm-vali-opt)
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)]
-                                (pvm/hoitokauden-kuukausivalit hk)
+                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne."
                                 [])
                     :valinta-nayta (comp fmt/pvm-opt first)))
 
@@ -61,7 +63,7 @@
           [:span.alasvedon-otsikko "Valitse raportti"]
           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
                                 ;;\u2014 on väliviivan unikoodi
-                                :format-fn  #(if % (second %) "Valitse")
+                                :format-fn  #(if % (:otsikko %) "Valitse")
                                 :valitse-fn #(reset! valittu-raporttityyppi %)
                                 :class      "valitse-raportti-alasveto"}
            +raporttityypit+]]
@@ -72,11 +74,14 @@
              :virheet  lomakkeen-virheet
              :muokkaa! (fn [uusi]
                          (reset! lomakkeen-tiedot uusi))}
-            (let [tiedot @lomakkeen-tiedot
+            (let [lomake-tiedot @lomakkeen-tiedot
                   kentat (into []
                                (concat
                                  [{:otsikko "Kohde" :nimi :kohteen-nimi :hae #(:nimi @nav/valittu-urakka) :muokattava? (constantly false)}]
-                                 (map (fn [kentta] (lomake-kentta kentta tiedot)) (:parametrit @valittu-raporttityyppi))))]
+                                 (map
+                                   (fn [kentta]
+                                     (tee-lomakekentta kentta lomake-tiedot))
+                                   (:parametrit @valittu-raporttityyppi))))]
               kentat)
 
             @lomakkeen-tiedot])]))))
