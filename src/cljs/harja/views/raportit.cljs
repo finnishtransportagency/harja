@@ -45,8 +45,22 @@
                    (let [urakka-id (:id @nav/valittu-urakka)
                          alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta & renderöi uudelleen jos muuttuu
                          loppupvm (t/plus alkupvm (t/years 30))
-                         _ (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))]
-                             (reset! valitun-raportin-sisalto toteumat)))]
+                         tehtavat (map
+                                    (fn [tasot] (nth tasot 3))
+                                    @u/urakan-toimenpiteet-ja-tehtavat)]
+
+                     (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
+                               _ (log "[RAPORTTI] Tehtävät :" (pr-str tehtavat))
+                               _ (log "[RAPORTTI] Toteumat: " (pr-str toteumat))
+                               toteumalliset-tehtavat (keep (fn [tehtava]
+                                                              (let [tehtavan-toteuma (first (filter (fn [toteuma]
+                                                                                                      (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                                    toteumat))]
+                                                                (when tehtavan-toteuma
+                                                                  (merge tehtava tehtavan-toteuma))))
+                                                            tehtavat)]
+                           (reset! valitun-raportin-sisalto toteumalliset-tehtavat)))
+
                      [:span
                       [grid/grid
                        {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
@@ -57,7 +71,7 @@
                         {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                        {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                         {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
                        @valitun-raportin-sisalto]])))}])
