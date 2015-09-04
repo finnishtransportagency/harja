@@ -73,7 +73,7 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paallystyskohde-id))
-        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot) ; 500M, :muu_tyo false,  3457M,  5M,  6M})
+        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
                          (:arvonvahennykset kohdetiedot)
                          (:bitumi_indeksi kohdetiedot)
                          (:kaasuindeksi kohdetiedot))
@@ -87,6 +87,7 @@
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus
       ;; Uusi päällystysilmoitus
+      ^{:uusi true}
       {:kohdenimi (:nimi kohdetiedot)
        :paallystyskohde-id paallystyskohde-id
        :kokonaishinta kokonaishinta
@@ -171,9 +172,13 @@
   (skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
-    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
-                                                                                                 :sopimus-id         sopimus-id
-                                                                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})]
+    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella
+                                       c user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
+          paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
+                                        ;; Tunnistetaan uuden tallentaminen
+                                        paallystysilmoitus-kannassa)]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
 
       ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
