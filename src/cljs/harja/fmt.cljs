@@ -28,6 +28,13 @@
     (euro summa)
     ""))
 
+(defn euro-indeksikorotus
+  "Formatoi euromäärän tai tyhjä, jos nil."
+  [summa]
+  (if summa
+    (euro summa)
+    "Indeksi puuttuu"))
+
 (defn kayttaja
   "Formatoi käyttäjän nimen."
   [{:keys [etunimi sukunimi]}]

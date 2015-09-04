@@ -2,9 +2,13 @@
 --                             98,    102,   110,   115,   104,    101
 --                keskiarvo: 105
 -- esim sakkosumma: 1 234 € * (105/100) = 1295,70 €
+CREATE TYPE indeksitarkistettu_suolasakko_rivi AS (
+  summa       NUMERIC,
+  korotettuna NUMERIC,
+  korotus     NUMERIC);
 
-
-CREATE  FUNCTION laske_suolasakko(talvikauden_alkuvuosi integer, indeksinimi varchar, summa NUMERIC) RETURNS NUMERIC(10,2) AS $$
+CREATE OR REPLACE FUNCTION laske_suolasakon_indeksitarkistus(talvikauden_alkuvuosi integer, indeksinimi varchar, summa NUMERIC)
+  RETURNS indeksitarkistettu_suolasakko_rivi AS $$
 DECLARE
   kerroin numeric;
   alkuv integer;
@@ -18,7 +22,7 @@ BEGIN
   -- keskiarvo kertoimena.
   SELECT
     INTO kerroin
-         AVG(arvo)/100
+         AVG(arvo)/100.0
     FROM indeksi
    WHERE nimi = indeksinimi
      AND ((vuosi = alkuv  AND kuukausi = 10) OR
@@ -29,6 +33,6 @@ BEGIN
           (vuosi = loppuv AND kuukausi = 3));
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
-  RETURN summa * kerroin;
+  RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;

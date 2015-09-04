@@ -100,6 +100,18 @@
 (defn valitse-hoitokausi! [hk]
   (reset! valittu-hoitokausi hk))
 
+(defonce valittu-hoitokauden-kuukausi
+         (reaction
+           (let [hk @valittu-hoitokausi
+                 ur @nav/valittu-urakka]
+             (when (and hk ur)
+               (if (pvm/valissa? (pvm/nyt) (:alkupvm ur) (:loppupvm ur))
+                 (pvm/ed-kk-aikavalina (pvm/nyt))
+                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
+
+(defn valitse-hoitokauden-kuukausi! [hk-kk]
+  (reset! valittu-hoitokauden-kuukausi hk-kk))
+
 ;; rivit ryhmitelty tehtävittäin, rivissä oltava :alkupvm ja :loppupvm
 (defn jaljella-olevien-hoitokausien-rivit
   "Palauttaa ne rivit joiden loppupvm on joku jaljella olevien kausien pvm:stä"
