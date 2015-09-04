@@ -116,10 +116,17 @@ BEGIN
           AND maksupvm <= aikavali_loppupvm;
 
     -- Kokonaishintaiset aikavälillä indeksikorotuksen kanssa
+    kht_laskutetaan := 0.0;
+    kht_laskutetaan_ind_korotettuna := 0.0;
+    kht_laskutetaan_ind_korotus := 0.0;
 
     SELECT *
     FROM laske_kuukauden_indeksikorotus(aikavalin_kht.vuosi, aikavalin_kht.kuukausi, ind, aikavalin_kht.summa)
     INTO kht_laskutetaan_rivi;
+
+    kht_laskutetaan := COALESCE(kht_laskutetaan_rivi.summa, 0.0);
+    kht_laskutetaan_ind_korotettuna := COALESCE(kht_laskutetaan_rivi.korotettuna, kht_laskutetaan);
+    kht_laskutetaan_ind_korotus := COALESCE(kht_laskutetaan_rivi.korotus, 0.0);
 
     -- Hoitokaudella ennen aikaväliä laskutetut yksikköhintaisten töiden kustannukset, myös indeksitarkistuksen kanssa
     yht_laskutettu := 0.0;
@@ -195,8 +202,9 @@ BEGIN
                                         ind, yhti_laskutetaan.yht_summa)
     INTO yht_laskutetaan_rivi;
 
-    yht_laskutetaan_ind_korotettuna := yht_laskutetaan_rivi.korotettuna;
-    yht_laskutetaan_ind_korotus := yht_laskutetaan_rivi.korotus;
+    yht_laskutetaan := COALESCE(yht_laskutetaan, 0.0);
+    yht_laskutetaan_ind_korotettuna := COALESCE(yht_laskutetaan_rivi.korotettuna, yht_laskutetaan);
+    yht_laskutetaan_ind_korotus := COALESCE(yht_laskutetaan_rivi.korotus, 0.0);
 
 
     -- Hoitokaudella ennen aikaväliä laskutetut sanktiot
@@ -221,9 +229,11 @@ BEGIN
                                           sanktiorivi.indeksi,
                                           sanktiorivi.maara)
       INTO sakot_laskutettu_rivi;
-      sakot_laskutettu := sakot_laskutettu + sakot_laskutettu_rivi.summa;
-      sakot_laskutettu_ind_korotettuna := SUM(sakot_laskutettu_ind_korotettuna + sakot_laskutettu_rivi.korotettuna);
-      sakot_laskutettu_ind_korotus := SUM(sakot_laskutettu_ind_korotus + sakot_laskutettu_rivi.korotus);
+      sakot_laskutettu := sakot_laskutettu + COALESCE(sakot_laskutettu_rivi.summa, 0.0);
+      sakot_laskutettu_ind_korotettuna := sakot_laskutettu_ind_korotettuna + COALESCE(sakot_laskutettu_rivi.korotettuna, sakot_laskutettu_rivi.summa);
+      sakot_laskutettu_ind_korotus := sakot_laskutettu_ind_korotus + COALESCE(sakot_laskutettu_rivi.korotus, 0.0);
+
+
     END LOOP;
 
 
@@ -251,16 +261,9 @@ BEGIN
                                           sanktiorivi.maara)
       INTO sakot_laskutetaan_rivi;
       sakot_laskutetaan := sakot_laskutetaan + sakot_laskutetaan_rivi.summa;
-      sakot_laskutetaan_ind_korotettuna := sakot_laskutetaan_ind_korotettuna + sakot_laskutetaan_rivi.korotettuna;
-      sakot_laskutetaan_ind_korotus := sakot_laskutetaan_ind_korotus + sakot_laskutetaan_rivi.korotus;
+      sakot_laskutetaan_ind_korotettuna := sakot_laskutetaan_ind_korotettuna + COALESCE(sakot_laskutetaan_rivi.korotettuna, sakot_laskutetaan_rivi.summa);
+      sakot_laskutetaan_ind_korotus := sakot_laskutetaan_ind_korotus + COALESCE(sakot_laskutetaan_rivi.korotus, 0.0);
     END LOOP;
-
-    -- Suolasakot
-    -- Suolasakot
-    --coalesce((SELECT *
-             -- FROM urakan_suolasakot(CAST(u.id AS INTEGER))
-             -- WHERE tpk.koodi = '23104'),
-             --0)
 
     suolasakot_laskutettu := 0.0;
     suolasakot_laskutettu_ind_korotettuna := 0.0;
@@ -290,12 +293,12 @@ BEGIN
         RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
-        suolasakot_laskutettu_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
+        suolasakot_laskutettu_ind_korotus := COALESCE(hoitokauden_laskettu_suolasakko_rivi.korotus, 0.0);
       ELSIF hoitokauden_suolasakko_rivi.maksukuukausi = (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) THEN
         RAISE NOTICE 'Suolasakko laskutetaan tässä kuussa %', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutetaan := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutetaan_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
-        suolasakot_laskutetaan_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
+        suolasakot_laskutetaan_ind_korotus := COALESCE(hoitokauden_laskettu_suolasakko_rivi.korotus, 0.0);
       ELSE
         RAISE NOTICE 'Suolasakkoa ei vielä laskutettu, maksukuukauden arvo: %', hoitokauden_suolasakko_rivi.maksukuukausi;
       END IF;
@@ -303,7 +306,7 @@ BEGIN
 
       RETURN NEXT (t.nimi, t.tuotekoodi,
                    kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
-                   aikavalin_kht.summa, kht_laskutetaan_rivi.korotettuna, kht_laskutetaan_rivi.korotus,
+                   kht_laskutetaan, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
                    yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
                    yht_laskutetaan, yht_laskutetaan_ind_korotettuna, yht_laskutetaan_ind_korotus,
                    sakot_laskutettu, sakot_laskutettu_ind_korotettuna, sakot_laskutettu_ind_korotus,
