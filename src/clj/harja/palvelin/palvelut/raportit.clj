@@ -39,7 +39,7 @@
                                                          urakka-id)))
 
 (defn muodosta-yksikkohintaisten-toiden-kuukausiraportti [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id alkupvm loppupvm)
+  (log/debug "Haetaan urakan toteutuneet tehtävät raporttia varten: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-tehtavat (into []
                                    toteumat/muunna-desimaaliluvut-xf
@@ -83,6 +83,7 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-raportit
+                     :yksikkohintaisten-toiden-kuukausiraportti
                      :suorita-raportti
                      :hae-laskutusyhteenvedon-tiedot)
     this))

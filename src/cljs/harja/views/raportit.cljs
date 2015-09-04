@@ -21,7 +21,6 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valittu-raporttityyppi (atom nil))
-(tarkkaile! "[RAPORTTI] Valittu-raporttityyppi" valittu-raporttityyppi)
 
 (def +raporttityypit+
   ; HUOM: Hardcoodattu testidata vectori mappeja
@@ -43,13 +42,16 @@
                  (let [urakka @nav/valittu-urakka
                        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
                        loppupvm (t/plus alkupvm (t/years 30))
-                                        sisalto (go (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka alkupvm loppupvm)))]
+                                        sisalto (go (let [vastaus (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka
+                                                                                                                              alkupvm
+                                                                                                                              loppupvm))]
+                                                      (log "[RAPORTTI] Data raportille: " (pr-str vastaus))
+                                                      vastaus))]
                    [:span
                     [grid/grid
                      {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
                       :tyhja        (if (empty? sisalto) "Raporttia ei voitu luoda.")
-                      :voi-muokata? false
-                      }
+                      :voi-muokata? false}
                      [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
                       {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -67,7 +69,7 @@
       (assoc kentta :valinnat @u/valitun-urakan-hoitokaudet
                     :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi - "))
       :valitun-aikavalin-kuukaudet
-      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu. Tähän ei kuitenkaan voi tehdä reactionia?
+      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
                                 (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne. Ehkä myös Koko hoitokausi?"
                                 [])
                     :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi - ")))
@@ -75,7 +77,6 @@
 
 (def lomake-tiedot (atom nil))
 (def lomake-virheet (atom nil))
-(tarkkaile! "[RAPORTTI] Lomake-virheet: " lomake-virheet)
 
 (defn raporttinakyma []
   (let [nakyma (:suorita @valittu-raporttityyppi)]
@@ -88,8 +89,6 @@
                          (not (nil? lomake-virheet))
                          (empty? lomake-virheet))
                 true))))
-
-(tarkkaile! "[RAPORTTI] Valittu-raportti" raportti-valmis-naytettavaksi?)
 
 (defn raporttivalinnat
   []
