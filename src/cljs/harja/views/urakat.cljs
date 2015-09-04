@@ -52,16 +52,18 @@
                              :aputeksti      "Kirjoita urakan nimi tähän"}
            @nav/suodatettu-urakkalista]]])))
 
+(defn valitse-hallintayksikko-ja-urakka []
+  (let [v-hal @nav/valittu-hallintayksikko
+        v-ur @nav/valittu-urakka]
+    (if-not v-hal
+      (valitse-hallintayksikko)
+      (if-not v-ur
+        (valitse-urakka)))))
+
 (defn urakat
   "Harjan karttasivu."
   []
-  [:span
    ;; TODO: urakkasivun koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä
-
-   (let [v-hal @nav/valittu-hallintayksikko
-         v-ur @nav/valittu-urakka]
-     (if-not v-hal
-       (valitse-hallintayksikko)
-       (if-not v-ur
-         (valitse-urakka)
-         [urakka/urakka v-ur])))])
+   (let [v-ur @nav/valittu-urakka]
+     (or (valitse-hallintayksikko-ja-urakka)
+         [urakka/urakka v-ur])))
