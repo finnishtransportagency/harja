@@ -33,7 +33,7 @@
              (get-in toteuma [:suorittaja :nimi])
              (get-in toteuma [:suorittaja :ytunnus])
              ""
-             (:tyyppi toteuma)
+             (:toteumatyyppi toteuma)
              (get-in toteuma [:tunniste :id])
              urakka-id)))
     (do
@@ -44,7 +44,7 @@
              (:sopimusId toteuma)
              (pvm-string->java-sql-date (:alkanut toteuma))
              (pvm-string->java-sql-date (:paattynyt toteuma))
-             (:tyyppi toteuma)
+             (:toteumatyyppi toteuma)
              (:id kirjaaja)
              (get-in toteuma [:suorittaja :nimi])
              (get-in toteuma [:suorittaja :ytunnus])

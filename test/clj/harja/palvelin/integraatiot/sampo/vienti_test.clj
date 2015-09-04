@@ -40,7 +40,7 @@
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 1) "Lähetys onnistui")
-    (odota #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 1000)
+    (odota #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))
           sampoon-lahetetty-kustannussuunnitelma (first (filter #(.contains % "<CostPlans>") @viestit))]
       (is (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-maksuera))

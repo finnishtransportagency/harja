@@ -12,6 +12,7 @@
             ;[harja.]
             [cljs.core.async :refer [timeout <!]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             )
 
   (:require-macros [reagent.ratom :refer [run!]]
@@ -95,6 +96,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn poista-popup! []
   (openlayers/hide-popup!))
 
+(defonce poista-popup-kun-tasot-muuttuvat
+  (tapahtumat/kuuntele! :karttatasot-muuttuneet
+                        (fn [_]
+                          (poista-popup!))))
+   
+
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
                                     :ymin (aget newextent 1)
@@ -165,13 +172,15 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                            @tasot/geometriat)
 
       :geometry-fn (fn [piirrettava]
-                     (when-let [alue (:alue piirrettava)]
+                     (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
                        (when (map? alue)
                          (assoc alue
                            :fill (if (:valittu piirrettava) false true)
-                           :stroke (when (or (:valittu piirrettava)
-                                             (= :silta (:type piirrettava)))
-                                     {:width 3})
+                           :stroke (if stroke
+                                     stroke
+                                     (when (or (:valittu piirrettava)
+                                               (= :silta (:type piirrettava)))
+                                       {:width 3}))
                            :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                            :color (or (:color alue)
                                       (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))

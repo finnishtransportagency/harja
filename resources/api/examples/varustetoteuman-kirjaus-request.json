@@ -24,7 +24,7 @@
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
       },
-      "tyyppi": "yksikkohintainen",
+      "toteumatyyppi": "yksikkohintainen",
       "tehtavat": [
         {
           "tehtava": {

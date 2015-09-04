@@ -25,7 +25,7 @@
 (defonce livesuodattimen-asetukset (atom "0-4h"))
 
 (defonce nakymassa? (atom false))
-(defonce taso-nykytilanne (atom false))
+(defonce karttataso-nykytilanne (atom false))
 (def haetut-asiat (atom nil))
 
 (defn oletusalue [asia]
@@ -73,7 +73,7 @@
 (def nykytilanteen-asiat-kartalla
   (reaction
     @haetut-asiat
-    (when @taso-nykytilanne
+    (when @karttataso-nykytilanne
       (into [] (map kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []

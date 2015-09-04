@@ -66,5 +66,5 @@
              :component-will-unmount (fn [_]
                                        (kartta/tyhjenna-yleiset-kontrollit)
                                        (tiedot/lopeta-asioiden-haku))}
-            (komp/lippu tiedot/nakymassa? tiedot/taso-nykytilanne)
+            (komp/lippu tiedot/nakymassa? tiedot/karttataso-nykytilanne)
             (constantly nil)))

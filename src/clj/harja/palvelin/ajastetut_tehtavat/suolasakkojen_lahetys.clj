@@ -37,8 +37,7 @@
 (defrecord SuolasakkojenLahetys []
   component/Lifecycle
   (start [this]
-    (assoc this :suolasakkojen-lahetys-tehtava (tee-suolasakkojen-lahetys-tehtava this))
-    this)
+    (assoc this :suolasakkojen-lahetys-tehtava (tee-suolasakkojen-lahetys-tehtava this)))
   (stop [this]
     (let [poista-suolasakkojen-lahetys (:suolasakkojen-lahetys-tehtava this)]
       (poista-suolasakkojen-lahetys))
