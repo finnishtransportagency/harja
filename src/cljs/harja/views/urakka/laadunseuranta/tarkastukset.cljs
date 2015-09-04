@@ -242,7 +242,7 @@
 
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
-    (komp/lippu laadunseuranta/taso-tarkastukset)
+    (komp/lippu laadunseuranta/karttataso-tarkastukset)
 
     (komp/kuuntelija
       :tarkastus-klikattu

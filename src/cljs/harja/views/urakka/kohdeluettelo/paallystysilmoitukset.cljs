@@ -575,7 +575,7 @@
 
 (defn paallystysilmoitukset []
   (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-nakymassa? paallystys/taso-paallystyskohteet)
+    (komp/lippu paallystys/paallystysilmoitukset-nakymassa? paallystys/karttataso-paallystyskohteet)
 
     (fn []
       (if @lomakedata
