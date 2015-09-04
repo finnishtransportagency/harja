@@ -15,7 +15,7 @@
     kayttaja
     :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                [:http-palvelin :db])))
+                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -32,7 +32,7 @@
           liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testitp36934853.jpg';")))
           tp-id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus ='Aura-auto suistui tieltä väistäessä jalankulkijaa.'")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti='Testikommentti';")))]
-
+      
       (is (= (+ tp-kannassa-ennen-pyyntoa 1) tp-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
       (is (number? tp-id))
