@@ -27,7 +27,7 @@
 (defonce valittu-valilehti (atom :tarkastukset))
 
 ;; Urakan tarkastusten karttataso
-(defonce taso-tarkastukset (atom false))
+(defonce karttataso-tarkastukset (atom false))
 
 (defonce valittu-tarkastus (atom nil))
 
@@ -79,7 +79,7 @@
 (defonce tarkastukset-kartalla
          (reaction
            @valittu-tarkastus
-           (when @taso-tarkastukset
+           (when @karttataso-tarkastukset
              (into [] tarkastus-xf @urakan-tarkastukset))))
 
 (defn paivita-tarkastus-listaan!

@@ -74,7 +74,7 @@
                           kohderivi)))
                  kohderivit))))
 
-(defonce taso-paallystyskohteet (atom false))
+(defonce karttataso-paallystyskohteet (atom false))
 
 (defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                          [valittu-sopimus-id _] @u/valittu-sopimusnumero
@@ -84,7 +84,7 @@
                                           (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystyskohteet-kartalla
-  (reaction (let [taso @taso-paallystyskohteet
+  (reaction (let [taso @karttataso-paallystyskohteet
                   kohderivit @kohderivit
                   toteumarivit @toteumarivit]
               (when taso
