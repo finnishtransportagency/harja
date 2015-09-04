@@ -4,6 +4,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.lomake :as lomake]
+            [harja.views.urakat :as urakat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
@@ -102,12 +103,15 @@
 
           @lomake-tiedot])])))
 
+(defn raporttivalinnat-ja-raportti []
+  [:span
+   [raporttivalinnat]
+   (when @valittu-raportti
+     [raporttinakyma])])
+
 (defn raportit []
   (komp/luo
     (fn []
-      (if @nav/valittu-urakka
-        [:span
-         [raporttivalinnat]
-         (when @valittu-raportti
-           [raporttinakyma])]
-        [:span "Valitse urakka, josta haluat tehdä raportin"]))))
+      (or
+        (urakat/valitse-hallintayksikko-ja-urakka)
+        (raporttivalinnat-ja-raportti)))))
