@@ -121,3 +121,11 @@ Callbackille annetaan samat parametrit kuin render funktiolle."
               (fn [this tapahtuma]
                 (when-not (yleiset/sisalla? this (:tapahtuma tapahtuma))
                   (ulkopuolella-fn)))))
+
+(defn ulos
+  "Mixin, joka kutsuu annettua funktiota komponentin poistuessa."
+  [funktio]
+  {:component-will-unmount
+   (fn [_]
+     (funktio))})
+  
