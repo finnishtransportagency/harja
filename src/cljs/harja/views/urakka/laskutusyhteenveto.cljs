@@ -95,10 +95,8 @@
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
-         [valinnat-komp/hoitokauden-kuukausi
-          (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)
-          u/valittu-hoitokauden-kuukausi
-          u/valitse-hoitokauden-kuukausi!]
+         [valinnat/hoitokauden-kuukausi]
+
          (when (and ur @u/valittu-hoitokausi valittu-aikavali)
            [:span.tiedot
             [grid/grid
