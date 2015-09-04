@@ -11,8 +11,11 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.fmt :as fmt]
+            [harja.tiedot.raportit :as raportit]
             [harja.ui.grid :as grid]
-            [harja.views.kartta :as kartta])
+            [cljs.core.async :refer [<! >! chan]]
+            [harja.views.kartta :as kartta]
+            [cljs-time.core :as t])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -37,22 +40,25 @@
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
     :suorita   (fn []
-                 (let [sisalto (atom nil)]
-                 [:span
-                  [grid/grid
-                   {:otsikko       "Yksikköhintaisten töiden kuukausiraportti"
-                    :tyhja         (if (empty? @sisalto) "Raporttia ei voitu luoda.")
-                    :voi-muokata? false
-                    }
-                   [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
-                    {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                   @sisalto]]))}])
+                 (let [urakka @nav/valitse-urakka
+                       alkupvm (t/now)
+                       loppupvm (t/plus alkupvm (t/years 30)) ; FIXME Käytä valittua kuukautta
+                                        sisalto (<! (go (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka alkupvm loppupvm)))]
+                   [:span
+                    [grid/grid
+                     {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
+                      :tyhja        (if (empty? @sisalto) "Raporttia ei voitu luoda.")
+                      :voi-muokata? false
+                      }
+                     [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
+                      {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Toteutunut määrä" :nimi :toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                     @sisalto]]))}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
@@ -127,5 +133,5 @@
   (komp/luo
     (fn []
       (or
-        (urakat/valitse-hallintayksikko-ja-urakka)
+        (urakat/valitse-hallintayksikko-ja-urakka) ; FIXME Voi olla tarve luoda raportti hallintayksikön alueesta tai koko Suomesta.
         (raporttivalinnat-ja-raportti)))))

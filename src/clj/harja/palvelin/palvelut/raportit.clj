@@ -6,7 +6,9 @@
              [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
              [harja.kyselyt.konversio :as konv]
              [harja.domain.roolit :as roolit]
+             [harja.palvelin.palvelut.toteumat :as toteumat]
              [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
+             [harja.kyselyt.toteumat :as toteumat-q]
              [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
              [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]))
 
@@ -36,6 +38,19 @@
                                                          (konv/sql-date aikavali_loppupvm)
                                                          urakka-id)))
 
+(defn muodosta-yksikkohintaisten-toiden-kuukausiraportti [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id alkupvm loppupvm)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteutuneet-tehtavat (into []
+                                   toteumat/muunna-desimaaliluvut-xf
+                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat db
+                                                                               urakka-id
+                                                                               (konv/sql-timestamp alkupvm)
+                                                                               (konv/sql-timestamp loppupvm)
+                                                                               "yksikkohintainen"))]
+    (log/debug "Haetty urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
+    toteutuneet-tehtavat)) ; TODO Summaa saman päivän tehtävät yhteen
+
 (defrecord Raportit []
   component/Lifecycle
   (start [{raportointi :raportointi
@@ -55,6 +70,10 @@
                        :suorita-raportti
                        (fn [user raportti]
                          (suorita-raportti raportointi user raportti))
+
+                       :yksikkohintaisten-toiden-kuukausiraportti
+                       (fn [user tiedot]
+                         (muodosta-yksikkohintaisten-toiden-kuukausiraportti db user tiedot))
 
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
