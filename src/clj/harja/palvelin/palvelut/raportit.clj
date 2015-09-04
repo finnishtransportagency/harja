@@ -47,9 +47,11 @@
                                                                                urakka-id
                                                                                (konv/sql-timestamp alkupvm)
                                                                                (konv/sql-timestamp loppupvm)
-                                                                               "yksikkohintainen"))]
-    (log/debug "Haetty urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
-    toteutuneet-tehtavat)) ; TODO Summaa saman päivän tehtävät yhteen
+                                                                               "yksikkohintainen"))
+        toteutuneet-tehtavat-summattu toteutuneet-tehtavat] ; TODO Summaa saman päivän tehtävät yhteen
+    (log/debug "Haettu urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
+    (log/debug "Samana päivänä toteutuneet tehtävät summattu : " toteutuneet-tehtavat-summattu)
+    toteutuneet-tehtavat))
 
 (defrecord Raportit []
   component/Lifecycle

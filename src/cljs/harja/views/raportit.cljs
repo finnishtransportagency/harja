@@ -50,8 +50,6 @@
                                     @u/urakan-toimenpiteet-ja-tehtavat)]
 
                      (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-                               _ (log "[RAPORTTI] Tehtävät :" (pr-str tehtavat))
-                               _ (log "[RAPORTTI] Toteumat: " (pr-str toteumat))
                                toteumalliset-tehtavat (keep (fn [tehtava]
                                                               (let [tehtavan-toteuma (first (filter (fn [toteuma]
                                                                                                       (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
