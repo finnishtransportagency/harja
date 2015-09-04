@@ -3,7 +3,7 @@
     {
       "tielupa": {
         "diaarinumero": 123456789,
-        "tyyppi": "kaapelien-johtojen-ja-putkien-sijoituslupa",
+        "tielupatyyppi": "kaapelien-johtojen-ja-putkien-sijoituslupa",
         "otsikko": "Lupa kaapelien sijoittamiseen Nelostielle Kempeleeseen",
         "myonnetty": "2016-01-30T12:00:00Z",
         "voimassa": {

@@ -27,13 +27,13 @@
                                    (get-in data [:otsikko :viestintunniste :id])
                                    (get-in data [:otsikko :lahetysaika])
                                    (get-in havainto [:havainto :tyokone :id])
-                                   (get-in havainto [:havainto :tyokone :tyyppi])
+                                   (get-in havainto [:havainto :tyokone :tyokonetyyppi])
                                    (get-in havainto [:havainto :sijainti :koordinaatit :x])
                                    (get-in havainto [:havainto :sijainti :koordinaatit :y])
                                    (get-in havainto [:havainto :suunta])
                                    (get-in havainto [:havainto :urakkaid])
                                    (get-in havainto [:havainto :sopimusid])
-                                   (arrayksi db (get-in havainto [:havainto :tehtavat]))))
+                                   (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))))
   {:ilmoitukset "Kirjauksen tallennus onnistui"})
 
 (defrecord Tyokoneenseuranta []
