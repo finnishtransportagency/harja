@@ -1,12 +1,13 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietolajit
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as tietolajin-hakukutsu]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as kutsusanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakuvastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.tierekisteri.tyokalut.kutsukasittely :as tierekisteri-palvelu]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [com.stuartsierra.component :as component]
 
-    ;; todo: nuketa
+    ;; todo: poista
+            [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as testi])
   (:use [slingshot.slingshot :only [try+ throw+]]))
@@ -20,12 +21,15 @@
 
 (defn hae-tietolajit [integraatioloki url tunniste muutospvm]
   (validoi-tunniste tunniste)
-  (let [kutsudata (tietolajin-hakukutsu/muodosta tunniste muutospvm)
-        palvelu-url (str url "/haetietolajit")]
-    (tierekisteri-palvelu/kutsu-palvelua integraatioloki "hae-tietolaji" palvelu-url kutsudata)))
+  (log/debug "Hae tietolajin: " tunniste " ominaisuudet muutospäivämäärällä: " nil " Tierekisteristä")
+  (let [kutsudata (kutsusanoma/muodosta tunniste muutospvm)
+        palvelu-url (str url "/haetietolajit")
+        vastausxml (tierekisteri-palvelu/kutsu-palvelua integraatioloki "hae-tietolaji" palvelu-url kutsudata)
+        vastausdata (vastaussanoma/lue vastausxml)]
+    vastausdata))
 
-(defn kutsu []
+(defn kutsu [tunniste]
   (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (hae-tietolajit integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" "tl507" nil)))
+    (hae-tietolajit integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" tunniste nil)))
