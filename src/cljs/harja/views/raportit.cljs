@@ -48,11 +48,11 @@
                  [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika :leveys "20%"}
                   {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                  {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
                   {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                  {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                  {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:toteutunut_maara rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
                  @valitun-raportin-sisalto])}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
@@ -88,12 +88,20 @@
     (go
       (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
       (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-            toteumat-kaikkine-tietoineen (-> (mapv ; Tehtävän tiedot (mm. yksikkö)
-                                               (fn [toteuma]
-                                                 (let [tehtavan-tiedot (first (filter (fn [tehtava]
-                                                                                        (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                                      tehtavat))]
-                                                   (merge toteuma (dissoc tehtavan-tiedot :id)))) toteumat))]
+            toteumat-kaikkine-tietoineen (mapv
+                                           (fn [toteuma]
+                                             (let [tehtavan-tiedot ; mm. yksikkö
+                                                   (first (filter (fn [tehtava]
+                                                                    (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                  tehtavat))
+                                                   yksikkohinta (or (:yksikkohinta (first (filter
+                                                                                            (fn [tyo] (and (= (:tehtava tyo) (::toimenpidekoodi_id toteuma))
+                                                                                                           (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                            @u/urakan-yks-hint-tyot))) 0)]
+                                               (-> toteuma
+                                                   (merge (dissoc tehtavan-tiedot :id))
+                                                   (assoc :yksikkohinta yksikkohinta))))
+                                           toteumat)]
         (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
       (:render @valittu-raporttityyppi))))
