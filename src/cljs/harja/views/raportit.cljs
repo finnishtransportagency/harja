@@ -15,7 +15,9 @@
             [harja.ui.grid :as grid]
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.urakka.suunnittelu :as s])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -90,17 +92,17 @@
       (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
             toteumat-kaikkine-tietoineen (mapv
                                            (fn [toteuma]
-                                             (let [tehtavan-tiedot ; mm. yksikkö
+                                             (let [tehtavan-tiedot
                                                    (first (filter (fn [tehtava]
                                                                     (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
                                                                   tehtavat))
-                                                   yksikkohinta (or (:yksikkohinta (first (filter
-                                                                                            (fn [tyo] (and (= (:tehtava tyo) (::toimenpidekoodi_id toteuma))
-                                                                                                           (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                   yksikkohinta-hoitokaudella (or (:yksikkohinta (first (filter
+                                                                                            (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
+                                                                                                           (pvm/sama-pvm? (:alkupvm tyo) (first (:hoitokausi @raporttivalinnat-tiedot)))))
                                                                                             @u/urakan-yks-hint-tyot))) 0)]
                                                (-> toteuma
                                                    (merge (dissoc tehtavan-tiedot :id))
-                                                   (assoc :yksikkohinta yksikkohinta))))
+                                                   (assoc :yksikkohinta yksikkohinta-hoitokaudella))))
                                            toteumat)]
         (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
@@ -143,6 +145,9 @@
           @raporttivalinnat-tiedot])])))
 
 (defn raporttivalinnat-ja-raportti []
+  (go (reset! u/urakan-yks-hint-tyot ; FIXME Tämä on pöllitty suoraan views.urakka-namespacesta. Voisiko jotenkin yhdistää yhdeksi funktioksi?
+              (s/prosessoi-tyorivit @nav/valittu-urakka
+                                    (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id @nav/valittu-urakka))))))
   [:span
    [raporttivalinnat]
    (when @raportti-valmis-naytettavaksi?

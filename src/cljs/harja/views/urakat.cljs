@@ -61,7 +61,7 @@
         (valitse-urakka)))))
 
 (defn urakat
-  "Harjan karttasivu."
+  "Urakan koko sisältö."
   []
    ;; TODO: urakkasivun koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä
    (let [v-ur @nav/valittu-urakka]
