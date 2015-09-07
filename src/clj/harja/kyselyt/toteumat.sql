@@ -145,6 +145,7 @@ FROM toteuma_tehtava tt
 SELECT
   tt.id as id,
   tt.maara as toteutunut_maara,
+  t.lisatieto as lisatieto,
   t.alkanut,
   (SELECT nimi
    FROM toimenpidekoodi tpk

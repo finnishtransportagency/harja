@@ -70,7 +70,9 @@
                               (fn [tehtavat]
                                 (if (> (count tehtavat) 1) ; Yhdistettäviä tehtäviä löytyi
                                   (let [yhdistettava (first tehtavat)] ; Kaikkia kentti ei ole mielekästä summata, summaa vain tarvittavat
-                                    (assoc yhdistettava :toteutunut_maara (reduce + (mapv :toteutunut_maara tehtavat))))
+                                    (-> yhdistettava
+                                        (assoc :toteutunut_maara (reduce + (mapv :toteutunut_maara tehtavat)))
+                                        (assoc :lisatieto (mapv :lisatieto tehtavat))))
                                   (first tehtavat)))
                               saman-paivan-samat-tehtavat-vector)]
     yhdistetyt-tehtavat))
