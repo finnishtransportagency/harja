@@ -399,7 +399,3 @@ BEGIN
 
   END;
 $$ LANGUAGE plpgsql;
-
- SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4, 'MAKU 2010');
- SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-08-01', '2015-08-31', 4, 'MAKU 2010');
- SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-09-01', '2015-09-30', 4, 'MAKU 2010');  
