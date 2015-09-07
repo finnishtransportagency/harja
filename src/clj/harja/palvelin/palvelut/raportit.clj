@@ -38,6 +38,25 @@
                                                          (konv/sql-date aikavali_loppupvm)
                                                          urakka-id)))
 
+(defn yhdista-saman-paivan-samat-tehtavat [tehtavat]
+  ; TODO Hahmotelma, ei testattu vielä
+  (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
+        saman-paivan-samat-tehtavat-map (group-by #(select-keys % [:toimenpidekoodi_id :alkanut]) tehtavat)
+        ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät)
+        saman-paivan-samat-tehtavat-vector (mapv
+                                             #(get saman-paivan-samat-tehtavat-map %)
+                                             (keys saman-paivan-samat-tehtavat-map))
+        ; Käy vector läpi ja yhdistä saman päivän samat tehtävät
+        yhdistetyt-tehtavat (mapv
+                              (fn [tehtavat]
+                                (if (> (count tehtavat) 1) ; Yhdistettäviä tehtäviä
+                                  (let [yhdistettava (first tehtavat)]
+                                    (assoc yhdistettava :maara (reduce + (mapv :maara tehtavat))))
+                                  (first tehtavat)))
+                              saman-paivan-samat-tehtavat-vector)]
+    yhdistetyt-tehtavat))
+
+
 (defn muodosta-yksikkohintaisten-toiden-kuukausiraportti [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät raporttia varten: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
