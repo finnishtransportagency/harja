@@ -25,7 +25,7 @@
 (tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " valitun-raportin-sisalto)
 
 (def +raporttityypit+
-  ; HUOM: Hardcoodattu testidata vectori mappeja
+  ; FIXME: Hardcoodattu testidata, tämän on tarkoitus tulla myöhemmin serveriltä(?)
   [{:nimi      :laskutusyhteenveto
     :otsikko   "Yks.hint. töiden toteumat -raportti"
     :konteksti #{:urakka}
@@ -43,7 +43,7 @@
     :render   (fn []
                 [grid/grid
                  {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                  :tyhja        (if (empty? @valitun-raportin-sisalto) "Raporttia ei voitu luoda.")
+                  :tyhja        (if (empty? @valitun-raportin-sisalto) "Ei raportoitavaa tietoa.")
                   :voi-muokata? false}
                  [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika :leveys "20%"}
                   {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -63,9 +63,9 @@
                     :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
-                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Päivää on turha näyttää, voisi olla parempoi esim. 12/2013, 01/2014 jne. Korjataan sitten kun kaikki muu toimii.
+                                (pvm/hoitokauden-kuukausivalit hk)
                                 [])
-                    :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi -")))
+                    :valinta-nayta #(if % (str (t/month (first %)) "/" (t/year (first %))) "- Valitse kuukausi -")))
     kentta))
 
 (def raporttivalinnat-tiedot (atom nil))
@@ -83,13 +83,12 @@
 
     ; FIXME Haku raporttityypin mukaan
     (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-                toteumat-kaikkine-tietoineen (mapv
-                                               (fn [toteuma]
-                                                 (let [tehtavan-tiedot (first (filter (fn [tehtava]
-                                                                                        (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                                      tehtavat))]
-                                                   (merge toteuma (dissoc tehtavan-tiedot :id))))
-                                               toteumat)]
+                toteumat-kaikkine-tietoineen (-> (mapv ; Tehtävän tiedot (mm. yksikkö)
+                                                   (fn [toteuma]
+                                                     (let [tehtavan-tiedot (first (filter (fn [tehtava]
+                                                                                            (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                          tehtavat))]
+                                                       (merge toteuma (dissoc tehtavan-tiedot :id)))) toteumat))]
           (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
       (:render @valittu-raporttityyppi))))

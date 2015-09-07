@@ -39,18 +39,19 @@
                                                          urakka-id)))
 
 (defn yhdista-saman-paivan-samat-tehtavat [tehtavat]
+  ; FIXME Tälle pitäisi tehdä yksikkötesti
   (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
         saman-paivan-samat-tehtavat-map (group-by #(select-keys % [:toimenpidekoodi_id :alkanut]) tehtavat)
-        ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät)
-        _ (log/debug "Saatiin aikaiseksi " (count (keys saman-paivan-samat-tehtavat-map)) " ryhmää. ryhmät: " (keys saman-paivan-samat-tehtavat-map))
+        ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät, voi sisältää vain yhden)
+        _ (log/debug "Saatiin aikaiseksi " (count (keys saman-paivan-samat-tehtavat-map)) " ryhmää. Ryhmät: " (keys saman-paivan-samat-tehtavat-map))
         saman-paivan-samat-tehtavat-vector (mapv
                                              #(get saman-paivan-samat-tehtavat-map %)
                                              (keys saman-paivan-samat-tehtavat-map))
         ; Käy vector läpi ja yhdistä saman päivän samat tehtävät
         yhdistetyt-tehtavat (mapv
                               (fn [tehtavat]
-                                (if (> (count tehtavat) 1) ; Yhdistettäviä tehtäviä
-                                  (let [yhdistettava (first tehtavat)]
+                                (if (> (count tehtavat) 1) ; Yhdistettäviä tehtäviä löytyi
+                                  (let [yhdistettava (first tehtavat)] ; Kaikkia kentti ei ole mielekästä summata, summaa vain tarvittavat
                                     (assoc yhdistettava :toteutunut_maara (reduce + (mapv :toteutunut_maara tehtavat))))
                                   (first tehtavat)))
                               saman-paivan-samat-tehtavat-vector)]
