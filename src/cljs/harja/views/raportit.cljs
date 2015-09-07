@@ -70,17 +70,7 @@
   [{:nimi      :yk-hint-kuukausiraportti
     :otsikko   "Yks.hint. töiden toteumat -raportti"
     :konteksti #{:urakka}
-    :parametrit
-               [{:otsikko  "Hoitokausi"
-                 :nimi     :hoitokausi
-                 :tyyppi   :valinta
-                 :validoi  [[:ei-tyhja "Anna arvo"]]
-                 :valinnat :valitun-urakan-hoitokaudet}
-                {:otsikko  "Kuukausi"
-                 :nimi     :kuukausi
-                 :tyyppi   :valinta
-                 :validoi  [[:ei-tyhja "Anna arvo"]]
-                 :valinnat :valitun-aikavalin-kuukaudet}]
+    :parametrit [:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet]
     :render    (fn []
                  [grid/grid
                   {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
@@ -140,8 +130,10 @@
                                  :class      "valitse-raportti-alasveto"}
             +raporttityypit+]]]
          [:div.raportin-asetukset ; FIXME Nämä pitäisi ottaa valitusta raportin tyypistä.
-          [valinnat/urakan-hoitokausi @nav/valittu-urakka]
-          [valinnat/hoitokauden-kuukausi]]]))))
+          (when (some #(= % :valitun-urakan-hoitokaudet) (:parametrit @valittu-raporttityyppi))
+            [valinnat/urakan-hoitokausi @nav/valittu-urakka])
+          (when (some #(= % :valitun-aikavalin-kuukaudet) (:parametrit @valittu-raporttityyppi))
+            [valinnat/hoitokauden-kuukausi])]]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [hae-urakan-tyot (fn [ur]
