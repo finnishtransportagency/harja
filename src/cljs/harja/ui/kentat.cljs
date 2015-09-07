@@ -625,24 +625,22 @@
         tr-osoite (atom {})
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
-        optiot (cljs.core/atom optiot)]
+        optiot (cljs.core/atom optiot)
+
+        virhe (atom nil)]
     
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
                                        [vkm-haku tapahtumat]
                                        [tapahtumat]))]
-            #_(log "arvo: " (pr-str arvo) ", kanava: " (cond (= kanava vkm-haku) "vkm-haku"
-                                                           (= kanava tapahtumat) "tapahtumat"
-                                                           :default "jotain muuta"))
-
             (when arvo
               (if (= kanava vkm-haku)
                 ;; Saatiin VKM vastaus paikkahakuun, käsittele se
                 (let [{:keys [kun-valmis paivita]} @optiot
                       osoite arvo]
                   (if (vkm/virhe? osoite)
-                    ;; FIXME: käsittele virhe
-                    (recur nil)
+                    (do (reset! virhe (vkm/virhe osoite))
+                        (recur nil))
                     
                     (do
                       (case @tila
@@ -656,11 +654,15 @@
                                       (paivita osoite)
                                       (reset! tila :alku-valittu))
                         
-                        :alku-valittu (let [osoite (swap! tr-osoite
-                                                          merge 
-                                                          {:loppuosa (get osoite "osa")
-                                                           :loppuetaisyys (get osoite "etaisyys")})]
-                                        (kun-valmis osoite)))
+                        :alku-valittu (if-not (= (:numero @tr-osoite)
+                                                 (get osoite "tie"))
+                                        (reset! virhe "Loppuosan tulee olla samalla tiellä")
+                                        
+                                        (let [osoite (swap! tr-osoite
+                                                            merge 
+                                                            {:loppuosa (get osoite "osa")
+                                                             :loppuetaisyys (get osoite "etaisyys")})]
+                                          (kun-valmis osoite))))
                       (recur nil))))
                 
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
@@ -684,10 +686,14 @@
                         (log "optiot: " @optiot)
                         ((:kun-peruttu @optiot))))
      (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
-       [:span (case @tila
-                :ei-valittu "Klikkaa alkupiste kartalta"
-                :alku-valittu "Klikkaa loppupiste kartalta"
-                "")]))))
+       [:span
+        (case @tila
+          :ei-valittu "Valitse alkupiste"
+          :alku-valittu "Valitse loppupiste"
+          "")
+
+        (when-let [virhe @virhe]
+          [:div.virhe virhe])]))))
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
@@ -764,7 +770,6 @@
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
                 [tr-karttavalitsin {:kun-peruttu #(do
-                                                    (log "PERUTAAN!")
                                                     (reset! data @osoite-ennen-karttavalintaa)
                                                     (reset! karttavalinta-kaynnissa false))
                                     :paivita #(swap! data merge %)
