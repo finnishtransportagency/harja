@@ -69,9 +69,14 @@
     kentta))
 
 (def raporttivalinnat-tiedot (atom nil))
-(def raporttivalinnat-virheet (atom nil))
-
 (tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raporttivalinnat-tiedot)
+(def raporttivalinnat-virheet (atom nil))
+(def raportti-valmis-naytettavaksi?
+  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
+                  lomake-virheet @raporttivalinnat-virheet]
+              (and valittu-raporttityyppi
+                   (not (nil? lomake-virheet))
+                   (empty? lomake-virheet)))))
 
 (defn yk-hint-kuukausiraportti []
   (let [urakka-id (:id @nav/valittu-urakka)
@@ -96,13 +101,6 @@
 (defn raporttinakyma []
   (case (:nimi @valittu-raporttityyppi)
     :yk-hint-kuukausiraportti (yk-hint-kuukausiraportti)))
-
-(def raportti-valmis-naytettavaksi?
-  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                  lomake-virheet @raporttivalinnat-virheet]
-              (and valittu-raporttityyppi
-                         (not (nil? lomake-virheet))
-                         (empty? lomake-virheet)))))
 
 (defn raporttivalinnat
   []
