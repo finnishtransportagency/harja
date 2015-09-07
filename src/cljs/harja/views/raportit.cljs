@@ -88,7 +88,7 @@
                                                  (let [tehtavan-tiedot (first (filter (fn [tehtava]
                                                                                         (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
                                                                                       tehtavat))]
-                                                   (merge toteuma tehtavan-tiedot)))
+                                                   (merge toteuma (dissoc tehtavan-tiedot :id))))
                                                toteumat)]
           (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
