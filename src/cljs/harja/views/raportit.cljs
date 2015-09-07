@@ -26,7 +26,7 @@
 
 (def +raporttityypit+
   ; FIXME: Hardcoodattu testidata, tämän on tarkoitus tulla myöhemmin serveriltä(?)
-  [{:nimi      :laskutusyhteenveto
+  [{:nimi      :yk-hint-kuukausiraportti
     :otsikko   "Yks.hint. töiden toteumat -raportti"
     :konteksti #{:urakka}
     :parametrit
@@ -73,27 +73,29 @@
 
 (tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raporttivalinnat-tiedot)
 
-(defn raporttinakyma []
+(defn yk-hint-kuukausiraportti []
   (let [urakka-id (:id @nav/valittu-urakka)
         alkupvm (first (:kuukausi @raporttivalinnat-tiedot)) ; FIXME Näiden pitäisi päivittyä kun putodotusvalikon item vaihtuu.
         loppupvm (second (:kuukausi @raporttivalinnat-tiedot))
         tehtavat (map
                    (fn [tasot] (nth tasot 3))
                    @u/urakan-toimenpiteet-ja-tehtavat)]
-
-    ; FIXME Haku raporttityypin mukaan
     (go
       (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
       (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-                toteumat-kaikkine-tietoineen (-> (mapv ; Tehtävän tiedot (mm. yksikkö)
-                                                   (fn [toteuma]
-                                                     (let [tehtavan-tiedot (first (filter (fn [tehtava]
-                                                                                            (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                                          tehtavat))]
-                                                       (merge toteuma (dissoc tehtavan-tiedot :id)))) toteumat))]
-          (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
+            toteumat-kaikkine-tietoineen (-> (mapv ; Tehtävän tiedot (mm. yksikkö)
+                                               (fn [toteuma]
+                                                 (let [tehtavan-tiedot (first (filter (fn [tehtava]
+                                                                                        (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                      tehtavat))]
+                                                   (merge toteuma (dissoc tehtavan-tiedot :id)))) toteumat))]
+        (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
       (:render @valittu-raporttityyppi))))
+
+(defn raporttinakyma []
+  (case (:nimi @valittu-raporttityyppi)
+    :yk-hint-kuukausiraportti (yk-hint-kuukausiraportti)))
 
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
