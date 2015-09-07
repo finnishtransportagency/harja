@@ -254,14 +254,14 @@
                                                                             (or (:yksikkohinta (first (filter
                                                                                                         (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                        @u/urakan-yks-hint-tyot))) 0)))
+                                                                                                        @u/urakan-yks-hint-tyot))) nil)))
                                                      rivit))
         lisaa-tyoriveille-suunniteltu-maara (fn [rivit] (map
                                                           (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
                                                                                  (or (:maara (first (filter
                                                                                                       (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                      @u/urakan-yks-hint-tyot))) 0)))
+                                                                                                      @u/urakan-yks-hint-tyot))) nil)))
                                                           rivit))
         lisaa-tyoriveille-suunnitellut-kustannukset (fn [rivit]
                                                       (map
@@ -269,14 +269,14 @@
                                                                                (or (:yhteensa (first (filter
                                                                                                        (fn [tyo] (and (= (:tehtava tyo) (:id rivi))
                                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                       @u/urakan-yks-hint-tyot))) 0)))
+                                                                                                       @u/urakan-yks-hint-tyot))) nil)))
                                                         rivit))
         lisaa-tyoriveille-toteutunut-maara (fn [rivit]
                                              (map
                                                (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (or (:maara (first (filter
                                                                                                                          (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
                                                                                                                          @tehtavien-summat)))
-                                                                                                        0)))
+                                                                                                        nil)))
                                                rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
