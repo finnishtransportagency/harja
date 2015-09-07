@@ -44,6 +44,23 @@
 ;; Alunperin englanniksi Leafletille tehty karttaimplementaatio on kopioitu
 ;; ja pala palalta portattu toiminnallisuutta ol3 päälle.
 
+;; Näihin atomeihin voi asettaa oman käsittelijän kartan
+;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
+;; kartan normaali toiminta.
+;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla reagent riippuvuuksia.
+(defonce klik-kasittelija (cljs.core/atom nil))
+(defonce hover-kasittelija (cljs.core/atom nil))
+
+(defn aseta-klik-kasittelija! [funktio]
+  (reset! klik-kasittelija funktio))
+(defn poista-klik-kasittelija! []
+  (aseta-klik-kasittelija! nil))
+(defn aseta-hover-kasittelija! [funktio]
+  (reset! hover-kasittelija funktio))
+(defn poista-hover-kasittelija! []
+  (aseta-hover-kasittelija! nil))
+
+
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -59,6 +76,9 @@
 
 (defn invalidate-size! []
   (go (>! komento-ch [::invalidate-size])))
+
+(defn aseta-kursori! [kursori]
+  (go (>! komento-ch [::cursor kursori])))
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
@@ -153,6 +173,17 @@
 (defn- laske-kartan-alue [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
 
+(defn- tapahtuman-kuvaus
+  "Tapahtuman kuvaus ulkoisille käsittelijöille"
+  [e]
+  (log e)
+  (let [c (.-coordinate e)
+        tyyppi (.-type e)]
+    {:tyyppi (case tyyppi
+               "pointermove" :hover
+               "click" :click)
+     :sijainti [(aget c 0) (aget c 1)]}))
+
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution" (fn [e]
                                             (when on-zoom
@@ -165,20 +196,24 @@
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "click" (fn [e]
-                     (when on-click
-                       (on-click e))
-                     (when on-select
-                       (when-let [g (tapahtuman-geometria this e)]
-                         (on-select g e))))))
+                     (if-let [kasittelija @klik-kasittelija]
+                       (kasittelija (tapahtuman-kuvaus e))
+                       (do (when on-click
+                             (on-click e))
+                           (when on-select
+                             (when-let [g (tapahtuman-geometria this e)]
+                               (on-select g e))))))))
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove" (fn [e]
-                           (reagent/set-state this
-                                              (if-let [g (tapahtuman-geometria this e)]
-                                                {:hover (assoc g
-                                                          :x (aget (.-pixel e) 0)
-                                                          :y (aget (.-pixel e) 1))}
-                                                {:hover nil})))))
+                           (if-let [kasittelija @hover-kasittelija]
+                             (kasittelija (tapahtuman-kuvaus e))
+                             (reagent/set-state this
+                                                (if-let [g (tapahtuman-geometria this e)]
+                                                  {:hover (assoc g
+                                                                 :x (aget (.-pixel e) 0)
+                                                                 :y (aget (.-pixel e) 1))}
+                                                  {:hover nil}))))))
 
 
 (defn keskita!
@@ -255,6 +290,13 @@
                  ::invalidate-size (.updateSize ol3)
 
                  ::hide-popup (poista-popup! this)
+
+                 ::cursor (let [[cursor] args
+                                vp (.-viewport_ ol3)
+                                style (.-style vp)]
+                            (set! (.-cursor style) (case cursor
+                                                     :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                                     "")))
                  ;:default (log "tuntematon kartan komento: " komento)
                  )
                (recur (alts! [komento-ch unmount-ch]))))

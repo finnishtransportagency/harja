@@ -2,10 +2,8 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "enum": [
-    "hoito",
-    "paallystys",
-    "paikkaus",
-    "tiemerkinta",
-    "valaistus"
+    "turvallisuuspoikkeama",
+    "prosessipoikkeama",
+    "tyoturvallisuuspoikkeama"
   ]
 }

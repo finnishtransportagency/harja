@@ -52,14 +52,14 @@
         }
       },
       "vaylamuoto": "tie",
-      "luokittelu": "tyotapaturma",
+      "luokittelu": ["tyotapaturma"],
       "ilmoittaja": {
         "id":5468135,
         "etunimi": "Veera",
         "sukunimi": "Veistelijä"
       },
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
-      "paattyny": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
       "kasitelty": "2016-01-30T12:00:00Z",
       "tyontekijanammatti": "Aura-auton kuljettaja",
       "tyotehtava": "Auraus",
@@ -72,12 +72,17 @@
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
           "suoritettu": "2016-01-30T12:00:00Z",
           "vastaavahenkilo": {
-            "id" : 384698,
             "etunimi": "Henri",
             "sukunimi": "Hakkuri"
           }
         }
       ],
+
+      "kommentit":[
+        {"kommentti": "Kommentin sisältö"}
+      ],
+
+
       "liitteet": [
         {
           "liite": {

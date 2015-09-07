@@ -6,11 +6,14 @@
             [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta] :as yleiset]
             [harja.ui.protokollat :refer [hae]]
             [harja.ui.komponentti :as komp]
+            [harja.ui.ikonit :as ikonit]
             [harja.loki :refer [log]]
+            [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
-            [cljs.core.async :refer [<! >!] :as async]
+            [cljs.core.async :refer [<! >! chan] :as async]
 
-    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+            [harja.views.kartta :as kartta]
+            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -615,6 +618,26 @@
            (pvm/pvm-aika p)
            "")])
 
+(defn tr-karttavalitsin [{:keys [kun-peruttu kun-valittu]}]
+  (let [tapahtumat (chan)]
+    (go (loop [[tapahtuma event] (<! tapahtumat)]
+          (when tapahtuma
+            (log "tapahtuipa niinä päivinä: " (pr-str tapahtuma) " :: " (pr-str event))
+            (if (= tapahtuma :click)
+              (kun-peruttu)
+              (recur (<! tapahtumat))))))
+    (komp/luo
+     (komp/sisaan-ulos #(swap! nav/tarvitsen-karttaa conj :tr-karttavalitsin)
+                       #(swap! nav/tarvitsen-karttaa disj :tr-karttavalitsin))
+     (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
+                       #(kartta/aseta-kursori! nil))
+     (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
+     (komp/kuuntelija :esc-painettu
+                      (fn [_]
+                        (kun-peruttu)))
+   (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
+     [:span "Klikkaa karttasijainti kartalta"]))))
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
         sijainti-haku (atom false)
@@ -627,7 +650,8 @@
                                                              (if-not osoite
                                                                (reset! sijainti nil)
                                                                (go
-                                                                 (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))]
+                                                                 (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))
+        karttavalinta-kaynnissa (atom false)]
     (komp/luo
 
       {:component-will-receive-props
@@ -676,6 +700,12 @@
                                          :placeholder "let"
                                          :value       loppuetaisyys
                                          :on-change   (muuta! :loppuetaisyys)}]]
+              (if-not @karttavalinta-kaynnissa
+                [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                                 (reset! karttavalinta-kaynnissa true))}
+                      (ikonit/map-marker) " Valitse kartalta"]]
+                [tr-karttavalitsin {:kun-peruttu #(reset! karttavalinta-kaynnissa false)}])
+              
               (when hae-sijainti
                 (if @sijainti-haku
                   [:td [yleiset/ajax-loader-pisteet " Haetaan sijaintia"]]

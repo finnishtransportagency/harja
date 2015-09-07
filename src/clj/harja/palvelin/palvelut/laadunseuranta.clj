@@ -27,7 +27,10 @@
                                       (when p (keyword p)))))
                    (map #(update-in % [:paatos :kasittelytapa]
                                     (fn [k]
-                                      (when k (keyword k)))))))
+                                      (when k (keyword k)))))
+                   (map #(if (nil? (:kasittelyaika (:paatos %)))
+                           (dissoc % :paatos)
+                           %))))
 
 (def tarkastus-xf
   (comp
@@ -75,23 +78,23 @@
                               (havainnot/hae-havainnon-tiedot db urakka-id havainto-id)))]
     (when havainto
       (assoc havainto
-        :kommentit (into []
-                         (comp (map konv/alaviiva->rakenne)
-                               (map #(assoc % :tekija (name (:tekija %))))
-                               (map (fn [{:keys [liite] :as kommentti}]
-                                      (if (:id liite)
-                                        kommentti
-                                        (dissoc kommentti :liite)))))
-                         (havainnot/hae-havainnon-kommentit db havainto-id))
-        :sanktiot (into []
-                        (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
-                              (map konv/alaviiva->rakenne)
-                              (map #(konv/string->keyword % :laji))
-                              (map #(assoc %
-                                     :sakko? (not (nil? (:summa %)))
-                                     :summa (some-> % :summa double))))
-                        (sanktiot/hae-havainnon-sanktiot db havainto-id))
-        :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
+             :kommentit (into []
+                              (comp (map konv/alaviiva->rakenne)
+                                    (map #(assoc % :tekija (name (:tekija %))))
+                                    (map (fn [{:keys [liite] :as kommentti}]
+                                           (if (:id liite)
+                                             kommentti
+                                             (dissoc kommentti :liite)))))
+                              (havainnot/hae-havainnon-kommentit db havainto-id))
+             :sanktiot (into []
+                             (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
+                                   (map konv/alaviiva->rakenne)
+                                   (map #(konv/string->keyword % :laji))
+                                   (map #(assoc %
+                                                :sakko? (not (nil? (:summa %)))
+                                                :summa (some-> % :summa double))))
+                             (sanktiot/hae-havainnon-sanktiot db havainto-id))
+             :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
