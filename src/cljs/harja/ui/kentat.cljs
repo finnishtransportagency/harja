@@ -618,15 +618,44 @@
            (pvm/pvm-aika p)
            "")])
 
-(defn tr-karttavalitsin [{:keys [kun-peruttu kun-valittu]}]
-  (let [tapahtumat (chan)]
-    (go (loop [[tapahtuma event] (<! tapahtumat)]
-          (when tapahtuma
-            (log "tapahtuipa niinä päivinä: " (pr-str tapahtuma) " :: " (pr-str event))
-            (if (= tapahtuma :click)
-              (kun-peruttu)
+(defn tr-karttavalitsin [optiot]
+  (let [tapahtumat (chan)
+        tila (atom :ei-valittu)
+
+        tr-osoite (atom {})
+        ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
+        ;; Muuten go lohko sulkee alkuarvojen yli
+        optiot (cljs.core/atom optiot)]
+    
+    (go (loop [{:keys [tyyppi sijainti]}  (<! tapahtumat)]
+          (let [{:keys [kun-valmis paivita]} @optiot]
+            (when tyyppi
+              (when (= :click tyyppi)
+                (go (let [osoite (<! (vkm/koordinaatti->tieosoite sijainti))]
+                      (when-not (vkm/virhe? osoite)
+                        (log "Tapahtuma " (pr-str sijainti " => " (pr-str osoite)))
+                        (case @tila
+                          :ei-valittu (let [osoite (swap! tr-osoite
+                                                          merge
+                                                          {:numero (get osoite "tie")
+                                                           :alkuosa (get osoite "osa")
+                                                           :alkuetaisyys (get osoite "etaisyys")
+                                                           :loppuosa nil
+                                                           :loppuetaisyys nil})]
+                                        (paivita osoite)
+                                        (reset! tila :alku-valittu))
+                          
+                          :alku-valittu (let [osoite (swap! tr-osoite
+                                                            merge 
+                                                            {:loppuosa (get osoite "osa")
+                                                             :loppuetaisyys (get osoite "etaisyys")})]
+                                          (kun-valmis osoite)))))))
               (recur (<! tapahtumat))))))
     (komp/luo
+     {:component-will-receive-props
+      (fn [_ _ uudet-optiot]
+        (reset! optiot uudet-optiot))}
+     
      (komp/sisaan-ulos #(swap! nav/tarvitsen-karttaa conj :tr-karttavalitsin)
                        #(swap! nav/tarvitsen-karttaa disj :tr-karttavalitsin))
      (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
@@ -634,9 +663,13 @@
      (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
      (komp/kuuntelija :esc-painettu
                       (fn [_]
-                        (kun-peruttu)))
-   (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
-     [:span "Klikkaa karttasijainti kartalta"]))))
+                        (log "optiot: " @optiot)
+                        ((:kun-peruttu @optiot))))
+     (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
+       [:span (case @tila
+                :ei-valittu "Klikkaa alkupiste kartalta"
+                :alku-valittu "Klikkaa loppupiste kartalta"
+                "")]))))
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
@@ -651,6 +684,7 @@
                                                                (reset! sijainti nil)
                                                                (go
                                                                  (reset! sijainti (<! (vkm/tieosoite->sijainti osoite))))))))
+        osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)]
     (komp/luo
 
@@ -664,13 +698,14 @@
          (lopeta-paivitys!))}
 
       (fn [{:keys [lomake? sijainti]} data]
-        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)]
                          (if (and (not (= "" v))
                                   (re-matches #"\d*" v))
                            (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
-                           (swap! data assoc kentta nil))))]
+                           (swap! data assoc kentta nil))))
+              kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta
            [:table
             [:tbody
@@ -679,32 +714,45 @@
                                          :size        5 :max-length 10
                                          :placeholder "Tie#"
                                          :value       numero
+                                         :disabled kartta?
                                          :on-change   (muuta! :numero)}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "aosa"
                                          :value       alkuosa
+                                         :disabled kartta?
                                          :on-change   (muuta! :alkuosa)}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "aet"
                                          :value       alkuetaisyys
+                                         :disabled kartta?
                                          :on-change   (muuta! :alkuetaisyys)}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "losa"
                                          :value       loppuosa
+                                         :disabled kartta?
                                          :on-change   (muuta! :loppuosa)}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "let"
                                          :value       loppuetaisyys
+                                         :disabled kartta?
                                          :on-change   (muuta! :loppuetaisyys)}]]
               (if-not @karttavalinta-kaynnissa
                 [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                                 (reset! osoite-ennen-karttavalintaa osoite)
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
-                [tr-karttavalitsin {:kun-peruttu #(reset! karttavalinta-kaynnissa false)}])
+                [tr-karttavalitsin {:kun-peruttu #(do
+                                                    (log "PERUTAAN!")
+                                                    (reset! data @osoite-ennen-karttavalintaa)
+                                                    (reset! karttavalinta-kaynnissa false))
+                                    :paivita #(swap! data merge %)
+                                    :kun-valmis #(do
+                                                   (reset! data %)
+                                                   (reset! karttavalinta-kaynnissa false))}])
               
               (when hae-sijainti
                 (if @sijainti-haku
@@ -716,8 +764,7 @@
                         (let [[x y] sijainti]
                           [:td [:div.sijainti
                                 [:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)] " "
-                                [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))))
-              ]]]])))))
+                                [:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]]]))))))]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]

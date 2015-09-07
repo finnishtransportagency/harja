@@ -176,7 +176,6 @@
 (defn- tapahtuman-kuvaus
   "Tapahtuman kuvaus ulkoisille käsittelijöille"
   [e]
-  (log e)
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
     {:tyyppi (case tyyppi
