@@ -627,30 +627,48 @@
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)]
     
-    (go (loop [{:keys [tyyppi sijainti]}  (<! tapahtumat)]
-          (let [{:keys [kun-valmis paivita]} @optiot]
-            (when tyyppi
-              (when (= :click tyyppi)
-                (go (let [osoite (<! (vkm/koordinaatti->tieosoite sijainti))]
-                      (when-not (vkm/virhe? osoite)
-                        (log "Tapahtuma " (pr-str sijainti " => " (pr-str osoite)))
-                        (case @tila
-                          :ei-valittu (let [osoite (swap! tr-osoite
-                                                          merge
-                                                          {:numero (get osoite "tie")
-                                                           :alkuosa (get osoite "osa")
-                                                           :alkuetaisyys (get osoite "etaisyys")
-                                                           :loppuosa nil
-                                                           :loppuetaisyys nil})]
-                                        (paivita osoite)
-                                        (reset! tila :alku-valittu))
-                          
-                          :alku-valittu (let [osoite (swap! tr-osoite
-                                                            merge 
-                                                            {:loppuosa (get osoite "osa")
-                                                             :loppuetaisyys (get osoite "etaisyys")})]
-                                          (kun-valmis osoite)))))))
-              (recur (<! tapahtumat))))))
+    (go (loop [vkm-haku nil]
+          (let [[arvo kanava] (alts! (if vkm-haku
+                                       [vkm-haku tapahtumat]
+                                       [tapahtumat]))]
+            #_(log "arvo: " (pr-str arvo) ", kanava: " (cond (= kanava vkm-haku) "vkm-haku"
+                                                           (= kanava tapahtumat) "tapahtumat"
+                                                           :default "jotain muuta"))
+
+            (when arvo
+              (if (= kanava vkm-haku)
+                ;; Saatiin VKM vastaus paikkahakuun, käsittele se
+                (let [{:keys [kun-valmis paivita]} @optiot
+                      osoite arvo]
+                  (if (vkm/virhe? osoite)
+                    ;; FIXME: käsittele virhe
+                    (recur nil)
+                    
+                    (do
+                      (case @tila
+                        :ei-valittu (let [osoite (swap! tr-osoite
+                                                        merge
+                                                        {:numero (get osoite "tie")
+                                                         :alkuosa (get osoite "osa")
+                                                         :alkuetaisyys (get osoite "etaisyys")
+                                                         :loppuosa nil
+                                                         :loppuetaisyys nil})]
+                                      (paivita osoite)
+                                      (reset! tila :alku-valittu))
+                        
+                        :alku-valittu (let [osoite (swap! tr-osoite
+                                                          merge 
+                                                          {:loppuosa (get osoite "osa")
+                                                           :loppuetaisyys (get osoite "etaisyys")})]
+                                        (kun-valmis osoite)))
+                      (recur nil))))
+                
+                ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
+                (let [{:keys [tyyppi sijainti]} arvo]
+                  (recur (if (= :click tyyppi)
+                           (vkm/koordinaatti->tieosoite sijainti)
+                           vkm-haku))))))))
+    
     (komp/luo
      {:component-will-receive-props
       (fn [_ _ uudet-optiot]
