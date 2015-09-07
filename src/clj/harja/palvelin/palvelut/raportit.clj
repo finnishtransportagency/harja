@@ -39,10 +39,10 @@
                                                          urakka-id)))
 
 (defn yhdista-saman-paivan-samat-tehtavat [tehtavat]
-  ; TODO Hahmotelma, ei testattu vielä
   (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
         saman-paivan-samat-tehtavat-map (group-by #(select-keys % [:toimenpidekoodi_id :alkanut]) tehtavat)
         ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät)
+        _ (log/debug "Saatiin aikaiseksi " (count (keys saman-paivan-samat-tehtavat-map)) " ryhmää. ryhmät: " (keys saman-paivan-samat-tehtavat-map))
         saman-paivan-samat-tehtavat-vector (mapv
                                              #(get saman-paivan-samat-tehtavat-map %)
                                              (keys saman-paivan-samat-tehtavat-map))
@@ -51,7 +51,7 @@
                               (fn [tehtavat]
                                 (if (> (count tehtavat) 1) ; Yhdistettäviä tehtäviä
                                   (let [yhdistettava (first tehtavat)]
-                                    (assoc yhdistettava :maara (reduce + (mapv :maara tehtavat))))
+                                    (assoc yhdistettava :toteutunut_maara (reduce + (mapv :toteutunut_maara tehtavat))))
                                   (first tehtavat)))
                               saman-paivan-samat-tehtavat-vector)]
     yhdistetyt-tehtavat))
@@ -67,10 +67,10 @@
                                                                                (konv/sql-timestamp alkupvm)
                                                                                (konv/sql-timestamp loppupvm)
                                                                                "yksikkohintainen"))
-        toteutuneet-tehtavat-summattu toteutuneet-tehtavat] ; TODO Summaa saman päivän tehtävät yhteen
+        toteutuneet-tehtavat-summattu (yhdista-saman-paivan-samat-tehtavat toteutuneet-tehtavat)]
     (log/debug "Haettu urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
     (log/debug "Samana päivänä toteutuneet tehtävät summattu : " toteutuneet-tehtavat-summattu)
-    toteutuneet-tehtavat))
+    toteutuneet-tehtavat-summattu))
 
 (defrecord Raportit []
   component/Lifecycle

@@ -63,7 +63,7 @@
                     :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
-                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Päivää on turha näyttää, voisi olla parempoi esim. 12/2013, 01/2014 jne.
+                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Päivää on turha näyttää, voisi olla parempoi esim. 12/2013, 01/2014 jne. Korjataan sitten kun kaikki muu toimii.
                                 [])
                     :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi -")))
     kentta))
@@ -75,12 +75,13 @@
 
 (defn raporttinakyma []
   (let [urakka-id (:id @nav/valittu-urakka)
-        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta & renderöi uudelleen jos muuttuu
+        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta
         loppupvm (t/plus alkupvm (t/years 30))
         tehtavat (map
                    (fn [tasot] (nth tasot 3))
                    @u/urakan-toimenpiteet-ja-tehtavat)]
 
+    ; FIXME Haku raporttityypin mukaan
     (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
                 toteumalliset-tehtavat (keep (fn [tehtava]
                                                (let [tehtavan-toteuma (first (filter (fn [toteuma]
