@@ -45,7 +45,7 @@
                  {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
                   :tyhja        (if (empty? @valitun-raportin-sisalto) "Raporttia ei voitu luoda.")
                   :voi-muokata? false}
-                 [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
+                 [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika :leveys "20%"}
                   {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -83,14 +83,14 @@
 
     ; FIXME Haku raporttityypin mukaan
     (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-                toteumalliset-tehtavat (keep (fn [tehtava]
-                                               (let [tehtavan-toteuma (first (filter (fn [toteuma]
-                                                                                       (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                                     toteumat))]
-                                                 (when tehtavan-toteuma
-                                                   (merge tehtava tehtavan-toteuma))))
-                                             tehtavat)]
-            (reset! valitun-raportin-sisalto toteumalliset-tehtavat)))
+                toteumat-kaikkine-tietoineen (mapv
+                                               (fn [toteuma]
+                                                 (let [tehtavan-tiedot (first (filter (fn [tehtava]
+                                                                                        (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                      tehtavat))]
+                                                   (merge toteuma tehtavan-tiedot)))
+                                               toteumat)]
+          (reset! valitun-raportin-sisalto toteumat-kaikkine-tietoineen)))
     (fn []
       (:render @valittu-raporttityyppi))))
 
