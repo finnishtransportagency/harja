@@ -49,6 +49,9 @@
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
+
+    ;; Tieosoiteverkon tuonti
+    [harja.palvelin.tyokalut.tieverkon-tuonti :as tieosoiteverkko]
     
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -289,6 +292,10 @@
   [nimi fn]
   (http-palvelin/poista-palvelu (:http-palvelin harja-jarjestelma) nimi)
   (http-palvelin/julkaise-palvelu (:http-palvelin harja-jarjestelma) nimi fn))
+
+(defmacro with-db [s & body]
+  `(let [~s (:db harja-jarjestelma)]
+     ~@body))
 
 (defn q
   "Kysele Harjan kannasta, REPL kehitystä varten"
