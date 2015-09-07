@@ -32,6 +32,12 @@
           (t/julkaise! {:aihe      :body-klikkaus
                         :tapahtuma e})))
 
+  ;; Asennetaan yleisten näppäinten handlerin body tasolle
+  (set! (.-onkeydown js/document.body)
+        (fn [e]
+          (when (= 27 (.-keyCode e))
+            (t/julkaise! {:aihe :esc-painettu}))))
+
   ;; Kaapataan raportoimattomat virheet ja lähetetään ne backin kautta logiin
   (set! (.-onerror js/window)
         (fn [errorMsg url lineNumber column errorObj]
