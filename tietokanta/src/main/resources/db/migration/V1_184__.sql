@@ -78,6 +78,7 @@ DECLARE
   muutostyot_laskutetaan_ind_korotus      NUMERIC;
   muutostyot_laskutetaan_rivi             RECORD;
   mhti RECORD;
+  mhti_aikavalilla RECORD;
   mhti_laskutetaan RECORD;
 
 BEGIN
@@ -354,33 +355,36 @@ BEGIN
       muutostyot_laskutetaan := 0.0;
       muutostyot_laskutetaan_ind_korotettuna := 0.0;
       muutostyot_laskutetaan_ind_korotus := 0.0;
-      SELECT
-        tot.alkanut                      AS tot_alkanut,
-        SUM(tt.maara * mht.yksikkohinta) AS mht_summa
-      INTO mhti_laskutetaan
-      FROM toteuma_tehtava tt
-        JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo'::toteumatyyppi, 'lisatyo'::toteumatyyppi))
-        JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
-        JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-        JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
-                                          AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
-                                          AND tpk3.id = t.tpk3_id
-      WHERE mht.urakka = ur
-            AND tot.urakka = ur
-            AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-            AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
-            AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
-      GROUP BY tot.alkanut;
+
+    FOR mhti_aikavalilla IN
+    SELECT
+      tot.alkanut                      AS tot_alkanut,
+      SUM(tt.maara * mht.yksikkohinta) AS mht_summa
+    FROM toteuma_tehtava tt
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo'::toteumatyyppi, 'lisatyo'::toteumatyyppi))
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+      JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
+                                      AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
+                                      AND tpk3.id = t.tpk3_id
+    WHERE mht.urakka = ur
+          AND tot.urakka = ur
+          AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
+          AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
+          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
+    GROUP BY tot.alkanut
+    LOOP
 
       SELECT *
-      FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti_laskutetaan.tot_alkanut) :: INTEGER),
-                                          (SELECT EXTRACT(MONTH FROM mhti_laskutetaan.tot_alkanut) :: INTEGER),
-                                          ind, mhti_laskutetaan.mht_summa)
+      FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti_aikavalilla.tot_alkanut) :: INTEGER),
+                                          (SELECT EXTRACT(MONTH FROM mhti_aikavalilla.tot_alkanut) :: INTEGER),
+                                          ind, mhti_aikavalilla.mht_summa)
       INTO muutostyot_laskutetaan_rivi;
 
-      muutostyot_laskutetaan := COALESCE(muutostyot_laskutetaan_rivi.summa, 0.0);
-      muutostyot_laskutetaan_ind_korotettuna := COALESCE(muutostyot_laskutetaan_rivi.korotettuna, muutostyot_laskutetaan);
-      muutostyot_laskutetaan_ind_korotus := COALESCE(muutostyot_laskutetaan_rivi.korotus, 0.0);
+      muutostyot_laskutetaan := muutostyot_laskutetaan + COALESCE(muutostyot_laskutetaan_rivi.summa, 0.0);
+      muutostyot_laskutetaan_ind_korotettuna := muutostyot_laskutetaan_ind_korotettuna + COALESCE(muutostyot_laskutetaan_rivi.korotettuna, muutostyot_laskutetaan);
+      muutostyot_laskutetaan_ind_korotus := muutostyot_laskutetaan_ind_korotus + COALESCE(muutostyot_laskutetaan_rivi.korotus, 0.0);
+    END LOOP;
 
       RETURN NEXT (t.nimi, t.tuotekoodi,
                    kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
