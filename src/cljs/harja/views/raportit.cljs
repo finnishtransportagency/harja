@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.tiedot.urakka.suunnittelu :as s])
+            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -116,7 +117,7 @@
       (assoc kentta :valinnat @u/valitun-urakan-hoitokaudet
                     :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
       :valitun-aikavalin-kuukaudet
-      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
+      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Resetoi kuukausi ensimmäiseen arvoon
                                 (pvm/hoitokauden-kuukausivalit hk)
                                 [])
                     :valinta-nayta #(if % (str (t/month (first %)) "/" (t/year (first %))) "- Valitse kuukausi -")))
@@ -159,13 +160,17 @@
           @raportin-parametrit-lomake])])))
 
 (defn raporttivalinnat-ja-raportti []
-  (go (reset! u/urakan-yks-hint-tyot                        ; FIXME Tämä on pöllitty suoraan views.urakka-namespacesta. Voisiko jotenkin yhdistää yhdeksi funktioksi?
-              (s/prosessoi-tyorivit @nav/valittu-urakka
-                                    (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id @nav/valittu-urakka))))))
-  [:span
-   [raporttivalinnat]
-   (when @raportti-valmis-naytettavaksi?
-     [raporttinakyma])])
+  (let [hae-urakan-tyot (fn [ur]
+                          (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
+                          (go (reset! u/urakan-yks-hint-tyot
+                                      (s/prosessoi-tyorivit ur
+                                                            (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+
+    (hae-urakan-tyot @nav/valittu-urakka) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency.
+    [:span
+     [raporttivalinnat]
+     (when @raportti-valmis-naytettavaksi?
+       [raporttinakyma])]))
 
 (defn raportit []
   (komp/luo
