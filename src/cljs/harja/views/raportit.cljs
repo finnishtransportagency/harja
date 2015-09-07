@@ -2,7 +2,6 @@
   "Harjan raporttien pääsivu."
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.komponentti :as komp]
-            [harja.ui.valinnat :as valinnat]
             [harja.ui.lomake :as lomake]
             [harja.views.urakat :as urakat]
             [harja.tiedot.navigaatio :as nav]
@@ -18,20 +17,18 @@
             [cljs-time.core :as t]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot])
+            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valittu-raporttityyppi (atom nil))
-(defonce raportin-parametrit-lomake (atom nil))
-(tarkkaile! "[RAPORTTI] Raporttiparametrit: " raportin-parametrit-lomake)
-(def raportin-parametrit-lomakkeen-virheet (atom nil))
 
 (defonce yksikkohintaiset-toteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      alkupvm (first (:kuukausi @raportin-parametrit-lomake))
-                      loppupvm (second (:kuukausi @raportin-parametrit-lomake))]
+                      alkupvm (first @u/valittu-hoitokausi)
+                      loppupvm (second @u/valittu-hoitokausi)]
                      (when (and urakka-id alkupvm loppupvm)
                        (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
                        (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
@@ -50,11 +47,11 @@
                                                                                  tehtavat))
                                                                   yksikkohinta-hoitokaudella (or (:yksikkohinta (first (filter
                                                                                                                          (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first (:hoitokausi @raportin-parametrit-lomake)))))
+                                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                                          @u/urakan-yks-hint-tyot))) nil)
                                                                   suunniteltu-maara-hoitokaudella (or (:maara (first (filter
                                                                                                                        (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first (:hoitokausi @raportin-parametrit-lomake)))))
+                                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                                        @u/urakan-yks-hint-tyot))) nil)]
                                                               (-> toteuma
                                                                   (merge (dissoc tehtavan-tiedot :id))
@@ -65,11 +62,8 @@
 (tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " yksikkohintaiset-toteumat-kaikkine-tietoineen)
 
 (def raportti-valmis-naytettavaksi?
-  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                  lomake-virheet @raportin-parametrit-lomakkeen-virheet]
-              (and valittu-raporttityyppi
-                   (not (nil? lomake-virheet))
-                   (empty? lomake-virheet)))))
+  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi]
+              (not (nil? valittu-raporttityyppi)))))
 
 (def +raporttityypit+
   ; FIXME: Hardcoodattu testidata, tämän on tarkoitus tulla myöhemmin serveriltä(?)
@@ -110,18 +104,21 @@
                                                                                                               lisatieto))) :tyyppi :string :leveys "20%"}]
                   @yksikkohintaiset-toteumat-kaikkine-tietoineen])}])
 
-(defn tee-lomakekentta [kentta lomakkeen-tiedot]
-  (if (= :valinta (:tyyppi kentta))
-    (case (:valinnat kentta)
-      :valitun-urakan-hoitokaudet
-      (assoc kentta :valinnat @u/valitun-urakan-hoitokaudet
-                    :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
-      :valitun-aikavalin-kuukaudet
-      (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Resetoi kuukausi ensimmäiseen arvoon
-                                (pvm/hoitokauden-kuukausivalit hk)
-                                [])
-                    :valinta-nayta #(if % (str (t/month (first %)) "/" (t/year (first %))) "- Valitse kuukausi -")))
-    kentta))
+; Alkuperäinen toteutus: raporttityypin parametreista tehdään kenttiä. Ongelmana kuitenkin tehdä riippuvuudet oikein kenttien välille.
+#_(defn tee-lomakekentta [kentta lomakkeen-tiedot]
+    (if (= :valinta (:tyyppi kentta))
+      (case (:valinnat kentta)
+        :valitun-urakan-hoitokaudet
+        (-> kentta
+            (dissoc :valinnat)
+            (assoc :valinnat-fn (constantly @u/valitun-urakan-hoitokaudet)
+                   :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -")))
+        :valitun-aikavalin-kuukaudet
+        (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Resetoi kuukausi ensimmäiseen arvoon
+                                  (pvm/hoitokauden-kuukausivalit hk)
+                                  [])
+                      :valinta-nayta #(if % (str (t/month (first %)) "/" (t/year (first %))) "- Valitse kuukausi -")))
+      kentta))
 
 (defn raporttinakyma []
   (fn []
@@ -131,33 +128,20 @@
   []
   (komp/luo
     (fn []
-      [:div.raportit
-       [:div.label-ja-alasveto
-        [:span.alasvedon-otsikko "Valitse raportti"]
-        [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
-                              ;;\u2014 on väliviivan unikoodi
-                              :format-fn  #(if % (:otsikko %) "Valitse")
-                              :valitse-fn #(reset! valittu-raporttityyppi %)
-                              :class      "valitse-raportti-alasveto"}
-         +raporttityypit+]]
-
-       (when @valittu-raporttityyppi
-         [lomake/lomake
-          {:luokka   :horizontal
-           :virheet  raportin-parametrit-lomakkeen-virheet
-           :muokkaa! (fn [uusi]
-                       (reset! raportin-parametrit-lomake uusi))}
-          (let [lomake-tiedot @raportin-parametrit-lomake
-                kentat (into []
-                             (concat
-                               [{:otsikko "Kohde" :nimi :kohteen-nimi :hae #(:nimi @nav/valittu-urakka) :muokattava? (constantly false)}]
-                               (map
-                                 (fn [kentta]
-                                   (tee-lomakekentta kentta lomake-tiedot))
-                                 (:parametrit @valittu-raporttityyppi))))]
-            kentat)
-
-          @raportin-parametrit-lomake])])))
+      (let [ur @nav/valittu-urakka]
+        [:div.raporttivalinnat
+         [:div.raportin-tyyppi
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Valitse raportti"]
+           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                                 ;;\u2014 on väliviivan unikoodi
+                                 :format-fn  #(if % (:otsikko %) "Valitse")
+                                 :valitse-fn #(reset! valittu-raporttityyppi %)
+                                 :class      "valitse-raportti-alasveto"}
+            +raporttityypit+]]]
+         [:div.raportin-asetukset ; FIXME Nämä pitäisi ottaa valitusta raportin tyypistä.
+          [valinnat/urakan-hoitokausi @nav/valittu-urakka]
+          [valinnat/hoitokauden-kuukausi]]]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [hae-urakan-tyot (fn [ur]
@@ -176,5 +160,5 @@
   (komp/luo
     (fn []
       (or
-        (urakat/valitse-hallintayksikko-ja-urakka)          ; FIXME Voi olla tarve luoda raportti hallintayksikön alueesta tai koko Suomesta.
+        (urakat/valitse-hallintayksikko-ja-urakka) ; FIXME Voi olla tarve luoda raportti hallintayksikön alueesta tai koko Suomesta.
         (raporttivalinnat-ja-raportti)))))
