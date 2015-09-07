@@ -51,10 +51,10 @@
                   {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
-                  {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                  {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                  {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:toteutunut_maara rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                  {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:toteutunut_maara rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  #_{:otsikko "Suunniteltu määrä hoitokaudelle" :nimi :suunniteltu-maara-hoitokaudelle :muokattava? (constantly false) :tyyppi :numero :leveys "20%"} ; TODO Nämä puuttuu vielä
+                  #_{:otsikko "Suunnitellut kustannukset hoitokaudelle" :nimi :suunnitellut-kustannukset-hoitokaudelle :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
                  @valitun-raportin-sisalto])}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
