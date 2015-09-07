@@ -156,7 +156,7 @@ FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
                           AND alkanut >= :alkupvm
-                          AND paattynyt <= :loppupvm
+                          AND alkanut <= :loppupvm
                           AND tyyppi = :tyyppi :: toteumatyyppi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;
