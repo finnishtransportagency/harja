@@ -40,39 +40,20 @@
                  :tyyppi   :valinta
                  :validoi  [[:ei-tyhja "Anna arvo"]]
                  :valinnat :valitun-aikavalin-kuukaudet}]
-    :suorita   (fn [raporttivalinnat-tiedot]
-                 (fn []
-                   (let [urakka-id (:id @nav/valittu-urakka)
-                         alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta & renderöi uudelleen jos muuttuu
-                         loppupvm (t/plus alkupvm (t/years 30))
-                         tehtavat (map
-                                    (fn [tasot] (nth tasot 3))
-                                    @u/urakan-toimenpiteet-ja-tehtavat)]
-
-                     (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
-                               toteumalliset-tehtavat (keep (fn [tehtava]
-                                                              (let [tehtavan-toteuma (first (filter (fn [toteuma]
-                                                                                                      (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                                                    toteumat))]
-                                                                (when tehtavan-toteuma
-                                                                  (merge tehtava tehtavan-toteuma))))
-                                                            tehtavat)]
-                           (reset! valitun-raportin-sisalto toteumalliset-tehtavat)))
-
-                     [:span
-                      [grid/grid
-                       {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                        :tyhja        (if (empty? @valitun-raportin-sisalto) "Raporttia ei voitu luoda.")
-                        :voi-muokata? false}
-                       [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
-                        {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                        {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                       @valitun-raportin-sisalto]])))}])
+    :render   (fn []
+                [grid/grid
+                 {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
+                  :tyhja        (if (empty? @valitun-raportin-sisalto) "Raporttia ei voitu luoda.")
+                  :voi-muokata? false}
+                 [{:otsikko "Päivämäärä" :nimi :pvm :muokattava? (constantly false) :tyyppi :pvm :leveys "20%"}
+                  {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Suunniteltu määrä" :nimi :suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Suunnitellut kustannukset" :nimi :suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                  {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                 @valitun-raportin-sisalto])}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
   (if (= :valinta (:tyyppi kentta))
@@ -82,7 +63,7 @@
                     :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -"))
       :valitun-aikavalin-kuukaudet
       (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Valintojen pitäisi päivittyä jos hoitokausi vaihtuu.
-                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Näytä kuukaudet tekstinä "Tammikuu, Helmikuu jne. Ehkä myös Koko hoitokausi?"
+                                (pvm/hoitokauden-kuukausivalit hk) ; FIXME Päivää on turha näyttää, voisi olla parempoi esim. 12/2013, 01/2014 jne.
                                 [])
                     :valinta-nayta #(if % (fmt/pvm-opt (first %)) "- Valitse kuukausi -")))
     kentta))
@@ -93,8 +74,24 @@
 (tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raporttivalinnat-tiedot)
 
 (defn raporttinakyma []
-  (komp/luo
-    ((:suorita @valittu-raporttityyppi) raporttivalinnat-tiedot)))
+  (let [urakka-id (:id @nav/valittu-urakka)
+        alkupvm (t/minus (t/now) (t/years 30)) ; FIXME Käytä valittua kuukautta & renderöi uudelleen jos muuttuu
+        loppupvm (t/plus alkupvm (t/years 30))
+        tehtavat (map
+                   (fn [tasot] (nth tasot 3))
+                   @u/urakan-toimenpiteet-ja-tehtavat)]
+
+    (go (let [toteumat (<! (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))
+                toteumalliset-tehtavat (keep (fn [tehtava]
+                                               (let [tehtavan-toteuma (first (filter (fn [toteuma]
+                                                                                       (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                     toteumat))]
+                                                 (when tehtavan-toteuma
+                                                   (merge tehtava tehtavan-toteuma))))
+                                             tehtavat)]
+            (reset! valitun-raportin-sisalto toteumalliset-tehtavat)))
+    (fn []
+      (:render @valittu-raporttityyppi))))
 
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
