@@ -24,6 +24,9 @@
 
 (defonce valittu-raporttityyppi (atom nil))
 (defonce raportin-parametrit-lomake (atom nil))
+(tarkkaile! "[RAPORTTI] Raporttiparametrit: " raportin-parametrit-lomake)
+(def raportin-parametrit-lomakkeen-virheet (atom nil))
+
 (defonce yksikkohintaiset-toteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       alkupvm (first (:kuukausi @raportin-parametrit-lomake))
@@ -58,10 +61,8 @@
                                                                   (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
                                                           @yksikkohintaiset-toteumat)]
                        toteumat-kaikkine-tietoineen))))
-
 (tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " yksikkohintaiset-toteumat-kaikkine-tietoineen)
-(tarkkaile! "[RAPORTTI] Raporttivalinnat-tiedot: " raportin-parametrit-lomake)
-(def raportin-parametrit-lomakkeen-virheet (atom nil))
+
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                   lomake-virheet @raportin-parametrit-lomakkeen-virheet]
@@ -88,7 +89,7 @@
     :render    (fn []
                  [grid/grid
                   {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                   :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavaa tietoa.")
+                   :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")
                    :voi-muokata? false}
                   [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika :leveys "20%"}
                    {:otsikko "Tehtävän nro" :nimi :toimenpidekoodi_id :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
