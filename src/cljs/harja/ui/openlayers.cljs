@@ -78,7 +78,7 @@
   (let [ol3 @the-kartta
         view (.getView ol3)]
     (.fitExtent view (clj->js alue) (.getSize ol3))))
-   
+
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))
 
@@ -88,6 +88,8 @@
 (defn kartan-extent []
   (let [k @the-kartta]
     (.calculateExtent (.getView k) (.getSize k))))
+
+(defonce openlayers-kartan-leveys (atom nil))
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
@@ -232,6 +234,9 @@
                              :interactions (ol-interaction/defaults #js {:mouseWheelZoom false})})
         ol3 (ol/Map. map-optiot)
 
+        _ (reset!
+            openlayers-kartan-leveys
+            (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
         _ (reset! the-kartta ol3)                           ;; puhtaasi REPL tunkkausta varten
         view (:view mapspec)
         zoom (:zoom mapspec)
@@ -310,6 +315,13 @@
 (defn- ol3-will-update [this [_ conf]]
   (update-ol3-geometries this (-> conf :geometries)))
 
+(defn- ol3-did-update [this _]
+  (let [uusi-leveys (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0))]
+    (when-not (= uusi-leveys
+                 @openlayers-kartan-leveys)
+      (reset! openlayers-kartan-leveys uusi-leveys)
+      (invalidate-size!))))
+
 (defn- ol3-render [mapspec]
   (let [c (reagent/current-component)]
     [:span
@@ -337,7 +349,6 @@
 
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (when-not (= :clickable-area (:type geom))
-    (log "STROKE: " (pr-str stroke))
     (doto feature
       (.setStyle (ol.style.Style.
                    #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
@@ -483,7 +494,8 @@
      :component-did-mount    ol3-did-mount
      :component-will-update  ol3-will-update
      :reagent-render         ol3-render
-     :component-will-unmount ol3-will-unmount}))
+     :component-will-unmount ol3-will-unmount
+     :component-did-update   ol3-did-update}))
 
 
 
