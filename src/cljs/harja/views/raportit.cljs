@@ -55,9 +55,13 @@
                   {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:suunniteltu-maara-hoitokaudella rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                   {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:toteutunut_maara rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                  {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (if (vector? (:lisatieto rivi))
-                                                                                                           (clojure.string/join "\n\n" (:lisatieto rivi))
-                                                                                                           (:lisatieto rivi))) :tyyppi :string :leveys "20%"}]
+                  {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (let [max-pituus 80
+                                                                                                               lisatieto (if (vector? (:lisatieto rivi))
+                                                                                                                           (clojure.string/join "\n\n" (:lisatieto rivi))
+                                                                                                                           (:lisatieto rivi))]
+                                                                                                           (if (> (count lisatieto) max-pituus)
+                                                                                                             (str (subs lisatieto 0 max-pituus) "...")
+                                                                                                             lisatieto))) :tyyppi :string :leveys "20%"}]
                  @valitun-raportin-sisalto])}])
 
 (defn tee-lomakekentta [kentta lomakkeen-tiedot]
