@@ -1,8 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietolajit
   (:require [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as kutsusanoma]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakuvastaus :as vastaussanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.tierekisteri.tyokalut.kutsukasittely :as tierekisteri-palvelu]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
 

@@ -10,7 +10,8 @@
            (java.io ByteArrayInputStream)
            (org.w3c.dom.ls LSResourceResolver LSInput)
            (org.xml.sax SAXParseException)
-           (java.text SimpleDateFormat)))
+           (java.text SimpleDateFormat ParseException)
+           (java.util Date)))
 
 (defn validoi
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
@@ -57,3 +58,25 @@
 
 (defn formatoi-paivamaara [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd") paivamaara))
+
+(defn parsi-kokonaisluku [data]
+  (when (and data (not (empty? data))) (Integer/parseInt data)))
+
+(defn parsi-totuusarvo [data]
+  (when (and data (not (empty? data))) (Boolean/parseBoolean data)))
+
+(defn parsi-avain [data]
+  (when (and data (not (empty? data))) (keyword (clojure.string/lower-case data))))
+
+(defn parsi-aika [formaatti data]
+  (when (and data (not (empty? data)))
+    (try (new Date (.getTime (.parse (SimpleDateFormat. formaatti) data)))
+         (catch ParseException e
+           (log/error e "Virhe parsiessa päivämäärää: " data ", formaatilla: " formaatti)
+           nil))))
+
+(defn parsi-aikaleima [teksti]
+  (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
+
+(defn parsi-paivamaara [teksti]
+  (parsi-aika "yyyy-MM-dd" teksti))
