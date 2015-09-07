@@ -78,7 +78,13 @@
           },
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
-            "type": "string"
+            "type": "array",
+            "items": {
+              "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu/0",
+              "type": "string",
+              "additionalProperties":false,
+              "$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeaman-luokittelu.schema.json"
+            }
           },
           "ilmoittaja": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/ilmoittaja",
@@ -92,8 +98,8 @@
             "format": "date-time",
             "required": true
           },
-          "paattyny": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/paattyny",
+          "paattynyt": {
+            "id": "urn:harja/turvallisuuspoikkeamat/0/paattynyt",
             "type": "string",
             "format": "date-time"
           },
@@ -157,6 +163,21 @@
             "type": "object",
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+          },
+          "kommentit": {
+            "id": "urn:harja/kommentit",
+            "type": "array",
+            "items": {
+              "id": "urn:harja/kommentit/0",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kommentti": {
+                  "id": "urn:harja/kommentit/0/kommentti",
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
