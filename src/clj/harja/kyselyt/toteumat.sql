@@ -143,6 +143,7 @@ FROM toteuma_tehtava tt
 -- name: hae-urakan-toteutuneet-tehtavat-kuukausiraportille
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät
 SELECT
+  tt.id as id,
   tt.maara as toteutunut_maara,
   t.alkanut,
   (SELECT nimi
