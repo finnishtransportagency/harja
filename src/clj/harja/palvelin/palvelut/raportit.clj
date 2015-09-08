@@ -18,7 +18,15 @@
   (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
     (into []
          (comp
-           (map #(konv/decimal->double % :kht_laskutettu :kht_laskutettu_ind_korotettuna :kht_laskutettu_ind_korotus
+           (map #(konv/decimal->double %
+                                       :indeksit_kaikki_laskutetaan
+                                       :indeksit_kaikki_laskutettu
+                                       :indeksit_muu_kuin_kokhint_laskutetaan
+                                       :indeksit_muu_kuin_kokhint_laskutettu
+                                       :kaikki_yhteensa_laskutetaan
+                                       :kaikki_yhteensa_laskutettu
+                                       :muu_kuin_kokhint_laskutettu :muu_kuin_kokhint_laskutetaan
+                                       :kht_laskutettu :kht_laskutettu_ind_korotettuna :kht_laskutettu_ind_korotus
                                        :kht_laskutetaan :kht_laskutetaan_ind_korotettuna :kht_laskutetaan_ind_korotus
                                        :yht_laskutettu :yht_laskutettu_ind_korotettuna :yht_laskutettu_ind_korotus
                                        :yht_laskutetaan :yht_laskutetaan_ind_korotettuna :yht_laskutetaan_ind_korotus

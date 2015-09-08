@@ -5,6 +5,10 @@ DROP TYPE laskutusyhteenveto_rivi;
 
 CREATE TYPE laskutusyhteenveto_rivi
 AS (nimi            VARCHAR, tuotekoodi VARCHAR,
+    indeksit_kaikki_laskutettu NUMERIC, indeksit_muu_kuin_kokhint_laskutettu NUMERIC,
+    indeksit_kaikki_laskutetaan NUMERIC, indeksit_muu_kuin_kokhint_laskutetaan NUMERIC,
+    muu_kuin_kokhint_laskutettu NUMERIC, kaikki_yhteensa_laskutettu NUMERIC,
+    muu_kuin_kokhint_laskutetaan NUMERIC, kaikki_yhteensa_laskutetaan NUMERIC,
     kht_laskutettu  NUMERIC, kht_laskutettu_ind_korotettuna NUMERIC, kht_laskutettu_ind_korotus NUMERIC,
     kht_laskutetaan NUMERIC, kht_laskutetaan_ind_korotettuna NUMERIC, kht_laskutetaan_ind_korotus NUMERIC,
     yht_laskutettu  NUMERIC, yht_laskutettu_ind_korotettuna NUMERIC, yht_laskutettu_ind_korotus NUMERIC,
@@ -24,6 +28,16 @@ CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   RETURNS SETOF laskutusyhteenveto_rivi AS $$
 DECLARE
   t                                      RECORD;
+  indeksit_kaikki_laskutettu NUMERIC;
+  indeksit_muu_kuin_kokhint_laskutettu NUMERIC;
+  indeksit_kaikki_laskutetaan NUMERIC;
+  indeksit_muu_kuin_kokhint_laskutetaan NUMERIC;
+
+  muu_kuin_kokhint_laskutettu NUMERIC;
+  kaikki_yhteensa_laskutettu NUMERIC;
+  muu_kuin_kokhint_laskutetaan NUMERIC;
+  kaikki_yhteensa_laskutetaan NUMERIC;
+
   kht_laskutettu                         NUMERIC;
   kht_laskutettu_ind_korotettuna         NUMERIC;
   kht_laskutettu_ind_korotus             NUMERIC;
@@ -98,7 +112,7 @@ DECLARE
 
 
 BEGIN
-  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
+  -- Loopataan urakan toimenpideinstanssien läpi
   FOR t IN SELECT
              tpk2.nimi AS nimi,
              tpk2.koodi AS tuotekoodi,
@@ -109,6 +123,7 @@ BEGIN
              JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
            WHERE tpi.urakka = ur
   LOOP
+    RAISE NOTICE '***** Käsitelly alkaa toimenpiteelle: % *****', t.nimi;
     kht_laskutettu := 0.0;
     kht_laskutettu_ind_korotettuna := 0.0;
     kht_laskutettu_ind_korotus := 0.0;
@@ -165,9 +180,11 @@ BEGIN
 
     FOR yhti IN SELECT
                   SUM(tt.maara * yht.yksikkohinta) AS yht_summa,
-                  tot.alkanut                      AS tot_alkanut
+                  tot.alkanut                      AS tot_alkanut,
+                  tot.id,
+      tt.toimenpidekoodi
                 FROM toteuma_tehtava tt
-                  JOIN toteuma tot ON tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen':: toteumatyyppi
+                  JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi)
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
@@ -177,13 +194,14 @@ BEGIN
                       AND tot.urakka = ur
                       AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
                       AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
-                GROUP BY tot.alkanut
+                GROUP BY tot.alkanut, tt.toimenpidekoodi, tot.id
     LOOP
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut) :: INTEGER),
                                           ind, yhti.yht_summa)
       INTO yht_laskutettu_rivi;
+      RAISE NOTICE 'yht_laskutettu_rivi: %', yht_laskutettu_rivi;
       yht_laskutettu :=  yht_laskutettu + yht_laskutettu_rivi.summa;
       yht_laskutettu_ind_korotettuna :=  yht_laskutettu_ind_korotettuna + yht_laskutettu_rivi.korotettuna;
       yht_laskutettu_ind_korotus :=  yht_laskutettu_ind_korotus + yht_laskutettu_rivi.korotus;
@@ -191,29 +209,20 @@ BEGIN
 
     END LOOP;
 
-    -- Aikavälillä laskutettavat yksikköhintaisten töiden kustannukset indeksitarkistuksen kanssa
-    SELECT SUM(tt.maara * yht.yksikkohinta)
-    INTO yht_laskutetaan
-    FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
-      JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-      JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
-                                        AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
-                                        AND tpk3.id = t.tpk3_id)
-    WHERE yht.urakka = ur
-          AND tot.urakka = ur
-          AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-          AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
-          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm;
 
     -- Aikavälillä laskutettavat yksikköhintaisten töiden kustannukset indeksitarkistuksen kanssa
+    yht_laskutetaan := 0.0;
+    yht_laskutetaan_ind_korotettuna := 0.0;
+    yht_laskutetaan_ind_korotus := 0.0;
+
+    FOR yhti_laskutetaan IN
     SELECT
       tot.alkanut                      AS tot_alkanut,
-      SUM(tt.maara * yht.yksikkohinta) AS yht_summa
-    INTO yhti_laskutetaan
+      SUM(tt.maara * yht.yksikkohinta) AS yht_summa,
+      tt.toimenpidekoodi,
+      tot.id
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
@@ -224,18 +233,19 @@ BEGIN
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
           AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
-    GROUP BY tot.alkanut;
-
+    GROUP BY tot.alkanut, tt.toimenpidekoodi, tot.id
+    LOOP
+      RAISE NOTICE 'yhti_laskutetaan: %', yhti_laskutetaan;
     SELECT *
     FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
                                         (SELECT EXTRACT(MONTH FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
                                         ind, yhti_laskutetaan.yht_summa)
     INTO yht_laskutetaan_rivi;
-
-    yht_laskutetaan := COALESCE(yht_laskutetaan, 0.0);
-    yht_laskutetaan_ind_korotettuna := COALESCE(yht_laskutetaan_rivi.korotettuna, yht_laskutetaan);
-    yht_laskutetaan_ind_korotus := COALESCE(yht_laskutetaan_rivi.korotus, 0.0);
-
+      RAISE NOTICE 'yht_laskutetaan_rivi: %', yht_laskutetaan_rivi;
+      yht_laskutetaan := yht_laskutetaan + COALESCE(yht_laskutetaan_rivi.summa, 0.0);
+      yht_laskutetaan_ind_korotettuna := yht_laskutetaan_ind_korotettuna + COALESCE(yht_laskutetaan_rivi.korotettuna, yht_laskutetaan_rivi.summa);
+      yht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + COALESCE(yht_laskutetaan_rivi.korotus, 0.0);
+    END LOOP;
 
     -- Hoitokaudella ennen aikaväliä laskutetut sanktiot
     sakot_laskutettu := 0.0;
@@ -508,8 +518,75 @@ BEGIN
     END LOOP;
     RAISE NOTICE 'Erilliskustannuksia laskutetaan: %', erilliskustannukset_laskutetaan;
 
+    -- Indeksisummat
+    indeksit_kaikki_laskutettu := 0.0;
+    indeksit_muu_kuin_kokhint_laskutettu := 0.0;
+    indeksit_kaikki_laskutetaan := 0.0;
+    indeksit_muu_kuin_kokhint_laskutetaan := 0.0;
 
-      RETURN NEXT (t.nimi, t.tuotekoodi,
+    indeksit_muu_kuin_kokhint_laskutettu := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus +
+        suolasakot_laskutettu_ind_korotus + muutostyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus;
+    indeksit_kaikki_laskutettu := indeksit_muu_kuin_kokhint_laskutettu + kht_laskutettu_ind_korotus;
+
+    indeksit_muu_kuin_kokhint_laskutetaan := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus +
+                                            suolasakot_laskutetaan_ind_korotus + muutostyot_laskutetaan_ind_korotus + erilliskustannukset_laskutetaan_ind_korotus;
+    indeksit_kaikki_laskutetaan := indeksit_muu_kuin_kokhint_laskutetaan + kht_laskutetaan_ind_korotus;
+
+
+    -- Kustannusten kokonaissummat
+    muu_kuin_kokhint_laskutettu := 0.0;
+    kaikki_yhteensa_laskutettu := 0.0;
+    muu_kuin_kokhint_laskutetaan := 0.0;
+    kaikki_yhteensa_laskutetaan := 0.0;
+
+    muu_kuin_kokhint_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
+                                   suolasakot_laskutettu_ind_korotettuna + muutostyot_laskutettu_ind_korotettuna +
+                                   erilliskustannukset_laskutettu_ind_korotettuna;
+
+    kaikki_yhteensa_laskutettu := muu_kuin_kokhint_laskutettu + kht_laskutettu_ind_korotettuna;
+
+    muu_kuin_kokhint_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
+                                   suolasakot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_ind_korotettuna +
+                                   erilliskustannukset_laskutetaan_ind_korotettuna;
+    kaikki_yhteensa_laskutetaan := muu_kuin_kokhint_laskutetaan + kht_laskutetaan_ind_korotettuna;
+
+    RAISE NOTICE '
+    Yhteenveto:';
+    RAISE NOTICE 'kht_laskutettu: %', kht_laskutettu;
+    RAISE NOTICE 'kht_laskutettu_ind_korotettuna: %', kht_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'yht_laskutettu: %', yht_laskutettu;
+    RAISE NOTICE 'yht_laskutettu_ind_korotettuna: %', yht_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'sakot_laskutettu: %', sakot_laskutettu;
+    RAISE NOTICE 'sakot_laskutettu_ind_korotettuna: %', sakot_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'suolasakot_laskutettu: %', suolasakot_laskutettu;
+    RAISE NOTICE 'suolasakot_laskutettu_ind_korotettuna: %', suolasakot_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'muutostyot_laskutettu: %', muutostyot_laskutettu;
+    RAISE NOTICE 'muutostyot_laskutettu_ind_korotettuna: %', muutostyot_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'erilliskustannukset_laskutettu: %', erilliskustannukset_laskutettu;
+    RAISE NOTICE 'erilliskustannukset_laskutettu_ind_korotettuna: %', erilliskustannukset_laskutettu_ind_korotettuna;
+
+    RAISE NOTICE 'kht_laskutetaan: %', kht_laskutetaan;
+    RAISE NOTICE 'kht_laskutetaan_ind_korotettuna: %', kht_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'yht_laskutetaan: %', yht_laskutetaan;
+    RAISE NOTICE 'yht_laskutetaan_ind_korotettuna: %', yht_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'sakot_laskutetaan: %', sakot_laskutetaan;
+    RAISE NOTICE 'sakot_laskutetaan_ind_korotettuna: %', sakot_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'suolasakot_laskutetaan: %', suolasakot_laskutetaan;
+    RAISE NOTICE 'suolasakot_laskutetaan_ind_korotettuna: %', suolasakot_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'muutostyot_laskutetaan: %', muutostyot_laskutetaan;
+    RAISE NOTICE 'muutostyot_laskutetaan_ind_korotettuna: %', muutostyot_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'erilliskustannukset_laskutetaan: %', erilliskustannukset_laskutetaan;
+    RAISE NOTICE 'erilliskustannukset_laskutetaan_ind_korotettuna: %', erilliskustannukset_laskutetaan_ind_korotettuna;
+
+    RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
+
+    ', t.nimi;
+
+    RETURN NEXT (t.nimi, t.tuotekoodi,
+                   indeksit_kaikki_laskutettu, indeksit_muu_kuin_kokhint_laskutettu,
+                   indeksit_kaikki_laskutetaan, indeksit_muu_kuin_kokhint_laskutetaan,
+                   muu_kuin_kokhint_laskutettu, kaikki_yhteensa_laskutettu,
+                   muu_kuin_kokhint_laskutetaan, kaikki_yhteensa_laskutetaan,
                    kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
                    kht_laskutetaan, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
                    yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
@@ -528,3 +605,5 @@ BEGIN
 
   END;
 $$ LANGUAGE plpgsql;
+
+SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-08-01', '2015-08-31', 4, 'MAKU 2010');

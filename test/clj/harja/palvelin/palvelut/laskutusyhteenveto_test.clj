@@ -51,12 +51,20 @@
                                :erilliskustannukset_laskutettu                  1000.0
                                :erilliskustannukset_laskutettu_ind_korotettuna  990.0
                                :erilliskustannukset_laskutettu_ind_korotus      -10.0
+                               :indeksit_kaikki_laskutetaan                     2362.70000000000000000
+                               :indeksit_kaikki_laskutettu                      1735.70000000000000000
+                               :indeksit_muu_kuin_kokhint_laskutetaan           36735.70000000000000000
+                               :indeksit_muu_kuin_kokhint_laskutettu            62.70000000000000000
+                               :kaikki_yhteensa_laskutetaan                     3887.680000000000076000000
+                               :kaikki_yhteensa_laskutettu                      170.680000000000076000000
                                :kht_laskutetaan                        3500.0
                                :kht_laskutetaan_ind_korotettuna        3717.0
                                :kht_laskutetaan_ind_korotus            217.0
                                :kht_laskutettu                         35000.0
                                :kht_laskutettu_ind_korotettuna         36673.0
                                :kht_laskutettu_ind_korotus             1673.0
+                               :muu_kuin_kokhint_laskutetaan                    3450.680000000000076000000
+                               :muu_kuin_kokhint_laskutettu                     387.680000000000076000000
                                :muutostyot_laskutetaan                 0.0
                                :muutostyot_laskutetaan_ind_korotettuna 0.0
                                :muutostyot_laskutetaan_ind_korotus     0.0
@@ -90,12 +98,20 @@
                                       :erilliskustannukset_laskutettu                  0.0
                                       :erilliskustannukset_laskutettu_ind_korotettuna  0.0
                                       :erilliskustannukset_laskutettu_ind_korotus      0.0
+                                      :indeksit_kaikki_laskutetaan                     4265.0000000000000000
+                                      :indeksit_kaikki_laskutettu                      65.0000000000000000
+                                      :indeksit_muu_kuin_kokhint_laskutetaan           65.0000000000000000
+                                      :indeksit_muu_kuin_kokhint_laskutettu            65.0000000000000000
+                                      :kaikki_yhteensa_laskutetaan                     186.00000000000000000
+                                      :kaikki_yhteensa_laskutettu                      186.00000000000000000
                                       :kht_laskutetaan                        0.0
                                       :kht_laskutetaan_ind_korotettuna        0.0
                                       :kht_laskutetaan_ind_korotus            0.0
                                       :kht_laskutettu                         0.0
                                       :kht_laskutettu_ind_korotettuna         0.0
                                       :kht_laskutettu_ind_korotus             0.0
+                                      :muu_kuin_kokhint_laskutetaan                    7186.00000000000000000
+                                      :muu_kuin_kokhint_laskutettu                     186.00000000000000000
                                       :muutostyot_laskutetaan                 5000.0
                                       :muutostyot_laskutetaan_ind_korotettuna 5062.0
                                       :muutostyot_laskutetaan_ind_korotus     62.0
@@ -116,7 +132,7 @@
                                       :suolasakot_laskutettu_ind_korotettuna  0.0
                                       :suolasakot_laskutettu_ind_korotus      0.0
                                       :tuotekoodi                             "23110"
-                                      :yht_laskutetaan                        4000.0
+                                      :yht_laskutetaan                        5000.0
                                       :yht_laskutetaan_ind_korotettuna        2124.0
                                       :yht_laskutetaan_ind_korotus            124.0
                                       :yht_laskutettu                         1000.0
@@ -129,12 +145,20 @@
                              :erilliskustannukset_laskutettu                  0.0
                              :erilliskustannukset_laskutettu_ind_korotettuna  0.0
                              :erilliskustannukset_laskutettu_ind_korotus      0.0
+                             :indeksit_kaikki_laskutetaan                     0.0
+                             :indeksit_kaikki_laskutettu                      4780.0000000000000000
+                             :indeksit_muu_kuin_kokhint_laskutetaan           104780.0000000000000000
+                             :indeksit_muu_kuin_kokhint_laskutettu            0.0
+                             :kaikki_yhteensa_laskutetaan                     10669.6000000000000000
+                             :kaikki_yhteensa_laskutettu                      49.6000000000000000
                              :kht_laskutetaan                        10000.0
                              :kht_laskutetaan_ind_korotettuna        10620.0
                              :kht_laskutetaan_ind_korotus            620.0
                              :kht_laskutettu                         100000.0
                              :kht_laskutettu_ind_korotettuna         104780.0
                              :kht_laskutettu_ind_korotus             4780.0
+                             :muu_kuin_kokhint_laskutetaan                    849.6000000000000000
+                             :muu_kuin_kokhint_laskutettu                     669.6000000000000000
                              :muutostyot_laskutetaan                 0.0
                              :muutostyot_laskutetaan_ind_korotettuna 0.0
                              :muutostyot_laskutetaan_ind_korotus     0.0
