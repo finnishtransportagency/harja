@@ -80,6 +80,9 @@
 (defn aseta-kursori! [kursori]
   (go (>! komento-ch [::cursor kursori])))
 
+(defn aseta-tooltip! [x y teksti]
+  (go (>! komento-ch [::tooltip x y teksti])))
+
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
 ;; Javascript objects.
@@ -182,7 +185,9 @@
                "pointermove" :hover
                "click" :click
                "singleclick" :click)
-     :sijainti [(aget c 0) (aget c 1)]}))
+     :sijainti [(aget c 0) (aget c 1)]
+     :x (aget (.-pixel e) 0)
+     :y (aget (.-pixel e) 1)}))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution" (fn [e]
@@ -205,16 +210,19 @@
                  (when-let [g (tapahtuman-geometria this e)]
                    (on-select g e))))))))
 
+
 (defn aseta-hover-kasittelija [this ol3]
-  (.on ol3 "pointermove" (fn [e]
-                           (if-let [kasittelija @hover-kasittelija]
-                             (kasittelija (tapahtuman-kuvaus e))
-                             (reagent/set-state this
-                                                (if-let [g (tapahtuman-geometria this e)]
-                                                  {:hover (assoc g
-                                                                 :x (aget (.-pixel e) 0)
-                                                                 :y (aget (.-pixel e) 1))}
-                                                  {:hover nil}))))))
+  (.on ol3 "pointermove"
+       (fn [e]
+         (if-let [kasittelija @hover-kasittelija]
+           (kasittelija (tapahtuman-kuvaus e))
+           
+           (reagent/set-state this
+                              (if-let [g (tapahtuman-geometria this e)]
+                                {:hover (assoc g
+                                               :x (aget (.-pixel e) 0)
+                                               :y (aget (.-pixel e) 1))}
+                                {:hover nil}))))))
 
 
 (defn keskita!
@@ -279,29 +287,36 @@
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
                (case komento
-                 ::fit-bounds (let [{:keys [ol3 geometries-map]} (reagent/state this)
-                                    view (.getView ol3)
-                                    avain (geometria-avain (first args))
-                                    [g _] (geometries-map avain)]
-                                (when g
-                                  (keskita! ol3 g)))
-                 ::popup (let [[coordinate content] args]
-                           (nayta-popup! this coordinate content))
+                 ::fit-bounds
+                 (let [{:keys [ol3 geometries-map]} (reagent/state this)
+                       view (.getView ol3)
+                       avain (geometria-avain (first args))
+                       [g _] (geometries-map avain)]
+                   (when g
+                     (keskita! ol3 g)))
+                 ::popup
+                 (let [[coordinate content] args]
+                   (nayta-popup! this coordinate content))
 
-                 ::invalidate-size (.updateSize ol3)
+                 ::invalidate-size
+                 (.updateSize ol3)
 
-                 ::hide-popup (poista-popup! this)
+                 ::hide-popup
+                 (poista-popup! this)
 
-                 ::cursor (let [[cursor] args
-                                vp (.-viewport_ ol3)
-                                style (.-style vp)]
-                            (set! (.-cursor style) (case cursor
-                                                     :crosshair "crosshair" ;; lisää tarvittavia kursoreita
-                                                     "")))
-                 ;:default (log "tuntematon kartan komento: " komento)
-                 )
+                 ::cursor
+                 (let [[cursor] args
+                       vp (.-viewport_ ol3)
+                       style (.-style vp)]
+                   (set! (.-cursor style) (case cursor
+                                            :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                            "")))
+                 ::tooltip
+                 (let [[x y teksti] args]
+                   (reagent/set-state this
+                                      {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
-
+    
     (.setView ol3 (ol.View. #js {:center (clj->js @view)
                                  :zoom   @zoom}))
 
@@ -366,7 +381,8 @@
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
          [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-          (t hover)]))]))
+          (or (:tooltip hover)
+              (t hover))]))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS

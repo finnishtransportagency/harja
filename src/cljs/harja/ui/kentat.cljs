@@ -666,7 +666,11 @@
                       (recur nil))))
                 
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
-                (let [{:keys [tyyppi sijainti]} arvo]
+                (let [{:keys [tyyppi sijainti x y]} arvo]
+                  (when (= :hover tyyppi)
+                    (kartta/aseta-tooltip! x y (case @tila
+                                                 :ei-valittu "Klikkaa alkupiste"
+                                                 :alku-valittu "Klikkaa loppupiste")))
                   (recur (if (= :click tyyppi)
                            (vkm/koordinaatti->tieosoite sijainti)
                            vkm-haku))))))))
@@ -703,7 +707,7 @@
         
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)]
-
+    (log "kompoentti tehty uudestaan!")
     (when hae-sijainti
       (go (loop [vkm-haku nil]
             (let [[arvo kanava] (alts! (if vkm-haku
@@ -720,8 +724,11 @@
                   ;; eli sisältää tien ja alkupisteen sekä valinnaisesti loppupisteen
                   (cond
                     (not (some str/blank? (map arvo [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])))
-                    ;; Kaikki TR-osoitteen kentät täytetty, haetaan tieviiva
-                    (recur (vkm/tieosoite-viiva arvo) )
+                    ;; Kaikki TR-osoitteen kentät täytetty, haetaan tieviiva (otetaan ensimmäinen)
+                    (recur (go (let [viivat (<! (vkm/tieosoite->viiva arvo))]
+                                 (if (vkm/virhe? viivat)
+                                   viivat
+                                   (first viivat)))))
 
                     (not (some str/blank? (map arvo [:numero :alkuosa :alkuetaisyys])))
                     ;; tie ja alkupiste annettu, haetaan pistemäinen osoite
@@ -732,11 +739,7 @@
                                        
     (komp/luo
 
-      {:component-will-receive-props
-       (fn [this & [_ _ data]]
-         (when hae-sijainti
-           (go (>! tr-osoite-ch @data))))
-       :component-will-unmount
+      {:component-will-unmount
        (fn [_]
          (log "Lopetetaan TR sijaintipäivitys")
          (async/close! tr-osoite-ch))}

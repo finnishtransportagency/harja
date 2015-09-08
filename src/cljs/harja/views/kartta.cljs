@@ -107,6 +107,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (def aseta-hover-kasittelija! openlayers/aseta-hover-kasittelija!)
 (def poista-hover-kasittelija! openlayers/poista-hover-kasittelija!)
 (def aseta-kursori! openlayers/aseta-kursori!)
+(def aseta-tooltip! openlayers/aseta-tooltip!)
 
 (defn kaappaa-hiiri
   "Muuttaa kartan toiminnallisuutta siten, että hover ja click eventit annetaan datana annettuun kanavaan.
