@@ -127,13 +127,15 @@
             [valinnat/hoitokauden-kuukausi])]]))))
 
 (defn raporttivalinnat-ja-raportti []
-  (let [hae-urakan-tyot (fn [ur]
+  (let [v-ur @nav/valittu-urakka
+        hae-urakan-tyot (fn [ur]
+                          (log "[RAPORTTI] Haetaan urakan yks. hint. ja kok. hint. työt")
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot
                                       (s/prosessoi-tyorivit ur
                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
 
-    (hae-urakan-tyot @nav/valittu-urakka) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
+    (when v-ur (hae-urakan-tyot @nav/valittu-urakka)) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
     [:span
      [raporttivalinnat]
      (when @raportti-valmis-naytettavaksi?
