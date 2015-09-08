@@ -48,7 +48,7 @@
                               (log/debug "Aloitetaan toteuman tehtävien tallennus")
                               (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
                               (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
-                              (tallenna-varuste db urakka-id kirjaaja varustetiedot toteuma-id))))
+                              (tallenna-varuste transaktio urakka-id kirjaaja varustetiedot toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
