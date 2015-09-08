@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "string",
+      "required": true
+    },
+    "tietolaji": {
+      "id": "urn:harja/tietolaji",
+      "type": "string",
+      "required": true
+    },
+    "ominaisuudet": {
+      "id": "urn:harja/ominaisuudet",
+      "type": "string"
+    },
+    "sijainti": {
+      "id": "urn:harja/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": true
+    },
+    "kuntoluokitus": {
+      "id": "urn:harja/kuntoluokitus",
+      "type": "integer"
+    },
+    "piiri": {
+      "id": "urn:harja/piiri",
+      "type": "integer"
+    }
+  }
+}
