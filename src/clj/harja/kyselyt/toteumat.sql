@@ -502,7 +502,7 @@ INSERT INTO varustetoteuma (tunniste,
     VALUES (
     :tunniste,
     :toteuma,
-    :toimenpide,
+    :toimenpide :: varustetoteuma_tyyppi,
     :tietolaji,
     :ominaisuudet,
     :tr_numero,

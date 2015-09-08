@@ -16,15 +16,16 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}]
+  (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
 (defn tallenna-varuste [db urakka-id kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
-                                               kuntoluokitus piiri]}]
-  (log/debug "Luodaan uusi varustetoteuma")
+                                               kuntoluokitus piiri]} toteuma-id]
+  (log/debug "Luodaan uusi varustetoteuma toteumalle " toteuma-id)
   (toteumat/luo-varustetoteuma<!
          db
          tunniste
+         toteuma-id
          toimenpide
          tietolaji
          ominaisuudet
@@ -47,7 +48,7 @@
                               (log/debug "Aloitetaan toteuman tehtävien tallennus")
                               (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
                               (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
-                              (tallenna-varuste db urakka-id kirjaaja varustetiedot))))
+                              (tallenna-varuste db urakka-id kirjaaja varustetiedot toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -66,7 +67,7 @@
                          integraatioloki
                          :lisaa-varustetoteuma
                          request
-                         skeemat/+reittitoteuman-kirjaus+
+                         skeemat/+varustetoteuman-kirjaus+
                          skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
