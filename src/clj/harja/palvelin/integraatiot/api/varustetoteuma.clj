@@ -29,11 +29,11 @@
          toimenpide
          tietolaji
          ominaisuudet
-         (get-in [:tie :numero] sijainti)
-         (get-in [:tie :aosa] sijainti)
-         (get-in [:tie :losa] sijainti)
-         (get-in [:tie :let] sijainti)
-         (get-in [:tie :aet] sijainti)
+         (get-in sijainti[:tie :numero] )
+         (get-in sijainti [:tie :aosa])
+         (get-in sijainti [:tie :losa])
+         (get-in sijainti [:tie :let])
+         (get-in sijainti [:tie :aet])
          piiri
          kuntoluokitus))
 
