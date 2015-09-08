@@ -19,6 +19,10 @@
   (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
+(defn paivita-muutos-tierekisteriin [db urakka-id kirjaaja data]
+  ; TODO
+  )
+
 (defn tallenna-varuste [db urakka-id kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
                                                kuntoluokitus piiri]} toteuma-id]
   (log/debug "Luodaan uusi varustetoteuma toteumalle " toteuma-id)
@@ -29,7 +33,7 @@
          toimenpide
          tietolaji
          ominaisuudet
-         (get-in sijainti[:tie :numero] )
+         (get-in sijainti[:tie :numero])
          (get-in sijainti [:tie :aosa])
          (get-in sijainti [:tie :losa])
          (get-in sijainti [:tie :let])
@@ -55,6 +59,7 @@
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
+    (paivita-muutos-tierekisteriin db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
