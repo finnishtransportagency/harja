@@ -8,7 +8,6 @@ CREATE TABLE tieverkko (
        tr_pituus integer NOT NULL,
        hoitoluokka VARCHAR(4),
        geometria geometry NOT NULL,
-       update_hash integer NOT NULL,
        
        PRIMARY KEY(osoite3, tie, ajorata, osa, tiepiiri, tr_pituus)
 );

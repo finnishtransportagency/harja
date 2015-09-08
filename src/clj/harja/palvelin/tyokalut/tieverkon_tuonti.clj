@@ -13,7 +13,7 @@
 
 (defn vie-entry [db tv]
   (k/vie-tieverkkotauluun! db (:osoite3 tv) (:tie tv) (:ajorata tv) (:osa tv)
-                           (:tiepiiri tv) (:tr_pituus tv) "I" (.toString (:the_geom tv)) (hash tv)))
+                           (:tiepiiri tv) (:tr_pituus tv) "I" (.toString (:the_geom tv))))
 
 (defn vie-kantaan [db shapefile]
   (if shapefile

@@ -1,7 +1,7 @@
 -- name: vie-tieverkkotauluun!
 -- vie entryn tieverkkotauluun
-INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka, geometria, update_hash) VALUES
-       (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, :hoitoluokka, ST_GeomFromText(:the_geom)::geometry, :update_hash)
+INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka, geometria) VALUES
+       (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, :hoitoluokka, ST_GeomFromText(:the_geom)::geometry)
 
 -- name: hae-tr-osoite-pisteelle
 -- hakee tierekisteriosoitteen pisteelle
