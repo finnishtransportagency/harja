@@ -19,6 +19,9 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
+;; Ad hoc geometrioiden näyttäminen näkymistä
+;; Avain on avainsana ja arvo on itse geometria
+(defonce nakyman-geometriat (atom {}))
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 ;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
@@ -122,7 +125,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
-  
+
+(defn nayta-geometria! [avain geometria]
+  (swap! nakyman-geometriat assoc avain geometria))
+
+(defn poista-geometria! [avain]
+  (swap! nakyman-geometriat dissoc avain))
+         
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
                                     :ymin (aget newextent 1)
@@ -166,31 +175,32 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                     (and geom
                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
-                   (concat (cond
-                             (and (= :tilannekuva @nav/sivu) (nil? v-hal))
-                             nil
+      (concat (cond
+                (and (= :tilannekuva @nav/sivu) (nil? v-hal))
+                nil
 
-                             (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
-                             [(assoc v-hal :valittu true)]
+                (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
+                [(assoc v-hal :valittu true)]
 
-                             (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
-                             [(assoc @nav/valittu-urakka :valittu true)]
+                (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
+                [(assoc @nav/valittu-urakka :valittu true)]
 
-                             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                             (nil? v-hal)
-                             hals
+                ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                (nil? v-hal)
+                hals
 
-                             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                             (nil? @nav/valittu-urakka)
-                             (vec (concat [(assoc v-hal
-                                             :valittu true)]
-                                          @nav/urakat-kartalla))
+                ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                (nil? @nav/valittu-urakka)
+                (vec (concat [(assoc v-hal
+                                     :valittu true)]
+                             @nav/urakat-kartalla))
 
-                             ;; Valittu urakka, mitä näytetään?
-                             :default [(assoc @nav/valittu-urakka
-                                         :valittu true
-                                         :harja.ui.openlayers/fit-bounds true)])
-                           @tasot/geometriat)
+                ;; Valittu urakka, mitä näytetään?
+                :default [(assoc @nav/valittu-urakka
+                                 :valittu true
+                                 :harja.ui.openlayers/fit-bounds true)])
+              @tasot/geometriat
+              @nakyman-geometriat)
 
       :geometry-fn (fn [piirrettava]
                      (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
