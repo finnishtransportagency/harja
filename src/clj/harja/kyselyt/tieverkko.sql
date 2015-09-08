@@ -5,6 +5,8 @@ INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluo
 
 -- name: hae-tr-osoite-pisteelle
 -- hakee tierekisteriosoitteen pisteelle
-SELECT osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka
-  FROM tieverkko
-  WHERE ST_Length(ST_ShortestLine(geometria, ST_MakePoint(:x, :y))) <= :treshold
+SELECT osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka, geometria
+  FROM tieverkko, LATERAL ST_MakePoint(:x, :y) pt
+  WHERE ST_DWithin(geometria, pt, :treshold)
+  ORDER BY ST_Length(ST_ShortestLine(geometria, pt)) ASC
+  LIMIT 1
