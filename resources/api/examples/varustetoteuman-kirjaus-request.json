@@ -17,12 +17,21 @@
       "tunniste": {
         "id": 3
       },
+      "alkanut": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
       "toteumatyyppi": "yksikkohintainen",
       "sopimusId": 1,
       "suorittaja": {
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
-      }
+      },
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 1
+          }
+        }
+      ]
     },
     "aika": "2016-01-30T12:00:00Z",
     "sijainti": {
@@ -48,6 +57,16 @@
       },
       "kuntoluokitus": 1,
       "piiri": 1
-    }
+    },
+    "liitteet": [
+      {
+        "liite": {
+          "nimi": "kolari.png",
+          "tyyppi": "image/png",
+          "kuvaus": "Kuva",
+          "sisalto": "... sisältö base64 enkoodattuna  ..."
+        }
+      }
+    ]
   }
 }
