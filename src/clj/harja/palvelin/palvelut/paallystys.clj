@@ -17,7 +17,8 @@
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [clj-time.format :as format]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [harja.geo :as geo]))
 
 (defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json
@@ -25,17 +26,28 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
+(def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
+
 (defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into [] (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
+  (let [vastaus (into []
+                      (comp (map #(konv/string->avain % [:tila]))
+                            (map #(assoc % :kohdeosat
+                                         (into []
+                                               kohdeosa-xf
+                                               (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                                db urakka-id sopimus-id (:id %))))))
+                      (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
     (log/debug "Päällystyskohteet saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-paallystyskohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystyskohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [vastaus (into [] (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+  (let [vastaus (into []
+                      kohdeosa-xf
+                      (q/hae-urakan-paallystyskohteen-paallystyskohdeosat db urakka-id sopimus-id paallystyskohde-id))]
     (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -46,7 +58,12 @@
                       (comp
                         (map #(konv/string->avain % [:paatos_taloudellinen_osa]))
                         (map #(konv/string->avain % [:paatos_tekninen_osa]))
-                        (map #(konv/string->avain % [:tila])))
+                        (map #(konv/string->avain % [:tila]))
+                        (map #(assoc % :kohdeosat
+                                     (into []
+                                           kohdeosa-xf
+                                           (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                            db urakka-id sopimus-id (:paallystyskohde_id %))))))
                       (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -55,7 +72,12 @@
   hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [paallystysilmoitus (first (into []
+  (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paallystyskohde-id))
+        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
+                         (:arvonvahennykset kohdetiedot)
+                         (:bitumi_indeksi kohdetiedot)
+                         (:kaasuindeksi kohdetiedot))
+        paallystysilmoitus (first (into []
                                         (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                               (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                                               (map #(konv/string->avain % [:tila]))
@@ -63,18 +85,31 @@
                                               (map #(konv/string->avain % [:paatos_taloudellinen_osa])))
                                         (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
-    (when paallystysilmoitus
-      (log/debug "Haetaan kommentit...")
-      (let [kommentit (into []
-                            (comp (map konv/alaviiva->rakenne)
-                                  (map (fn [{:keys [liite] :as kommentti}]
-                                         (if (:id
-                                               liite)
-                                           kommentti
-                                           (dissoc kommentti :liite)))))
-                            (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
-        (log/debug "Kommentit saatu: " kommentit)
-        (assoc paallystysilmoitus :kommentit kommentit)))))
+    (if-not paallystysilmoitus
+      ;; Uusi päällystysilmoitus
+      ^{:uusi true}
+      {:kohdenimi (:nimi kohdetiedot)
+       :paallystyskohde-id paallystyskohde-id
+       :kokonaishinta kokonaishinta
+       :kommentit []}
+
+      (do 
+        (log/debug "Haetaan kommentit...")
+        (log/info "KOHDETIEDOT: " kohdetiedot)
+        (let [kommentit (into []
+                              (comp (map konv/alaviiva->rakenne)
+                                    (map (fn [{:keys [liite] :as kommentti}]
+                                           (if (:id
+                                                liite)
+                                             kommentti
+                                             (dissoc kommentti :liite)))))
+                              (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
+          (log/debug "Kommentit saatu: " kommentit)
+          (assoc paallystysilmoitus
+                 :kokonaishinta kokonaishinta
+                 :paallystyskohde-id paallystyskohde-id
+                 :kommentit kommentit
+                 ))))))
 
 (defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
@@ -137,9 +172,13 @@
   (skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
-    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella c user {:urakka-id          urakka-id
-                                                                                                 :sopimus-id         sopimus-id
-                                                                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})]
+    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella
+                                       c user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
+          paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
+                                        ;; Tunnistetaan uuden tallentaminen
+                                        paallystysilmoitus-kannassa)]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
 
       ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
@@ -221,7 +260,7 @@
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
-(defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+(defn luo-uusi-paallystyskohdeosa [db user paallystyskohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi päällystyskohdeosa, jonka päällystyskohde-id: " paallystyskohde-id)
   (when-not poistettu
     (q/luo-paallystyskohdeosa<! db
@@ -232,11 +271,12 @@
                                 (or tr_alkuetaisyys 0)
                                 (or tr_loppuosa 0)
                                 (or tr_loppuetaisyys 0)
+                                (geo/geometry (geo/clj->pg sijainti))
                                 (or kvl 0)
                                 nykyinen_paallyste
                                 toimenpide)))
 
-(defn paivita-paallystyskohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu]}]
+(defn paivita-paallystyskohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
   (if poistettu
     (do (log/debug "Poistetaan päällystyskohdeosa")
         (q/poista-paallystyskohdeosa! db id))
@@ -248,6 +288,7 @@
                                        (or tr_alkuetaisyys 0)
                                        (or tr_loppuosa 0)
                                        (or tr_loppuetaisyys 0)
+                                       (geo/geometry (geo/clj->pg sijainti))
                                        (or kvl 0)
                                        nykyinen_paallyste
                                        toimenpide

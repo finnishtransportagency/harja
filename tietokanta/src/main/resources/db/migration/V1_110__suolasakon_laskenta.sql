@@ -18,7 +18,7 @@ BEGIN
   -- keskiarvo kertoimena.
   SELECT
     INTO kerroin
-         AVG(arvo)/100.0
+         AVG(arvo)/100
     FROM indeksi
    WHERE nimi = indeksinimi
      AND ((vuosi = alkuv  AND kuukausi = 10) OR

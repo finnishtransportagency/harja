@@ -239,7 +239,7 @@
 
 (defn ilmoitukset []
   (komp/luo
-    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/taso-ilmoitukset nav/pakota-nakyviin?)
+    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
 
     (fn []
       (if @tiedot/valittu-ilmoitus

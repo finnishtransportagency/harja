@@ -10,8 +10,9 @@
             [harja.loki :refer [log]]
             [harja.views.kartta.tasot :as tasot]
             ;[harja.]
-            [cljs.core.async :refer [timeout <!]]
+            [cljs.core.async :refer [timeout <! >!] :as async]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             )
 
   (:require-macros [reagent.ratom :refer [run!]]
@@ -70,6 +71,8 @@
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
+(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
+
 
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
@@ -93,6 +96,32 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn poista-popup! []
   (openlayers/hide-popup!))
 
+(defonce poista-popup-kun-tasot-muuttuvat
+  (tapahtumat/kuuntele! :karttatasot-muuttuneet
+                        (fn [_]
+                          (poista-popup!))))
+   
+
+(def aseta-klik-kasittelija! openlayers/aseta-klik-kasittelija!)
+(def poista-klik-kasittelija! openlayers/poista-klik-kasittelija!)
+(def aseta-hover-kasittelija! openlayers/aseta-hover-kasittelija!)
+(def poista-hover-kasittelija! openlayers/poista-hover-kasittelija!)
+(def aseta-kursori! openlayers/aseta-kursori!)
+
+(defn kaappaa-hiiri
+  "Muuttaa kartan toiminnallisuutta siten, että hover ja click eventit annetaan datana annettuun kanavaan.
+Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori, jossa on kaksi elementtiä:
+tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
+  [kanava]
+  (let [kasittelija #(go (>! kanava %))]
+    (aseta-klik-kasittelija! kasittelija)
+    (aseta-hover-kasittelija! kasittelija)
+
+    #(do (poista-klik-kasittelija!)
+         (poista-hover-kasittelija!)
+         (async/close! kanava))))
+
+  
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
                                     :ymin (aget newextent 1)
@@ -163,13 +192,15 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                            @tasot/geometriat)
 
       :geometry-fn (fn [piirrettava]
-                     (when-let [alue (:alue piirrettava)]
+                     (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
                        (when (map? alue)
                          (assoc alue
                            :fill (if (:valittu piirrettava) false true)
-                           :stroke (when (or (:valittu piirrettava)
-                                             (= :silta (:type piirrettava)))
-                                     {:width 3})
+                           :stroke (if stroke
+                                     stroke
+                                     (when (or (:valittu piirrettava)
+                                               (= :silta (:type piirrettava)))
+                                       {:width 3}))
                            :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                            :color (or (:color alue)
                                       (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))

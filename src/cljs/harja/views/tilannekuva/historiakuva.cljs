@@ -141,7 +141,7 @@
      :component-will-unmount (fn [_]
                                (tiedot/lopeta-asioiden-haku)
                                (kartta/tyhjenna-yleiset-kontrollit))}
-    (komp/lippu tiedot/nakymassa? tiedot/taso-historiakuva)
+    (komp/lippu tiedot/nakymassa? tiedot/karttataso-historiakuva)
     (fn []
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
                                                   :lyhyt

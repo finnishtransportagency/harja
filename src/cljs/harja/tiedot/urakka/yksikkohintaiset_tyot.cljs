@@ -12,7 +12,6 @@
 (defn hae-urakan-yksikkohintaiset-tyot [urakka-id]
   (k/post! :yksikkohintaiset-tyot urakka-id))
 
-
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Tallentaa urakan yksikköhintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
   [{:keys [tyyppi id]} sopimusnumero tyot]

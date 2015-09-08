@@ -24,7 +24,7 @@
       },
       "alkanut": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
-      "tyyppi": "yksikkohintainen",
+      "toteumatyyppi": "yksikkohintainen",
       "tehtavat": [
         {
           "tehtava": {

@@ -40,7 +40,7 @@
   skeema-polussa. JSON on String, joka on sisältö. Jos annettu JSON ei ole validia, heitetään JSONException."
   [skeemaresurssin-polku json]
 
-  (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku ". Data: " json)
+  (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku)
   (let [virheet (validate
                   (cheshire/parse-string (slurp (io/resource skeemaresurssin-polku)))
                   (cheshire/parse-string json)

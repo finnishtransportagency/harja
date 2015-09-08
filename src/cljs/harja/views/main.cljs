@@ -105,7 +105,7 @@
 
 
                ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
-               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska kartan kontrollien pitäisi
+               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska välilehtien pitäisi
                ;; pysyä kartan päällä.
                [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
                 (case sivu

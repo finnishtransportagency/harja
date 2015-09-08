@@ -32,9 +32,37 @@
                          }
     hoitokaudet]])
 
+(defn hoitokauden-kuukausi
+  [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Kuukausi"]
+   [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
+                         :format-fn  #(let [[alkupvm _] %
+                                            kk-numero (pvm/kuukausi alkupvm)
+                                            kk-teksti (case kk-numero
+                                                        1 "Tammikuu"
+                                                        2 "Helmikuu"
+                                                        3 "Maaliskuu"
+                                                        4 "Huhtikuu"
+                                                        5 "Toukokuu"
+                                                        6 "Kesäkuu"
+                                                        7 "Heinäkuu"
+                                                        8 "Elokuu"
+                                                        9 "Syyskuu"
+                                                        10 "Lokakuu"
+                                                        11 "Marraskuu"
+                                                        12 "Joulukuu"
+                                                        "Valitse")]
+                                       (if %
+                                         (str kk-teksti " " (pvm/vuosi alkupvm))
+                                         "Valitse"))
+                         :valitse-fn valitse-fn
+                         :class      "suunnittelu-alasveto"
+                         }
+    hoitokauden-kuukaudet]])
+
 (defn aikavali
   [valittu-aikavali-atom]
-  ; TODO Harjaa vastaava tyyli tälle
   [:span.label-ja-aikavali
    [:span.alasvedon-otsikko "Aikaväli"]
    [:div.aikavali-valinnat

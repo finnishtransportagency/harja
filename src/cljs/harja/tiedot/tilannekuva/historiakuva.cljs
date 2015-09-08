@@ -30,7 +30,7 @@
                                              :loppu (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
 
 (defonce nakymassa? (atom false))
-(defonce taso-historiakuva (atom false))
+(defonce karttataso-historiakuva (atom false))
 
 ;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
 (defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?
@@ -123,7 +123,7 @@
 (def historiakuvan-asiat-kartalla
   (reaction
     @haetut-asiat
-    (when @taso-historiakuva
+    (when @karttataso-historiakuva
       (into [] (mapcat kartalla-xf) @haetut-asiat))))
 
 (defn kasaa-parametrit []

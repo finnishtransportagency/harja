@@ -83,7 +83,7 @@
                                             kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
                                             (:id user) id)
-         (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+         (q/aseta-turvallisuuspoikkeaman-sijainti<! db
                                                    (first sijainti) (second sijainti) tr_numero
                                                    tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
          id)
@@ -92,7 +92,7 @@
                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                                   (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
-       (q/aseta-turvallisuuspoikkeaman-sijanti<! db
+       (q/aseta-turvallisuuspoikkeaman-sijainti<! db
                                                  (first sijainti) (second sijainti) tr_numero
                                                  tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
        id))))

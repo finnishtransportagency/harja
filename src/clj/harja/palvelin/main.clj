@@ -60,7 +60,11 @@
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
-    
+    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
+
+    ;; Ajastetut tehtävät
+    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
+
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
   (:gen-class))
@@ -217,7 +221,7 @@
                                 [:http-palvelin :db])
       :raportit (component/using
                  (raportit/->Raportit)
-                 [:http-palvelin :raportointi])
+                 [:http-palvelin :db :raportointi])
 
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
@@ -246,6 +250,10 @@
                               (api-tyokoneenseuranta/->Tyokoneenseuranta)
                               [:http-palvelin :db])
       :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
+                                                        [:db])
+      :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
+                                                        [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
+      :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                                         [:db])
       )))
 

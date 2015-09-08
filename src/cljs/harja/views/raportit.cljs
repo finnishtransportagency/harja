@@ -50,7 +50,7 @@
 (defn raporttinakyma []
   [:div "Tänne tulee myöhemmin raporttinäkymä..."])
 
-(defn raportit
+(defn raporttivalinnat
   []
   (let [lomakkeen-tiedot (atom nil)
         lomakkeen-virheet (atom nil)]
@@ -83,9 +83,10 @@
 
            @lomakkeen-tiedot])]))))
 
-(defn yksikkohintaisten-toteumat []
+(defn raportit []
   (komp/luo
     (fn []
-      (if @valittu-raportti
+      [:div "Raporttinäkymiä ei ole vielä aloitettu."]
+      #_(if @valittu-raportti
         [raporttinakyma]
-        [raportit]))))
+        [raporttivalinnat]))))

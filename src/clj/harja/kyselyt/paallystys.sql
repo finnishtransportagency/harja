@@ -3,6 +3,7 @@
 SELECT
   paallystyskohde.id,
   pi.id as paallystysilmoitus_id,
+  pi.tila,
   pai.id as paikkausilmoitus_id,
   kohdenumero,
   paallystyskohde.nimi,
@@ -24,6 +25,13 @@ WHERE
   urakka = :urakka
   AND sopimus = :sopimus
   AND paallystyskohde.poistettu IS NOT TRUE;
+
+-- name: hae-urakan-paallystyskohde
+-- Hakee urakan yksittäisen päällystyskohteen
+SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset,
+       bitumi_indeksi, kaasuindeksi
+  FROM paallystyskohde
+ WHERE urakka = :urakka AND id = :id
 
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
@@ -82,6 +90,7 @@ SELECT
   tr_alkuetaisyys,
   tr_loppuosa,
   tr_loppuetaisyys,
+  sijainti,
   kvl,
   nykyinen_paallyste,
   toimenpide
@@ -192,7 +201,7 @@ WHERE id = :id;
 
 -- name: luo-paallystyskohdeosa<!
 -- Luo uuden päällystykohdeosan
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide)
+INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
 VALUES (:paallystyskohde,
         :nimi,
         :tr_numero,
@@ -200,6 +209,7 @@ VALUES (:paallystyskohde,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
+	:sijainti,
         :kvl,
         :nykyinen_paallyste,
         :toimenpide);
@@ -214,6 +224,7 @@ SET
   tr_alkuetaisyys       = :tr_alkuetaisyys,
   tr_loppuosa           = :tr_loppuosa,
   tr_loppuetaisyys      = :tr_loppuetaisyys,
+  sijainti              = :sijainti,
   kvl                   = :kvl,
   nykyinen_paallyste    = :nykyinen_paallyste,
   toimenpide            = :toimenpide

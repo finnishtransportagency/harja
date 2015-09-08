@@ -1,1 +1,0 @@
-ALTER TABLE integraatioviesti ADD COLUMN osoite VARCHAR;
