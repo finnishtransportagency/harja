@@ -113,14 +113,13 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori, jossa on kaksi elementtiä:
 tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
   [kanava]
-  (aseta-klik-kasittelija! (fn [klik]
-                             (go (>! kanava [:click klik]))))
-  (aseta-hover-kasittelija! (fn [hover]
-                              (go (>! kanava [:hover hover]))))
+  (let [kasittelija #(go (>! kanava %))]
+    (aseta-klik-kasittelija! kasittelija)
+    (aseta-hover-kasittelija! kasittelija)
 
-  #(do (poista-klik-kasittelija!)
-       (poista-hover-kasittelija!)
-       (async/close! kanava)))
+    #(do (poista-klik-kasittelija!)
+         (poista-hover-kasittelija!)
+         (async/close! kanava))))
 
   
 (defn- paivita-extent [_ newextent]
