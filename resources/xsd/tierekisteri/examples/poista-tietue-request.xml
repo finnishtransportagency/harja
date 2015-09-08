@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:poistaTietue xmlns:ns2="http://www.solita.fi/harja/tierekisteri/poistaTietue">
+    <poistaja>
+        <henkilo>Keijo Käsittelijä</henkilo>
+        <jarjestelma>FastMekka</jarjestelma>
+        <organisaatio>Asfaltia Oy</organisaatio>
+        <yTunnus>1234567-8</yTunnus>
+    </poistaja>
+    <tunniste>HAR123456789</tunniste>
+    <tietolajitunniste>tl506</tietolajitunniste>
+    <poistettu>2015-03-03+02:00</poistettu>
+</ns2:poistaTietue>

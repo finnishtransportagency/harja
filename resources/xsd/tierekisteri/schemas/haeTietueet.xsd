@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tie"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/haeTietueet" version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tie" schemaLocation="./entities/tie.xsd"/>
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+               schemaLocation="./entities/tietolajitunniste.xsd"/>
+
+    <xs:element name="haeTietueet">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns1:tietolajitunniste"/>
+                <xs:element minOccurs="0" name="muutospvm" type="xs:date"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="tie" type="ns2:tie"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

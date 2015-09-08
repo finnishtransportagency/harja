@@ -44,6 +44,23 @@
 ;; Alunperin englanniksi Leafletille tehty karttaimplementaatio on kopioitu
 ;; ja pala palalta portattu toiminnallisuutta ol3 päälle.
 
+;; Näihin atomeihin voi asettaa oman käsittelijän kartan
+;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
+;; kartan normaali toiminta.
+;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla reagent riippuvuuksia.
+(defonce klik-kasittelija (cljs.core/atom nil))
+(defonce hover-kasittelija (cljs.core/atom nil))
+
+(defn aseta-klik-kasittelija! [funktio]
+  (reset! klik-kasittelija funktio))
+(defn poista-klik-kasittelija! []
+  (aseta-klik-kasittelija! nil))
+(defn aseta-hover-kasittelija! [funktio]
+  (reset! hover-kasittelija funktio))
+(defn poista-hover-kasittelija! []
+  (aseta-hover-kasittelija! nil))
+
+
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -59,6 +76,9 @@
 
 (defn invalidate-size! []
   (go (>! komento-ch [::invalidate-size])))
+
+(defn aseta-kursori! [kursori]
+  (go (>! komento-ch [::cursor kursori])))
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
@@ -78,7 +98,7 @@
   (let [ol3 @the-kartta
         view (.getView ol3)]
     (.fitExtent view (clj->js alue) (.getSize ol3))))
-   
+
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))
 
@@ -88,6 +108,8 @@
 (defn kartan-extent []
   (let [k @the-kartta]
     (.calculateExtent (.getView k) (.getSize k))))
+
+(defonce openlayers-kartan-leveys (atom nil))
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
@@ -153,6 +175,16 @@
 (defn- laske-kartan-alue [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
 
+(defn- tapahtuman-kuvaus
+  "Tapahtuman kuvaus ulkoisille käsittelijöille"
+  [e]
+  (let [c (.-coordinate e)
+        tyyppi (.-type e)]
+    {:tyyppi (case tyyppi
+               "pointermove" :hover
+               "click" :click)
+     :sijainti [(aget c 0) (aget c 1)]}))
+
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution" (fn [e]
                                             (when on-zoom
@@ -165,20 +197,24 @@
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "click" (fn [e]
-                     (when on-click
-                       (on-click e))
-                     (when on-select
-                       (when-let [g (tapahtuman-geometria this e)]
-                         (on-select g e))))))
+                     (if-let [kasittelija @klik-kasittelija]
+                       (kasittelija (tapahtuman-kuvaus e))
+                       (do (when on-click
+                             (on-click e))
+                           (when on-select
+                             (when-let [g (tapahtuman-geometria this e)]
+                               (on-select g e))))))))
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove" (fn [e]
-                           (reagent/set-state this
-                                              (if-let [g (tapahtuman-geometria this e)]
-                                                {:hover (assoc g
-                                                          :x (aget (.-pixel e) 0)
-                                                          :y (aget (.-pixel e) 1))}
-                                                {:hover nil})))))
+                           (if-let [kasittelija @hover-kasittelija]
+                             (kasittelija (tapahtuman-kuvaus e))
+                             (reagent/set-state this
+                                                (if-let [g (tapahtuman-geometria this e)]
+                                                  {:hover (assoc g
+                                                                 :x (aget (.-pixel e) 0)
+                                                                 :y (aget (.-pixel e) 1))}
+                                                  {:hover nil}))))))
 
 
 (defn keskita!
@@ -232,6 +268,9 @@
                              :interactions (ol-interaction/defaults #js {:mouseWheelZoom false})})
         ol3 (ol/Map. map-optiot)
 
+        _ (reset!
+            openlayers-kartan-leveys
+            (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
         _ (reset! the-kartta ol3)                           ;; puhtaasi REPL tunkkausta varten
         view (:view mapspec)
         zoom (:zoom mapspec)
@@ -255,6 +294,13 @@
                  ::invalidate-size (.updateSize ol3)
 
                  ::hide-popup (poista-popup! this)
+
+                 ::cursor (let [[cursor] args
+                                vp (.-viewport_ ol3)
+                                style (.-style vp)]
+                            (set! (.-cursor style) (case cursor
+                                                     :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                                     "")))
                  ;:default (log "tuntematon kartan komento: " komento)
                  )
                (recur (alts! [komento-ch unmount-ch]))))
@@ -310,6 +356,13 @@
 (defn- ol3-will-update [this [_ conf]]
   (update-ol3-geometries this (-> conf :geometries)))
 
+(defn- ol3-did-update [this _]
+  (let [uusi-leveys (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0))]
+    (when-not (= uusi-leveys
+                 @openlayers-kartan-leveys)
+      (reset! openlayers-kartan-leveys uusi-leveys)
+      (invalidate-size!))))
+
 (defn- ol3-render [mapspec]
   (let [c (reagent/current-component)]
     [:span
@@ -337,7 +390,6 @@
 
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (when-not (= :clickable-area (:type geom))
-    (log "STROKE: " (pr-str stroke))
     (doto feature
       (.setStyle (ol.style.Style.
                    #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
@@ -483,7 +535,8 @@
      :component-did-mount    ol3-did-mount
      :component-will-update  ol3-will-update
      :reagent-render         ol3-render
-     :component-will-unmount ol3-will-unmount}))
+     :component-will-unmount ol3-will-unmount
+     :component-did-update   ol3-did-update}))
 
 
 

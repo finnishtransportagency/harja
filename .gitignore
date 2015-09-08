@@ -18,4 +18,5 @@ node_modules
 harja.iml
 *~
 .vagrant
-
+build.xml
+test2junit

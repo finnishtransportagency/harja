@@ -63,7 +63,7 @@
   nil)
 
 (defmethod kentan-yksikko :horizontal [_ {yks :yksikko}]
-  (when yks [:div.inline-block.lomake-yksikko yks]))
+  (when yks [:div.inline-block.lomake-yksikko.col-sm-2 yks]))
 
 (defmulti kentan-vihje (fn [luokka _] luokka))
 
