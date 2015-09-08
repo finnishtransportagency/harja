@@ -149,7 +149,10 @@ SELECT
   t.alkanut,
   (SELECT nimi
    FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS nimi
+   WHERE id = tt.toimenpidekoodi) AS nimi,
+   (SELECT id
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpidekoodi_id
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
