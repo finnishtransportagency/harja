@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajikentta"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
+           xmlns="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajikentta"
+               schemaLocation="tietolajikentta.xsd"/>
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+               schemaLocation="tietolajitunniste.xsd"/>
+
+    <xs:complexType name="tietolajikuvaus">
+        <xs:sequence>
+            <xs:element minOccurs="0" name="tietolajitunniste" type="ns2:tietolajitunniste"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="ominaisuudet" type="ominaisuudet"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ominaisuudet">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="ominaisuus" nillable="true"
+                        type="ns1:tietolajikentta"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
