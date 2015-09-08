@@ -484,3 +484,31 @@ WHERE reittipiste = :id;
 SELECT *
 FROM reittipiste
 WHERE toteuma = :id;
+
+-- name: luo-varustetoteuma<!
+-- Luo uuden varustetoteuman
+INSERT INTO varustetoteuma (tunniste,
+                            toteuma,
+                            toimenpide,
+                            tietolaji,
+                            ominaisuudet,
+                            tr_numero,
+                            tr_alkuosa,
+                            tr_loppuosa,
+                            tr_loppuetaisyys,
+                            tr_alkuetaisyys,
+                            piiri,
+                            kuntoluokka)
+    VALUES (
+    :tunniste,
+    :toteuma,
+    :toimenpide,
+    :tietolaji,
+    :ominaisuudet,
+    :tr_numero,
+    :tr_alkuosa,
+    :tr_loppuosa,
+    :tr_loppuetaisyys,
+    :tr_alkuetaisyys,
+    :piiri,
+    :kuntoluokka);

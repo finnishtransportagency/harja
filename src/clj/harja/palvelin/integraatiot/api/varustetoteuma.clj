@@ -19,9 +19,22 @@
   (let [vastauksen-data {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn tallenna-varuste [db urakka-id kirjaaja varuste]
-  ; TODO
-  )
+(defn tallenna-varuste [db urakka-id kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
+                                               kuntoluokitus piiri]}]
+  (log/debug "Luodaan uusi varustetoteuma")
+  (toteumat/luo-varustetoteuma<!
+         db
+         tunniste
+         toimenpide
+         tietolaji
+         ominaisuudet
+         (get-in [:tie :numero] sijainti)
+         (get-in [:tie :aosa] sijainti)
+         (get-in [:tie :losa] sijainti)
+         (get-in [:tie :let] sijainti)
+         (get-in [:tie :aet] sijainti)
+         piiri
+         kuntoluokitus))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
