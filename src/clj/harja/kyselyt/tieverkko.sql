@@ -1,4 +1,4 @@
--- name: vie-tierekisteri!
+-- name: vie-tieverkkotauluun!
 -- vie entryn tieverkkotauluun
 INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka, geometria, update_hash) VALUES
        (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, :hoitoluokka, ST_GeomFromText(:the_geom)::geometry, :update_hash)
@@ -10,3 +10,7 @@ SELECT osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, hoitoluokka, geometria
   WHERE ST_DWithin(geometria, pt, :treshold)
   ORDER BY ST_Length(ST_ShortestLine(geometria, pt)) ASC
   LIMIT 1
+
+-- name: tuhoa-tieverkkodata!
+-- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
+DELETE FROM tieverkko;
