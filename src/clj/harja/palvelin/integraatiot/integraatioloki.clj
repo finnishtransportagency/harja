@@ -10,7 +10,7 @@
   (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id])
   (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id])
   (kirjaa-jms-viesti [integraatioloki tapahtuma-id viesti-id suunta sisalto])
-  (kirjaa-rest-xml-viesti [integraatioloki tapahtuma-id suunta osoite sisalto otsikko parametrit])
+  (kirjaa-rest-viesti [integraatioloki tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit])
   (kirjaa-saapunut-jms-viesti [integraatioloki jarjestelma integraatio viesti-id viesti])
   (kirjaa-lahteva-jms-kuittaus [integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja])
   (kirjaa-saapunut-jms-kuittaus [integraatioloki kuittaus ulkoinen-id integraatio onnistunut]))
@@ -35,9 +35,9 @@
    :otsikko       (when otsikko (str otsikko))
    :parametrit    nil})
 
-(defn tee-rest-xml-lokiviesti [suunta osoite sisalto otsikko parametrit]
+(defn tee-rest-lokiviesti [suunta osoite sisaltotyyppi sisalto otsikko parametrit]
   {:suunta        suunta
-   :sisaltotyyppi "application/xml"
+   :sisaltotyyppi sisaltotyyppi
    :siirtotyyppi  "HTTP"
    :osoite        osoite
    :sisalto       sisalto
@@ -69,8 +69,8 @@
     (kirjaa-viesti db tapahtuma-id lokiviesti)
     (integraatiloki/aseta-ulkoinen-id-integraatiotapahtumalle! db viesti-id tapahtuma-id)))
 
-(defn lokita-rest-xml-viesti [db tapahtuma-id suunta osoite sisalto otsikko parametrit]
-  (let [lokiviesti (tee-rest-xml-lokiviesti suunta osoite sisalto otsikko parametrit)]
+(defn lokita-rest-viesti [db tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit]
+  (let [lokiviesti (tee-rest-lokiviesti suunta osoite sisaltotyyppi sisalto otsikko parametrit)]
     (kirjaa-viesti db tapahtuma-id lokiviesti)))
 
 (defn lokita-saapunut-jms-viesti [integraatioloki jarjestelma integraatio viesti-id viesti]
@@ -105,7 +105,7 @@
   (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja true tapahtumaid ulkoinen-id))
   (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja false tapahtumaid ulkoinen-id))
   (kirjaa-jms-viesti [this tapahtuma-id viesti-id suunta sisalto] (lokita-jms-viesti (:db this) tapahtuma-id viesti-id suunta sisalto))
-  (kirjaa-rest-xml-viesti [this tapahtuma-id suunta osoite sisalto otsikko parametrit] (lokita-rest-xml-viesti (:db this) tapahtuma-id suunta osoite sisalto otsikko parametrit))
+  (kirjaa-rest-viesti [this tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit] (lokita-rest-viesti (:db this) tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit))
   (kirjaa-saapunut-jms-viesti [this jarjestelma integraatio viesti-id viesti] (lokita-saapunut-jms-viesti this jarjestelma integraatio viesti-id viesti))
   (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja))
   (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut)))
