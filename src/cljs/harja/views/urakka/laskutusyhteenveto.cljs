@@ -100,6 +100,15 @@
                                                 :yhteenveto                  true
                                                 :muutostyot_laskutettu_ind_korotus  (reduce + (map :muutostyot_laskutettu_ind_korotus tiedot))
                                                 :muutostyot_laskutetaan_ind_korotus (reduce + (map :muutostyot_laskutetaan_ind_korotus tiedot))}
+           erilliskustannukset-yhteenveto {:nimi                        "Erilliskustannukset yhteensä"
+                                   :yhteenveto                  true
+                                   :erilliskustannukset_laskutettu  (reduce + (map :erilliskustannukset_laskutettu tiedot))
+                                   :erilliskustannukset_laskutetaan (reduce + (map :erilliskustannukset_laskutetaan tiedot))}
+
+           erilliskustannukset-ind-tar-yhteenveto {:nimi                        "Erilliskustannusten indeksitarkistukset yhteensä"
+                                           :yhteenveto                  true
+                                           :erilliskustannukset_laskutettu_ind_korotus  (reduce + (map :erilliskustannukset_laskutettu_ind_korotus tiedot))
+                                           :erilliskustannukset_laskutetaan_ind_korotus (reduce + (map :erilliskustannukset_laskutetaan_ind_korotus tiedot))}
             valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
@@ -204,6 +213,25 @@
              (sort-by :yhteenveto (conj tiedot muutostyot-yhteenveto))]
 
             [grid/grid
+             {:otsikko      "Erilliskustannukset"
+              :tyhja        "Ei erilliskustannuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :erilliskustannukset_laskutettu :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :erilliskustannukset_laskutetaan :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:erilliskustannukset_laskutettu rivi)
+                                      (:erilliskustannukset_laskutetaan rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot erilliskustannukset-yhteenveto))]
+
+            [grid/grid
              {:otsikko      "Kokonaishintaisten töiden indeksitarkistukset"
               :tyhja        "Ei indeksitarkistuksia"
               :tunniste     :nimi
@@ -297,5 +325,24 @@
                                       (:muutostyot_laskutetaan_ind_korotus rivi)))}]
 
              (sort-by :yhteenveto (conj tiedot muutostyot-ind-tar-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "Erilliskustannusten indeksitarkistukset"
+              :tyhja        "Ei erilliskustannusten indeksitarkistuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :erilliskustannukset_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :erilliskustannukset_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:erilliskustannukset_laskutettu_ind_korotus rivi)
+                                      (:erilliskustannukset_laskutetaan_ind_korotus rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot erilliskustannukset-ind-tar-yhteenveto))]
 
             ])]))))

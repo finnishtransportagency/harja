@@ -45,13 +45,20 @@
            (map #(konv/decimal->double % :suolasakot_laskutetaan))
            (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotettuna))
            (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotus))
-
+;; FIXME!! anna vektorina keywordit muuntimeen
            (map #(konv/decimal->double % :muutostyot_laskutettu))
            (map #(konv/decimal->double % :muutostyot_laskutettu_ind_korotettuna))
            (map #(konv/decimal->double % :muutostyot_laskutettu_ind_korotus))
            (map #(konv/decimal->double % :muutostyot_laskutetaan))
            (map #(konv/decimal->double % :muutostyot_laskutetaan_ind_korotettuna))
            (map #(konv/decimal->double % :muutostyot_laskutetaan_ind_korotus))
+
+           (map #(konv/decimal->double % :erilliskustannukset_laskutettu))
+           (map #(konv/decimal->double % :erilliskustannukset_laskutettu_ind_korotettuna))
+           (map #(konv/decimal->double % :erilliskustannukset_laskutettu_ind_korotus))
+           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan))
+           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan_ind_korotettuna))
+           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan_ind_korotus))
            )
          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
                                                     (konv/sql-date hk-alkupvm)

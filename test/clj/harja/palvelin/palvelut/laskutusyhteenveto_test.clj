@@ -45,7 +45,13 @@
           _ (log/debug "haetut-tiedot-liikenneymparisto" haetut-tiedot-liikenneymparisto)
           _ (log/debug "haetut-tiedot-soratiet" haetut-tiedot-soratiet)
 
-          odotetut-talvihoito {:kht_laskutetaan                        3500.0
+          odotetut-talvihoito {:erilliskustannukset_laskutetaan                 1000.0
+                               :erilliskustannukset_laskutetaan_ind_korotettuna 1062.0
+                               :erilliskustannukset_laskutetaan_ind_korotus     62.0
+                               :erilliskustannukset_laskutettu                  1000.0
+                               :erilliskustannukset_laskutettu_ind_korotettuna  990.0
+                               :erilliskustannukset_laskutettu_ind_korotus      -10.0
+                               :kht_laskutetaan                        3500.0
                                :kht_laskutetaan_ind_korotettuna        3717.0
                                :kht_laskutetaan_ind_korotus            217.0
                                :kht_laskutettu                         35000.0
@@ -78,7 +84,13 @@
                                :yht_laskutettu_ind_korotettuna         209.8
                                :yht_laskutettu_ind_korotus             9.8}
 
-          odotetut-liikenneymparisto {:kht_laskutetaan                        0.0
+          odotetut-liikenneymparisto {:erilliskustannukset_laskutetaan                 0.0
+                                      :erilliskustannukset_laskutetaan_ind_korotettuna 0.0
+                                      :erilliskustannukset_laskutetaan_ind_korotus     0.0
+                                      :erilliskustannukset_laskutettu                  0.0
+                                      :erilliskustannukset_laskutettu_ind_korotettuna  0.0
+                                      :erilliskustannukset_laskutettu_ind_korotus      0.0
+                                      :kht_laskutetaan                        0.0
                                       :kht_laskutetaan_ind_korotettuna        0.0
                                       :kht_laskutetaan_ind_korotus            0.0
                                       :kht_laskutettu                         0.0
@@ -111,7 +123,13 @@
                                       :yht_laskutettu_ind_korotettuna         1039.0
                                       :yht_laskutettu_ind_korotus             39.0}
 
-          odotetut-soratiet {:kht_laskutetaan                        10000.0
+          odotetut-soratiet {:erilliskustannukset_laskutetaan                 0.0
+                             :erilliskustannukset_laskutetaan_ind_korotettuna 0.0
+                             :erilliskustannukset_laskutetaan_ind_korotus     0.0
+                             :erilliskustannukset_laskutettu                  0.0
+                             :erilliskustannukset_laskutettu_ind_korotettuna  0.0
+                             :erilliskustannukset_laskutettu_ind_korotus      0.0
+                             :kht_laskutetaan                        10000.0
                              :kht_laskutetaan_ind_korotettuna        10620.0
                              :kht_laskutetaan_ind_korotus            620.0
                              :kht_laskutettu                         100000.0
