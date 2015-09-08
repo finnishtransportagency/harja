@@ -74,7 +74,7 @@
 
 (def +raporttityypit+
   [{:nimi       :yks-hint-kuukausiraportti
-    :otsikko    "Yks. hint. töiden toteumat -raportti"
+    :otsikko    "Yks. hint. töiden kuukausiraportti"
     :konteksti  #{:urakka}
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet}
     :render     (fn []
@@ -139,7 +139,8 @@
 
     (when v-ur (hae-urakan-tyot @nav/valittu-urakka)) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta.
                                                       ; Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
-                                                      ; Toimisko paremmin jos urakan yks. hint. ja kok. hint. työt käyttäisi reactionia?
+                                                      ; Toimisko paremmin jos urakan yks. hint. ja kok. hint. työt käyttäisi
+                                                      ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
     [:span
      [raporttivalinnat]
      (when @raportti-valmis-naytettavaksi?
