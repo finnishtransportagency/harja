@@ -10,7 +10,7 @@ CREATE TABLE tieverkko (
        geometria geometry NOT NULL,
        update_hash integer NOT NULL,
        
-       PRIMARY KEY(osoite3, tie, ajorata, osa, tiepiiri, trpituus)
+       PRIMARY KEY(osoite3, tie, ajorata, osa, tiepiiri, tr_pituus)
 );
 
 CREATE INDEX tieverkko_geom_index ON tieverkko USING GIST ( geometria ); 
