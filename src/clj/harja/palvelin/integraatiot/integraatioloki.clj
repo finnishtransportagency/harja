@@ -3,7 +3,8 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.integraatioloki :as integraatiloki]
             [clj-time.core :refer [months ago]]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [com.stuartsierra.component :as component]))
 
 (defprotocol IntegraatiolokiKirjaus
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
@@ -92,7 +93,7 @@
       (kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti nil nil ulkoinen-id))))
 
 (defrecord Integraatioloki [paivittainen-puhdistusaika]
-  com.stuartsierra.component/Lifecycle
+  component/Lifecycle
   (start [this]
     (assoc this :integraatiolokin-puhdistus-tehtava (tee-integraatiolokin-puhdistus-tehtava this paivittainen-puhdistusaika)))
   (stop [this]
