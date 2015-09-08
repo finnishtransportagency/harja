@@ -35,7 +35,9 @@
 
 (defonce yksikkohintaiset-toteumat-kaikkine-tietoineen
          (reaction
-           (when @yksikkohintaiset-toteumat
+           (when
+             @nav/valittu-urakka
+             @yksikkohintaiset-toteumat
              (let [tehtavat (map
                               (fn [tasot] (nth tasot 3))
                               @u/urakan-toimenpiteet-ja-tehtavat)
@@ -135,7 +137,9 @@
                                       (s/prosessoi-tyorivit ur
                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
 
-    (when v-ur (hae-urakan-tyot @nav/valittu-urakka)) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
+    (when v-ur (hae-urakan-tyot @nav/valittu-urakka)) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta.
+                                                      ; Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
+                                                      ; Toimisko paremmin jos urakan yks. hint. ja kok. hint. työt käyttäisi reactionia?
     [:span
      [raporttivalinnat]
      (when @raportti-valmis-naytettavaksi?
