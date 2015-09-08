@@ -45,41 +45,104 @@
           _ (log/debug "haetut-tiedot-liikenneymparisto" haetut-tiedot-liikenneymparisto)
           _ (log/debug "haetut-tiedot-soratiet" haetut-tiedot-soratiet)
 
-          odotetut-talvihoito {:tuotekoodi                             "23100" :nimi "Talvihoito"
-                               :yht_laskutettu_ind_korotettuna         209.8 :suolasakot_laskutetaan 2280.0 :sakot_laskutetaan_ind_korotettuna 0.0
-                               :muutostyot_laskutettu                  1000.0 :kht_laskutettu 35000.0 :kht_laskutetaan_ind_korotettuna 3717.0
-                               :yht_laskutettu_ind_korotus             9.8 :muutostyot_laskutettu_ind_korotus 59.0 :kht_laskutetaan 3500.0
-                               :sakot_laskutettu_ind_korotettuna       103.9 :kht_laskutettu_ind_korotus 1673.0 :sakot_laskutetaan 0.0
-                               :kht_laskutetaan_ind_korotus            217.0 :yht_laskutetaan 0.0 :muutostyot_laskutetaan_ind_korotus 0.0
-                               :suolasakot_laskutettu_ind_korotettuna  0.0 :muutostyot_laskutetaan 0.0 :suolasakot_laskutetaan_ind_korotus 108.68000000000008
-                               :yht_laskutetaan_ind_korotettuna        0.0 :yht_laskutettu 200.0 :muutostyot_laskutettu_ind_korotettuna 1059.0
-                               :muutostyot_laskutetaan_ind_korotettuna 0.0 :sakot_laskutetaan_ind_korotus 0.0 :suolasakot_laskutettu 0.0
-                               :suolasakot_laskutetaan_ind_korotettuna 2388.6800000000003 :sakot_laskutettu_ind_korotus 3.9
-                               :sakot_laskutettu                       100.0 :kht_laskutettu_ind_korotettuna 36673.0 :suolasakot_laskutettu_ind_korotus 0.0 :yht_laskutetaan_ind_korotus 0.0}
+          odotetut-talvihoito {:kht_laskutetaan                        3500.0
+                               :kht_laskutetaan_ind_korotettuna        3717.0
+                               :kht_laskutetaan_ind_korotus            217.0
+                               :kht_laskutettu                         35000.0
+                               :kht_laskutettu_ind_korotettuna         36673.0
+                               :kht_laskutettu_ind_korotus             1673.0
+                               :muutostyot_laskutetaan                 0.0
+                               :muutostyot_laskutetaan_ind_korotettuna 0.0
+                               :muutostyot_laskutetaan_ind_korotus     0.0
+                               :muutostyot_laskutettu                  1000.0
+                               :muutostyot_laskutettu_ind_korotettuna  1059.0
+                               :muutostyot_laskutettu_ind_korotus      59.0
+                               :nimi                                   "Talvihoito"
+                               :sakot_laskutetaan                      0.0
+                               :sakot_laskutetaan_ind_korotettuna      0.0
+                               :sakot_laskutetaan_ind_korotus          0.0
+                               :sakot_laskutettu                       100.0
+                               :sakot_laskutettu_ind_korotettuna       103.9
+                               :sakot_laskutettu_ind_korotus           3.9
+                               :suolasakot_laskutetaan                 2280.0
+                               :suolasakot_laskutetaan_ind_korotettuna 2388.6800000000003
+                               :suolasakot_laskutetaan_ind_korotus     108.68000000000008
+                               :suolasakot_laskutettu                  0.0
+                               :suolasakot_laskutettu_ind_korotettuna  0.0
+                               :suolasakot_laskutettu_ind_korotus      0.0
+                               :tuotekoodi                             "23100"
+                               :yht_laskutetaan                        0.0
+                               :yht_laskutetaan_ind_korotettuna        0.0
+                               :yht_laskutetaan_ind_korotus            0.0
+                               :yht_laskutettu                         200.0
+                               :yht_laskutettu_ind_korotettuna         209.8
+                               :yht_laskutettu_ind_korotus             9.8}
 
-          odotetut-liikenneymparisto {:tuotekoodi                            "23110" :nimi "Liikenneympäristön hoito"
-                                      :yht_laskutettu_ind_korotettuna        1039.0 :suolasakot_laskutetaan 0.0 :sakot_laskutetaan_ind_korotettuna 0.0
-                                      :muutostyot_laskutettu                 2000.0 :kht_laskutettu 0.0 :kht_laskutetaan_ind_korotettuna 0.0
-                                      :yht_laskutettu_ind_korotus            39.0 :muutostyot_laskutettu_ind_korotus 118.0 :kht_laskutetaan 0.0
-                                      :sakot_laskutettu_ind_korotettuna      1226.0 :kht_laskutettu_ind_korotus 0.0 :sakot_laskutetaan 0.0
-                                      :kht_laskutetaan_ind_korotus           0.0 :yht_laskutetaan 4000.0 :muutostyot_laskutetaan_ind_korotus 372.0
-                                      :suolasakot_laskutettu_ind_korotettuna 0.0 :muutostyot_laskutetaan 6000.0 :suolasakot_laskutetaan_ind_korotus 0.0
-                                      :yht_laskutetaan_ind_korotettuna       3186.0 :yht_laskutettu 1000.0
-                                      :muutostyot_laskutettu_ind_korotettuna 2118.0 :muutostyot_laskutetaan_ind_korotettuna 6372.0
-                                      :sakot_laskutetaan_ind_korotus         0.0 :suolasakot_laskutettu 0.0 :suolasakot_laskutetaan_ind_korotettuna 0.0
-                                      :sakot_laskutettu_ind_korotus 26.0 :sakot_laskutettu 1200.0 :kht_laskutettu_ind_korotettuna 0.0
-                                      :suolasakot_laskutettu_ind_korotus 0.0 :yht_laskutetaan_ind_korotus 186.0}
+          odotetut-liikenneymparisto {:kht_laskutetaan                        0.0
+                                      :kht_laskutetaan_ind_korotettuna        0.0
+                                      :kht_laskutetaan_ind_korotus            0.0
+                                      :kht_laskutettu                         0.0
+                                      :kht_laskutettu_ind_korotettuna         0.0
+                                      :kht_laskutettu_ind_korotus             0.0
+                                      :muutostyot_laskutetaan                 5000.0
+                                      :muutostyot_laskutetaan_ind_korotettuna 5062.0
+                                      :muutostyot_laskutetaan_ind_korotus     62.0
+                                      :muutostyot_laskutettu                  2000.0
+                                      :muutostyot_laskutettu_ind_korotettuna  2000.0
+                                      :muutostyot_laskutettu_ind_korotus      0.0
+                                      :nimi                                   "Liikenneympäristön hoito"
+                                      :sakot_laskutetaan                      0.0
+                                      :sakot_laskutetaan_ind_korotettuna      0.0
+                                      :sakot_laskutetaan_ind_korotus          0.0
+                                      :sakot_laskutettu                       1200.0
+                                      :sakot_laskutettu_ind_korotettuna       1226.0
+                                      :sakot_laskutettu_ind_korotus           26.0
+                                      :suolasakot_laskutetaan                 0.0
+                                      :suolasakot_laskutetaan_ind_korotettuna 0.0
+                                      :suolasakot_laskutetaan_ind_korotus     0.0
+                                      :suolasakot_laskutettu                  0.0
+                                      :suolasakot_laskutettu_ind_korotettuna  0.0
+                                      :suolasakot_laskutettu_ind_korotus      0.0
+                                      :tuotekoodi                             "23110"
+                                      :yht_laskutetaan                        4000.0
+                                      :yht_laskutetaan_ind_korotettuna        2124.0
+                                      :yht_laskutetaan_ind_korotus            124.0
+                                      :yht_laskutettu                         1000.0
+                                      :yht_laskutettu_ind_korotettuna         1039.0
+                                      :yht_laskutettu_ind_korotus             39.0}
 
-          odotetut-soratiet {:tuotekoodi                             "23120" :nimi "Soratien hoito"
-                             :yht_laskutettu_ind_korotettuna         0.0 :suolasakot_laskutetaan 0.0 :sakot_laskutetaan_ind_korotettuna 849.6
-                             :muutostyot_laskutettu                  0.0 :kht_laskutettu 100000.0 :kht_laskutetaan_ind_korotettuna 10620.0 :yht_laskutettu_ind_korotus 0.0
-                             :muutostyot_laskutettu_ind_korotus      0.0 :kht_laskutetaan 10000.0 :sakot_laskutettu_ind_korotettuna 0.0 :kht_laskutettu_ind_korotus 4780.0
-                             :sakot_laskutetaan                      800.0 :kht_laskutetaan_ind_korotus 620.0 :yht_laskutetaan 0.0 :muutostyot_laskutetaan_ind_korotus 0.0
-                             :suolasakot_laskutettu_ind_korotettuna  0.0 :muutostyot_laskutetaan 0.0 :suolasakot_laskutetaan_ind_korotus 0.0
-                             :yht_laskutetaan_ind_korotettuna        0.0 :yht_laskutettu 0.0 :muutostyot_laskutettu_ind_korotettuna 0.0
-                             :muutostyot_laskutetaan_ind_korotettuna 0.0 :sakot_laskutetaan_ind_korotus 49.6 :suolasakot_laskutettu 0.0
-                             :suolasakot_laskutetaan_ind_korotettuna 0.0 :sakot_laskutettu_ind_korotus 0.0 :sakot_laskutettu 0.0
-                             :kht_laskutettu_ind_korotettuna 104780.0 :suolasakot_laskutettu_ind_korotus 0.0 :yht_laskutetaan_ind_korotus 0.0}
+          odotetut-soratiet {:kht_laskutetaan                        10000.0
+                             :kht_laskutetaan_ind_korotettuna        10620.0
+                             :kht_laskutetaan_ind_korotus            620.0
+                             :kht_laskutettu                         100000.0
+                             :kht_laskutettu_ind_korotettuna         104780.0
+                             :kht_laskutettu_ind_korotus             4780.0
+                             :muutostyot_laskutetaan                 0.0
+                             :muutostyot_laskutetaan_ind_korotettuna 0.0
+                             :muutostyot_laskutetaan_ind_korotus     0.0
+                             :muutostyot_laskutettu                  0.0
+                             :muutostyot_laskutettu_ind_korotettuna  0.0
+                             :muutostyot_laskutettu_ind_korotus      0.0
+                             :nimi                                   "Soratien hoito"
+                             :sakot_laskutetaan                      800.0
+                             :sakot_laskutetaan_ind_korotettuna      849.6
+                             :sakot_laskutetaan_ind_korotus          49.6
+                             :sakot_laskutettu                       0.0
+                             :sakot_laskutettu_ind_korotettuna       0.0
+                             :sakot_laskutettu_ind_korotus           0.0
+                             :suolasakot_laskutetaan                 0.0
+                             :suolasakot_laskutetaan_ind_korotettuna 0.0
+                             :suolasakot_laskutetaan_ind_korotus     0.0
+                             :suolasakot_laskutettu                  0.0
+                             :suolasakot_laskutettu_ind_korotettuna  0.0
+                             :suolasakot_laskutettu_ind_korotus      0.0
+                             :tuotekoodi                             "23120"
+                             :yht_laskutetaan                        0.0
+                             :yht_laskutetaan_ind_korotettuna        0.0
+                             :yht_laskutetaan_ind_korotus            0.0
+                             :yht_laskutettu                         0.0
+                             :yht_laskutettu_ind_korotettuna         0.0
+                             :yht_laskutettu_ind_korotus             0.0}
 
           ]
 

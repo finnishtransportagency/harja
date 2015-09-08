@@ -72,11 +72,13 @@ DECLARE
   muutostyot_laskutettu_ind_korotettuna  NUMERIC;
   muutostyot_laskutettu_ind_korotus      NUMERIC;
   muutostyot_laskutettu_rivi             RECORD;
+  muutostyot_laskutettu_paivanhinnalla             NUMERIC;
 
   muutostyot_laskutetaan                  NUMERIC;
   muutostyot_laskutetaan_ind_korotettuna  NUMERIC;
   muutostyot_laskutetaan_ind_korotus      NUMERIC;
   muutostyot_laskutetaan_rivi             RECORD;
+  muutostyot_laskutetaan_paivanhinnalla             NUMERIC;
   mhti RECORD;
   mhti_aikavalilla RECORD;
   mhti_laskutetaan RECORD;
@@ -329,13 +331,15 @@ BEGIN
                   SUM(tt.maara * mht.yksikkohinta) AS mht_summa,
                   tot.alkanut                      AS tot_alkanut
                 FROM toteuma_tehtava tt
-                  JOIN toteuma tot ON tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+                  JOIN toteuma tot ON tt.toteuma = tot.id
+                                      AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                                     AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
                                                     AND tpk3.id = t.tpk3_id)
                 WHERE mht.urakka = ur
+                      AND tt.paivan_hinta IS NULL
                       AND tot.urakka = ur
                       AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
                       AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
@@ -351,10 +355,30 @@ BEGIN
       muutostyot_laskutettu_ind_korotus :=  muutostyot_laskutettu_ind_korotus + COALESCE(muutostyot_laskutettu_rivi.korotus, 0.0);
     END LOOP;
 
-      -- Aikavälillä laskutettavat muutos- ja lisätyöt indeksitarkistuksen kanssa
-      muutostyot_laskutetaan := 0.0;
-      muutostyot_laskutetaan_ind_korotettuna := 0.0;
-      muutostyot_laskutetaan_ind_korotus := 0.0;
+    -- Päivän hinnalla laskutetut muutostyöt hoitokaudella ennen aikaväliä
+    muutostyot_laskutettu_paivanhinnalla := 0.0;
+    SELECT SUM(tt.paivan_hinta)
+    FROM toteuma_tehtava tt
+      JOIN toteuma tot ON tt.toteuma = tot.id
+                          AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                   AND tpk3.id = t.tpk3_id
+    WHERE tt.paivan_hinta IS NOT NULL
+          AND tot.urakka = ur
+          AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
+          AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
+
+    INTO muutostyot_laskutettu_paivanhinnalla;
+    muutostyot_laskutettu_paivanhinnalla := COALESCE(muutostyot_laskutettu_paivanhinnalla, 0.0);
+
+    RAISE NOTICE 'Muutostöitä laskutettu päivän hinnalla %', muutostyot_laskutettu_paivanhinnalla;
+    RAISE NOTICE 'Muutostöitä laskutettu listahinnalla %', muutostyot_laskutettu;
+
+    -- Aikavälillä laskutettavat muutos- ja lisätyöt indeksitarkistuksen kanssa
+    muutostyot_laskutetaan := 0.0;
+    muutostyot_laskutetaan_ind_korotettuna := 0.0;
+    muutostyot_laskutetaan_ind_korotus := 0.0;
 
     FOR mhti_aikavalilla IN
     SELECT
@@ -367,7 +391,8 @@ BEGIN
       JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
                                       AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
                                       AND tpk3.id = t.tpk3_id
-    WHERE mht.urakka = ur
+    WHERE tt.paivan_hinta IS NULL
+          AND mht.urakka = ur
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
@@ -385,6 +410,33 @@ BEGIN
       muutostyot_laskutetaan_ind_korotettuna := muutostyot_laskutetaan_ind_korotettuna + COALESCE(muutostyot_laskutetaan_rivi.korotettuna, muutostyot_laskutetaan);
       muutostyot_laskutetaan_ind_korotus := muutostyot_laskutetaan_ind_korotus + COALESCE(muutostyot_laskutetaan_rivi.korotus, 0.0);
     END LOOP;
+
+    -- Päivän hinnalla laskutetut muutostyöt aikavälillä
+    muutostyot_laskutetaan_paivanhinnalla := 0.0;
+    SELECT SUM(tt.paivan_hinta)
+    FROM toteuma_tehtava tt
+      JOIN toteuma tot ON tt.toteuma = tot.id
+                          AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                   AND tpk3.id = t.tpk3_id
+    WHERE tt.paivan_hinta IS NOT NULL
+          AND tot.urakka = ur
+          AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
+          AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
+          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
+
+    INTO muutostyot_laskutetaan_paivanhinnalla;
+    muutostyot_laskutetaan_paivanhinnalla := COALESCE(muutostyot_laskutetaan_paivanhinnalla, 0.0);
+
+    RAISE NOTICE 'Muutostöitä laskutetaan päivän hinnalla %', muutostyot_laskutetaan_paivanhinnalla;
+    RAISE NOTICE 'Muutostöitä laskutetaan listahinnalla %', muutostyot_laskutetaan;
+
+    -- Ynnätään muutostöiden molemmat hinnoittelutyypit
+    muutostyot_laskutettu := muutostyot_laskutettu + muutostyot_laskutettu_paivanhinnalla;
+    muutostyot_laskutettu_ind_korotettuna := muutostyot_laskutettu_ind_korotettuna + muutostyot_laskutettu_paivanhinnalla;
+    muutostyot_laskutetaan := muutostyot_laskutetaan + muutostyot_laskutetaan_paivanhinnalla;
+    muutostyot_laskutetaan_ind_korotettuna := muutostyot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_paivanhinnalla;
 
       RETURN NEXT (t.nimi, t.tuotekoodi,
                    kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
