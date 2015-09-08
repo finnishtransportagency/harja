@@ -225,11 +225,11 @@
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
                           [:http-palvelin :db])
 
-      ;; testausta varten
-      :tr-haku (component/using (tr-haku/->TierekisteriHaku) [:http-palvelin :db])
-
       ;; tieosoiteverkon tuonti
-      :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti) [:db])
+      :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
+                                                (:tieosoiteverkon-shapefile asetukset)
+                                                (:tieosoiteverkon-tuontivali asetukset))
+                                               [:db])
       
       ;; Harja API
       :api-urakat (component/using

@@ -8,8 +8,6 @@
             [chime :refer [chime-at]]
             [harja.kyselyt.tieverkko :as k]))
 
-(def +tieverkko-shp-example+ "file:///Users/markolau/Documents/TR_PTJ_data/Tieosoiteverkko.shp")
-
 (defn tuo-tieverkko [shapefile]
   (map shp/feature-propertyt (shp/featuret (shp/lue-shapefile shapefile))))
 
@@ -18,23 +16,26 @@
                            (:tiepiiri tv) (:tr_pituus tv) "I" (.toString (:the_geom tv)) (hash tv)))
 
 (defn vie-kantaan [db shapefile]
-  (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
-  (jdbc/with-db-transaction [transaktio db]
-    (k/tuhoa-tieverkkodata! transaktio)
-    (doseq [tv (tuo-tieverkko shapefile)]
-      (vie-entry transaktio tv))
-    (log/debug "Tieosoiteverkon tuonti kantaan valmis.")))
+  (if shapefile
+    (do
+      (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
+      (jdbc/with-db-transaction [transaktio db]
+        (k/tuhoa-tieverkkodata! transaktio)
+        (doseq [tv (tuo-tieverkko shapefile)]
+          (vie-entry transaktio tv))
+        (log/debug "Tieosoiteverkon tuonti kantaan valmis.")))
+    (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
-(defn tee-tuontiajat []
-  (periodic-seq (t/now) (t/minutes 5)))
+(defn tee-tuontiajat [aikavali-tuntia]
+  (periodic-seq (t/now) (t/hours aikavali-tuntia)))
 
 (defn tee-tuontitehtava [this]
-  (log/debug "Ajastetaan tieosoiteverkon tuontitehtävä")
-  (chime-at (tee-tuontiajat)
+  (log/debug "Ajastetaan tieosoiteverkon tuontitehtävä " (:aikavali this) " tunnin väleillä")
+  (chime-at (tee-tuontiajat (:aikavali this))
             (fn [_]
-              (vie-kantaan (:db this) +tieverkko-shp-example+))))
+              (vie-kantaan (:db this) (:shapefile this)))))
 
-(defrecord Tieverkontuonti []
+(defrecord Tieverkontuonti [shapefile aikavali]
   component/Lifecycle
   (start [this]
     (assoc this :tieosoiteverkon-tuontitehtava (tee-tuontitehtava this)))
