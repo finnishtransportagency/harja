@@ -417,14 +417,18 @@ documentation:
             application/json:
               example: !include examples/virhe-response.json
               schema: virhe-response
-  /tietolajit:
-    description: Tietolajien haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
+  /tietolaji:
+    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
     get:
       queryParameters:
-        tunnisteet:
-          description: Haettavien tietolajien tunnisteet pilkulla erotettuina
+        tunniste:
+          description: Haettavan tietolajin tunniste
           type: string
-          example: tl506, tl507
+          example: tl506
+        tunniste:
+          description: Haettavan tietolajin tunniste
+          type: date
+          example: 2015-01-01
       responses:
          200:
           body:
