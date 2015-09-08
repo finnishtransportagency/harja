@@ -71,8 +71,8 @@
                 (not (nil? valittu-raporttityyppi))))))
 
 (def +raporttityypit+
-  [{:nimi       :yk-hint-kuukausiraportti
-    :otsikko    "Yks.hint. töiden toteumat -raportti"
+  [{:nimi       :yks-hint-kuukausiraportti
+    :otsikko    "Yks. hint. töiden toteumat -raportti"
     :konteksti  #{:urakka}
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet}
     :render     (fn []
@@ -119,7 +119,7 @@
                                  :class      "valitse-raportti-alasveto"}
             +raporttityypit+]]]
          [:div.raportin-asetukset
-          (when (contains? (:konteksti @valittu-raporttityyppi) :urakka)
+            (when (contains? (:konteksti @valittu-raporttityyppi) :urakka)
             (urakat/valitse-hallintayksikko-ja-urakka))
           (when (and v-ur v-hal (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet))
             [valinnat/urakan-hoitokausi @nav/valittu-urakka])

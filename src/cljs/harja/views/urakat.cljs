@@ -61,7 +61,7 @@
         v-ur @nav/valittu-urakka]
     (if-not v-hal
       (valitse-hallintayksikko)
-      (if-not v-ur
+      (when-not v-ur
         (valitse-urakka)))))
 
 (defn urakat
