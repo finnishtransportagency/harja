@@ -27,4 +27,12 @@
 (defmethod extent :multiline [{lines :lines}]
   (laske-pisteiden-extent (mapcat :points lines)))
 
+;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
+(def pisteen-extent-laajennus 35)
+
+(defmethod extent :point [{c :coordinates}]
+  (let [d pisteen-extent-laajennus
+        [x y] c]
+    [(- x d) (- y d) (+ x d) (+ y d)]))
+
 ;; FIXME: lisää tarvittaessa muita 

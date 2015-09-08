@@ -13,6 +13,8 @@
             [cljs.core.async :refer [<! >! chan] :as async]
 
             [harja.views.kartta :as kartta]
+            [harja.geo :as geo]
+            
             ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]])
@@ -706,18 +708,28 @@
         tr-osoite-ch (chan)
         
         osoite-ennen-karttavalintaa (atom nil)
-        karttavalinta-kaynnissa (atom false)]
-    (log "kompoentti tehty uudestaan!")
+        karttavalinta-kaynnissa (atom false)
+
+        nayta-kartalla (fn [arvo]
+                         (if (or (nil? arvo) (vkm/virhe? arvo))
+                           (kartta/poista-geometria! :tr-valittu-osoite)
+                           (do (kartta/nayta-geometria! :tr-valittu-osoite
+                                                        {:alue (assoc arvo
+                                                                      :stroke {:width 4})
+                                                         :type :tr-valittu-osoite})
+                               (kartta/keskita-kartta-alueeseen! (geo/extent arvo)))))]
     (when hae-sijainti
+      (nayta-kartalla @sijainti)
       (go (loop [vkm-haku nil]
             (let [[arvo kanava] (alts! (if vkm-haku
                                          [vkm-haku tr-osoite-ch]
                                          [tr-osoite-ch]))]
-              (pr-str "VKM/TR: " (pr-str arvo))
+              (log "VKM/TR: " (pr-str arvo))
               (when arvo
                 (if (= kanava vkm-haku)
                   ;; Saatiin VKM vastaus, päivitetään sijaintiin
                   (do (reset! sijainti arvo)
+                      (nayta-kartalla arvo)
                       (recur nil))
                   
                   ;; Saatiin uusi osoite, tehdään VKM haku jos osoite muodollisesti pätevä
@@ -739,10 +751,10 @@
                                        
     (komp/luo
 
-      {:component-will-unmount
-       (fn [_]
-         (log "Lopetetaan TR sijaintipäivitys")
-         (async/close! tr-osoite-ch))}
+     (komp/ulos #(do 
+                   (log "Lopetetaan TR sijaintipäivitys")
+                   (async/close! tr-osoite-ch)
+                   (kartta/poista-geometria! :tr-valittu-osoite)))
 
       (fn [{:keys [lomake? sijainti]} data]
         (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
@@ -806,16 +818,16 @@
                                     :paivita #(swap! data merge %)
                                     :kun-valmis #(do
                                                    (reset! data %)
-                                                   (reset! karttavalinta-kaynnissa false))}])
+                                                   (reset! karttavalinta-kaynnissa false)
+                                                   (go (>! tr-osoite-ch %)))}])
               
-              (when hae-sijainti
+              #_(when hae-sijainti
                 (let [sijainti @sijainti]
                   (when sijainti
                     (if (vkm/virhe? sijainti)
                       [:td [:div.virhe (vkm/virhe sijainti)]]
                       [:td [:div.sijainti (pr-str sijainti)]]))))
-              #_[:span.sijainti-pohjoinen [:b "P:"] " " (.toFixed y)]
-              #_[:span.sijainti-itainen [:b "I:"] " " (.toFixed x)]
+              
               ]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
