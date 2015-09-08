@@ -15,7 +15,6 @@ CREATE TABLE varustetoteuma (
   tr_loppuosa integer,
   tr_loppuetaisyys integer,
   tr_alkuetaisyys integer,
-  aika date,
   piiri integer,
   kuntoluokka integer
 );
