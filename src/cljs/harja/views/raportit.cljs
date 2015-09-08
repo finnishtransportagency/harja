@@ -62,11 +62,15 @@
 (tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " yksikkohintaiset-toteumat-kaikkine-tietoineen)
 
 (def raportti-valmis-naytettavaksi?
-  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi]
-              (not (nil? valittu-raporttityyppi)))))
+  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
+                  konteksti (:konteksti valittu-raporttityyppi)
+                  v-ur @nav/valittu-urakka
+                  v-hal @nav/valittu-hallintayksikko]
+              (if (contains? konteksti :urakka)
+                (and v-ur v-hal (not (nil? valittu-raporttityyppi)))
+                (not (nil? valittu-raporttityyppi))))))
 
 (def +raporttityypit+
-  ; FIXME: Hardcoodattu testidata, tämän on tarkoitus tulla myöhemmin serveriltä(?)
   [{:nimi       :yk-hint-kuukausiraportti
     :otsikko    "Yks.hint. töiden toteumat -raportti"
     :konteksti  #{:urakka}
@@ -94,22 +98,6 @@
                                                                                                                lisatieto))) :tyyppi :string :leveys "20%"}]
                    @yksikkohintaiset-toteumat-kaikkine-tietoineen])}])
 
-; Alkuperäinen toteutus: raporttityypin parametreista tehdään kenttiä. Ongelmana kuitenkin tehdä riippuvuudet oikein kenttien välille.
-#_(defn tee-lomakekentta [kentta lomakkeen-tiedot]
-    (if (= :valinta (:tyyppi kentta))
-      (case (:valinnat kentta)
-        :valitun-urakan-hoitokaudet
-        (-> kentta
-            (dissoc :valinnat)
-            (assoc :valinnat-fn (constantly @u/valitun-urakan-hoitokaudet)
-                   :valinta-nayta #(if % (fmt/pvm-vali-opt %) "- Valitse hoitokausi -")))
-        :valitun-aikavalin-kuukaudet
-        (assoc kentta :valinnat (if-let [hk (:hoitokausi lomakkeen-tiedot)] ; FIXME Resetoi kuukausi ensimmäiseen arvoon
-                                  (pvm/hoitokauden-kuukausivalit hk)
-                                  [])
-                      :valinta-nayta #(if % (str (t/month (first %)) "/" (t/year (first %))) "- Valitse kuukausi -")))
-      kentta))
-
 (defn raporttinakyma []
   (fn []
     (:render @valittu-raporttityyppi)))
@@ -118,7 +106,8 @@
   []
   (komp/luo
     (fn []
-      (let [ur @nav/valittu-urakka]
+      (let [v-ur @nav/valittu-urakka
+            v-hal @nav/valittu-hallintayksikko]
         [:div.raporttivalinnat
          [:div.raportin-tyyppi
           [:div.label-ja-alasveto
@@ -130,9 +119,11 @@
                                  :class      "valitse-raportti-alasveto"}
             +raporttityypit+]]]
          [:div.raportin-asetukset
-          (when (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet)
+          (when (contains? (:konteksti @valittu-raporttityyppi) :urakka)
+            (urakat/valitse-hallintayksikko-ja-urakka))
+          (when (and v-ur v-hal (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet))
             [valinnat/urakan-hoitokausi @nav/valittu-urakka])
-          (when (contains? (:parametrit @valittu-raporttityyppi) :valitun-aikavalin-kuukaudet)
+          (when (and v-ur v-hal (contains? (:parametrit @valittu-raporttityyppi) :valitun-aikavalin-kuukaudet))
             [valinnat/hoitokauden-kuukausi])]]))))
 
 (defn raporttivalinnat-ja-raportti []
@@ -142,7 +133,7 @@
                                       (s/prosessoi-tyorivit ur
                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
 
-    (hae-urakan-tyot @nav/valittu-urakka)                   ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
+    (hae-urakan-tyot @nav/valittu-urakka) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta. Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
     [:span
      [raporttivalinnat]
      (when @raportti-valmis-naytettavaksi?
@@ -151,6 +142,4 @@
 (defn raportit []
   (komp/luo
     (fn []
-      (or
-        (urakat/valitse-hallintayksikko-ja-urakka)          ; FIXME Voi olla tarve luoda raportti hallintayksikön alueesta tai koko Suomesta.
-        (raporttivalinnat-ja-raportti)))))
+      (raporttivalinnat-ja-raportti))))

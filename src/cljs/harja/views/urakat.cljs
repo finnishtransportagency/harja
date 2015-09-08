@@ -52,7 +52,11 @@
                              :aputeksti      "Kirjoita urakan nimi tähän"}
            @nav/suodatettu-urakkalista]]])))
 
-(defn valitse-hallintayksikko-ja-urakka []
+(defn valitse-hallintayksikko-ja-urakka
+  "Jos hallintayksikköä ei ole valittu, palauttaa hallintayksikönvalintakomponentin
+   Jos hallintayksikkö on valittu, mutta urakkaa ei, palauttaa urakanvalintakomponentin
+   Jos molemmat on valittu, palauttaa nil"
+  []
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
     (if-not v-hal
