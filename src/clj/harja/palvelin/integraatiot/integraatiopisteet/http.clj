@@ -22,7 +22,7 @@
 
 (defn laheta-kutsu [integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
   (log/debug "Lähetetään HTTP " metodi " -kutsu integraatiolle: " integraatio ", järjestelmään: " jarjestelma ": "
-             "- osoitte:" url ", "
+             "- osoite:" url ", "
              "- metodi: " metodi ", "
              "- data: " kutsudata ", "
              "- otsikkot:" otsikot
