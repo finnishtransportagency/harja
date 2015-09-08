@@ -24,11 +24,6 @@
           "required": true,
           "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
-        "aika": {
-          "id": "urn:harja/toteumat/0/toteuma/alkanut",
-          "type": "string",
-          "format": "date-time"
-        },
         "sijainti": {
           "id": "urn:harja/ilmoitukset/0/sijainti",
           "type": "object",
