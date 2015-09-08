@@ -35,4 +35,12 @@
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
 
+
+;; Päättelee annetulle geometrialle hyvän ikonisijainnin
+;; geometry -> [x y]
+(defmethod ikonin-sijainti (fn [geometry] (:type geometry)))
+
+;; FIXME: tähän jäin
+
+
 ;; FIXME: lisää tarvittaessa muita 

@@ -93,14 +93,15 @@
 (def ^:export the-kartta (atom nil))
 
 (defn keskita-kartta-pisteeseen! [keskipiste]
-  (.setCenter (.getView @the-kartta) (clj->js keskipiste)))
+  (when-let [ol3 @the-kartta]
+    (.setCenter (.getView ol3) (clj->js keskipiste))))
 
 (defn keskita-kartta-alueeseen! [alue]
   (assert (vector? alue) "Alueen tulee vektori numeroita")
   (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
-  (let [ol3 @the-kartta
-        view (.getView ol3)]
-    (.fitExtent view (clj->js alue) (.getSize ol3))))
+  (when-let [ol3 @the-kartta]
+    (let [view (.getView ol3)]
+      (.fitExtent view (clj->js alue) (.getSize ol3)))))
    
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))

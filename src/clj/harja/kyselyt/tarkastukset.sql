@@ -46,7 +46,7 @@ INSERT
        (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
         sijainti, tarkastaja, mittaaja, tyyppi, havainto, luoja, ulkoinen_id)
 VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
-        :sijainti::point, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja, :ulkoinen_id)
+        :sijainti, :tarkastaja, :mittaaja, :tyyppi::tarkastustyyppi, :havainto, :luoja, :ulkoinen_id)
 
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot

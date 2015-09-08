@@ -55,7 +55,14 @@
   (map #(assoc %
          :type :tarkastus
          :alue {:type        :icon
-                :coordinates (:sijainti %)
+                :coordinates (let [sijainti (:sijainti %)]
+                               (case (:type sijainti)
+                                 ;; Pistemäisen sijainnin koordinaatti on piste itse
+                                 :point (:coordinates sijainti)
+
+                                 ;; Viivamaisen sijainnin koordinaati on 1. viivan 1. piste
+                                 ;; (FIXME: viivan keskipiste parempi?)
+                                 :multiline (-> sijainti :lines first :points first)))
                 :direction   0
                 :img         (if (= (:id %) (:id @valittu-tarkastus))
                                "images/tyokone_highlight.png"
