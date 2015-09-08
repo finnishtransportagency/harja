@@ -38,9 +38,15 @@
 
 ;; Päättelee annetulle geometrialle hyvän ikonisijainnin
 ;; geometry -> [x y]
-(defmethod ikonin-sijainti (fn [geometry] (:type geometry)))
+(defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
 
-;; FIXME: tähän jäin
+(defmethod ikonin-sijainti :point [geom]
+  (:coordinates sijainti))
 
+;; FIXME: olisiko keskipiste parempi?
+(defmethod ikonin-sijainti :multiline [{lines :lines}]
+  (ikonin-sijainti (first lines)))
 
-;; FIXME: lisää tarvittaessa muita 
+(defmethod ikonin-sijainti :line [{points :points}]
+  (first points))
+

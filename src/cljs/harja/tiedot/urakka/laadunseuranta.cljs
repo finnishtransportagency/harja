@@ -9,7 +9,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log]]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -55,14 +56,7 @@
   (map #(assoc %
          :type :tarkastus
          :alue {:type        :icon
-                :coordinates (let [sijainti (:sijainti %)]
-                               (case (:type sijainti)
-                                 ;; Pistemäisen sijainnin koordinaatti on piste itse
-                                 :point (:coordinates sijainti)
-
-                                 ;; Viivamaisen sijainnin koordinaati on 1. viivan 1. piste
-                                 ;; (FIXME: viivan keskipiste parempi?)
-                                 :multiline (-> sijainti :lines first :points first)))
+                :coordinates (geo/ikonin-sijainti (:sijainti %))
                 :direction   0
                 :img         (if (= (:id %) (:id @valittu-tarkastus))
                                "images/tyokone_highlight.png"

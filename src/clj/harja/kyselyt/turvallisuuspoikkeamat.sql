@@ -137,14 +137,14 @@ SET urakka               = :urakka,
   muokattu               = NOW()
 WHERE id = :id;
 
---name: aseta-turvallisuuspoikkeaman-sijainti<!
+--name: aseta-turvallisuuspoikkeaman-sijainti!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20. Ei aseta muokkaajaa ja muokattua, koska:
 -- * kyselyä kutsutaan heti paivita1:sen jälkeen, joka jo asettaa ne
 -- * kyselyä kutsutaan heti luonnin jälkeen
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti),
+  sijainti         = :sijainti,
   tr_numero        = :numero,
   tr_alkuetaisyys  = :aet,
   tr_loppuetaisyys = :let,
