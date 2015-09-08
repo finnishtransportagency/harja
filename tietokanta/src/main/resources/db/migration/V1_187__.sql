@@ -5,7 +5,7 @@ CREATE TYPE varustetoteuma_tyyppi AS ENUM ('lisatty','paivitetty','poistettu');
 
 CREATE TABLE varustetoteuma (
   id serial PRIMARY KEY,
-  tunniste varchar(128) UNIQUE,
+  tunniste varchar(128),
   toteuma integer references toteuma (id),
   toimenpide varustetoteuma_tyyppi,
   tietolaji varchar(128),
