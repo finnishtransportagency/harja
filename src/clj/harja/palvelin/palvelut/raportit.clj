@@ -18,47 +18,18 @@
   (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
     (into []
          (comp
-           (map #(konv/decimal->double % :kht_laskutettu))
-           (map #(konv/decimal->double % :kht_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :kht_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :kht_laskutetaan))
-           (map #(konv/decimal->double % :kht_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :kht_laskutetaan_ind_korotus))
-
-           (map #(konv/decimal->double % :yht_laskutettu))
-           (map #(konv/decimal->double % :yht_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :yht_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :yht_laskutetaan))
-           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :yht_laskutetaan_ind_korotus))
-
-           (map #(konv/decimal->double % :sakot_laskutettu))
-           (map #(konv/decimal->double % :sakot_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :sakot_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :sakot_laskutetaan))
-           (map #(konv/decimal->double % :sakot_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :sakot_laskutetaan_ind_korotus))
-
-           (map #(konv/decimal->double % :suolasakot_laskutettu))
-           (map #(konv/decimal->double % :suolasakot_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :suolasakot_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :suolasakot_laskutetaan))
-           (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :suolasakot_laskutetaan_ind_korotus))
-;; FIXME!! anna vektorina keywordit muuntimeen
-           (map #(konv/decimal->double % :muutostyot_laskutettu))
-           (map #(konv/decimal->double % :muutostyot_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :muutostyot_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :muutostyot_laskutetaan))
-           (map #(konv/decimal->double % :muutostyot_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :muutostyot_laskutetaan_ind_korotus))
-
-           (map #(konv/decimal->double % :erilliskustannukset_laskutettu))
-           (map #(konv/decimal->double % :erilliskustannukset_laskutettu_ind_korotettuna))
-           (map #(konv/decimal->double % :erilliskustannukset_laskutettu_ind_korotus))
-           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan))
-           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan_ind_korotettuna))
-           (map #(konv/decimal->double % :erilliskustannukset_laskutetaan_ind_korotus))
+           (map #(konv/decimal->double % :kht_laskutettu :kht_laskutettu_ind_korotettuna :kht_laskutettu_ind_korotus
+                                       :kht_laskutetaan :kht_laskutetaan_ind_korotettuna :kht_laskutetaan_ind_korotus
+                                       :yht_laskutettu :yht_laskutettu_ind_korotettuna :yht_laskutettu_ind_korotus
+                                       :yht_laskutetaan :yht_laskutetaan_ind_korotettuna :yht_laskutetaan_ind_korotus
+                                       :sakot_laskutettu :sakot_laskutettu_ind_korotettuna :sakot_laskutettu_ind_korotus
+                                       :sakot_laskutetaan :sakot_laskutetaan_ind_korotettuna :sakot_laskutetaan_ind_korotus
+                                       :suolasakot_laskutettu :suolasakot_laskutettu_ind_korotettuna :suolasakot_laskutettu_ind_korotus
+                                       :suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotettuna :suolasakot_laskutetaan_ind_korotus
+                                       :muutostyot_laskutettu :muutostyot_laskutettu_ind_korotettuna :muutostyot_laskutettu_ind_korotus
+                                       :muutostyot_laskutetaan :muutostyot_laskutetaan_ind_korotettuna :muutostyot_laskutetaan_ind_korotus
+                                       :erilliskustannukset_laskutettu :erilliskustannukset_laskutettu_ind_korotettuna :erilliskustannukset_laskutettu_ind_korotus
+                                       :erilliskustannukset_laskutetaan :erilliskustannukset_laskutetaan_ind_korotettuna :erilliskustannukset_laskutetaan_ind_korotus))
            )
          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
                                                     (konv/sql-date hk-alkupvm)
