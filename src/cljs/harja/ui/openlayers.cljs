@@ -180,7 +180,8 @@
         tyyppi (.-type e)]
     {:tyyppi (case tyyppi
                "pointermove" :hover
-               "click" :click)
+               "click" :click
+               "singleclick" :click)
      :sijainti [(aget c 0) (aget c 1)]}))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
@@ -194,14 +195,15 @@
                              (on-move e (laske-kartan-alue ol3))))))
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
-  (.on ol3 "click" (fn [e]
-                     (if-let [kasittelija @klik-kasittelija]
-                       (kasittelija (tapahtuman-kuvaus e))
-                       (do (when on-click
-                             (on-click e))
-                           (when on-select
-                             (when-let [g (tapahtuman-geometria this e)]
-                               (on-select g e))))))))
+  (.on ol3 "singleclick"
+       (fn [e]
+         (if-let [kasittelija @klik-kasittelija]
+           (kasittelija (tapahtuman-kuvaus e))
+           (do (when on-click
+                 (on-click e))
+               (when on-select
+                 (when-let [g (tapahtuman-geometria this e)]
+                   (on-select g e))))))))
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove" (fn [e]
