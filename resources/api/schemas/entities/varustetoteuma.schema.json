@@ -14,6 +14,15 @@
       "type": "string",
       "required": true
     },
+    "toimenpide": {
+      "id": "urn:harja/toimenpide",
+      "enum": [
+        "lisatty",
+        "paivitetty",
+        "poistettu"
+      ],
+      "required": true
+    },
     "ominaisuudet": {
       "id": "urn:harja/ominaisuudet",
       "type": "string"
