@@ -95,8 +95,8 @@
                     :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")
                     :voi-muokata? false}
                    [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika-opt :leveys "20%"}
-                    {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "30%"}
+                    {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
                     {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
                     {:otsikko "Suunniteltu määrä hoitokaudella" :nimi :suunniteltu-maara-hoitokaudella :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
@@ -107,13 +107,9 @@
                                                                                                                                                     (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
                                                                                                                                (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (let [max-pituus 80
-                                                                                                                 lisatieto (if (vector? (:lisatieto rivi))
-                                                                                                                             (clojure.string/join "\n\n" (:lisatieto rivi))
-                                                                                                                             (:lisatieto rivi))]
-                                                                                                             (if (> (count lisatieto) max-pituus)
-                                                                                                               (str (subs lisatieto 0 max-pituus) "...")
-                                                                                                               lisatieto))) :tyyppi :string :leveys "20%"}]
+                    {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (if (vector? (:lisatieto rivi))
+                                                                                                                            (clojure.string/join "\n\n" (:lisatieto rivi))
+                                                                                                                            (:lisatieto rivi))) :nayta-max-merkkia 80 :tyyppi :string :leveys "20%"}]
                    @yksikkohintaiset-toteumat-kaikkine-tietoineen])}])
 
 (defn raporttinakyma []

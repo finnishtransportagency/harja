@@ -255,7 +255,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [:tr {:class    luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti]} skeema]
+   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
        [vetolaatikon-tila ohjaus vetolaatikot id]
@@ -264,12 +264,17 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
              (if (= tasaa :oikea) "tasaa-oikealle" "")}
         (if (= tyyppi :komponentti)
           (komponentti rivi)
-          (let [arvo (if hae
+          (let [haettu-arvo (if hae
                           (hae rivi)
-                          (get rivi nimi))]
+                          (get rivi nimi))
+                arvon-pituus-rajattu (if nayta-max-merkkia
+                                       (if (> (count haettu-arvo) nayta-max-merkkia)
+                                           (str (subs haettu-arvo 0 nayta-max-merkkia) "...")
+                                           haettu-arvo)
+                                       haettu-arvo)]
             (if fmt
-              (fmt arvo)
-              [nayta-arvo skeema (vain-luku-atomina arvo)])))]))
+              (fmt arvon-pituus-rajattu)
+              [nayta-arvo skeema (vain-luku-atomina arvon-pituus-rajattu)])))]))
    [:td.toiminnot]])
 
 (defn laske-sarakkeiden-leveys [skeema]
