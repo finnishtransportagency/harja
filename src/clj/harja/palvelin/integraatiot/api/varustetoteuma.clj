@@ -33,7 +33,7 @@
          toimenpide
          tietolaji
          ominaisuudet
-         (get-in sijainti[:tie :numero])
+         (get-in sijainti [:tie :numero])
          (get-in sijainti [:tie :aosa])
          (get-in sijainti [:tie :losa])
          (get-in sijainti [:tie :let])
