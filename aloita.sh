@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -e
 echo "Luodaan uudestaan harja ja harjatesti tietokannat"
 
 cd vagrant
@@ -9,4 +10,3 @@ cd ..
 
 echo "Käynnistetään repl. Muista käynnistää myös fighweel!"
 lein do clean, repl
-
