@@ -33,12 +33,12 @@
                        {:toteutunut_maara 2 :alkanut (t/now) :toimenpidekoodi_id 1 :nimi "Auraus"}
                        {:toteutunut_maara 44 :alkanut (t/plus (t/now) (t/days 2)) :toimenpidekoodi_id 1 :nimi "Auraus"}
                        {:toteutunut_maara 76 :alkanut (t/plus (t/now) (t/days 2)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
-                       {:toteutunut_maara 6 :alkanut (t/plus (t/now) (t/days 4)) :toimenpidekoodi_id 2 :nimi "Suolaus"} ; Pitää yhdistää alempaan
-                       {:toteutunut_maara 6 :alkanut (t/plus (t/now) (t/days 4)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
+                       {:toteutunut_maara 6 :alkanut (t/date-time 2000 10 11) :toimenpidekoodi_id 2 :nimi "Suolaus"} ; Pitää yhdistää alempaan
+                       {:toteutunut_maara 6 :alkanut (t/plus (t/date-time 2000 10 11) (t/hours 4)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
                        {:toteutunut_maara 7 :alkanut (t/plus (t/now) (t/days 5)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
-                       {:toteutunut_maara 1 :alkanut (t/plus (t/now) (t/days 4)) :toimenpidekoodi_id 3 :nimi "Paikkaus"} ; Pitää yhdistää kahteen alempaan
-                       {:toteutunut_maara 10 :alkanut (t/plus (t/now) (t/days 4)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}
-                       {:toteutunut_maara 100 :alkanut (t/plus (t/now) (t/days 4)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}]
+                       {:toteutunut_maara 1 :alkanut (t/date-time 2000 10 11) :toimenpidekoodi_id 3 :nimi "Paikkaus"} ; Pitää yhdistää kahteen alempaan
+                       {:toteutunut_maara 10 :alkanut (t/plus (t/date-time 2000 10 11) (t/minutes 1)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}
+                       {:toteutunut_maara 100 :alkanut (t/plus (t/date-time 2000 10 11) (t/hours 23)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}]
         yhdistetyt (yhdista-saman-paivan-samat-tehtavat yhdistettavat)
         yhdistetyt-auraukset (filter
                                #(= (:nimi %) "Auraus")

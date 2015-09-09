@@ -1,16 +1,17 @@
 (ns harja.palvelin.palvelut.raportit
-  (:require  [com.stuartsierra.component :as component]
-             [clojure.string :as str]
-             [taoensso.timbre :as log]
+  (:require [com.stuartsierra.component :as component]
+            [clojure.string :as str]
+            [taoensso.timbre :as log]
 
-             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-             [harja.kyselyt.konversio :as konv]
-             [harja.domain.roolit :as roolit]
-             [harja.palvelin.palvelut.toteumat :as toteumat]
-             [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
-             [harja.kyselyt.toteumat :as toteumat-q]
-             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
-             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
+            [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
+            [clj-time.core :as t]))
 
 
 (defn hae-laskutusyhteenvedon-tiedot
@@ -57,9 +58,13 @@
                                                     urakan-indeksi))))
 
 (defn yhdista-saman-paivan-samat-tehtavat [tehtavat]
-  ; FIXME Tälle pitäisi tehdä yksikkötesti
   (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
-        saman-paivan-samat-tehtavat-map (group-by #(select-keys % [:toimenpidekoodi_id :alkanut]) tehtavat)
+        saman-paivan-samat-tehtavat-map (group-by (fn [tehtava]
+                                                    (let [tpk-id (:toimenpidekoodi_id tehtava)
+                                                          alkanut (:alkanut tehtava)
+                                                          pvm (str (t/day alkanut) "-" (t/month alkanut) "-" (t/year alkanut))]
+                                                      [tpk-id pvm]))
+                                                  tehtavat)
         ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät, voi sisältää vain yhden)
         _ (log/debug "Saatiin aikaiseksi " (count (keys saman-paivan-samat-tehtavat-map)) " ryhmää. Ryhmät: " (keys saman-paivan-samat-tehtavat-map))
         saman-paivan-samat-tehtavat-vector (mapv
