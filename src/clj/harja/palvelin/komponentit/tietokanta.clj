@@ -7,10 +7,8 @@
 (defrecord Tietokanta [datasource]
   component/Lifecycle
   (start [this]
-    #_(println "Käytetään tietokantaa: " datasource)
     this)
   (stop [this]
-    #_(println "Tietokanta suljetaan: " datasource)
     (DataSources/destroy  datasource)
     this))
 
