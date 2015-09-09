@@ -8,7 +8,8 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-viesti [tunniste tietolajitunniste]
-  [:haeTietue
+  [:ns2:haeTietue
+   {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}
    [:tunniste tunniste]
    [:tietolajitunniste tietolajitunniste]])
 
