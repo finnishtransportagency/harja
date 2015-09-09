@@ -1,8 +1,11 @@
 (ns harja.geo
-  "Yleisiä geometria-apureita")
+  "Yleisiä geometria-apureita"
+  (:require [harja.loki :refer [log]]))
 
 
-(defn- laske-pisteiden-extent [pisteet]
+(defn- laske-pisteiden-extent
+  "Laskee pisteiden alueen."
+  [pisteet]
   (let [[ensimmainen-x ensimmainen-y] (first pisteet)
         pisteet (rest pisteet)]
     (loop [minx ensimmainen-x
@@ -18,7 +21,33 @@
              (max y maxy)
              pisteet)))))
   
-       
+(defn- pisteet
+  "Palauttaa annetun geometrian pisteet sekvenssinä"
+  [{type :type :as g}]
+  (case type
+    :line (:points g)
+    :multiline (mapcat :points (:lines g))
+    :polygon (:coordinates g)
+    :multipolygon (mapcat :coordinates (:polygons g))
+    :point [(:coordinates g)]))
+
+(defn keskipiste
+  "Laske annetun geometrian keskipiste ottamalla keskiarvon kaikista pisteistä.
+Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
+  [g]
+  (loop [x 0
+         y 0
+         i 0
+         [piste & pisteet] (pisteet g)]
+    (if-not piste
+      (if (zero? i)
+        nil ; ei pisteitä
+        [(/ x i) (/ y i)])
+      (recur (+ x (first piste))
+             (+ y (second piste))
+             (inc i)
+             pisteet))))
+
 (defmulti extent (fn [geometry] (:type geometry)))
 
 (defmethod extent :line [{points :points}]
@@ -41,12 +70,9 @@
 (defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
 
 (defmethod ikonin-sijainti :point [geom]
-  (:coordinates sijainti))
+  (:coordinates geom))
 
-;; FIXME: olisiko keskipiste parempi?
-(defmethod ikonin-sijainti :multiline [{lines :lines}]
-  (ikonin-sijainti (first lines)))
+(defmethod ikonin-sijainti :default [g]
+  (keskipiste g))
 
-(defmethod ikonin-sijainti :line [{points :points}]
-  (first points))
 
