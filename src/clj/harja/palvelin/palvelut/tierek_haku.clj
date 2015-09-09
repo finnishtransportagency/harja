@@ -11,7 +11,7 @@
                                                    (:x1 params) (:y1 params)
                                                    (:x2 params) (:y2 params)
                                                    250))]
-    (konv/array->vec tros :tr_osoite)))
+    (assoc tros :geometria (geo/pg->clj (:geometria tros)))))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
