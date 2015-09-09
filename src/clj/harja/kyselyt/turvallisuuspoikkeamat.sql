@@ -174,7 +174,7 @@ WHERE ulkoinen_id = :id AND
 --name: aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti),
+  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
   tr_numero        = :numero,
   tr_alkuetaisyys  = :aet,
   tr_loppuetaisyys = :let,
