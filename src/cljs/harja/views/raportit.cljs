@@ -106,10 +106,7 @@
                                                                                                                                                   (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
                                                                                                                                                     (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
-                                                                                                                               (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (if (vector? (:lisatieto rivi))
-                                                                                                                            (clojure.string/join "\n\n" (:lisatieto rivi))
-                                                                                                                            (:lisatieto rivi))) :nayta-max-merkkia 80 :tyyppi :string :leveys "20%"}]
+                                                                                                                               (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
                    @yksikkohintaiset-toteumat-kaikkine-tietoineen])}])
 
 (defn raporttinakyma []
