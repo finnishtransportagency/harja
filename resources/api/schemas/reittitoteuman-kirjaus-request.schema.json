@@ -30,7 +30,7 @@
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
-        },
+        }
       }
     }
   }

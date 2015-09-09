@@ -37,7 +37,7 @@
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/varustetoteuma.schema.json",
           "required": true
-        },
+        }
       }
     }
   }
