@@ -40,6 +40,8 @@
                             :ilmoituskuittausjono s/Str}
 
    :ilmatieteenlaitos {:lampotilat-url s/Str}
+   :tieosoiteverkon-tuontivali s/Int
+   (s/optional-key :tieosoiteverkon-shapefile) s/Str
    })
 
 (def oletusasetukset
@@ -53,6 +55,7 @@
                 :salasana ""}
 
    :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
+   :tieosoiteverkon-tuontivali 1
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
