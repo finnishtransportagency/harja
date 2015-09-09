@@ -5,10 +5,10 @@ DROP TYPE laskutusyhteenveto_rivi;
 
 CREATE TYPE laskutusyhteenveto_rivi
 AS (nimi            VARCHAR, tuotekoodi VARCHAR,
-    indeksit_kaikki_laskutettu NUMERIC, indeksit_muu_kuin_kokhint_laskutettu NUMERIC,
-    indeksit_kaikki_laskutetaan NUMERIC, indeksit_muu_kuin_kokhint_laskutetaan NUMERIC,
-    muu_kuin_kokhint_laskutettu NUMERIC, kaikki_yhteensa_laskutettu NUMERIC,
-    muu_kuin_kokhint_laskutetaan NUMERIC, kaikki_yhteensa_laskutetaan NUMERIC,
+    kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC, kaikki_laskutettu_ind_korotus NUMERIC,
+    kaikki_paitsi_kht_laskutetaan_ind_korotus NUMERIC, kaikki_laskutetaan_ind_korotus NUMERIC,
+    kaikki_paitsi_kht_laskutettu NUMERIC, kaikki_laskutettu NUMERIC,
+    kaikki_paitsi_kht_laskutetaan NUMERIC, kaikki_laskutetaan NUMERIC,
     kht_laskutettu  NUMERIC, kht_laskutettu_ind_korotettuna NUMERIC, kht_laskutettu_ind_korotus NUMERIC,
     kht_laskutetaan NUMERIC, kht_laskutetaan_ind_korotettuna NUMERIC, kht_laskutetaan_ind_korotus NUMERIC,
     yht_laskutettu  NUMERIC, yht_laskutettu_ind_korotettuna NUMERIC, yht_laskutettu_ind_korotus NUMERIC,
@@ -28,15 +28,15 @@ CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   RETURNS SETOF laskutusyhteenveto_rivi AS $$
 DECLARE
   t                                      RECORD;
-  indeksit_kaikki_laskutettu NUMERIC;
-  indeksit_muu_kuin_kokhint_laskutettu NUMERIC;
-  indeksit_kaikki_laskutetaan NUMERIC;
-  indeksit_muu_kuin_kokhint_laskutetaan NUMERIC;
+  kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC;
+  kaikki_laskutettu_ind_korotus NUMERIC;
+  kaikki_paitsi_kht_laskutetaan_ind_korotus NUMERIC;
+  kaikki_laskutetaan_ind_korotus NUMERIC;
 
-  muu_kuin_kokhint_laskutettu NUMERIC;
-  kaikki_yhteensa_laskutettu NUMERIC;
-  muu_kuin_kokhint_laskutetaan NUMERIC;
-  kaikki_yhteensa_laskutetaan NUMERIC;
+  kaikki_paitsi_kht_laskutettu NUMERIC;
+  kaikki_laskutettu NUMERIC;
+  kaikki_paitsi_kht_laskutetaan NUMERIC;
+  kaikki_laskutetaan NUMERIC;
 
   kht_laskutettu                         NUMERIC;
   kht_laskutettu_ind_korotettuna         NUMERIC;
@@ -519,36 +519,36 @@ BEGIN
     RAISE NOTICE 'Erilliskustannuksia laskutetaan: %', erilliskustannukset_laskutetaan;
 
     -- Indeksisummat
-    indeksit_kaikki_laskutettu := 0.0;
-    indeksit_muu_kuin_kokhint_laskutettu := 0.0;
-    indeksit_kaikki_laskutetaan := 0.0;
-    indeksit_muu_kuin_kokhint_laskutetaan := 0.0;
+    kaikki_paitsi_kht_laskutettu_ind_korotus := 0.0;
+    kaikki_laskutettu_ind_korotus := 0.0;
+    kaikki_paitsi_kht_laskutetaan_ind_korotus := 0.0;
+    kaikki_laskutetaan_ind_korotus := 0.0;
 
-    indeksit_muu_kuin_kokhint_laskutettu := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus +
+    kaikki_paitsi_kht_laskutettu_ind_korotus := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus +
         suolasakot_laskutettu_ind_korotus + muutostyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus;
-    indeksit_kaikki_laskutettu := indeksit_muu_kuin_kokhint_laskutettu + kht_laskutettu_ind_korotus;
+    kaikki_laskutettu_ind_korotus := kaikki_paitsi_kht_laskutettu_ind_korotus + kht_laskutettu_ind_korotus;
 
-    indeksit_muu_kuin_kokhint_laskutetaan := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus +
+    kaikki_paitsi_kht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus +
                                             suolasakot_laskutetaan_ind_korotus + muutostyot_laskutetaan_ind_korotus + erilliskustannukset_laskutetaan_ind_korotus;
-    indeksit_kaikki_laskutetaan := indeksit_muu_kuin_kokhint_laskutetaan + kht_laskutetaan_ind_korotus;
+    kaikki_laskutetaan_ind_korotus := kaikki_paitsi_kht_laskutetaan_ind_korotus + kht_laskutetaan_ind_korotus;
 
 
     -- Kustannusten kokonaissummat
-    muu_kuin_kokhint_laskutettu := 0.0;
-    kaikki_yhteensa_laskutettu := 0.0;
-    muu_kuin_kokhint_laskutetaan := 0.0;
-    kaikki_yhteensa_laskutetaan := 0.0;
+    kaikki_paitsi_kht_laskutettu := 0.0;
+    kaikki_laskutettu := 0.0;
+    kaikki_paitsi_kht_laskutetaan := 0.0;
+    kaikki_laskutetaan := 0.0;
 
-    muu_kuin_kokhint_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
+    kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
                                    suolasakot_laskutettu_ind_korotettuna + muutostyot_laskutettu_ind_korotettuna +
                                    erilliskustannukset_laskutettu_ind_korotettuna;
 
-    kaikki_yhteensa_laskutettu := muu_kuin_kokhint_laskutettu + kht_laskutettu_ind_korotettuna;
+    kaikki_laskutettu := kaikki_paitsi_kht_laskutettu + kht_laskutettu_ind_korotettuna;
 
-    muu_kuin_kokhint_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
+    kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
                                    suolasakot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_ind_korotettuna +
                                    erilliskustannukset_laskutetaan_ind_korotettuna;
-    kaikki_yhteensa_laskutetaan := muu_kuin_kokhint_laskutetaan + kht_laskutetaan_ind_korotettuna;
+    kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan_ind_korotettuna;
 
     RAISE NOTICE '
     Yhteenveto:';
@@ -582,11 +582,12 @@ BEGIN
 
     ', t.nimi;
 
+
     RETURN NEXT (t.nimi, t.tuotekoodi,
-                   indeksit_kaikki_laskutettu, indeksit_muu_kuin_kokhint_laskutettu,
-                   indeksit_kaikki_laskutetaan, indeksit_muu_kuin_kokhint_laskutetaan,
-                   muu_kuin_kokhint_laskutettu, kaikki_yhteensa_laskutettu,
-                   muu_kuin_kokhint_laskutetaan, kaikki_yhteensa_laskutetaan,
+                   kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
+                   kaikki_paitsi_kht_laskutetaan_ind_korotus, kaikki_laskutetaan_ind_korotus,
+                   kaikki_paitsi_kht_laskutettu, kaikki_laskutettu,
+                   kaikki_paitsi_kht_laskutetaan, kaikki_laskutetaan,
                    kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
                    kht_laskutetaan, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
                    yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
