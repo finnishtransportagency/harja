@@ -1,8 +1,8 @@
-CREATE TYPE tr_osoite AS (tie INTEGER, aosa INTEGER, aet INTEGER, losa INTEGER, let INTEGER);
+-- Kuvaus: tierekisteriosoitteen haku tieosoiteverkosta
 
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
   alkupiste geometry, loppupiste geometry, treshold INTEGER)
-  RETURNS tr_osoite
+  RETURNS INTEGER ARRAY
 AS $$
 DECLARE
    alkuosa RECORD;
@@ -39,6 +39,6 @@ BEGIN
    SELECT ST_Length(ST_Line_Substring(alkuosa.geometria, 0, ST_Line_Locate_Point(ST_LineMerge(alkuosa.geometria), alkupiste))) INTO alkuet;
    SELECT ST_Length(ST_Line_Substring(loppuosa.geometria, 0, ST_Line_Locate_Point(ST_LineMerge(loppuosa.geometria), loppupiste))) INTO loppuet;
 
-   RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet, loppuosa.osa, loppuet)::tr_osoite;
+   RETURN ARRAY[alkuosa.tie, alkuosa.osa, alkuet::INTEGER, loppuosa.osa, loppuet::INTEGER];
 END;
 $$ LANGUAGE plpgsql;
