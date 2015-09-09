@@ -1,0 +1,949 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta name="generator" content="HTML Tidy for Linux/x86 (vers 25 March 2009), see www.w3.org"/>
+
+    <title>Harja Tierekisteri API -rajapintakuvaus</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="Content-Tyyppi" content="text/html; charset=us-ascii"/>
+    <meta name="generator" content="https://github.com/kevinrenskers/raml2html 1.0.5"/>
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" type="text/css"/>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.1/styles/default.min.css"
+          type="text/css"/>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js">
+    </script>
+    <script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js">
+    </script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.1/highlight.min.js">
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        $(document).ready(function () {
+            $('.page-header pre code, .top-resource-description pre code').each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
+
+            $('[data-toggle]').click(function () {
+                var selector = $(this).data('target') + ' pre code';
+                $(selector).each(function (i, block) {
+                    hljs.highlightBlock(block);
+                });
+            });
+        });
+        //]]>
+
+
+    </script>
+    <style type="text/css">
+        /*<![CDATA[*/
+
+        .hljs {
+            background: transparent;
+        }
+
+        .parent {
+            color: #999;
+        }
+
+        .list-group-item > .badge {
+            float: none;
+            margin-right: 6px;
+        }
+
+        .panel-title > .methods {
+            float: right;
+        }
+
+        .badge {
+            border-radius: 0;
+            text-transform: uppercase;
+            width: 100px;
+            font-weight: normal;
+            color: #f3f3f6;
+            line-height: normal;
+        }
+
+        .badge_get {
+            background-color: #63a8e2;
+        }
+
+        .badge_post {
+            background-color: #6cbd7d;
+        }
+
+        .badge_put {
+            background-color: #22bac4;
+        }
+
+        .badge_delete {
+            background-color: #d26460;
+        }
+
+        .list-group,
+        .panel-group {
+            margin-bottom: 0;
+        }
+
+        .panel-group .panel + .panel-white {
+            margin-top: 0;
+        }
+
+        .panel-group .panel-white {
+            border-bottom: 1px solid #F5F5F5;
+            border-radius: 0;
+        }
+
+        .panel-white:last-child {
+            border-bottom-color: white;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-white .panel-heading {
+            background: white;
+        }
+
+        .tab-pane ul {
+            padding-left: 2em;
+        }
+
+        .tab-pane h2 {
+            font-size: 1.2em;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-pane h3 {
+            font-size: 1.1em;
+        }
+
+        .tab-content {
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        #sidebar {
+            margin-top: 30px;
+        }
+
+        .top-resource-description {
+            border-bottom: 1px solid #ddd;
+            background: #fcfcfc;
+            padding: 15px 15px 0 15px;
+            margin: -15px -15px 10px -15px;
+        }
+
+        .resource-description {
+            border-bottom: 1px solid #fcfcfc;
+            background: #fcfcfc;
+            padding: 15px 15px 0 15px;
+            margin: -15px -15px 10px -15px;
+        }
+
+        .resource-description p:last-child {
+            margin: 0;
+        }
+
+        .list-group .badge {
+            float: left;
+        }
+
+        .method_description {
+            margin-left: 85px;
+        }
+
+        .method_description p:last-child {
+            margin: 0;
+        }
+
+        .list-group-item {
+            cursor: pointer;
+        }
+
+        .list-group-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .modal-dialog {
+            width: 90%;
+            /* desired relative width */
+            /* place center */
+
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /*]]>*/
+    </style>
+</head>
+
+
+<body data-spy="scroll" data-target="#sidebar">
+<div class="container">
+    <div class="row">
+        <div class="col-md-9" role="main">
+            <div class="page-header">
+                <h1>Harja - Tierekisteri -rajapintakuvaus
+                    <small>version 0.5</small>
+                </h1>
+            </div>
+
+            <!-- Tietolajien haku-->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_haeTietolaji" class="panel-title">Tietolajin haku: haeTietolaji</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen
+                            tietolajin tunnusta (esim. "tl506"). Vaihtoehtoisesti voidaan antaa muutospäivämäärä, jonka jälkeen muuttuneet tiedot halutaan. Tietolajeja käytetään lisättäessä ja päivitettäessä tietuieden
+                            ominaisuuksia. Haettaessa, lisättäessa ja päivittäessä tietueita tietolajin kentät lähetetään jonossa määrätyssä järjestyksessä määrämittaisina merkkijonon pätkinä.</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeTietolaji_sekvenssi"><span class=
+                                                                                  "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a class="collapsed" data-toggle="collapse"
+                                                           href="#panel__haeTietolaji"></a><a href="#"
+                                                                                               data-toggle="modal"
+                                                                                               data-target="#_haeTietolaji_post"><span
+                                        class=
+                                                "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietolaji_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietolajin-haku.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="panel__haeTietolaji" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="list-group">
+                                        <div data-toggle="modal" data-target="#_haeTietolaji_post"
+                                             class="list-group-item">
+                                            <span class="badge badge_post">post</span>
+
+                                            <div class="method_description"></div>
+
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietolaji_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+
+                                            <h4 class="modal-title" id="myModalLabel">haeTietolaji</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_haeTietolaji_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_haeTietolaji_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_haeTietolaji_post_request">
+                                                    <h3>Body</h3>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/haeTietolaji.xsd"
+                                                                                   target="_blank">haeTietolaji.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/hae-tietolaji-request.xml" target="_blank">hae-tietolaji-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_haeTietolaji_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: : <a
+                                                            href="examples/hae-tietolaji-response.xml" target="_blank">hae-tietolaji-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietolajia-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Tietueiden haku-->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_haeTietue" class="panel-title">Tietueiden haku: haeTietueet</h3>
+                </div>
+
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Tietueiden haku. Hakee joko tietyltä tieväliltä kaikki tietueet tai kaikki tietyn päivämärään jälkeen muuttuneet tietueet. Sen lisäksi annetaan tietolajit, jonka mukaiset tietueet halutaan hakea.</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeTietueet_sekvenssi"><span class=
+                                                                                 "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeTietueet_post"><span class=
+                                                                            "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietueet_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueiden-haku.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietueet_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                            <h4 class="modal-title" id="myModalLabel">haeTietueet</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_haeTietueet_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_haeTietueet_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_haeTietueet_post_request">
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/haeTietueet.xsd"
+                                                                                   target="_blank">haeTietueet.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/hae-tietueet-request.xml" target="_blank">hae-tietueet-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_haeTietueet_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/hae-tietue-response.xml" target="_blank">hae-tietue-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-vastaus-tietuetta-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietuetta-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tietueen haku-->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_haeTietue" class="panel-title">Tietueen haku: haeTietue</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Yksittäisen tietueen haku. Haku tehdään käyttäen Liikenneviraston tunnistetta sekä tietolajia.</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeTietue_sekvenssi"><span class=
+                                                                               "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeTietue_post"><span class=
+                                                                          "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietue_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueen-haku.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeTietue_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                            <h4 class="modal-title" id="myModalLabel">haeTietue</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_haeTietue_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_haeTietue_post_response" data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_haeTietue_post_request">
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/haeTietue.xsd"
+                                                                                   target="_blank">haeTietue.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/hae-tietue-request.xml" target="_blank">hae-tietue-request.xml</a>
+                                                    </p>
+                                                </div>
+
+                                                <div class="tab-pane" id="_haeTietue_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/hae-tietue-response.xml" target="_blank">hae-tietue-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-vastaus-tietuetta-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietuetta-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Tietueen lisaaminen-->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_lisaaTietue" class="panel-title">Tietueen lisaaminen: lisaaTietue</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Tietueen lis&#228;ys</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_lisaaTietue_sekvenssi"><span class=
+                                                                                 "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a class="collapsed" data-toggle="collapse"
+                                                           href="#panel__lisaaTietue"></a><a href="#"
+                                                                                              data-toggle="modal"
+                                                                                              data-target="#_lisaaTietue_post"><span
+                                        class=
+                                                "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_lisaaTietue_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueen-lisays.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="panel__lisaaTietue" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="list-group">
+                                        <div data-toggle="modal" data-target="#_lisaaTietue_post"
+                                             class="list-group-item">
+                                            <span class="badge badge_post">Viestit</span>
+
+                                            <div class="method_description"></div>
+
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_lisaaTietue_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+
+                                            <h4 class="modal-title" id="myModalLabel">lisaaTietue</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_lisaaTietue_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_lisaaTietue_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_lisaaTietue_post_request">
+                                                    <h3>Body</h3>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/lisaaTietue.xsd"
+                                                                                   target="_blank">lisaaTietue.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/lisaa-tietue-request.xml" target="_blank">lisaa-tietue-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_lisaaTietue_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/ok-vastaus-response.xml" target="_blank">ok-vastaus-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-tietueen-lisays-epaonnistui-response.xml"
+                                                            target="_blank">virhe-tietueen-lisays-epaonnistui-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tietueen päivittäminen-->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_paivitaTietue" class="panel-title">Tietueen päivittäminen: paivitaTietue</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Tietueen tietojen p&#228;ivitys</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_paivitaTietue_sekvenssi"><span class=
+                                                                                   "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a class="collapsed" data-toggle="collapse"
+                                                           href="#panel__paivitaTietue"></a><a href="#"
+                                                                                                data-toggle="modal"
+                                                                                                data-target="#_paivitaTietue_post"><span
+                                        class=
+                                                "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_paivitaTietue_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueen-paivitys.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="panel__paivitaTietue" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="list-group">
+                                        <div data-toggle="modal" data-target="#_paivitaTietue_post"
+                                             class="list-group-item">
+                                            <span class="badge badge_post">post</span>
+
+                                            <div class="method_description"></div>
+
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_paivitaTietue_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+
+                                            <h4 class="modal-title" id="myModalLabel">paivitaTietue</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_paivitaTietue_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_paivitaTietue_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_paivitaTietue_post_request">
+                                                    <h3>Body</h3>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/paivitaTietue.xsd"
+                                                                                   target="_blank">paivitaTietue.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/paivita-tietue-request.xml" target="_blank">paivita-tietue-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_paivitaTietue_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/ok-vastaus-response.xml" target="_blank">ok-vastaus-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-vastaus-tietuetta-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietuetta-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Tietueen poistaminen -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_poistaTietue" class="panel-title">Tietueen poistaminen: poistaTietue</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Tietueen poisto</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_poistaTietue_sekvenssi"><span class=
+                                                                                  "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a class="collapsed" data-toggle="collapse"
+                                                           href="#panel__poistaTietue"></a> <a href="#"
+                                                                                                data-toggle="modal"
+                                                                                                data-target="#_poistaTietue_post"><span
+                                        class=
+                                                "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_poistaTietue_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueen-poisto.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="panel__poistaTietue" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <div class="list-group">
+                                        <div data-toggle="modal" data-target="#_poistaTietue_post"
+                                             class="list-group-item">
+                                            <span class="badge badge_post">post</span>
+
+                                            <div class="method_description"></div>
+
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_poistaTietue_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+
+                                            <h4 class="modal-title" id="myModalLabel">poistaTietue</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_poistaTietue_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_poistaTietue_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_poistaTietue_post_request">
+                                                    <h3>Body</h3>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/poistaTietue.xsd"
+                                                                                   target="_blank">poistaTietue.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/poista-tietue-request.xml" target="_blank">poista-tietue-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_poistaTietue_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/ok-vastaus-response.xml" target="_blank">ok-vastaus-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong></p>
+
+                                                    <p><strong>Skeema</strong>: <a href="schemas/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="examples/virhe-vastaus-tietuetta-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietuetta-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

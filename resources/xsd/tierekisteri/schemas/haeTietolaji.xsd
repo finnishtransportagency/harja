@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajitunniste">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+               schemaLocation="./entities/tietolajitunniste.xsd"/>
+
+    <xs:element name="haeTietolajit">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns1:tietolajitunniste"/>
+                <xs:element minOccurs="0" name="muutospvm" type="xs:date" nillable="true"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

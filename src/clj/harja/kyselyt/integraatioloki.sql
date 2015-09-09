@@ -27,9 +27,9 @@ WHERE id = :id;
 
 -- name: luo-integraatioviesti<!
 -- Luo uuden integraatioviestin
-INSERT INTO integraatioviesti (integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
+INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
 VALUES
-  (:integraatiotapahtuma, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit);
+  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit);
 
 -- name: hae-tapahtumaid-ulkoisella-idlla
 -- Hakee tapahtuma id:n ulkoisella id:llä ja integraatiolla

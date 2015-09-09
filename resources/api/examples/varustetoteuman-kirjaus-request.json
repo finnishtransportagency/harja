@@ -17,45 +17,53 @@
       "tunniste": {
         "id": 3
       },
-      "sopimusId": 123456789,
       "alkanut": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
+      "toteumatyyppi": "yksikkohintainen",
+      "sopimusId": 1,
       "suorittaja": {
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
       },
-      "toteumatyyppi": "yksikkohintainen",
       "tehtavat": [
         {
           "tehtava": {
-            "id": 11220,
-            "selite": "Varuste ja laite"
+            "id": 1
           }
         }
       ]
     },
-    "varustekirjaukset": [
-      {
-        "varustekirjaus": {
-          "tunniste": "HAR123456789",
-          "tyyppi": "506",
-          "kuvaus": "Nopeusrajoituksen liikennemerkki",
-          "huomiot": "Hitsattu kasaan",
-          "sijainti": {
-            "koordinaatit": {
-              "x": 64.91292829999999,
-              "y": 25.503484200000003
-            }
-          }
-        }
+    "aika": "2016-01-30T12:00:00Z",
+    "sijainti": {
+      "koordinaatit": {
+        "x": 64.91292829999999,
+        "y": 25.503484200000003
       }
-    ],
+    },
+    "varuste": {
+      "tunniste": "HAR560",
+      "tietolaji": "tl506",
+      "toimenpide": "lisatty",
+      "ominaisuudet": "-",
+      "sijainti": {
+        "tie": {
+          "numero": 1234,
+          "nimi": "Kiviharjunlenkki",
+          "aosa": 1,
+          "losa": 73,
+          "aet": 100,
+          "let": 20
+        }
+      },
+      "kuntoluokitus": 1,
+      "piiri": 1
+    },
     "liitteet": [
       {
         "liite": {
-          "nimi": "liikennemerkki.png",
+          "nimi": "kolari.png",
           "tyyppi": "image/png",
-          "kuvaus": "Kuva liikennemerkistä",
+          "kuvaus": "Kuva",
           "sisalto": "... sisältö base64 enkoodattuna  ..."
         }
       }

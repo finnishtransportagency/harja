@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/urakka" version="1.0">
+
+    <xs:simpleType name="urakka">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="100"/>
+            <xs:enumeration value="400"/>
+            <xs:enumeration value="3001"/>
+            <xs:enumeration value="3002"/>
+            <xs:enumeration value="3003"/>
+            <xs:enumeration value="3004"/>
+            <xs:enumeration value="3005"/>
+            <xs:enumeration value="3006"/>
+            <xs:enumeration value="4001"/>
+            <xs:enumeration value="4002"/>
+            <xs:enumeration value="4003"/>
+            <xs:enumeration value="4004"/>
+            <xs:enumeration value="4005"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4007"/>
+            <xs:enumeration value="4006"/>
+            <xs:enumeration value="4008"/>
+            <xs:enumeration value="4009"/>
+            <xs:enumeration value="5001"/>
+            <xs:enumeration value="5002"/>
+            <xs:enumeration value="5003"/>
+            <xs:enumeration value="6001"/>
+            <xs:enumeration value="6002"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

@@ -44,7 +44,10 @@ on avainsanamäppi parametrejä."
     ch))
 
 
-
+(defn koordinaatti->tieosoite
+  "Muuntaa annetun koordinaatin tieosoitteeksi."
+  [[x y]]
+  (vkm-kutsu "tieosoite" {:x x :y y}))
       
 (defn tieosoite 
   "Kutsuu tieosoite palvelua tierekisteriosoitteella, osoite sisältää avaimet:
