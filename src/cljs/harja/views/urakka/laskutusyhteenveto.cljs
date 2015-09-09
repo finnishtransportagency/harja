@@ -109,10 +109,21 @@
                                            :yhteenveto                  true
                                            :erilliskustannukset_laskutettu_ind_korotus  (reduce + (map :erilliskustannukset_laskutettu_ind_korotus tiedot))
                                            :erilliskustannukset_laskutetaan_ind_korotus (reduce + (map :erilliskustannukset_laskutetaan_ind_korotus tiedot))}
+
+            kaikki-paitsi-kht-ind-tar-yhteenveto{:nimi                        "Muut kuin kok.hint. töiden indeksitarkistukset yhteensä"
+                                      :yhteenveto                  true
+                                      :kaikki_paitsi_kht_laskutettu_ind_korotus  (reduce + (map :kaikki_paitsi_kht_laskutettu_ind_korotus tiedot))
+                                      :kaikki_paitsi_kht_laskutetaan_ind_korotus (reduce + (map :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot))}
+
+            kaikki-ind-tar-yhteenveto{:nimi                        "Kaikki indeksitarkistukset yhteensä"
+                                      :yhteenveto                  true
+                                      :kaikki_laskutettu_ind_korotus  (reduce + (map :kaikki_laskutettu_ind_korotus tiedot))
+                                      :kaikki_laskutetaan_ind_korotus (reduce + (map :kaikki_laskutetaan_ind_korotus tiedot))}
+
             kaikki-paitsi-kht-yhteenveto {:nimi                        "Kaikki yhteensä"
-                               :yhteenveto                  true
-                               :kaikki_paitsi_kht_laskutettu  (reduce + (map :kaikki_paitsi_kht_laskutettu tiedot))
-                               :kaikki_paitsi_kht_laskutetaan (reduce + (map :kaikki_paitsi_kht_laskutetaan tiedot))}
+                                         :yhteenveto                  true
+                                         :kaikki_paitsi_kht_laskutettu  (reduce + (map :kaikki_paitsi_kht_laskutettu tiedot))
+                                         :kaikki_paitsi_kht_laskutetaan (reduce + (map :kaikki_paitsi_kht_laskutetaan tiedot))}
             kaikki-yhteenveto {:nimi                        "Kaikki yhteensä"
                                             :yhteenveto                  true
                                             :kaikki_laskutettu  (reduce + (map :kaikki_laskutettu tiedot))
@@ -352,6 +363,44 @@
                                       (:erilliskustannukset_laskutetaan_ind_korotus rivi)))}]
 
              (sort-by :yhteenveto (conj tiedot erilliskustannukset-ind-tar-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä"
+              :tyhja        "Ei indeksitarkistuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :kaikki_paitsi_kht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :kaikki_paitsi_kht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:kaikki_paitsi_kht_laskutettu_ind_korotus rivi)
+                                      (:kaikki_paitsi_kht_laskutetaan_ind_korotus rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot kaikki-paitsi-kht-ind-tar-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "Kaikki indeksitarkistukset yhteensä"
+              :tyhja        "Ei indeksitarkistuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :kaikki_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :kaikki_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:kaikki_laskutettu_ind_korotus rivi)
+                                      (:kaikki_laskutetaan_ind_korotus rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot kaikki-ind-tar-yhteenveto))]
 
             [grid/grid
              {:otsikko      "Kaikki paitsi kok.hint. työt yhteensä"
