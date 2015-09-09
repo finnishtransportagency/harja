@@ -26,8 +26,8 @@ INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinsta
             (2015, 9, 10000, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
 
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
-    VALUES ('2014-10-01', '2014-12-31', 3, 'km', 10, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
-           ('2015-01-01', '2015-09-30', 9, 'km', 10, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
+    VALUES ('2014-10-01', '2014-12-31', 3, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
+           ('2015-01-01', '2015-09-30', 9, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
            ('2014-10-01', '2014-12-31', 60, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
            ('2015-01-01', '2015-09-30', 180, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
            ('2014-10-01', '2014-12-31', 100, 't', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Sorastus'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)),
@@ -72,6 +72,9 @@ VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
    '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'lyv_yht_tot_elokuu'),
   ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'lyv_yht_tot_elokuu2'),
+  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
    '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'lyv_muutostyo_tot_heinakuu'),
   ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
@@ -87,10 +90,11 @@ VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
    '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'lyv_lisatyo_tot_elokuu_paivanhinta_2');
 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
-       ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
-       ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
-       ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+VALUES
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
   ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
   ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
   ((SELECT id from toteuma where lisatieto = 'lyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
@@ -102,6 +106,16 @@ INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
        ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
        ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
        ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000);
+
+--Erilliskustannukset
+INSERT INTO erilliskustannus (tyyppi,sopimus,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
+VALUES
+  ('tilaajan_maa-aines', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP 2014-2019'), '2015-05-15', -1000, 'MAKU 2010', 'Urakoitsija maksaa tilaajalle', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('vahinkojen_korjaukset', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP 2014-2019'), '2015-06-15', 1000, 'MAKU 2010', 'Vahingot on nyt korjattu, lasku tulossa.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('vahinkojen_korjaukset', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP 2014-2019'), '2015-07-15', 1000, null, 'Tilaaja maksaa urakoitsijlle.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('asiakastyytyvaisyysbonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP 2014-2019'), '2015-08-15', 1000, 'MAKU 2010', 'Asiakkaat erittäin tyytyväisiä, tyytyväisyysindeksi 0,92.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP 2014-2019'), '2015-09-15', 1000, 'MAKU 2010', 'Muun erilliskustannuksen lisätieto', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh'));
+
 
 -- Sydäntalven lämpötila hoitokaudella ja pitkän ajan keskiarvo, vaikuttaa sallittuun suolamäärään
 INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
