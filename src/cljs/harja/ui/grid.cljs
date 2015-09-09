@@ -654,7 +654,7 @@ Optiot on mappi optioita:
                                                             :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
                                                                                 (when rivi-klikattu
                                                                                   " klikattava ")
-                                                                                (when (:yhteenveto rivi) " yhteensa ")
+                                                                                (when (:yhteenveto rivi) " yhteenveto ")
                                                                                 (when rivin-luokka
                                                                                   (rivin-luokka rivi)))
                                                             :rivi-klikattu rivi-klikattu}
