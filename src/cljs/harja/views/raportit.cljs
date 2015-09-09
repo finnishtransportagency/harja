@@ -66,7 +66,6 @@
                    yhteensa {:id -1
                              :nimi       "Yhteensä"
                              :yhteenveto true
-                             :toteutunut_maara (reduce + (mapv :toteutunut_maara toteumat-tehtavatietoineen))
                              :toteutuneet-kustannukset (reduce + (mapv
                                                                    (fn [rivi]
                                                                      (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
