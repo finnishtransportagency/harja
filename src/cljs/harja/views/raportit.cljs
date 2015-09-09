@@ -44,7 +44,7 @@
              (let [tehtavat (map
                               (fn [tasot] (nth tasot 3))
                               @u/urakan-toimenpiteet-ja-tehtavat)
-                   toteumat-kaikkine-tietoineen (mapv
+                   toteumat-tehtavatietoineen (mapv
                                                   (fn [toteuma]
                                                     (let [tehtavan-tiedot
                                                           (first (filter (fn [tehtava]
@@ -62,8 +62,18 @@
                                                           (merge (dissoc tehtavan-tiedot :id))
                                                           (assoc :yksikkohinta yksikkohinta-hoitokaudella)
                                                           (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
-                                                  @yksikkohintaiset-toteumat)]
-               toteumat-kaikkine-tietoineen))))
+                                                  @yksikkohintaiset-toteumat)
+                   yhteensa {:id -1
+                             :nimi       "Yhteensä"
+                             :yhteenveto true
+                             :toteutunut_maara (reduce + (mapv :toteutunut_maara toteumat-tehtavatietoineen))
+                             :toteutuneet-kustannukset (reduce + (mapv
+                                                                   (fn [rivi]
+                                                                     (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
+                                                                   toteumat-tehtavatietoineen))}]
+               (if (empty? toteumat-tehtavatietoineen)
+                 toteumat-tehtavatietoineen
+                 (conj toteumat-tehtavatietoineen yhteensa))))))
 (tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " yksikkohintaiset-toteumat-kaikkine-tietoineen)
 
 (def raportti-valmis-naytettavaksi?
@@ -84,15 +94,21 @@
                   [grid/grid
                    {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
                     :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")
-                    :voi-muokata? false}
-                   [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika :leveys "20%"}
+                    :voi-muokata? false
+                    :rivin-luokka #(when (:yhteenveto %) " bold")}
+                   [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-aika-opt :leveys "20%"}
                     {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
                     {:otsikko "Suunniteltu määrä hoitokaudella" :nimi :suunniteltu-maara-hoitokaudella :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:suunniteltu-maara-hoitokaudella rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (* (:yksikkohinta rivi) (:toteutunut_maara rivi))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi]
+                                                                                                                                                (let [yksikkohinta (:yksikkohinta rivi)
+                                                                                                                                                      suunniteltu-maara-hoitokaudella (:suunniteltu-maara-hoitokaudella rivi)]
+                                                                                                                                                  (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
+                                                                                                                                                    (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                    {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
+                                                                                                                               (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :hae (fn [rivi] (let [max-pituus 80
                                                                                                                  lisatieto (if (vector? (:lisatieto rivi))
                                                                                                                              (clojure.string/join "\n\n" (:lisatieto rivi))
