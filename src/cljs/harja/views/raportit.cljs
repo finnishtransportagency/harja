@@ -25,11 +25,14 @@
 
 (defonce valittu-raporttityyppi (atom nil))
 
+(def nakymassa? (atom nil))
+
 (defonce yksikkohintaiset-toteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       alkupvm (first @u/valittu-hoitokauden-kuukausi)
-                      loppupvm (second @u/valittu-hoitokauden-kuukausi)]
-                     (when (and urakka-id alkupvm loppupvm)
+                      loppupvm (second @u/valittu-hoitokauden-kuukausi)
+                      nakymassa? @nakymassa?]
+                     (when (and urakka-id alkupvm loppupvm nakymassa?)
                        (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
                        (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
 
@@ -147,5 +150,6 @@
 
 (defn raportit []
   (komp/luo
+    (komp/lippu nakymassa?)
     (fn []
       (raporttivalinnat-ja-raportti))))
