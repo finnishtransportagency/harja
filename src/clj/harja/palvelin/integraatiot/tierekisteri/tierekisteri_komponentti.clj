@@ -2,7 +2,8 @@
   (:require
     [com.stuartsierra.component :as component]
     [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
-    [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]))
+    [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn validoi-tunniste [tunniste]
   (when (not

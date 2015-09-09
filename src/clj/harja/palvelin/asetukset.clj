@@ -10,55 +10,55 @@
 
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin {:portti s/Int
-                   :url s/Str}
-   :kehitysmoodi Boolean
-   :tietokanta {:palvelin s/Str
-                :tietokanta s/Str
-                :portti s/Int
-                :kayttaja s/Str
-                :salasana s/Str}
-   :fim {:url s/Str}
-   :log {(s/optional-key :gelf) {:palvelin s/Str
-                                 :taso s/Keyword}
-         (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+  {:http-palvelin                 {:portti s/Int
+                                   :url    s/Str}
+   :kehitysmoodi                  Boolean
+   :tietokanta                    {:palvelin   s/Str
+                                   :tietokanta s/Str
+                                   :portti     s/Int
+                                   :kayttaja   s/Str
+                                   :salasana   s/Str}
+   :fim                           {:url s/Str}
+   :log                           {(s/optional-key :gelf)    {:palvelin s/Str
+                                                              :taso     s/Keyword}
+                                   (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
 
-         (s/optional-key :email) {:taso s/Keyword
-                                  :palvelin s/Str
-                                  :vastaanottaja [s/Str]}}
+                                   (s/optional-key :email)   {:taso          s/Keyword
+                                                              :palvelin      s/Str
+                                                              :vastaanottaja [s/Str]}}
    (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
-   (s/optional-key :sonja) {:url s/Str
-                            :kayttaja s/Str
-                            :salasana s/Str
-                            (s/optional-key :tyyppi) s/Keyword}
-   (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
-                            :kuittausjono-sisaan s/Str
-                            :lahetysjono-ulos s/Str
-                            :kuittausjono-ulos s/Str
-                            :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tloik) {:ilmoitusviestijono s/Str
-                            :ilmoituskuittausjono s/Str}
-
-   :ilmatieteenlaitos {:lampotilat-url s/Str}
+   (s/optional-key :sonja)        {:url                     s/Str
+                                   :kayttaja                s/Str
+                                   :salasana                s/Str
+                                   (s/optional-key :tyyppi) s/Keyword}
+   (s/optional-key :sampo)        {:lahetysjono-sisaan       s/Str
+                                   :kuittausjono-sisaan      s/Str
+                                   :lahetysjono-ulos         s/Str
+                                   :kuittausjono-ulos        s/Str
+                                   :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :tloik)        {:ilmoitusviestijono   s/Str
+                                   :ilmoituskuittausjono s/Str}
+   (s/optional-key :tierekisteri) {:url   s/Str}
+   :ilmatieteenlaitos             {:lampotilat-url s/Str}
    })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
   {:http-palvelin {:portti 3000 :url "http://localhost:3000/"}
-   :kehitysmoodi true
-   :tietokanta {:palvelin "localhost"
-                :tietokanta "harja"
-                :portti 5432
-                :kayttaja "harja"
-                :salasana ""}
+   :kehitysmoodi  true
+   :tietokanta    {:palvelin   "localhost"
+                   :tietokanta "harja"
+                   :portti     5432
+                   :kayttaja   "harja"
+                   :salasana   ""}
 
-   :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
+   :log           {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
   (merge-with #(if (map? %1)
-                 (merge %1 %2)
-                 %2)
+                (merge %1 %2)
+                %2)
               oletukset asetukset))
 
 (defn lue-asetukset
@@ -83,28 +83,28 @@
   (when-let [email (-> asetukset :log :email)]
     (log/set-config! [:appenders :postal]
                      (make-postal-appender
-                      {:enabled? true
-                       :rate-limit [1 30000] ; 1 viesti / 30 sekuntia rajoitus
-                       :async? true
-                       :min-level (:taso email)}
-                      {:postal-config
-                       ^{:host (:palvelin email)}
-                       {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-                        :to (:vastaanottaja email)}}))))
+                       {:enabled?   true
+                        :rate-limit [1 30000]               ; 1 viesti / 30 sekuntia rajoitus
+                        :async?     true
+                        :min-level  (:taso email)}
+                       {:postal-config
+                        ^{:host (:palvelin email)}
+                        {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
+                         :to   (:vastaanottaja email)}}))))
 
 
 
 (comment (defn konfiguroi-lokitus
-  "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
-  [asetukset]
-  (let [konfiguroija (JoranConfigurator.)
-        konteksti (LoggerFactory/getILoggerFactory)
-        konfiguraatio (-> asetukset
-                          :logback-konfiguraatio
-                          io/file)]
-    (println "Lokituksen konfiguraatio: " (.getAbsolutePath konfiguraatio)) ;; käytetään println ennen lokituksen alustusta
-    (.setContext konfiguroija konteksti)
-    (.reset konteksti)
-    (.doConfigure konfiguroija konfiguraatio))))
+           "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
+           [asetukset]
+           (let [konfiguroija (JoranConfigurator.)
+                 konteksti (LoggerFactory/getILoggerFactory)
+                 konfiguraatio (-> asetukset
+                                   :logback-konfiguraatio
+                                   io/file)]
+             (println "Lokituksen konfiguraatio: " (.getAbsolutePath konfiguraatio)) ;; käytetään println ennen lokituksen alustusta
+             (.setContext konfiguroija konteksti)
+             (.reset konteksti)
+             (.doConfigure konfiguroija konfiguraatio))))
       
   

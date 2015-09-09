@@ -114,35 +114,48 @@
                  :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-  "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
-  on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
-  validoidaan käyttäen annettuja JSON-skeemoja.
+(defn parsi-kyselyparametrit [kyselyparametrit]
+  (let [parametrit {}]
+    (map (fn [pari]
+           (let [parsittu (clojure.string/split pari #"=")]
+             (merge parametrit {(keyword (first parsittu)) (second parsittu)})))
+         (clojure.string/split kyselyparametrit #"&"))
+    parametrit))
 
-  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+(defn parsi-parametrit [request]
+  (let [parametrit (:params request)
+        kyselyparametrit (parsi-kyselyparametrit (:query-string request))]
+    (concat parametrit kyselyparametrit)))
 
-  (let [body (if (:body request)
-               (slurp (:body request))
-               nil)
-        tapahtuma-id (when integraatioloki (lokita-kutsu integraatioloki resurssi request body))]
-    (let [vastaus (try+
-                    (let
-                      [parametrit (:params request)
-                       kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-                       kutsun-data (lue-kutsu kutsun-skeema request body)
-                       vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                      (tee-vastaus vastauksen-skeema vastauksen-data))
-                    (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-                      (kasittele-invalidi-json virheet))
-                    (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-                      (kasittele-viallinen-kutsu virheet))
-                    (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
-                      (kasittele-sisainen-kasittelyvirhe virheet))
-                    (catch Exception e
-                      (log/error "Tapahtui poikkeus: " e)
-                      (log/error "NextException: " (.getNextException e))
-                      (kasittele-sisainen-kasittelyvirhe
-                        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                          :viesti (.getMessage e)}])))]
-      (when integraatioloki (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
-      vastaus)))
+  (defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+    "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
+    on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
+    validoidaan käyttäen annettuja JSON-skeemoja.
+
+    Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+
+    (let [body (if (:body request)
+                 (slurp (:body request))
+                 nil)
+          tapahtuma-id (when integraatioloki (lokita-kutsu integraatioloki resurssi request body))]
+      (let [vastaus (try+
+                      (let
+                        [parametrit (parsi-parametrit request)
+                         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                         kutsun-data (lue-kutsu kutsun-skeema request body)
+                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                        (tee-vastaus vastauksen-skeema vastauksen-data))
+                      (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+                        (kasittele-invalidi-json virheet))
+                      (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
+                        (kasittele-viallinen-kutsu virheet))
+                      (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
+                        (kasittele-sisainen-kasittelyvirhe virheet))
+                      (catch Exception e
+                        (log/error "Tapahtui poikkeus: " e)
+                        (log/error "NextException: " (.getNextException e))
+                        (kasittele-sisainen-kasittelyvirhe
+                          [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                            :viesti (.getMessage e)}])))]
+        (when integraatioloki (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+        vastaus)))
