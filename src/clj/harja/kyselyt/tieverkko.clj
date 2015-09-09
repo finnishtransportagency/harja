@@ -2,4 +2,3 @@
   (:require [yesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/tieverkko.sql")
-
