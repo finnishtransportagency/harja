@@ -109,6 +109,14 @@
                                            :yhteenveto                  true
                                            :erilliskustannukset_laskutettu_ind_korotus  (reduce + (map :erilliskustannukset_laskutettu_ind_korotus tiedot))
                                            :erilliskustannukset_laskutetaan_ind_korotus (reduce + (map :erilliskustannukset_laskutetaan_ind_korotus tiedot))}
+            kaikki-paitsi-kht-yhteenveto {:nimi                        "Kaikki yhteensä"
+                               :yhteenveto                  true
+                               :kaikki_paitsi_kht_laskutettu  (reduce + (map :kaikki_paitsi_kht_laskutettu tiedot))
+                               :kaikki_paitsi_kht_laskutetaan (reduce + (map :kaikki_paitsi_kht_laskutetaan tiedot))}
+            kaikki-yhteenveto {:nimi                        "Kaikki yhteensä"
+                                            :yhteenveto                  true
+                                            :kaikki_laskutettu  (reduce + (map :kaikki_laskutettu tiedot))
+                                            :kaikki_laskutetaan (reduce + (map :kaikki_laskutetaan tiedot))}
             valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
@@ -344,5 +352,43 @@
                                       (:erilliskustannukset_laskutetaan_ind_korotus rivi)))}]
 
              (sort-by :yhteenveto (conj tiedot erilliskustannukset-ind-tar-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "Kaikki paitsi kok.hint. työt yhteensä"
+              :tyhja        "Ei kustannuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :kaikki_paitsi_kht_laskutettu :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :kaikki_paitsi_kht_laskutetaan :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:kaikki_paitsi_kht_laskutettu rivi)
+                                      (:kaikki_paitsi_kht_laskutetaan rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot kaikki-paitsi-kht-yhteenveto))]
+
+            [grid/grid
+             {:otsikko      "KAIKKI YHTEENSÄ"
+              :tyhja        "Ei kustannuksia"
+              :tunniste     :nimi
+              :rivin-luokka #(when (:yhteenveto %) " bold")
+              :voi-muokata? false}
+             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+               :nimi    :kaikki_laskutettu :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
+               :nimi    :kaikki_laskutetaan :tyyppi :numero :leveys "20%"
+               :fmt     fmt/euro-opt :tasaa :oikea}
+              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+               :hae     (fn [rivi] (+ (:kaikki_laskutettu rivi)
+                                      (:kaikki_laskutetaan rivi)))}]
+
+             (sort-by :yhteenveto (conj tiedot kaikki-yhteenveto))]
 
             ])]))))

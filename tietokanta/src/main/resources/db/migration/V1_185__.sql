@@ -541,14 +541,18 @@ BEGIN
 
     kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
                                    suolasakot_laskutettu_ind_korotettuna + muutostyot_laskutettu_ind_korotettuna +
-                                   erilliskustannukset_laskutettu_ind_korotettuna;
+                                   erilliskustannukset_laskutettu_ind_korotettuna
+                                    --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
+                                    + kht_laskutettu_ind_korotus;
 
-    kaikki_laskutettu := kaikki_paitsi_kht_laskutettu + kht_laskutettu_ind_korotettuna;
+    kaikki_laskutettu := kaikki_paitsi_kht_laskutettu + kht_laskutettu;
 
     kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
                                    suolasakot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_ind_korotettuna +
-                                   erilliskustannukset_laskutetaan_ind_korotettuna;
-    kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan_ind_korotettuna;
+                                   erilliskustannukset_laskutetaan_ind_korotettuna
+                                     --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
+                                     + kht_laskutetaan_ind_korotus;
+    kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan;
 
     RAISE NOTICE '
     Yhteenveto:';
@@ -577,6 +581,15 @@ BEGIN
     RAISE NOTICE 'muutostyot_laskutetaan_ind_korotettuna: %', muutostyot_laskutetaan_ind_korotettuna;
     RAISE NOTICE 'erilliskustannukset_laskutetaan: %', erilliskustannukset_laskutetaan;
     RAISE NOTICE 'erilliskustannukset_laskutetaan_ind_korotettuna: %', erilliskustannukset_laskutetaan_ind_korotettuna;
+
+    RAISE NOTICE 'kaikki_paitsi_kht_laskutettu_ind_korotus: %', kaikki_paitsi_kht_laskutettu_ind_korotus;
+    RAISE NOTICE 'kaikki_laskutettu_ind_korotus: %', kaikki_laskutettu_ind_korotus;
+    RAISE NOTICE 'kaikki_paitsi_kht_laskutetaan_ind_korotus: %', kaikki_paitsi_kht_laskutetaan_ind_korotus;
+    RAISE NOTICE 'kaikki_laskutetaan_ind_korotus: %', kaikki_laskutetaan_ind_korotus;
+    RAISE NOTICE 'kaikki_paitsi_kht_laskutettu: %', kaikki_paitsi_kht_laskutettu;
+    RAISE NOTICE 'kaikki_laskutettu: %', kaikki_laskutettu;
+    RAISE NOTICE 'kaikki_paitsi_kht_laskutetaan: %', kaikki_paitsi_kht_laskutetaan;
+    RAISE NOTICE 'kaikki_laskutetaan: %', kaikki_laskutetaan;
 
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 
