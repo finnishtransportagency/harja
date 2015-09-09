@@ -251,7 +251,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])]])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot]} skeema rivi]
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna]} skeema rivi]
   [:tr {:class    luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
@@ -275,7 +275,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             (if fmt
               (fmt arvon-pituus-rajattu)
               [nayta-arvo skeema (vain-luku-atomina arvon-pituus-rajattu)])))]))
-   [:td.toiminnot]])
+   (when tallenna [:td.toiminnot])])
 
 (defn laske-sarakkeiden-leveys [skeema]
   (if (every? number? (map :leveys skeema))
@@ -589,7 +589,7 @@ Optiot on mappi optioita:
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
                     [:th {:width (or leveys "5%")} otsikko])
-                  [:th.toiminnot {:width "40px"} " "]]]
+                  (when tallenna [:th.toiminnot {:width "40px"} " "])]]
 
                 [:tbody
                  (if muokataan
@@ -656,6 +656,7 @@ Optiot on mappi optioita:
                                               [naytto-rivi {:ohjaus        ohjaus
                                                             :vetolaatikot  vetolaatikot
                                                             :id            id
+                                                            :tallenna      tallenna
                                                             :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
                                                                                 (when rivi-klikattu
                                                                                   " klikattava ")
