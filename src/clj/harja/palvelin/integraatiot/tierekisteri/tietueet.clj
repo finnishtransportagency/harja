@@ -3,7 +3,14 @@
             [clojure.string :as string]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
+
+    ;todo: poista
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.testi :as testi]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-virheet [url tunniste tietolajitunniste virheet]
@@ -29,7 +36,7 @@
         vastausdata))))
 
 (defn hae-tietueet [integraatioloki url id tietolaji]
-  (log/debug "Haetaen tietu " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
+  (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [kutsudata (kutsusanoma/muodosta id tietolaji)
         palvelu-url (str url "/haetietue")
         otsikot {"Content-Type" "text/xml"}
@@ -43,3 +50,9 @@
                       kutsudata
                       (fn [vastaus-xml] (kasittele-vastaus palvelu-url id tietolaji vastaus-xml)))]
     vastausdata))
+
+(defn kutsu [tietolaji tunniste]
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
+    (component/start integraatioloki)
+    (hae-tietueet integraatioloki "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri/haetietolajit" tunniste tietolaji)))
