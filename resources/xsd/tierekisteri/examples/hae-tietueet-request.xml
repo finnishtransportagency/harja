@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:haeTietueet xmlns:ns2="http://www.solita.fi/harja/tierekisteri/haeTietueet">
+    <tietolajitunniste>tl506</tietolajitunniste>
+    <muutospvm>2015-03-03+02:00</muutospvm>
+    <tie>
+        <numero>1</numero>
+        <aet>1</aet>
+        <aosa>1</aosa>
+        <let>1</let>
+        <losa>1</losa>
+        <ajr>1</ajr>
+        <puoli>1</puoli>
+        <alkupvm>2017-03-03+02:00</alkupvm>
+    </tie>
+</ns2:haeTietueet>

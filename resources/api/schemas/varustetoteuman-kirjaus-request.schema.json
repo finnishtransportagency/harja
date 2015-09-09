@@ -15,7 +15,7 @@
       "id": "urn:harja/varustetoteuma",
       "type": "object",
       "additionalProperties": false,
-      "required":true,
+      "required": true,
       "properties": {
         "toteuma": {
           "id": "urn:harja/varustetoteuma/toteuma",
@@ -24,25 +24,27 @@
           "required": true,
           "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
         },
-        "varustekirjaukset": {
-          "id": "urn:harja/varustetoteuma/varuste-kirjaukset",
-          "type": "array",
-          "items": {
-            "id": "urn:harja/toteumat/0/toteuma/varuste-kirjaukset/0",
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "varustekirjaus": {
-                "id": "urn:harja/varustetoteuma/varuste-kirjaukset/0/varustekirjaus",
-                "type": "object",
-                "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/varuste-kirjaus.schema.json"
-              }
-            }
-          }
+        "aika": {
+          "id": "urn:harja/toteumat/0/toteuma/alkanut",
+          "type": "string",
+          "format": "date-time"
+        },
+        "sijainti": {
+          "id": "urn:harja/ilmoitukset/0/sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "required": true
+        },
+        "varuste": {
+          "id": "urn:harja/ilmoitukset/0/varustetoteuma",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/varustetoteuma.schema.json",
+          "required": true
         },
         "liitteet": {
-          "id": "urn:harja/varustetoteuma/liitteet",
+          "id": "urn:harja/liitteet",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"

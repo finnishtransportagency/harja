@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.sampo-komponentti
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
+            [com.stuartsierra.component :as component]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
@@ -31,7 +32,7 @@
     (fn [] ())))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
-  com.stuartsierra.component/Lifecycle
+  component/Lifecycle
   (start [this]
     (assoc this :sonja-viestikuuntelija (tee-sonja-viestikuuntelija this lahetysjono-sisaan kuittausjono-sisaan)
                 :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)

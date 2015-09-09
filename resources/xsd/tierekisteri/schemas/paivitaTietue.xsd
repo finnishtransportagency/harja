@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="http://www.solita.fi/harja/tierekisteri/suorittaja"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietue"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/paivitaTietue" version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/suorittaja"
+               schemaLocation="./entities/suorittaja.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="./entities/tietue.xsd"/>
+
+    <xs:element name="paivitaTietue">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" name="paivittaja" type="ns1:suorittaja"/>
+                <xs:element minOccurs="1" name="tietue" type="ns2:tietue"/>
+                <xs:element minOccurs="1" name="paivitetty" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
