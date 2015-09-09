@@ -73,7 +73,7 @@
   ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
-  (let [sijainti (geo/geometry (geo/clj->pg sijainti))
+  (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         tr_numero (:numero tr)
         tr_alkuetaisyys (:alkuetaisyys tr)
         tr_loppuetaisyys (:loppuetaisyys tr)
