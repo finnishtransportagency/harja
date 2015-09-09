@@ -20,7 +20,11 @@
     vastauksen-data))
 
 (defn paivita-muutos-tierekisteriin [db urakka-id kirjaaja data]
-  ; TODO
+  ; TODO Postaa muutos tierekisteriin. Oletetaan, että APIn kautta tullut lisäys/päivitys/poisto on aina uusin tieto
+  ; reaalimaailmasta, joten muutos viedään aina tierekisteriin.
+  ; Tässä täytyy huomioida tierekisteripäivityksen mahdollinen epäonnistuminen, jolloin Harjaan ei saa jäädä
+  ; tietoa, joka ei ole synkassa tierekisterin kanssa. Voidaanko tämä esim. kääriä samaan transaktioon
+  ; Harjan tietokantaoperaation kanssa ja jos päivitys tierekisteriin ei onnistu, peruutetaan transaktio?
   )
 
 (defn tallenna-varuste [db urakka-id kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
