@@ -31,12 +31,6 @@
           "required": true,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
         },
-        "liitteet": {
-          "id": "urn:harja/pistetoteuma/liitteet",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
-        }
       }
     }
   }
