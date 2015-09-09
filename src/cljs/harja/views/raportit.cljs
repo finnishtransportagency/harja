@@ -52,11 +52,11 @@
                                                                          tehtavat))
                                                           yksikkohinta-hoitokaudella (or (:yksikkohinta (first (filter
                                                                                                                  (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokauden-kuukausi))))
+                                                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                                  @u/urakan-yks-hint-tyot))) nil)
                                                           suunniteltu-maara-hoitokaudella (or (:maara (first (filter
                                                                                                                (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                              (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokauden-kuukausi))))
+                                                                                                                              (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                                @u/urakan-yks-hint-tyot))) nil)]
                                                       (-> toteuma
                                                           (merge (dissoc tehtavan-tiedot :id))
