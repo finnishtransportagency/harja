@@ -55,9 +55,9 @@
                                :kaikki_laskutetaan_ind_korotus                  387.68000000000006
                                :kaikki_laskutettu                               40923.9
                                :kaikki_laskutettu_ind_korotus                   1823.9
-                               :kaikki_paitsi_kht_laskutetaan                   3450.6800000000003
+                               :kaikki_paitsi_kht_laskutetaan                   3667.6800000000003
                                :kaikki_paitsi_kht_laskutetaan_ind_korotus       170.68000000000006
-                               :kaikki_paitsi_kht_laskutettu                    4250.9
+                               :kaikki_paitsi_kht_laskutettu                    5923.9
                                :kaikki_paitsi_kht_laskutettu_ind_korotus        150.9
                                :kht_laskutetaan                                 3500.0
                                :kht_laskutetaan_ind_korotettuna                 3717.0
@@ -154,9 +154,9 @@
                              :kaikki_laskutetaan_ind_korotus                  669.6
                              :kaikki_laskutettu                               104780.0
                              :kaikki_laskutettu_ind_korotus                   4780.0
-                             :kaikki_paitsi_kht_laskutetaan                   849.6
+                             :kaikki_paitsi_kht_laskutetaan                   1469.6
                              :kaikki_paitsi_kht_laskutetaan_ind_korotus       49.6
-                             :kaikki_paitsi_kht_laskutettu                    0.0
+                             :kaikki_paitsi_kht_laskutettu                    4780.0
                              :kaikki_paitsi_kht_laskutettu_ind_korotus        0.0
                              :kht_laskutetaan                                 10000.0
                              :kht_laskutetaan_ind_korotettuna                 10620.0
