@@ -25,9 +25,15 @@
   ; Tässä täytyy huomioida tierekisteripäivityksen mahdollinen epäonnistuminen, jolloin Harjaan ei saa jäädä
   ; tietoa, joka ei ole synkassa tierekisterin kanssa. Voidaanko tämä esim. kääriä samaan transaktioon
   ; Harjan tietokantaoperaation kanssa ja jos päivitys tierekisteriin ei onnistu, peruutetaan transaktio?
-  )
+)
 
-(defn tallenna-varuste [db urakka-id kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
+(defn poista-toteuman-varustetiedot [db toteuma-id]
+  (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
+  (toteumat/poista-toteuman-varustetiedot!
+    db
+    toteuma-id))
+
+(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
                                                kuntoluokitus piiri]} toteuma-id]
   (log/debug "Luodaan uusi varustetoteuma toteumalle " toteuma-id)
   (toteumat/luo-varustetoteuma<!
@@ -43,7 +49,8 @@
          (get-in sijainti [:tie :let])
          (get-in sijainti [:tie :aet])
          piiri
-         kuntoluokitus))
+         kuntoluokitus
+         (:id kirjaaja)))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
@@ -56,7 +63,8 @@
                               (log/debug "Aloitetaan toteuman tehtävien tallennus")
                               (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
                               (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
-                              (tallenna-varuste transaktio urakka-id kirjaaja varustetiedot toteuma-id))))
+                              (poista-toteuman-varustetiedot transaktio toteuma-id)
+                              (tallenna-varuste transaktio kirjaaja varustetiedot toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

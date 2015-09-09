@@ -498,7 +498,9 @@ INSERT INTO varustetoteuma (tunniste,
                             tr_loppuetaisyys,
                             tr_alkuetaisyys,
                             piiri,
-                            kuntoluokka)
+                            kuntoluokka,
+                            luoja,
+                            luotu)
     VALUES (
     :tunniste,
     :toteuma,
@@ -511,4 +513,9 @@ INSERT INTO varustetoteuma (tunniste,
     :tr_loppuetaisyys,
     :tr_alkuetaisyys,
     :piiri,
-    :kuntoluokka);
+    :kuntoluokka,
+    :luoja,
+    NOW());
+
+-- name: poista-toteuman-varustetiedot!
+DELETE FROM varustetoteuma WHERE toteuma = :id;
