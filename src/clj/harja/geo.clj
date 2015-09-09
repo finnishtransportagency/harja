@@ -1,5 +1,6 @@
 (ns harja.geo
   "Yleiskäyttöisiä paikkatietoon ja koordinaatteihin liittyviä apureita."
+  (:require [taoensso.timbre :as log])
   (:import (org.postgresql.geometric PGpoint PGpolygon)
            (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString)))
 
@@ -79,6 +80,10 @@
                            (map (fn [[x y]]
                                   (Point. x y))
                                 points))))
+(defmethod clj->pg :point [{c :coordinates :as p}]
+  (log/info "clj->pg :point " p)
+  (Point. (first c) (second c)))
+
 (defn geometry [g]
   (PGgeometry. g))
 
