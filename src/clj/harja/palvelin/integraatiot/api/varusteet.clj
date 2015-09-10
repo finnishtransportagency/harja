@@ -10,12 +10,12 @@
             [taoensso.timbre :as log]))
 
 
-(defn hae-tietolaji [tierekisteri parametrit kayttaja]
-  (println "++++++PARAMETRIT" parametrit)
+(defn hae-tietolaji [tierekisteri {:keys [tunniste muutospaivamaara]} kayttaja]
+  (println "++++++PARAMETRIT: " tunniste ", " muutospaivamaara)
   (log/debug "Haetaan tietolajin: " nil " kuvaus muutospäivämäärällä: " nil " käyttäjälle: " kayttaja)
   ;; todo: tarkista, että käyttäjä on olemassa
-  (let [vastausdata
-        (tierekisteri/hae-tietolajit tierekisteri "tl506" nil)]))
+  (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)]
+    (println "+++++++VASTAUSDATA: " vastausdata)))
 
 (defrecord Varusteet []
   component/Lifecycle
