@@ -19,7 +19,7 @@
   (let [yhteyshenkilo-id (:id (first (yhteyshenkilot/hae-id-sampoidlla db sampo-id)))]
     (if yhteyshenkilo-id
       (do
-        (paivita-yhteyshenkilo db yhteyshenkilo-id etunimi sukunimi sampo-id sahkoposti)
+        (paivita-yhteyshenkilo db yhteyshenkilo-id etunimi sukunimi sahkoposti)
         yhteyshenkilo-id)
       (do
         (luo-yhteyshenkilo db sampo-id etunimi sukunimi sampo-id sahkoposti)))))

@@ -19,13 +19,13 @@
 
 (defn tallenna-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
   (let [organisaatio-id (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id)))
-        postinro (merkkijono/leikkaa 5 postinumero)]
+        postinumero (merkkijono/leikkaa 5 postinumero)]
     (if organisaatio-id
       (do
-        (paivita-organisaatio db organisaatio-id nimi y-tunnus katuosoite postinro)
+        (paivita-organisaatio db organisaatio-id nimi y-tunnus katuosoite postinumero)
         organisaatio-id)
       (do
-        (luo-organisaatio db sampo-id nimi y-tunnus katuosoite postinro)))))
+        (luo-organisaatio db sampo-id nimi y-tunnus katuosoite postinumero)))))
 
 (defn kasittele-organisaatio [db {:keys [viesti-id sampo-id nimi y-tunnus katuosoite postinumero]}]
   (log/debug "Käsitellään organisaatio Sampo id:llä: " sampo-id)
