@@ -3,6 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.5. Julkaistu: 2.9.2015. Muutokset:
+    - Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.
     - Poikkeamat poistetu rajapinnasta
     - Muutoksia varusterajapintaan
 - Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
