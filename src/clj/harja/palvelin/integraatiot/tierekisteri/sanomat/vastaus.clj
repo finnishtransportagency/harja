@@ -81,8 +81,8 @@
      :piiri       (z/xml1-> tietue :piiri z/text)
      :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
      :urakka      (z/xml1-> tietue :urakka z/text)
-     :sijainti    (parsi-tietueen-sijainti tietue)
-     :tietolaji   (parsi-tietueen-tietolaji tietue)}))
+     :sijainti    (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
+     :tietolaji   (parsi-tietueen-tietolaji (z/xml1-> tietue :sijainti))}))
 
 (defn lue [viesti]
   (let [data (xml/lue viesti)

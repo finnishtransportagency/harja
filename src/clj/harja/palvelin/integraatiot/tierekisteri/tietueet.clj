@@ -14,10 +14,16 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-virheet [url tunniste tietolajitunniste virheet]
-  (throw+ {:type  :tierekisteri-kutsu-epaonnistui
+  ;; Kutsu epäonnistuu jos annetulla tunnisteella ei löydy tietuetta, ts. kutsu palauttaa
+  ;; tyhjän. Tällöin ei kannata mielestäni heittää virhettä, vaan palauttaa "tyhjä tulos".
+  #_(throw+ {:type  :tierekisteri-kutsu-epaonnistui
            :error (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
                        " & tietolajitunnisteella: " tietolajitunniste "."
-                       "Virheet: " (string/join virheet))}))
+                       "Virheet: " (string/join virheet))})
+  {:type  :tierekisteri-kutsu-epaonnistui
+   :error (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
+               " & tietolajitunnisteella: " tietolajitunniste "."
+               "Virheet: " (string/join virheet))})
 
 (defn kirjaa-varoitukset [url tunniste tietolajitunniste virheet]
   (log/warn (str "Tietueen haku palautti virheitä (URL: " url ") tunnisteella: " tunniste
@@ -55,4 +61,6 @@
   (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (hae-tietueet integraatioloki "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri/haetietolajit" tunniste tietolaji)))
+    (hae-tietueet integraatioloki
+                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri/haetietue"
+                  tunniste tietolaji)))

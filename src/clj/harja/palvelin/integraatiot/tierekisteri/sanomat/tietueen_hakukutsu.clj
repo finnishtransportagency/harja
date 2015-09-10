@@ -19,5 +19,5 @@
     (if (xml/validoi +xsd-polku+ "haeTietue.xsd" xml)
       xml
       (do
-        (log/error "Tietolajihakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
+        (log/error "Tietueenhakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
         nil))))
