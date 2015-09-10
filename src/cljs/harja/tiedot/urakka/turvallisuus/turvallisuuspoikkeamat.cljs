@@ -40,7 +40,9 @@
     :alue {:type        :icon
            :coordinates (geo/ikonin-sijainti (:sijainti %))
            :direction 0
-           :img "images/turvallisuuspoikkeama.png"}))
+           :img (if (= (:id %) (:id @valittu-turvallisuuspoikkeama))
+                  "images/turvallisuuspoikkeama_korostettu.png"
+                  "images/turvallisuuspoikkeama.png")}))
 
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction @valittu-turvallisuuspoikkeama
@@ -50,7 +52,6 @@
 (defonce turvallisuuspoikkeamaa-klikattu
          (tapahtumat/kuuntele! :turvallisuuspoikkeama-klikattu
                                (fn [tp]
-                                 (log "TURPO: " (pr-str tp))
                                  (reset! valittu-turvallisuuspoikkeama (dissoc tp :type :alue)))))
 
 

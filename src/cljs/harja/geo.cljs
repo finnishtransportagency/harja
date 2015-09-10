@@ -20,7 +20,10 @@
              (max x maxx)
              (max y maxy)
              pisteet)))))
-  
+
+(defn laajenna-extent [[minx miny maxx maxy] d]
+  [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
+
 (defn- pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
   [{type :type :as g}]
@@ -48,6 +51,8 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
              (inc i)
              pisteet))))
 
+
+
 (defmulti extent (fn [geometry] (:type geometry)))
 
 (defmethod extent :line [{points :points}]
@@ -64,7 +69,11 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
 
+(defn extent-monelle [geometriat]
+  (laske-pisteiden-extent (mapcat pisteet geometriat)))
 
+
+  
 ;; Päättelee annetulle geometrialle hyvän ikonisijainnin
 ;; geometry -> [x y]
 (defmulti ikonin-sijainti (fn [geometry] (:type geometry)))

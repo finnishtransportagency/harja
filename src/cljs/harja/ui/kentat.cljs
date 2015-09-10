@@ -750,7 +750,11 @@
                     (recur nil))))))))
                                        
     (komp/luo
-
+     {:component-will-update
+      (fn [_ _ {sijainti :sijainti}]
+        (when sijainti
+          (nayta-kartalla @sijainti)))}
+     
      (komp/ulos #(do 
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)

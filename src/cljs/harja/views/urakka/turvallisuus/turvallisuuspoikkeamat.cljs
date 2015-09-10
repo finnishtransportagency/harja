@@ -12,7 +12,9 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.kommentit :as kommentit]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.geo :as geo]
+            [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -37,6 +39,7 @@
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fn []
+      (log "MUOKATTU: " (pr-str @muokattu))
       [:div
        [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
@@ -77,7 +80,7 @@
           :tyyppi :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
-          :sijainti (r/wrap (:sijainti muokattu)
+          :sijainti (r/wrap (:sijainti @muokattu)
                             #(swap! muokattu assoc :sijainti %))}
          {:otsikko     "Kommentit" :nimi :kommentit
           :komponentti [kommentit/kommentit {:voi-kommentoida? true
@@ -105,29 +108,39 @@
                                                         uusi)))))]}]
         @muokattu]])))
 
+(defonce rajaa-kartta-haettujen-poikkeamien-alueelle
+  (run! (let [valittu @tiedot/valittu-turvallisuuspoikkeama
+              tpt @tiedot/haetut-turvallisuuspoikkeamat]
+          (when (and (nil? valittu)
+                     (not (empty? tpt)))
+            (kartta/keskita-kartta-alueeseen!
+             (geo/laajenna-extent (geo/extent-monelle (keep :sijainti tpt)) 500))))))
+  
 (defn turvallisuuspoikkeamalistaus
   []
-  [:div.sanktiot
-   [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   [:button.nappi-ensisijainen
-    {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
-    (ikonit/plus) " Lisää turvallisuuspoikkeama"]
-   [grid/grid
-    {:otsikko       "Turvallisuuspoikkeamat"
-     :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
-     :rivi-klikattu #(go (reset! tiedot/valittu-turvallisuuspoikkeama
-                                 (<! (tiedot/hae-turvallisuuspoikkeama (:id @nav/valittu-urakka)
+  (let [urakka @nav/valittu-urakka]
+    [:div.sanktiot
+     [urakka-valinnat/urakan-hoitokausi urakka]
+     [:button.nappi-ensisijainen
+      {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
+      (ikonit/plus) " Lisää turvallisuuspoikkeama"]
+     [grid/grid
+      {:otsikko       "Turvallisuuspoikkeamat"
+       :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+       :rivi-klikattu #(go
+                         (reset! tiedot/valittu-turvallisuuspoikkeama
+                                 (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
                                                                        (:id %)))))}
-    [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
-     {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
-     {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
-     {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
-     {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
-      :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
-     {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
-      :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
-    @tiedot/haetut-turvallisuuspoikkeamat
-    ]])
+      [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
+       {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
+       {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
+       {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
+       {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
+        :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
+       {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
+        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+      @tiedot/haetut-turvallisuuspoikkeamat
+      ]]))
 
 (defn turvallisuuspoikkeamat []
   (komp/luo
