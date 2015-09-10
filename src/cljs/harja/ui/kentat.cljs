@@ -647,12 +647,13 @@
                     (do
                       (case @tila
                         :ei-valittu (let [osoite (swap! tr-osoite
-                                                        merge
-                                                        {:numero (get osoite "tie")
-                                                         :alkuosa (get osoite "osa")
-                                                         :alkuetaisyys (get osoite "etaisyys")
-                                                         :loppuosa nil
-                                                         :loppuetaisyys nil})]
+                                                        (fn [tr]
+                                                          (dissoc (merge tr
+                                                                         {:numero (get osoite "tie")
+                                                                          :alkuosa (get osoite "osa")
+                                                                          :alkuetaisyys (get osoite "etaisyys")})
+                                                                  :loppuosa
+                                                                  :loppuetaisyys)))]
                                       (paivita osoite)
                                       (reset! tila :alku-valittu))
                         
@@ -669,10 +670,16 @@
                 
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
                 (let [{:keys [tyyppi sijainti x y]} arvo]
-                  (when (= :hover tyyppi)
+                  (case tyyppi
+                    :hover
                     (kartta/aseta-tooltip! x y (case @tila
                                                  :ei-valittu "Klikkaa alkupiste"
-                                                 :alku-valittu "Klikkaa loppupiste")))
+                                                 :alku-valittu "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"))
+
+                    :enter (when (= @tila :alku-valittu)
+                             ((:kun-valmis @optiot) @tr-osoite))
+                    nil)
+                  
                   (recur (if (= :click tyyppi)
                            (vkm/koordinaatti->tieosoite sijainti)
                            vkm-haku))))))))
@@ -690,7 +697,9 @@
      (komp/kuuntelija :esc-painettu
                       (fn [_]
                         (log "optiot: " @optiot)
-                        ((:kun-peruttu @optiot))))
+                        ((:kun-peruttu @optiot)))
+                      :enter-painettu
+                      #(go (>! tapahtumat {:tyyppi :enter})))
      (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
        [:span
         (case @tila
