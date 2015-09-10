@@ -442,8 +442,11 @@
       (.setStyle (clj->js @nuolityylit)))))
 
 
-(defmethod luo-feature :point [{:keys [coordinates]}]
-  (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))}))
+(defmethod luo-feature :point [{:keys [coordinates] :as point}]
+  #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+  (luo-feature (assoc point
+                      :type :circle
+                      :radius 1)))
 
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
