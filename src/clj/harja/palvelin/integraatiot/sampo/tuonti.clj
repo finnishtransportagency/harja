@@ -52,12 +52,13 @@
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
+        (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus tapahtuma-id (str virheet)))
       (catch Exception e
+        (log/error "Sampo sisäänluvussa tapahtui poikkeus." e)
         (integraatioloki/kirjaa-epaonnistunut-integraatio
           integraatioloki
           "Sampo sisäänluvussa tapahtui poikkeus"
-          (str "Poikkeus: " (.getMessage e))
+          (str "Poikkeus: " e)
           tapahtuma-id
-          nil)
-        (log/error "Sampo sisäänluvussa tapahtui poikkeus." e)))))
+          nil)))))
