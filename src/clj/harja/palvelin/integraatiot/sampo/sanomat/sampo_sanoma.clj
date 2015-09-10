@@ -16,7 +16,7 @@
          nil)))
 
 (defn lue-hanke [program]
-  {:viesti-id              (z/xml1-> program (z/attr :message_Id))
+  {:viesti-id              (z/xml1-> program (z/attr :messageId))
    :sampo-id               (z/xml1-> program (z/attr :id))
    :nimi                   (z/xml1-> program (z/attr :name))
    :alkupvm                (parsi-paivamaara (z/xml1-> program (z/attr :schedule_start)))
@@ -43,7 +43,7 @@
    :urakoitsija-sampo-id (z/xml1-> order (z/attr :contractPartyId))})
 
 (defn lue-toimenpideinstanssi [operation]
-  {:viesti-id             (z/xml1-> operation (z/attr :message_Id))
+  {:viesti-id             (z/xml1-> operation (z/attr :messageId))
    :sampo-id              (z/xml1-> operation (z/attr :id))
    :nimi                  (z/xml1-> operation (z/attr :name))
    :alkupvm               (parsi-paivamaara (z/xml1-> operation (z/attr :schedule_finish)))
