@@ -22,10 +22,23 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "tunniste": {
-                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/tunniste",
+              "kenttatunniste": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/kenttatunniste",
                 "type": "string",
                 "required": true
+              },
+              "jarjestysnumero": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/jarjestysnumero",
+                "type": "integer",
+                "required": true
+              },
+              "pituus": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pituus",
+                "type": "integer"
+              },
+              "pakollinen": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "type": "boolean"
               },
               "selite": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/selite",
@@ -34,16 +47,47 @@
               },
               "tietotyyppi": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/tietotyyppi",
-                "type": "string",
-                "required": true
+                "required": true,
+                "enum": [
+                  "merkkijono",
+                  "koodisto",
+                  "numeerinen",
+                  "paivamaara"
+                ]
               },
-              "pakollinen": {
-                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
-                "type": "boolean"
-              },
-              "pituus": {
-                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pituus",
+              "desimaalit": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/desimaalit",
                 "type": "integer"
+              },
+              "alaraja": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/alaraja",
+                "type": "integer"
+              },
+              "ylaraja": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/ylaraja",
+                "type": "integer"
+              },
+              "muutospvm": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "type": "string",
+                "format": "date-time"
+              },
+              "voimassaolo": {
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "alkupvm": {
+                    "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/voimassaolo/alkupvm",
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "loppupvm": {
+                    "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/voimassaolo/alkupvm",
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
               },
               "koodisto": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto",
@@ -53,22 +97,30 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "koodiryhma": {
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/koodiryhma",
+                      "type": "string",
+                      "required": true
+                    },
                     "koodi": {
-                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi",
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "arvo": {
-                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/arvo",
-                          "type": "string",
-                          "required": true
-                        },
-                        "selite": {
-                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/selite",
-                          "type": "string",
-                          "required": true
-                        }
-                      }
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/koodi",
+                      "type": "integer",
+                      "required": true
+                    },
+                    "lyhenne": {
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/lyhenne",
+                      "type": "string",
+                      "required": true
+                    },
+                    "selite": {
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/selite",
+                      "type": "string",
+                      "required": true
+                    },
+                    "muutospvm": {
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/muutospvm",
+                      "type": "string",
+                      "format": "date-time"
                     }
                   }
                 }
