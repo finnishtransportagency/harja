@@ -6,7 +6,8 @@
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
             [harja.ui.ikonit :as ikonit]
-
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -360,6 +361,8 @@
 
     (let [mount (:on-mount mapspec)]
       (mount (laske-kartan-alue ol3)))
+
+    (tapahtumat/julkaise! {:aihe :kartta-nakyy})
     ))
 
 (defn ol3-will-unmount [this]
@@ -498,17 +501,15 @@
 
     ;; Create new shapes for new geometries and update the geometries map
     (loop [new-geometries-map {}
-           new-fit-bounds fit-bounds
            [item & items] items]
       (if-not item
         ;; Update component state with the new geometries map
-        (reagent/set-state component {:geometries-map new-geometries-map
-                                      :fit-bounds     new-fit-bounds})
+        (reagent/set-state component {:geometries-map new-geometries-map})
 
         (let [geom (geometry-fn item)
               avain (geometria-avain item)]
           (if-not geom
-            (recur new-geometries-map new-fit-bounds items)
+            (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
                             (let [new-shape (luo-feature geom)]
                               (.setId new-shape avain)
@@ -525,15 +526,7 @@
                                                                 [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
                               new-shape))]
 
-              ;;(log "OL3: " (pr-str avain) " = " (pr-str geom))
-              ;; If geometry has ::fit-bounds value true, then zoom to this
-              ;; only 1 item should have this
-              (if (and (::fit-bounds geom) (not= fit-bounds avain))
-                (do
-                  (go (<! (timeout 100))
-                      (keskita! ol3 shape))
-                  (recur (assoc new-geometries-map avain [shape item]) avain items))
-                (recur (assoc new-geometries-map avain [shape item]) new-fit-bounds items)))))))))
+              (recur (assoc new-geometries-map avain [shape item]) items))))))))
 
 
 ;;;;;;;;;

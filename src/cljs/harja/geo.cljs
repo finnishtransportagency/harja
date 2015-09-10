@@ -69,6 +69,12 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
 
+(defmethod extent :multipolygon [{polygons :polygons}]
+  (laske-pisteiden-extent (mapcat :coordinates polygons)))
+
+(defmethod extent :polygon [{coordinates :coordinates}]
+  (laske-pisteiden-extent coordinates))
+  
 (defn extent-monelle [geometriat]
   (laske-pisteiden-extent (mapcat pisteet geometriat)))
 

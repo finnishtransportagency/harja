@@ -9,11 +9,10 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.views.kartta.tasot :as tasot]
-            ;[harja.]
             [cljs.core.async :refer [timeout <! >!] :as async]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            )
+            [harja.geo :as geo])
 
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -140,6 +139,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                     :xmax (aget newextent 2)
                                     :ymax (aget newextent 3)}))
 
+(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan
+  (run! (let [v-hal @nav/valittu-hallintayksikko
+              v-ur @nav/valittu-urakka]
+          (log "ZOOMAILLAAN, v-hal: " v-hal ", v-ur: " v-ur)
+          (if v-ur
+            (keskita-kartta-alueeseen! (geo/extent (:alue v-ur)))
+            (if v-hal
+              (keskita-kartta-alueeseen! (geo/extent (:alue v-hal))))))))
+
 (defn kartta-openlayers []
   (let [hals @hal/hallintayksikot
         v-hal @nav/valittu-hallintayksikko
@@ -214,7 +222,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                      (when (or (:valittu piirrettava)
                                                (= :silta (:type piirrettava)))
                                        {:width 3}))
-                           :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
+                           ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                            :color (or (:color alue)
                                       (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
                            :zindex (or (:zindex alue) (case (:type piirrettava)

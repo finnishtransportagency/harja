@@ -710,6 +710,7 @@
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
+        edellinen-extent (atom nil)
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (kartta/poista-geometria! :tr-valittu-osoite)
@@ -717,7 +718,9 @@
                                                         {:alue (assoc arvo
                                                                       :stroke {:width 4})
                                                          :type :tr-valittu-osoite})
-                               (kartta/keskita-kartta-alueeseen! (geo/extent arvo)))))]
+                               (let [e (geo/extent arvo)]
+                                 (kartta/keskita-kartta-alueeseen! e)
+                                 (reset! edellinen-extent e)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go (loop [vkm-haku nil]
@@ -754,7 +757,11 @@
       (fn [_ _ {sijainti :sijainti}]
         (when sijainti
           (nayta-kartalla @sijainti)))}
-     
+
+     (komp/kuuntelija :kartta-nakyy
+                      #(when-let [e @edellinen-extent]
+                         ;; Jos kartta tulee näkyviin, viedään se viimeksi zoomattuun extentiin
+                         (kartta/keskita-kartta-alueeseen! e)))
      (komp/ulos #(do 
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
