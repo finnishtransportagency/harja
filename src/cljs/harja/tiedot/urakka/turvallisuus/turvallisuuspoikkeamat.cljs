@@ -37,13 +37,10 @@
 (def turvallisuuspoikkeama-kartalla-xf
   #(assoc %
     :type :turvallisuuspoikkeama
-    :alue {:type        :circle
-           :radius      (if (= (:id %) (:id @valittu-turvallisuuspoikkeama)) 7000 5000)
+    :alue {:type        :icon
            :coordinates (geo/ikonin-sijainti (:sijainti %))
-           :color       (if (= (:id %) (:id @valittu-turvallisuuspoikkeama))
-                          "green"
-                          "blue") ;;fixme väri ei toimi?
-           :stroke      {:color "black" :width 3}}))
+           :direction 0
+           :img "images/turvallisuuspoikkeama.png"}))
 
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction @valittu-turvallisuuspoikkeama
@@ -53,6 +50,7 @@
 (defonce turvallisuuspoikkeamaa-klikattu
          (tapahtumat/kuuntele! :turvallisuuspoikkeama-klikattu
                                (fn [tp]
+                                 (log "TURPO: " (pr-str tp))
                                  (reset! valittu-turvallisuuspoikkeama (dissoc tp :type :alue)))))
 
 

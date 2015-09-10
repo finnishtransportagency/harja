@@ -30,8 +30,8 @@
 (defn turvallisuuspoikkeaman-tiedot
   []
 
-  (let [muokattu (atom @tiedot/valittu-turvallisuuspoikkeama)
-        lomakkeen-virheet (atom {})
+  (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)
+        lomakkeen-virheet (reaction @tiedot/valittu-turvallisuuspoikkeama {})
         voi-tallentaa? (reaction (and
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
