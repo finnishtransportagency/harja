@@ -70,7 +70,6 @@
    :sampo-id       (z/xml1-> resource (z/attr :id))
    :etunimi        (z/xml1-> resource (z/attr :first_name))
    :sukunimi       (z/xml1-> resource (z/attr :last_name))
-   :kayttajatunnus (z/xml1-> resource (z/attr :user_Name))
    :sahkoposti     (z/xml1-> (z/xml1-> resource) :contactInformation (z/attr :email))})
 
 (defn lue-viesti [viesti]
