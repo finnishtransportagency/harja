@@ -6,6 +6,7 @@
     - Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.
     - Poikkeamat poistetu rajapinnasta
     - Muutoksia varusterajapintaan
+    - Haetaan vain yksi tietolaji kerrallaan
 - Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
     - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
 - Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:

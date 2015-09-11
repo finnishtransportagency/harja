@@ -30,7 +30,8 @@
               "jarjestysnumero": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/jarjestysnumero",
                 "type": "integer",
-                "required": true
+                "required": false,
+                "_comment": "FIXME: jarjestysnumero pakolliseksi. Sonjasta tähän tulee välillä nulleja."
               },
               "pituus": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pituus",
@@ -50,10 +51,12 @@
                 "required": true,
                 "enum": [
                   "merkkijono",
+                  "j",
                   "koodisto",
                   "numeerinen",
                   "paivamaara"
-                ]
+                ],
+                "_comment": "FIXME: tietotyyppi j tulee Sonjasta mutta vaikuttaa bugilta."
               },
               "desimaalit": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/desimaalit",
