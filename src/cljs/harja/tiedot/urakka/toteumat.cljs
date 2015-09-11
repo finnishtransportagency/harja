@@ -17,7 +17,6 @@
 
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do
-         (log "Asia: " (pr-str %))
          (assoc %
          :type :yksikkohintainen-toteuma
          :alue {:type   :arrow-line
