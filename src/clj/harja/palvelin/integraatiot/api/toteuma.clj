@@ -21,35 +21,39 @@
     "kaliumformiaatti" "Kaliumformiaatti"
     (throw (RuntimeException. (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)))))
 
+(defn paivita-toteuma [db urakka-id kirjaaja toteuma]
+  (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
+  (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
+         db
+         (pvm-string->java-sql-date (:alkanut toteuma))
+         (pvm-string->java-sql-date (:paattynyt toteuma))
+         (:id kirjaaja)
+         (get-in toteuma [:suorittaja :nimi])
+         (get-in toteuma [:suorittaja :ytunnus])
+         ""
+         (:toteumatyyppi toteuma)
+         (get-in toteuma [:tunniste :id])
+         urakka-id)))
+
+(defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
+  (log/debug "Luodaan uusi toteuma.")
+  (:id (toteumat/luo-toteuma<!
+         db
+         urakka-id
+         (:sopimusId toteuma)
+         (pvm-string->java-sql-date (:alkanut toteuma))
+         (pvm-string->java-sql-date (:paattynyt toteuma))
+         (:toteumatyyppi toteuma)
+         (:id kirjaaja)
+         (get-in toteuma [:suorittaja :nimi])
+         (get-in toteuma [:suorittaja :ytunnus])
+         ""
+         (get-in toteuma [:tunniste :id]))))
+
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
-    (do
-      (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-      (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
-             db
-             (pvm-string->java-sql-date (:alkanut toteuma))
-             (pvm-string->java-sql-date (:paattynyt toteuma))
-             (:id kirjaaja)
-             (get-in toteuma [:suorittaja :nimi])
-             (get-in toteuma [:suorittaja :ytunnus])
-             ""
-             (:toteumatyyppi toteuma)
-             (get-in toteuma [:tunniste :id])
-             urakka-id)))
-    (do
-      (log/debug "Luodaan uusi toteuma.")
-      (:id (toteumat/luo-toteuma<!
-             db
-             urakka-id
-             (:sopimusId toteuma)
-             (pvm-string->java-sql-date (:alkanut toteuma))
-             (pvm-string->java-sql-date (:paattynyt toteuma))
-             (:toteumatyyppi toteuma)
-             (:id kirjaaja)
-             (get-in toteuma [:suorittaja :nimi])
-             (get-in toteuma [:suorittaja :ytunnus])
-             ""
-             (get-in toteuma [:tunniste :id]))))))
+    (paivita-toteuma db urakka-id kirjaaja toteuma)
+    (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
 (defn tallenna-sijainti [db sijainti toteuma-id]
   (log/debug "Tuhotaan toteuman vanha sijainti")
