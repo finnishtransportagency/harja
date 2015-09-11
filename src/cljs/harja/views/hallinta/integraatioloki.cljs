@@ -37,9 +37,10 @@
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn nayta-otsikko [otsikko]
-  (let [sisalto (kartta-merkkijonoksi otsikko)]
-    (if (> (count sisalto) 30)
-      [:div (str (leikkaa-merkkijono sisalto 30) "...")
+  (let [sisalto (kartta-merkkijonoksi otsikko)
+        max-pituus 30]
+    (if (> (count sisalto) max-pituus)
+      [:div (str (leikkaa-merkkijono sisalto max-pituus) "... ")
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -50,27 +51,28 @@
 
 (defn nayta-lisatiedot [lisatiedot]
   (let [max-pituus 60
-          teksti lisatiedot]
-      (if (> (count teksti) max-pituus)
-        [:span
-         (leikkaa-merkkijono lisatiedot max-pituus)
-         [:button.nappi-toissijainen.grid-lisaa
-          {:on-click
-           (fn [e]
-             (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
-          (ikonit/eye-open)]]
-        teksti)))
+        teksti lisatiedot]
+    (if (> (count teksti) max-pituus)
+      [:span
+       (str (leikkaa-merkkijono lisatiedot max-pituus) "... ")
+       [:button.nappi-toissijainen.grid-lisaa
+        {:on-click
+         (fn [e]
+           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
+        (ikonit/eye-open)]]
+      teksti)))
 
 (defn nayta-sisalto [sisalto]
-  (if (> (count sisalto) 30)
-    [:div (str (leikkaa-merkkijono sisalto 30) "...")
-     [:span.pull-right
-      [:button.nappi-toissijainen.grid-lisaa
-       {:on-click
-        (fn [e]
-          (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
-       (ikonit/eye-open)]]]
-    sisalto))
+  (let [max-pituus 30]
+    (if (> (count sisalto) max-pituus)
+      [:div (str (leikkaa-merkkijono sisalto max-pituus) "...")
+       [:span.pull-right
+        [:button.nappi-toissijainen.grid-lisaa
+         {:on-click
+          (fn [e]
+            (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
+         (ikonit/eye-open)]]]
+      sisalto)))
 
 (defn tapahtuman-tiedot [{id :id}]
   (let [viestit (atom nil)]
