@@ -11,7 +11,9 @@
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as coerce])
+  (:import (java.sql Timestamp)))
 
 
 (defn hae-laskutusyhteenvedon-tiedot
@@ -48,11 +50,17 @@
                                                      urakka-id
                                                      urakan-indeksi))))
 
-(defn yhdista-saman-paivan-samat-tehtavat [tehtavat]
+(defn yhdista-saman-paivan-samat-tehtavat
+  "Ottaa joukon toteuma_tehtava-taulun rivejä ja yhdistää sellaiset rivit, joiden tehtävän toimenpidekoodi ja aloituspvm
+   ovat samat. Aloituspvm voi olla joko java.util.Date tai java.sql.Timestamp."
+  [tehtavat]
   (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
         saman-paivan-samat-tehtavat-map (group-by (fn [tehtava]
                                                     (let [tpk-id (:toimenpidekoodi_id tehtava)
-                                                          alkanut (:alkanut tehtava)
+                                                          konvertoi-sql-timestamp? (instance? Timestamp (:alkanut tehtava))
+                                                          alkanut (if konvertoi-sql-timestamp?
+                                                                    (coerce/from-sql-date (:alkanut tehtava))
+                                                                    (:alkanut tehtava))
                                                           pvm (str (t/day alkanut) "-" (t/month alkanut) "-" (t/year alkanut))]
                                                       [tpk-id pvm]))
                                                   tehtavat)
