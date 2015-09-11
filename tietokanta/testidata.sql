@@ -827,7 +827,7 @@ NOW(), 1350, 10);
 
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
-REFRESH MATERIALIZED VIEW urakoiden_alueet;
+SELECT paivita_urakoiden_alueet();
 
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql

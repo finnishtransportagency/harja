@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.28"]
+                 [org.clojure/clojurescript "1.7.48"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.4.3"]
@@ -157,7 +157,7 @@
                        {:id "prod"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                         :compiler {:optimizations :advanced
-
+                                   :recompile-dependents false ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
                                    ;;:preamble ["reagent/react.min.js"]
                                    :output-to "resources/public/js/harja.js"
                                    :closure-extra-annotations #{"api" "observable"}
