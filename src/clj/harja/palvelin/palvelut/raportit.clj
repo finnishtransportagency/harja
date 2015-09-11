@@ -58,10 +58,8 @@
         saman-paivan-samat-tehtavat-map (group-by (fn [tehtava]
                                                     (let [tpk-id (:toimenpidekoodi_id tehtava)
                                                           konvertoi-sql-timestamp? (instance? Timestamp (:alkanut tehtava))
-                                                          alkanut (if konvertoi-sql-timestamp?
-                                                                    (coerce/from-sql-date (:alkanut tehtava))
-                                                                    (:alkanut tehtava))
-                                                          pvm (str (t/day alkanut) "-" (t/month alkanut) "-" (t/year alkanut))]
+                                                          alkanut (:alkanut tehtava)
+                                                          pvm (.format (java.text.SimpleDateFormat. "dd.MM.yyyy") alkanut)]
                                                       [tpk-id pvm]))
                                                   tehtavat)
         ; Muuta map vectoriksi (jokainen item on vector jossa on päivän samat tehtävät, voi sisältää vain yhden)
