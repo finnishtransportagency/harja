@@ -33,7 +33,7 @@
                         :tapahtuma e})))
 
   ;; Asennetaan yleisten näppäinten handlerin body tasolle
-  (set! (.-onkeydown js/document.body)
+  #_(set! (.-onkeydown js/document.body)
         (fn [e]
           (when (= 27 (.-keyCode e))
             (t/julkaise! {:aihe :esc-painettu}))))

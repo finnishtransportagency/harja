@@ -3,7 +3,8 @@
             [harja.kyselyt.organisaatiot :as organisaatiot]
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [harja.tyokalut.merkkijono :as merkkijono])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-organisaatio [db organisaatio-id nimi y-tunnus katuosoite postinumero]
@@ -17,7 +18,8 @@
     uusi-id))
 
 (defn tallenna-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
-  (let [organisaatio-id (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id)))]
+  (let [organisaatio-id (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id)))
+        postinumero (merkkijono/leikkaa 5 postinumero)]
     (if organisaatio-id
       (do
         (paivita-organisaatio db organisaatio-id nimi y-tunnus katuosoite postinumero)
