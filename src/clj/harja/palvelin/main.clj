@@ -53,6 +53,8 @@
 
     ;; Tieosoiteverkon tuonti
     [harja.palvelin.tyokalut.tieverkon-tuonti :as tieosoiteverkko]
+    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
+    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
     
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -230,6 +232,8 @@
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
                           [:http-palvelin :db])
 
+      :tr-haku (component/using (tierek-haku/->TierekisteriHaku) [:http-palvelin :db])
+      
       ;; tieosoiteverkon tuonti
       :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
                                                 (:tieosoiteverkon-shapefile asetukset)
