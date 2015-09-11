@@ -405,11 +405,11 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
-                                                                                :width 1})
+                                                                                :width (or width 2)})
                                                  :zIndex 4})])]
 
     (.forEachSegment
