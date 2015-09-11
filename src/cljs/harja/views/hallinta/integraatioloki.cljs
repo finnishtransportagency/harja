@@ -33,7 +33,7 @@
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
-                 :leveys  "1000px"}
+                 :leveys  "80%"}
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn nayta-otsikko [otsikko]
