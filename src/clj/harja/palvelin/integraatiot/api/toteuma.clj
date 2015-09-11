@@ -10,6 +10,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn luo-toteuman-tunniste [lahettava-jarjestelma toteuma-ulkoinen-id]
+  (str lahettava-jarjestelma "_" toteuma-ulkoinen-id))
 
 (defn materiaali-enum->string [materiaali]
   (case materiaali
@@ -21,7 +23,7 @@
     "kaliumformiaatti" "Kaliumformiaatti"
     (throw (RuntimeException. (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)))))
 
-(defn paivita-toteuma [db urakka-id kirjaaja toteuma]
+(defn paivita-toteuma [db urakka-id kirjaaja tunniste toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
@@ -32,10 +34,10 @@
          (get-in toteuma [:suorittaja :ytunnus])
          ""
          (:toteumatyyppi toteuma)
-         (get-in toteuma [:tunniste :id])
+         tunniste
          urakka-id)))
 
-(defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
+(defn luo-uusi-toteuma [db urakka-id kirjaaja tunniste toteuma]
   (log/debug "Luodaan uusi toteuma.")
   (:id (toteumat/luo-toteuma<!
          db
@@ -48,12 +50,12 @@
          (get-in toteuma [:suorittaja :nimi])
          (get-in toteuma [:suorittaja :ytunnus])
          ""
-         (get-in toteuma [:tunniste :id]))))
+         tunniste)))
 
-(defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
-  (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
-    (paivita-toteuma db urakka-id kirjaaja toteuma)
-    (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
+(defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja tunniste toteuma]
+  (if (toteumat/onko-olemassa-ulkoisella-idlla? db tunniste (:id kirjaaja))
+    (paivita-toteuma db urakka-id kirjaaja tunniste toteuma)
+    (luo-uusi-toteuma db urakka-id kirjaaja tunniste toteuma)))
 
 (defn tallenna-sijainti [db sijainti toteuma-id]
   (log/debug "Tuhotaan toteuman vanha sijainti")

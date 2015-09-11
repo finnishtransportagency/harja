@@ -66,8 +66,9 @@
 (defn tallenna-toteuma-ja-reitti [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
     (let [toteuma (get-in data [:reittitoteuma :toteuma])
+          tunniste (api-toteuma/luo-toteuman-tunniste (get-in data [:otsikko :lahettaja :jarjestelma]) (get-in data [:reittitoteuma :toteuma :tunniste :id]))
           reitti (get-in data [:reittitoteuma :reitti])
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja tunniste toteuma)]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan toteuman tehtävien tallennus")
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
