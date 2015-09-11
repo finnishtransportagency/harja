@@ -140,7 +140,18 @@
              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
               :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
              {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
-             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30}]))
+             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi]
+                                                                                                       (let [max-pituus 60
+                                                                                                             teksti (:lisatietoja rivi)]
+                                                                                                         (if (> (count teksti) max-pituus)
+                                                                                                           [:span
+                                                                                                            (str (subs teksti 0 max-pituus) "... ")
+                                                                                                            [:button.nappi-toissijainen.grid-lisaa
+                                                                                                             {:on-click
+                                                                                                              (fn [e]
+                                                                                                                (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
+                                                                                                             (ikonit/eye-open)]]
+                                                                                                           teksti)))}]))
 
      @tiedot/haetut-tapahtumat]]])
 
