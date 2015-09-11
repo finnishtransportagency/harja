@@ -6,7 +6,8 @@
             [harja.palvelin.palvelut.raportit :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -28,17 +29,24 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(defn d [txt]
+  (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") txt))
+
+(defn dt [txt]
+  (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") txt))
+
 (deftest yhdista-saman-paivan-samat-tehtavat-toimii-oikein
-  (let [yhdistettavat [{:toteutunut_maara 1 :alkanut (t/now) :toimenpidekoodi_id 1 :nimi "Auraus"} ; Pitää yhdistää alempaan
-                       {:toteutunut_maara 2 :alkanut (t/now) :toimenpidekoodi_id 1 :nimi "Auraus"}
-                       {:toteutunut_maara 44 :alkanut (t/plus (t/now) (t/days 2)) :toimenpidekoodi_id 1 :nimi "Auraus"}
-                       {:toteutunut_maara 76 :alkanut (t/plus (t/now) (t/days 2)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
-                       {:toteutunut_maara 6 :alkanut (t/date-time 2000 10 11) :toimenpidekoodi_id 2 :nimi "Suolaus"} ; Pitää yhdistää alempaan
-                       {:toteutunut_maara 6 :alkanut (t/plus (t/date-time 2000 10 11) (t/hours 4)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
-                       {:toteutunut_maara 7 :alkanut (t/plus (t/now) (t/days 5)) :toimenpidekoodi_id 2 :nimi "Suolaus"}
-                       {:toteutunut_maara 1 :alkanut (t/date-time 2000 10 11) :toimenpidekoodi_id 3 :nimi "Paikkaus"} ; Pitää yhdistää kahteen alempaan
-                       {:toteutunut_maara 10 :alkanut (t/plus (t/date-time 2000 10 11) (t/minutes 1)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}
-                       {:toteutunut_maara 100 :alkanut (t/plus (t/date-time 2000 10 11) (t/hours 23)) :toimenpidekoodi_id 3 :nimi "Paikkaus"}]
+  (let [nyt (java.util.Date.)
+        yhdistettavat [{:toteutunut_maara 1 :alkanut nyt :toimenpidekoodi_id 1 :nimi "Auraus"} ; Pitää yhdistää alempaan
+                       {:toteutunut_maara 2 :alkanut nyt :toimenpidekoodi_id 1 :nimi "Auraus"}
+                       {:toteutunut_maara 44 :alkanut (d "18.8.2015") :toimenpidekoodi_id 1 :nimi "Auraus"}
+                       {:toteutunut_maara 76 :alkanut (d "18.8.2015") :toimenpidekoodi_id 2 :nimi "Suolaus"}
+                       {:toteutunut_maara 6 :alkanut (d "11.10.2000") :toimenpidekoodi_id 2 :nimi "Suolaus"} ; Pitää yhdistää alempaan
+                       {:toteutunut_maara 6 :alkanut (d "11.10.2000") :toimenpidekoodi_id 2 :nimi "Suolaus"}
+                       {:toteutunut_maara 7 :alkanut (d "11.9.2015")  :toimenpidekoodi_id 2 :nimi "Suolaus"}
+                       {:toteutunut_maara 1 :alkanut (d "11.10.2000") :toimenpidekoodi_id 3 :nimi "Paikkaus"} ; Pitää yhdistää kahteen alempaan
+                       {:toteutunut_maara 10 :alkanut (dt "11.10.2000 12:00") :toimenpidekoodi_id 3 :nimi "Paikkaus"}
+                       {:toteutunut_maara 100 :alkanut (d "11.10.2000 23:59") :toimenpidekoodi_id 3 :nimi "Paikkaus"}]
         yhdistetyt (yhdista-saman-paivan-samat-tehtavat yhdistettavat)
         yhdistetyt-auraukset (filter
                                #(= (:nimi %) "Auraus")
