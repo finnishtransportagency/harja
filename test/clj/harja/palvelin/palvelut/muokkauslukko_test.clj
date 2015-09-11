@@ -101,10 +101,10 @@
 (deftest kayttajan-A-lukitseman-nakyman-lukitseminen-ei-onnistu-kayttajalta-B
   (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :lukitse
-                                  +kayttaja-jvh+ {:id "jvh_2015"})
+                                  +kayttaja-jvh+ {:id "nakyma1"})
         tero-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :lukitse
-                                   +kayttaja-tero+ {:id "jvh_2015"})]
+                                   +kayttaja-tero+ {:id "nakyma1"})]
     (is (not (nil? jvh-lukko)))
     (is (nil? tero-lukko))))
 
