@@ -409,7 +409,7 @@
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
-                                                                                :width (or width 3)})
+                                                                                :width (or width 2)})
                                                  :zIndex 4})])]
 
     (.forEachSegment
