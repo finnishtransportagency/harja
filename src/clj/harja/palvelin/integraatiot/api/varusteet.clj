@@ -2,32 +2,25 @@
   "Varusteiden API-kutsut"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
-            [harja.testi :as testi]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [cheshire.core :as cheshire]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat]
-            [harja.tyokalut.json_validointi :as json]))
+            [taoensso.timbre :as log]))
 
 
-(defn hae-tietolaji [tierekisteri {:keys [tunniste muutospaivamaara]} kayttaja]
-  (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-  ;; todo: tarkista, että käyttäjä on olemassa
-  (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-        ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
-        _ (log/debug "ennen munklausta" vastausdata)
-        muunnettu-vastausdata (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
-                                                (map (fn [o]
-                                                       {:ominaisuus o})
-                                                     ominaisuudet)) :onnistunut)]
-    (log/debug "+++++++muunnettu-vastausdata: " muunnettu-vastausdata)
-    muunnettu-vastausdata))
+(defn hae-tietolaji [tierekisteri parametrit kayttaja]
+  (let [tunniste (get parametrit "tunniste")
+        muutospaivamaara (get parametrit "muutospaivamaara")]
+    (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
+    (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
+          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
+          muunnettu-vastausdata (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
+                                                  (map (fn [o]
+                                                         {:ominaisuus o})
+                                                       ominaisuudet)) :onnistunut)]
+      muunnettu-vastausdata)))
 
 (defrecord Varusteet []
   component/Lifecycle

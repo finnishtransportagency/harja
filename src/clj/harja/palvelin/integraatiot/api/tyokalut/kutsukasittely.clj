@@ -128,7 +128,6 @@
     (let [vastaus (try+
                     (let
                       [parametrit (:params request)
-                       _ (log/debug "kutsukäsittely, params" parametrit)
                        kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                        kutsun-data (lue-kutsu kutsun-skeema request body)
                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
