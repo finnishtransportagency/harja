@@ -137,8 +137,10 @@
     (is (not (nil? jvh-lukko-uudestaan)))))
 
 (deftest vanha-lukko-lasketaan-oikein
-  (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))}
-        vanha-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 10)))}]
+  (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))
+                     :ika 180}
+        vanha-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 10)))
+                     :ika 600}]
     (is (false? (lukko/lukko-vanhentunut? tuore-lukko)))
     (is (true? (lukko/lukko-vanhentunut? vanha-lukko)))))
 
