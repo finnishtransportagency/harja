@@ -7,6 +7,7 @@
             [harja.ui.protokollat :refer [hae]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.tierekisteri :as tr]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
@@ -620,95 +621,6 @@
            (pvm/pvm-aika p)
            "")])
 
-(defn tr-karttavalitsin [optiot]
-  (let [tapahtumat (chan)
-        tila (atom :ei-valittu)
-
-        tr-osoite (atom {})
-        ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
-        ;; Muuten go lohko sulkee alkuarvojen yli
-        optiot (cljs.core/atom optiot)
-
-        virhe (atom nil)]
-    
-    (go (loop [vkm-haku nil]
-          (let [[arvo kanava] (alts! (if vkm-haku
-                                       [vkm-haku tapahtumat]
-                                       [tapahtumat]))]
-            (when arvo
-              (if (= kanava vkm-haku)
-                ;; Saatiin VKM vastaus paikkahakuun, käsittele se
-                (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo]
-                  (if (vkm/virhe? osoite)
-                    (do (reset! virhe (vkm/virhe osoite))
-                        (recur nil))
-                    
-                    (do
-                      (case @tila
-                        :ei-valittu (let [osoite (swap! tr-osoite
-                                                        (fn [tr]
-                                                          (dissoc (merge tr
-                                                                         {:numero (get osoite "tie")
-                                                                          :alkuosa (get osoite "osa")
-                                                                          :alkuetaisyys (get osoite "etaisyys")})
-                                                                  :loppuosa
-                                                                  :loppuetaisyys)))]
-                                      (paivita osoite)
-                                      (reset! tila :alku-valittu))
-                        
-                        :alku-valittu (if-not (= (:numero @tr-osoite)
-                                                 (get osoite "tie"))
-                                        (reset! virhe "Loppuosan tulee olla samalla tiellä")
-                                        
-                                        (let [osoite (swap! tr-osoite
-                                                            merge 
-                                                            {:loppuosa (get osoite "osa")
-                                                             :loppuetaisyys (get osoite "etaisyys")})]
-                                          (kun-valmis osoite))))
-                      (recur nil))))
-                
-                ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
-                (let [{:keys [tyyppi sijainti x y]} arvo]
-                  (case tyyppi
-                    :hover
-                    (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu "Klikkaa alkupiste"
-                                                 :alku-valittu "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"))
-
-                    :enter (when (= @tila :alku-valittu)
-                             ((:kun-valmis @optiot) @tr-osoite))
-                    nil)
-                  
-                  (recur (if (= :click tyyppi)
-                           (vkm/koordinaatti->tieosoite sijainti)
-                           vkm-haku))))))))
-    
-    (komp/luo
-     {:component-will-receive-props
-      (fn [_ _ uudet-optiot]
-        (reset! optiot uudet-optiot))}
-     
-     (komp/sisaan-ulos #(swap! nav/tarvitsen-karttaa conj :tr-karttavalitsin)
-                       #(swap! nav/tarvitsen-karttaa disj :tr-karttavalitsin))
-     (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
-                       #(kartta/aseta-kursori! nil))
-     (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
-     (komp/kuuntelija :esc-painettu
-                      (fn [_]
-                        (log "optiot: " @optiot)
-                        ((:kun-peruttu @optiot)))
-                      :enter-painettu
-                      #(go (>! tapahtumat {:tyyppi :enter})))
-     (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
-       [:span
-        (case @tila
-          :ei-valittu "Valitse alkupiste"
-          :alku-valittu "Valitse loppupiste"
-          "")
-
-        (when-let [virhe @virhe]
-          [:div.virhe virhe])]))))
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
@@ -832,7 +744,7 @@
                                                                  (reset! osoite-ennen-karttavalintaa osoite)
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
-                [tr-karttavalitsin {:kun-peruttu #(do
+                [tr/karttavalitsin {:kun-peruttu #(do
                                                     (reset! data @osoite-ennen-karttavalintaa)
                                                     (reset! karttavalinta-kaynnissa false))
                                     :paivita #(swap! data merge %)
