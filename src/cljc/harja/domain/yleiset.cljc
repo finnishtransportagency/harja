@@ -9,8 +9,8 @@
   {:numero s/Int
    :alkuosa s/Int
    :alkuetaisyys s/Int
-   (s/optional-key :loppuosa) s/Int
-   (s/optional-key :loppuetaisyys) s/Int})
+   (s/optional-key :loppuosa) (s/maybe s/Int)
+   (s/optional-key :loppuetaisyys) (s/maybe s/Int)})
 
 (def Coordinate [s/Num])
 
