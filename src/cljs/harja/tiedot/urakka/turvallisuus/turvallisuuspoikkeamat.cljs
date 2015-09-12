@@ -39,6 +39,7 @@
     :type :turvallisuuspoikkeama
     :alue {:type        :icon
            :coordinates (geo/ikonin-sijainti (:sijainti %))
+           :anchor [0.5 1]
            :direction 0
            :img (if (= (:id %) (:id @valittu-turvallisuuspoikkeama))
                   "images/turvallisuuspoikkeama_korostettu.png"
