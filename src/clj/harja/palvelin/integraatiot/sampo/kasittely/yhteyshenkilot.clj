@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn paivita-yhteyshenkilo [db yhteyshenkilo-id etunimi sukunimi kayttajatunnus sahkoposti]
+(defn paivita-yhteyshenkilo [db yhteyshenkilo-id etunimi sukunimi sahkoposti]
   (log/debug "Päivitetään yhteyshenkilo, jonka id on: " yhteyshenkilo-id ".")
   (yhteyshenkilot/paivita-yhteyshenkilo<! db etunimi sukunimi nil nil sahkoposti nil yhteyshenkilo-id))
 
@@ -15,20 +15,20 @@
     (log/debug "Uusi yhteyshenkilo id on:" uusi-id)
     uusi-id))
 
-(defn tallenna-yhteyshenkilo [db sampo-id etunimi sukunimi kayttajatunnus sahkoposti]
+(defn tallenna-yhteyshenkilo [db sampo-id etunimi sukunimi sahkoposti]
   (let [yhteyshenkilo-id (:id (first (yhteyshenkilot/hae-id-sampoidlla db sampo-id)))]
     (if yhteyshenkilo-id
       (do
-        (paivita-yhteyshenkilo db yhteyshenkilo-id etunimi sukunimi kayttajatunnus sahkoposti)
+        (paivita-yhteyshenkilo db yhteyshenkilo-id etunimi sukunimi sahkoposti)
         yhteyshenkilo-id)
       (do
-        (luo-yhteyshenkilo db sampo-id etunimi sukunimi kayttajatunnus sahkoposti)))))
+        (luo-yhteyshenkilo db sampo-id etunimi sukunimi sampo-id sahkoposti)))))
 
-(defn kasittele-yhteyshenkilo [db {:keys [viesti-id sampo-id etunimi sukunimi kayttajatunnus sahkoposti]}]
+(defn kasittele-yhteyshenkilo [db {:keys [viesti-id sampo-id etunimi sukunimi sahkoposti]}]
   (log/debug "Käsitellään yhteyshenkilo Sampo id:llä: " sampo-id)
 
   (try
-    (let [yhteyshenkilo-id (tallenna-yhteyshenkilo db sampo-id etunimi sukunimi kayttajatunnus sahkoposti)]
+    (let [yhteyshenkilo-id (tallenna-yhteyshenkilo db sampo-id etunimi sukunimi sahkoposti)]
       (log/debug "Käsiteltävän yhteyshenkilon id on:" yhteyshenkilo-id)
       (yhteyshenkilot/paivita-yhteyshenkilot-urakalle-sampoidlla! db sampo-id)
 

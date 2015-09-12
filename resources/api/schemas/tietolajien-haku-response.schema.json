@@ -4,24 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "tietolajit": {
-      "id": "urn:harja/tietolajit",
-      "type": "array",
-      "required": true,
-      "items": {
-        "id": "urn:harja/tietolajit/0",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "tietolaji": {
-            "id": "urn:harja/tietolajit/0/tietolaji",
-            "type": "object",
-            "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",
-            "required": true
-          }
-        }
-      }
+    "tietolaji": {
+      "id": "urn:harja/tietolajit/0/tietolaji",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json",
+      "required": true
     }
   }
 }

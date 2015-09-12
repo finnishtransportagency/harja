@@ -203,7 +203,7 @@
             @paallystyskohteet]
 
            [grid/grid
-            {:otsikko                  "Muut työt"          ; NOTE: Muut työt ovat alkuperäiseen sopimukseen kuulumattomia töitä.
+            {:otsikko                  "Muut kohteet" ; NOTE: Muut kohteet ovat alkuperäiseen sopimukseen kuulumattomia töitä.
              :tyhja                    (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero

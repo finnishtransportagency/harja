@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:vastaus xmlns:ns2="http://www.solita.fi/harja/tierekisteri/vastaus">
+    <ns2:status>OK</ns2:status>
+    <ns2:tietolajit>
+        <ns2:tietolaji>
+            <tietolajitunniste>tl506</tietolajitunniste>
+            <ominaisuudet>
+                <ominaisuus>
+                    <kenttatunniste>LMNUMERO</kenttatunniste>
+                    <jarjestysnumero>1</jarjestysnumero>
+                    <pituus>12</pituus>
+                    <pakollinen>true</pakollinen>
+                    <selite>Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto.</selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>SIVUTIE</kenttatunniste>
+                    <jarjestysnumero>2</jarjestysnumero>
+                    <pituus>12</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Sivutiellä olevat, väistämisvelvollisuutta osoittavat liikennemerkit kirjataan maantien
+                        puolelle seuraavissa tapauksissa seuraavin koodein:
+                    </selite>
+                    <tietotyyppi>koodisto</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                    <koodisto>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>1</koodi>
+                            <lyhenne>YK</lyhenne>
+                            <selite>yksityistie</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>2</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>katu tai kaavatie</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>9</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>em. erottelua ei ole voitu tehdä</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                    </koodisto>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMALA</kenttatunniste>
+                    <jarjestysnumero>3</jarjestysnumero>
+                    <pituus>10</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Muiden kuin vakioliikennemerkkien pinta-ala ilmoitetaan 1 neliömetrin tarkkuuteen
+                        pyöristettynä
+                    </selite>
+                    <tietotyyppi>numeerinen</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMVANHA</kenttatunniste>
+                    <jarjestysnumero>4</jarjestysnumero>
+                    <pituus>1</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkki vanhaa tyyppiä, 1 = on</selite>
+                    <tietotyyppi>numeerinen</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMTYYPPI</kenttatunniste>
+                    <jarjestysnumero>5</jarjestysnumero>
+                    <pituus>1</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkin tyyppi</selite>
+                    <tietotyyppi>koodisto</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                    <koodisto>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>1</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>tavallinen</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>2</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>muuttuva</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>3</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>käännettävä</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>4</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>kaksipuolinen</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                    </koodisto>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMKAUSI</kenttatunniste>
+                    <jarjestysnumero>6</jarjestysnumero>
+                    <pituus>12</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Kausiluontoinen liikennemerkki = 1 (määritellään toimistolla).</selite>
+                    <tietotyyppi>numeerinen</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMKIINNIT</kenttatunniste>
+                    <jarjestysnumero>7</jarjestysnumero>
+                    <pituus>1</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkin kiinnitystapa</selite>
+                    <tietotyyppi>koodisto</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                    <koodisto>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>1</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>putkivarsi</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>2</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>kehys</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>3</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>kiinni muussa rakenteessa</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>6</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>puoliporttaali (vrt. tietolaji 262)</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                    </koodisto>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMMATER</kenttatunniste>
+                    <jarjestysnumero>8</jarjestysnumero>
+                    <pituus>4</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkin materiaali</selite>
+                    <tietotyyppi>koodisto</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                    <koodisto/>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMTEKSTI</kenttatunniste>
+                    <jarjestysnumero>9</jarjestysnumero>
+                    <pituus>50</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Viittojen, opastusmerkkien, rajoitusten ja lisäkilpien tietosisältö (50 merkkiä) ja
+                        opastesymbolien numerot. Tähän voi tarvittaessa kirjata kausiluontoisen merkin voimassaoloajan
+                    </selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>LMOMIST</kenttatunniste>
+                    <jarjestysnumero>10</jarjestysnumero>
+                    <pituus>50</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Opasteen omistaja voidaan kirjoittaa tähän ellei se ole Tieviranomainen.</selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>OPASTETUNN</kenttatunniste>
+                    <jarjestysnumero>11</jarjestysnumero>
+                    <pituus>20</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.</selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>KUNTOLUOKK</kenttatunniste>
+                    <jarjestysnumero>12</jarjestysnumero>
+                    <pituus>1</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkin kunto ilmoitetaan virallisen kuntoluokituksen 1-5 mukaan liikennemerkkien
+                        kuntoluokitusohjetta (TIEH 2200060-v-09) nodattaen
+                    </selite>
+                    <tietotyyppi>koodisto</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                    <koodisto>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>1</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>erittäin huono kunto (ohjeessa huono)</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>2</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>huono (välttävä) kunto</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>3</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>tyydyttävä kunto</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>4</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>hyvä kunto</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>5</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>erittäin hyvä kunto</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                    </koodisto>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>OPASTETUNN</kenttatunniste>
+                    <jarjestysnumero>13</jarjestysnumero>
+                    <pituus>10</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.</selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                    </voimassaolo>
+                </ominaisuus>
+                <ominaisuus>
+                    <kenttatunniste>URAKKA</kenttatunniste>
+                    <jarjestysnumero>14</jarjestysnumero>
+                    <pituus>6</pituus>
+                    <pakollinen>false</pakollinen>
+                    <selite>Tässä kentässä ilmoitetaan urakan tunnus, mikäli opaste ei kuulu hoidon alueurakan vaan
+                        erillisen palvelusopimuksen piiriin (6 merkkiä). Jos hoitaja on paikallinen kunta, tunnus on
+                        400.
+                    </selite>
+                    <tietotyyppi>merkkijono</tietotyyppi>
+                    <voimassaolo>
+                        <alkupvm>2015-05-26+03:00</alkupvm>
+                        <loppupvm>2015-12-26+03:00</loppupvm>
+                    </voimassaolo>
+                </ominaisuus>
+            </ominaisuudet>
+        </ns2:tietolaji>
+    </ns2:tietolajit>
+</ns2:vastaus>
