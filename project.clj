@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.122"]
+                 [org.clojure/clojurescript "1.7.48"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.4.3"]
@@ -163,7 +163,7 @@
                                    :closure-extra-annotations #{"api" "observable"}
 
                                    ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
-                                   :source-map "resources/public/js/harja.js.map"
+                                   ;;:source-map "resources/public/js/harja.js.map"
                                    :output-dir "resources/public/js/"
                                    }}
 

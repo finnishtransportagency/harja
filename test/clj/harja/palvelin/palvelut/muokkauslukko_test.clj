@@ -101,10 +101,10 @@
 (deftest kayttajan-A-lukitseman-nakyman-lukitseminen-ei-onnistu-kayttajalta-B
   (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :lukitse
-                                  +kayttaja-jvh+ {:id "jvh_2015"})
+                                  +kayttaja-jvh+ {:id "nakyma1"})
         tero-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :lukitse
-                                   +kayttaja-tero+ {:id "jvh_2015"})]
+                                   +kayttaja-tero+ {:id "nakyma1"})]
     (is (not (nil? jvh-lukko)))
     (is (nil? tero-lukko))))
 
@@ -137,8 +137,10 @@
     (is (not (nil? jvh-lukko-uudestaan)))))
 
 (deftest vanha-lukko-lasketaan-oikein
-  (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))}
-        vanha-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 10)))}]
+  (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))
+                     :ika 180}
+        vanha-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 10)))
+                     :ika 600}]
     (is (false? (lukko/lukko-vanhentunut? tuore-lukko)))
     (is (true? (lukko/lukko-vanhentunut? vanha-lukko)))))
 

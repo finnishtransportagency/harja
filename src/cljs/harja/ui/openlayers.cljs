@@ -6,7 +6,8 @@
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
             [harja.ui.ikonit :as ikonit]
-
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -80,6 +81,9 @@
 (defn aseta-kursori! [kursori]
   (go (>! komento-ch [::cursor kursori])))
 
+(defn aseta-tooltip! [x y teksti]
+  (go (>! komento-ch [::tooltip x y teksti])))
+
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
 ;; Javascript objects.
@@ -90,14 +94,15 @@
 (def ^:export the-kartta (atom nil))
 
 (defn keskita-kartta-pisteeseen! [keskipiste]
-  (.setCenter (.getView @the-kartta) (clj->js keskipiste)))
+  (when-let [ol3 @the-kartta]
+    (.setCenter (.getView ol3) (clj->js keskipiste))))
 
 (defn keskita-kartta-alueeseen! [alue]
   (assert (vector? alue) "Alueen tulee vektori numeroita")
   (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
-  (let [ol3 @the-kartta
-        view (.getView ol3)]
-    (.fitExtent view (clj->js alue) (.getSize ol3))))
+  (when-let [ol3 @the-kartta]
+    (let [view (.getView ol3)]
+      (.fitExtent view (clj->js alue) (.getSize ol3)))))
 
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))
@@ -182,8 +187,11 @@
         tyyppi (.-type e)]
     {:tyyppi (case tyyppi
                "pointermove" :hover
-               "click" :click)
-     :sijainti [(aget c 0) (aget c 1)]}))
+               "click" :click
+               "singleclick" :click)
+     :sijainti [(aget c 0) (aget c 1)]
+     :x (aget (.-pixel e) 0)
+     :y (aget (.-pixel e) 1)}))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution" (fn [e]
@@ -196,25 +204,29 @@
                              (on-move e (laske-kartan-alue ol3))))))
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
-  (.on ol3 "click" (fn [e]
-                     (if-let [kasittelija @klik-kasittelija]
-                       (kasittelija (tapahtuman-kuvaus e))
-                       (do (when on-click
-                             (on-click e))
-                           (when on-select
-                             (when-let [g (tapahtuman-geometria this e)]
-                               (on-select g e))))))))
+  (.on ol3 "singleclick"
+       (fn [e]
+         (if-let [kasittelija @klik-kasittelija]
+           (kasittelija (tapahtuman-kuvaus e))
+           (do (when on-click
+                 (on-click e))
+               (when on-select
+                 (when-let [g (tapahtuman-geometria this e)]
+                   (on-select g e))))))))
+
 
 (defn aseta-hover-kasittelija [this ol3]
-  (.on ol3 "pointermove" (fn [e]
-                           (if-let [kasittelija @hover-kasittelija]
-                             (kasittelija (tapahtuman-kuvaus e))
-                             (reagent/set-state this
-                                                (if-let [g (tapahtuman-geometria this e)]
-                                                  {:hover (assoc g
-                                                                 :x (aget (.-pixel e) 0)
-                                                                 :y (aget (.-pixel e) 1))}
-                                                  {:hover nil}))))))
+  (.on ol3 "pointermove"
+       (fn [e]
+         (if-let [kasittelija @hover-kasittelija]
+           (kasittelija (tapahtuman-kuvaus e))
+           
+           (reagent/set-state this
+                              (if-let [g (tapahtuman-geometria this e)]
+                                {:hover (assoc g
+                                               :x (aget (.-pixel e) 0)
+                                               :y (aget (.-pixel e) 1))}
+                                {:hover nil}))))))
 
 
 (defn keskita!
@@ -282,29 +294,36 @@
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
                (case komento
-                 ::fit-bounds (let [{:keys [ol3 geometries-map]} (reagent/state this)
-                                    view (.getView ol3)
-                                    avain (geometria-avain (first args))
-                                    [g _] (geometries-map avain)]
-                                (when g
-                                  (keskita! ol3 g)))
-                 ::popup (let [[coordinate content] args]
-                           (nayta-popup! this coordinate content))
+                 ::fit-bounds
+                 (let [{:keys [ol3 geometries-map]} (reagent/state this)
+                       view (.getView ol3)
+                       avain (geometria-avain (first args))
+                       [g _] (geometries-map avain)]
+                   (when g
+                     (keskita! ol3 g)))
+                 ::popup
+                 (let [[coordinate content] args]
+                   (nayta-popup! this coordinate content))
 
-                 ::invalidate-size (.updateSize ol3)
+                 ::invalidate-size
+                 (.updateSize ol3)
 
-                 ::hide-popup (poista-popup! this)
+                 ::hide-popup
+                 (poista-popup! this)
 
-                 ::cursor (let [[cursor] args
-                                vp (.-viewport_ ol3)
-                                style (.-style vp)]
-                            (set! (.-cursor style) (case cursor
-                                                     :crosshair "crosshair" ;; lisää tarvittavia kursoreita
-                                                     "")))
-                 ;:default (log "tuntematon kartan komento: " komento)
-                 )
+                 ::cursor
+                 (let [[cursor] args
+                       vp (.-viewport_ ol3)
+                       style (.-style vp)]
+                   (set! (.-cursor style) (case cursor
+                                            :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                            "")))
+                 ::tooltip
+                 (let [[x y teksti] args]
+                   (reagent/set-state this
+                                      {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
-
+    
     (.setView ol3 (ol.View. #js {:center (clj->js @view)
                                  :zoom   @zoom}))
 
@@ -347,6 +366,8 @@
 
     (let [mount (:on-mount mapspec)]
       (mount (laske-kartan-alue ol3)))
+
+    (tapahtumat/julkaise! {:aihe :kartta-nakyy})
     ))
 
 (defn ol3-will-unmount [this]
@@ -376,7 +397,8 @@
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
          [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-          (t hover)]))]))
+          (or (:tooltip hover)
+              (t hover))]))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS
@@ -405,11 +427,11 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
-                                                                                :width 1})
+                                                                                :width (or width 2)})
                                                  :zIndex 4})])]
 
     (.forEachSegment
@@ -434,8 +456,11 @@
       (.setStyle (clj->js @nuolityylit)))))
 
 
-(defmethod luo-feature :point [{:keys [coordinates]}]
-  (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))}))
+(defmethod luo-feature :point [{:keys [coordinates] :as point}]
+  #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+  (luo-feature (assoc point
+                      :type :circle
+                      :radius 1)))
 
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
@@ -449,16 +474,20 @@
                                                                   :size         #js [62 62]})
                                      :zIndex (or zindex 4)}))))
 
-(defmethod luo-feature :icon [{:keys [coordinates img direction]}]
+(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style. #js {:image  (ol.style.Icon. #js {:src          img
-                                                                  :anchor       #js [0.5 1]
-                                                                  :opacity      1
-                                                                  :size         #js [40 40]
-                                                                  :rotation     (or direction 0)
-                                                                  :anchorXUnits "fraction"
-                                                                  :anchorYUnits "fraction"})
-                                     :zIndex 4}))))
+    (.setStyle (ol.style.Style.
+                #js {:image  (ol.style.Icon.
+                              #js {:src          img
+                                   :anchor       (if anchor
+                                                   (clj->js anchor)
+                                                   #js [0.5 1])
+                                   :opacity      1
+                                   ;;:size         #js [40 40]
+                                   :rotation     (or direction 0)
+                                   :anchorXUnits "fraction"
+                                   :anchorYUnits "fraction"})
+                     :zIndex 4}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
@@ -487,17 +516,15 @@
 
     ;; Create new shapes for new geometries and update the geometries map
     (loop [new-geometries-map {}
-           new-fit-bounds fit-bounds
            [item & items] items]
       (if-not item
         ;; Update component state with the new geometries map
-        (reagent/set-state component {:geometries-map new-geometries-map
-                                      :fit-bounds     new-fit-bounds})
+        (reagent/set-state component {:geometries-map new-geometries-map})
 
         (let [geom (geometry-fn item)
               avain (geometria-avain item)]
           (if-not geom
-            (recur new-geometries-map new-fit-bounds items)
+            (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
                             (let [new-shape (luo-feature geom)]
                               (.setId new-shape avain)
@@ -514,15 +541,7 @@
                                                                 [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
                               new-shape))]
 
-              ;;(log "OL3: " (pr-str avain) " = " (pr-str geom))
-              ;; If geometry has ::fit-bounds value true, then zoom to this
-              ;; only 1 item should have this
-              (if (and (::fit-bounds geom) (not= fit-bounds avain))
-                (do
-                  (go (<! (timeout 100))
-                      (keskita! ol3 shape))
-                  (recur (assoc new-geometries-map avain [shape item]) avain items))
-                (recur (assoc new-geometries-map avain [shape item]) new-fit-bounds items)))))))))
+              (recur (assoc new-geometries-map avain [shape item]) items))))))))
 
 
 ;;;;;;;;;

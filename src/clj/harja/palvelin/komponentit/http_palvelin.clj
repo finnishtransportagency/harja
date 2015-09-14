@@ -5,6 +5,7 @@
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
+            [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
             [schema.core :as s]
@@ -199,7 +200,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
-  (julkaise-palvelu http nimi reitti
+  (julkaise-palvelu http nimi  (wrap-params reitti)
                     {:ring-kasittelija? true
                      :tarkista-polku? false}))
 

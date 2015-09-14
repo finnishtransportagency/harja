@@ -73,7 +73,7 @@ Palautettavassa datassa:
   (contains? tulos "virhe"))
 
 
-(defn tieosoite-viiva
+(defn tieosoite->viiva
   "Hakee tieosoitteen viitekehysmuuntimesta ja palauttaa tieviivat. Tiellä voi olla kaksi polkua, jos kaksisuuntainen.
 Jos tietä ei löydy, palauttaa VKM:n palauttaman virheen."
   [tr]
@@ -114,7 +114,8 @@ Jos tietä ei löydy, palauttaa VKM:n palauttaman virheen."
                     first
                     (get "point")
                     ((fn [{x "x" y "y"}]
-                       [x y]))))))))
+                       {:type :point
+                        :coordinates [x y]}))))))))
             
           
 

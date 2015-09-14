@@ -66,6 +66,7 @@
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
+    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
@@ -268,6 +269,8 @@
                                                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                                         [:db])
+      :api-varusteet (component/using (api-varusteet/->Varusteet)
+                                      [:http-palvelin :db :integraatioloki :tierekisteri])
       )))
 
 (defonce harja-jarjestelma nil)
