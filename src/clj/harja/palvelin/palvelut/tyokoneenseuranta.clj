@@ -12,11 +12,11 @@
 
 (defn- formatoi-vastaus [tyokone]
   (-> tyokone
-      (update-in [:sijainti] geo/pg->clj)
-      (update-in [:sijainti] swap-coords) ; swapataan koordinaatit
-      (update-in [:edellinensijainti] (fn [pos] (if pos
-                                                  (swap-coords (geo/pg->clj pos))
-                                                  nil)))
+      (update-in [:sijainti] (comp swap-coords geo/piste-koordinaatit))
+      
+      (update-in [:edellinensijainti] #(some-> %
+                                               geo/piste-koordinaatit
+                                               swap-coords))
       (assoc :tyyppi :tyokone)
       (konversiot/array->set :tehtavat)))
 

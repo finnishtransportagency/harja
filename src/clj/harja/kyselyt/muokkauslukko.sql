@@ -1,14 +1,10 @@
 -- name: hae-lukko-idlla
 -- Hakee lukon id:llä
-SELECT
-muokkauslukko.id as "id",
-muokkauslukko.kayttaja as "kayttaja",
-aikaleima,
-etunimi,
-sukunimi
-FROM muokkauslukko
-  JOIN kayttaja ON kayttaja.id = muokkauslukko.kayttaja
-WHERE muokkauslukko.id = :id;
+SELECT m.id, m.kayttaja, m.aikaleima, k.etunimi, k.sukunimi,
+       (EXTRACT(EPOCH FROM NOW()::TIMESTAMP WITHOUT TIME ZONE) - EXTRACT(EPOCH FROM aikaleima)) as ika
+  FROM muokkauslukko m
+  JOIN kayttaja k ON k.id = m.kayttaja
+ WHERE m.id = :id;
 
 -- name: luo-lukko<!
 -- Tekee uuden lukon

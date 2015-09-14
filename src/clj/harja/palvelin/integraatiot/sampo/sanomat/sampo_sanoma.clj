@@ -15,8 +15,14 @@
          (log/error e "Virhe parsiessa päivämäärää: " teksti)
          nil)))
 
+(defn hae-viesti-id [data]
+  (or (z/xml1-> data (z/attr :messageId))
+      (z/xml1-> data (z/attr :message_Id))
+      (z/xml1-> data (z/attr :messageid))
+      (z/xml1-> data (z/attr :message_id))))
+
 (defn lue-hanke [program]
-  {:viesti-id              (z/xml1-> program (z/attr :message_Id))
+  {:viesti-id              (hae-viesti-id program)
    :sampo-id               (z/xml1-> program (z/attr :id))
    :nimi                   (z/xml1-> program (z/attr :name))
    :alkupvm                (parsi-paivamaara (z/xml1-> program (z/attr :schedule_start)))
@@ -25,7 +31,7 @@
    :yhteyshenkilo-sampo-id (z/xml1-> program (z/attr :resourceId))})
 
 (defn lue-urakka [project]
-  {:viesti-id              (z/xml1-> project (z/attr :message_Id))
+  {:viesti-id              (hae-viesti-id project)
    :sampo-id               (z/xml1-> project (z/attr :id))
    :nimi                   (z/xml1-> project (z/attr :name))
    :alkupvm                (parsi-paivamaara (z/xml1-> project (z/attr :schedule_start)))
@@ -34,7 +40,7 @@
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))})
 
 (defn lue-sopimus [order]
-  {:viesti-id            (z/xml1-> order (z/attr :messageId))
+  {:viesti-id            (hae-viesti-id order)
    :sampo-id             (z/xml1-> order (z/attr :id))
    :nimi                 (z/xml1-> order (z/attr :name))
    :alkupvm              (parsi-paivamaara (z/xml1-> order (z/attr :schedule_finish)))
@@ -43,7 +49,7 @@
    :urakoitsija-sampo-id (z/xml1-> order (z/attr :contractPartyId))})
 
 (defn lue-toimenpideinstanssi [operation]
-  {:viesti-id             (z/xml1-> operation (z/attr :message_Id))
+  {:viesti-id             (hae-viesti-id operation)
    :sampo-id              (z/xml1-> operation (z/attr :id))
    :nimi                  (z/xml1-> operation (z/attr :name))
    :alkupvm               (parsi-paivamaara (z/xml1-> operation (z/attr :schedule_finish)))
@@ -57,7 +63,7 @@
    :sampo-toimenpidekoodi (z/xml1-> operation (z/attr :vv_operation))})
 
 (defn lue-organisaatio [company]
-  {:viesti-id   (z/xml1-> company (z/attr :messageId))
+  {:viesti-id   (hae-viesti-id company)
    :sampo-id    (z/xml1-> company (z/attr :id))
    :nimi        (z/xml1-> company (z/attr :name))
    :y-tunnus    (z/xml1-> company (z/attr :vv_corporate_id))
@@ -66,12 +72,11 @@
    :kaupunki    (z/xml1-> (z/xml1-> company) :contactInformation (z/attr :city))})
 
 (defn lue-yhteyshenkilo [resource]
-  {:viesti-id      (z/xml1-> resource (z/attr :message_Id))
-   :sampo-id       (z/xml1-> resource (z/attr :id))
-   :etunimi        (z/xml1-> resource (z/attr :first_name))
-   :sukunimi       (z/xml1-> resource (z/attr :last_name))
-   :kayttajatunnus (z/xml1-> resource (z/attr :user_Name))
-   :sahkoposti     (z/xml1-> (z/xml1-> resource) :contactInformation (z/attr :email))})
+  {:viesti-id  (hae-viesti-id resource)
+   :sampo-id   (z/xml1-> resource (z/attr :id))
+   :etunimi    (z/xml1-> resource (z/attr :first_name))
+   :sukunimi   (z/xml1-> resource (z/attr :last_name))
+   :sahkoposti (z/xml1-> (z/xml1-> resource) :contactInformation (z/attr :email))})
 
 (defn lue-viesti [viesti]
   (when (not (xml/validoi +xsd-polku+ "Sampo2Harja.xsd" viesti))

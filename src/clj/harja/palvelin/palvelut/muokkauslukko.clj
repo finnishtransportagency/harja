@@ -9,14 +9,15 @@
             [harja.kyselyt.muokkauslukko :as q]))
 
 (def suurin-sallittu-lukon-ika-minuuteissa 5)
+(def suurin-sallittu-lukon-ika-sekunneissa (* 60 suurin-sallittu-lukon-ika-minuuteissa))
 
 (defn lukko-vanhentunut?
   "Kertoo onko lukon suurin salittu ikä ylittynyt. true tai false"
   [lukko]
   (log/debug "Tarkistetaan lukon ikä")
-  (let [lukon-aikaleima (coerce/from-sql-time (:aikaleima lukko))
-        aika-nyt (t/now)
-        lukko-vanhentunut (t/after? aika-nyt (t/plus lukon-aikaleima (t/minutes suurin-sallittu-lukon-ika-minuuteissa)))]
+  (let [ika (:ika lukko)
+        lukko-vanhentunut (> ika
+                             suurin-sallittu-lukon-ika-sekunneissa)]
     (if lukko-vanhentunut
       (do (log/debug "Lukko on vanhentunut")
           true)

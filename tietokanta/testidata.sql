@@ -391,17 +391,17 @@ INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materia
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, null, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
 
 -- Toteumat
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'Tällä toteumalla on reitti.');
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea');
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
-INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea :(');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'Tällä toteumalla on reitti.');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea :(');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Pekan Kone OY', 'Y125', 'Automaattisesti lisätty fastroi toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi'));
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1350, 10);
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (2, '2005-10-01 00:00.00', 1350, 7);
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1351, 5);
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, '2005-10-01 00:00.00', 1350, 15);
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, '2005-10-01 00:00.00', 1351, 150);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, NOW(), 1350, 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (2, NOW(), 1350, 7);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, NOW(), 1351, 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, NOW(), 1350, 15);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, NOW(), 1351, 150);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1350, 28);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1351, 123);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1, 7);
@@ -480,7 +480,7 @@ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitust
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 12345, '2005-10-01 10:00.00', '2005-10-01 10:05.13', true, 'Voisko joku soittaa?',
-ST_MakePoint(452935, 7186873)::POINT, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi, ARRAY['saveaTiella', 'vettaTiella']::ilmoituksenselite[],
+ST_MakePoint(452935, 7186873)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi, ARRAY['saveaTiella', 'vettaTiella']::ilmoituksenselite[],
 (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'),
 'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas'::ilmoittajatyyppi,
 'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
@@ -537,7 +537,7 @@ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitust
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 12346, '2005-10-10 06:05.32', '2005-10-11 06:06.37', true, 'Taas täällä joku mättää!',
-ST_MakePoint(435847, 7216217)::POINT, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
+ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
 ARRAY['kaivonKansiRikki', 'vettaTiella']::ilmoituksenselite[],
 (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'),
 'Yrjö', 'Mestari', '0441271234', '0441233424', 'tyonvalvonta@isoveli.com', 'muu'::ilmoittajatyyppi,
@@ -580,7 +580,7 @@ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matka
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 12347, '2007-12-01 20:01.20', '2007-12-07 08:07.50',
 false, 'Kauhea kuoppa tiessä',
-ST_MakePoint(499687, 7248153)::POINT, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
+ST_MakePoint(499687, 7248153)::GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
 ARRAY['kuoppiaTiessa', 'vettaTiella']::ilmoituksenselite[],
 (SELECT tyyppi FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'),
 'Paavo', 'Poliisimies', '086727461', '0448261234', 'paavo.poliisimies@poliisi.fi', 'viranomainen'::ilmoittajatyyppi,
@@ -654,7 +654,7 @@ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitust
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES (12348, '2006-02-13 00:00.00', '2005-02-13 00:00.00', false, 'Täällä joku pommi räjähti!!',
-ST_MakePoint(249863, 6723867)::POINT, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi, ARRAY['virkaApupyynto']::ilmoituksenselite[],
+ST_MakePoint(249863, 6723867)::GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi, ARRAY['virkaApupyynto']::ilmoituksenselite[],
 'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja'::ilmoittajatyyppi,
 'Mika', 'Vaihdemies', '085612567', 'vaihde@valityspalvelu.fi');
 
@@ -666,7 +666,7 @@ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa,
 VALUES
 ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2005-10-01 10:00.00', '2005-10-01 12:20.00', '2005-10-06 09:00.00',
 'Trukkikuski', 'Lastaus', 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-'Murtunut peukalo', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::POINT, 6, 6, 6, 6, 6,
+'Murtunut peukalo', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
 ARRAY['turvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
 
 INSERT INTO korjaavatoimenpide
@@ -678,7 +678,7 @@ VALUES
 -- Havainnot
 
 INSERT INTO havainto (kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
-VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(1, 2), 5);
+VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(1, 2)::GEOMETRY, 5);
 
 -- Sanktiot
 
@@ -686,8 +686,8 @@ INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, havainto, toimenpid
 
 -- Tarkastukset
 
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(429293, 7209214), 'Ismo', 'Seppo', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(429000, 7202314), 'Matti', 'Pentti', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
+INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(429293, 7209214)::GEOMETRY, 'Ismo', 'Seppo', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
+INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, mittaaja, tyyppi, havainto, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(429000, 7202314)::GEOMETRY, 'Matti', 'Pentti', 'pistokoe'::tarkastustyyppi, 1, NOW(), 1, 3);
 
 -- Tyokoneseurannan havainnot
 
@@ -762,25 +762,25 @@ INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:00.00',
 NOW(),
-st_makepoint(498919, 7247099) :: POINT);
+st_makepoint(498919, 7247099) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:03.00',
 NOW(),
-st_makepoint(499271, 7248395) :: POINT);
+st_makepoint(499271, 7248395) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:06.00',
 NOW(),
-st_makepoint(499399, 7249019) :: POINT);
+st_makepoint(499399, 7249019) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:09.00',
 NOW(),
-st_makepoint(499820, 7249885) :: POINT);
+st_makepoint(499820, 7249885) ::POINT);
 
 -- Reittipisteet yksikköhintaiselle työlle
 
@@ -788,25 +788,25 @@ INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
-st_makepoint(498919, 7247099) :: POINT);
+st_makepoint(498919, 7247099) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
-st_makepoint(499271, 7248395) :: POINT);
+st_makepoint(499271, 7248395) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
-st_makepoint(499399, 7249019) :: POINT);
+st_makepoint(499399, 7249019) ::POINT);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
-st_makepoint(499820, 7249885) :: POINT);
+st_makepoint(499820, 7249885) ::POINT);
 
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:00.00' :: TIMESTAMP ),
@@ -827,7 +827,7 @@ NOW(), 1350, 10);
 
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
-REFRESH MATERIALIZED VIEW urakoiden_alueet;
+SELECT paivita_urakoiden_alueet();
 
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql

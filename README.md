@@ -50,13 +50,25 @@ Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat omas
 Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
 
-## Staging tietokannan päivitys, uusi ja hyvä tapa
+## Staging tietokannan sisällön muokkaus
+* Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
+Host harja-*-test
+  ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
 
-ssh -L7777:localhost:5432 harja-db1-stg
+Host harja-*-stg
+  ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
+
+* Sourceta uusi config tai avaa uusi terminaali-ikkuna. 
+
+* Avaa VPN putki.
+
+* Luo itsellesi SSH-avainpari ja pyydä tuttuja laittamaan julkinen avain palvelimelle.
+
+ssh -L7777:localhost:5432 harja-dfb1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
 
-## Testipalvelimen tietokannan päivitys, vanha ja huono tapa
+## Testipalvelimen tietokannan päivitys, vanha ja huono tapa, mutta säilyköön ohje jälkipolville:
  * Avaa VPN putki <br/>
  <code>
     ssh harja-jenkins.solitaservices.fi

@@ -36,7 +36,6 @@
 (defonce valittu-jarjestelma (atom nil))
 (defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom nil))
-(defonce valittu-tapahtuma (atom nil))
 
 (defonce haetut-tapahtumat
   (reaction<! [valittu-jarjestelma @valittu-jarjestelma

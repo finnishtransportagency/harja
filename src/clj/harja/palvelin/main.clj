@@ -50,6 +50,11 @@
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
+
+    ;; Tieosoiteverkon tuonti
+    [harja.palvelin.tyokalut.tieverkon-tuonti :as tieosoiteverkko]
+    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
+    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
     
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -61,6 +66,7 @@
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
+    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
@@ -226,6 +232,14 @@
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
                           [:http-palvelin :db])
+
+      :tr-haku (component/using (tierek-haku/->TierekisteriHaku) [:http-palvelin :db])
+      
+      ;; tieosoiteverkon tuonti
+      :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
+                                                (:tieosoiteverkon-shapefile asetukset)
+                                                (:tieosoiteverkon-tuontivali asetukset))
+                                               [:db])
       
       ;; Harja API
       :api-urakat (component/using
@@ -255,6 +269,8 @@
                                                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                                         [:db])
+      :api-varusteet (component/using (api-varusteet/->Varusteet)
+                                      [:http-palvelin :db :integraatioloki :tierekisteri])
       )))
 
 (defonce harja-jarjestelma nil)
@@ -294,6 +310,10 @@
   [nimi fn]
   (http-palvelin/poista-palvelu (:http-palvelin harja-jarjestelma) nimi)
   (http-palvelin/julkaise-palvelu (:http-palvelin harja-jarjestelma) nimi fn))
+
+(defmacro with-db [s & body]
+  `(let [~s (:db harja-jarjestelma)]
+     ~@body))
 
 (defn q
   "Kysele Harjan kannasta, REPL kehitystä varten"

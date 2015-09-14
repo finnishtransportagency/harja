@@ -9,16 +9,18 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.views.kartta.tasot :as tasot]
-            ;[harja.]
             [cljs.core.async :refer [timeout <! >!] :as async]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            )
+            [harja.geo :as geo])
 
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 
+;; Ad hoc geometrioiden näyttäminen näkymistä
+;; Avain on avainsana ja arvo on itse geometria
+(defonce nakyman-geometriat (atom {}))
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 ;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
@@ -107,6 +109,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (def aseta-hover-kasittelija! openlayers/aseta-hover-kasittelija!)
 (def poista-hover-kasittelija! openlayers/poista-hover-kasittelija!)
 (def aseta-kursori! openlayers/aseta-kursori!)
+(def aseta-tooltip! openlayers/aseta-tooltip!)
 
 (defn kaappaa-hiiri
   "Muuttaa kartan toiminnallisuutta siten, että hover ja click eventit annetaan datana annettuun kanavaan.
@@ -121,12 +124,29 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
-  
+
+(defn nayta-geometria! [avain geometria]
+  (assert (and (map? geometria)
+               (contains? geometria :alue)) "Geometrian tulee olla mäpissä :alue avaimessa!")
+  (swap! nakyman-geometriat assoc avain geometria))
+
+(defn poista-geometria! [avain]
+  (swap! nakyman-geometriat dissoc avain))
+         
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
                                     :ymin (aget newextent 1)
                                     :xmax (aget newextent 2)
                                     :ymax (aget newextent 3)}))
+
+(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan
+  (run! (let [v-hal @nav/valittu-hallintayksikko
+              v-ur @nav/valittu-urakka]
+          (log "ZOOMAILLAAN, v-hal: " v-hal ", v-ur: " v-ur)
+          (if v-ur
+            (keskita-kartta-alueeseen! (geo/extent (:alue v-ur)))
+            (if v-hal
+              (keskita-kartta-alueeseen! (geo/extent (:alue v-hal))))))))
 
 (defn kartta-openlayers []
   (let [hals @hal/hallintayksikot
@@ -165,31 +185,32 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                     (and geom
                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
-                   (concat (cond
-                             (and (= :tilannekuva @nav/sivu) (nil? v-hal))
-                             nil
+      (doall (concat (cond
+                       (and (= :tilannekuva @nav/sivu) (nil? v-hal))
+                       nil
 
-                             (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
-                             [(assoc v-hal :valittu true)]
+                       (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
+                       [(assoc v-hal :valittu true)]
 
-                             (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
-                             [(assoc @nav/valittu-urakka :valittu true)]
+                       (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
+                       [(assoc @nav/valittu-urakka :valittu true)]
 
-                             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                             (nil? v-hal)
-                             hals
+                       ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                       (nil? v-hal)
+                       hals
 
-                             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                             (nil? @nav/valittu-urakka)
-                             (vec (concat [(assoc v-hal
-                                             :valittu true)]
-                                          @nav/urakat-kartalla))
+                       ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                       (nil? @nav/valittu-urakka)
+                       (vec (concat [(assoc v-hal
+                                            :valittu true)]
+                                    @nav/urakat-kartalla))
 
-                             ;; Valittu urakka, mitä näytetään?
-                             :default [(assoc @nav/valittu-urakka
-                                         :valittu true
-                                         :harja.ui.openlayers/fit-bounds true)])
-                           @tasot/geometriat)
+                       ;; Valittu urakka, mitä näytetään?
+                       :default [(assoc @nav/valittu-urakka
+                                        :valittu true
+                                        :harja.ui.openlayers/fit-bounds true)])
+                     @tasot/geometriat
+                     (vals @nakyman-geometriat)))
 
       :geometry-fn (fn [piirrettava]
                      (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
@@ -201,7 +222,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                      (when (or (:valittu piirrettava)
                                                (= :silta (:type piirrettava)))
                                        {:width 3}))
-                           :harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
+                           ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                            :color (or (:color alue)
                                       (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
                            :zindex (or (:zindex alue) (case (:type piirrettava)
