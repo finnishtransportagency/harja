@@ -16,7 +16,6 @@
 (def +pistetoteuman-kirjaus+ "api/schemas/pistetoteuman-kirjaus-request.schema.json")
 (def +reittitoteuman-kirjaus+ "api/schemas/reittitoteuman-kirjaus-request.schema.json")
 
-(def +poikkeamien-kirjaus+ "api/schemas/poikkeamien-kirjaus-request.schema.json")
 (def +turvallisuuspoikkeamien-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
 
 (def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
