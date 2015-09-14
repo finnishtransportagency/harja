@@ -54,5 +54,5 @@
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (hae-tietueet integraatioloki
-                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri/haetietue"
+                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
                   tunniste tietolaji)))
