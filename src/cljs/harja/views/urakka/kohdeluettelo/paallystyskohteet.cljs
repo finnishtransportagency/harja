@@ -91,7 +91,7 @@
                            (when (not (haetut osoite))
                              (go
                                (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
-                               (let [sijainti (<! (vkm/tieosoite-viiva osoite))]
+                               (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
                                  (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
                                    (if-let [virhe (and (vkm/virhe? sijainti)
                                                        (get sijainti "virhe"))]

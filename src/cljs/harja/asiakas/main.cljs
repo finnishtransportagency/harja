@@ -35,8 +35,10 @@
   ;; Asennetaan yleisten näppäinten handlerin body tasolle
   (set! (.-onkeydown js/document.body)
         (fn [e]
-          (when (= 27 (.-keyCode e))
-            (t/julkaise! {:aihe :esc-painettu}))))
+          (case (.-keyCode e)
+            27 (t/julkaise! {:aihe :esc-painettu})
+            13 (t/julkaise! {:aihe :enter-painettu})
+            nil)))
 
   ;; Kaapataan raportoimattomat virheet ja lähetetään ne backin kautta logiin
   (set! (.-onerror js/window)

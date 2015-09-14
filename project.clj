@@ -163,7 +163,7 @@
                                    :closure-extra-annotations #{"api" "observable"}
 
                                    ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
-                                   :source-map "resources/public/js/harja.js.map"
+                                   ;;:source-map "resources/public/js/harja.js.map"
                                    :output-dir "resources/public/js/"
                                    }}
 

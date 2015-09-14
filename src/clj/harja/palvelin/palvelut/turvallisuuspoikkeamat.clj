@@ -8,14 +8,15 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.turvallisuuspoikkeamat :as q]))
+            [harja.kyselyt.turvallisuuspoikkeamat :as q]
+            [harja.geo :as geo]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map konv/alaviiva->rakenne)
-                                 (harja.geo/muunna-pg-tulokset :sijainti)
-                                 (map #(konv/array->vec % :tyyppi))
-                                 (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
-                                 (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
+        (geo/muunna-pg-tulokset :sijainti)
+        (map #(konv/array->vec % :tyyppi))
+        (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
+        (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -72,7 +73,8 @@
   ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
-  (let [tr_numero (:numero tr)
+  (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
+        tr_numero (:numero tr)
         tr_alkuetaisyys (:alkuetaisyys tr)
         tr_loppuetaisyys (:loppuetaisyys tr)
         tr_alkuosa (:alkuosa tr)
@@ -83,18 +85,17 @@
                                             kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
                                             (:id user) id)
-         (q/aseta-turvallisuuspoikkeaman-sijainti<! db
-                                                   (first sijainti) (second sijainti) tr_numero
-                                                   tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+         (q/aseta-turvallisuuspoikkeaman-sijainti! db
+                                                   sijainti
+                                                   tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
          id)
 
      (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                                   (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
-       (q/aseta-turvallisuuspoikkeaman-sijainti<! db
-                                                 (first sijainti) (second sijainti) tr_numero
-                                                 tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+       (q/aseta-turvallisuuspoikkeaman-sijainti! db
+                                                 sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
        id))))
 
 (defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
