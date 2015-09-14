@@ -86,7 +86,7 @@
                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
                                             (:id user) id)
          (q/aseta-turvallisuuspoikkeaman-sijainti! db
-                                                   
+                                                   sijainti
                                                    tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
          id)
 
