@@ -288,7 +288,7 @@ FROM urakka u
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
 WHERE u.id = :urakka_id;
 
--- name: paivita-urakka-alaueiden-nakyma!
+-- name: paivita-urakka-alaueiden-nakyma
 -- Päivittää urakka-alueiden materialisoidun näkymän
 SELECT paivita_urakoiden_alueet();
 
