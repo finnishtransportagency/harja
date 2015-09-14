@@ -142,6 +142,11 @@
                       (log/error "Tapahtui poikkeus: " e)
                       (kasittele-sisainen-kasittelyvirhe
                         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                          :viesti (.getMessage e)}])))]
+                          :viesti (.getMessage e)}]))
+                    (catch Object poikkeus
+                      (log/error (:throwable &throw-context) "Tapahtui poikkeus")
+                      (kasittele-sisainen-kasittelyvirhe
+                        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                          :viesti (str poikkeus)}])))]
       (when integraatioloki (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))

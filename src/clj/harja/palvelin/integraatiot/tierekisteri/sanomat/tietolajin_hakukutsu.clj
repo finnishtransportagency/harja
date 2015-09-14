@@ -19,4 +19,4 @@
       xml
       (do
         (log/error "Tietolajihakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
-        nil))))
+        (throw (Exception. "Tietolajin hakukutsu Tierekisteriin ei ole validi"))))))

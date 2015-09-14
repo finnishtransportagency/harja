@@ -4,14 +4,15 @@
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :refer [+tietolajien-haku+]])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-virheet [url tunniste muutospvm virheet]
-  (throw+ {:type  :tierekisteri-kutsu-epaonnistui
-           :error (str "Tietolajin haku epäonnistui (URL: " url ") tunnisteella: " tunniste
-                       " & muutospäivämäärällä: " muutospvm "."
-                       "Virheet: " (string/join virheet))}))
+  (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+           :virheet [{:koodi  :tierekisteri-kutsu-epaonnistui
+                      :viesti (str "Tietolajin haku epäonnistui (URL: " url ") tunnisteella: " tunniste
+                                   " & muutospäivämäärällä: " muutospvm "."
+                                   "Virheet: " (string/join virheet))}]})  )
 
 (defn kirjaa-varoitukset [url tunniste muutospvm virheet]
   (log/warn (str "Tietolajin haku palautti virheitä (URL: " url ") tunnisteella: " tunniste
