@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi)
 
 (defn paattele-yllapidon-tyyppi [alueurakkanumero]
-  (if (empty? alueurakkanumero)
+  (if (or (empty? alueurakkanumero) (> 3 (count alueurakkanumero)))
     "hoito"
     (let [tunniste (subs alueurakkanumero 2 3)]
       (case tunniste
@@ -12,7 +12,7 @@
         "hoito"))))
 
 (defn paattele-urakkatyyppi [alueurakkanumero]
-  (if (empty? alueurakkanumero)
+  (if (or (empty? alueurakkanumero) (> 2 (count alueurakkanumero)))
     "hoito"
     (let [tunniste (subs alueurakkanumero 1 2)]
       (case tunniste
