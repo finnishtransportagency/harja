@@ -51,14 +51,17 @@
     (log/debug "Hoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 (defn tee-tuontiajat [aikavali-tuntia]
-  (periodic-seq (t/now) (t/hours aikavali-tuntia)))
+  (periodic-seq (t/plus (t/now) (t/minutes 2)) (t/hours aikavali-tuntia)))
 
 (defn tee-tuontitehtava [this]
   (log/debug "Ajastetaan tieosoiteverkon tuontitehtävä " (:aikavali this) " tunnin väleillä")
   (chime-at (tee-tuontiajat (:aikavali this))
             (fn [_]
-              (vie-tieverkko-kantaan (:db this) (:tieverkko-shapefile this))
-              (vie-hoitoluokat-kantaan (:db this) (:hoitoluokka-shapefile this)))))
+              (try
+                (do (vie-tieverkko-kantaan (:db this) (:tieverkko-shapefile this))
+                    (vie-hoitoluokat-kantaan (:db this) (:hoitoluokka-shapefile this)))
+                (catch Exception e
+                  (log/debug "Virhe tieosoiteverkon tuonnissa, tiedostoja ei ehkä löydy"))))))
 
 (defrecord Tieverkontuonti [tieverkko-shapefile hoitoluokka-shapefile aikavali]
   component/Lifecycle
