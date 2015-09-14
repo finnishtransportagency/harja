@@ -17,19 +17,20 @@ lein clean > /dev/null
 set +e
 
 echo "Ajetaan unit testit"
-if [ -z "$1" ]; then
-  output="$(lein test)"; else
-  output="$(lein test 2>&1)" 
-fi
-if [[ $? -ne 0 ]] ; then
-  echo "\n** Unit testien tulos **"
-  echo $output | tail -c 80
-  echo "** **\n"
+lein test2junit > /dev/null
+
+output="$(for i in test2junit/xml/*.xml;
+do xpath $i "/testsuite[not(@errors = '0') or not(@failures = '0')]" 2>&1 | grep -v "No nodes found";
+done;)"
+
+if [ -z "$output" ]; then
+  echo "Ei virheitä unit testeissä"; else
+  echo ""
+  echo "$output"
+  echo ""
+  echo "** Unit testit epäonnistuivat **"
   exit 1
 fi
-echo "\n** Unit testien tulos **"
-echo $output | tail -c 80
-echo "** **\n"
 
 set -e
 
