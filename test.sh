@@ -34,13 +34,14 @@ fi
 
 set -e
 
-lein figwheel dev &
 echo "\n\n*****************"
 echo "Käynnistetään figwheel ja REPL"
 echo "Odota rauhassa"
 echo "Poistu kirjoittamalla (exit) tai painamalla ctrl-d"
 echo "*****************\n"
+lein trampoline figwheel &
 lein repl
 
 echo "Kiitos testaamisesta!"
-kill `lsof -n -i4TCP:3449 | awk 'NR>1{printf "%s", $2}'`
+#kill `lsof -n -i4TCP:3449 | awk 'NR>1{printf "%s", $2}'`
+kill %1
