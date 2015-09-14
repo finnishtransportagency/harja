@@ -51,7 +51,7 @@
     (log/debug "Hoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 (defn tee-tuontiajat [aikavali-tuntia]
-  (periodic-seq (t/plus (t/now) (t/minutes 2)) (t/hours aikavali-tuntia)))
+  (periodic-seq (t/plus (t/now) (t/minutes 1)) (t/hours aikavali-tuntia)))
 
 (defn tee-tuontitehtava [this]
   (log/debug "Ajastetaan tieosoiteverkon tuontitehtävä " (:aikavali this) " tunnin väleillä")
