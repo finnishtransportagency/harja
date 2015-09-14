@@ -25,13 +25,11 @@
     },
     "losa": {
       "id": "urn:harja/sijainti/tie/losa",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "let": {
       "id": "urn:harja/sijainti/tie/let",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     }
   }
 }
