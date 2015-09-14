@@ -111,7 +111,9 @@
 
           {:otsikko "TR osoite"
            :nimi :tr
-           :fmt #(str/join " / " (map (fn [kentta] (get % kentta)) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
+           :fmt #(apply yleiset/tierekisteriosoite
+                        (map (fn [kentta] (get % kentta))
+                             [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
            :leveys 2}
           ]
 

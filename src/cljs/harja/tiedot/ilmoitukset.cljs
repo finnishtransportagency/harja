@@ -8,7 +8,8 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.geo :as geo])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -70,7 +71,7 @@
   #(assoc %
     :type :ilmoitus
     :alue {:type        :circle
-           :coordinates (:sijainti %)
+           :coordinates (geo/ikonin-sijainti (:sijainti %))
            :color        (if (= (:id %) (:id @valittu-ilmoitus)) "green" "blue")
            :radius      5000
            :stroke      {:color "black" :width 10}}))

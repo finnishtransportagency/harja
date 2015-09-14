@@ -106,7 +106,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-tehtavat (into []
                                    muunna-desimaaliluvut-xf
-                                   (q/hae-urakan-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi)))]
+                                   (q/hae-urakan-ja-sopimuksen-toteutuneet-tehtavat db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi)))]
     (log/debug "Haetty urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
     toteutuneet-tehtavat))
 

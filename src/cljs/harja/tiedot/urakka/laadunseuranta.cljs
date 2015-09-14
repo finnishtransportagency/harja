@@ -9,7 +9,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log]]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -55,7 +56,7 @@
   (map #(assoc %
          :type :tarkastus
          :alue {:type        :icon
-                :coordinates (:sijainti %)
+                :coordinates (geo/ikonin-sijainti (:sijainti %))
                 :direction   0
                 :img         (if (= (:id %) (:id @valittu-tarkastus))
                                "images/tyokone_highlight.png"

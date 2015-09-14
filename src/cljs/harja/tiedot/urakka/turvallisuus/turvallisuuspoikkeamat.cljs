@@ -5,7 +5,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -36,11 +37,13 @@
 (def turvallisuuspoikkeama-kartalla-xf
   #(assoc %
     :type :turvallisuuspoikkeama
-    :alue {:type        :circle
-           :radius      (if (= (:id %) (:id @valittu-turvallisuuspoikkeama)) 10000 5000)
-           :coordinates (:sijainti %)
-           :fill        (if (= (:id %) (:id @valittu-turvallisuuspoikkeama)) {:color "green"} {:color "blue"}) ;;fixme väri ei toimi?
-           :stroke      {:color "black" :width 10}}))
+    :alue {:type        :icon
+           :coordinates (geo/ikonin-sijainti (:sijainti %))
+           :anchor [0.5 1]
+           :direction 0
+           :img (if (= (:id %) (:id @valittu-turvallisuuspoikkeama))
+                  "images/turvallisuuspoikkeama_korostettu.png"
+                  "images/turvallisuuspoikkeama.png")}))
 
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction @valittu-turvallisuuspoikkeama

@@ -188,7 +188,7 @@ WHERE id = :id;
 UPDATE ilmoitus
 SET
   tr_numero = :tr_numero,
-  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti)
+  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY
 WHERE id = :id;
 
 -- name: hae-ilmoituksen-urakka

@@ -1,5 +1,6 @@
 (ns harja.geo
   "Yleiskäyttöisiä paikkatietoon ja koordinaatteihin liittyviä apureita."
+  (:require [taoensso.timbre :as log])
   (:import (org.postgresql.geometric PGpoint PGpolygon)
            (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString)))
 
@@ -8,6 +9,9 @@
 (defprotocol MuunnaGeometria
   "Geometriatyyppien muunnos PostgreSQL muodosta Clojure dataksi"
   (pg->clj [this]))
+
+(defn piste-koordinaatit [p]
+  [(.x p) (.y p)])
 
 (extend-protocol MuunnaGeometria
 
@@ -25,7 +29,7 @@
   Polygon
   (pg->clj [^Polygon p]
     {:type :polygon
-     :coordinates (mapv pg->clj
+     :coordinates (mapv piste-koordinaatit
                         (loop [acc []
                                i 0]
                           (if (= i (.numPoints p))
@@ -35,24 +39,24 @@
 
   Point 
   (pg->clj [^Point p]
-    [(.x p) (.y p)]
-    #_(euref->osm [(.x p) (.y p)]))
+    {:type :point
+     :coordinates (piste-koordinaatit p)})
   
-  ;; Piste muunnetaan muotoon [x y]
   PGpoint
   (pg->clj [^PGpoint p]
-    #_(euref->osm [(.x p) (.y p)])
-    [(.x p) (.y p)])
+    {:type :point
+     :coordinates (piste-koordinaatit p)})
 
-  ;; Polygoni muunnetaan muotoon [[x1 y1] ... [xN yN]]
   PGpolygon
   (pg->clj [^PGpolygon poly]
-    (mapv pg->clj (seq (.points poly))))
+    {:type :polygon
+     :coordinates (mapv piste-koordinaatit
+                        (seq (.points poly)))})
 
   LineString
   (pg->clj [^LineString line]
     {:type :line
-     :points (mapv pg->clj (.getPoints line))})
+     :points (mapv piste-koordinaatit (.getPoints line))})
   
   MultiLineString
   (pg->clj [^MultiLineString mls]
@@ -76,6 +80,10 @@
                            (map (fn [[x y]]
                                   (Point. x y))
                                 points))))
+(defmethod clj->pg :point [{c :coordinates :as p}]
+  (log/info "clj->pg :point " p)
+  (Point. (first c) (second c)))
+
 (defn geometry [g]
   (PGgeometry. g))
 

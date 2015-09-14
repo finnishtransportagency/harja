@@ -33,13 +33,14 @@
           toimenpiteet (:toimenpideinstanssit data)
           organisaatiot (:organisaatiot data)
           yhteyshenkilot (:yhteyshenkilot data)
-          kuittaukset (concat
-                        (hankkeet/kasittele-hankkeet transaktio hankkeet)
-                        (urakat/kasittele-urakat transaktio urakat)
-                        (sopimukset/kasittele-sopimukset transaktio sopimukset)
-                        (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
-                        (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
-                        (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot))]
+          kuittaukset (doall
+                        (concat
+                          (hankkeet/kasittele-hankkeet transaktio hankkeet)
+                          (urakat/kasittele-urakat transaktio urakat)
+                          (sopimukset/kasittele-sopimukset transaktio sopimukset)
+                          (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
+                          (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
+                          (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot)))]
       kuittaukset)))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
