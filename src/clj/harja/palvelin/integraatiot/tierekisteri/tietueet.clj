@@ -1,12 +1,10 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietueet
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
+            [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-
-    ;todo: poista
-            [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as testi]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
@@ -14,12 +12,6 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-virheet [url tunniste tietolajitunniste virheet]
-  ;; Kutsu epäonnistuu jos annetulla tunnisteella ei löydy tietuetta, ts. kutsu palauttaa
-  ;; tyhjän. Tällöin ei kannata mielestäni heittää virhettä, vaan palauttaa "tyhjä tulos".
-  #_(throw+ {:type  :tierekisteri-kutsu-epaonnistui
-           :error (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
-                       " & tietolajitunnisteella: " tietolajitunniste "."
-                       "Virheet: " (string/join virheet))})
   {:type  :tierekisteri-kutsu-epaonnistui
    :error (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
                " & tietolajitunnisteella: " tietolajitunniste "."
