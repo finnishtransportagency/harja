@@ -41,7 +41,7 @@
  :tierekisteri      {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
  :integraatiot      {:paivittainen-lokin-puhdistusaika nil}
 
- :ilmatieteenlaitos {:lampotilat-url "https://sonja.tiehallinto.fi/http/AURA/Lampotilat"}
+ :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
  :tieosoiteverkon-tuontivali 1
  ;:tieosoiteverkon-shapefile "file:///Users/markolau/Documents/TR_PTJ_data/Tieosoiteverkko.shp"
  }
