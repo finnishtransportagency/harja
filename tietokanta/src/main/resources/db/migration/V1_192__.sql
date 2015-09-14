@@ -1,6 +1,8 @@
 -- Kuvaus: hoitoluokkataulu
 ALTER TABLE tieverkko DROP COLUMN IF EXISTS hoitoluokka;
 
+ALTER TABLE reittipiste ADD COLUMN hoitoluokka INTEGER;
+
 CREATE TABLE hoitoluokka (
    ajorata INTEGER,
    aosa INTEGER,
@@ -31,7 +33,7 @@ BEGIN
    INTO hl;
 
    IF hl IS NULL THEN
-     RAISE EXCEPTION 'pisteelle ei löydy tietä';
+     RETURN NULL;
    END IF;
 
    RETURN hl.hoitoluokka;

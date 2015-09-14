@@ -433,7 +433,9 @@ WHERE
 
 -- name: luo-reittipiste<!
 -- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti) VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y)::POINT);
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka) 
+  VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y)::POINT,
+          hoitoluokka_pisteelle(ST_MakePoint(:x,:y)::geometry, 250::INTEGER));
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
