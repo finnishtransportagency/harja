@@ -85,15 +85,14 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                           (reset! tila :alku-valittu))
                         
                         :alku-valittu
-                        (if-not (= (:numero @tr-osoite)
-                                   (:tie osoite))
-                          (reset! virhe "Loppuosan tulee olla samalla tiellä")
-                          
-                          (let [osoite (swap! tr-osoite
-                                              merge 
-                                              {:loppuosa (:losa osoite)
-                                               :loppuetaisyys (:let osoite)})]
-                            (kun-valmis osoite))))
+                        (let [osoite (swap! tr-osoite
+                                            merge 
+                                            {:numero (:tie osoite)
+                                             :alkuosa (:aosa osoite)
+                                             :alkuetaisyys (:aet osoite)
+                                             :loppuosa (:losa osoite)
+                                             :loppuetaisyys (:let osoite)})]
+                          (kun-valmis osoite)))
                       (recur nil))))
                 
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
