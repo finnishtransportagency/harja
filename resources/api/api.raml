@@ -543,8 +543,7 @@ documentation:
   /tyokone:
     post:
       is: [secured]
-      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä sekä urakka, johon tehtävä liittyy. Sen slisäksi voidaan kirjata myös materiaalin käyttöä. Huom. suolamateriaalit kirjataan kuivatonneina. Uusi seurantapiste lähetetään aina, kun tieosa tai suuunta tieverkkolla vaihtuu tai, kun suoritettava tehtävä vaihtuu.
-
+      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
       body:
         application/json:
           example: !include examples/tyokoneenseurannan-kirjaus-request.json     
