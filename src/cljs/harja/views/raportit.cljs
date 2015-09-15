@@ -121,7 +121,7 @@
                   [grid/grid
                    {:otsikko      "Materiaaliraportti"
                     :tyhja        (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
-                   [{:otsikko "Tehtävä" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
+                   [{:otsikko "Materiaali" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
                     {:otsikko "Yksikkö" :nimi :materiaali_yksikko  :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
                     {:otsikko "Toteutunut määrä" :nimi :kokonaismaara :muokattava? (constantly false) :tyyppi :numero :leveys "34%"}]
                    @materiaalitoteumat])}])
