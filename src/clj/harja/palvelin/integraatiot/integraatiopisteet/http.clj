@@ -23,12 +23,12 @@
          :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Tuntematon HTTP metodi:" metodi)}]}))))
 
 (defn laheta-kutsu [integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
-  (log/debug " Lähetetään HTTP " metodi " -kutsu integraatiolle: " integraatio ", järjestelmään: " jarjestelma " : "
-             " - osoite: " url ", "
-             " - metodi: " metodi ", "
-             " - data: " kutsudata ", "
-             " - otsikkot: " otsikot
-             " - parametrit: " parametrit)
+  (log/debug " Lähetetään HTTP " metodi "-kutsu integraatiolle: " integraatio ", järjestelmään: " jarjestelma " : "
+             "\n - osoite: " url ", "
+             "\n - metodi: " metodi ", "
+             "\n - data: " kutsudata ", "
+             "\n - otsikkot: " otsikot
+             "\n - parametrit: " parametrit)
 
   (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio nil nil)
         sisaltotyyppi (get otsikot " Content-Type ")]
