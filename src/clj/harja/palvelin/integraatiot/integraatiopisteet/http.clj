@@ -33,9 +33,9 @@
   (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio nil nil)
         sisaltotyyppi (get otsikot " Content-Type ")]
     (try
-      (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id " ulos " url sisaltotyyppi kutsudata otsikot nil)
+      (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot nil)
       (let [{:keys [status body error headers]} (tee-http-kutsu url metodi otsikot parametrit kutsudata)
-            lokiviesti (integraatioloki/tee-rest-lokiviesti " sisään " url sisaltotyyppi body headers nil)]
+            lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
         (log/debug " Palvelu palautti: ")
         (log/debug " - tila: " status)
         (log/debug " - otsikot: " headers)
@@ -46,7 +46,7 @@
             (log/error " Kutsu palveluun: " url " epäonnistui virhe: " error)
             (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
             (throw+ {:type    :http-kutsu-epaonnistui
-                     :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Virhe :" error)}]}))
+                     :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
           (do
             (let [vastausdata (kasittele-vastaus body)]
               (log/debug " Kutsu palveluun: " url " onnistui. ")
@@ -58,7 +58,7 @@
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
         (throw+
           {:type    :http-kutsu-epaonnistui
-           :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Poikkeus :" (.toString e))}]})))))
+           :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.toString e))}]})))))
 
 (defn laheta-post-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kutsudata kasittele-vastaus-fn]
-  (laheta-kutsu integraatioloki integraatio jarjestelma url " post " otsikot parametrit kutsudata kasittele-vastaus-fn))
+  (laheta-kutsu integraatioloki integraatio jarjestelma url "post" otsikot parametrit kutsudata kasittele-vastaus-fn))
