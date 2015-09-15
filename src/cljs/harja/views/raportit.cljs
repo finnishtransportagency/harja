@@ -150,7 +150,7 @@
 (defn raporttinakyma []
   (komp/luo
     (fn []
-      (let [valittu-raporttityyppi @valittu-raporttityyppi]
+      (let [valittu-raporttityyppi @valittu-raporttityyppi] ; FIXME renderiä ei ajetan uudestaan vaikka tämä päivittyy?
         (:render valittu-raporttityyppi)))))
 
 (defn raporttivalinnat []

@@ -154,6 +154,70 @@ WHERE (SELECT SUM(maara) AS maara
                  poistettu IS NOT TRUE
          ) IS NOT NULL;
 
+-- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
+-- Hakee hallintayksikössä käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
+-- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
+-- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
+SELECT DISTINCT
+           m.nimi    AS materiaali_nimi,
+           m.yksikko AS materiaali_yksikko,
+           m.id      AS materiaali_id,
+  (
+    SELECT SUM(maara) AS kokonaismaara
+    FROM toteuma_materiaali
+    WHERE materiaalikoodi = m.id AND
+          toteuma IN
+          (
+            SELECT id
+            FROM toteuma
+            WHERE
+              alkanut :: DATE >= :alku AND
+              alkanut :: DATE <= :loppu AND
+              urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko) AND
+              poistettu IS NOT TRUE) AND
+          poistettu IS NOT TRUE
+  )
+
+FROM materiaalikoodi m
+  LEFT JOIN materiaalin_kaytto mk
+    ON m.id = mk.materiaali
+       AND mk.poistettu IS NOT TRUE
+       AND mk.alkupvm :: DATE BETWEEN :alku AND :loppu
+       AND mk.loppupvm :: DATE BETWEEN :alku AND :loppu
+       AND mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+
+
+  LEFT JOIN toteuma_materiaali tm
+    ON tm.materiaalikoodi = m.id
+       AND tm.poistettu IS NOT TRUE
+
+  LEFT JOIN toteuma t
+    ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
+       AND t.alkanut :: DATE BETWEEN :alku AND :loppu
+       AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE (SELECT SUM(maara) AS maara
+       FROM materiaalin_kaytto
+       WHERE materiaali = m.id
+             AND poistettu IS NOT TRUE
+             AND alkupvm :: DATE BETWEEN :alku AND :loppu
+             AND loppupvm :: DATE BETWEEN :alku AND :loppu
+             AND urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)) IS NOT NULL
+      OR (
+           SELECT SUM(maara) AS kokonaismaara
+           FROM toteuma_materiaali
+           WHERE materiaalikoodi = m.id AND
+                 toteuma IN
+                 (
+                   SELECT id
+                   FROM toteuma
+                   WHERE
+                     alkanut :: DATE >= :alku AND
+                     alkanut :: DATE <= :loppu AND
+                     urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko) AND
+                     poistettu IS NOT TRUE) AND
+                 poistettu IS NOT TRUE
+         ) IS NOT NULL;
+
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Hakee kaikissa urakoissa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,

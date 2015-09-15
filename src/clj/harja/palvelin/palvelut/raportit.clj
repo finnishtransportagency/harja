@@ -111,12 +111,12 @@
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   ; FIXME Vaadi lukuoikeus hallintayksikköön
-  #_(let [toteutuneet-materiaalit (into [] ; FIXME SQL puuttuu
+  (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                    (konv/sql-timestamp alkupvm)
                                                                                                    (konv/sql-timestamp loppupvm)
                                                                                                    hallintayksikko-id))]
-    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
@@ -126,7 +126,7 @@
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                    (konv/sql-timestamp alkupvm)
                                                                                                    (konv/sql-timestamp loppupvm)))]
-    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    (log/debug "Haettu koko maan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 (defrecord Raportit []
   component/Lifecycle
