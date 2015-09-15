@@ -76,9 +76,9 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                         (let [osoite (swap! tr-osoite
                                             (fn [tr]
                                               (dissoc (merge tr
-                                                             {:numero (get osoite "tie")
-                                                              :alkuosa (get osoite "osa")
-                                                              :alkuetaisyys (get osoite "etaisyys")})
+                                                             {:numero (:tie osoite)
+                                                              :alkuosa (:aosa osoite)
+                                                              :alkuetaisyys (:aet osoite)})
                                                       :loppuosa
                                                       :loppuetaisyys)))]
                           (paivita osoite)
@@ -86,13 +86,13 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                         
                         :alku-valittu
                         (if-not (= (:numero @tr-osoite)
-                                   (get osoite "tie"))
+                                   (:tie osoite))
                           (reset! virhe "Loppuosan tulee olla samalla tiellä")
                           
                           (let [osoite (swap! tr-osoite
                                               merge 
-                                              {:loppuosa (get osoite "osa")
-                                               :loppuetaisyys (get osoite "etaisyys")})]
+                                              {:loppuosa (:aosa osoite)
+                                               :loppuetaisyys (:aet osoite)})]
                             (kun-valmis osoite))))
                       (recur nil))))
                 
@@ -111,7 +111,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                     nil)
                   
                   (recur (if (= :click tyyppi)
-                           (vkm/koordinaatti->tieosoite sijainti)
+                           (vkm/koordinaatti->trosoite sijainti)
                            vkm-haku))))))))
     
     (komp/luo

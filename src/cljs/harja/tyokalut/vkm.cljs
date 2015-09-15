@@ -2,6 +2,7 @@
   "Rajapinta Liikenneviraston tarjoamaan Viitekehysmuunnin (VKM) työkaluun. VKM tarjoaa JSON(P) rajapinnan, joten sitä voidaan kutsua suoraan fronttipuolen koodista. Tämä nimiavaruus tarjoaa funktiopohjaisen rajapinnan, jossa VKM kutsut palauttavat kanavan, josta tulokset voi lukea."
 
   (:require [cljs.core.async :refer [<! >! chan put! close!]]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -43,6 +44,9 @@ on avainsanamäppi parametrejä."
     ;; PENDING: implement timeout
     ch))
 
+
+(defn koordinaatti->trosoite [[x y]]
+  (k/post! :hae-tr-pisteella {:x x :y y}))
 
 (defn koordinaatti->tieosoite
   "Muuntaa annetun koordinaatin tieosoitteeksi."
