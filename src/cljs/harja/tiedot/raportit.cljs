@@ -15,3 +15,20 @@
            {:urakka-id urakka-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
+
+(defn hae-materiaaliraportti-koko-maalle [alkupvm loppupvm]
+  (k/post! :materiaaliraportti-koko-maalle
+           {:alkupvm alkupvm
+            :loppupvm loppupvm}))
+
+(defn hae-materiaaliraportti-hallintayksikolle [hallintayksikko-id alkupvm loppupvm]
+  (k/post! :materiaaliraportti-hallintayksikolle
+           {:hallintayksikko-id hallintayksikko-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
+
+(defn hae-materiaaliraportti-urakalle [urakka-id alkupvm loppupvm]
+  (k/post! :materiaaliraportti-urakalle
+           {:urakka-id urakka-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
