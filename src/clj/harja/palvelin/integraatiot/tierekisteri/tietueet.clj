@@ -1,13 +1,9 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietueet
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
-            [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :as testi]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 

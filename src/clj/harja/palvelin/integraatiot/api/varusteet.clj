@@ -53,7 +53,7 @@
 
     (julkaise-reitti
       http :hae-tietue
-      (GET "/api/varusteet/tietue" request
+      (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
                          (fn [parametrit data kayttaja db]
                            (log/debug "parametrit" parametrit)
