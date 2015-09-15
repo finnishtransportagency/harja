@@ -53,7 +53,6 @@
               vastausdata))))
 
       (catch Exception e
-        ;; todo: lisää mikä järjestelmä & mikä integraatio!
         (log/error " HTTP-kutsukäsittelyssä tapahtui poikkeus: " e " (järjestelmä: " jarjestelma ", integraatio: " integraatio ", URL: " url ") ")
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
         (throw+ {:type :http-kutsu-epaonnistui :error e})))))
