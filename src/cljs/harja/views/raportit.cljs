@@ -150,7 +150,7 @@
 (defn raporttinakyma []
   (komp/luo
     (fn []
-      (let [valittu-raporttityyppi @valittu-raporttityyppi] ; FIXME renderiä ei ajetan uudestaan vaikka tämä päivittyy?
+      (let [valittu-raporttityyppi @valittu-raporttityyppi] ; FIXME renderiä ei ajeta uudestaan vaikka tämä päivittyy?
         (:render valittu-raporttityyppi)))))
 
 (defn raporttivalinnat []
@@ -182,7 +182,7 @@
                        v-hal)
               [valinnat/hoitokauden-kuukausi])
             (when ; TODO Ilmeisesti ei ole mielekästä tapaa näyttää koko maan tai hallintayksikon hoitokausia,
-                  ; koska koko maan tai hallintayksikön alueella on erilaisia hoito/-sopimuskausia sisältäviä urakoita.
+                  ; koska koko maan tai hallintayksikön alueella on eri pituisia hoito/-sopimuskausia sisältäviä urakoita.
                   ; --> Näytä yleinen aikavälikomponentti, josta hoitokauden voi valita itse.
               (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-hoitokaudet)
                        (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-hoitokaudet))
