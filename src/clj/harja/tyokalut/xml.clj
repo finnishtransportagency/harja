@@ -62,6 +62,9 @@
 (defn parsi-kokonaisluku [data]
   (when (and data (not (empty? data))) (Integer/parseInt data)))
 
+(defn parsi-reaaliluku [data]
+  (when (and data (not (empty? data))) (Double/parseDouble data)))
+
 (defn parsi-totuusarvo [data]
   (when (and data (not (empty? data))) (Boolean/parseBoolean data)))
 

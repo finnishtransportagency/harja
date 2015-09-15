@@ -1,21 +1,18 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietueet
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
-            [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :as testi]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-virheet [url tunniste tietolajitunniste virheet]
-  {:type  :tierekisteri-kutsu-epaonnistui
-   :error (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
-               " & tietolajitunnisteella: " tietolajitunniste "."
-               "Virheet: " (string/join virheet))})
+  (throw+ {:type  :tierekisteri-kutsu-epaonnistui
+           :virheet [:viesti (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " tunniste
+                                  " & tietolajitunnisteella: " tietolajitunniste "."
+                                  "Virheet: " (string/join virheet))
+                     :koodi :tietueen-haku-epaonnistui]}))
 
 (defn kirjaa-varoitukset [url tunniste tietolajitunniste virheet]
   (log/warn (str "Tietueen haku palautti virheitä (URL: " url ") tunnisteella: " tunniste
@@ -33,7 +30,7 @@
           (kirjaa-varoitukset url tunniste tietolajitunniste virheet))
         vastausdata))))
 
-(defn hae-tietueet [integraatioloki url id tietolaji]
+(defn hae-tietue [integraatioloki url id tietolaji]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [kutsudata (kutsusanoma/muodosta id tietolaji)
         palvelu-url (str url "/haetietue")
@@ -48,11 +45,3 @@
                       kutsudata
                       (fn [vastaus-xml] (kasittele-vastaus palvelu-url id tietolaji vastaus-xml)))]
     vastausdata))
-
-(defn kutsu [tietolaji tunniste]
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (hae-tietueet integraatioloki
-                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
-                  tunniste tietolaji)))
