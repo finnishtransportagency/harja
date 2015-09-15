@@ -11,6 +11,16 @@ VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_i
          FROM urakka
          WHERE sampoid = :urakka_sampoid));
 
+-- name: onko-tuotu-samposta
+-- Tarkistaa onko Samposta tuodulla urakalla jo toimenpideinstanssi
+SELECT exists(
+    SELECT id
+    FROM toimenpideinstanssi
+    WHERE toimenpide = (SELECT id
+                        FROM toimenpidekoodi
+                        WHERE koodi = :sampo_toimenpidekoodi) AND
+          urakka_sampoid = :urakka_sampoid);
+
 -- name: paivita-toimenpideinstanssi!
 -- Paivittaa toimenpideinstanssin.
 UPDATE toimenpideinstanssi
@@ -45,4 +55,4 @@ SET urakka = (
   SELECT id
   FROM urakka
   WHERE sampoid = :urakka_sampoid)
-where urakka_sampoid = :urakka_sampoid
+WHERE urakka_sampoid = :urakka_sampoid
