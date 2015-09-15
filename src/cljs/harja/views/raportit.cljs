@@ -30,8 +30,7 @@
                   konteksti (:konteksti valittu-raporttityyppi)
                   v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
-                  v-aikavali @u/valittu-aikavali
-                  _ (log "Valittu aikaväli: " (pr-str v-aikavali))]
+                  v-aikavali @u/valittu-aikavali]
               (when valittu-raporttityyppi
                 (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
                   (and v-ur
