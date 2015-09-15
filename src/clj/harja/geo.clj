@@ -116,3 +116,10 @@
       [(.y c) (.x c)])
     (org.geotools.geometry.jts.JTS/transform coordinate nil euref->osm-transform)))
 
+(def osm->euref-transform (org.geotools.referencing.CRS/findMathTransform osm euref true))
+
+(defn osm->euref
+  [coord]
+  (let [c (org.geotools.geometry.jts.JTS/transform (com.vividsolutions.jts.geom.Coordinate. (:x coord) (:y coord))
+                                                   nil osm->euref-transform)]
+    {:x (.y c) :y (.x c)}))
