@@ -45,7 +45,8 @@
           (do
             (log/error " Kutsu palveluun: " url " epäonnistui virhe: " error)
             (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
-            (throw+ {:type :http-kutsu-epaonnistui :error error}))
+            (throw+ {:type    :http-kutsu-epaonnistui
+                     :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Virhe :" error)}]}))
           (do
             (let [vastausdata (kasittele-vastaus body)]
               (log/debug " Kutsu palveluun: " url " onnistui. ")
@@ -55,7 +56,9 @@
       (catch Exception e
         (log/error " HTTP-kutsukäsittelyssä tapahtui poikkeus: " e " (järjestelmä: " jarjestelma ", integraatio: " integraatio ", URL: " url ") ")
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
-        (throw+ {:type :http-kutsu-epaonnistui :error e})))))
+        (throw+
+          {:type    :http-kutsu-epaonnistui
+           :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Poikkeus :" (.toString e))}]})))))
 
 (defn laheta-post-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kutsudata kasittele-vastaus-fn]
   (laheta-kutsu integraatioloki integraatio jarjestelma url " post " otsikot parametrit kutsudata kasittele-vastaus-fn))
