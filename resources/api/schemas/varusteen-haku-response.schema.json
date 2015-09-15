@@ -8,8 +8,7 @@
       "id": "urn:harja/varuste",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/varuste.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/varuste.schema.json"
     }
   }
 }
