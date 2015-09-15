@@ -17,7 +17,8 @@
 
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
-  (hae-tietue [this tietueen-tunniste tietolajitunniste]))
+  (hae-tietue [this tietueen-tunniste tietolajitunniste])
+  (hae-tietue-tr-osoitteella [this tietueen-tunniste tr]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
@@ -33,5 +34,11 @@
   (hae-tietue [this tietueen-tunniste tietolajitunniste]
     (validoi-tunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
-      (tietueet/hae-tietueet (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste))))
+      (tietueet/hae-tietueet (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste)))
+
+  (hae-tietue-tr-osoitteella [this tr tietolajitunniste]
+    (validoi-tunniste tietolajitunniste)
+    (when-not (empty? tierekisteri-api-url)
+      (tietueet/hae-tietueet-tr-osoitteella
+        (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste))))
 
