@@ -3,7 +3,8 @@
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [hiccup.core :refer [html]]))
+            [hiccup.core :refer [html]])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
@@ -19,4 +20,6 @@
       xml
       (do
         (log/error "Tietolajihakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
-        nil))))
+        (throw+
+          {:type    :tietolaji-haku-epaonnistui
+           :virheet [{:koodi :ei-validi-xml :viesti "Tietolajin hakukutsu Tierekisteriin ei ole validi"}]})))))
