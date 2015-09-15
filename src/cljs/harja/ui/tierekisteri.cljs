@@ -91,7 +91,8 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                                              :alkuosa (:aosa osoite)
                                              :alkuetaisyys (:aet osoite)
                                              :loppuosa (:losa osoite)
-                                             :loppuetaisyys (:let osoite)})]
+                                             :loppuetaisyys (:let osoite)
+                                             :geometria (:geometria osoite)})]
                           (kun-valmis osoite)))
                       (recur nil))))
                 
