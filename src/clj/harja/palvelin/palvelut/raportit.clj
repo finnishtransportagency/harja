@@ -108,11 +108,10 @@
     (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
-; FIXME SQL puuttuu
-#_(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
+(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   ; FIXME Vaadi lukuoikeus hallintayksikköön
-  (let [toteutuneet-materiaalit (into []
+  #_(let [toteutuneet-materiaalit (into [] ; FIXME SQL puuttuu
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                    (konv/sql-timestamp alkupvm)
                                                                                                    (konv/sql-timestamp loppupvm)
