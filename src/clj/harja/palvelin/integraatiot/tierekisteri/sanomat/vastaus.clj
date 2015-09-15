@@ -74,15 +74,16 @@
 
 (defn parsi-tietue [data]
   (let [tietue (z/xml1-> data :ns2:tietueet :ns2:tietue)]
-    {:tunniste    (z/xml1-> tietue :tunniste z/text)
-     :alkupvm     (xml/parsi-paivamaara (z/xml1-> tietue :alkupvm z/text))
-     :loppupvm    (xml/parsi-paivamaara (z/xml1-> tietue :loppupvm z/text))
-     :karttapvm   (xml/parsi-paivamaara (z/xml1-> tietue :karttapvm z/text))
-     :piiri       (z/xml1-> tietue :piiri z/text)
-     :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
-     :urakka      (xml/parsi-kokonaisluku (z/xml1-> tietue :urakka z/text))
-     :sijainti    (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
-     :tietolaji   (parsi-tietueen-tietolaji (z/xml1-> tietue :sijainti))}))
+    (when tietue
+      {:tunniste    (z/xml1-> tietue :tunniste z/text)
+       :alkupvm     (xml/parsi-paivamaara (z/xml1-> tietue :alkupvm z/text))
+       :loppupvm    (xml/parsi-paivamaara (z/xml1-> tietue :loppupvm z/text))
+       :karttapvm   (xml/parsi-paivamaara (z/xml1-> tietue :karttapvm z/text))
+       :piiri       (z/xml1-> tietue :piiri z/text)
+       :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
+       :urakka      (xml/parsi-kokonaisluku (z/xml1-> tietue :urakka z/text))
+       :sijainti    (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
+       :tietolaji   (parsi-tietueen-tietolaji (z/xml1-> tietue :tietolaji))})))
 
 (defn lue [viesti]
   (let [data (xml/lue viesti)

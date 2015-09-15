@@ -30,5 +30,5 @@
   (hae-tietue [this tietueen-tunniste tietolajitunniste]
     (validoi-tunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
-      (tietueet/hae-tietueet (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste))))
+      (tietueet/hae-tietue (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste))))
 

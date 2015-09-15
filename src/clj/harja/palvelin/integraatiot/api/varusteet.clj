@@ -25,7 +25,7 @@
 (defn hae-tietue [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
-    (log/debug "Haetaan tietue " tunniste " tietolajista " tietolajitunniste " käyttäjälle " kayttaja)
+    (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
           muunnettu-vastausdata (-> vastausdata
                                     (dissoc :onnistunut)
@@ -33,9 +33,12 @@
                                     (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
                                     (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)
                                     (clojure.set/rename-keys {:tietue :varuste}))]
-      (log/debug "VASTAUS ON")
-      (log/debug (pr-str muunnettu-vastausdata))
-      muunnettu-vastausdata)))
+
+      ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
+      ;; Tässä tapauksessa me palautamme tyhjän kartan.
+      (if (:tietue vastausdata)
+        muunnettu-vastausdata
+        {}))))
 
 (defrecord Varusteet []
   component/Lifecycle
