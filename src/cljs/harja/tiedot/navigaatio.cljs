@@ -16,11 +16,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.urakoitsijat :as urk]
    [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur]
+   [harja.atom :refer-macros [reaction<!]]
    [harja.pvm :as pvm])
   
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]])
+                   [reagent.ratom :refer [reaction run!]])
   
   (:import goog.History))
 
