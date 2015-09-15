@@ -23,8 +23,16 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce valittu-raporttityyppi (atom nil))
-
+(def valittu-raporttityyppi (atom nil))
+(tarkkaile! "[RAPORTTI] Valittu raporttityyppi: " valittu-raporttityyppi)
+(def raportti-valmis-naytettavaksi?
+  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
+                  konteksti (:konteksti valittu-raporttityyppi)
+                  v-ur @nav/valittu-urakka
+                  v-hal @nav/valittu-hallintayksikko]
+              (if (contains? konteksti :urakka)
+                (and v-ur v-hal (not (nil? valittu-raporttityyppi)))
+                (not (nil? valittu-raporttityyppi))))))
 (def nakymassa? (atom nil))
 
 (defonce yksikkohintaiset-toteumat
@@ -35,7 +43,6 @@
                      (when (and urakka-id alkupvm loppupvm nakymassa?)
                        (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
                        (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
-
 (defonce yksikkohintaiset-toteumat-kaikkine-tietoineen
          (reaction
            (when
@@ -73,16 +80,15 @@
                (if (empty? toteumat-tehtavatietoineen)
                  toteumat-tehtavatietoineen
                  (conj toteumat-tehtavatietoineen yhteensa))))))
-(tarkkaile! "[RAPORTTI] Valitun raportin sisältö: " yksikkohintaiset-toteumat-kaikkine-tietoineen)
-
-(def raportti-valmis-naytettavaksi?
-  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                  konteksti (:konteksti valittu-raporttityyppi)
-                  v-ur @nav/valittu-urakka
-                  v-hal @nav/valittu-hallintayksikko]
-              (if (contains? konteksti :urakka)
-                (and v-ur v-hal (not (nil? valittu-raporttityyppi)))
-                (not (nil? valittu-raporttityyppi))))))
+(defonce materiaalitoteumat
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                       alkupvm (first @u/valittu-hoitokausi)
+                       loppupvm (second @u/valittu-hoitokausi)
+                       nakymassa? @nakymassa?]
+                     (when (and nakymassa?)
+                       (log "[RAPORTTI] Haetaan materiaalitiedot parametreilla: " urakka-id alkupvm loppupvm)
+                       (raportit/hae-materiaaliraportti-urakalle urakka-id alkupvm loppupvm))))
+(tarkkaile! "[RAPORTTI] Materiaalitoteumat: " materiaalitoteumat)
 
 (def +raporttityypit+
   [{:nimi       :yks-hint-kuukausiraportti
@@ -106,14 +112,27 @@
                                                                                                                                                     (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                     {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
                                                                                                                                (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                   @yksikkohintaiset-toteumat-kaikkine-tietoineen])}])
+                   @yksikkohintaiset-toteumat-kaikkine-tietoineen])}
+   {:nimi       :materiaaliraportti
+    :otsikko    "Materiaaliraportti"
+    :konteksti  #{:urakka :hallintayksikko :koko-maa}
+    :parametrit #{:valitun-urakan-hoitokaudet}
+    :render     (fn []
+                  [grid/grid
+                   {:otsikko      "Materiaaliraportti"
+                    :tyhja        (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
+                   [{:otsikko "Tehtävä" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
+                    {:otsikko "Yksikkö" :nimi :materiaali_yksikko  :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
+                    {:otsikko "Toteutunut määrä" :nimi :kokonaismaara :muokattava? (constantly false) :tyyppi :numero :leveys "34%"}]
+                   @materiaalitoteumat])}])
 
 (defn raporttinakyma []
-  (fn []
-    (:render @valittu-raporttityyppi)))
+  (komp/luo
+    (fn []
+      (let [valittu-raporttityyppi @valittu-raporttityyppi]
+        (:render valittu-raporttityyppi)))))
 
-(defn raporttivalinnat
-  []
+(defn raporttivalinnat []
   (komp/luo
     (fn []
       (let [v-ur @nav/valittu-urakka

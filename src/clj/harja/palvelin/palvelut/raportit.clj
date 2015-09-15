@@ -101,7 +101,7 @@
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-materiaalit (into []
-                                      (toteumat-q/hae-urakan-toteutuneet-materiaalit-raportille db
+                                      (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
                                                                                                 (konv/sql-timestamp alkupvm)
                                                                                                 (konv/sql-timestamp loppupvm)
                                                                                                 urakka-id))]
