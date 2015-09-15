@@ -23,7 +23,6 @@
          :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Tuntematon HTTP metodi:" metodi)}]}))))
 
 (defn laheta-kutsu [integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
-  (throw+ {:type :http-kutsu-epaonnistui :virheet [{:koodi :kilahti :viesti "Tämä kilahti"}]})
   (log/debug " Lähetetään HTTP " metodi " -kutsu integraatiolle: " integraatio ", järjestelmään: " jarjestelma " : "
              " - osoite: " url ", "
              " - metodi: " metodi ", "
