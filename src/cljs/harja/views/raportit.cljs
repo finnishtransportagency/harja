@@ -30,17 +30,21 @@
                   konteksti (:konteksti valittu-raporttityyppi)
                   v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko]
-              (if (contains? konteksti :urakka)
-                (and v-ur v-hal (not (nil? valittu-raporttityyppi)))
-                (not (nil? valittu-raporttityyppi))))))
+              (if (not (nil? valittu-raporttityyppi)) ; Raporttityyppi täytyy olla valittuna aina
+                (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
+                  (and v-ur
+                       v-hal)
+                  true)
+                false))))
 (def nakymassa? (atom nil))
 
 (defonce yksikkohintaiset-toteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       alkupvm (first @u/valittu-hoitokauden-kuukausi)
                       loppupvm (second @u/valittu-hoitokauden-kuukausi)
-                      nakymassa? @nakymassa?]
-                     (when (and urakka-id alkupvm loppupvm nakymassa?)
+                      nakymassa? @nakymassa?
+                      tama-raportti-valittu? (= :yks-hint-kuukausiraportti (:nimi @valittu-raporttityyppi))]
+                     (when (and urakka-id alkupvm loppupvm nakymassa? tama-raportti-valittu?)
                        (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
                        (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
 (defonce yksikkohintaiset-toteumat-kaikkine-tietoineen
@@ -82,13 +86,18 @@
                  (conj toteumat-tehtavatietoineen yhteensa))))))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                       alkupvm (first @u/valittu-hoitokausi)
-                       loppupvm (second @u/valittu-hoitokausi)
-                       nakymassa? @nakymassa?]
-                     (when (and nakymassa?)
+                      hallintayksikko-id (:id @nav/valittu-hallintayksikko)
+                      alkupvm (first @u/valittu-hoitokausi)
+                      loppupvm (second @u/valittu-hoitokausi)
+                      nakymassa? @nakymassa?
+                      tama-raportti-valittu? (= :materiaaliraportti (:nimi @valittu-raporttityyppi))]
+                     (when (and alkupvm loppupvm nakymassa? tama-raportti-valittu?)
                        (log "[RAPORTTI] Haetaan materiaalitiedot parametreilla: " urakka-id alkupvm loppupvm)
-                       (raportit/hae-materiaaliraportti-urakalle urakka-id alkupvm loppupvm))))
-(tarkkaile! "[RAPORTTI] Materiaalitoteumat: " materiaalitoteumat)
+                       (if urakka-id
+                         (raportit/hae-materiaaliraportti-urakalle urakka-id alkupvm loppupvm)
+                         (if hallintayksikko
+                           (raportit/hae-materiaaliraportti-hallintayksikolle hallintayksikko alkupvm loppupvm)
+                           (raportit/hae-materiaaliraportti-koko-maalle alkupvm loppupvm))))))
 
 (def +raporttityypit+
   [{:nimi       :yks-hint-kuukausiraportti
@@ -98,7 +107,8 @@
     :render     (fn []
                   [grid/grid
                    {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                    :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")}
+                    :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")
+                    :tunniste :materiaali_id}
                    [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-opt :leveys "20%"}
                     {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "30%"}
                     {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
@@ -148,8 +158,9 @@
                                  :class      "valitse-raportti-alasveto"}
             +raporttityypit+]]]
          [:div.raportin-asetukset
-            (when (contains? (:konteksti @valittu-raporttityyppi) :urakka)
-            (urakat/valitse-hallintayksikko-ja-urakka))
+            ; Aina pelkkä urakka-konteksti, pakota valitsemaan hallintayksikkö ja urakka (jos ei ole jo valittu
+            (when (= (:konteksti @valittu-raporttityyppi) #{:urakka})
+              (urakat/valitse-hallintayksikko-ja-urakka))
           (when (and v-ur v-hal (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet))
             [valinnat/urakan-hoitokausi @nav/valittu-urakka])
           (when (and v-ur v-hal (contains? (:parametrit @valittu-raporttityyppi) :valitun-aikavalin-kuukaudet))
