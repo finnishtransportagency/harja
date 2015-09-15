@@ -173,6 +173,9 @@
     (poista-palvelut http
                      :hae-raportit
                      :yksikkohintaisten-toiden-kuukausiraportti
+                     :materiaaliraportti-urakalle
+                     :materiaaliraportti-hallintayksikolle
+                     :materiaaliraportti-koko-maalle
                      :suorita-raportti
                      :hae-laskutusyhteenvedon-tiedot)
     this))

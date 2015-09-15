@@ -29,13 +29,17 @@
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                   konteksti (:konteksti valittu-raporttityyppi)
                   v-ur @nav/valittu-urakka
-                  v-hal @nav/valittu-hallintayksikko]
-              (if (not (nil? valittu-raporttityyppi)) ; Raporttityyppi täytyy olla valittuna aina
+                  v-hal @nav/valittu-hallintayksikko
+                  v-aikavali @u/valittu-aikavali
+                  _ (log "Valittu aikaväli: " (pr-str v-aikavali))]
+              (when valittu-raporttityyppi
                 (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
                   (and v-ur
                        v-hal)
-                  true)
-                false))))
+                  (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-hoitokaudet)
+                          (contains? (:parametrit valittu-raporttityyppi) :koko-maan-hoitokaudet))
+                    (and (not (nil? v-aikavali)) (not (empty? (keep identity v-aikavali))))
+                    false))))))
 (def nakymassa? (atom nil))
 
 (defonce yksikkohintaiset-toteumat
