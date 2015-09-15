@@ -6,9 +6,6 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn hae-paasopimuksen-id [db urakka-sampo-id]
-  (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id))))
-
 (defn paivita-sopimus [db sopimus-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]
   (log/debug "Päivitetään sopimus, jonka id on: " sopimus-id ".")
   (sopimukset/paivita-sopimus! db nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id sopimus-id))
