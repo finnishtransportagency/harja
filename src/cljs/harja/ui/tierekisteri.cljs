@@ -48,7 +48,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
-
+        alkupiste (atom nil)
         tr-osoite (atom {})
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
@@ -91,8 +91,8 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                           
                           (let [osoite (swap! tr-osoite
                                               merge 
-                                              {:loppuosa (:aosa osoite)
-                                               :loppuetaisyys (:aet osoite)})]
+                                              {:loppuosa (:losa osoite)
+                                               :loppuetaisyys (:let osoite)})]
                             (kun-valmis osoite))))
                       (recur nil))))
                 
@@ -111,7 +111,11 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                     nil)
                   
                   (recur (if (= :click tyyppi)
-                           (vkm/koordinaatti->trosoite sijainti)
+                           (if (= :alku-valittu @tila)
+                             (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
+                             (do
+                               (reset! alkupiste sijainti)
+                               (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
     
     (komp/luo
