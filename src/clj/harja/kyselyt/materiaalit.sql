@@ -94,19 +94,6 @@ WHERE (SELECT SUM(maara) AS maara
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
-SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
-          m.id as materiaali_id, m.nimi as materiaali_nimi, m.yksikko as materiaali_yksikko,
-          pa.id as pohjavesialue_id, pa.nimi as pohjavesialue_nimi, pa.tunnus as pohjavesialue_tunnus,
-  (SELECT SUM(maara) as kokonaismaara from toteuma_materiaali
-  WHERE materiaalikoodi = mk.id AND toteuma IN (SELECT id FROM toteuma WHERE urakka=1))
-FROM materiaalin_kaytto mk
-  LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
-  LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
-WHERE mk.urakka = 1 AND
-      mk.poistettu = false;
-
-
-
 SELECT DISTINCT
            m.nimi    AS materiaali_nimi,
            m.yksikko AS materiaali_yksikko,
@@ -120,8 +107,9 @@ SELECT DISTINCT
             SELECT id
             FROM toteuma
             WHERE
-              alkanut :: DATE >= '2000-09-30 00:00:00+02' AND
-              alkanut :: DATE <= '2010-09-30 00:00:00+02' AND
+              alkanut :: DATE >= :alku AND
+              alkanut :: DATE <= :loppu AND
+              urakka = :urakka AND
               poistettu IS NOT TRUE) AND
           poistettu IS NOT TRUE
   )
@@ -130,8 +118,9 @@ FROM materiaalikoodi m
   LEFT JOIN materiaalin_kaytto mk
     ON m.id = mk.materiaali
        AND mk.poistettu IS NOT TRUE
-       AND mk.alkupvm :: DATE BETWEEN '2000-09-30 00:00:00+02' AND '2010-09-30 00:00:00+02'
-       AND mk.loppupvm :: DATE BETWEEN '2000-09-30 00:00:00+02' AND '2010-09-30 00:00:00+02'
+       AND mk.alkupvm :: DATE BETWEEN :alku AND :loppu
+       AND mk.loppupvm :: DATE BETWEEN :alku AND :loppu
+       AND mk.urakka = :urakka
 
 
   LEFT JOIN toteuma_materiaali tm
@@ -140,13 +129,15 @@ FROM materiaalikoodi m
 
   LEFT JOIN toteuma t
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
-       AND t.alkanut :: DATE BETWEEN '2000-09-30 00:00:00+02' AND '2010-09-30 00:00:00+02'
+       AND t.alkanut :: DATE BETWEEN :alku AND :loppu
+       AND t.urakka = :urakka
 WHERE (SELECT SUM(maara) AS maara
        FROM materiaalin_kaytto
        WHERE materiaali = m.id
              AND poistettu IS NOT TRUE
-             AND alkupvm :: DATE BETWEEN '2000-09-30 00:00:00+02' AND '2010-09-30 00:00:00+02'
-             AND loppupvm :: DATE BETWEEN '2000-09-30 00:00:00+02' AND '2010-09-30 00:00:00+02') IS NOT NULL
+             AND alkupvm :: DATE BETWEEN :alku AND :loppu
+             AND loppupvm :: DATE BETWEEN :alku AND :loppu
+             AND urakka = :urakka) IS NOT NULL
       OR (
            SELECT SUM(maara) AS kokonaismaara
            FROM toteuma_materiaali
@@ -156,12 +147,12 @@ WHERE (SELECT SUM(maara) AS maara
                    SELECT id
                    FROM toteuma
                    WHERE
-                     alkanut :: DATE >= '2000-09-30 00:00:00+02' AND
-                     alkanut :: DATE <= '2010-09-30 00:00:00+02' AND
+                     alkanut :: DATE >= :alku AND
+                     alkanut :: DATE <= :loppu AND
+                     urakka = :urakka AND
                      poistettu IS NOT TRUE) AND
                  poistettu IS NOT TRUE
          ) IS NOT NULL;
-
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

@@ -9,6 +9,7 @@
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
             [clj-time.core :as t]
@@ -85,15 +86,27 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-tehtavat (into []
                                    toteumat/muunna-desimaaliluvut-xf
-                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille db
-                                                                               urakka-id
-                                                                               (konv/sql-timestamp alkupvm)
-                                                                               (konv/sql-timestamp loppupvm)
-                                                                               "yksikkohintainen"))
+                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille
+                                     db
+                                     urakka-id
+                                     (konv/sql-timestamp alkupvm)
+                                     (konv/sql-timestamp loppupvm)
+                                     "yksikkohintainen"))
         toteutuneet-tehtavat-summattu (yhdista-saman-paivan-samat-tehtavat toteutuneet-tehtavat)]
     (log/debug "Haettu urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
     (log/debug "Samana päivänä toteutuneet tehtävät summattu : " toteutuneet-tehtavat-summattu)
     toteutuneet-tehtavat-summattu))
+
+(defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteutuneet-materiaalit (into []
+                                      (toteumat-q/hae-urakan-toteutuneet-materiaalit-raportille db
+                                                                                                (konv/sql-timestamp alkupvm)
+                                                                                                (konv/sql-timestamp loppupvm)
+                                                                                                urakka-id))]
+    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
 
 (defrecord Raportit []
   component/Lifecycle
@@ -118,6 +131,10 @@
                        :yksikkohintaisten-toiden-kuukausiraportti
                        (fn [user tiedot]
                          (muodosta-yksikkohintaisten-toiden-kuukausiraportti db user tiedot))
+
+                       :materiaaliraportti-urakalle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-urakalle db user tiedot))
 
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
