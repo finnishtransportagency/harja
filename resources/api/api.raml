@@ -51,6 +51,8 @@ documentation:
    content: !include documentation/harja-api-kuvaus.md
  - title: Tekninen kuvaus
    content: !include documentation/harja-api-tekninen-kuvaus.md
+ - title: Sijaintitiedot
+   content: !include documentation/harja-api-sijaintitietojen-kuvaus.md
 
 
 /urakat:
@@ -103,7 +105,7 @@ documentation:
       /reitti:
         post:
           is: [secured]
-          description: Toteumien kirjaaminen urakalle.
+          description: Toteumien kirjaaminen urakalle. Huom. suolamateriaalit kirjataan kuivatonneina.
           body:
             application/json:
               example: !include examples/reittitoteuman-kirjaus-request.json
@@ -417,14 +419,18 @@ documentation:
             application/json:
               example: !include examples/virhe-response.json
               schema: virhe-response
-  /tietolajit:
-    description: Tietolajien haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
+  /tietolaji:
+    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
     get:
       queryParameters:
-        tunnisteet:
-          description: Haettavien tietolajien tunnisteet pilkulla erotettuina
+        tunniste:
+          description: Haettavan tietolajin tunniste
           type: string
-          example: tl506, tl507
+          example: tl506
+        muutospaivamaara:
+          description: Haettavan tietolajin muutospäivämäärä
+          type: date
+          example: 2015-01-01
       responses:
          200:
           body:
@@ -537,7 +543,8 @@ documentation:
   /tyokone:
     post:
       is: [secured]
-      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä sekä urakka, johon tehtävä liittyy. Rajapintaan lähetettävä datan otostiheys, lähetysväli ja puskurointi täytyy olla konfiguroitavissa lähetettävässä järjestelmässä. Esimerkiksi yksittäisen laitteen sijainti lähetetään 1 minuutin otosvälillä ja yksittäinen järjestelmä lähettää kaikki keräämänsä sijaintitiedot kerran 10 minuutissa.
+      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä sekä urakka, johon tehtävä liittyy. Sen slisäksi voidaan kirjata myös materiaalin käyttöä. Huom. suolamateriaalit kirjataan kuivatonneina. Uusi seurantapiste lähetetään aina, kun tieosa tai suuunta tieverkkolla vaihtuu tai, kun suoritettava tehtävä vaihtuu.
+
       body:
         application/json:
           example: !include examples/tyokoneenseurannan-kirjaus-request.json     

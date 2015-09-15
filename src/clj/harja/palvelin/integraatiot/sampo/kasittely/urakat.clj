@@ -18,7 +18,7 @@
   (log/debug "Luodaan uusi urakka.")
   (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi))]
     (log/debug "Uusi urakka id on:" uusi-id)
-    (urakat/paivita-urakka-alaueiden-nakyma! db)
+    (urakat/paivita-urakka-alaueiden-nakyma db)
     uusi-id))
 
 (defn tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi]

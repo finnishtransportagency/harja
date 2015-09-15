@@ -47,10 +47,18 @@
     (u (str "DELETE FROM turvallisuuspoikkeama WHERE id="id))))
 
 (deftest tallenna-turvallisuuspoikkeama-test
-  (let [tp {:urakka    @oulun-alueurakan-id :tapahtunut (java.sql.Date. 105 9 1) :paattynyt (java.sql.Date. 105 9 1)
-            :kasitelty (java.sql.Date. 105 9 1) :tyontekijanammatti "Testaaja" :tyotehtava "Testaus"
-            :kuvaus    "e2e taas punaisena" :vammat "Lähinnä tympäsee" :sairauspoissaolopaivat 0 :sairaalavuorokaudet 0
-            :sijainti  [0 0] :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6} :tyyppi [:turvallisuuspoikkeama]}
+  (let [tp {:urakka    @oulun-alueurakan-id
+            :tapahtunut (java.sql.Date. 105 9 1)
+            :paattynyt (java.sql.Date. 105 9 1)
+            :kasitelty (java.sql.Date. 105 9 1)
+            :tyontekijanammatti "Testaaja"
+            :tyotehtava "Testaus"
+            :kuvaus    "e2e taas punaisena"
+            :vammat "Lähinnä tympäsee"
+            :sairauspoissaolopaivat 0
+            :sairaalavuorokaudet 0
+            :sijainti {:type :point :coordinates [0 0]}
+            :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6} :tyyppi [:turvallisuuspoikkeama]}
         korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa" :suoritettu nil :vastaavahenkilo "Kaikki yhdessä"}]
         uusi-kommentti {:tekija "Teemu" :kommentti "Näin on!" :liite nil}
         hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]

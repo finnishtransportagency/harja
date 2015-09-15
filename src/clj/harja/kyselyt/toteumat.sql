@@ -114,7 +114,7 @@ WHERE taso = 4
                   FROM toimenpideinstanssi
                   WHERE urakka = :urakka);
 
--- name: hae-urakan-toteutuneet-tehtavat
+-- name: hae-urakan-ja-sopimuksen-toteutuneet-tehtavat
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät
 SELECT
   tt.id                           AS tehtava_id,
@@ -136,6 +136,28 @@ FROM toteuma_tehtava tt
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
+                          AND tyyppi = :tyyppi :: toteumatyyppi
+                          AND tt.poistettu IS NOT TRUE
+                          AND t.poistettu IS NOT TRUE;
+
+-- name: hae-urakan-toteutuneet-tehtavat-kuukausiraportille
+-- Hakee urakan tietyntyyppiset toteutuneet tehtävät
+SELECT
+  tt.id as id,
+  tt.maara as toteutunut_maara,
+  t.lisatieto as lisatieto,
+  t.alkanut,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS nimi,
+   (SELECT id
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpidekoodi_id
+FROM toteuma_tehtava tt
+  INNER JOIN toteuma t ON tt.toteuma = t.id
+                          AND urakka = :urakka
+                          AND alkanut >= :alkupvm
+                          AND alkanut <= :loppupvm
                           AND tyyppi = :tyyppi :: toteumatyyppi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE;

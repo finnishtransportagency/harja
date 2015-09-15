@@ -34,24 +34,25 @@
 
 (def tarkastus-xf
   (comp
-    (map konv/alaviiva->rakenne)
-    (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
-    (map #(-> %1
-              (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
-              (update-in [:havainto] dissoc :selvityspyydetty)
-              (update-in [:havainto] (fn [h]
-                                       (if (nil? (:selvitys-pyydetty h))
-                                         (dissoc h :selvitys-pyydetty)
-                                         h)))))
+   (geo/muunna-pg-tulokset :sijainti)
+   (map konv/alaviiva->rakenne)
+   (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+   (map #(-> %1
+             (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
+             (update-in [:havainto] dissoc :selvityspyydetty)
+             (update-in [:havainto] (fn [h]
+                                      (if (nil? (:selvitys-pyydetty h))
+                                        (dissoc h :selvitys-pyydetty)
+                                        h)))))
 
-    (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
-    (map (fn [tarkastus]
-           (condp = (:tyyppi tarkastus)
-             :talvihoito (dissoc tarkastus :soratiemittaus)
-             :soratie (dissoc tarkastus :talvihoitomittaus)
-             :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-             :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-             :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
+   (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
+   (map (fn [tarkastus]
+          (condp = (:tyyppi tarkastus)
+            :talvihoito (dissoc tarkastus :soratiemittaus)
+            :soratie (dissoc tarkastus :talvihoitomittaus)
+            :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+            :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+            :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)

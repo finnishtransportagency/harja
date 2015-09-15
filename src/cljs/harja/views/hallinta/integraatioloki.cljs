@@ -33,13 +33,14 @@
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
-                 :leveys  "1000px"}
+                 :leveys  "80%"}
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn nayta-otsikko [otsikko]
-  (let [sisalto (kartta-merkkijonoksi otsikko)]
-    (if (> (count sisalto) 30)
-      [:div (str (leikkaa-merkkijono sisalto 30) "...")
+  (let [sisalto (kartta-merkkijonoksi otsikko)
+        max-pituus 30]
+    (if (> (count sisalto) max-pituus)
+      [:div (str (leikkaa-merkkijono sisalto max-pituus) "... ")
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -48,16 +49,30 @@
          (ikonit/eye-open)]]]
       sisalto)))
 
+(defn nayta-lisatiedot [lisatiedot]
+  (let [max-pituus 60
+        teksti lisatiedot]
+    (if (> (count teksti) max-pituus)
+      [:span
+       (str (leikkaa-merkkijono lisatiedot max-pituus) "... ")
+       [:button.nappi-toissijainen.grid-lisaa
+        {:on-click
+         (fn [e]
+           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
+        (ikonit/eye-open)]]
+      teksti)))
+
 (defn nayta-sisalto [sisalto]
-  (if (> (count sisalto) 30)
-    [:div (str (leikkaa-merkkijono sisalto 30) "...")
-     [:span.pull-right
-      [:button.nappi-toissijainen.grid-lisaa
-       {:on-click
-        (fn [e]
-          (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
-       (ikonit/eye-open)]]]
-    sisalto))
+  (let [max-pituus 30]
+    (if (> (count sisalto) max-pituus)
+      [:div (str (leikkaa-merkkijono sisalto max-pituus) "...")
+       [:span.pull-right
+        [:button.nappi-toissijainen.grid-lisaa
+         {:on-click
+          (fn [e]
+            (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
+         (ikonit/eye-open)]]]
+      sisalto)))
 
 (defn tapahtuman-tiedot [{id :id}]
   (let [viestit (atom nil)]
@@ -116,7 +131,6 @@
     [grid
      {:otsikko       (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
       :tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
-      :rivi-klikattu #(reset! tiedot/valittu-tapahtuma %)
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
@@ -140,7 +154,7 @@
              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
               :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
              {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
-             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30}]))
+             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
      @tiedot/haetut-tapahtumat]]])
 
