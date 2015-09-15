@@ -25,7 +25,7 @@
   ; Tässä täytyy huomioida tierekisteripäivityksen mahdollinen epäonnistuminen, jolloin Harjaan ei saa jäädä
   ; tietoa, joka ei ole synkassa tierekisterin kanssa. Voidaanko tämä esim. kääriä samaan transaktioon
   ; Harjan tietokantaoperaation kanssa ja jos päivitys tierekisteriin ei onnistu, peruutetaan transaktio?
-)
+  )
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -34,29 +34,28 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
-                                               kuntoluokitus piiri]} toteuma-id]
+                                            kuntoluokitus piiri]} toteuma-id]
   (log/debug "Luodaan uusi varustetoteuma toteumalle " toteuma-id)
   (toteumat/luo-varustetoteuma<!
-         db
-         tunniste
-         toteuma-id
-         toimenpide
-         tietolaji
-         ominaisuudet
-         (get-in sijainti [:tie :numero])
-         (get-in sijainti [:tie :aosa])
-         (get-in sijainti [:tie :losa])
-         (get-in sijainti [:tie :let])
-         (get-in sijainti [:tie :aet])
-         piiri
-         kuntoluokitus
-         (:id kirjaaja)))
+    db
+    tunniste
+    toteuma-id
+    toimenpide
+    tietolaji
+    ominaisuudet
+    (get-in sijainti [:tie :numero])
+    (get-in sijainti [:tie :aosa])
+    (get-in sijainti [:tie :losa])
+    (get-in sijainti [:tie :let])
+    (get-in sijainti [:tie :aet])
+    piiri
+    kuntoluokitus
+    (:id kirjaaja)))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
                             (let [toteuma (get-in data [:varustetoteuma :toteuma])
-                                  tunniste (api-toteuma/luo-toteuman-tunniste (get-in data [:otsikko :lahettaja :jarjestelma]) (get-in data [:varustetoteuma :toteuma :tunniste :id]))
-                                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja tunniste toteuma)
+                                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
                                   varustetiedot (get-in data [:varustetoteuma :varuste])]
                               (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
                               (log/debug "Aloitetaan sijainnin tallennus")

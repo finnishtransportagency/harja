@@ -342,7 +342,7 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 SELECT exists(
     SELECT toteuma.id
     FROM toteuma
-    WHERE ulkoinen_id = :ulkoinen_id);
+    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset
@@ -470,7 +470,7 @@ VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
 DELETE FROM reitti_tehtava
 WHERE reittipiste = :id;
 
--- name: luo-reitti-materiaali<!
+-- name: luo-reitti_materiaali<!
 -- Luo uuden reitin materiaalin
 INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara)
 VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
