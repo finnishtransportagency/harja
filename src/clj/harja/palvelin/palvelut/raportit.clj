@@ -108,6 +108,26 @@
     (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
+(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
+  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
+  ; FIXME Vaadi lukuoikeus hallintayksikköön
+  (let [toteutuneet-materiaalit (into []
+                                      (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db ; FIXME SQL puuttuu
+                                                                                                   (konv/sql-timestamp alkupvm)
+                                                                                                   (konv/sql-timestamp loppupvm)
+                                                                                                   hallintayksikko-id))]
+    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
+
+(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
+  (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
+  ; FIXME Vaadi lukuoikeus koko maan urakoihin.
+  (let [toteutuneet-materiaalit (into []
+                                      (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
+                                                                                                   (konv/sql-timestamp alkupvm)
+                                                                                                   (konv/sql-timestamp loppupvm)))]
+    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
 (defrecord Raportit []
   component/Lifecycle
   (start [{raportointi :raportointi
@@ -135,6 +155,14 @@
                        :materiaaliraportti-urakalle
                        (fn [user tiedot]
                          (muodosta-materiaaliraportti-urakalle db user tiedot))
+
+                       :materiaaliraportti-hallintayksikolle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-hallintayksikolle db user tiedot))
+
+                       :materiaaliraportti-koko-maalle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-koko-maalle db user tiedot))
 
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
