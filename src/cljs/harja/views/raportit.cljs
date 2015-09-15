@@ -129,13 +129,20 @@
     :konteksti  #{:urakka :hallintayksikko :koko-maa}
     :parametrit #{:valitun-urakan-hoitokaudet :koko-maan-hoitokaudet :valitun-hallintayksikon-hoitokaudet}
     :render     (fn []
-                  [grid/grid
-                   {:otsikko      "Materiaaliraportti"
-                    :tyhja        (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
-                   [{:otsikko "Materiaali" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
-                    {:otsikko "Yksikkö" :nimi :materiaali_yksikko  :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
-                    {:otsikko "Toteutunut määrä" :nimi :kokonaismaara :muokattava? (constantly false) :tyyppi :numero :leveys "34%"}]
-                   @materiaalitoteumat])}])
+                  (let [v-ur @nav/valittu-urakka
+                        v-hal @nav/valittu-hallintayksikko
+                        grid-otsikko (if v-ur
+                                       "Urakan materiaaliraportti"
+                                       (if v-hal
+                                         "Hallintayksikön materiaaliraportti"
+                                         "Koko maan materiaaliraportti"))]
+                    [grid/grid
+                     {:otsikko grid-otsikko
+                      :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
+                     [{:otsikko "Materiaali" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
+                      {:otsikko "Yksikkö" :nimi :materiaali_yksikko :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
+                      {:otsikko "Toteutunut määrä" :nimi :kokonaismaara :muokattava? (constantly false) :tyyppi :numero :leveys "34%"}]
+                     @materiaalitoteumat]))}])
 
 (defn raporttinakyma []
   (komp/luo
@@ -171,7 +178,9 @@
                        v-ur
                        v-hal)
               [valinnat/hoitokauden-kuukausi])
-            (when
+            (when ; TODO Ilmeisesti ei ole mielekästä tapaa näyttää koko maan tai hallintayksikon hoitokausia,
+                  ; koska koko maan tai hallintayksikön alueella on erilaisia hoito/-sopimuskausia sisältäviä urakoita.
+                  ; --> Näytä yleinen aikavälikomponentti, josta hoitokauden voi valita itse.
               (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-hoitokaudet)
                        (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-hoitokaudet))
                    (nil? v-ur))
