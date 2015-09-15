@@ -43,6 +43,7 @@
    :ilmatieteenlaitos                          {:lampotilat-url s/Str}
    :tieosoiteverkon-tuontivali                 s/Int
    (s/optional-key :tieosoiteverkon-shapefile) s/Str
+   (s/optional-key :hoitoluokkien-shapefile) s/Str
    })
 
 (def oletusasetukset

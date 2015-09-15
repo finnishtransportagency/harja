@@ -238,6 +238,7 @@
       ;; tieosoiteverkon tuonti
       :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
                                                 (:tieosoiteverkon-shapefile asetukset)
+                                                (:hoitoluokkien-shapefile asetukset)
                                                 (:tieosoiteverkon-tuontivali asetukset))
                                                [:db])
       

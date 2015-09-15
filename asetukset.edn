@@ -44,4 +44,5 @@
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
  :tieosoiteverkon-tuontivali 1
  ;:tieosoiteverkon-shapefile "file:///Users/markolau/Documents/TR_PTJ_data/Tieosoiteverkko.shp"
+ ;:hoitoluokkien-shapefile "file:///Users/markolau/Documents/HarjaShpEsimerkit/tl132.shp"
  }
