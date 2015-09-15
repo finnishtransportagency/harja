@@ -155,8 +155,8 @@ WHERE (SELECT SUM(maara) AS maara
          ) IS NOT NULL;
 
 
--- name: hae--toteutuneet-materiaalit-raportille
--- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
+-- name: hae-koko-maan-toteutuneet-materiaalit-raportille
+-- Hakee kaikissa urakoissa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 SELECT DISTINCT
@@ -174,7 +174,6 @@ SELECT DISTINCT
             WHERE
               alkanut :: DATE >= :alku AND
               alkanut :: DATE <= :loppu AND
-              urakka = :urakka AND
               poistettu IS NOT TRUE) AND
           poistettu IS NOT TRUE
   )
@@ -185,7 +184,6 @@ FROM materiaalikoodi m
        AND mk.poistettu IS NOT TRUE
        AND mk.alkupvm :: DATE BETWEEN :alku AND :loppu
        AND mk.loppupvm :: DATE BETWEEN :alku AND :loppu
-       AND mk.urakka = :urakka
 
 
   LEFT JOIN toteuma_materiaali tm
@@ -195,14 +193,12 @@ FROM materiaalikoodi m
   LEFT JOIN toteuma t
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
        AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-       AND t.urakka = :urakka
 WHERE (SELECT SUM(maara) AS maara
        FROM materiaalin_kaytto
        WHERE materiaali = m.id
              AND poistettu IS NOT TRUE
              AND alkupvm :: DATE BETWEEN :alku AND :loppu
-             AND loppupvm :: DATE BETWEEN :alku AND :loppu
-             AND urakka = :urakka) IS NOT NULL
+             AND loppupvm :: DATE BETWEEN :alku AND :loppu) IS NOT NULL
       OR (
            SELECT SUM(maara) AS kokonaismaara
            FROM toteuma_materiaali
@@ -214,7 +210,6 @@ WHERE (SELECT SUM(maara) AS maara
                    WHERE
                      alkanut :: DATE >= :alku AND
                      alkanut :: DATE <= :loppu AND
-                     urakka = :urakka AND
                      poistettu IS NOT TRUE) AND
                  poistettu IS NOT TRUE
          ) IS NOT NULL;

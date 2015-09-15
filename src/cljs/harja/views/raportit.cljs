@@ -95,8 +95,8 @@
                        (log "[RAPORTTI] Haetaan materiaalitiedot parametreilla: " urakka-id alkupvm loppupvm)
                        (if urakka-id
                          (raportit/hae-materiaaliraportti-urakalle urakka-id alkupvm loppupvm)
-                         (if hallintayksikko
-                           (raportit/hae-materiaaliraportti-hallintayksikolle hallintayksikko alkupvm loppupvm)
+                         (if hallintayksikko-id
+                           (raportit/hae-materiaaliraportti-hallintayksikolle hallintayksikko-id alkupvm loppupvm)
                            (raportit/hae-materiaaliraportti-koko-maalle alkupvm loppupvm))))))
 
 (def +raporttityypit+
@@ -126,7 +126,7 @@
    {:nimi       :materiaaliraportti
     :otsikko    "Materiaaliraportti"
     :konteksti  #{:urakka :hallintayksikko :koko-maa}
-    :parametrit #{:valitun-urakan-hoitokaudet}
+    :parametrit #{:valitun-urakan-hoitokaudet :koko-maan-hoitokaudet :valitun-hallintayksikon-hoitokaudet}
     :render     (fn []
                   [grid/grid
                    {:otsikko      "Materiaaliraportti"
