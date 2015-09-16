@@ -5,7 +5,6 @@
             [clojure.data.zip.xml :as z]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -18,11 +17,11 @@
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-   "yit"
-   :sonja (feikki-sonja)
-   :sampo (component/using
-           (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
-           [:db :sonja :integraatioloki])))
+    "yit"
+    :sonja (feikki-sonja)
+    :sampo (component/using
+             (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
+             [:db :sonja :integraatioloki])))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
@@ -45,7 +44,20 @@
 
       (is (= "NA" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
           "Virheitä ei tapahtunut käsittelyssä.")))
-  
+
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
 
+#_(def testidatapatteri
+  [])
 
+#_(deftest aja-testipatteri
+  (let [siirtoja (count testidatapatteri)
+        viestit (atom [])]
+    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (doseq [testidata testidatapatteri]
+      (println "Lähetetään: " testidata)
+      (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
+    (odota #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
+    (let [epaonnistuneet (q "SELECT v.sisalto, t.lisatietoja FROM integraatioviesti  v  RIGHT JOIN integraatiotapahtuma t ON v.integraatiotapahtuma = t.id  RIGHT JOIN integraatio i ON t.integraatio = i.id WHERE NOT t.onnistunut AND v.suunta = 'sisään' AND i.jarjestelma = 'sampo' and nimi = 'sisaanluku'")]
+      (println "Epäonnistuneet:" epaonnistuneet)
+      (println "Ajettiin yhteensä:" siirtoja "siirtoa"))))
