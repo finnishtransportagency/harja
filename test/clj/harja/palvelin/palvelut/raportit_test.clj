@@ -27,6 +27,13 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(defn vaadi-urakoittain-summatut-materiaalit
+  "Tarkistaa, ettei joukossa ole saman urakan samoja materiaaleja (eli nämä on summattu yhteen)"
+  [materiaalitoteumat]
+  (is (= (count (keys (group-by
+                        #(select-keys % [:urakka_nimi :materiaali_nimi])
+                        materiaalitoteumat))) (count materiaalitoteumat))))
+
 (defn d [txt]
   (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") txt))
 
@@ -86,7 +93,8 @@
                                 {:urakka-id @oulun-alueurakan-2005-2010-id
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
-    (is (>= (count vastaus) 3))))
+    (is (>= (count vastaus) 3))
+    (vaadi-urakoittain-summatut-materiaalit vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-hallintayksikolle-toimii
   (let [alkupvm (java.sql.Date. 105 9 1)
@@ -96,7 +104,8 @@
                                 {:hallintayksikko-id @pohjois-pohjanmaan-hallintayksikon-id
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
-    (is (>= (count vastaus) 3))))
+    (is (>= (count vastaus) 3))
+    (vaadi-urakoittain-summatut-materiaalit vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-koko-maalle-toimii
   (let [alkupvm (java.sql.Date. 105 9 1)
@@ -105,4 +114,5 @@
                                 :materiaaliraportti-koko-maalle +kayttaja-jvh+
                                 {:alkupvm alkupvm
                                  :loppupvm loppupvm})]
-    (is (>= (count vastaus) 4))))
+    (is (>= (count vastaus) 4))
+    (vaadi-urakoittain-summatut-materiaalit vastaus)))
