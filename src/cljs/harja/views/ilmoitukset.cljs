@@ -184,10 +184,12 @@
                        :hae (comp first :aikavali)
                        :aseta #(assoc-in %1 [:aikavali 0] %2)
                        :otsikko "Alkaen"
+                       :leveys-col 3
                        :tyyppi :pvm}
                       
                       {:nimi :saapunut-paattyen
                        :otsikko "Päättyen"
+                       :leveys-col 3
                        :hae (comp second :aikavali)
                        :aseta #(assoc-in %1 [:aikavali 1] %2)
                        :tyyppi :pvm})

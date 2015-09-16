@@ -90,7 +90,7 @@
                        [:div.form-group {:class (when (:pakollinen? kentta) "required")}
                         [:div.row
                          otsikko
-                         [:div {:class (str "col-md-" (or (:leveys-col kentta) 10))}
+                         [:div {:class (str "col-sm-" (or (:leveys-col kentta) 10))}
                           komponentti]]])
                      luo-kentta)
                skeemat))])
@@ -101,12 +101,12 @@
   ^{:key (:otsikko ryhma)}
   [:div.form-group
    [:div.row
-    [:label.col-md-2.control-label (:otsikko ryhma)]
+    [:label.col-sm-2.control-label (:otsikko ryhma)]
     (doall
      (for [skeema skeemat
            :let [[kentta otsikko komponentti] (luo-kentta (assoc skeema :lomake? :rivi))]]
        ^{:key (:nimi kentta)}
-       [:div {:class (str "col-md-" (or (:leveys (:optiot ryhma))
+       [:div {:class (str "col-sm-" (or (:leveys (:optiot ryhma))
                                         (:leveys-col skeema)
                                         2))}
         [:div
