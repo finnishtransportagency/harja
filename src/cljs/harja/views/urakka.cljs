@@ -32,6 +32,10 @@
                           (go (reset! u/urakan-yks-hint-tyot
                                       (s/prosessoi-tyorivit ur
                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+
+    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
+    @u/valittu-toimenpideinstanssi
+    
     (hae-urakan-tyot ur)
     [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
      "Yleiset"
