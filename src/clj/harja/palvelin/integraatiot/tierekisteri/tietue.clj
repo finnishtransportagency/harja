@@ -3,12 +3,7 @@
             [clojure.string :as string]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-
-            [harja.testi :as testi])
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -51,11 +46,3 @@
                       kutsudata
                       (fn [vastaus-xml] (kasittele-vastaus palvelu-url id tietolaji vastaus-xml)))]
     vastausdata))
-
-(defn kutsu [tietolaji tunniste]
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (hae-tietue integraatioloki
-                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
-                  tunniste tietolaji)))
