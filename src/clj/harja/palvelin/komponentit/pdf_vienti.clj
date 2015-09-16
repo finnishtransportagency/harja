@@ -9,7 +9,10 @@
             [clojure.string :as str]
             [hiccup.core :refer [html]]
             [clojure.java.io :as io])
-  (:import (org.apache.fop.apps FopConfParser)))
+  (:import (org.apache.fop.apps FopConfParser MimeConstants)
+           (javax.xml.transform Transformer TransformerFactory)
+           (javax.xml.transform.stream StreamSource StreamResult)
+           (javax.xml.transform.sax SAXResult)))
 
 (defprotocol PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [this nimi kasittely-fn]
@@ -51,8 +54,18 @@
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))
 
+(defn- hiccup->pdf [fop-factory hiccup]
+  (with-open [out (java.io.ByteArrayOutputStream.)]
+    (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
+          xform (.newTransformer (TransformerFactory/newInstance))
+          src (StreamSource. (java.io.StringReader. (html hiccup)))
+          res (SAXResult. (.getDefaultHandler fop))]
+      (.transform xform src res)
+      (.toByteArray out))))
 
-(defn muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja q :query-string
+
+
+(defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja q :query-string
                                               params :params :as req}]
   (let [tyyppi (keyword (first (str/split q #"\&")))
         kasittelija (get kasittelijat tyyppi)]
@@ -62,8 +75,8 @@
       (do (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja) " parametreilla " params)
           (try
             {:status 200
-             :body (str (some-> (kasittelija kayttaja params)
-                                (html)))}
+             :headers {"Content-Type" "application/pdf"} ;; content-disposition!
+             :body (java.io.ByteArrayInputStream. (hiccup->pdf fop-factory (kasittelija kayttaja params)))}
             (catch Exception e
               (log/warn "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
               {:status 500
@@ -71,4 +84,34 @@
 
               
                                       
+(def test-fo
+  [:fo:root {:xmlns:fo "http://www.w3.org/1999/XSL/Format"}
 
+   ;; Layoutin konffi
+   [:fo:layout-master-set
+    [:fo:simple-page-master {:master-name "first"
+                             :page-height "29.7cm" :page-width "21cm"
+                             :margin-top "1cm" :margin-bottom "2cm" :margin-left "2.5cm" :margin-right "2.5cm"}
+     [:fo:region-body {:margin-top "1cm"}]
+     [:fo:region-before {:extent "1cm"}]
+     [:fo:region-after {:extent "1.5cm"}]]]
+
+   ;; Itse sisältö
+   [:fo:page-sequence {:master-reference "first"}
+    [:fo:flow {:flow-name "xsl-region-body"}
+     [:fo:block {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"]
+     [:fo:block {:space-after.optimum "10pt" :font-family "Helvetica" :font-size "10pt"}
+      [:fo:table
+       [:fo:table-column {:column-width "10cm"}]
+       [:fo:table-column {:column-width "10cm"}]
+       [:fo:table-body
+        (for [[eka toka] [["1" "jotain"] ["2" "ihan"] ["3" "muuta"]]]
+          [:fo:table-row
+           [:fo:table-cell
+            [:fo:block eka]]
+           [:fo:table-cell
+            [:fo:block eka]]])]]]]]])
+
+   
+(defn rekisteroi-testi []
+  (rekisteroi-pdf-kasittelija! (:pdf-vienti harja.palvelin.main/harja-jarjestelma) :test (fn [k params] test-fo)))
