@@ -22,6 +22,16 @@
                                                        ominaisuudet)) :onnistunut)]
       muunnettu-vastausdata)))
 
+;; Muokkaa tietuetta siten, että se vastaa json skemaa
+;; Esimerkiksi koordinaatteja ja linkkejä ei ole toistaiseksi tarkoituskaan laittaa eteenpäin,
+;; vaan ne ovat 'future prooffausta'. Muut kentät saattavat olla sellaisia että ne oikeasti halutaan ottaa
+;; mukaan - tätä transduseria ei kannata tuhota, sillä tätä käytetään tietueen haussa sekä tietueiden haussa.
+(def puhdista-tietue-xf
+  #(-> %
+       (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
+       (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
+       (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
+
 (defn hae-tietue [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
@@ -29,14 +39,38 @@
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
           muunnettu-vastausdata (-> vastausdata
                                     (dissoc :onnistunut)
-                                    (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
-                                    (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
-                                    (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)
+                                    (puhdista-tietue-xf)
                                     (clojure.set/rename-keys {:tietue :varuste}))]
 
       ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
       ;; Tässä tapauksessa me palautamme tyhjän kartan.
       (if (:tietue vastausdata)
+        muunnettu-vastausdata
+        {}))))
+
+(defn hae-tietueet [tierekisteri parametrit kayttaja]
+  (let [tr {:numero (get parametrit "numero")
+            :aet (get parametrit "aet")
+            :aosa (get parametrit "aosa")
+            :let (get parametrit "let")
+            :losa (get parametrit "losa")
+            :ajr (get parametrit "ajr")
+            :puoli (get parametrit "puoli")
+            :alkupvm (get parametrit "alkupvm")}
+        tietolajitunniste (get parametrit "tietolajitunniste")
+        muutospvm (get parametrit "muutospaivamaara")]
+    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
+               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tr))
+    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tr tietolajitunniste muutospvm)
+          muunnettu-vastausdata (-> vastausdata
+                                    (dissoc :onnistunut)
+                                    (update-in [:tietueet] #(map puhdista-tietue-xf %))
+                                    (update-in [:tietueet] #(into [] (remove nil? (remove empty? %))))
+                                    (clojure.set/rename-keys {:tietueet :varusteet}))]
+
+      ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet
+      ;; Tässä tapauksessa palautamme tyhjän kartan
+      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
         muunnettu-vastausdata
         {}))))
 
@@ -58,10 +92,19 @@
                          (fn [parametrit data kayttaja db]
                            (log/debug "parametrit" parametrit)
                            (hae-tietue tierekisteri parametrit kayttaja)))))
+
+    (julkaise-reitti
+      http :hae-tietueet
+      (GET "/api/varusteet/varusteet" request
+        (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
+                         (fn [parametrit data kayttaja db]
+                           (log/debug "parametrit" parametrit)
+                           (hae-tietueet tierekisteri parametrit kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-tietolaji
-                     :hae-tietue)
+                     :hae-tietue
+                     :hae-tietueet)
     this))

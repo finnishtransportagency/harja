@@ -12,7 +12,7 @@
   [:ns2:haeTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietueet"}
    [:tietolajitunniste tietolajitunniste]
-   [:muutospvm muutospvm]
+   (when muutospvm [:muutospvm muutospvm])
    (into [:tie] (map (fn[[avain arvo]] [avain arvo]) tr))])
 
 (defn muodosta [tr tietolajitunniste muutospvm]
