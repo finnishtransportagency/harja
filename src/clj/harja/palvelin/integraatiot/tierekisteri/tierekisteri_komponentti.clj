@@ -3,6 +3,7 @@
     [com.stuartsierra.component :as component]
     [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
     [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]
+    [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -18,7 +19,7 @@
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste])
-  (hae-tietue-tr-osoitteella [this tietueen-tunniste tr]))
+  (hae-tietueet [this tr tietolajitunniste muutospvm]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
@@ -34,11 +35,11 @@
   (hae-tietue [this tietueen-tunniste tietolajitunniste]
     (validoi-tunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
-      (tietueet/hae-tietue (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste)))
+      (tietue/hae-tietue (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste)))
 
-  (hae-tietue-tr-osoitteella [this tr tietolajitunniste]
+  (hae-tietueet [this tr tietolajitunniste muutospvm]
     (validoi-tunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
-      (tietueet/hae-tietueet-tr-osoitteella
-        (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste))))
+      (tietueet/hae-tietueet
+        (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm))))
 

@@ -20,6 +20,7 @@
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisältö on:" xml)
   (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
 
+    (log/debug "1")
     (.setResourceResolver schema-factory
                           (reify LSResourceResolver
                             (resolveResource [this type namespaceURI publicId systemId baseURI]
@@ -32,6 +33,7 @@
                                   (getCharacterStream [_] (io/reader xsd-file))
                                   (getEncoding [_] "UTF-8")
                                   (getStringData [_] (slurp xsd-file)))))))
+    (log/debug "2")
     (try (-> schema-factory
              (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-polku xsd)))))
              .newValidator
