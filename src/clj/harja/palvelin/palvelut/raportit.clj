@@ -83,7 +83,7 @@
 
 (defn muodosta-yksikkohintaisten-toiden-kuukausiraportti [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät raporttia varten: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-tehtavat (into []
                                    toteumat/muunna-desimaaliluvut-xf
                                    (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille
@@ -99,7 +99,7 @@
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
                                                                                                    urakka-id
@@ -110,7 +110,7 @@
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
-  ; FIXME Vaadi lukuoikeus hallintayksikköön
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                             hallintayksikko-id
@@ -121,7 +121,7 @@
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
-  ; FIXME Vaadi lukuoikeus koko maan urakoihin.
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)
