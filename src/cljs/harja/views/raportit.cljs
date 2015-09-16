@@ -18,7 +18,8 @@
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.roolit :as roolit])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -261,4 +262,6 @@
   (komp/luo
     (komp/lippu nakymassa?)
     (fn []
-      (raporttivalinnat-ja-raportti))))
+      (if (roolit/roolissa? roolit/tilaajan-kayttaja)
+        (raporttivalinnat-ja-raportti)
+        [:span "Ei ole oikeutta tarkastella raportteja."]))))
