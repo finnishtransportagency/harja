@@ -27,7 +27,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn vaadi-urakoittain-summatut-materiaalit
+(defn vaadi-urakan-samat-materiaalit-summattu
   "Tarkistaa, ettei joukossa ole saman urakan samoja materiaaleja (eli nämä on summattu yhteen)"
   [materiaalitoteumat]
   (is (= (count (keys (group-by
@@ -94,7 +94,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
-    (vaadi-urakoittain-summatut-materiaalit vastaus)))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-hallintayksikolle-toimii
   (let [alkupvm (java.sql.Date. 105 9 1)
@@ -105,7 +105,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
-    (vaadi-urakoittain-summatut-materiaalit vastaus)))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-koko-maalle-toimii
   (let [alkupvm (java.sql.Date. 105 9 1)
@@ -115,4 +115,4 @@
                                 {:alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 4))
-    (vaadi-urakoittain-summatut-materiaalit vastaus)))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
