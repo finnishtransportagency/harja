@@ -90,29 +90,33 @@
 (defn muodosta-materiaalisarakkeet
   "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
   [materiaalitoteumat]
-  (mapv (fn [materiaali]
-          {:otsikko     (str materiaali " (" (:materiaali_yksikko
-                                               (first (filter
-                                                        #(= (:materiaali_nimi %) materiaali)
-                                                        materiaalitoteumat))) ")")
-           :nimi        (keyword materiaali)
-           :muokattava? (constantly false)
-           :tyyppi
-                        :string
-           :leveys      "33%"})
-        (distinct (mapv :materiaali_nimi materiaalitoteumat))))
+  (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
+    (mapv (fn [materiaali]
+            {:otsikko     (str materiaali " (" (:materiaali_yksikko
+                                                 (first (filter
+                                                          #(= (:materiaali_nimi %) materiaali)
+                                                          materiaalitoteumat))) ")")
+             :nimi        (keyword materiaali)
+             :muokattava? (constantly false)
+             :tyyppi
+                          :string
+             :leveys      "33%"})
+          materiaali-nimet)))
 (defn muodosta-materiaaliraportin-rivit
   "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
   [materiaalitoteumat]
-  (mapv (fn [urakka]
-          (reduce
-            (fn [eka toka]
-              (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
-            {:urakka_nimi urakka}
-            (filter
-              #(= (:urakka_nimi %) urakka)
-              materiaalitoteumat)))
-        (distinct (mapv :urakka_nimi materiaalitoteumat))))
+  (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
+        urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
+        urakkarivit (mapv (fn [urakka]
+                            (reduce
+                              (fn [eka toka]
+                                (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
+                              (reduce (fn [eka toka] (assoc eka (keyword toka) 0)) {:urakka_nimi urakka} materiaali-nimet)
+                              (filter
+                                #(= (:urakka_nimi %) urakka)
+                                materiaalitoteumat)))
+                          urakka-nimet)]
+    urakkarivit))
 (defn muodosta-materiaaliraportin-yhteensa-rivi
   "Palauttaa rivin, jossa eri materiaalien määrät on summattu yhteen"
   [materiaalitoteumat]
