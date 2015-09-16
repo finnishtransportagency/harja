@@ -21,6 +21,6 @@
 (deftest tarkista-paivamaaran-kasittely
   (let [muutospaivamaara (.parse (SimpleDateFormat. "dd.MM.yyyy") "1.1.2015")
         kutsu-xml (tietolajin-hakukutsu/muodosta "tl506" muutospaivamaara)]
-    (is (.contains kutsu-xml "2015-01-01") "Kutsu sisältää oikein formatoidun muutostpäivämäärän")))
+    (is (.contains kutsu-xml "2015-01-01") "Kutsu sisältää oikein formatoidun muutospäivämäärän")))
 
 
