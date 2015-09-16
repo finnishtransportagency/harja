@@ -108,10 +108,13 @@
   (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
         urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
         urakkarivit (mapv (fn [urakka]
-                            (reduce
+                            (reduce ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
                               (fn [eka toka]
                                 (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
-                              (reduce (fn [eka toka] (assoc eka (keyword toka) 0)) {:urakka_nimi urakka} materiaali-nimet)
+                              (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
+                                        (assoc eka (keyword toka) 0))
+                                      {:urakka_nimi urakka}
+                                      materiaali-nimet)
                               (filter
                                 #(= (:urakka_nimi %) urakka)
                                 materiaalitoteumat)))
@@ -122,9 +125,11 @@
   [materiaalitoteumat]
   (let [materiaalinimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
     (reduce (fn [eka toka]
-              (assoc eka (keyword toka) (reduce + (mapv :kokonaismaara (filter
-                                                                         #(= (:materiaali_nimi %) toka)
-                                                                         materiaalitoteumat)))))
+              (assoc eka (keyword toka) (reduce + (mapv
+                                                    :kokonaismaara
+                                                    (filter
+                                                      #(= (:materiaali_nimi %) toka)
+                                                      materiaalitoteumat)))))
             {:urakka_nimi "Yhteensä" :yhteenveto true}
             materiaalinimet)))
 (defonce materiaalitoteumat
