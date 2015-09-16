@@ -264,4 +264,4 @@
     (fn []
       (if (roolit/roolissa? roolit/tilaajan-kayttaja)
         (raporttivalinnat-ja-raportti)
-        [:span "Ei ole oikeutta tarkastella raportteja."]))))
+        [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
