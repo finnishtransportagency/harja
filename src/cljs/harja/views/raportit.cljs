@@ -113,6 +113,16 @@
               #(= (:urakka_nimi %) urakka)
               materiaalitoteumat)))
         (distinct (mapv :urakka_nimi materiaalitoteumat))))
+(defn muodosta-materiaaliraportin-yhteensa-rivi
+  "Palauttaa rivin, jossa eri materiaalien määrät on summattu yhteen"
+  [materiaalitoteumat]
+  (let [materiaalinimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
+    (reduce (fn [eka toka]
+              (assoc eka (keyword toka) (reduce + (mapv :kokonaismaara (filter
+                                                                         #(= (:materiaali_nimi %) toka)
+                                                                         materiaalitoteumat)))))
+            {:urakka_nimi "Yhteensä" :yhteenveto true}
+            materiaalinimet)))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       hallintayksikko-id (:id @nav/valittu-hallintayksikko)
@@ -169,13 +179,17 @@
                         materiaalisarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
                         lopulliset-sarakkeet (reduce conj perussarakkeet materiaalisarakkeet)
                         _ (log "[RAPORTTI] Materiaaliraportin sarakkeet: " (pr-str lopulliset-sarakkeet))
-                        rivit (muodosta-materiaaliraportin-rivit @materiaalitoteumat)
-                        _ (log "[RAPORTTI] Materiaaliraportin rivit: " (pr-str rivit))]
+                        urakkarivit (muodosta-materiaaliraportin-rivit @materiaalitoteumat)
+                        yhteensa-rivi (muodosta-materiaaliraportin-yhteensa-rivi @materiaalitoteumat)
+                        lopulliset-rivit (conj urakkarivit yhteensa-rivi)
+                        _ (log "[RAPORTTI] Materiaaliraportin rivit: " (pr-str urakkarivit))]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
                      lopulliset-sarakkeet
-                     rivit]))}])
+                     (if (> (count urakkarivit) 0)
+                       lopulliset-rivit
+                       [])]))}])
 
 (defn raporttinakyma []
   (komp/luo
