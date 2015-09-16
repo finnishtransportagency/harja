@@ -6,34 +6,30 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn hae-paasopimuksen-id [db urakka-sampo-id]
-  (:id (first (sopimukset/hae-paasopimuksen-id-urakan-sampoidlla db urakka-sampo-id))))
-
 (defn paivita-sopimus [db sopimus-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]
   (log/debug "Päivitetään sopimus, jonka id on: " sopimus-id ".")
   (sopimukset/paivita-sopimus! db nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id sopimus-id))
 
-(defn luo-sopimus [db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id]
-  (log/debug "Luodaan uusi sopimus. Paasopimuksen id:" paasopimus-id)
-  (let [uusi-id (:id (sopimukset/luo-sopimus<! db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id))]
+(defn luo-sopimus [db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]
+  (log/debug "Luodaan uusi sopimus.")
+  (let [uusi-id (:id (sopimukset/luo-sopimus<! db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id))]
     (log/debug "Uusi sopimus id on:" uusi-id)
     uusi-id))
 
-(defn tallenna-sopimus [db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id]
+(defn tallenna-sopimus [db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]
   (let [sopimus-id (:id (first (sopimukset/hae-id-sampoidlla db sampo-id)))]
     (if sopimus-id
       (do
         (paivita-sopimus db sopimus-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id)
         sopimus-id)
       (do
-        (luo-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)))))
+        (luo-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id)))))
 
 (defn kasittele-sopimus [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id]}]
   (log/debug "Käsitellään sopimus sampo id:llä: " sampo-id)
 
   (try
-    (let [paasopimus-id (hae-paasopimuksen-id db urakka-sampo-id)
-          sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id paasopimus-id)]
+    (let [sopimus-id (tallenna-sopimus db sampo-id nimi alkupvm loppupvm urakka-sampo-id urakoitsija-sampo-id)]
 
       (log/debug "Käsiteltävän sopimukset id on:" sopimus-id)
       (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id)

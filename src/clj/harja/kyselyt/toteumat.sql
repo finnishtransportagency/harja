@@ -455,7 +455,9 @@ WHERE
 
 -- name: luo-reittipiste<!
 -- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti) VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y)::POINT);
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka) 
+  VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y)::point,
+          hoitoluokka_pisteelle(ST_MakePoint(:x,:y)::geometry, 250::INTEGER));
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
@@ -492,7 +494,7 @@ VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
 DELETE FROM reitti_tehtava
 WHERE reittipiste = :id;
 
--- name: luo-reitti-materiaali<!
+-- name: luo-reitti_materiaali<!
 -- Luo uuden reitin materiaalin
 INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara)
 VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
@@ -506,3 +508,39 @@ WHERE reittipiste = :id;
 SELECT *
 FROM reittipiste
 WHERE toteuma = :id;
+
+-- name: luo-varustetoteuma<!
+-- Luo uuden varustetoteuman
+INSERT INTO varustetoteuma (tunniste,
+                            toteuma,
+                            toimenpide,
+                            tietolaji,
+                            ominaisuudet,
+                            tr_numero,
+                            tr_alkuosa,
+                            tr_loppuosa,
+                            tr_loppuetaisyys,
+                            tr_alkuetaisyys,
+                            piiri,
+                            kuntoluokka,
+                            luoja,
+                            luotu)
+    VALUES (
+    :tunniste,
+    :toteuma,
+    :toimenpide :: varustetoteuma_tyyppi,
+    :tietolaji,
+    :ominaisuudet,
+    :tr_numero,
+    :tr_alkuosa,
+    :tr_loppuosa,
+    :tr_loppuetaisyys,
+    :tr_alkuetaisyys,
+    :piiri,
+    :kuntoluokka,
+    :luoja,
+    NOW());
+
+-- name: poista-toteuman-varustetiedot!
+DELETE FROM varustetoteuma WHERE toteuma = :id;
+
