@@ -30,12 +30,6 @@
           "additionalProperties": false,
           "required": true,
           "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
-        },
-        "liitteet": {
-          "id": "urn:harja/reittitoteuma/liitteet",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
         }
       }
     }
