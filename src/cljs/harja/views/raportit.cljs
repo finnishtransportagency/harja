@@ -24,7 +24,6 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-raporttityyppi (atom nil))
-(tarkkaile! "[RAPORTTI] Valittu raporttityyppi: " valittu-raporttityyppi)
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                   konteksti (:konteksti valittu-raporttityyppi)
@@ -87,6 +86,23 @@
                (if (empty? toteumat-tehtavatietoineen)
                  toteumat-tehtavatietoineen
                  (conj toteumat-tehtavatietoineen yhteensa))))))
+
+(defn muuta-materiaalitoteumienrivit-sarakkeiksi [rivit]
+  (mapv (fn [rivi]
+          {:otsikko (:materiaali_nimi rivi)
+           :nimi (keyword (:materiaali_nimi rivi))
+           :muokattava? (constantly false)
+           :tyyppi :string
+           :leveys "10%"})
+        rivit))
+(defn laske-materiaalien-yhteismaara [materiaalit]
+  (let [rivin-perustiedot {:id 999 :nimi "Yhteensä" :yhteenveto true}
+        lopullinen-rivi (reduce (fn [eka toka]
+                                  (assoc eka
+                                    (keyword (:materiaali_nimi toka))
+                                    (:kokonaismaara toka)))
+                                rivin-perustiedot materiaalit)]
+    lopullinen-rivi))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       hallintayksikko-id (:id @nav/valittu-hallintayksikko)
@@ -138,14 +154,16 @@
                                        "Urakan materiaaliraportti"
                                        (if v-hal
                                          "Hallintayksikön materiaaliraportti"
-                                         "Koko maan materiaaliraportti"))]
+                                         "Koko maan materiaaliraportti"))
+                        perussarakkeet [{:otsikko " " :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
+                        toteumasarakkeet (muuta-materiaalitoteumienrivit-sarakkeiksi @materiaalitoteumat)
+                        lopulliset-sarakkeet (reduce conj perussarakkeet toteumasarakkeet)
+                        yhteensa [(laske-materiaalien-yhteismaara @materiaalitoteumat)]]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
-                     [{:otsikko "Materiaali" :nimi :materiaali_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
-                      {:otsikko "Yksikkö" :nimi :materiaali_yksikko :muokattava? (constantly false) :tyyppi :string :leveys "33%"}
-                      {:otsikko "Toteutunut määrä" :nimi :kokonaismaara :muokattava? (constantly false) :tyyppi :numero :leveys "34%"}]
-                     @materiaalitoteumat]))}])
+                     lopulliset-sarakkeet
+                     (if (> (count @materiaalitoteumat) 0) yhteensa [])]))}])
 
 (defn raporttinakyma []
   (komp/luo
