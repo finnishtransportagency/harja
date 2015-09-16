@@ -181,12 +181,12 @@
                   (let [v-ur @nav/valittu-urakka
                         v-hal @nav/valittu-hallintayksikko
                         grid-otsikko (if v-ur
-                                       (str "Urakan materiaaliraportti "
+                                       (str (:nimi v-ur) " - Materiaaliraportti "
                                             (pvm/pvm (first @u/valittu-hoitokausi))
                                             " - "
                                             (pvm/pvm (second @u/valittu-hoitokausi)))
                                        (if v-hal
-                                         (str "Hallintayksikön materiaaliraportti "
+                                         (str (:nimi v-hal) " - Materiaaliraportti "
                                               (pvm/pvm (first @u/valittu-aikavali))
                                               " - "
                                               (pvm/pvm (second @u/valittu-aikavali)))
