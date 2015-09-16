@@ -91,7 +91,15 @@
   "Käy läpi materiaalitoteumat ja muodostaa jokaisesta toteumissa esiintyvästä materiaalin nimestä oman sarakkeen"
   [materiaalitoteumat]
   (mapv (fn [materiaali]
-          {:otsikko materiaali :nimi (keyword materiaali) :muokattava? (constantly false) :tyyppi :string :leveys "33%"})
+          {:otsikko     (str materiaali " (" (:materiaali_yksikko
+                                               (first (filter
+                                                        #(= (:materiaali_nimi %) materiaali)
+                                                        materiaalitoteumat))) ")")
+           :nimi        (keyword materiaali)
+           :muokattava? (constantly false)
+           :tyyppi
+                        :string
+           :leveys      "33%"})
         (distinct (mapv :materiaali_nimi materiaalitoteumat))))
 (defn muodosta-materiaaliraportin-rivit
   "Yhdistää saman urakan materiaalitoteumat yhdeksi riviksi."
@@ -160,8 +168,9 @@
                         perussarakkeet [{:otsikko "Urakka" :nimi :urakka_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
                         materiaalisarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
                         lopulliset-sarakkeet (reduce conj perussarakkeet materiaalisarakkeet)
+                        _ (log "[RAPORTTI] Materiaaliraportin sarakkeet: " (pr-str lopulliset-sarakkeet))
                         rivit (muodosta-materiaaliraportin-rivit @materiaalitoteumat)
-                        _ (log "[RAPORTTI] Rivit: " (pr-str rivit))]
+                        _ (log "[RAPORTTI] Materiaaliraportin rivit: " (pr-str rivit))]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
