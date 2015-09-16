@@ -8,6 +8,7 @@
     [harja.palvelin.komponentit.fim :as fim]
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
+    [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -97,10 +98,13 @@
                                                         kehitysmoodi)
                        [:todennus])
 
+      :pdf-vienti (component/using
+                   (pdf-vienti/luo-pdf-vienti)
+                   [:http-palvelin])
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
-
+      
       ;; Integraatioloki
       :integraatioloki (component/using (integraatioloki/->Integraatioloki
                                           (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))

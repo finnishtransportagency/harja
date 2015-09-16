@@ -10,6 +10,7 @@
             [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
             [clj-time.core :as t]
             [clj-time.coerce :as coerce])
