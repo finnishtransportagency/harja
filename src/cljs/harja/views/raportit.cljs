@@ -230,7 +230,7 @@
             +raporttityypit+]]]
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
-            ; Aina pelkkä urakka-konteksti, pakota valitsemaan hallintayksikkö ja urakka (jos ei ole jo valittu
+            ; Jos kontekstissa ainoastaan urakka, pakota valitsemaan hallintayksikkö ja urakka (jos ei ole jo valittu)
             (when (= (:konteksti @valittu-raporttityyppi) #{:urakka})
               (urakat/valitse-hallintayksikko-ja-urakka))
             (when (and (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet)
