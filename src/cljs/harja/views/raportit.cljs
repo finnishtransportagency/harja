@@ -181,10 +181,19 @@
                   (let [v-ur @nav/valittu-urakka
                         v-hal @nav/valittu-hallintayksikko
                         grid-otsikko (if v-ur
-                                       "Urakan materiaaliraportti"
+                                       (str "Urakan materiaaliraportti "
+                                            (pvm/pvm (first @u/valittu-hoitokausi))
+                                            " - "
+                                            (pvm/pvm (second @u/valittu-hoitokausi)))
                                        (if v-hal
-                                         "Hallintayksikön materiaaliraportti"
-                                         "Koko maan materiaaliraportti"))
+                                         (str "Hallintayksikön materiaaliraportti "
+                                              (pvm/pvm (first @u/valittu-aikavali))
+                                              " - "
+                                              (pvm/pvm (second @u/valittu-aikavali)))
+                                         (str "Koko maan materiaaliraportti "
+                                              (pvm/pvm (first @u/valittu-aikavali))
+                                              " - "
+                                              (pvm/pvm (second @u/valittu-aikavali)))))
                         perussarakkeet [{:otsikko "Urakka" :nimi :urakka_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
                         materiaalisarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
                         lopulliset-sarakkeet (reduce conj perussarakkeet materiaalisarakkeet)
