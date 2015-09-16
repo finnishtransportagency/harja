@@ -88,7 +88,7 @@
                  (conj toteumat-tehtavatietoineen yhteensa))))))
 
 (defn muodosta-materiaalisarakkeet
-  "Käy läpi materiaalitoteumat ja muodostaa jokaisesta toteumissa esiintyvästä materiaalin nimestä oman sarakkeen"
+  "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
   [materiaalitoteumat]
   (mapv (fn [materiaali]
           {:otsikko     (str materiaali " (" (:materiaali_yksikko
@@ -102,7 +102,7 @@
            :leveys      "33%"})
         (distinct (mapv :materiaali_nimi materiaalitoteumat))))
 (defn muodosta-materiaaliraportin-rivit
-  "Yhdistää saman urakan materiaalitoteumat yhdeksi riviksi."
+  "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
   [materiaalitoteumat]
   (mapv (fn [urakka]
           (reduce
@@ -192,7 +192,6 @@
                        [])]))}])
 
 (defn raporttinakyma [tyyppi]
-  (log "RAPORTTINAKYMA")
   ((:render tyyppi)))
 
 (defn raporttivalinnat []

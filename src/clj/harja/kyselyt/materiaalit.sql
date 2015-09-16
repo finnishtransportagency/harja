@@ -91,9 +91,8 @@ WHERE (SELECT SUM(maara) AS maara
          ) IS NOT NULL;
 
 -- name: hae-urakan-toteutuneet-materiaalit-raportille
--- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
--- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
--- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
+-- Palauttaa urakan materiaalit ja määrät omilla riveillä.
+-- Samat materiaalit summataan yhteen.
 SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
@@ -109,6 +108,8 @@ FROM toteuma_materiaali
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
+-- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
+-- Saman urakan samat materiaalit summataan yhteen.
 SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
@@ -124,6 +125,8 @@ FROM toteuma_materiaali
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
+-- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
+-- Saman urakan samat materiaalit summataan yhteen.
 SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
