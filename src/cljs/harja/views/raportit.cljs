@@ -87,10 +87,24 @@
                  toteumat-tehtavatietoineen
                  (conj toteumat-tehtavatietoineen yhteensa))))))
 
-(defn muodosta-materiaalisarakkeet [rivit]
+(defn muodosta-materiaalisarakkeet
+  "Käy läpi materiaalitoteumat ja muodostaa jokaisesta toteumissa esiintyvästä materiaalin nimestä oman sarakkeen"
+  [materiaalitoteumat]
   (mapv (fn [materiaali]
           {:otsikko materiaali :nimi (keyword materiaali) :muokattava? (constantly false) :tyyppi :string :leveys "33%"})
-        (distinct (mapv :materiaali_nimi rivit))))
+        (distinct (mapv :materiaali_nimi materiaalitoteumat))))
+(defn muodosta-materiaaliraportin-rivit
+  "Yhdistää saman urakan materiaalitoteumat yhdeksi riviksi."
+  [materiaalitoteumat]
+  (mapv (fn [urakka]
+          (reduce
+            (fn [eka toka]
+              (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
+            {:urakka_nimi urakka}
+            (filter
+              #(= (:urakka_nimi %) urakka)
+              materiaalitoteumat)))
+        (distinct (mapv :urakka_nimi materiaalitoteumat))))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       hallintayksikko-id (:id @nav/valittu-hallintayksikko)
@@ -144,14 +158,15 @@
                                          "Hallintayksikön materiaaliraportti"
                                          "Koko maan materiaaliraportti"))
                         perussarakkeet [{:otsikko "Urakka" :nimi :urakka_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
-                        toteumasarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
-                        _ (log "[RAPORTIT] Toteumasarakkeet " (pr-str toteumasarakkeet))
-                        lopulliset-sarakkeet (reduce conj perussarakkeet toteumasarakkeet)]
+                        materiaalisarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
+                        lopulliset-sarakkeet (reduce conj perussarakkeet materiaalisarakkeet)
+                        rivit (muodosta-materiaaliraportin-rivit @materiaalitoteumat)
+                        _ (log "[RAPORTTI] Rivit: " (pr-str rivit))]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
                      lopulliset-sarakkeet
-                     [:asd 1]]))}]) ; FIXME Muodosta rivit
+                     rivit]))}])
 
 (defn raporttinakyma []
   (komp/luo
