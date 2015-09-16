@@ -102,9 +102,9 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
-                                                                                                (konv/sql-timestamp alkupvm)
-                                                                                                (konv/sql-timestamp loppupvm)
-                                                                                                urakka-id))]
+                                                                                                   urakka-id
+                                                                                                   (konv/sql-timestamp alkupvm)
+                                                                                                   (konv/sql-timestamp loppupvm)))]
     (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
@@ -113,9 +113,9 @@
   ; FIXME Vaadi lukuoikeus hallintayksikköön
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                   (konv/sql-timestamp alkupvm)
-                                                                                                   (konv/sql-timestamp loppupvm)
-                                                                                                   hallintayksikko-id))]
+                                                                                                            hallintayksikko-id
+                                                                                                            (konv/sql-timestamp alkupvm)
+                                                                                                            (konv/sql-timestamp loppupvm)))]
     (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
@@ -124,8 +124,8 @@
   ; FIXME Vaadi lukuoikeus koko maan urakoihin.
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
-                                                                                                   (konv/sql-timestamp alkupvm)
-                                                                                                   (konv/sql-timestamp loppupvm)))]
+                                                                                                      (konv/sql-timestamp alkupvm)
+                                                                                                      (konv/sql-timestamp loppupvm)))]
     (log/debug "Haettu koko maan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 (defrecord Raportit []

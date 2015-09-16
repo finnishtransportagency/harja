@@ -87,22 +87,10 @@
                  toteumat-tehtavatietoineen
                  (conj toteumat-tehtavatietoineen yhteensa))))))
 
-(defn muuta-materiaalitoteumienrivit-sarakkeiksi [rivit]
-  (mapv (fn [rivi]
-          {:otsikko (:materiaali_nimi rivi)
-           :nimi (keyword (:materiaali_nimi rivi))
-           :muokattava? (constantly false)
-           :tyyppi :string
-           :leveys "10%"})
-        rivit))
-(defn laske-materiaalien-yhteismaara [materiaalit]
-  (let [rivin-perustiedot {:id 999 :nimi "Yhteensä" :yhteenveto true}
-        lopullinen-rivi (reduce (fn [eka toka]
-                                  (assoc eka
-                                    (keyword (:materiaali_nimi toka))
-                                    (:kokonaismaara toka)))
-                                rivin-perustiedot materiaalit)]
-    lopullinen-rivi))
+(defn muodosta-materiaalisarakkeet [rivit]
+  (mapv (fn [materiaali]
+          {:otsikko materiaali :nimi (keyword materiaali) :muokattava? (constantly false) :tyyppi :string :leveys "33%"})
+        (distinct (mapv :materiaali_nimi rivit))))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       hallintayksikko-id (:id @nav/valittu-hallintayksikko)
@@ -155,15 +143,15 @@
                                        (if v-hal
                                          "Hallintayksikön materiaaliraportti"
                                          "Koko maan materiaaliraportti"))
-                        perussarakkeet [{:otsikko " " :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
-                        toteumasarakkeet (muuta-materiaalitoteumienrivit-sarakkeiksi @materiaalitoteumat)
-                        lopulliset-sarakkeet (reduce conj perussarakkeet toteumasarakkeet)
-                        yhteensa [(laske-materiaalien-yhteismaara @materiaalitoteumat)]]
+                        perussarakkeet [{:otsikko "Urakka" :nimi :urakka_nimi :muokattava? (constantly false) :tyyppi :string :leveys "33%"}]
+                        toteumasarakkeet (muodosta-materiaalisarakkeet @materiaalitoteumat)
+                        _ (log "[RAPORTIT] Toteumasarakkeet " (pr-str toteumasarakkeet))
+                        lopulliset-sarakkeet (reduce conj perussarakkeet toteumasarakkeet)]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
                      lopulliset-sarakkeet
-                     (if (> (count @materiaalitoteumat) 0) yhteensa [])]))}])
+                     [:asd 1]]))}]) ; FIXME Muodosta rivit
 
 (defn raporttinakyma []
   (komp/luo
