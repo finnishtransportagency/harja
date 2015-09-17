@@ -94,6 +94,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
+    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-hallintayksikolle-toimii
@@ -105,6 +106,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
+    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-koko-maalle-toimii
@@ -115,4 +117,5 @@
                                 {:alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 4))
+    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
