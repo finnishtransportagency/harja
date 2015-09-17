@@ -41,4 +41,30 @@ Oletuksena muodostuu A4 sivu.
          sisalto])
       [:fo:flow {:flow-name "xsl-region-body"}
        sisalto]]]))
-  
+
+(defn tietoja
+  "Tee 2-sarakkeinen Tietoja taulukko, jossa vasen on tietokentän nimi ja oikea on arvo.
+  Taulukon layout on automaattinen. Optiot on tällä hetkellä tyhjät, sinne voisi laittaa nimi/arvo tyylit."
+  [optiot & nimet-ja-arvot]
+
+  [:fo:table {:table-layout "fixed"}
+   [:fo:table-column]
+   [:fo:table-column]
+   [:fo:table-body
+    (for [[nimi arvo] (partition 2 nimet-ja-arvot)]
+      [:fo:table-row
+       [:fo:table-cell [:fo:block {:font-weight "bold"} (let [nimi (str nimi)]
+                                                          (if (.endsWith nimi ":")
+                                                            nimi
+                                                            (str nimi ":")))]]
+       [:fo:table-cell [:fo:block (str arvo)]]])]])
+
+(defn vali
+  "Tyhjä rivi"
+  []
+  [:fo:block "&#x00A0;"])
+
+(defn otsikko
+  "Väliotsikko"
+  [teksti]
+  [:fo:block {:font-size "16pt" :font-weight "bold"} teksti])

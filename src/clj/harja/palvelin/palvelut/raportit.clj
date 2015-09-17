@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :refer [rekisteroi-pdf-kasittelija! poista-pdf-kasittelija!]]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.toteumat :as toteumat]
@@ -12,6 +13,10 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
+
+            [harja.tyokalut.xsl-fo :as fo]
+
+            [harja.kyselyt.urakat :as qu]
             [clj-time.core :as t]
             [clj-time.coerce :as coerce])
   (:import (java.sql Timestamp)))
@@ -101,6 +106,7 @@
   (start [{raportointi :raportointi
            http        :http-palvelin
            db          :db
+           pdf-vienti  :pdf-vienti
            :as         this}]
 
     (julkaise-palvelut http
@@ -123,12 +129,38 @@
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
                          (hae-laskutusyhteenvedon-tiedot db user tiedot)))
+
+    (rekisteroi-pdf-kasittelija! pdf-vienti
+                                 :laskutusyhteenveto
+                                 ;; PENDING: tämä on karvalakki "raportti", jolla koestetaan PDF:n vientitoimintoa
+                                 ;; koko raportit ja niiden html/pdf näkymä tulee refaktoroida yhtenäiseen malliin
+                                 (fn [user params]
+                                   (let [{:keys [nimi alkupvm loppupvm urakoitsija_nimi]}
+                                         (some->> (get params "u")
+                                                  (Integer/parseInt)
+                                                  (qu/hae-urakka db)
+                                                  first)
+                                         pvm #(.format (java.text.SimpleDateFormat. "dd.MM.yyyy") %)]
+                                   (fo/dokumentti
+                                    {:header {:sisalto [:fo:block "HARJA: LASKUTUSYHTEENVETO"]}}
+                                    (fo/otsikko "Urakka")
+                                    (fo/tietoja
+                                     {}
+                                     "Urakka" nimi
+                                     "Aika" (str (pvm alkupvm) " \u2014 " (pvm loppupvm))
+                                     "Urakoitsija" urakoitsija_nimi)
+                                    (fo/vali)
+                                    (fo/otsikko "Raportti")
+                                    (fo/tietoja
+                                     {}
+                                     "Laskutusyhteenvedon kuukausi" (str (get params "vuosi") "/" (get params "kk")))))))
     this)
 
-  (stop [{http :http-palvelin :as this}]
+  (stop [{http :http-palvelin pdf-vienti :pdf-vienti :as this}]
     (poista-palvelut http
                      :hae-raportit
                      :yksikkohintaisten-toiden-kuukausiraportti
                      :suorita-raportti
                      :hae-laskutusyhteenvedon-tiedot)
+    (poista-pdf-kasittelija! pdf-vienti :laskutusyhteenveto)
     this))

@@ -232,7 +232,7 @@
                                 [:http-palvelin :db])
       :raportit (component/using
                  (raportit/->Raportit)
-                 [:http-palvelin :db :raportointi])
+                 [:http-palvelin :db :raportointi :pdf-vienti])
 
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)

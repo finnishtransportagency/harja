@@ -68,7 +68,7 @@
 
 (defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja q :query-string
                                               params :params :as req}]
-  (let [tyyppi (keyword (first (str/split q #"\&")))
+  (let [tyyppi (keyword (get params "_"))
         kasittelija (get kasittelijat tyyppi)]
     (if-not kasittelija
       {:status 404
