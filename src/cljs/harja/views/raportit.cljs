@@ -108,18 +108,18 @@
   [materiaalitoteumat]
   (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
         urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
-        urakkarivit (mapv (fn [urakka]
-                            (reduce ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
-                              (fn [eka toka]
-                                (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
-                              (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
-                                        (assoc eka (keyword toka) 0))
-                                      {:urakka_nimi urakka}
-                                      materiaali-nimet)
-                              (filter
-                                #(= (:urakka_nimi %) urakka)
-                                materiaalitoteumat)))
-                          urakka-nimet)]
+        urakkarivit (vec (map-indexed (fn [index urakka]
+                                        (reduce             ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
+                                          (fn [eka toka]
+                                            (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
+                                          (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
+                                                    (assoc eka (keyword toka) 0))
+                                                  {:id index :urakka_nimi urakka}
+                                                  materiaali-nimet)
+                                          (filter
+                                            #(= (:urakka_nimi %) urakka)
+                                            materiaalitoteumat)))
+                                      urakka-nimet))]
     urakkarivit))
 (defn muodosta-materiaaliraportin-yhteensa-rivi
   "Palauttaa rivin, jossa eri materiaalien määrät on summattu yhteen"
@@ -131,7 +131,7 @@
                                                     (filter
                                                       #(= (:materiaali_nimi %) toka)
                                                       materiaalitoteumat)))))
-            {:urakka_nimi "Yhteensä" :yhteenveto true}
+            {:id -1 :urakka_nimi "Yhteensä" :yhteenveto true}
             materiaalinimet)))
 (defonce materiaalitoteumat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
@@ -200,7 +200,7 @@
                         urakkarivit (muodosta-materiaaliraportin-rivit @materiaalitoteumat)
                         yhteensa-rivi (muodosta-materiaaliraportin-yhteensa-rivi @materiaalitoteumat)
                         lopulliset-rivit (conj urakkarivit yhteensa-rivi)
-                        _ (log "[RAPORTTI] Materiaaliraportin rivit: " (pr-str urakkarivit))]
+                        _ (log "[RAPORTTI] Materiaaliraportin rivit: " (pr-str lopulliset-rivit))]
                     [grid/grid
                      {:otsikko grid-otsikko
                       :tyhja   (if (empty? @materiaalitoteumat) "Ei raportoitavia materiaaleja.")}
