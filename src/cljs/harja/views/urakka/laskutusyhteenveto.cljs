@@ -6,7 +6,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-
+            [harja.ui.ikonit :as ikonit]
+            
             [harja.tiedot.urakka.laskutusyhteenveto :as laskutus-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -19,7 +20,8 @@
             [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -270,6 +272,17 @@
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
 
+         (when-let [kk @u/valittu-hoitokauden-kuukausi]
+           [:form {:style {:float "right"} :target "_blank" :method "GET"
+                   :action (k/pdf-url :laskutusyhteenveto)}
+            [:input {:type "hidden" :name "_" :value "laskutusyhteenveto"}]
+            [:input {:type "hidden" :name "u" :value (:id ur)}]
+            [:input {:type "hidden" :name "vuosi" :value (pvm/vuosi (first kk))}]
+            [:input {:type "hidden" :name "kk" :value (pvm/kuukausi (first kk))}]
+            [:button.btn.btn-primary {:type "submit"}
+             (ikonit/print)
+             " Lataa PDF"]])
+         
          (when (and ur @u/valittu-hoitokausi valittu-aikavali)
            [:span.tiedot
             [grid/grid
