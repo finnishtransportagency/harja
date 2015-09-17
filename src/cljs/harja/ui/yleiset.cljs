@@ -371,7 +371,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +korostuksen-kesto+ 4000)
 
-(defn taulukko2
+(defn kaksi-saraketta
   "Luo kaksi bootstrap-saraketta (nimeltä otsikko & arvo). Sarakkeille voi antaa tyypin ja leveyden."
   [otsikko-tyyppi-col otsikko-leveys-col arvo-tyypppi-col arvo-leveys-col & otsikot-ja-arvot]
   (let [otsikko-class (str "col-" otsikko-tyyppi-col "-" otsikko-leveys-col)

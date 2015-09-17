@@ -68,7 +68,7 @@
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
 
-        [yleiset/taulukko2 "sm" 6 "sm" 6
+        [yleiset/kaksi-saraketta "sm" 6 "sm" 6
          
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
