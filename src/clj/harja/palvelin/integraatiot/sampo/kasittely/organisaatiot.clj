@@ -20,7 +20,7 @@
 (defn tallenna-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
   (let [organisaatio-id (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id)))
         postinumero (merkkijono/leikkaa 5 postinumero)
-        y-tunnus (merkkijono/leikkaa 9 y-tunnus)]
+        y-tunnus (if (empty? y-tunnus) nil (merkkijono/leikkaa 9 y-tunnus))]
     (if organisaatio-id
       (do
         (paivita-organisaatio db organisaatio-id nimi y-tunnus katuosoite postinumero)
