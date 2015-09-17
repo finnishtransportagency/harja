@@ -24,8 +24,10 @@
 
 ;; Muokkaa tietuetta siten, että se vastaa json skemaa
 ;; Esimerkiksi koordinaatteja ja linkkejä ei ole toistaiseksi tarkoituskaan laittaa eteenpäin,
-;; vaan ne ovat 'future prooffausta'. Muut kentät saattavat olla sellaisia että ne oikeasti halutaan ottaa
-;; mukaan - tätä transduseria ei kannata tuhota, sillä tätä käytetään tietueen haussa sekä tietueiden haussa.
+;; vaan ne ovat 'future prooffausta'. Näiden poistaminen payloadista on kasattu tänne, jotta JOS joskus halutaankin
+;; palauttaa esim koordinaatit, ei tarvi kuin poistaa niiden dissoccaaminen täältä.
+;; Tietueille ja tietueelle tehdään myös muita samankaltaisia operaatiota, esim :tietue -> :varuste uudelleennimeäminen,
+;; mutta näitä operaatioita ei tehdä täällä em. syystä.
 (def puhdista-tietue-xf
   #(-> %
        (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
@@ -49,14 +51,14 @@
         {}))))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
-  (let [tr {:numero (get parametrit "numero")
-            :aet (get parametrit "aet")
-            :aosa (get parametrit "aosa")
-            :let (get parametrit "let")
-            :losa (get parametrit "losa")
-            :ajr (get parametrit "ajr")
-            :puoli (get parametrit "puoli")
-            :alkupvm (get parametrit "alkupvm")}
+  (let [tr (into {} (filter val {:numero  (get parametrit "numero")
+                                 :aet     (get parametrit "aet")
+                                 :aosa    (get parametrit "aosa")
+                                 :let     (get parametrit "let")
+                                 :losa    (get parametrit "losa")
+                                 :ajr     (get parametrit "ajr")
+                                 :puoli   (get parametrit "puoli")
+                                 :alkupvm (get parametrit "alkupvm")}))
         tietolajitunniste (get parametrit "tietolajitunniste")
         muutospvm (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
@@ -66,6 +68,8 @@
                                     (dissoc :onnistunut)
                                     (update-in [:tietueet] #(map puhdista-tietue-xf %))
                                     (update-in [:tietueet] #(into [] (remove nil? (remove empty? %))))
+                                    (update-in [:tietueet] (fn [tietue]
+                                                             (map #(clojure.set/rename-keys % {:tietue :varuste}) tietue)))
                                     (clojure.set/rename-keys {:tietueet :varusteet}))]
 
       ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet

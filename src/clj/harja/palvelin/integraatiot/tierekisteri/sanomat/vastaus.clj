@@ -93,5 +93,10 @@
     (-> vastaus
         (cond-> (z/xml1-> data :ns2:virheet) (assoc :virheet (parsi-virheet data)))
         (cond-> (z/xml1-> data :ns2:tietolajit) (assoc :tietolaji (parsi-tietolaji data)))
-        (cond-> (> (count (z/xml-> data :ns2:tietueet :ns2:tietue)) 1) (assoc :tietueet (vec (parsi-tietueet data))))
-        (cond-> (z/xml1-> data :ns2:tietueet) (assoc :tietue (first (parsi-tietueet data)))))))
+        (cond-> (> (count (z/xml-> data :ns2:tietueet :ns2:tietue)) 1) (assoc
+                                                                         :tietueet
+                                                                         (vec
+                                                                           (map
+                                                                             #(assoc {} :tietue %)
+                                                                             (parsi-tietueet data)))))
+        (cond-> (= (count (z/xml-> data :ns2:tietueet :ns2:tietue)) 1) (assoc :tietue (first (parsi-tietueet data)))))))
