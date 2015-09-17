@@ -123,8 +123,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
       (fn [_ _ uudet-optiot]
         (reset! optiot uudet-optiot))}
      
-     (komp/sisaan-ulos #(swap! nav/tarvitsen-karttaa conj :tr-karttavalitsin)
-                       #(swap! nav/tarvitsen-karttaa disj :tr-karttavalitsin))
+     (komp/sisaan #(nav/vaihda-kartan-koko! :M))
      (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
                        #(kartta/aseta-kursori! nil))
      (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
