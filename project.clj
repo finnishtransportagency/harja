@@ -100,7 +100,12 @@
                  [com.cemerick/clojurescript.test "0.3.3"]
                  
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
-                 [slingshot "0.12.2"]]
+                 [slingshot "0.12.2"]
+
+                 ;; PDF:n generointi
+                 [org.apache.xmlgraphics/fop "2.0"]
+                 
+                 ]
 
   :dev-dependencies [;; Selain REPL
 

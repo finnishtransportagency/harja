@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.raportit :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -15,9 +16,12 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :pdf-vienti (component/using
+                                     (pdf-vienti/luo-pdf-vienti)
+                                     [:http-palvelin])
                         :hae-laskutusyhteenvedon-tiedot (component/using
                                                           (->Raportit)
-                                                          [:http-palvelin :db])))))
+                                                          [:http-palvelin :db :pdf-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
