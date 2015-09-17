@@ -105,6 +105,8 @@ FROM toteuma_materiaali
                   AND urakka.id = :urakka
                   AND alkanut :: DATE >= :alku
                   AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
@@ -122,6 +124,8 @@ FROM toteuma_materiaali
                   AND urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
                   AND alkanut :: DATE >= :alku
                   AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
@@ -138,6 +142,8 @@ FROM toteuma_materiaali
   JOIN toteuma ON toteuma.id = toteuma
                   AND alkanut :: DATE >= :alku
                   AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille
