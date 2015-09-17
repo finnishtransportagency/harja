@@ -19,7 +19,8 @@
             [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -55,6 +56,14 @@
             tiedot @laskutusyhteenvedon-tiedot
             talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)
             valittu-aikavali @u/valittu-hoitokauden-kuukausi
+            laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
+                                    (pvm/kuukauden-nimi (pvm/kuukausi (first valittu-aikavali)))
+                                    "ta "
+                                    (pvm/vuosi (first valittu-aikavali)))
+            laskutetaan-teksti  (str "Laskutetaan "
+                                     (pvm/kuukauden-nimi (pvm/kuukausi (first valittu-aikavali)))
+                                     "ssa "
+                                     (pvm/vuosi (first valittu-aikavali)))
             taulukko (fn [otsikko otsikko-jos-tyhja
                           laskutettu-kentta laskutetaan-kentta
                           tiedot]
@@ -69,13 +78,13 @@
                            :tunniste     :nimi
                            :voi-muokata? false}
                           [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-                           {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
+                           {:otsikko laskutettu-teksti
                             :nimi    laskutettu-kentta :tyyppi :numero :leveys "20%"
                             :fmt     fmt/euro-opt :tasaa :oikea}
-                           {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-                            :nimi    laskutetaan-kentta :tyyppi :numero :leveys "20%"
+                           {:otsikko  laskutetaan-teksti
+                                          :nimi    laskutetaan-kentta :tyyppi :numero :leveys "20%"
                             :fmt     fmt/euro-opt :tasaa :oikea}
-                           {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+                           {:otsikko "Hoitokaudella yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
                             :hae     (fn [rivi] (+ (laskutettu-kentta rivi)
                                                    (laskutetaan-kentta rivi)))}]
 
