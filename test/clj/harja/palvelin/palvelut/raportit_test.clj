@@ -83,7 +83,8 @@
                                     {:urakka-id @oulun-alueurakan-2005-2010-id
                                      :alkupvm alkupvm
                                      :loppupvm loppupvm})]
-  (is (>= (count vastaus) 3))))
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:toteutunut_maara :lisatieto :alkanut :nimi :toimenpidekoodi_id])))
+    (is (>= (count vastaus) 3))))
 
 (deftest materiaaliraportin-muodostaminen-urakalle-toimii
   (let [alkupvm (java.sql.Date. 105 9 1)
@@ -94,7 +95,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
-    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-hallintayksikolle-toimii
@@ -106,7 +107,7 @@
                                  :alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 3))
-    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
 
 (deftest materiaaliraportin-muodostaminen-koko-maalle-toimii
@@ -117,5 +118,5 @@
                                 {:alkupvm alkupvm
                                  :loppupvm loppupvm})]
     (is (>= (count vastaus) 4))
-    (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
     (vaadi-urakan-samat-materiaalit-summattu vastaus)))
