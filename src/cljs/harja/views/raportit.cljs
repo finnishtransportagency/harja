@@ -109,7 +109,7 @@
   (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
         urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
         urakkarivit (vec (map-indexed (fn [index urakka]
-                                        (reduce             ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
+                                        (reduce ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
                                           (fn [eka toka]
                                             (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
                                           (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
