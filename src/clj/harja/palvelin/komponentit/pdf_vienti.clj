@@ -8,7 +8,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [hiccup.core :refer [html]]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [harja.tyokalut.xsl-fo :as fo])
   (:import (org.apache.fop.apps FopConfParser MimeConstants)
            (javax.xml.transform Transformer TransformerFactory)
            (javax.xml.transform.stream StreamSource StreamResult)
@@ -39,7 +40,7 @@
   (rekisteroi-pdf-kasittelija! [_ nimi kasittely-fn]
     (log/info "Rekisteröidään PDF käsittelijä: " nimi)
     (swap! pdf-kasittelijat assoc nimi kasittely-fn))
-
+  
   (poista-pdf-kasittelija! [_ nimi]
     (log/info "Poistetaan PDF käsittelijä: " nimi)
     (swap! pdf-kasittelijat dissoc nimi)))
@@ -78,40 +79,34 @@
              :headers {"Content-Type" "application/pdf"} ;; content-disposition!
              :body (java.io.ByteArrayInputStream. (hiccup->pdf fop-factory (kasittelija kayttaja params)))}
             (catch Exception e
-              (log/warn "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
+              (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
               {:status 500
                :body "Virhe PDF-muodostuksessa"}))))))
 
               
                                       
-(def test-fo
-  [:fo:root {:xmlns:fo "http://www.w3.org/1999/XSL/Format"}
+#_(defn- luo-testi-pdf
+  []
+  (with-open [out (io/output-stream (io/file "test.pdf"))]
+    (.write out
+            (hiccup->pdf (luo-fop-factory)
+                         (fo/dokumentti
+                          {:header {:extent "1cm"
+                                    :sisalto [:fo:block "Harja - järjestelmän tuloste"]}
+                           :footer {:extent "1cm"
+                                    :sisalto [:fo:block "FOOTERISSAHAN ME"]
+                                    }}
 
-   ;; Layoutin konffi
-   [:fo:layout-master-set
-    [:fo:simple-page-master {:master-name "first"
-                             :page-height "29.7cm" :page-width "21cm"
-                             :margin-top "1cm" :margin-bottom "2cm" :margin-left "2.5cm" :margin-right "2.5cm"}
-     [:fo:region-body {:margin-top "1cm"}]
-     [:fo:region-before {:extent "1cm"}]
-     [:fo:region-after {:extent "1.5cm"}]]]
+                          [:fo:block {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"]
+                          [:fo:block {:space-after.optimum "10pt" :font-family "Helvetica" :font-size "10pt"}
+                           [:fo:table
+                            [:fo:table-column {:column-width "10cm"}]
+                            [:fo:table-column {:column-width "10cm"}]
+                            [:fo:table-body
+                             (for [[eka toka] [["1" "jotain"] ["2" "ihan"] ["3" "muuta"]]]
+                               [:fo:table-row
+                                [:fo:table-cell
+                                 [:fo:block eka]]
+                                [:fo:table-cell
+                                 [:fo:block toka]]])]]])))))
 
-   ;; Itse sisältö
-   [:fo:page-sequence {:master-reference "first"}
-    [:fo:flow {:flow-name "xsl-region-body"}
-     [:fo:block {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"]
-     [:fo:block {:space-after.optimum "10pt" :font-family "Helvetica" :font-size "10pt"}
-      [:fo:table
-       [:fo:table-column {:column-width "10cm"}]
-       [:fo:table-column {:column-width "10cm"}]
-       [:fo:table-body
-        (for [[eka toka] [["1" "jotain"] ["2" "ihan"] ["3" "muuta"]]]
-          [:fo:table-row
-           [:fo:table-cell
-            [:fo:block eka]]
-           [:fo:table-cell
-            [:fo:block eka]]])]]]]]])
-
-   
-(defn rekisteroi-testi []
-  (rekisteroi-pdf-kasittelija! (:pdf-vienti harja.palvelin.main/harja-jarjestelma) :test (fn [k params] test-fo)))
