@@ -11,8 +11,8 @@
             [clojure.java.io :as io]
             [harja.tyokalut.xsl-fo :as fo])
   (:import (org.apache.fop.apps FopConfParser MimeConstants)
-           (javax.xml.transform Transformer TransformerFactory)
-           (javax.xml.transform.stream StreamSource StreamResult)
+           (javax.xml.transform TransformerFactory)
+           (javax.xml.transform.stream StreamSource)
            (javax.xml.transform.sax SAXResult)))
 
 (defprotocol PdfKasittelijat
@@ -85,28 +85,5 @@
 
               
                                       
-#_(defn- luo-testi-pdf
-  []
-  (with-open [out (io/output-stream (io/file "test.pdf"))]
-    (.write out
-            (hiccup->pdf (luo-fop-factory)
-                         (fo/dokumentti
-                          {:header {:extent "1cm"
-                                    :sisalto [:fo:block "Harja - järjestelmän tuloste"]}
-                           :footer {:extent "1cm"
-                                    :sisalto [:fo:block "FOOTERISSAHAN ME"]
-                                    }}
 
-                          [:fo:block {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"]
-                          [:fo:block {:space-after.optimum "10pt" :font-family "Helvetica" :font-size "10pt"}
-                           [:fo:table
-                            [:fo:table-column {:column-width "10cm"}]
-                            [:fo:table-column {:column-width "10cm"}]
-                            [:fo:table-body
-                             (for [[eka toka] [["1" "jotain"] ["2" "ihan"] ["3" "muuta"]]]
-                               [:fo:table-row
-                                [:fo:table-cell
-                                 [:fo:block eka]]
-                                [:fo:table-cell
-                                 [:fo:block toka]]])]]])))))
 
