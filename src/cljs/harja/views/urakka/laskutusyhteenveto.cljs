@@ -10,23 +10,16 @@
             [harja.tiedot.urakka.laskutusyhteenveto :as laskutus-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.valinnat :as valinnat-komp]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset]
-            [clojure.string :as str])
+            [harja.domain.skeema :refer [+tyotyypit+]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
-
-
-
 
 
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
@@ -45,7 +38,6 @@
                                                                                                    :aikavali-loppupvm aikavali-loppupvm
                                                                                                    :urakka-id         (:id ur)}))))
 
-(tarkkaile! "laskutusyhteenvedon-tiedot" laskutusyhteenvedon-tiedot)
 
 (defn laskutusyhteenveto
   []
