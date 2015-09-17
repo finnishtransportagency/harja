@@ -88,51 +88,39 @@
 
          (when (and ur @u/valittu-hoitokausi valittu-aikavali)
            [:span.tiedot
-
-            [taulukko "Kokonaishintaiset työt" "Ei kokonaishintaisia töitä"
-             :kht_laskutettu :kht_laskutetaan tiedot]
-
-            [taulukko "Yksikköhintaiset työt" "Ei yksikköhintaisia töitä"
-             :yht_laskutettu :yht_laskutetaan tiedot]
-
-            [taulukko "Sanktiot" "Ei sanktioita"
-             :sakot_laskutettu :sakot_laskutetaan tiedot]
-
-            [taulukko "Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
-             :suolasakot_laskutettu :suolasakot_laskutetaan talvihoidon-tiedot]
-
-            [taulukko "Muutos- ja lisätyöt" "Ei muutos- ja lisätöitä"
-             :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
-
-            [taulukko "Erilliskustannukset" "Ei erilliskustannuksia"
-             :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
-
-            [taulukko "Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
-             :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Yksikköhintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
-             :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Sanktioiden indeksitarkistukset" "Ei indeksitarkistuksia"
-             :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
-             :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus talvihoidon-tiedot]
-
-            [taulukko "Muutos- ja lisätöiden indeksitarkistukset" "Ei indeksitarkistuksia"
-             :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
-             :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
-             :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Kaikki indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
-             :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot]
-
-            [taulukko "Kaikki paitsi kok.hint. työt yhteensä" "Ei kustannuksia"
-             :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
-
-            [taulukko "Kaikki yhteensä" "Ei kustannuksia"
-             :kaikki_laskutettu :kaikki_laskutetaan tiedot]])]))))
+            (for [[otsikko tyhja laskutettu laskutetaan tiedot]
+                  [["Kokonaishintaiset työt" "Ei kokonaishintaisia töitä"
+                    :kht_laskutettu :kht_laskutetaan tiedot]
+                   ["Yksikköhintaiset työt" "Ei yksikköhintaisia töitä"
+                    :yht_laskutettu :yht_laskutetaan tiedot]
+                   ["Sanktiot" "Ei sanktioita"
+                    :sakot_laskutettu :sakot_laskutetaan tiedot]
+                   ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
+                    :suolasakot_laskutettu :suolasakot_laskutetaan talvihoidon-tiedot]
+                   ["Muutos- ja lisätyöt" "Ei muutos- ja lisätöitä"
+                    :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                   ["Erilliskustannukset" "Ei erilliskustannuksia"
+                    :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
+                   ["Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
+                   ["Yksikköhintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
+                   ["Sanktioiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
+                   ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
+                    :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus talvihoidon-tiedot]
+                   ["Muutos- ja lisätöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
+                   ["Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
+                   ["Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
+                    :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
+                   ["Kaikki indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
+                    :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot]
+                   ["Kaikki paitsi kok.hint. työt yhteensä" "Ei kustannuksia"
+                    :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
+                   ["Kaikki yhteensä" "Ei kustannuksia"
+                    :kaikki_laskutettu :kaikki_laskutetaan tiedot]
+                   ]]
+              ^{:key (str otsikko)}
+              [taulukko otsikko tyhja laskutettu laskutetaan tiedot])])]))))
