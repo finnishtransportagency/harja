@@ -48,13 +48,13 @@
                loppupvm (java.sql.Date. 106 10 30)
                res (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :urakan-erilliskustannukset +kayttaja-jvh+
-                                     {:urakka-id @oulun-alueurakan-id
+                                     {:urakka-id @oulun-alueurakan-2005-2010-id
                                       :alkupvm alkupvm
                                       :loppupvm loppupvm})
                oulun-alueurakan-toiden-lkm (ffirst (q
                                                      (str "SELECT count(*)
                                                        FROM erilliskustannus
-                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-id
+                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
                ") AND pvm >= '2005-10-01' AND pvm <= '2006-09-30'")))]
            (is (= (count res) oulun-alueurakan-toiden-lkm) "Erilliskustannusten määrä")))
 
@@ -66,7 +66,7 @@
                hoitokauden-loppupvm (java.sql.Date. 106 10 30) ;;30.9.2006
                toteuman-pvm (java.sql.Date. 105 11 12)
                toteuman-lisatieto "Testikeissin lisätieto"
-               ek {:urakka-id @oulun-alueurakan-id
+               ek {:urakka-id @oulun-alueurakan-2005-2010-id
                    :alkupvm hoitokauden-alkupvm
                    :loppupvm hoitokauden-loppupvm
                    :pvm toteuman-pvm :rahasumma 20000.0
@@ -75,7 +75,7 @@
                maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                        FROM erilliskustannus
-                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-id
+                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
                                          ") AND pvm >= '2005-10-01' AND pvm <= '2006-09-30'")))
                res (kutsu-palvelua (:http-palvelin jarjestelma)
                      :tallenna-erilliskustannus +kayttaja-jvh+ ek)
@@ -98,7 +98,7 @@
         hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
         hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto2"
-        tyo {:urakka-id @oulun-alueurakan-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
+        tyo {:urakka-id @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
              :alkanut tyon-pvm :paattynyt tyon-pvm
              :hoitokausi-aloituspvm hoitokausi-aloituspvm :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
              :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
@@ -108,7 +108,7 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                FROM toteuma
-                                              WHERE urakka = " @oulun-alueurakan-id "
+                                              WHERE urakka = " @oulun-alueurakan-2005-2010-id "
                                                     AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
                                                     AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo')
                                                     AND alkanut >= to_date('1-10-2005', 'DD-MM-YYYY')
@@ -140,7 +140,7 @@
         hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
         hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id @oulun-alueurakan-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
+        tyo {:urakka-id @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-paasopimuksen-id
              :alkanut tyon-pvm :paattynyt tyon-pvm
              :hoitokausi-aloituspvm hoitokausi-aloituspvm :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
              :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
@@ -151,7 +151,7 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                FROM toteuma
-                                              WHERE urakka = " @oulun-alueurakan-id "
+                                              WHERE urakka = " @oulun-alueurakan-2005-2010-id "
                                                     AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
                                                     AND tyyppi IN ('yksikkohintainen') AND lisatieto = '" toteuman-lisatieto "';")))
         lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -159,7 +159,7 @@
         ;;FIXME: tässä testissä voitaisiin testata myös hakupalvelu, ja varmistaa
         ;; että määrä lisäyksen jälkeen on yhden suurempi kuin ennen lisäystä
         #_maara-lisayksen-jalkeen #_(kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :urakan-toteutuneet-tehtavat +kayttaja-jvh+ {:urakka-id @oulun-alueurakan-id
+                                                :urakan-toteutuneet-tehtavat +kayttaja-jvh+ {:urakka-id @oulun-alueurakan-2005-2010-id
                                                                                              :sopimus-id @oulun-alueurakan-paasopimuksen-id
                                                                                              :alkupvm hoitokausi-aloituspvm
                                                                                              :loppupvm hoitokausi-lopetuspvm
@@ -169,7 +169,7 @@
     (is (= (get-in lisatty [:toteuma :lisatieto]) toteuman-lisatieto) "Tallennetun työn lisätieto")
     (is (= (get-in lisatty [:toteuma :suorittajan-nimi]) "Alihankkijapaja Ky") "Tallennetun työn suorittajan nimi")
     (is (= (get-in lisatty [:toteuma :suorittajan-ytunnus]) "123456-Y") "Tallennetun työn suorittajan y-tunnus")
-    (is (= (get-in lisatty [:toteuma :urakka-id]) @oulun-alueurakan-id) "Tallennetun työn urakan id")
+    (is (= (get-in lisatty [:toteuma :urakka-id]) @oulun-alueurakan-2005-2010-id) "Tallennetun työn urakan id")
     (is (= (get-in lisatty [:toteuma :urakka-id]) @oulun-alueurakan-paasopimuksen-id) "Tallennetun työn pääsopimuksen id")
     (is (= (get-in lisatty [:toteuma :tehtavat 0 :toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
     (is (= (get-in lisatty [:toteuma :tehtavat 0 :maara]) 333) "Tallennetun työn tehtävän määrä")
@@ -184,7 +184,7 @@
 
 ;; TODO implementoi..
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
-  (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka="@oulun-alueurakan-id)))
+  (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka="@oulun-alueurakan-2005-2010-id)))
         toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (java.util.Date. 105 11 24) :paattynyt (java.util.Date. 105 11 24)
                  :tyyppi nil, :suorittajan-nimi "UNIT TEST" :suorittajan-ytunnus 1234 :lisatieto "Unit test teki tämän"})
         tmt (atom [{:id -1 :materiaalikoodi 1 :maara 192837} {:materiaalikoodi 1 :maara 192837}])]
