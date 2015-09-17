@@ -47,6 +47,8 @@
 
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
 
+
+;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
   [])
 

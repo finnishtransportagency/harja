@@ -29,11 +29,11 @@
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-muut-tyot-haettu-oikein
          (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-id)
+                                      :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
                oulun-alueurakan-toiden-lkm (ffirst (q
                                                      (str "SELECT count(*)
                                                              FROM muutoshintainen_tyo
-                                                            WHERE urakka = " @oulun-alueurakan-id)))
+                                                            WHERE urakka = " @oulun-alueurakan-2005-2010-id)))
                ramppitehtavan-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='I rampit'")))
                ;; testidata.sta: {:loppupvm #inst "2010-09-29T21:00:00.000-00:00", :yksikko tiekm, :tehtava 1384,
                ;; :urakka 1, :yksikkohinta 4.5, :toimenpideinstanssi 1, :id 8,
@@ -51,11 +51,11 @@
 
 (deftest tallenna-muutoshintaiset-tyot-testi
   (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-id)
+                                             :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
         muutoshintaisten-toiden-maara-ennen-paivitysta (ffirst (q
                                        (str "SELECT count(*)
                                                        FROM muutoshintainen_tyo
-                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-id
+                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
                                             ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2010-09-30'")))
 
         muokattavan-tyon-tehtava (ffirst (q (str "select id from toimenpidekoodi where nimi = 'I rampit'")))
@@ -66,13 +66,13 @@
 
         muutoshintaiset-tyot-paivitetty (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
-                                                      {:urakka-id @oulun-alueurakan-id
+                                                      {:urakka-id @oulun-alueurakan-2005-2010-id
                                                        :tyot       [muokattava-tyo-uudet-arvot]})
         muokattu-tyo-paivitetty (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava) muutoshintaiset-tyot-paivitetty))
 
         alkuperaiset-arvot-palautettu (kutsu-palvelua (:http-palvelin jarjestelma)
                                                      :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
-                                                     {:urakka-id @oulun-alueurakan-id
+                                                     {:urakka-id @oulun-alueurakan-2005-2010-id
                                                       :tyot       [muokattava-tyo]})
         muokattu-tyo-palautuksen-jalkeen   (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) alkuperaiset-arvot-palautettu))]
 

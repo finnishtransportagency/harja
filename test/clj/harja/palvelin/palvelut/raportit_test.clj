@@ -1,13 +1,11 @@
 (ns harja.palvelin.palvelut.raportit-test
   (:require [clojure.test :refer :all]
 
-            [harja.kyselyt.urakat :as urk-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.raportit :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as tc]))
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -28,6 +26,13 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
+
+(defn vaadi-urakan-samat-materiaalit-summattu
+  "Tarkistaa, ettei joukossa ole saman urakan samoja materiaaleja (eli nämä on summattu yhteen)"
+  [materiaalitoteumat]
+  (is (= (count (keys (group-by
+                        #(select-keys % [:urakka_nimi :materiaali_nimi])
+                        materiaalitoteumat))) (count materiaalitoteumat))))
 
 (defn d [txt]
   (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") txt))
@@ -70,4 +75,48 @@
       (is (= (:toteutunut_maara (nth yhdistetyt-suolaukset 2)) 7))
       (is (= (:toteutunut_maara (first yhdistetyt-paikkaukset)) 111)))))
 
+(deftest yks-hint-toiden-raportin-muodostaminen-toimii
+  (let [alkupvm (java.sql.Date. 105 9 1)
+        loppupvm (java.sql.Date. 106 10 30)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :yksikkohintaisten-toiden-kuukausiraportti +kayttaja-jvh+
+                                    {:urakka-id @oulun-alueurakan-2005-2010-id
+                                     :alkupvm alkupvm
+                                     :loppupvm loppupvm})]
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:toteutunut_maara :lisatieto :alkanut :nimi :toimenpidekoodi_id])))
+    (is (>= (count vastaus) 3))))
 
+(deftest materiaaliraportin-muodostaminen-urakalle-toimii
+  (let [alkupvm (java.sql.Date. 105 9 1)
+        loppupvm (java.sql.Date. 106 10 30)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :materiaaliraportti-urakalle +kayttaja-jvh+
+                                {:urakka-id @oulun-alueurakan-2005-2010-id
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm})]
+    (is (>= (count vastaus) 3))
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
+
+(deftest materiaaliraportin-muodostaminen-hallintayksikolle-toimii
+  (let [alkupvm (java.sql.Date. 105 9 1)
+        loppupvm (java.sql.Date. 106 10 30)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :materiaaliraportti-hallintayksikolle +kayttaja-jvh+
+                                {:hallintayksikko-id @pohjois-pohjanmaan-hallintayksikon-id
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm})]
+    (is (>= (count vastaus) 3))
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
+
+(deftest materiaaliraportin-muodostaminen-koko-maalle-toimii
+  (let [alkupvm (java.sql.Date. 105 9 1)
+        loppupvm (java.sql.Date. 106 10 30)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :materiaaliraportti-koko-maalle +kayttaja-jvh+
+                                {:alkupvm alkupvm
+                                 :loppupvm loppupvm})]
+    (is (>= (count vastaus) 4))
+    (is (true? (sisaltaa-ainakin-sarakkeet? vastaus [:kokonaismaara :urakka_nimi :materiaali_nimi :materiaali_yksikko])))
+    (vaadi-urakan-samat-materiaalit-summattu vastaus)))
