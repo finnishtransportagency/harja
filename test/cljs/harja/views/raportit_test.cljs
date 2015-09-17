@@ -31,3 +31,13 @@
     (is (= (:NACL2 (first rivit)) 2))
     (is (= (:NACL (second rivit)) 1))
     (is (= (:NACL2 (second rivit)) 0))))
+
+
+(deftest materiaaliraportin-yhteensa-rivin-muodostus-toimii
+  (let [materiaalitoteumat [{:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL2" :kokonaismaara 2}
+                            {:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL" :kokonaismaara 1}
+                            {:urakka_nimi "Pirkanmaan raivausurakka 2130" :materiaali_nimi "NACL" :kokonaismaara 5}]
+        yhteensa (raportit/muodosta-materiaaliraportin-yhteensa-rivi materiaalitoteumat)]
+    (is (true? (map? yhteensa)))
+    (is (= (:NACL yhteensa) 6))
+    (is (= (:NACL2 yhteensa) 2))))
