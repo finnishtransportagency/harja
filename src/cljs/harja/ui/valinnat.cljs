@@ -7,7 +7,8 @@
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [clojure.string :as str]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -38,23 +39,9 @@
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
                          :format-fn  #(let [[alkupvm _] %
-                                            kk-numero (pvm/kuukausi alkupvm)
-                                            kk-teksti (case kk-numero
-                                                        1 "Tammikuu"
-                                                        2 "Helmikuu"
-                                                        3 "Maaliskuu"
-                                                        4 "Huhtikuu"
-                                                        5 "Toukokuu"
-                                                        6 "Kesäkuu"
-                                                        7 "Heinäkuu"
-                                                        8 "Elokuu"
-                                                        9 "Syyskuu"
-                                                        10 "Lokakuu"
-                                                        11 "Marraskuu"
-                                                        12 "Joulukuu"
-                                                        "Valitse")]
+                                            kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
                                        (if %
-                                         (str kk-teksti " " (pvm/vuosi alkupvm))
+                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))
                                          "Valitse"))
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
