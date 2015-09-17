@@ -15,11 +15,11 @@
 
 (defn kasittele-virheet [url tr tietolajitunniste muutospvm virheet]
   (throw+ {:type    :tierekisteri-kutsu-epaonnistui
-           :virheet [:viesti (str "Tietueiden haku epäonnistui (URL: " url ") tr-osoitteella: " (pr-str tr)
+           :virheet [{:viesti (str "Tietueiden haku epäonnistui (URL: " url ") tr-osoitteella: " (pr-str tr)
                                   " & tietolajitunnisteella: " tietolajitunniste
                                   " & muutospäivämäärällä: " muutospvm "."
                                   "Virheet: " (string/join virheet))
-                     :koodi :tietueiden-haku-epaonnistui]}))
+                     :koodi :tietueiden-haku-epaonnistui}]}))
 
 (defn kirjaa-varoitukset [url tr tietolajitunniste muutospvm virheet]
   (log/warn (str "Tietueiden haku palautti virheitä (URL: " url ") tr-osoitteella: " (pr-str tr)

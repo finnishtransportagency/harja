@@ -7,7 +7,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as string])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
@@ -45,10 +47,16 @@
                                     (clojure.set/rename-keys {:tietue :varuste}))]
 
       ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
-      ;; Tässä tapauksessa me palautamme tyhjän kartan.
-      (if (:tietue vastausdata)
-        muunnettu-vastausdata
-        {}))))
+      ;; Tässä tapauksessa me palautamme tyhjän kartan. Samalla tunnisteella voi myös virheellisesti löytyä
+      ;; useampi tietue, jolloin palautamme virheen.
+      (cond
+        (:tietueet vastausdata)
+        (throw+ {:type    :tierekisteri-kutsu-epaonnistui
+                 :virheet [{:viesti (str "Varusteen haku epäonnistui, koska tunniste " tunniste " palautti virheellisesti "
+                                         (count (:tietueet vastausdata)) " tietuetta.")
+                            :koodi  :tunniste-palautti-monta-tietuetta}]})
+        (:tietue vastausdata) muunnettu-vastausdata
+        :else {}))))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
   (let [tr (into {} (filter val {:numero  (get parametrit "numero")
