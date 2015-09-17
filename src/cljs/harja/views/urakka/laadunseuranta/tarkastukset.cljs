@@ -68,7 +68,7 @@
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
 
-        [yleiset/taulukko2 6 6
+        [yleiset/kaksi-saraketta "sm" 6 "sm" 6
          
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
@@ -92,10 +92,8 @@
             laadunseuranta/tarkastustyyppi]]]]
 
         (when @laadunseuranta/voi-kirjata?
-          [:div.row
-           [:div.col-md-10]
-           [:div.col-md-2 [napit/uusi "Uusi tarkastus"
-                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus)) {}]]])
+          [napit/uusi "Uusi tarkastus"
+                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus)) {}])
         
         [grid/grid
          {:otsikko "Tarkastukset"
