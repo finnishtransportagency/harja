@@ -144,9 +144,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
               v-ur @nav/valittu-urakka]
           (log "ZOOMAILLAAN, v-hal: " v-hal ", v-ur: " v-ur)
           (if-let [alue (and v-ur (:alue v-ur))]
-            (keskita-kartta-alueeseen! (geo/extent (:alue v-ur)))
+            (keskita-kartta-alueeseen! (geo/extent alue))
             (if-let [alue (and v-hal (:alue v-hal))]
-              (keskita-kartta-alueeseen! (geo/extent (:alue v-hal))))))))
+              (keskita-kartta-alueeseen! (geo/extent alue)))))))
 
 (defn kartta-openlayers []
   (let [hals @hal/hallintayksikot
