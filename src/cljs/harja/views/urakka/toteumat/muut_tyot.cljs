@@ -224,6 +224,7 @@
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
               :muokattava? (constantly false)})
            {:otsikko       "Sopimusnumero" :nimi :sopimus
+            :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta second
             :valinnat      (:sopimukset @nav/valittu-urakka)
@@ -231,17 +232,20 @@
             :leveys-col    3}
            {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
             :tyyppi        :valinta
+            :pakollinen?   true
             :valinta-nayta #(:tpi_nimi %)
             :valinnat      @u/urakan-toimenpideinstanssit
             :fmt           #(:tpi_nimi %)
             :leveys-col    3}
            {:otsikko       "Tyyppi" :nimi :tyyppi
             :tyyppi        :valinta
+            :pakollinen?   true
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (muun-tyon-tyypin-teksti %))
             :valinnat      +muun-tyon-tyypit+
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :leveys-col    3}
            {:otsikko       "Tehtävä" :nimi :tehtava
+            :pakollinen?   true
             :hae           #(get-in % [:tehtava :toimenpidekoodi])
             :valinta-arvo  #(:id (nth % 3))
             :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
@@ -265,12 +269,14 @@
              (lomake/ryhma
               "Toteutuneen työn tiedot"
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
+               :pakollinen?   true
                :tyyppi        :valinta
                :valinta-arvo  first
                :valinta-nayta second
                :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                :leveys-col 3}
               {:otsikko "Määrä" :nimi :maara :tyyppi :numero
+               :pakollinen? true
                :hae     #(get-in % [:tehtava :maara])
                :vihje   (if (= :paivanhinta (:hinnoittelu @muokattu))
                           "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
@@ -304,7 +310,7 @@
                  :hae     #(* (get-in % [:tehtava :maara]) (:yksikkohinta %))
                  :fmt   fmt/euro-opt
                  :leveys-col  3})
-              {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+              {:otsikko "Aloitus" :pakollinen? true :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :aseta (fn [rivi arvo]
                         (assoc
                           (if
@@ -317,7 +323,7 @@
                           arvo))
                :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-              {:otsikko     "Lopetus" :nimi :paattynyt :tyyppi :pvm
+              {:otsikko     "Lopetus" :pakollinen? true :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :leveys-col 2
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
@@ -392,7 +398,7 @@
              {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
              {:otsikko "Tehtävä" :tyyppi :string :nimi :tehtavan_nimi
               :hae     #(get-in % [:tehtava :nimi]) :leveys "25%"}
-             {:otsikko "Määrä" :tyyppi :string :nimi :maara
+             {:otsikko "Määrä" :pakollinen? true :tyyppi :string :nimi :maara
               :hae #(if (get-in % [:tehtava :maara]) (get-in % [:tehtava :maara]) "-")
               :leveys "10%"}
              {:otsikko "Yksikkö"
