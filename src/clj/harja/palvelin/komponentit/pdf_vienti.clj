@@ -45,12 +45,15 @@
     (log/info "Poistetaan PDF käsittelijä: " nimi)
     (swap! pdf-kasittelijat dissoc nimi)))
 
+
 (defn- luo-fop-factory []
-  (-> "fop/fop.xconf"
-      io/resource io/as-file
-      (FopConfParser.)
-      .getFopFactoryBuilder
-      .build))
+  (let [conf (io/resource "fop/fop.xconf")
+        conf-parser (FopConfParser. (io/input-stream conf)
+                                    (.toURI conf)
+                                    (org.apache.fop.apps.io.ResourceResolverFactory/createDefaultResourceResolver))]
+    (-> conf-parser
+        .getFopFactoryBuilder
+        .build)))
 
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))

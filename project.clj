@@ -216,5 +216,14 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             }
 
-
+  ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
+  ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
+  ;; ne pitää kopioida 
+  :manifest {"Specification-Title" "Java Advanced Imaging Image I/O Tools"
+             "Specification-Version" "1.1"
+             "Specification-Vendor" "Sun Microsystems, Inc."
+             "Implementation-Title" "com.sun.media.imageio"
+             "Implementation-Version" "1.1"
+             "Implementation-Vendor" "Sun Microsystems, Inc."
+             "Extension-Name" "com.sun.media.imageio"}
   )
