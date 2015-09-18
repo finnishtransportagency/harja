@@ -252,7 +252,7 @@
                                              (:selvitys-pyydetty havainto))
                      :selvitys-annettu (and (:uusi-kommentti havainto)
                                             (= :urakoitsija osapuoli)))
-          id (havainnot/luo-tai-paivita-havainto c user havainto)]
+          id (havainnot/luo-tai-paivita-havainto c user (assoc havainto :tekija "tilaaja"))]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
         (havainnot/kirjaa-havainnon-paatos! c
