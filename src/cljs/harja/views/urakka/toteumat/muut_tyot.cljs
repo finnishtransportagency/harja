@@ -321,13 +321,11 @@
                             rivi)
                           :alkanut
                           arvo))
-               :pakollinen? true
                :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                :varoita [[:urakan-aikana-ja-hoitokaudella]]}
               {:otsikko     "Lopetus" :pakollinen? true :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :leveys-col 2
-               :pakollinen? true
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
                          [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
               {:otsikko "Suorittaja" :nimi :suorittajan-nimi
