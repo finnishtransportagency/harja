@@ -100,7 +100,12 @@
                  [com.cemerick/clojurescript.test "0.3.3"]
                  
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
-                 [slingshot "0.12.2"]]
+                 [slingshot "0.12.2"]
+
+                 ;; PDF:n generointi
+                 [org.apache.xmlgraphics/fop "2.0"]
+                 
+                 ]
 
   :dev-dependencies [;; Selain REPL
 
@@ -211,5 +216,14 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             }
 
-
+  ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
+  ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
+  ;; ne pitää kopioida 
+  :manifest {"Specification-Title" "Java Advanced Imaging Image I/O Tools"
+             "Specification-Version" "1.1"
+             "Specification-Vendor" "Sun Microsystems, Inc."
+             "Implementation-Title" "com.sun.media.imageio"
+             "Implementation-Version" "1.1"
+             "Implementation-Vendor" "Sun Microsystems, Inc."
+             "Extension-Name" "com.sun.media.imageio"}
   )

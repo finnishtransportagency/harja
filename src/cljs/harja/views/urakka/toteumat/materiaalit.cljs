@@ -197,7 +197,7 @@
                   :virheet lomakkeen-virheet}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+           {:otsikko "Aloitus" :pakollinen? true :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita [[:urakan-aikana-ja-hoitokaudella]]
             :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))
             :aseta (fn [rivi arvo]
@@ -209,18 +209,18 @@
                          rivi)
                        :alkanut arvo))
             :leveys "30%"}
-           {:otsikko "Lopetus" :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
+           {:otsikko "Lopetus" :pakollinen? true :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                        [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
             :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :leveys "30%"}
            (when  (:jarjestelmanlisaama @muokattu)
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
-           {:otsikko "Materiaalit" :nimi :materiaalit  :komponentti [materiaalit-ja-maarat
+           {:otsikko "Materiaalit" :pakollinen? true :nimi :materiaalit  :komponentti [materiaalit-ja-maarat
                                                                      materiaalitoteumat-mapissa
                                                                      materiaalien-virheet
                                                                      (:jarjestelmanlisaama @muokattu)] :tyyppi :komponentti}
-           {:otsikko "Suorittaja" :tyyppi :string :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-           {:otsikko "Suorittajan y-tunnus" :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+           {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
            {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}]
           @muokattu]]))))
 

@@ -37,7 +37,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-ja-paivita-soratietarkastus
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
         soratietarkastus (assoc-in soratietarkastus [:havainto :kuvaus] kuvaus)
         hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
@@ -94,7 +94,7 @@
 ; FIXME Siivoa tallennettu data
 
 (deftest hae-havainnon-tiedot []
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-havainnon-tiedot +kayttaja-jvh+ {:urakka-id   urakka-id
                                                                       :havainto-id 1})]
@@ -103,7 +103,7 @@
     (is (>= (count (:kuvaus vastaus)) 10))))
 
 (deftest hae-urakan-havainnot []
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-havainnot +kayttaja-jvh+ {:listaus   :kaikki
                                                                       :urakka-id urakka-id
@@ -113,7 +113,7 @@
     (is (>= (count vastaus) 1))))
 
 (deftest hae-urakan-sanktiot []
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                      :alku      (java.sql.Date. 100 9 1)
@@ -128,7 +128,7 @@
     (is (>= (count vastaus) 9))))
 
 (deftest hae-urakan-tarkastukset []
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
                                                                          :alkupvm   (java.sql.Date. 100 9 1)
@@ -139,7 +139,7 @@
     (is (>= (count vastaus) 1))))
 
 (deftest hae-tarkastus []
-  (let [urakka-id (hae-oulun-alueurakan-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
                                                                :tarkastus-id 1})]
@@ -159,7 +159,7 @@
          [:havainto :tr :numero] [:havainto :tr :alkuosa] [:havainto :tr :loppuosa]
          [:havainto :tr :alkuetaisyys] [:havainto :tr :loppuetaisyys]]
         :hae-urakan-sanktiot
-        {:urakka-id (hae-oulun-alueurakan-id)
+        {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
          :alku      (java.sql.Date. 100 0 1)
          :loppu    (java.sql.Date. 110 0 1)
          :tpi 1})))

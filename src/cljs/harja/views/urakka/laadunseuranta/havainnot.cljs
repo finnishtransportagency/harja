@@ -310,12 +310,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
 
             [(when-not osa-tarkastusta?
-               {:otsikko    "Havainnon pvm ja aika"
-                :tyyppi     :pvm-aika
-                :nimi       :aika
-                :validoi    [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
-                :varoita    [[:urakan-aikana-ja-hoitokaudella]]
-                :leveys-col 5})
+               {:otsikko     "Havainnon pvm ja aika"
+                :tyyppi      :pvm-aika
+                :pakollinen? true
+                :nimi        :aika
+                :validoi     [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+                :varoita     [[:urakan-aikana-ja-hoitokaudella]]
+                :leveys-col  5})
 
              {:otsikko       "Tekijä" :nimi :tekija
               :tyyppi        :valinta
@@ -337,10 +338,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              (when-not osa-tarkastusta?
                {:otsikko     "Kohde" :tyyppi :string :nimi :kohde
                 :leveys-col  4
+                :pakollinen? true
                 :muokattava? muokattava?
                 :validoi     [[:ei-tyhja "Anna havainnon kohde"]]})
 
-             {:otsikko     "Kuvaus" :nimi :kuvaus :tyyppi :text
+             {:otsikko     "Kuvaus"
+              :nimi :kuvaus
+              :tyyppi :text
+              :pakollinen? true
               :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 

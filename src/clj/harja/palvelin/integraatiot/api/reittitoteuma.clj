@@ -35,7 +35,7 @@
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
         (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
-      (toteumat/luo-reitti-materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
+      (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
@@ -65,18 +65,18 @@
 
 (defn tallenna-toteuma-ja-reitti [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma (get-in data [:reittitoteuma :toteuma])
-          reitti (get-in data [:reittitoteuma :reitti])
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
-      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-      (log/debug "Aloitetaan toteuman tehtävien tallennus")
-      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman materiaalien tallennus")
-      (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-      (poista-toteuman-reitti transaktio toteuma-id)
-      (log/debug "Aloitetaan reitin tallennus")
-      (luo-reitti transaktio reitti toteuma-id))))
+                            (let [toteuma (get-in data [:reittitoteuma :toteuma])
+                                  reitti (get-in data [:reittitoteuma :reitti])
+                                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
+                              (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+                              (log/debug "Aloitetaan toteuman tehtävien tallennus")
+                              (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
+                              (log/debug "Aloitetaan toteuman materiaalien tallennus")
+                              (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
+                              (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
+                              (poista-toteuman-reitti transaktio toteuma-id)
+                              (log/debug "Aloitetaan reitin tallennus")
+                              (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

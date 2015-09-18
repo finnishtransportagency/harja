@@ -6,26 +6,24 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-
+            [harja.ui.ikonit :as ikonit]
+            
             [harja.tiedot.urakka.laskutusyhteenveto :as laskutus-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.valinnat :as valinnat-komp]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.asiakas.kommunikaatio :as k])
+
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
-
-
-
 
 
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
@@ -44,175 +42,6 @@
                                                                                                    :aikavali-loppupvm aikavali-loppupvm
                                                                                                    :urakka-id         (:id ur)}))))
 
-(tarkkaile! "laskutusyhteenvedon-tiedot" laskutusyhteenvedon-tiedot)
-
-(defn lista-kaikki-yhteensa [tiedot valittu-aikavali]
-  (let [kaikki-yhteenveto {:nimi                        "Kaikki yhteensä"
-                           :yhteenveto                  true
-                           :kaikki_laskutettu  (reduce + (map :kaikki_laskutettu tiedot))
-                           :kaikki_laskutetaan (reduce + (map :kaikki_laskutetaan tiedot))}]
-    [grid/grid
-     {:otsikko      "KAIKKI YHTEENSÄ"
-      :tyhja        "Ei kustannuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :kaikki_laskutettu :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :kaikki_laskutetaan :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:kaikki_laskutettu rivi)
-                              (:kaikki_laskutetaan rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot kaikki-yhteenveto))]))
-
-(defn lista-kaikki-paitsi-kok-hint-yhteensa [tiedot valittu-aikavali]
-  (let [kaikki-paitsi-kht-yhteenveto {:nimi                        "Kaikki yhteensä"
-                                      :yhteenveto                  true
-                                      :kaikki_paitsi_kht_laskutettu  (reduce + (map :kaikki_paitsi_kht_laskutettu tiedot))
-                                      :kaikki_paitsi_kht_laskutetaan (reduce + (map :kaikki_paitsi_kht_laskutetaan tiedot))}]
-    [grid/grid
-     {:otsikko      "Kaikki paitsi kok.hint. työt yhteensä"
-      :tyhja        "Ei kustannuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :kaikki_paitsi_kht_laskutettu :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :kaikki_paitsi_kht_laskutetaan :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:kaikki_paitsi_kht_laskutettu rivi)
-                              (:kaikki_paitsi_kht_laskutetaan rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot kaikki-paitsi-kht-yhteenveto))]))
-
-(defn lista-kaikki-indeksitarkastukset-yhteensa [tiedot valittu-aikavali]
-  (let [kaikki-ind-tar-yhteenveto {:nimi                        "Kaikki indeksitarkistukset yhteensä"
-                                   :yhteenveto                  true
-                                   :kaikki_laskutettu_ind_korotus  (reduce + (map :kaikki_laskutettu_ind_korotus tiedot))
-                                   :kaikki_laskutetaan_ind_korotus (reduce + (map :kaikki_laskutetaan_ind_korotus tiedot))}]
-    [grid/grid
-     {:otsikko      "Kaikki indeksitarkistukset yhteensä"
-      :tyhja        "Ei indeksitarkistuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :kaikki_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :kaikki_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:kaikki_laskutettu_ind_korotus rivi)
-                              (:kaikki_laskutetaan_ind_korotus rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot kaikki-ind-tar-yhteenveto))]))
-
-(defn lista-kaikki-paitsi-kht-ind-tar-yhteenveto [tiedot valittu-aikavali]
-  (let [kaikki-paitsi-kht-ind-tar-yhteenveto {:nimi                        "Muut kuin kok.hint. töiden indeksitarkistukset yhteensä"
-                                              :yhteenveto                  true
-                                              :kaikki_paitsi_kht_laskutettu_ind_korotus  (reduce + (map :kaikki_paitsi_kht_laskutettu_ind_korotus tiedot))
-                                              :kaikki_paitsi_kht_laskutetaan_ind_korotus (reduce + (map :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot))}]
-    [grid/grid
-     {:otsikko      "Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä"
-      :tyhja        "Ei indeksitarkistuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :kaikki_paitsi_kht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :kaikki_paitsi_kht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:kaikki_paitsi_kht_laskutettu_ind_korotus rivi)
-                              (:kaikki_paitsi_kht_laskutetaan_ind_korotus rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot kaikki-paitsi-kht-ind-tar-yhteenveto))]))
-
-(defn lista-erilliskustannusten-indeksitarkastukset [tiedot valittu-aikavali]
-  (let [erilliskustannukset-ind-tar-yhteenveto {:nimi                        "Erilliskustannusten indeksitarkistukset yhteensä"
-                                                :yhteenveto                  true
-                                                :erilliskustannukset_laskutettu_ind_korotus  (reduce + (map :erilliskustannukset_laskutettu_ind_korotus tiedot))
-                                                :erilliskustannukset_laskutetaan_ind_korotus (reduce + (map :erilliskustannukset_laskutetaan_ind_korotus tiedot))}]
-    [grid/grid
-     {:otsikko      "Erilliskustannusten indeksitarkistukset"
-      :tyhja        "Ei erilliskustannusten indeksitarkistuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :erilliskustannukset_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :erilliskustannukset_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:erilliskustannukset_laskutettu_ind_korotus rivi)
-                              (:erilliskustannukset_laskutetaan_ind_korotus rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot erilliskustannukset-ind-tar-yhteenveto))]))
-
-(defn lista-muutos-ja-lisatyot-indeksitarkastukset [tiedot valittu-aikavali]
-  (let [muutostyot-ind-tar-yhteenveto {:nimi                        "Muutos- ja lisätöiden indeksitarkistukset yhteensä"
-                                                :yhteenveto                  true
-                                                :muutostyot_laskutettu_ind_korotus  (reduce + (map :muutostyot_laskutettu_ind_korotus tiedot))
-                                       :muutostyot_laskutetaan_ind_korotus (reduce + (map :muutostyot_laskutetaan_ind_korotus tiedot))}]
-    [grid/grid
-     {:otsikko      "Muutos- ja lisätöiden indeksitarkistukset"
-      :tyhja        "Ei muutos- ja lisätöiden indeksitarkistuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :muutostyot_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :muutostyot_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:muutostyot_laskutettu_ind_korotus rivi)
-                              (:muutostyot_laskutetaan_ind_korotus rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot muutostyot-ind-tar-yhteenveto))]))
-
-(defn lista-erilliskustannukset [tiedot valittu-aikavali]
-  (let [erilliskustannukset-yhteenveto {:nimi                        "Erilliskustannukset yhteensä"
-                                        :yhteenveto                  true
-                                        :erilliskustannukset_laskutettu  (reduce + (map :erilliskustannukset_laskutettu tiedot))
-                                        :erilliskustannukset_laskutetaan (reduce + (map :erilliskustannukset_laskutetaan tiedot))}]
-    [grid/grid
-     {:otsikko      "Erilliskustannukset"
-      :tyhja        "Ei erilliskustannuksia"
-      :tunniste     :nimi
-      :rivin-luokka #(when (:yhteenveto %) " bold")
-      :voi-muokata? false}
-     [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-      {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-       :nimi    :erilliskustannukset_laskutettu :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-       :nimi    :erilliskustannukset_laskutetaan :tyyppi :numero :leveys "20%"
-       :fmt     fmt/euro-opt :tasaa :oikea}
-      {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-       :hae     (fn [rivi] (+ (:erilliskustannukset_laskutettu rivi)
-                              (:erilliskustannukset_laskutetaan rivi)))}]
-
-     (sort-by :yhteenveto (conj tiedot erilliskustannukset-yhteenveto))]))
 
 (defn laskutusyhteenveto
   []
@@ -221,244 +50,91 @@
     (fn []
       (let [ur @nav/valittu-urakka
             tiedot @laskutusyhteenvedon-tiedot
-            talvihoidon-tuotekoodi "23100"
-            talvihoidon-tiedot (filter #(= (:tuotekoodi %) talvihoidon-tuotekoodi) tiedot)
-            kht-yhteenveto {:nimi                        "Kokonaishintaiset työt yhteensä"
-                            :yhteenveto                  true
-                            :kht_laskutettu
-                                                         (reduce + (map :kht_laskutettu tiedot))
-                            :kht_laskutetaan (reduce + (map :kht_laskutetaan tiedot))}
+            talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)
+            valittu-aikavali @u/valittu-hoitokauden-kuukausi
+            laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
+                                    (pvm/kuukauden-nimi (pvm/kuukausi (first valittu-aikavali)))
+                                    "ta "
+                                    (pvm/vuosi (first valittu-aikavali)))
+            laskutetaan-teksti  (str "Laskutetaan "
+                                     (pvm/kuukauden-nimi (pvm/kuukausi (first valittu-aikavali)))
+                                     "ssa "
+                                     (pvm/vuosi (first valittu-aikavali)))
+            taulukko (fn [otsikko otsikko-jos-tyhja
+                          laskutettu-kentta laskutetaan-kentta
+                          tiedot]
+                       (let [yhteenveto {:nimi                        "Toimenpiteet yhteensä"
+                                         :yhteenveto                  true
+                                         laskutettu-kentta
+                                                                      (reduce + (map laskutettu-kentta tiedot))
+                                         laskutetaan-kentta (reduce + (map laskutetaan-kentta tiedot))}]
+                         [grid/grid
+                          {:otsikko      otsikko
+                           :tyhja        otsikko-jos-tyhja
+                           :tunniste     :nimi
+                           :voi-muokata? false}
+                          [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
+                           {:otsikko laskutettu-teksti
+                            :nimi    laskutettu-kentta :tyyppi :numero :leveys "20%"
+                            :fmt     fmt/euro-opt :tasaa :oikea}
+                           {:otsikko  laskutetaan-teksti
+                                          :nimi    laskutetaan-kentta :tyyppi :numero :leveys "20%"
+                            :fmt     fmt/euro-opt :tasaa :oikea}
+                           {:otsikko "Hoitokaudella yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
+                            :hae     (fn [rivi] (+ (laskutettu-kentta rivi)
+                                                   (laskutetaan-kentta rivi)))}]
 
-            yht-yhteenveto {:nimi            "Yksikköhintaiset työt yhteensä"
-                            :yhteenveto      true
-                            :yht_laskutettu
-                                             (reduce + (map :yht_laskutettu tiedot))
-                            :yht_laskutetaan (reduce + (map :yht_laskutetaan tiedot))}
-            kht-ind-tar-yhteenveto {:nimi                        "Kokonaishintaisten töiden indeksitarkistukset yhteensä"
-                                    :yhteenveto                  true
-                                    :kht_laskutettu_ind_korotus  (reduce + (map :kht_laskutettu_ind_korotus tiedot))
-                                    :kht_laskutetaan_ind_korotus (reduce + (map :kht_laskutetaan_ind_korotus tiedot))}
-            yht-ind-tar-yhteenveto {:nimi                        "Yksikköhintaisten töiden indeksitarkistukset yhteensä"
-                                    :yhteenveto                  true
-                                    :yht_laskutettu_ind_korotus  (reduce + (map :yht_laskutettu_ind_korotus tiedot))
-                                    :yht_laskutetaan_ind_korotus (reduce + (map :yht_laskutetaan_ind_korotus tiedot))}
-            sakot-yhteenveto  {:nimi                        "Sanktiot yhteensä"
-                               :yhteenveto                  true
-                               :sakot_laskutettu (reduce + (map :sakot_laskutettu tiedot))
-                               :sakot_laskutetaan (reduce + (map :sakot_laskutetaan tiedot))}
-            sakot-ind-tar-yhteenveto {:nimi                        "Sanktioiden indeksitarkistukset yhteensä"
-                                     :yhteenveto                  true
-                                     :sakot_laskutettu_ind_korotus  (reduce + (map :sakot_laskutettu_ind_korotus tiedot))
-                                     :sakot_laskutetaan_ind_korotus (reduce + (map :sakot_laskutetaan_ind_korotus tiedot))}
-            talvisuolasakot-yhteenveto {:nimi                        "Talvisuolasakko yhteensä"
-                                        :yhteenveto                  true
-                                        :suolasakot_laskutettu  (reduce + (map :suolasakot_laskutettu tiedot))
-                                        :suolasakot_laskutetaan (reduce + (map :suolasakot_laskutetaan tiedot))}
-
-            talvisuolasakot-ind-tar-yhteenveto {:nimi                        "Talvisuolasakon indeksitarkistukset yhteensä"
-                                                :yhteenveto                  true
-                                                :suolasakot_laskutettu_ind_korotus  (reduce + (map :suolasakot_laskutettu_ind_korotus tiedot))
-                                                :suolasakot_laskutetaan_ind_korotus (reduce + (map :suolasakot_laskutetaan_ind_korotus tiedot))}
-            muutostyot-yhteenveto {:nimi                        "Muutos- ja lisätyöt yhteensä"
-                                        :yhteenveto                  true
-                                        :muutostyot_laskutettu  (reduce + (map :muutostyot_laskutettu tiedot))
-                                        :muutostyot_laskutetaan (reduce + (map :muutostyot_laskutetaan tiedot))}
-
-                 valittu-aikavali @u/valittu-hoitokauden-kuukausi]
+                          (sort-by :yhteenveto (conj tiedot yhteenveto))]))]
         [:span.laskutusyhteenveto
          [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
 
+         (when-let [kk @u/valittu-hoitokauden-kuukausi]
+           [:form {:style {:float "right"} :target "_blank" :method "GET"
+                   :action (k/pdf-url :laskutusyhteenveto)}
+            [:input {:type "hidden" :name "_" :value "laskutusyhteenveto"}]
+            [:input {:type "hidden" :name "u" :value (:id ur)}]
+            [:input {:type "hidden" :name "vuosi" :value (pvm/vuosi (first kk))}]
+            [:input {:type "hidden" :name "kk" :value (pvm/kuukausi (first kk))}]
+            [:button.nappi-ensisijainen {:type "submit"}
+             (ikonit/print)
+             " Lataa PDF"]])
+         
          (when (and ur @u/valittu-hoitokausi valittu-aikavali)
            [:span.tiedot
-            [grid/grid
-             {:otsikko      "Kokonaishintaiset työt"
-              :tyhja        "Ei kokonaishintaisia töitä"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :kht_laskutettu :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :kht_laskutetaan :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:kht_laskutettu rivi)
-                                      (:kht_laskutetaan rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot kht-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Yksikköhintaiset työt"
-              :tyhja        "Ei yksikköhintaisia töitä"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :yht_laskutettu :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :yht_laskutetaan :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:yht_laskutettu rivi)
-                                      (:yht_laskutetaan rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot yht-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Sanktiot"
-              :tyhja        "Ei sanktioita"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :sakot_laskutettu :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :sakot_laskutetaan :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:sakot_laskutettu rivi)
-                                      (:sakot_laskutetaan rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot sakot-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Talvisuolasakko (autom. laskettu)"
-              :tyhja        "Ei talvisuolasakkoa"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :suolasakot_laskutettu :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :suolasakot_laskutetaan :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:suolasakot_laskutettu rivi)
-                                      (:suolasakot_laskutetaan rivi)))}]
-
-             (sort-by :yhteenveto (conj talvihoidon-tiedot talvisuolasakot-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Muutos- ja lisätyöt"
-              :tyhja        "Ei muutos- ja lisätöitä"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :muutostyot_laskutettu :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :muutostyot_laskutetaan :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:muutostyot_laskutettu rivi)
-                                      (:muutostyot_laskutetaan rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot muutostyot-yhteenveto))]
-
-            [lista-erilliskustannukset tiedot valittu-aikavali]
-            
-
-            [grid/grid
-             {:otsikko      "Kokonaishintaisten töiden indeksitarkistukset"
-              :tyhja        "Ei indeksitarkistuksia"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :kht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :kht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:kht_laskutettu_ind_korotus rivi)
-                                      (:kht_laskutetaan_ind_korotus rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot kht-ind-tar-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Yksikköhintaisten töiden indeksitarkistukset"
-              :tyhja        "Ei indeksitarkistuksia"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :yht_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :yht_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-opt :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:yht_laskutettu_ind_korotus rivi)
-                                      (:yht_laskutetaan_ind_korotus rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot yht-ind-tar-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Sanktioiden indeksitarkistukset"
-              :tyhja        "Ei sanktioiden indeksitarkistuksia"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :sakot_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :sakot_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:sakot_laskutettu_ind_korotus rivi)
-                                      (:sakot_laskutetaan_ind_korotus rivi)))}]
-
-             (sort-by :yhteenveto (conj tiedot sakot-ind-tar-yhteenveto))]
-
-            [grid/grid
-             {:otsikko      "Talvisuolasakon indeksitarkistus (autom. laskettu)"
-              :tyhja        "Ei talvisuolasakon indeksitarkistuksia"
-              :tunniste     :nimi
-              :rivin-luokka #(when (:yhteenveto %) " bold")
-              :voi-muokata? false}
-             [{:otsikko "Toimenpide" :nimi :nimi :tyyppi :string :leveys "40%"}
-              {:otsikko (str "Laskutettu hoitokaudella ennen " (pvm/pvm (first valittu-aikavali)))
-               :nimi    :suolasakot_laskutettu_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko (str "Laskutetaan " (pvm/pvm (first valittu-aikavali)) " - " (pvm/pvm (second valittu-aikavali)))
-               :nimi    :suolasakot_laskutetaan_ind_korotus :tyyppi :numero :leveys "20%"
-               :fmt     fmt/euro-indeksikorotus :tasaa :oikea}
-              {:otsikko "Yhteensä" :nimi :yhteensa :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt :tasaa :oikea
-               :hae     (fn [rivi] (+ (:suolasakot_laskutettu_ind_korotus rivi)
-                                      (:suolasakot_laskutetaan_ind_korotus rivi)))}]
-
-             (sort-by :yhteenveto (conj talvihoidon-tiedot talvisuolasakot-ind-tar-yhteenveto))]
-
-            [lista-muutos-ja-lisatyot-indeksitarkastukset tiedot valittu-aikavali]
-            
-
-            [lista-erilliskustannusten-indeksitarkastukset tiedot valittu-aikavali]
-            
-
-            [lista-kaikki-paitsi-kht-ind-tar-yhteenveto tiedot valittu-aikavali]
-         
-            [lista-kaikki-indeksitarkastukset-yhteensa tiedot valittu-aikavali]
-            
-
-            [lista-kaikki-paitsi-kok-hint-yhteensa tiedot valittu-aikavali]
-
-            [lista-kaikki-yhteensa tiedot valittu-aikavali]
-
-            ])]))))
+            (for [[otsikko tyhja laskutettu laskutetaan tiedot]
+                  [["Kokonaishintaiset työt" "Ei kokonaishintaisia töitä"
+                    :kht_laskutettu :kht_laskutetaan tiedot]
+                   ["Yksikköhintaiset työt" "Ei yksikköhintaisia töitä"
+                    :yht_laskutettu :yht_laskutetaan tiedot]
+                   ["Sanktiot" "Ei sanktioita"
+                    :sakot_laskutettu :sakot_laskutetaan tiedot]
+                   ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
+                    :suolasakot_laskutettu :suolasakot_laskutetaan talvihoidon-tiedot]
+                   ["Muutos- ja lisätyöt" "Ei muutos- ja lisätöitä"
+                    :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                   ["Erilliskustannukset" "Ei erilliskustannuksia"
+                    :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
+                   ["Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
+                   ["Yksikköhintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
+                   ["Sanktioiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
+                   ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
+                    :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus talvihoidon-tiedot]
+                   ["Muutos- ja lisätöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
+                   ["Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
+                    :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
+                   ["Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
+                    :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
+                   ["Kaikki indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
+                    :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot]
+                   ["Kaikki paitsi kok.hint. työt yhteensä" "Ei kustannuksia"
+                    :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
+                   ["Kaikki yhteensä" "Ei kustannuksia"
+                    :kaikki_laskutettu :kaikki_laskutetaan tiedot]]]
+              ^{:key (str otsikko)}
+              [taulukko otsikko tyhja laskutettu laskutetaan tiedot])])]))))

@@ -386,6 +386,7 @@ INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materia
 INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Erityisalueet NaCl-liuos', 't', 'hoito'::urakkatyyppi, true, 'talvisuola'::materiaalityyppi);
 INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Hiekoitushiekka', 't', 'hoito'::urakkatyyppi, false, 'muu'::materiaalityyppi);
 INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Kaliumformiaatti', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
+INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Talvisuola NaCl, rakeinen', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
 
 -- Materiaalin käytöt
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, null, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);

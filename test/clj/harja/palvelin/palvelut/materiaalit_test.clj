@@ -55,7 +55,7 @@
   (is (oikeat-sarakkeet-palvelussa?
         [:id :alkupvm :loppupvm :maara :sopimus [:materiaali :id] [:materiaali :nimi] [:materiaali :yksikko]
          :kokonaismaara]
-        :hae-urakan-materiaalit @oulun-alueurakan-id)))
+        :hae-urakan-materiaalit @oulun-alueurakan-2005-2010-id)))
 
 (deftest hae-urakan-toteumat-materiaalille-sarakkeet
   (let [tunnisteet
@@ -135,11 +135,11 @@
   (let [] (is true)))
 
 (deftest tallenna-toteuma-materiaaleja-test
-  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-id" LIMIT 1")))
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id" LIMIT 1")))
         vanha-maara 12398751
         uusi-maara 12
         toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1} {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
-        parametrit {:toteumamateriaalit @toteumamateriaalit :urakka-id @oulun-alueurakan-id :sopimus sopimus}
+        parametrit {:toteumamateriaalit @toteumamateriaalit :urakka-id @oulun-alueurakan-2005-2010-id :sopimus sopimus}
         hae-materiaalitoteumien-maara (fn [id] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali
                                                                 WHERE poistettu IS NOT TRUE AND toteuma="id))))
         vanhat-materiaalitoteumat-lukumaara (hae-materiaalitoteumien-maara toteuma_id)

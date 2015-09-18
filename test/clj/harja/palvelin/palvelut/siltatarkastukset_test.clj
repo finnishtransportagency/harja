@@ -26,7 +26,7 @@
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
                                      :listaus :kaikki})
         joutsensilta (nimella sillat "Joutsensilta")]
     (is joutsensilta "Joutsensilta löytyi")
@@ -34,7 +34,7 @@
 
 (deftest kempeleen-testisillan-tarkastus
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
                                      :listaus :kaikki})
         kempele (nimella sillat "Kempeleen testisilta")]
     (is kempele "Kempeleen testisilta löytyy")
@@ -42,7 +42,7 @@
 
 (deftest puutteellisia-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
                                      :listaus :puutteet})]
     (is (nimella sillat "Kempeleen testisilta"))
     (is (nimella sillat "Oulujoen silta"))
@@ -50,7 +50,7 @@
 
 (deftest korjattuja-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
                                      :listaus :korjatut})
         kajaanintie (nimella sillat "Kajaanintien silta")]
     (is kajaanintie)

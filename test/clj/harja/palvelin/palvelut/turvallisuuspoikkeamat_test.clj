@@ -34,7 +34,7 @@
            [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]
 
           :hae-turvallisuuspoikkeamat
-          {:urakka-id @oulun-alueurakan-id
+          {:urakka-id @oulun-alueurakan-2005-2010-id
            :alku      (java.sql.Date. 105 9 1)
            :loppu     (java.sql.Date. 106 8 30)}))))
 
@@ -47,7 +47,7 @@
     (u (str "DELETE FROM turvallisuuspoikkeama WHERE id="id))))
 
 (deftest tallenna-turvallisuuspoikkeama-test
-  (let [tp {:urakka    @oulun-alueurakan-id
+  (let [tp {:urakka    @oulun-alueurakan-2005-2010-id
             :tapahtunut (java.sql.Date. 105 9 1)
             :paattynyt (java.sql.Date. 105 9 1)
             :kasitelty (java.sql.Date. 105 9 1)

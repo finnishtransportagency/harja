@@ -345,7 +345,7 @@
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :tyyppi :pvm :leveys-col 2
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm :leveys-col 2
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
                         "Tälle päivälle on jo kirjattu tarkastus.")]
