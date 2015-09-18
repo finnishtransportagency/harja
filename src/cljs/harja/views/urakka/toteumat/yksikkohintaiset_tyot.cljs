@@ -160,7 +160,7 @@
               :muokattava? (constantly false)
               :vihje       "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu."})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+           {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta   (fn [rivi arvo]
                        (assoc
                          (if
@@ -173,9 +173,9 @@
                          arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-           {:otsikko "Lopetus" :nimi :paattynyt :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
+           {:otsikko "Lopetus" :nimi :paattynyt :pakollinen? true :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                                                                                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
