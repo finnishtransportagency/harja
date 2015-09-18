@@ -135,7 +135,6 @@
                    ["Kaikki paitsi kok.hint. työt yhteensä" "Ei kustannuksia"
                     :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
                    ["Kaikki yhteensä" "Ei kustannuksia"
-                    :kaikki_laskutettu :kaikki_laskutetaan tiedot]
-                   ]]
+                    :kaikki_laskutettu :kaikki_laskutetaan tiedot]]]
               ^{:key (str otsikko)}
               [taulukko otsikko tyhja laskutettu laskutetaan tiedot])])]))))
