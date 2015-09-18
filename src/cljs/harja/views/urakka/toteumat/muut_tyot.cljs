@@ -275,7 +275,7 @@
                :vihje   (if (= :paivanhinta (:hinnoittelu @muokattu))
                           "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
                           ei vaikuta kokonaishintaan."
-                          "Käytät sopimushintaa. Kokonaiskustannus on yksikköhinta kerrottuna tehdyn työn määrällä.")
+                          "Käytät muutoshintaa. Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä.")
                :aseta   (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :validoi (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                           [[:ei-tyhja "Määrä antamatta."]])
@@ -291,7 +291,7 @@
                 {:otsikko     "Sopimushinta" :nimi :yksikkohinta
                  :tyyppi      :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
                  :vihje       (if (:yksikkohinta-suunniteltu? @muokattu)
-                                "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelu > Muut työt -osiosta."
+                                "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
                                 "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
                                 varten Suunnittelu > Muut työt -osioon.")
                  :muokattava? #(not (:yksikkohinta-suunniteltu? %))
@@ -315,11 +315,13 @@
                             rivi)
                           :alkanut
                           arvo))
+               :pakollinen? true
                :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                :varoita [[:urakan-aikana-ja-hoitokaudella]]}
               {:otsikko     "Lopetus" :nimi :paattynyt :tyyppi :pvm
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :leveys-col 2
+               :pakollinen? true
                :validoi [[:ei-tyhja "Valitse päivämäärä"]
                          [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
               {:otsikko "Suorittaja" :nimi :suorittajan-nimi
