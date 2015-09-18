@@ -66,7 +66,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
               (if (= kanava vkm-haku)
                 ;; Saatiin VKM vastaus paikkahakuun, käsittele se
                 (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo]
+                      osoite arvo] 
                   (if (vkm/virhe? osoite)
                     (do (reset! virhe (vkm/virhe osoite))
                         (recur nil))

@@ -77,7 +77,7 @@ Palautettavassa datassa:
 (defn virhe?
   "Tarkistaa epäonnistuiko VKM kutsu"
   [tulos]
-  (contains? tulos "virhe"))
+  (contains? tulos :virhe))
 
 
 (defn tieosoite->viiva
@@ -98,7 +98,7 @@ Jos tietä ei löydy, palauttaa VKM:n palauttaman virheen."
 
 
 (defn virhe [tulos]
-  (get tulos "virhe"))
+  "Pisteelle ei löydy tietä")
 
 (defn tieosoite->sijainti
   "Kutsuu VKM:n kautta tierekisteriosoitetta ja yrittää löytää parhaan sijainnin. 
