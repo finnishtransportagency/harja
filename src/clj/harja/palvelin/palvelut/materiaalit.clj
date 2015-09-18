@@ -63,8 +63,8 @@
     (log/debug "Hae toteuman materiaalitiedot:")
     tulos))
 
-  
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit] :as tiedot}]
+
+(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi materiaalit] :as tiedot}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
@@ -72,9 +72,17 @@
           vanhat-materiaalit (ryhmittele
                               (filter #(= sopimus-id (:sopimus %))
                                       (hae-urakan-materiaalit c user urakka-id)))]
+      ;; Ei materiaaleja, poista kaikki urakan materiaalit
+      (when (empty? materiaalit)
+        (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan urakan hoitokauden materiaalit")
+        (log/debug "Hoitokausi: " (pr-str hoitokausi))
+        (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                            urakka-id sopimus-id
+                                            (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))
+
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
         (log/debug "PÄIVITETÄÄN HOITOKAUDEN " hoitokausi " materiaalit")
-        
+
         (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
@@ -97,8 +105,8 @@
                   :when (not (materiaalit-sisaan avain))]
             (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
             (q/poista-materiaalinkaytto-id! c (:id user) id))
-          
-      
+
+
           ;; Käydään läpi frontin lähettämät uudet materiaalit
           ;; Jos materiaali on kannassa, päivitetään sen määrä tarvittaessa
           ;; Jos materiaali ei ole kannassa, syötetään se uutena
@@ -113,13 +121,13 @@
                     (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
                         (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
                         )))
-          
+
               (let [{:keys [alkupvm loppupvm maara materiaali pohjavesialue]} materiaali]
                 (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
                 (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
                                     urakka-id sopimus-id (:id pohjavesialue) (:id user)))))))
-          
-          
+
+
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi
       (hae-urakan-materiaalit c user urakka-id))))
 
@@ -214,7 +222,7 @@
                                                            (:hk-alku tiedot)
                                                            (:hk-loppu tiedot)
                                                            (:sopimus tiedot))))
-                           
+
     this)
 
   (stop [this]
@@ -227,5 +235,5 @@
                      :hae-urakassa-kaytetyt-materiaalit
                      :poista-toteuma-materiaali!
                      :tallenna-toteuma-materiaaleja!)
-                    
+
     this))

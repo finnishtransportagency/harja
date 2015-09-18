@@ -49,13 +49,14 @@
                      (<! (k/post! :hae-urakan-materiaalit urakka-id)))))
     ch))
  
-(defn tallenna [urakka-id sopimus-id materiaalit] 
+(defn tallenna [urakka-id sopimus-id hoitokausi materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
   (let [ch (chan)]
     (go (>! ch (into []
                      (<! (k/post! :tallenna-urakan-materiaalit
                                   {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
+                                   :hoitokausi hoitokausi
                                    :materiaalit (filter #(or (:pohjavesialue %)
                                                              (not (nil? (:maara %)))) materiaalit)})))))
     ch))

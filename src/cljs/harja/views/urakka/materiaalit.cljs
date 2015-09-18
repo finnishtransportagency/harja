@@ -251,6 +251,7 @@
                                       _ (logt rivit)
                                       uudet-materiaalit (<! (t/tallenna (:id ur)
                                                                         (first @u/valittu-sopimusnumero)
+                                                                        @u/valittu-hoitokausi
                                                                         rivit))]
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
