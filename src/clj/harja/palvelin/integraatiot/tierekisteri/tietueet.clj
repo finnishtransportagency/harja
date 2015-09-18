@@ -54,11 +54,3 @@
                       kutsudata
                       (fn [vastaus-xml] (kasittele-vastaus palvelu-url tr tietolaji muutospvm vastaus-xml)))]
     vastausdata))
-
-(defn kutsu [tr tietolaji muutospvm]
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (hae-tietueet integraatioloki
-                "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
-                tr tietolaji muutospvm)))
