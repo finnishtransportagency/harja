@@ -479,7 +479,7 @@ BEGIN
        WHERE ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
              AND ek.toimenpideinstanssi = t.tpi
              AND ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm
-             AND ek.pvm <= aikavali_alkupvm
+             AND ek.pvm < aikavali_alkupvm
     LOOP
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutettu.pvm) :: INTEGER),
