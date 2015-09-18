@@ -193,7 +193,7 @@ BEGIN
                 WHERE yht.urakka = ur
                       AND tot.urakka = ur
                       AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-                      AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
+                      AND tot.alkanut < aikavali_alkupvm
                 GROUP BY tot.alkanut, tt.toimenpidekoodi, tot.id
     LOOP
       SELECT *
@@ -232,7 +232,6 @@ BEGIN
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
-          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
     GROUP BY tot.alkanut, tt.toimenpidekoodi, tot.id
     LOOP
       RAISE NOTICE 'yhti_laskutetaan: %', yhti_laskutetaan;
@@ -366,7 +365,7 @@ BEGIN
                       AND tt.paivan_hinta IS NULL
                       AND tot.urakka = ur
                       AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-                      AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
+                      AND tot.alkanut < aikavali_alkupvm
                 GROUP BY tot.alkanut
     LOOP
       SELECT *
@@ -391,7 +390,7 @@ BEGIN
     WHERE tt.paivan_hinta IS NOT NULL
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
-          AND tot.alkanut <= aikavali_alkupvm AND tot.paattynyt <= aikavali_alkupvm
+          AND tot.alkanut < aikavali_alkupvm
 
     INTO muutostyot_laskutettu_paivanhinnalla;
     muutostyot_laskutettu_paivanhinnalla := COALESCE(muutostyot_laskutettu_paivanhinnalla, 0.0);
@@ -420,7 +419,6 @@ BEGIN
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
-          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
     GROUP BY tot.alkanut
     LOOP
 
@@ -448,7 +446,6 @@ BEGIN
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
-          AND tot.paattynyt >= aikavali_alkupvm AND tot.paattynyt <= aikavali_loppupvm
 
     INTO muutostyot_laskutetaan_paivanhinnalla;
     muutostyot_laskutetaan_paivanhinnalla := COALESCE(muutostyot_laskutetaan_paivanhinnalla, 0.0);

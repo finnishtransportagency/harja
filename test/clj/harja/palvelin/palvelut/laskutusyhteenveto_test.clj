@@ -55,12 +55,12 @@
                                :erilliskustannukset_laskutettu                  1000.0
                                :erilliskustannukset_laskutettu_ind_korotettuna  990.0
                                :erilliskustannukset_laskutettu_ind_korotus      -10.0
-                               :kaikki_laskutetaan                              8229.68
-                               :kaikki_laskutetaan_ind_korotus                  449.68000000000006
+                               :kaikki_laskutetaan                              9291.68
+                               :kaikki_laskutetaan_ind_korotus                  511.68000000000006
                                :kaikki_laskutettu                               40923.9
                                :kaikki_laskutettu_ind_korotus                   1823.9
-                               :kaikki_paitsi_kht_laskutetaan                   4729.68
-                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       232.68000000000006
+                               :kaikki_paitsi_kht_laskutetaan                   5791.68
+                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       294.68000000000006
                                :kaikki_paitsi_kht_laskutettu                    5923.9
                                :kaikki_paitsi_kht_laskutettu_ind_korotus        150.9
                                :kht_laskutetaan                                 3500.0
@@ -69,9 +69,9 @@
                                :kht_laskutettu                                  35000.0
                                :kht_laskutettu_ind_korotettuna                  36673.0
                                :kht_laskutettu_ind_korotus                      1673.0
-                               :muutostyot_laskutetaan                          0.0
-                               :muutostyot_laskutetaan_ind_korotettuna          0.0
-                               :muutostyot_laskutetaan_ind_korotus              0.0
+                               :muutostyot_laskutetaan                          1000.0
+                               :muutostyot_laskutetaan_ind_korotettuna          1062.0
+                               :muutostyot_laskutetaan_ind_korotus              62.0
                                :muutostyot_laskutettu                           1000.0
                                :muutostyot_laskutettu_ind_korotettuna           1059.0
                                :muutostyot_laskutettu_ind_korotus               59.0
@@ -105,26 +105,26 @@
                                       :erilliskustannukset_laskutettu                  0.0
                                       :erilliskustannukset_laskutettu_ind_korotettuna  0.0
                                       :erilliskustannukset_laskutettu_ind_korotus      0.0
-                                      :kaikki_laskutetaan                              9248.0
+                                      :kaikki_laskutetaan                              10248.0
                                       :kaikki_laskutetaan_ind_korotus                  248.0
-                                      :kaikki_laskutettu                               4265.0
-                                      :kaikki_laskutettu_ind_korotus                   65.0
-                                      :kaikki_paitsi_kht_laskutetaan                   8248.0
+                                      :kaikki_laskutettu                               5324.0
+                                      :kaikki_laskutettu_ind_korotus                   124.0
+                                      :kaikki_paitsi_kht_laskutetaan                   10248.0
                                       :kaikki_paitsi_kht_laskutetaan_ind_korotus       248.0
-                                      :kaikki_paitsi_kht_laskutettu                    4265.0
-                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        65.0
+                                      :kaikki_paitsi_kht_laskutettu                    5324.0
+                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        124.0
                                       :kht_laskutetaan                                 0.0
                                       :kht_laskutetaan_ind_korotettuna                 0.0
                                       :kht_laskutetaan_ind_korotus                     0.0
                                       :kht_laskutettu                                  0.0
                                       :kht_laskutettu_ind_korotettuna                  0.0
                                       :kht_laskutettu_ind_korotus                      0.0
-                                      :muutostyot_laskutetaan                          6000.0
-                                      :muutostyot_laskutetaan_ind_korotettuna          6062.0
+                                      :muutostyot_laskutetaan                          7000.0
+                                      :muutostyot_laskutetaan_ind_korotettuna          7062.0
                                       :muutostyot_laskutetaan_ind_korotus              62.0
-                                      :muutostyot_laskutettu                           2000.0
-                                      :muutostyot_laskutettu_ind_korotettuna           2000.0
-                                      :muutostyot_laskutettu_ind_korotus               0.0
+                                      :muutostyot_laskutettu                           3000.0
+                                      :muutostyot_laskutettu_ind_korotettuna           3059.0
+                                      :muutostyot_laskutettu_ind_korotus               59.0
                                       :nimi                                            "Liikenneympäristön hoito"
                                       :sakot_laskutetaan                               0.0
                                       :sakot_laskutetaan_ind_korotettuna               0.0
@@ -199,9 +199,3 @@
       (is (= odotetut-talvihoito haetut-tiedot-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
       (is (= odotetut-liikenneymparisto haetut-tiedot-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
       (is (= odotetut-soratiet haetut-tiedot-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
-
-
-
-;; FIXME: Muista varmistaa että muutos- ja lisätöiden indeksikorotus
-;; otetaan mukaan kuukausirajalla 1.8.2015. Vaikuttaa että näin ei tapahdu.
-
