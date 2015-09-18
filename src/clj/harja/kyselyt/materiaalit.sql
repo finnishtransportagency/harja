@@ -218,7 +218,6 @@ UPDATE materiaalin_kaytto
  WHERE id = :id;
  
 -- name: poista-pohjavesialueen-materiaalinkaytto!
--- Poistaa materiaalin käytön pohjavesialueella
 UPDATE materiaalin_kaytto
    SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = true
  WHERE urakka = :urakka AND sopimus = :sopimus
