@@ -193,18 +193,21 @@
                                 (ikonit/trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
+            :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta second
             :valinnat      (:sopimukset @nav/valittu-urakka)
             :fmt           second
             :leveys-col    3}
            {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
+            :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(:tpi_nimi %)
             :valinnat      @u/urakan-toimenpideinstanssit
             :fmt           #(:tpi_nimi %)
             :leveys-col    3}
            {:otsikko       "Tyyppi" :nimi :tyyppi
+            :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
             :valinnat      (luo-kustannustyypit (:tyyppi @nav/valittu-urakka))
@@ -212,16 +215,25 @@
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :leveys-col    3}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
+            :pakollinen?   true
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-           {:otsikko "Rahamäärä" :nimi :rahasumma :yksikko "€":tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3}
+           {:otsikko     "Rahamäärä"
+            :nimi        :rahasumma
+            :pakollinen? true
+            :yksikko     "€"
+            :tyyppi      :numero
+            :validoi     [[:ei-tyhja "Anna rahamäärä"]]
+            :leveys-col  3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
+            :pakollinen?   true
             :valinta-nayta str
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
             :fmt           #(if (nil? %) yleiset/+valitse-indeksi+ str)
             :leveys-col    3
             }
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
+            :pakollinen?   true
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat      +maksajavalinnat+
             :fmt           #(maksajavalinnan-teksti %)
