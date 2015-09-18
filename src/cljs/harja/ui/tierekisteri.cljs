@@ -9,6 +9,8 @@
             [cljs.core.async :refer [>! <! alts! chan] :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def vkmn-antama-alkuosoite (atom nil))
+(def vkmn-antama-loppuosoite (atom nil))
 
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
@@ -112,9 +114,12 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                   
                   (recur (if (= :click tyyppi)
                            (if (= :alku-valittu @tila)
-                             (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
+                             (do
+                               (go (reset! vkmn-antama-alkuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
+                               (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti))
                              (do
                                (reset! alkupiste sijainti)
+                               (go (reset! vkmn-antama-loppuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
     

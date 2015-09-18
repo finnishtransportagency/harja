@@ -640,7 +640,7 @@
                                                                       :stroke {:width 4})
                                                          :type :tr-valittu-osoite})
                                (let [e (geo/extent arvo)]
-                                 (kartta/keskita-kartta-alueeseen! e)
+                                 #_(kartta/keskita-kartta-alueeseen! e)
                                  (reset! edellinen-extent e)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
@@ -661,7 +661,7 @@
      (komp/kuuntelija :kartta-nakyy
                       #(when-let [e @edellinen-extent]
                          ;; Jos kartta tulee näkyviin, viedään se viimeksi zoomattuun extentiin
-                         (kartta/keskita-kartta-alueeseen! e)))
+                         #_(kartta/keskita-kartta-alueeseen! e) nil))
      (komp/ulos #(do 
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
