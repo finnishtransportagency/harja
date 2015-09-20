@@ -8,6 +8,7 @@
     [harja.palvelin.komponentit.fim :as fim]
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
+    [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -62,6 +63,7 @@
     [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
     [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
     [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
+    [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
@@ -96,10 +98,13 @@
                                                         kehitysmoodi)
                        [:todennus])
 
+      :pdf-vienti (component/using
+                   (pdf-vienti/luo-pdf-vienti)
+                   [:http-palvelin])
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
-
+      
       ;; Integraatioloki
       :integraatioloki (component/using (integraatioloki/->Integraatioloki
                                           (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
@@ -227,7 +232,7 @@
                                 [:http-palvelin :db])
       :raportit (component/using
                  (raportit/->Raportit)
-                 [:http-palvelin :db :raportointi])
+                 [:http-palvelin :db :raportointi :pdf-vienti])
 
       :tyokoneenseuranta (component/using
                           (tyokoneenseuranta/->TyokoneseurantaHaku)
@@ -258,6 +263,9 @@
       :api-reittitoteuma (component/using
                           (api-reittitoteuma/->Reittitoteuma)
                           [:http-palvelin :db :integraatioloki])
+      :api-varustetoteuma (component/using
+                           (api-varustetoteuma/->Varustetoteuma)
+                           [:http-palvelin :db :integraatioloki])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])

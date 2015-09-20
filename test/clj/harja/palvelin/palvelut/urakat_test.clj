@@ -33,10 +33,10 @@
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-urakan-sopimustyyppi urakanvalvoja
-                        {:urakka-id     @oulun-alueurakan-id
+                        {:urakka-id     @oulun-alueurakan-2005-2010-id
                          :sopimustyyppi "kokonaisurakka"})]
     (is (= uusi-sopimustyyppi "kokonaisurakka"))
-    (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-id))))
+    (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-2005-2010-id))))
 
 
 (deftest hae-urakka-testi
@@ -44,11 +44,11 @@
   (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
         haettu-urakka
         (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :hae-urakka urakanvalvoja @oulun-alueurakan-id)
+                        :hae-urakka urakanvalvoja @oulun-alueurakan-2005-2010-id)
         sopimukset (:sopimukset haettu-urakka)
         [eka-sopimuksen-id eka-sopimuksen-sampoid] (first sopimukset)
         [toka-sopimuksen-id toka-sopimuksen-sampoid] (second sopimukset)]
-    (is (= (:id haettu-urakka) @oulun-alueurakan-id) "haetun urakan id")
+    (is (= (:id haettu-urakka) @oulun-alueurakan-2005-2010-id) "haetun urakan id")
     (is (= (count sopimukset) 2) "haetun urakan sopimusten määrä")
     (is (= eka-sopimuksen-id 1) "haetun urakan sopimustesti")
     (is (= eka-sopimuksen-sampoid "1H05228/01") "haetun urakan sopimustesti")

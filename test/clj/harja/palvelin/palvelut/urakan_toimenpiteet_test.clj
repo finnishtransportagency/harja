@@ -29,13 +29,13 @@
                       urakkatieto-fixture))
 
 (deftest hae-urakan-1-toimenpiteet
-  (let [urakka-id @oulun-alueurakan-id
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
         response (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :urakan-toimenpiteet +kayttaja-jvh+ urakka-id)
         tpi-maara (ffirst (q
                             (str "SELECT count(*)
                                                        FROM toimenpideinstanssi
-                                                      WHERE urakka = " @oulun-alueurakan-id ";")))
+                                                      WHERE urakka = " @oulun-alueurakan-2005-2010-id ";")))
         tpit (into #{}
                    (map :tpi_nimi response))]
     (is (not (nil? response)))
@@ -48,7 +48,7 @@
 
 
 (deftest hae-urakan-1-toimenpiteet-ja-tehtavat
-  (let [urakka-id @oulun-alueurakan-id
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
         response (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :urakan-toimenpiteet-ja-tehtavat +kayttaja-jvh+ urakka-id)]
     (is (not (nil? response)))))

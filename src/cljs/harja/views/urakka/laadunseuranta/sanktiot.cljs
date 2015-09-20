@@ -66,18 +66,21 @@
          ;; TODO Mitkä päivämäärät tarvitaan?
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
                        {:otsikko "Havaittu" :nimi :havaintoaika
+                        :pakollinen? true
                         :hae     (comp :aika :havainto)
                         :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :aika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                        {:otsikko "Käsitelty" :nimi :kasittelyaika
+                        :pakollinen? true
                         :hae     (comp :kasittelyaika :paatos :havainto)
                         :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelyaika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                   [:pvm-kentan-jalkeen (comp :aika :havainto) "Ei voida käsitellä havaintoa ennen"]]}
                        {:otsikko "Perintäpvm" :nimi :perintapvm
+                        :pakollinen? true
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                   [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :havainto)
@@ -90,6 +93,7 @@
           :leveys-col  3 :tyyppi :string
           :muokattava? (constantly false)}
          {:otsikko "Perustelu" :nimi :perustelu
+          :pakollinen? true
           :hae     (comp :perustelu :paatos :havainto)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :perustelu] arvo))
           :leveys-col  4 :tyyppi :text :koko [80 :auto]
@@ -111,6 +115,7 @@
            :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
            :leveys  1 :tyyppi :string}
          {:otsikko "Käsitelty" :nimi :kasittelytapa
+          :pakollinen? true
           :hae (comp :kasittelytapa :paatos :havainto)
           :aseta #(assoc-in %1 [:havainto :paatos :kasittelytapa] %2)
           :tyyppi :valinta
@@ -132,6 +137,7 @@
 
          (lomake/ryhma {:otsikko "Sanktio" :leveys 2 :ulkoasu :rivi}
                        {:otsikko "Summa" :nimi :summa :leveys-col 2 :tyyppi :positiivinen-numero
+                        :pakollinen? true
                         :yksikko "€"
                         :validoi [[:ei-tyhja "Anna summa"]]}
                        {:otsikko "Indeksi" :nimi :indeksi :leveys 2
@@ -145,27 +151,29 @@
 
          (lomake/ryhma {:otsikko "Luokittelu"  :ulkoasu :rivi}
                        {:otsikko       "Laji" :tyyppi :valinta
+                        :pakollinen? true
                         :leveys-col 2
                         :nimi          :laji
                         :hae           (comp keyword :laji)
                         :aseta         #(assoc %1 :laji %2 :tyyppi nil)
                         :valinnat      [:A :B :C]
                         :valinta-nayta #(case %
-                                          :A "Ryhmä A"
-                                          :B "Ryhmä B"
-                                          :C "Ryhmä C"
-                                          "- valitse -")
+                                         :A "Ryhmä A"
+                                         :B "Ryhmä B"
+                                         :C "Ryhmä C"
+                                         "- valitse -")
                         :validoi       [[:ei-tyhja "Valitse laji"]]}
-                       
+
                        {:otsikko       "Tyyppi" :tyyppi :valinta
-                        :leveys-col 6
+                        :leveys-col    6
+                        :pakollinen?   true
                         :nimi          :tyyppi
                         :aseta         (fn [sanktio tyyppi]
                                          (assoc sanktio
-                                                :tyyppi tyyppi
-                                                :toimenpideinstanssi (:tpi_id (first
-                                                                               (filter
-                                                                                #(= (:toimenpidekoodi tyyppi) (:id %))
+                                           :tyyppi tyyppi
+                                           :toimenpideinstanssi (:tpi_id (first
+                                                                           (filter
+                                                                             #(= (:toimenpidekoodi tyyppi) (:id %))
                                                                                 @tiedot-urakka/urakan-toimenpideinstanssit)))))
                         ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Havainnossa käytetään.
                         :valinnat-fn   (fn [_] (map #(dissoc % :laji) (laadunseuranta/lajin-sanktiotyypit (:laji @muokattu))))

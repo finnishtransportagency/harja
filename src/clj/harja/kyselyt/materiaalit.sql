@@ -21,6 +21,7 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
+-- määrä = suunniteltu määrä. kokonaismäärä = toteutunut määrä
 SELECT DISTINCT
            m.nimi    AS materiaali_nimi,
            m.yksikko AS materiaali_yksikko,
@@ -88,6 +89,62 @@ WHERE (SELECT SUM(maara) AS maara
                      poistettu IS NOT TRUE) AND
                  poistettu IS NOT TRUE
          ) IS NOT NULL;
+
+-- name: hae-urakan-toteutuneet-materiaalit-raportille
+-- Palauttaa urakan materiaalit ja määrät omilla riveillä.
+-- Samat materiaalit summataan yhteen.
+SELECT
+  SUM(maara) AS kokonaismaara,
+  urakka.nimi AS urakka_nimi,
+  materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.yksikko AS materiaali_yksikko
+FROM toteuma_materiaali
+  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
+  JOIN toteuma ON toteuma.id = toteuma
+                  AND urakka.id = :urakka
+                  AND alkanut :: DATE >= :alku
+                  AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+
+-- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
+-- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
+-- Saman urakan samat materiaalit summataan yhteen.
+SELECT
+  SUM(maara) AS kokonaismaara,
+  urakka.nimi AS urakka_nimi,
+  materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.yksikko AS materiaali_yksikko
+FROM toteuma_materiaali
+  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
+  JOIN toteuma ON toteuma.id = toteuma
+                  AND urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+                  AND alkanut :: DATE >= :alku
+                  AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+
+-- name: hae-koko-maan-toteutuneet-materiaalit-raportille
+-- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
+-- Saman urakan samat materiaalit summataan yhteen.
+SELECT
+  SUM(maara) AS kokonaismaara,
+  urakka.nimi AS urakka_nimi,
+  materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.yksikko AS materiaali_yksikko
+FROM toteuma_materiaali
+  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
+  JOIN toteuma ON toteuma.id = toteuma
+                  AND alkanut :: DATE >= :alku
+                  AND alkanut :: DATE <= :loppu
+                  AND toteuma.poistettu IS NOT TRUE
+                  AND toteuma_materiaali.poistettu IS NOT TRUE
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

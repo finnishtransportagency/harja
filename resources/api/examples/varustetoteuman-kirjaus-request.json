@@ -33,7 +33,6 @@
         }
       ]
     },
-    "aika": "2016-01-30T12:00:00Z",
     "sijainti": {
       "koordinaatit": {
         "x": 64.91292829999999,
@@ -57,16 +56,6 @@
       },
       "kuntoluokitus": 1,
       "piiri": 1
-    },
-    "liitteet": [
-      {
-        "liite": {
-          "nimi": "kolari.png",
-          "tyyppi": "image/png",
-          "kuvaus": "Kuva",
-          "sisalto": "... sisältö base64 enkoodattuna  ..."
-        }
-      }
-    ]
+    }
   }
 }

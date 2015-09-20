@@ -59,14 +59,14 @@
         [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
-         (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
-                       {:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-opt :leveys 1 :tyyppi :pvm
+         (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 3}
+                       {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
                         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-                       {:otsikko "Päättynyt" :nimi :paattynyt :fmt pvm/pvm-aika-opt :leveys 1 :tyyppi :pvm-aika
+                       {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
-                       {:otsikko "Käsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :leveys 1 :tyyppi :pvm-aika
+                       {:otsikko "Käsitelty" :pakollinen? true :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
          

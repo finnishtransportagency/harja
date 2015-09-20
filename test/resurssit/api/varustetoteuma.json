@@ -1,0 +1,61 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "varustetoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": __ID__
+      },
+      "alkanut": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
+      "toteumatyyppi": "yksikkohintainen",
+      "sopimusId": 1,
+      "suorittaja": {
+        "nimi": "Tehotekijät Oy",
+        "ytunnus": "8765432-1"
+      },
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 1
+          }
+        }
+      ]
+    },
+    "sijainti": {
+      "koordinaatit": {
+        "x": 64.91292829999999,
+        "y": 25.503484200000003
+      }
+    },
+    "varuste": {
+      "tunniste": "HAR560",
+      "tietolaji": "tl506",
+      "toimenpide": "lisatty",
+      "ominaisuudet": "-",
+      "sijainti": {
+        "tie": {
+          "numero": 1234,
+          "nimi": "Kiviharjunlenkki",
+          "aosa": 1,
+          "losa": 73,
+          "aet": 100,
+          "let": 20
+        }
+      },
+      "kuntoluokitus": 1,
+      "piiri": 1
+    }
+  }
+}

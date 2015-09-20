@@ -7,7 +7,8 @@
             [cognitect.transit :as t]
             [harja.loki :refer [log]]
             [harja.transit :as transit]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def +polku+ (let [host (.-host js/location)]
@@ -101,6 +102,13 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn pikkukuva-url [liite-id]
   (str (polku) "lataa-pikkukuva?id=" liite-id))
+
+(defn pdf-url [tyyppi & parametrit]
+  (str (polku) "pdf?" (name tyyppi)
+       "&" (str/join "&"
+                     (map (fn [[nimi arvo]]
+                            (str (name nimi) "=" arvo))
+                          (partition 2 parametrit))))) 
 
 (defn wmts-polku []
   (str +polku+ "wmts/"))

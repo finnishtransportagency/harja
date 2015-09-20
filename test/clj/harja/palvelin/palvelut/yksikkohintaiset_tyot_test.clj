@@ -31,11 +31,11 @@
 (deftest kaikki-yksikkohintaiset-tyot-haettu-oikein 
   (let [yksikkohintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :yksikkohintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
-                                @oulun-alueurakan-id)
+                                @oulun-alueurakan-2005-2010-id)
         oulun-alueurakan-toiden-lkm (ffirst (q 
                                              (str "SELECT count(*)
                                                        FROM yksikkohintainen_tyo
-                                                      WHERE urakka = " @oulun-alueurakan-id)))]
+                                                      WHERE urakka = " @oulun-alueurakan-2005-2010-id)))]
     (is (= (count yksikkohintaiset-tyot) oulun-alueurakan-toiden-lkm))))
 
 

@@ -161,7 +161,8 @@
 
 
 (def testikayttajien-lkm (atom nil))
-(def oulun-alueurakan-id (atom nil))
+(def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
+(def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
@@ -173,7 +174,7 @@
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
-(defn hae-oulun-alueurakan-id []
+(defn hae-oulun-alueurakan-2005-2010-id []
   (ffirst (q (str "SELECT id
                                FROM   urakka
                                WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
@@ -182,6 +183,11 @@
   (ffirst (q (str "SELECT id
                                FROM   urakka
                                WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+
+(defn hae-pohjois-pohjanmaan-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                               FROM   organisaatio
+                               WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -226,8 +232,9 @@
   (pudota-ja-luo-testitietokanta-templatesta)
   (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
-  (reset! oulun-alueurakan-id (hae-oulun-alueurakan-id))
+  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2010-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! muhoksen-paikkausurakan-id (hae-muhoksen-paikkausurakan-id))
@@ -235,7 +242,7 @@
   (reset! oulun-alueurakan-paasopimuksen-id (hae-oulun-alueurakan-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (testit)
-  (reset! oulun-alueurakan-id nil)
+  (reset! oulun-alueurakan-2005-2010-id nil)
   (reset! oulun-alueurakan-paasopimuksen-id nil)
   (reset! pudasjarven-alueurakan-id nil))
 
@@ -245,7 +252,7 @@
   {:sahkoposti   "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit       #{"urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
-   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-id,
+   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
                             :nimi            "Oulun alueurakka 2005-2010",
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
                    :rooli  "urakanvalvoja"}]})
@@ -254,7 +261,7 @@
   {:sahkoposti   "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit       #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-id,
+   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
                             :nimi            "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
                    :luotu  nil,

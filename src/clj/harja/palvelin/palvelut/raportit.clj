@@ -4,13 +4,20 @@
             [taoensso.timbre :as log]
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :refer [rekisteroi-pdf-kasittelija! poista-pdf-kasittelija!]]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
+
+            [harja.tyokalut.xsl-fo :as fo]
+
+            [harja.kyselyt.urakat :as qu]
             [clj-time.core :as t]
             [clj-time.coerce :as coerce])
   (:import (java.sql Timestamp)))
@@ -57,7 +64,6 @@
   (let [; Ryhmittele tehtävät tyypin ja pvm:n mukaan
         saman-paivan-samat-tehtavat-map (group-by (fn [tehtava]
                                                     (let [tpk-id (:toimenpidekoodi_id tehtava)
-                                                          konvertoi-sql-timestamp? (instance? Timestamp (:alkanut tehtava))
                                                           alkanut (:alkanut tehtava)
                                                           pvm (.format (java.text.SimpleDateFormat. "dd.MM.yyyy") alkanut)]
                                                       [tpk-id pvm]))
@@ -82,24 +88,57 @@
 
 (defn muodosta-yksikkohintaisten-toiden-kuukausiraportti [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät raporttia varten: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-tehtavat (into []
                                    toteumat/muunna-desimaaliluvut-xf
-                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille db
-                                                                               urakka-id
-                                                                               (konv/sql-timestamp alkupvm)
-                                                                               (konv/sql-timestamp loppupvm)
-                                                                               "yksikkohintainen"))
+                                   (toteumat-q/hae-urakan-toteutuneet-tehtavat-kuukausiraportille
+                                     db
+                                     urakka-id
+                                     (konv/sql-timestamp alkupvm)
+                                     (konv/sql-timestamp loppupvm)
+                                     "yksikkohintainen"))
         toteutuneet-tehtavat-summattu (yhdista-saman-paivan-samat-tehtavat toteutuneet-tehtavat)]
     (log/debug "Haettu urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
     (log/debug "Samana päivänä toteutuneet tehtävät summattu : " toteutuneet-tehtavat-summattu)
     toteutuneet-tehtavat-summattu))
 
+(defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (let [toteutuneet-materiaalit (into []
+                                      (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
+                                                                                                   urakka-id
+                                                                                                   (konv/sql-timestamp alkupvm)
+                                                                                                   (konv/sql-timestamp loppupvm)))]
+    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
+
+(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
+  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (let [toteutuneet-materiaalit (into []
+                                      (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
+                                                                                                            hallintayksikko-id
+                                                                                                            (konv/sql-timestamp alkupvm)
+                                                                                                            (konv/sql-timestamp loppupvm)))]
+    (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
+
+(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
+  (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (let [toteutuneet-materiaalit (into []
+                                      (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
+                                                                                                      (konv/sql-timestamp alkupvm)
+                                                                                                      (konv/sql-timestamp loppupvm)))]
+    (log/debug "Haettu koko maan toteutuneet materiaalit: " toteutuneet-materiaalit)
+    toteutuneet-materiaalit))
 (defrecord Raportit []
   component/Lifecycle
   (start [{raportointi :raportointi
            http        :http-palvelin
            db          :db
+           pdf-vienti  :pdf-vienti
            :as         this}]
 
     (julkaise-palvelut http
@@ -119,15 +158,56 @@
                        (fn [user tiedot]
                          (muodosta-yksikkohintaisten-toiden-kuukausiraportti db user tiedot))
 
+                       :materiaaliraportti-urakalle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-urakalle db user tiedot))
+
+                       :materiaaliraportti-hallintayksikolle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-hallintayksikolle db user tiedot))
+
+                       :materiaaliraportti-koko-maalle
+                       (fn [user tiedot]
+                         (muodosta-materiaaliraportti-koko-maalle db user tiedot))
+
                        :hae-laskutusyhteenvedon-tiedot
                        (fn [user tiedot]
                          (hae-laskutusyhteenvedon-tiedot db user tiedot)))
+
+    (rekisteroi-pdf-kasittelija! pdf-vienti
+                                 :laskutusyhteenveto
+                                 ;; PENDING: tämä on karvalakki "raportti", jolla koestetaan PDF:n vientitoimintoa
+                                 ;; koko raportit ja niiden html/pdf näkymä tulee refaktoroida yhtenäiseen malliin
+                                 (fn [user params]
+                                   (let [{:keys [nimi alkupvm loppupvm urakoitsija_nimi]}
+                                         (some->> (get params "u")
+                                                  (Integer/parseInt)
+                                                  (qu/hae-urakka db)
+                                                  first)
+                                         pvm #(.format (java.text.SimpleDateFormat. "dd.MM.yyyy") %)]
+                                   (fo/dokumentti
+                                    {:header {:sisalto [:fo:block "HARJA: LASKUTUSYHTEENVETO"]}}
+                                    (fo/otsikko "Urakka")
+                                    (fo/tietoja
+                                     {}
+                                     "Urakka" nimi
+                                     "Aika" (str (pvm alkupvm) " \u2014 " (pvm loppupvm))
+                                     "Urakoitsija" urakoitsija_nimi)
+                                    (fo/vali)
+                                    (fo/otsikko "Raportti")
+                                    (fo/tietoja
+                                     {}
+                                     "Laskutusyhteenvedon kuukausi" (str (get params "vuosi") "/" (get params "kk")))))))
     this)
 
-  (stop [{http :http-palvelin :as this}]
+  (stop [{http :http-palvelin pdf-vienti :pdf-vienti :as this}]
     (poista-palvelut http
                      :hae-raportit
                      :yksikkohintaisten-toiden-kuukausiraportti
+                     :materiaaliraportti-urakalle
+                     :materiaaliraportti-hallintayksikolle
+                     :materiaaliraportti-koko-maalle
                      :suorita-raportti
                      :hae-laskutusyhteenvedon-tiedot)
+    (poista-pdf-kasittelija! pdf-vienti :laskutusyhteenveto)
     this))
