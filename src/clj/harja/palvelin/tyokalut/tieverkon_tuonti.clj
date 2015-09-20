@@ -36,6 +36,7 @@
         (k/tuhoa-tieverkkodata! transaktio)
         (doseq [tv (tuo-tieverkko shapefile)]
           (vie-tieverkko-entry transaktio tv))
+        (k/paivita-paloiteltu-tieverkko! db)
         (log/debug "Tieosoiteverkon tuonti kantaan valmis.")))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 

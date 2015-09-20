@@ -3,6 +3,7 @@
 CREATE MATERIALIZED VIEW tieverkko_paloina AS SELECT osoite3, tie, ajorata, osa, tiepiiri, (ST_Dump(geometria)).geom AS geom, (ST_Dump(geometria)).path[1] FROM tieverkko;
 
 CREATE INDEX tieverkko_paloina_geom_index ON tieverkko_paloina USING GIST (geom);
+CREATE INDEX tieverkko_paloina_tieosa_index ON tieverkko_paloina (tie,osa);
 
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
   piste geometry, treshold INTEGER)
@@ -46,7 +47,6 @@ CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
   RETURNS tr_osoite
 AS $$
 DECLARE
-  tmp tieverkko_paloina[];
   reitti geometry;
   atr tr_osoite;
   btr tr_osoite;

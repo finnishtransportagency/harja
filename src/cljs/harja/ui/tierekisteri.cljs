@@ -115,11 +115,11 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                   (recur (if (= :click tyyppi)
                            (if (= :alku-valittu @tila)
                              (do
-                               (go (reset! vkmn-antama-alkuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
+                               #_(go (reset! vkmn-antama-alkuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
                                (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti))
                              (do
                                (reset! alkupiste sijainti)
-                               (go (reset! vkmn-antama-loppuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
+                               #_(go (reset! vkmn-antama-loppuosoite (<! (vkm/koordinaatti->tieosoite sijainti))))
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
     
