@@ -48,49 +48,106 @@ CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
 AS $$
 DECLARE
   reitti geometry;
-  atr tr_osoite;
-  btr tr_osoite;
+  alkupatka geometry;
+  loppupatka geometry;
+  apiste geometry;
+  bpiste geometry;
+  aosa INTEGER;
+  bosa INTEGER;
+  tienosavali RECORD;
   ap NUMERIC;
   bp NUMERIC;
+  alkuet NUMERIC;
+  loppuet NUMERIC;
+  tmp geometry;
 BEGIN
-  -- molempien päiden tierekisteriosoitteet
-  atr := tierekisteriosoite_pisteelle(alkupiste, treshold);
-  btr := tierekisteriosoite_pisteelle(loppupiste, treshold);
+   -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
+  SELECT a.tie, 
+         a.osa AS aosa, 
+         b.osa AS bosa,
+         a.ajorata AS ajorataa,
+         b.ajorata AS ajoratab
+    FROM tieverkko_paloina a, 
+         tieverkko_paloina b 
+   WHERE ST_DWithin(a.geom, alkupiste, treshold) 
+     AND ST_DWithin(b.geom, loppupiste, treshold) 
+     AND a.tie=b.tie
+ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
+          ST_Length(ST_ShortestLine(loppupiste, b.geom))
+   LIMIT 1
+    INTO tienosavali;
+  
+  -- sortataan alku- ja loppupiste ja tienosavälit siten että alkuosa on ensimmäisenä osoitteessa
+  IF tienosavali.aosa > tienosavali.bosa THEN
+    aosa := tienosavali.bosa;
+    bosa := tienosavali.aosa;
+    apiste := loppupiste;
+    bpiste := alkupiste;
+  ELSE
+    aosa := tienosavali.aosa;
+    bosa := tienosavali.bosa;
+    apiste := alkupiste;
+    bpiste := loppupiste;
+  END IF;
 
-     -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä
-     WITH u AS (SELECT a.tie, 
-                       a.osa AS aosa, 
-                       b.osa AS bosa, 
-                       a.ajorata AS ajorata
-                FROM tieverkko_paloina a, 
-                     tieverkko_paloina b 
-               WHERE ST_DWithin(a.geom, alkupiste, treshold) 
-                 AND ST_DWithin(b.geom, loppupiste, treshold) 
-                 AND a.tie=b.tie 
-                 AND a.ajorata=b.ajorata
-               LIMIT 1)
+  IF aosa=bosa THEN
+    SELECT ST_LineMerge(ST_Union(ST_Line_Substring(geom, LEAST(ST_Line_Locate_Point(geom, apiste), ST_Line_Locate_Point(geom, bpiste)),
+				                          GREATEST(ST_Line_Locate_Point(geom, apiste),ST_Line_Locate_Point(geom, bpiste))) ORDER BY path)) 
+      FROM tieverkko_paloina tv
+     WHERE tv.tie = tienosavali.tie
+       AND tv.osa = aosa
+       AND tv.ajorata = tienosavali.ajorataa
+    INTO reitti;
+  ELSE     
   -- kootaan osien geometriat yhdeksi viivaksi
-  SELECT ST_MakeLine(tv.geom ORDER BY osa) 
-    FROM tieverkko_paloina tv, u 
-   WHERE tv.tie=u.tie 
-     AND tv.ajorata=u.ajorata
-     AND tv.osa>=LEAST(u.aosa,u.bosa)
-     AND tv.osa<=GREATEST(u.aosa,u.bosa)
-   INTO reitti;
-
+  SELECT ST_LineMerge(ST_Union((CASE 
+				 WHEN tv.osa=aosa 
+				    THEN ST_Line_Substring(tv.geom, ST_Line_Locate_Point(tv.geom, apiste), 1)
+				 WHEN tv.osa=bosa 
+				    THEN ST_Line_Substring(tv.geom, 0, ST_Line_Locate_Point(tv.geom, bpiste))
+				 ELSE tv.geom 
+				 END)
+				ORDER BY tv.osa)) 
+    FROM tieverkko_paloina tv
+   WHERE tv.tie=tienosavali.tie
+     AND tv.osa>=aosa
+     AND tv.osa<=bosa
+    INTO reitti;
+  END IF;
+  
   IF reitti IS NULL THEN
      RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
   END IF;
+
+  -- alkupisteen tienosan geometria loppupituuden määrittämiseksi
+  SELECT geom
+    FROM tieverkko_paloina tv
+   WHERE tv.tie=tienosavali.tie
+     AND tv.osa=aosa
+     AND tv.ajorata=tienosavali.ajorataa
+  LIMIT 1
+  INTO alkupatka;
+
+  -- loppupisteen tienosan geometria loppupituuden määrittämiseksi
+  SELECT geom
+    FROM tieverkko_paloina tv
+   WHERE tv.tie=tienosavali.tie
+     AND tv.osa=bosa
+     AND tv.ajorata=tienosavali.ajoratab
+  LIMIT 1
+  INTO loppupatka;
   
-  -- projisoidaan alku- ja loppupisteet tälle viivalle ja leikataan viiva niiden mukaan alusta ja lopusta
-  ap := ST_Line_Locate_Point(reitti, alkupiste);
-  bp := ST_Line_Locate_Point(reitti, loppupiste);
+  ap := ST_Line_Locate_Point(alkupatka, apiste);
+  bp := ST_Line_Locate_Point(loppupatka, bpiste);
   
-  RETURN ROW(atr.tie, 
-             atr.aosa, 
-             atr.aet, 
-             btr.aosa, 
-             btr.aet, 
-             ST_Line_Substring(reitti, LEAST(ap,bp), GREATEST(ap,bp)));
+  alkuet := ST_Length(ST_Line_Substring(alkupatka, 0, ap));
+  loppuet := ST_Length(ST_Line_Substring(loppupatka, 0, bp));
+  
+  RETURN ROW(tienosavali.tie, 
+             aosa, 
+             alkuet::INTEGER, 
+             bosa, 
+             loppuet::INTEGER,
+             reitti);
 END;
 $$ LANGUAGE plpgsql;

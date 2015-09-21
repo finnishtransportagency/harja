@@ -658,10 +658,6 @@
         (when sijainti
           (nayta-kartalla @sijainti)))}
 
-     (komp/kuuntelija :kartta-nakyy
-                      #(when-let [e @edellinen-extent]
-                         ;; Jos kartta tulee näkyviin, viedään se viimeksi zoomattuun extentiin
-                         #_(kartta/keskita-kartta-alueeseen! e) nil))
      (komp/ulos #(do 
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
@@ -721,6 +717,7 @@
               (if-not @karttavalinta-kaynnissa
                 [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
                                                                  (reset! osoite-ennen-karttavalintaa osoite)
+                                                                 (reset! data {})
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
                 [tr/karttavalitsin {:kun-peruttu #(do
