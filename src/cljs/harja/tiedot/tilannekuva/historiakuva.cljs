@@ -62,14 +62,24 @@
 (def haetut-asiat (atom nil))
 
 (defn oletusalue [asia]
-  {:type        :circle
-   :coordinates (:sijainti asia)
-   :color       "green"
-   :radius      5000
-   :stroke      {:color "black" :width 10}})
+  (merge
+    (:sijainti asia)
+    {:color  "green"
+     :stroke {:color "black" :width 10}}))
 
 (defmulti kartalla-xf :tyyppi)
-(defmethod kartalla-xf :ilmoitus [ilmoitus]
+
+(defmethod kartalla-xf :tiedoitus [ilmoitus]
+  [(assoc ilmoitus
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
+
+(defmethod kartalla-xf :kysely [ilmoitus]
+  [(assoc ilmoitus
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
+
+(defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
      :alue (oletusalue ilmoitus))])
@@ -91,17 +101,17 @@
         (assoc rp
           :type :reittipiste
           :alue {:type        :clickable-area
-                 :coordinates (:sijainti rp)
+                 :coordinates (get-in rp [:sijainti :coordinates])
                  :zindex      3}))
       (:reittipisteet toteuma))
     (assoc toteuma
       :type :toteuma
       :alue {
              :type   :arrow-line
-             :points (mapv :sijainti (sort-by
-                                       :aika
-                                       pvm/ennen?
-                                       (:reittipisteet toteuma)))})))
+             :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
+                                                                  :aika
+                                                                  pvm/ennen?
+                                                                  (:reittipisteet toteuma)))})))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   [(assoc tp
@@ -151,6 +161,7 @@
   (go
     (let [yhdista (fn [& tulokset]
                     (apply (comp vec concat) (remove k/virhe? tulokset)))
+          yhteiset-parametrit (kasaa-parametrit)
           haettavat-toimenpidekoodit (mapv
                                        :id
                                        (filter
@@ -158,20 +169,30 @@
                                            (get @valitut-toteumatyypit nimi))
                                          @toimenpidekoodit))
           tulos (yhdista
-                  #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
-                  #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
-                  #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt (kasaa-parametrit))))
-                  #_(when @hae-turvallisuuspoikkeamat? (<! (k/post! :hae-turvallisuuspoikkeamat (kasaa-parametrit))))
-                  #_(when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset (kasaa-parametrit))))
-                  #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
-                  #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit))))
-                  #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot (kasaa-parametrit))))
-                  #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot (kasaa-parametrit))))
+                  #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot yhteiset-parametrit)))
+                  #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset yhteiset-parametrit)))
+                  #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt yhteiset-parametrit)))
+                  #_(when @hae-turvallisuuspoikkeamat? (<! (k/post! :hae-turvallisuuspoikkeamat yhteiset-parametrit)))
+                  #_(when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset yhteiset-parametrit)))
+                  #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet yhteiset-parametrit)))
+                  #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot yhteiset-parametrit)))
+                  #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot yhteiset-parametrit)))
+                  #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot yhteiset-parametrit)))
+                  (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
+                    (mapv
+                      #(clojure.set/rename-keys % {:ilmoitustyyppi :tyyppi})
+                      (<! (k/post! :hae-ilmoitukset (assoc
+                                                      yhteiset-parametrit
+                                                      :aikavali [(:alku yhteiset-parametrit)
+                                                                 (:loppu yhteiset-parametrit)]
+                                                      :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
+                                                                            (when @hae-kyselyt? :kysely)
+                                                                            (when @hae-tiedoitukset? :tiedoitus)]))))))
                   (when-not (empty? haettavat-toimenpidekoodit)
-                    (<! (k/post! :hae-toteumat-historiakuvaan (assoc
-                                                                (kasaa-parametrit)
-                                                                :toimenpidekoodit
-                                                                haettavat-toimenpidekoodit)))))]
+                      (<! (k/post! :hae-toteumat-historiakuvaan (assoc
+                                                                  yhteiset-parametrit
+                                                                  :toimenpidekoodit
+                                                                  haettavat-toimenpidekoodit)))))]
       (reset! haetut-asiat tulos))))
 
 (def +sekuntti+ 1000)

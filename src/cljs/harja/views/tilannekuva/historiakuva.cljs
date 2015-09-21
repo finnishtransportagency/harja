@@ -14,9 +14,11 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.views.kartta :as kartta]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.ilmoitukset :as ilmoitukset])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
+(declare kuuntelut)
 
 (defn lyhytsuodatin []
   [kentat/tee-kentta {:tyyppi     :aikavalitsin
@@ -140,7 +142,10 @@
                                (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
      :component-will-unmount (fn [_]
                                (tiedot/lopeta-asioiden-haku)
-                               (kartta/tyhjenna-yleiset-kontrollit))}
+                               (kartta/tyhjenna-yleiset-kontrollit)
+                               (doseq [lopeta-kuuntelija kuuntelut]
+                                 (log "Lopetetaan kuuntelija")
+                                 (lopeta-kuuntelija)))}
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-historiakuva)
     (fn []
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
@@ -148,46 +153,68 @@
                                                   :pitka)))
       nil)))
 
-(tapahtumat/kuuntele! :toteuma-klikattu
-                      (fn [tapahtuma]
-                        (log (pr-str (dissoc tapahtuma :reittipisteet)))
-                        (log (pr-str (:tehtava tapahtuma)))
-                        (log (pr-str (get-in tapahtuma [:tehtava :id])))
-                        (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
-                                             [:div.kartta-toteuma-popup
-                                              [:p [:b "Toteuma"]]
-                                              [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
-                                              (when (:suorittaja tapahtuma)
-                                                [:span
-                                                 [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
-                                              (when-not (empty? (:tehtavat tapahtuma))
-                                                (doall
-                                                  (for [tehtava (:tehtavat tapahtuma)]
-                                                    [:span
-                                                     [:p "Toimenpide: " (:toimenpide tehtava)]
-                                                     [:p "Määrä: " (:maara tehtava)]
-                                                     [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                                                     [:p "Lisätieto: " (:lisatieto tehtava)]])))
-                                              (when-not (empty? (:materiaalit tapahtuma))
-                                                (doall
-                                                  (for [toteuma (:materiaalit tapahtuma)]
-                                                    [:span
-                                                     [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                                                     [:p "Määrä: " (:maara toteuma)]])))
-                                              (when (:lisatieto tapahtuma)
-                                                [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
+(defonce
+  kuuntelut
+  [(tapahtumat/kuuntele! :toteuma-klikattu
+                         (fn [tapahtuma]
+                           (log (pr-str (dissoc tapahtuma :reittipisteet)))
+                           (log (pr-str (:tehtava tapahtuma)))
+                           (log (pr-str (get-in tapahtuma [:tehtava :id])))
+                           (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+                                                [:div.kartta-toteuma-popup
+                                                 [:p [:b "Toteuma"]]
+                                                 [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                                 (when (:suorittaja tapahtuma)
+                                                   [:span
+                                                    [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                                                 (when-not (empty? (:tehtavat tapahtuma))
+                                                   (doall
+                                                     (for [tehtava (:tehtavat tapahtuma)]
+                                                       [:span
+                                                        [:p "Toimenpide: " (:toimenpide tehtava)]
+                                                        [:p "Määrä: " (:maara tehtava)]
+                                                        [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                                        [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                                                 (when-not (empty? (:materiaalit tapahtuma))
+                                                   (doall
+                                                     (for [toteuma (:materiaalit tapahtuma)]
+                                                       [:span
+                                                        [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                        [:p "Määrä: " (:maara toteuma)]])))
+                                                 (when (:lisatieto tapahtuma)
+                                                   [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
 
-(tapahtumat/kuuntele! :reittipiste-klikattu
-                      (fn [tapahtuma]
-                        (kartta/nayta-popup! (:sijainti tapahtuma)
-                                             [:div.kartta-reittipiste-popup
-                                              [:p [:b "Reittipiste"]]
-                                              [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
-                                              (when (get-in tapahtuma [:tehtava :id])
-                                                [:span
-                                                 [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
-                                                 [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
-                                              (when (get-in tapahtuma [:materiaali :id])
-                                                [:span
-                                                 [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
-                                                 [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])])))
+   (tapahtumat/kuuntele! :reittipiste-klikattu
+                         (fn [tapahtuma]
+                           (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
+                                                [:div.kartta-reittipiste-popup
+                                                 [:p [:b "Reittipiste"]]
+                                                 [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
+                                                 (when (get-in tapahtuma [:tehtava :id])
+                                                   [:span
+                                                    [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
+                                                    [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
+                                                 (when (get-in tapahtuma [:materiaali :id])
+                                                   [:span
+                                                    [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
+                                                    [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])])))
+
+   (tapahtumat/kuuntele! :ilmoitus-klikattu
+                         (fn [tapahtuma]
+                           (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
+                                                [:div.kartta-ilmoitus-popup
+                                                 [:p [:b "Ilmoitus"]]
+                                                 [:p "Melkoista huttua."]
+                                                 [:a {:href     "#"
+                                                      :on-click #(do (.preventDefault %)
+                                                                     (let [putsaa (fn [asia]
+                                                                                    (clojure.set/rename-keys
+                                                                                      (dissoc asia :type :alue)
+                                                                                      {:tyyppi :ilmoitustyyppi}))]
+                                                                       (reset! nav/sivu :ilmoitukset)
+                                                                       (reset! ilmoitukset/haetut-ilmoitukset
+                                                                               (map putsaa (filter
+                                                                                             (fn [asia] (= (:type asia) :ilmoitus))
+                                                                                             @tiedot/historiakuvan-asiat-kartalla)))
+                                                                       (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}
+                                                  "Siirry ilmoitusnäkymään"]])))])

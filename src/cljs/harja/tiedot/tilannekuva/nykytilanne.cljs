@@ -63,10 +63,10 @@
 (defmethod kartalla-xf :tyokone [tyokone]
   (assoc tyokone
     :type :tyokone
-    :alue {:type :icon
+    :alue {:type        :icon
            :coordinates (:sijainti tyokone)
-           :direction (- (suunta-radiaaneina tyokone))
-           :img "images/tyokone.png"}))
+           :direction   (- (suunta-radiaaneina tyokone))
+           :img         "images/tyokone.png"}))
 
 (defmethod kartalla-xf :default [_])
 
@@ -90,16 +90,22 @@
   (go
     (let [yhdista (fn [& tulokset]
                     (apply (comp vec concat) (remove k/virhe? tulokset)))
+          yhteiset-parametrit (kasaa-parametrit)
           tulos (yhdista
-                  (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
-                  #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot (kasaa-parametrit))))
-                  #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset (kasaa-parametrit))))
-                  #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt (kasaa-parametrit))))
+                  (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit)))
+                  (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
+                    (<! (k/post! :hae-ilmoitukset (assoc
+                                                    yhteiset-parametrit
+                                                    :aikavali [(:alku yhteiset-parametrit)
+                                                               (:loppu yhteiset-parametrit)]
+                                                    :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
+                                                                          (when @hae-kyselyt? :kysely)
+                                                                          (when @hae-tiedoitukset? :tiedoitus)])))))
                   #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
       (reset! haetut-asiat tulos)
-      (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
+      (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                              :tyokoneet tulos}))))
 
 
