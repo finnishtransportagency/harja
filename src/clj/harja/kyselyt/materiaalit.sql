@@ -94,6 +94,7 @@ WHERE (SELECT SUM(maara) AS maara
 SELECT DISTINCT
   urakka.nimi AS urakka_nimi,
   materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.nimi_lyhenne AS materiaali_nimi_lyhenne,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM materiaalin_kaytto
     JOIN urakka ON materiaalin_kaytto.urakka = urakka.id
@@ -110,6 +111,7 @@ SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
   materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.nimi_lyhenne AS materiaali_nimi_lyhenne,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
@@ -120,7 +122,7 @@ FROM toteuma_materiaali
                   AND alkanut :: DATE <= :loppu
                   AND toteuma.poistettu IS NOT TRUE
                   AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, materiaali_nimi_lyhenne;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -129,6 +131,7 @@ SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
   materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.nimi_lyhenne AS materiaali_nimi_lyhenne,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
@@ -139,7 +142,7 @@ FROM toteuma_materiaali
                   AND alkanut :: DATE <= :loppu
                   AND toteuma.poistettu IS NOT TRUE
                   AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, materiaali_nimi_lyhenne;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -148,6 +151,7 @@ SELECT
   SUM(maara) AS kokonaismaara,
   urakka.nimi AS urakka_nimi,
   materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.nimi_lyhenne AS materiaali_nimi_lyhenne,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
@@ -157,7 +161,7 @@ FROM toteuma_materiaali
                   AND alkanut :: DATE <= :loppu
                   AND toteuma.poistettu IS NOT TRUE
                   AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, materiaali_nimi_lyhenne;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
