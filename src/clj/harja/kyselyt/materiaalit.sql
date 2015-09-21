@@ -90,6 +90,19 @@ WHERE (SELECT SUM(maara) AS maara
                  poistettu IS NOT TRUE
          ) IS NOT NULL;
 
+-- name: hae-urakan-suunnitellut-materiaalit-raportille
+SELECT DISTINCT
+  urakka.nimi AS urakka_nimi,
+  materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.yksikko AS materiaali_yksikko
+FROM materiaalin_kaytto
+    JOIN urakka ON materiaalin_kaytto.urakka = urakka.id
+  JOIN materiaalikoodi ON materiaalikoodi.id = materiaalin_kaytto.materiaali
+WHERE urakka = :urakka
+AND materiaalin_kaytto.alkupvm :: DATE >= :alkuvpm
+AND materiaalin_kaytto.alkupvm :: DATE <= :alkupvm
+AND poistettu IS NOT TRUE;
+
 -- name: hae-urakan-toteutuneet-materiaalit-raportille
 -- Palauttaa urakan materiaalit ja määrät omilla riveillä.
 -- Samat materiaalit summataan yhteen.
