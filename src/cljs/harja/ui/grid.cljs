@@ -590,7 +590,7 @@ Optiot on mappi optioita:
                 [:thead
                  [:tr
                   (for [{:keys [otsikko otsikko-lyhenne leveys nimi]} skeema]
-                    (let [lopullinen-otsikko (if (>= viewport-leveys 500)
+                    (let [lopullinen-otsikko (if (and (>= viewport-leveys 700) (<= (count skeema) 15))
                                                otsikko
                                                (or otsikko-lyhenne otsikko))]
                       ^{:key (str nimi)}
