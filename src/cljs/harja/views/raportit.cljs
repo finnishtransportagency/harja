@@ -91,18 +91,18 @@
 (defn muodosta-materiaalisarakkeet
   "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
   [materiaalitoteumat]
-  (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
+  (let [materiaalit (distinct (mapv (fn [materiaali]
+                                      (select-keys materiaali [:materiaali_nimi :materiaali_nimi_lyhenne]))
+                                    materiaalitoteumat))]
     (mapv (fn [materiaali]
-            {:otsikko     (str materiaali " (" (:materiaali_yksikko
-                                                 (first (filter
-                                                          #(= (:materiaali_nimi %) materiaali)
-                                                          materiaalitoteumat))) ")")
-             :nimi        (keyword materiaali)
-             :muokattava? (constantly false)
+            {:otsikko         (:materiaali_nimi materiaali)
+             :otsikko-lyhenne (:materiaali_nimi_lyhenne materiaali)
+             :nimi            (keyword (:materiaali_nimi materiaali))
+             :muokattava?     (constantly false)
              :tyyppi
-                          :string
-             :leveys      "33%"})
-          materiaali-nimet)))
+                              :string
+             :leveys          "33%"})
+          materiaalit)))
 (defn muodosta-materiaaliraportin-rivit
   "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
   [materiaalitoteumat]
