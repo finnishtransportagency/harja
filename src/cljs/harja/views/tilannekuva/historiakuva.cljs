@@ -204,8 +204,11 @@
                                 (fn [tapahtuma]
                                   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                                                        [:div.kartta-ilmoitus-popup
-                                                        [:p [:b "Ilmoitus"]]
-                                                        [:p "Melkoista huttua."]
+                                                        (log (pr-str tapahtuma))
+                                                        [:p [:b (name (:tyyppi tapahtuma))]]
+                                                        [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+                                                        [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
+                                                        [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
                                                         [:a {:href     "#"
                                                              :on-click #(do (.preventDefault %)
                                                                             (let [putsaa (fn [asia]
