@@ -72,18 +72,20 @@
   {:tietolajitunniste (z/xml1-> data :tietolajitunniste z/text)
    :arvot             (z/xml1-> data :arvot z/text)})
 
-(defn parsi-tietue [data]
-  (let [tietue (z/xml1-> data :ns2:tietueet :ns2:tietue)]
-    (when tietue
-      {:tunniste    (z/xml1-> tietue :tunniste z/text)
-       :alkupvm     (xml/parsi-paivamaara (z/xml1-> tietue :alkupvm z/text))
-       :loppupvm    (xml/parsi-paivamaara (z/xml1-> tietue :loppupvm z/text))
-       :karttapvm   (xml/parsi-paivamaara (z/xml1-> tietue :karttapvm z/text))
-       :piiri       (z/xml1-> tietue :piiri z/text)
-       :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
-       :urakka      (xml/parsi-kokonaisluku (z/xml1-> tietue :urakka z/text))
-       :sijainti    (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
-       :tietolaji   (parsi-tietueen-tietolaji (z/xml1-> tietue :tietolaji))})))
+(defn parsi-tietueet [data]
+  (let [tietueet (z/xml-> data :ns2:tietueet :ns2:tietue)]
+    (doall
+      (for [tietue tietueet]
+        (when tietue
+          {:tunniste    (z/xml1-> tietue :tunniste z/text)
+           :alkupvm     (xml/parsi-paivamaara (z/xml1-> tietue :alkupvm z/text))
+           :loppupvm    (xml/parsi-paivamaara (z/xml1-> tietue :loppupvm z/text))
+           :karttapvm   (xml/parsi-paivamaara (z/xml1-> tietue :karttapvm z/text))
+           :piiri       (z/xml1-> tietue :piiri z/text)
+           :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
+           :urakka      (xml/parsi-kokonaisluku (z/xml1-> tietue :urakka z/text))
+           :sijainti    (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
+           :tietolaji   (parsi-tietueen-tietolaji (z/xml1-> tietue :tietolaji))})))))
 
 (defn lue [viesti]
   (let [data (xml/lue viesti)
@@ -91,4 +93,10 @@
     (-> vastaus
         (cond-> (z/xml1-> data :ns2:virheet) (assoc :virheet (parsi-virheet data)))
         (cond-> (z/xml1-> data :ns2:tietolajit) (assoc :tietolaji (parsi-tietolaji data)))
-        (cond-> (z/xml1-> data :ns2:tietueet) (assoc :tietue (parsi-tietue data))))))
+        (cond-> (> (count (z/xml-> data :ns2:tietueet :ns2:tietue)) 1) (assoc
+                                                                         :tietueet
+                                                                         (vec
+                                                                           (map
+                                                                             #(assoc {} :tietue %)
+                                                                             (parsi-tietueet data)))))
+        (cond-> (= (count (z/xml-> data :ns2:tietueet :ns2:tietue)) 1) (assoc :tietue (first (parsi-tietueet data)))))))

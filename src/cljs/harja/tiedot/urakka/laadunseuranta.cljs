@@ -81,7 +81,11 @@
          (reaction
            @valittu-tarkastus
            (when @karttataso-tarkastukset
-             (into [] tarkastus-xf @urakan-tarkastukset))))
+             (into []
+                   (comp
+                    (filter :sijainti)
+                    tarkastus-xf)
+                   @urakan-tarkastukset))))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

@@ -7,7 +7,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as string])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
@@ -22,6 +24,18 @@
                                                        ominaisuudet)) :onnistunut)]
       muunnettu-vastausdata)))
 
+;; Muokkaa tietuetta siten, että se vastaa json skemaa
+;; Esimerkiksi koordinaatteja ja linkkejä ei ole toistaiseksi tarkoituskaan laittaa eteenpäin,
+;; vaan ne ovat 'future prooffausta'. Näiden poistaminen payloadista on kasattu tänne, jotta JOS joskus halutaankin
+;; palauttaa esim koordinaatit, ei tarvi kuin poistaa niiden dissoccaaminen täältä.
+;; Tietueille ja tietueelle tehdään myös muita samankaltaisia operaatiota, esim :tietue -> :varuste uudelleennimeäminen,
+;; mutta näitä operaatioita ei tehdä täällä em. syystä.
+(def puhdista-tietue-xf
+  #(-> %
+       (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
+       (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
+       (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
+
 (defn hae-tietue [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
@@ -29,14 +43,46 @@
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
           muunnettu-vastausdata (-> vastausdata
                                     (dissoc :onnistunut)
-                                    (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
-                                    (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
-                                    (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)
+                                    (puhdista-tietue-xf)
                                     (clojure.set/rename-keys {:tietue :varuste}))]
 
       ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
-      ;; Tässä tapauksessa me palautamme tyhjän kartan.
-      (if (:tietue vastausdata)
+      ;; Tässä tapauksessa me palautamme tyhjän kartan. Samalla tunnisteella voi myös virheellisesti löytyä
+      ;; useampi tietue, jolloin palautamme virheen.
+      (cond
+        (:tietueet vastausdata)
+        (throw+ {:type    :tierekisteri-kutsu-epaonnistui
+                 :virheet [{:viesti (str "Varusteen haku epäonnistui, koska tunniste " tunniste " palautti virheellisesti "
+                                         (count (:tietueet vastausdata)) " tietuetta.")
+                            :koodi  :tunniste-palautti-monta-tietuetta}]})
+        (:tietue vastausdata) muunnettu-vastausdata
+        :else {}))))
+
+(defn hae-tietueet [tierekisteri parametrit kayttaja]
+  (let [tr (into {} (filter val {:numero  (get parametrit "numero")
+                                 :aet     (get parametrit "aet")
+                                 :aosa    (get parametrit "aosa")
+                                 :let     (get parametrit "let")
+                                 :losa    (get parametrit "losa")
+                                 :ajr     (get parametrit "ajr")
+                                 :puoli   (get parametrit "puoli")
+                                 :alkupvm (get parametrit "alkupvm")}))
+        tietolajitunniste (get parametrit "tietolajitunniste")
+        muutospvm (get parametrit "muutospaivamaara")]
+    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
+               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tr))
+    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tr tietolajitunniste muutospvm)
+          muunnettu-vastausdata (-> vastausdata
+                                    (dissoc :onnistunut)
+                                    (update-in [:tietueet] #(map puhdista-tietue-xf %))
+                                    (update-in [:tietueet] #(into [] (remove nil? (remove empty? %))))
+                                    (update-in [:tietueet] (fn [tietue]
+                                                             (map #(clojure.set/rename-keys % {:tietue :varuste}) tietue)))
+                                    (clojure.set/rename-keys {:tietueet :varusteet}))]
+
+      ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet
+      ;; Tässä tapauksessa palautamme tyhjän kartan
+      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
         muunnettu-vastausdata
         {}))))
 
@@ -58,10 +104,19 @@
                          (fn [parametrit data kayttaja db]
                            (log/debug "parametrit" parametrit)
                            (hae-tietue tierekisteri parametrit kayttaja)))))
+
+    (julkaise-reitti
+      http :hae-tietueet
+      (GET "/api/varusteet/varusteet" request
+        (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
+                         (fn [parametrit data kayttaja db]
+                           (log/debug "parametrit" parametrit)
+                           (hae-tietueet tierekisteri parametrit kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-tietolaji
-                     :hae-tietue)
+                     :hae-tietue
+                     :hae-tietueet)
     this))

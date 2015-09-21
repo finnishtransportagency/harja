@@ -48,7 +48,12 @@
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction @valittu-turvallisuuspoikkeama
                    (when @karttataso-turvallisuuspoikkeamat
-                     (into [] (map turvallisuuspoikkeama-kartalla-xf) @haetut-turvallisuuspoikkeamat))))
+                     (into []
+                           (comp
+                            (filter :sijainti)
+                            (map turvallisuuspoikkeama-kartalla-xf))
+
+                           @haetut-turvallisuuspoikkeamat))))
 
 (defonce turvallisuuspoikkeamaa-klikattu
          (tapahtumat/kuuntele! :turvallisuuspoikkeama-klikattu

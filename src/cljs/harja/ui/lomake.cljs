@@ -85,15 +85,24 @@
   ^{:key (:otsikko ryhma)}
   [:fieldset
    [:legend (:otsikko ryhma)]
-   (doall (map (comp (fn [[kentta otsikko komponentti]]
-                       ^{:key (:nimi kentta)}
-                       [:div.form-group {:class (when (:pakollinen? kentta) "required")}
-                        [:div.row
-                         otsikko
-                         [:div {:class (str "col-sm-" (or (:leveys-col kentta) 10))}
-                          komponentti]]])
-                     luo-kentta)
-               skeemat))])
+   (doall
+    (map
+     (fn [skeema]
+       (let [[kentta otsikko komponentti yksikko vihje] (luo-kentta skeema)]
+         ^{:key (:nimi kentta)}
+         [:div.form-group {:class (when (:pakollinen? skeema) "required")}
+          [:span
+           [:div.row
+            otsikko
+            [:span
+             [:div {:class (str "col-sm-" (min (if yksikko 8 10) 
+                                               (or (:leveys-col kentta) 10)))}
+              komponentti]
+             (when yksikko
+               [:span.yksikko yksikko])]]
+           (when vihje
+             vihje)]]))
+      skeemat))])
           
           
 
@@ -104,14 +113,19 @@
     [:label.col-sm-2.control-label (:otsikko ryhma)]
     (doall
      (for [skeema skeemat
-           :let [[kentta otsikko komponentti] (luo-kentta (assoc skeema :lomake? :rivi))]]
+           :let [[kentta otsikko komponentti yksikko vihje] (luo-kentta (assoc skeema :lomake? :rivi))]]
        ^{:key (:nimi kentta)}
        [:div {:class (str "col-sm-" (or (:leveys (:optiot ryhma))
                                         (:leveys-col skeema)
                                         2))}
+        ;; PENDING: rivissä yksikön ja vihjeen näyttämiseen ei oikein ole
+        ;; hyvää tapaa. Pitäisikö vain hyväksyä, että silloin ei ole?
         [:div
          [:label.control-label otsikko]
          komponentti]]))]])
+
+        
+        
 
   
 (def +ei-otsikkoa+ #{:boolean})
