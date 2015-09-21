@@ -5,7 +5,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [clj-time.core :as t]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -64,7 +65,7 @@
     tulos))
 
 
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi materiaalit] :as tiedot}]
+(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana?  materiaalit] :as tiedot}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
@@ -74,14 +75,28 @@
                                       (hae-urakan-materiaalit c user urakka-id)))]
       ;; Ei materiaaleja, poista kaikki urakan materiaalit
       (when (empty? materiaalit)
-        (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan urakan hoitokauden materiaalit")
-        (log/debug "Hoitokausi: " (pr-str hoitokausi))
-        (q/poista-urakan-materiaalinkaytto! c (:id user)
-                                            urakka-id sopimus-id
-                                            (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))
+        (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan materiaalit valitulta hoitokaudelta")
+        (log/debug "Poistetaanko myös tulevilta? " tulevat-hoitokaudet-mukana?)
+
+        (if tulevat-hoitokaudet-mukana?
+          (do
+            (doseq [i hoitokaudet]
+              (if (or
+                    (t/equal? (first i) (first hoitokausi))
+                    (t/after? (first i) (first hoitokausi)))
+                (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
+                    (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                                        urakka-id sopimus-id
+                                                        (konv/sql-date (first i)) (konv/sql-date (second i)))))))
+          (do
+            (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str hoitokausi))
+            (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                                urakka-id sopimus-id
+                                                (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (log/debug "PÄIVITETÄÄN HOITOKAUDEN " hoitokausi " materiaalit")
+        (log/debug "PÄIVITETÄÄN saadut materiaalit")
+        (log/debug "Päivitetäänkö myös tulevilta? " tulevat-hoitokaudet-mukana?)
 
         (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))

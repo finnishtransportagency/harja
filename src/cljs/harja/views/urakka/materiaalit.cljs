@@ -252,6 +252,8 @@
                                       uudet-materiaalit (<! (t/tallenna (:id ur)
                                                                         (first @u/valittu-sopimusnumero)
                                                                         @u/valittu-hoitokausi
+                                                                        @u/valitun-urakan-hoitokaudet
+                                                                        @tuleville?
                                                                         rivit))]
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
