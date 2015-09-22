@@ -96,7 +96,6 @@
                                     materiaalitoteumat))]
     (mapv (fn [materiaali]
             {:otsikko         (:materiaali_nimi materiaali)
-             :otsikko-lyhenne (:materiaali_nimi_lyhenne materiaali)
              :nimi            (keyword (:materiaali_nimi materiaali))
              :muokattava?     (constantly false)
              :tyyppi
