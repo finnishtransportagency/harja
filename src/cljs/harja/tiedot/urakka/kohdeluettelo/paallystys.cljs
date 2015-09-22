@@ -16,7 +16,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (defonce paallystysilmoitukset-nakymassa? (atom false))
-(defonce paallystyskohteet-nakymassa (atom false))
+(defonce paallystys-tai-paikkauskohteet-nakymassa (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
   (k/post! :urakan-paallystyskohteet {:urakka-id urakka-id
@@ -54,7 +54,7 @@
 
 (defonce paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                  [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 nakymassa? @paallystyskohteet-nakymassa]
+                                 nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
                                 (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                   (log "PÄÄ Haetaan päällystyskohteet.")
                                   (let [vastaus (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
@@ -83,7 +83,7 @@
 (tarkkaile! "Päällystysilmoitukset: " paallystystoteumat)
 (defonce paikkaustoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                    [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                   nakymassa? @paikkaus/paallystys-tai-paikkausnakymassa?]
+                                   nakymassa? @paikkaus/paikkausilmoitukset-nakymassa]
                                   (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                     (log "PAI Haetaan paikkausilmoitukset")
                                     (paikkaus/hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))

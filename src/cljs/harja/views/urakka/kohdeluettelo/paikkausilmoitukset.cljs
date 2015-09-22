@@ -341,7 +341,7 @@
 
 (defn paikkausilmoitukset []
   (komp/luo
-    (komp/lippu paikkaus/paallystys-tai-paikkausnakymassa? paallystys/karttataso-paikkauskohteet)
+    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa paallystys/karttataso-paikkauskohteet)
 
     (fn []
       (if @paallystys/paikkausilmoitus-lomakedata
