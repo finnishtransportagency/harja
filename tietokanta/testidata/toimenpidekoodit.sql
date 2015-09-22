@@ -1425,3 +1425,31 @@ UPDATE toimenpidekoodi SET tuotenumero = 270 WHERE koodi = '20180';
 UPDATE toimenpidekoodi SET tuotenumero = 240 WHERE koodi = '14100';
 UPDATE toimenpidekoodi SET tuotenumero = 260 WHERE koodi = '141210';
 UPDATE toimenpidekoodi SET tuotenumero = 536 WHERE koodi = '30103';
+
+
+-- Hoidon kokonaishintaisia tehtäviä:
+-- Talvihoidon laajan toimenpiteen
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Auraus ja sohjonpoisto', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Suolaus', 4, 'tiekm',  true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Pistehiekoitus', 4, 'tiekm',  true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Linjahiekoitus', 4, 'tiekm',  true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Pinnan tasaus', 4, 'tiekm',  true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Liikennemerkkien puhdistus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Lumivallien madaltaminen', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sulamisveden haittojen torjunta', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'));
+-- Soratienhoidon laajan toimenpiteen
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden muokkaushöyläys', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden pölynsidonta', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden tasaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
+UPDATE toimenpidekoodi SET kokonaishintainen = TRUE WHERE nimi = 'Sorastus' AND emo = (SELECT id FROM toimenpidekoodi WHERE koodi='23124');
+-- Alueurakan liikenneympäristön hoidon
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Tiestotarkastus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Harjaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Koneellinen niitto', 4, 'ha', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Koneellinen vesakonraivaus', 4, 'ha', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('L- ja p-alueiden puhdistus', 4, 'kpl', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
+-- Päällystysrakenteen
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Päällysteiden paikkaus', 4, 'kpl', true, (SELECT id FROM toimenpidekoodi WHERE koodi='19121'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Päällysteiden juotostyöt', 4, 'kpl', true, (SELECT id FROM toimenpidekoodi WHERE koodi='19121'));
+-- Muut siltaan kohdistuvat työt
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Siltojen puhdistus', 4, 'kpl', true, (SELECT id FROM toimenpidekoodi WHERE koodi='19125'));
