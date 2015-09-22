@@ -11,14 +11,15 @@
             [harja.domain.paikkaus.minipot :as minipot]
 
             [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
+            [harja.kyselyt.paallystys :as paallystys-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [clj-time.format :as format]
             [clj-time.coerce :as coerce]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.palvelut.paallystys :as paallystys]))
 
 (defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan paikkaustoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -26,7 +27,12 @@
   (let [vastaus (into []
                       (comp
                         (map #(konv/string->avain % [:paatos]))
-                        (map #(konv/string->avain % [:tila])))
+                        (map #(konv/string->avain % [:tila]))
+                        (map #(assoc % :kohdeosat
+                                       (into []
+                                             paallystys/kohdeosa-xf
+                                             (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                               db urakka-id sopimus-id (:paikkauskohde_id %))))))
                       (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str vastaus))
     vastaus))
