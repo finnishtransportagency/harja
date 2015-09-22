@@ -35,8 +35,8 @@
                 (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
                   (and v-ur
                        v-hal)
-                  (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-hoitokaudet)
-                          (contains? (:parametrit valittu-raporttityyppi) :koko-maan-hoitokaudet))
+                  (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
+                          (contains? (:parametrit valittu-raporttityyppi) :koko-maan-aikavali))
                     (and (not (nil? v-aikavali)) (not (empty? (keep identity v-aikavali))))
                     false))))))
 (def nakymassa? (atom nil))
@@ -153,7 +153,7 @@
   [{:nimi       :yks-hint-kuukausiraportti
     :otsikko    "Yks. hint. töiden kuukausiraportti"
     :konteksti  #{:urakka}
-    :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet}
+    :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet :valitun-urakan-toimenpiteet+kaikki}
     :render     (fn []
                   [grid/grid
                    {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
@@ -175,7 +175,7 @@
    {:nimi       :materiaaliraportti
     :otsikko    "Materiaaliraportti"
     :konteksti  #{:urakka :hallintayksikko :koko-maa}
-    :parametrit #{:valitun-urakan-hoitokaudet :koko-maan-hoitokaudet :valitun-hallintayksikon-hoitokaudet}
+    :parametrit #{:valitun-urakan-hoitokaudet :koko-maan-aikavali :valitun-hallintayksikon-aikavali}
     :render     (fn []
                   (let [v-ur @nav/valittu-urakka
                         v-hal @nav/valittu-hallintayksikko
@@ -240,11 +240,9 @@
                        v-ur
                        v-hal)
               [valinnat/hoitokauden-kuukausi])
-            (when ; Ilmeisesti ei ole mielekästä tapaa näyttää koko maan tai hallintayksikon hoitokausia,
-                  ; koska koko maan tai hallintayksikön alueella on eri pituisia hoito/-sopimuskausia sisältäviä urakoita.
-                  ; --> Näytä yleinen aikavälikomponentti, josta hoitokauden voi valita itse.
-              (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-hoitokaudet)
-                       (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-hoitokaudet))
+            (when
+              (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
+                       (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-aikavali))
                    (nil? v-ur))
               [valinnat/aikavali])])]))))
 
