@@ -11,7 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [kohderivit paallystys-tai-paikkausnakymassa? paivita-kohde!] :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [kohderivit paallystyskohteet-nakymassa paivita-kohde!] :as paallystys]
             [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
@@ -159,7 +159,7 @@
                                :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
-      (komp/lippu paallystys-tai-paikkausnakymassa? paallystys/karttataso-paallystyskohteet)
+      (komp/lippu paallystyskohteet-nakymassa paallystys/karttataso-paallystyskohteet)
       (fn []
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 

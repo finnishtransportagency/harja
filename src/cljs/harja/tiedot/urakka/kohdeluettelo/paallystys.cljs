@@ -13,13 +13,8 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(defonce paallystyskohteet-nakymassa? (atom false))
 (defonce paallystysilmoitukset-nakymassa? (atom false))
-
-(defonce paallystys-tai-paikkausnakymassa? (atom false))
-
-
-
+(defonce paallystyskohteet-nakymassa (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
   (k/post! :urakan-paallystyskohteet {:urakka-id urakka-id
@@ -57,7 +52,7 @@
 
 (defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                  [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 nakymassa? @paallystys-tai-paikkausnakymassa?]
+                                 nakymassa? @paallystyskohteet-nakymassa]
                                 (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                   (log "PÄÄ Haetaan päällystyskohteet.")
                                   (let [vastaus (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
@@ -110,6 +105,3 @@
                       (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                    kohderivit)
                               toteumarivit))))))
-
-  
-                  
