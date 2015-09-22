@@ -46,7 +46,7 @@
                       alkupvm (first @u/valittu-hoitokauden-kuukausi)
                       loppupvm (second @u/valittu-hoitokauden-kuukausi)
                       nakymassa? @nakymassa?
-                      tama-raportti-valittu? (= :yks-hint-kuukausiraportti (:nimi @valittu-raporttityyppi))]
+                      tama-raportti-valittu? (= :yks-hint-raportti (:nimi @valittu-raporttityyppi))]
                      (when (and urakka-id alkupvm loppupvm nakymassa? tama-raportti-valittu?)
                        (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
                        (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
@@ -141,8 +141,8 @@
                            (raportit/hae-materiaaliraportti-koko-maalle aikavali-alkupvm aikavali-loppupvm))))))
 
 (def +raporttityypit+
-  [{:nimi       :yks-hint-kuukausiraportti
-    :otsikko    "Yks. hint. töiden kuukausiraportti"
+  [{:nimi       :yks-hint-raportti
+    :otsikko    "Yksikköhintaisten töiden raportti"
     :konteksti  #{:urakka}
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet :valitun-urakan-toimenpiteet+kaikki}
     :render     (fn []
@@ -163,7 +163,7 @@
                                             []
                                             (conj filtteroidyt-tehtavat yhteensa))]
                     [grid/grid
-                     {:otsikko "Yksikköhintaisten töiden kuukausiraportti"
+                     {:otsikko "Yksikköhintaisten töiden raportti"
                       :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
                      [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-opt :leveys "20%"}
                       {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "30%"}
