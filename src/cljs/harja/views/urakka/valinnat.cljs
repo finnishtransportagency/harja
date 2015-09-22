@@ -25,6 +25,9 @@
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+(defn urakan-toimenpide+kaikki []
+  (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit+kaikki u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi
     ur
@@ -44,12 +47,12 @@
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+lisavalinnat [ur]
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
-    u/urakan-toimenpideinstanssit+lisavalinnat u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+    u/urakan-toimenpideinstanssit+muut u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (valinnat/urakan-hoitokausi-ja-toimenpide
