@@ -65,7 +65,7 @@
   (merge
     (:sijainti asia)
     {:color  "green"
-     :radius 100
+     :radius 300
      :stroke {:color "black" :width 10}}))
 
 (defmulti kartalla-xf :tyyppi)

@@ -32,7 +32,7 @@
   {:type        :circle
    :coordinates (:sijainti asia)
    :color       "green"
-   :radius      5000
+   :radius      300
    :stroke      {:color "black" :width 10}})
 
 (defmulti kartalla-xf :tyyppi)
