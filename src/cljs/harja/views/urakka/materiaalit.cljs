@@ -231,7 +231,7 @@
              @kohdistettavat-materiaalikoodit pohjavesialue-materiaalit-muokattu])
 
           (when voi-muokata?
-            [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
+            [raksiboksi "Tallenna kaikille hoitokausille" @tuleville?
              #(swap! tuleville? not) 
              [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
              (and @tuleville? @varoita-ylikirjoituksesta?)
