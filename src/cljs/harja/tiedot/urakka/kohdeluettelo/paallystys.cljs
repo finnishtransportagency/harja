@@ -8,7 +8,9 @@
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -50,7 +52,7 @@
                                         :paallystyskohde-id paallystyskohde-id
                                         :osat osat}))
 
-(defonce kohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+(defonce paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                  [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                  nakymassa? @paallystyskohteet-nakymassa]
                                 (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
@@ -60,7 +62,7 @@
                                     vastaus))))
 
 (defn paivita-kohde! [id funktio & argumentit]
-  (swap! kohderivit
+  (swap! paallystyskohderivit
          (fn [kohderivit]
            (into []
                  (map (fn [kohderivi]
@@ -70,21 +72,31 @@
                  kohderivit))))
 
 (defonce karttataso-paallystyskohteet (atom false))
+(defonce karttataso-paikkauskohteet (atom false))
 
-(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+(defonce paallystystoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                          [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                          nakymassa? @paallystysilmoitukset-nakymassa?]
                                         (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                           (log "PÄÄ Haetaan päällystystoteumat.")
                                           (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+(tarkkaile! "Päällystysilmoitukset: " paallystystoteumat)
+(defonce paikkaustoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                   nakymassa? @paikkaus/paallystys-tai-paikkausnakymassa?]
+                                  (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                                    (log "PAI Haetaan paikkausilmoitukset")
+                                    (paikkaus/hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
+(tarkkaile! "Paikkaustoteumat: " paikkaustoteumat)
 
-(defonce lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paikkausilmoitus-lomakedata (atom nil))   ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @karttataso-paallystyskohteet
-                  kohderivit @kohderivit
-                  toteumarivit @toteumarivit
-                  avoin-paallystysilmoitus (:paallystyskohde-id @lomakedata)]
+                  kohderivit @paallystyskohderivit
+                  toteumarivit @paallystystoteumat
+                  avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
               (when taso
                 (into []
                       (mapcat #(map (fn [{sij :sijainti nimi :nimi :as osa}]
@@ -105,3 +117,29 @@
                       (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                    kohderivit)
                               toteumarivit))))))
+
+(defonce paikkauskohteet-kartalla
+         (reaction (let [taso @karttataso-paikkauskohteet
+                         kohderivit @paallystyskohderivit
+                         toteumarivit @paikkaustoteumat
+                         avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
+                     (when taso
+                       (into []
+                             (mapcat #(map (fn [{sij :sijainti nimi :nimi :as osa}]
+                                             (let [paikkauskohde-id (:paikkauskohde_id %)]
+                                               {:type :paikkauskohde
+                                                :kohde %
+                                                :paikkauskohde-id paikkauskohde-id
+                                                :tila (:tila %)
+                                                :nimi (str (:nimi %) ": " nimi)
+                                                :osa osa
+                                                :alue (assoc sij
+                                                        :stroke {:color (case (:tila %)
+                                                                          :aloitettu "blue"
+                                                                          :valmis "green"
+                                                                          "orange")
+                                                                 :width (if (= paikkauskohde-id avoin-paikkausilmoitus) 8 6)})}))
+                                           (:kohdeosat %)))
+                             (concat (map #(assoc % :paikkauskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                          kohderivit)
+                                     toteumarivit))))))

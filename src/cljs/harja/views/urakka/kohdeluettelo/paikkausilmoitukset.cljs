@@ -21,22 +21,16 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
-            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset])
+            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(def lomakedata (atom nil))                                 ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
+
 
 (def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
                                                (lukko/nykyinen-nakyma-lukittu?))))
-
-(defonce toteumarivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                   [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                   nakymassa? @paikkaus/paikkausilmoitukset-nakymassa?]
-                                  (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                    (log "PAI Haetaan paikkausilmoitukset")
-                                    (paikkaus/hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
@@ -87,14 +81,14 @@
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
                       (roolit/roolissa? roolit/urakanvalvoja)
-                      (not= (:tila @lomakedata) :lukittu)
+                      (not= (:tila @paallystys/paikkausilmoitus-lomakedata) :lukittu)
                       (false? @lomake-lukittu-muokkaukselta?))
-        paatostiedot (r/wrap {:paatos        (:paatos @lomakedata)
-                              :perustelu     (:perustelu @lomakedata)
-                              :kasittelyaika (:kasittelyaika @lomakedata)}
-                             (fn [uusi-arvo] (reset! lomakedata (-> (assoc @lomakedata :paatos (:paatos uusi-arvo))
-                                                                    (assoc :perustelu (:perustelu uusi-arvo))
-                                                                    (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
+        paatostiedot (r/wrap {:paatos        (:paatos @paallystys/paikkausilmoitus-lomakedata)
+                              :perustelu     (:perustelu @paallystys/paikkausilmoitus-lomakedata)
+                              :kasittelyaika (:kasittelyaika @paallystys/paikkausilmoitus-lomakedata)}
+                             (fn [uusi-arvo] (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc @paallystys/paikkausilmoitus-lomakedata :paatos (:paatos uusi-arvo))
+                                                                               (assoc :perustelu (:perustelu uusi-arvo))
+                                                                               (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
     (when @valmis-kasiteltavaksi?
       [:div.paikkausilmoitus-kasittely
        [:h3 "Käsittely"]
@@ -128,10 +122,10 @@
 
 (defn tallennus
   [valmis-tallennettavaksi?]
-  (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
-                                        valmispvm-paikkaus (:valmispvm_paikkaus @lomakedata)
-                                        paatos (:paatos @lomakedata)
-                                        tila (:tila @lomakedata)]
+  (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata)
+                                        valmispvm-paikkaus (:valmispvm_paikkaus @paallystys/paikkausilmoitus-lomakedata)
+                                        paatos (:paatos @paallystys/paikkausilmoitus-lomakedata)
+                                        tila (:tila @paallystys/paikkausilmoitus-lomakedata)]
                                     (cond (not (and valmispvm-kohde valmispvm-paikkaus))
                                           "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
                                           (and (not= :lukittu tila)
@@ -148,10 +142,10 @@
 
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
-      #(let [lomake @lomakedata
+      #(let [lomake @paallystys/paikkausilmoitus-lomakedata
              lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
                                   (grid/poista-idt [:ilmoitustiedot :toteumat]))]
-        (log "PAI Lomake-data: " (pr-str @lomakedata))
+        (log "PAI Lomake-data: " (pr-str @paallystys/paikkausilmoitus-lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
         (paikkaus/tallenna-paikkausilmoitus urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
@@ -159,31 +153,31 @@
        :ikoni        (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PAI Lomake tallennettu, vastaus: " (pr-str vastaus))
-                       (reset! toteumarivit vastaus)
-                       (reset! lomakedata nil))}]]))
+                       (reset! paallystys/paikkaustoteumat vastaus)
+                       (reset! paallystys/paikkausilmoitus-lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
-  (let [kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @lomakedata [:ilmoitustiedot :toteumat])))]
+  (let [kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paallystys/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
 
     (komp/luo
-      (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @lomakedata)))
+      (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @paallystys/paikkausilmoitus-lomakedata)))
       (fn []
-        (let [kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @lomakedata)
-                                      :valmispvm_kohde    (:valmispvm_kohde @lomakedata)
-                                      :valmispvm_paikkaus (:valmispvm_paikkaus @lomakedata)}
+        (let [kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @paallystys/paikkausilmoitus-lomakedata)
+                                      :valmispvm_kohde    (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata)
+                                      :valmispvm_paikkaus (:valmispvm_paikkaus @paallystys/paikkausilmoitus-lomakedata)}
                                      (fn [uusi-arvo]
-                                       (reset! lomakedata (-> (assoc @lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                              (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
-                                                              (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
+                                       (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc @paallystys/paikkausilmoitus-lomakedata :aloituspvm (:aloituspvm uusi-arvo))
+                                                                         (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
+                                                                         (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
 
               toteutuneet-osoitteet
-              (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @lomakedata)))
-                      (fn [uusi-arvo] (reset! lomakedata
-                                              (assoc-in @lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+              (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @paallystys/paikkausilmoitus-lomakedata)))
+                      (fn [uusi-arvo] (reset! paallystys/paikkausilmoitus-lomakedata
+                                              (assoc-in @paallystys/paikkausilmoitus-lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
               toteutuneet-maarat
-              (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @lomakedata))))
-                      (fn [uusi-arvo] (reset! lomakedata
-                                              (assoc-in @lomakedata [:ilmoitustiedot :toteumat] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+              (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @paallystys/paikkausilmoitus-lomakedata))))
+                      (fn [uusi-arvo] (reset! paallystys/paikkausilmoitus-lomakedata
+                                              (assoc-in @paallystys/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat] (grid/filteroi-uudet-poistetut uusi-arvo)))))
 
               toteutuneet-osoitteet-virheet (atom {})
               toteutuneet-maarat-virheet (atom {})
@@ -191,7 +185,7 @@
               valmis-tallennettavaksi? (reaction
                                          (let [toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                                toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
-                                               tila (:tila @lomakedata)
+                                               tila (:tila @paallystys/paikkausilmoitus-lomakedata)
                                                lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
                                            (and
                                              (not (= tila :lukittu))
@@ -199,8 +193,8 @@
                                              (empty? toteutuneet-maarat-virheet)
                                              (false? lomake-lukittu-muokkaukselta?))))
               valmis-kasiteltavaksi? (reaction
-                                       (let [valmispvm-kohde (:valmispvm_kohde @lomakedata)
-                                             tila (:tila @lomakedata)]
+                                       (let [valmispvm-kohde (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata)
+                                             tila (:tila @paallystys/paikkausilmoitus-lomakedata)]
                                          (log "PAI valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
                                          (and tila
                                               valmispvm-kohde
@@ -208,7 +202,7 @@
                                               (not (nil? valmispvm-kohde)))))]
           [:div.paikkausilmoituslomake
 
-           [:button.nappi-toissijainen {:on-click #(reset! lomakedata nil)}
+           [:button.nappi-toissijainen {:on-click #(reset! paallystys/paikkausilmoitus-lomakedata nil)}
             (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
 
            (when @lomake-lukittu-muokkaukselta?
@@ -220,32 +214,32 @@
             [:div.col-md-6
              [:h3 "Perustiedot"]
              [lomake/lomake {:luokka       :horizontal
-                             :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
+                             :voi-muokata? (and (not= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata))
                                                 (false? @lomake-lukittu-muokkaukselta?))
                              :muokkaa!     (fn [uusi]
                                              (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                              (reset! kohteen-tiedot uusi))}
-              [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @lomakedata) " " (:kohdenimi @lomakedata))) :muokattava? (constantly false)}
+              [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @paallystys/paikkausilmoitus-lomakedata) " " (:kohdenimi @paallystys/paikkausilmoitus-lomakedata))) :muokattava? (constantly false)}
                {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
                {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paikkaus :tyyppi :pvm}
                {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
                 :vihje   (when (and
-                                 (:valmispvm_paikkaus @lomakedata)
-                                 (:valmispvm_kohde @lomakedata)
-                                 (= :aloitettu (:tila @lomakedata)))
+                                 (:valmispvm_paikkaus @paallystys/paikkausilmoitus-lomakedata)
+                                 (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata)
+                                 (= :aloitettu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                            "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
                 :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
                {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
-               (when (or (= :valmis (:tila @lomakedata))
-                         (= :lukittu (:tila @lomakedata)))
+               (when (or (= :valmis (:tila @paallystys/paikkausilmoitus-lomakedata))
+                         (= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
                   :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                      :voi-liittaa      false
                                                      :leveys-col       40
                                                      :placeholder      "Kirjoita kommentti..."
-                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @lomakedata)
-                                                                               #(swap! lomakedata assoc :uusi-kommentti %))}
-                                (:kommentit @lomakedata)]})
+                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @paallystys/paikkausilmoitus-lomakedata)
+                                                                               #(swap! paallystys/paikkausilmoitus-lomakedata assoc :uusi-kommentti %))}
+                                (:kommentit @paallystys/paikkausilmoitus-lomakedata)]})
                ]
               @kohteen-tiedot]]
 
@@ -259,9 +253,9 @@
              {:otsikko      "Paikatut tierekisteriosoitteet"
               :tunniste     :tie
               :voi-muokata? (do
-                              (log "PAI tila " (pr-str (:tila @lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @lomakedata)))
-                              (and (not= :lukittu (:tila @lomakedata))
-                                   (not= :hyvaksytty (:paatos @lomakedata))
+                              (log "PAI tila " (pr-str (:tila @paallystys/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @paallystys/paikkausilmoitus-lomakedata)))
+                              (and (not= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata))
+                                   (not= :hyvaksytty (:paatos @paallystys/paikkausilmoitus-lomakedata))
                                    (false? @lomake-lukittu-muokkaukselta?)))
               :virheet      toteutuneet-osoitteet-virheet
               :uusi-id      (inc (count @toteutuneet-osoitteet))}
@@ -283,8 +277,8 @@
 
             [grid/muokkaus-grid
              {:otsikko      "Toteutuneet suoritemäärät"
-              :voi-muokata? (and (not= :lukittu (:tila @lomakedata))
-                                 (not= :hyvaksytty (:paatos @lomakedata))
+              :voi-muokata? (and (not= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata))
+                                 (not= :hyvaksytty (:paatos @paallystys/paikkausilmoitus-lomakedata))
                                  (false? @lomake-lukittu-muokkaukselta?))
               :voi-lisata?  false
               :voi-kumota?  false
@@ -311,7 +305,7 @@
       [:div
        [grid/grid
         {:otsikko  "Paikkausilmoitukset"
-         :tyhja    (if (nil? @toteumarivit) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+         :tyhja    (if (nil? @paallystys/paikkaustoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
@@ -327,29 +321,29 @@
                                                                                                          (log "PAI Rivi: " (pr-str rivi))
                                                                                                          (log "PAI Vastaus: " (pr-str vastaus))
                                                                                                          (if-not (k/virhe? vastaus)
-                                                                                                           (reset! lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
+                                                                                                           (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
-                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! lomakedata {:kohdenumero      (:kohdenumero rivi)
-                                                                                                                          :kohdenimi        (:nimi rivi)
-                                                                                                                          :paikkauskohde-id (:paikkauskohde_id rivi)})}
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! paallystys/paikkausilmoitus-lomakedata {:kohdenumero      (:kohdenumero rivi)
+                                                                                                                                     :kohdenimi        (:nimi rivi)
+                                                                                                                                     :paikkauskohde-id (:paikkauskohde_id rivi)})}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)
-                          :lukittu 0
-                          :valmis 1
-                          :aloitettu 3
-                          4))
+                                :lukittu 0
+                                :valmis 1
+                                :aloitettu 3
+                                4))
                 (fn [toteuma] (case (:paatos toteuma)
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3)))
-          @toteumarivit)]])))
+          @paallystys/paikkaustoteumat)]])))
 
 (defn paikkausilmoitukset []
   (komp/luo
-    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
+    (komp/lippu paikkaus/paallystys-tai-paikkausnakymassa? paallystys/karttataso-paikkauskohteet)
 
     (fn []
-      (if @lomakedata
+      (if @paallystys/paikkausilmoitus-lomakedata
         [paikkausilmoituslomake]
         [ilmoitusluettelo]))))

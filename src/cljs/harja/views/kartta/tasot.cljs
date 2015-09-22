@@ -28,7 +28,8 @@
                                          @toteumat/yksikkohintainen-toteuma-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla
-                                         @paallystys/paallystyskohteet-kartalla)]
+                                         @paallystys/paallystyskohteet-kartalla
+                                         @paallystys/paikkauskohteet-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))

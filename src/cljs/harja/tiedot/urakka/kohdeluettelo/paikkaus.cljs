@@ -13,7 +13,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defonce paikkauskohteet-nakymassa? (atom false))
-(defonce paikkausilmoitukset-nakymassa? (atom false))
+(defonce paallystys-tai-paikkausnakymassa? (atom false))
 
 (defn hae-paikkaustoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paikkaustoteumat {:urakka-id  urakka-id
