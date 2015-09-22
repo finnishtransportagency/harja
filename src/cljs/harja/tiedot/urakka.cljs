@@ -36,6 +36,9 @@
 (defonce urakan-toimenpideinstanssit+muut (reaction
                                                     (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
 
+(defonce urakan-toimenpideinstanssit+kaikki (reaction
+                                            (conj @urakan-toimenpideinstanssit {:tpi_nimi "Kaikki"})))
+
 (defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]

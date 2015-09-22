@@ -56,38 +56,29 @@
              @nav/valittu-urakka
              @yksikkohintaiset-toteumat
              (let [tehtavat (map
-                              (fn [tasot] (nth tasot 3))
+                              (fn [tasot] (let [kolmostaso (nth tasot 2)
+                                                nelostaso (nth tasot 3)]
+                                            (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
                               @u/urakan-toimenpiteet-ja-tehtavat)
                    toteumat-tehtavatietoineen (mapv
-                                                  (fn [toteuma]
-                                                    (let [tehtavan-tiedot
-                                                          (first (filter (fn [tehtava]
-                                                                           (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                         tehtavat))
-                                                          yksikkohinta-hoitokaudella (or (:yksikkohinta (first (filter
-                                                                                                                 (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                                 @u/urakan-yks-hint-tyot))) nil)
-                                                          suunniteltu-maara-hoitokaudella (or (:maara (first (filter
+                                                (fn [toteuma]
+                                                  (let [tehtavan-tiedot (first (filter (fn [tehtava]
+                                                                                         (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
+                                                                                       tehtavat))
+                                                        yksikkohinta-hoitokaudella (or (:yksikkohinta (first (filter
                                                                                                                (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
                                                                                                                               (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                               @u/urakan-yks-hint-tyot))) nil)]
-                                                      (-> toteuma
-                                                          (merge (dissoc tehtavan-tiedot :id))
-                                                          (assoc :yksikkohinta yksikkohinta-hoitokaudella)
-                                                          (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
-                                                  @yksikkohintaiset-toteumat)
-                   yhteensa {:id -1
-                             :nimi       "Yhteensä"
-                             :yhteenveto true
-                             :toteutuneet-kustannukset (reduce + (mapv
-                                                                   (fn [rivi]
-                                                                     (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
-                                                                   toteumat-tehtavatietoineen))}]
-               (if (empty? toteumat-tehtavatietoineen)
-                 toteumat-tehtavatietoineen
-                 (conj toteumat-tehtavatietoineen yhteensa))))))
-
+                                                                                                               @u/urakan-yks-hint-tyot))) nil)
+                                                        suunniteltu-maara-hoitokaudella (or (:maara (first (filter
+                                                                                                             (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
+                                                                                                                            (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                                             @u/urakan-yks-hint-tyot))) nil)]
+                                                    (-> toteuma
+                                                        (merge (dissoc tehtavan-tiedot :id))
+                                                        (assoc :yksikkohinta yksikkohinta-hoitokaudella)
+                                                        (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
+                                                @yksikkohintaiset-toteumat)]
+               toteumat-tehtavatietoineen))))
 (defn muodosta-materiaalisarakkeet
   "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
   [materiaalitoteumat]
@@ -155,23 +146,41 @@
     :konteksti  #{:urakka}
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet :valitun-urakan-toimenpiteet+kaikki}
     :render     (fn []
-                  [grid/grid
-                   {:otsikko      "Yksikköhintaisten töiden kuukausiraportti"
-                    :tyhja        (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")}
-                   [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-opt :leveys "20%"}
-                    {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "30%"}
-                    {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-                    {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
-                    {:otsikko "Suunniteltu määrä hoitokaudella" :nimi :suunniteltu-maara-hoitokaudella :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi]
-                                                                                                                                                (let [yksikkohinta (:yksikkohinta rivi)
-                                                                                                                                                      suunniteltu-maara-hoitokaudella (:suunniteltu-maara-hoitokaudella rivi)]
-                                                                                                                                                  (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
-                                                                                                                                                    (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                    {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
-                                                                                                                               (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
-                   @yksikkohintaiset-toteumat-kaikkine-tietoineen])}
+                  (let [filtteroidyt-tehtavat (case (:tpi_nimi @u/valittu-toimenpideinstanssi)
+                                               "Kaikki" @yksikkohintaiset-toteumat-kaikkine-tietoineen
+                                               (filter (fn [tehtava]
+                                                         (or (:yhteenveto tehtava)
+                                                             (= (:t3_koodi tehtava) (:t3_koodi @u/valittu-toimenpideinstanssi))))
+                                                       @yksikkohintaiset-toteumat-kaikkine-tietoineen))
+                        yhteensa {:id                       -1
+                                  :nimi                     "Yhteensä"
+                                  :yhteenveto               true
+                                  :toteutuneet-kustannukset (reduce + (mapv
+                                                                        (fn [rivi]
+                                                                          (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
+                                                                        filtteroidyt-tehtavat))}
+                        naytettavat-rivit (if (empty? filtteroidyt-tehtavat)
+                                            []
+                                            (conj filtteroidyt-tehtavat yhteensa))]
+                    [grid/grid
+                     {:otsikko "Yksikköhintaisten töiden kuukausiraportti"
+                      :tyhja   (if (empty? @yksikkohintaiset-toteumat-kaikkine-tietoineen) "Ei raportoitavia tehtäviä.")}
+                     [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :fmt pvm/pvm-opt :leveys "20%"}
+                      {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "30%"}
+                      {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+                      {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%" :fmt fmt/euro-opt}
+                      {:otsikko "Suunniteltu määrä hoitokaudella" :nimi :suunniteltu-maara-hoitokaudella :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi]
+                                                                                                                                                  (let [yksikkohinta (:yksikkohinta rivi)
+                                                                                                                                                        suunniteltu-maara-hoitokaudella (:suunniteltu-maara-hoitokaudella rivi)]
+                                                                                                                                                    (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
+                                                                                                                                                      (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
+                                                                                                                                 (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                     (sort
+                       (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
+                       naytettavat-rivit)]))}
    {:nimi       :materiaaliraportti
     :otsikko    "Materiaaliraportti"
     :konteksti  #{:urakka :hallintayksikko :koko-maa}
@@ -244,7 +253,10 @@
               (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
                        (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-aikavali))
                    (nil? v-ur))
-              [valinnat/aikavali])])]))))
+              [valinnat/aikavali])
+            (when
+              (and (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-toimenpiteet+kaikki) v-ur)
+              [valinnat/urakan-toimenpide+kaikki])])]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [v-ur @nav/valittu-urakka
