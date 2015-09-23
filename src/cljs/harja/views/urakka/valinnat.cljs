@@ -52,7 +52,7 @@
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
+  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit+muut)
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
