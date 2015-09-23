@@ -127,9 +127,6 @@
                                (assoc materiaalitoteuma :kokonaismaara 0)
                                materiaalitoteuma))
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
-    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
-    (log/debug "Haettu urakan suunnitellut materiaalit: " suunnitellut-materiaalit)
-    (log/debug "Kaikki materiaalit: " (pr-str lopullinen-tulos))
     lopullinen-tulos))
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
@@ -140,7 +137,6 @@
                                                                                                             (konv/sql-timestamp alkupvm)
                                                                                                             (konv/sql-timestamp loppupvm)
                                                                                                             hallintayksikko-id))]
-    (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
@@ -150,7 +146,6 @@
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)
                                                                                                       (konv/sql-timestamp loppupvm)))]
-    (log/debug "Haettu koko maan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 (defrecord Raportit []
   component/Lifecycle
