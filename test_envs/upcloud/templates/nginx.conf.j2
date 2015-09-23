@@ -47,7 +47,7 @@ server {
 
     location / {
       proxy_pass_header OAM_REMOTE_USER;
-      proxy_pass   http://backend;
+      proxy_pass   http://backend/;
     }
     
     location ~ /harja/api/(?<path>.*)$ {

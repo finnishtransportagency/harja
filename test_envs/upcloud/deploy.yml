@@ -1,0 +1,34 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: Varmistetaan, että Harjan sovellushakemisto on olemassa
+      file: path=/opt/harja state=directory owner=harja group=harja mode="u=rwx,g=rwx,o=rx"
+      
+    - name: kirjoita serviced konfiguraatio
+      template: src=templates/centos7-service-template.j2 dest=/etc/systemd/system/harja.service mode=755
+      with_items:
+        - description: "Harja testiymparisto"
+          start_file: /opt/harja/harja.sh
+          user_name: harja
+          user_group: harja
+          workingdir: /opt/harja
+      
+    - name: Kopioi viimeisin Harja jar
+      copy: src=../../target/harja-0.0.1-SNAPSHOT-standalone.jar dest=/opt/harja/harja-nightly.jar
+        
+    - name: Kopioi sovelluksen konfiguraatio
+      template: src=templates/asetukset.edn dest=/opt/harja/asetukset.edn
+
+    - name: Kopioi käynnistysskripti
+      template: src=templates/harja.sh dest=/opt/harja/harja.sh mode=755
+
+    - name: Käynnistä Harja
+      sudo: yes
+      service: name=harja state=restarted
+      register: start
+
+      
+
+    
+  

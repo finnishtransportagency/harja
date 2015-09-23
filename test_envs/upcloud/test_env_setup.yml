@@ -11,6 +11,8 @@
   tasks:
     - name: fix hostname
       hostname: name={{harja_hostname}}
+    - name: fix hosts
+      lineinfile: dest=/etc/hosts line="127.0.0.1 {{harja_hostname}}"
     - name: install nginx repo rpm
       yum:
         name: http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
@@ -51,15 +53,41 @@
     - name: set up harja database user
       sudo: yes
       sudo_user: postgres      
-      postgresql_user: name=harja
+      postgresql_user: name=harja password=harja123
     - name: set up harja database
       sudo: yes
       sudo_user: postgres      
       postgresql_db: name=harja owner=harja encoding='UTF-8' lc_collate='fi_FI.UTF-8' lc_ctype='fi_FI.UTF-8'
+    - name: set up postgis for harja database
+      sudo: yes
+      sudo_user: postgres      
+      postgresql_ext: name=postgis db=harja
+    - name: configure postgresql.conf
+      template: src=templates/postgresql.conf.j2 dest=/var/lib/pgsql/9.4/data/postgresql.conf owner=postgres group=postgres mode=0600
+      notify:
+        - restart postgres
+    - name: configure pg_hba.conf
+      template: src=templates/pg_hba.conf.j2 dest=/var/lib/pgsql/9.4/data/pg_hba.conf owner=postgres group=postgres mode=0600
+      notify:
+        - restart postgres
     - name: configure nginx
       template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
       notify:
         - restart nginx
+    - name: Download ActiveMQ
+      get_url: dest=/tmp/activemq.tar.gz url=http://www.nic.funet.fi/pub/mirrors/apache.org/activemq/5.12.0/apache-activemq-5.12.0-bin.tar.gz
+      register: get_activemq
+    - name: Create ActiveMQ directory
+      file: state=directory path=/opt/activemq mode=0777
+    - name: Extract ActiveMQ
+      unarchive: dest=/opt/activemq src=/tmp/activemq.tar.gz copy=no
+      when: get_activemq|changed
+    - name: Start ActiveMQ
+      async: 10
+      poll: 0
+      command: /opt/activemq/apache-activemq-5.12.0/bin/activemq restart
+      args:
+        chdir: "/opt/activemq/apache-activemq-5.12.0"
     - name: start nginx
       service: name=nginx state=started
     - name: add HTTP to iptables IN_public_allow chain
