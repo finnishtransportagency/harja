@@ -35,16 +35,26 @@
   (let [fo (muodosta-pdf [:taulukko [{:otsikko "Eka" :leveys "10%"}
                                      {:otsikko "Toka" :leveys "60%"}
                                      {:otsikko "Kolmas" :leveys "30%"}]
-                          [["eka" "toka" "kolmas"]]])
-        [_ [s1 s2 s3] body] fo
-        [_ [[_ [a1 a2 a3]]]] body]
-    (is (= s1 [:fo:table-column {:column-width "10%"}]))
-    (is (= s2 [:fo:table-column {:column-width "60%"}]))
-    (is (= s3 [:fo:table-column {:column-width "30%"}]))
-    
-    (is (= a1 [:fo:table-cell [:fo:block "eka"]]))
-    (is (= a2 [:fo:table-cell [:fo:block "toka"]]))
-    (is (= a3 [:fo:table-cell [:fo:block "kolmas"]]))))
+                          [["eka" "toka" "kolmas"]]])]
+    ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
+    ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
+    ;; visuaalista rakennetta oikein assertoida.
+    (is (= fo '[:fo:table {:border "solid 0.1mm black"}
+                ([:fo:table-column {:column-width "10%"}]
+                 [:fo:table-column {:column-width "60%"}]
+                 [:fo:table-column {:column-width "30%"}])
+                [:fo:table-header
+                 [:fo:table-row
+                  ([:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Eka"]]
+                   [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Toka"]]
+                   [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Kolmas"]])]]
+                [:fo:table-body
+                 ([:fo:table-row
+                   ([:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "eka"]]
+                    [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "toka"]]
+                    [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "kolmas"]])])]]))))
+
+
 
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}
@@ -59,7 +69,6 @@
 (deftest yhteenveto
   (let [fo (muodosta-pdf [:yhteenveto [["otsikko" "arvo"]
                                        ["toinen juttu" 4242]]])
-        _ (println fo)
         [_  s1 s2 [_ [r1 r2]]] fo]
     (is (= s1 [:fo:table-column {:column-width "25%"}]))
     (is (= s2 [:fo:table-column {:column-width "75%"}]))
@@ -73,7 +82,9 @@
           
 ;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti ja siitä PDF:n generointi
 
-(def +testiraportti+ [:raportti {}
+(def +testiraportti+ [:raportti {:nimi "Testiraportti"
+                                 :tietoja [["Urakka" "Rymättylän päällystys"]
+                                           ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
                       [:otsikko "Tämä on hieno raportti"]
                       [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
                       [:taulukko [{:otsikko "Nimi" :leveys "50%"}
@@ -111,7 +122,7 @@
 
 ;; Evaluoi tämä, jos haluat saada raportti PDF:n näytölle auki
 #_(do (require '[clojure.java.io :as io])
-      (require '[clojure.java.shell :as sh])
-      (io/copy (luo-raportti-pdf-bytes)
-               (java.io.File. "raportti.pdf"))
-      (sh/sh "open" "raportti.pdf"))
+    (require '[clojure.java.shell :as sh])
+    (io/copy (luo-raportti-pdf-bytes)
+             (java.io.File. "raportti.pdf"))
+    (sh/sh "open" "raportti.pdf"))

@@ -42,11 +42,10 @@
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
   [:fo:block
    [:fo:block {:font-weight "bold"} otsikko]
-   [:fo:instream-foreign-object {:content-width "15cm" :content-height "10cm"}
+   [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
     [:svg {:xmlns "http://www.w3.org/2000/svg"}
-     ;; FIXME
      (let [data pylvaat
-           width 150
+           width 180
            height 80
            label-fn first
            value-fn second
@@ -112,7 +111,26 @@
        [:fo:table-cell
         [:fo:block {:margin-left "5mm"} (str arvo)]]])]])
 
+(defn- luo-footer [raportin-nimi]
+  (let [nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
+    [:fo:table
+     [:fo:table-column {:column-width "40%"}]
+     [:fo:table-column {:column-width "40%"}]
+     [:fo:table-column {:column-width "20%"}]
+     [:fo:table-body
+      [:fo:table-row
+       [:fo:table-cell [:fo:block raportin-nimi]]
+       [:fo:table-cell [:fo:block "Ajettu " nyt]]
+       [:fo:table-cell {:text-align "end"}
+        [:fo:block
+         "Sivu " [:fo:page-number] " / " [:fo:page-number-citation {:ref-id "raportti-loppu"}]]]]]]))
+  
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (apply fo/dokumentti {}
-         (map muodosta-pdf sisalto)))
+  (apply fo/dokumentti {:footer {:sisalto (luo-footer (:nimi raportin-tunnistetiedot))}}
+         (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
+                  (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
+                    [:fo:block {:padding "2mm" :border "solid 0.2mm black"}
+                     (muodosta-pdf [:yhteenveto tiedot])])]
+                 (map muodosta-pdf sisalto)
+                 [[:fo:block {:id "raportti-loppu"}]])))
