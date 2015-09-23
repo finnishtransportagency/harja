@@ -48,7 +48,7 @@
                                         (urakat-q/hae-kaynnissa-olevat-urakat db)))]
                  (when-not (empty? urakat) urakat))
 
-               (if (vector? urakka) urakka (vec urakka)))]
+               (if (vector? urakka) urakka [urakka]))]
       (when ur
         (log/debug "Haetaan urakoille: " (pr-str ur))
         (q/hae-toimenpidekoodit-historiakuvaan db ur)))))
