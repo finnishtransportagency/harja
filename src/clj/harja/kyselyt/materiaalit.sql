@@ -113,7 +113,7 @@ SELECT
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
+  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.toteuma)
   JOIN toteuma ON toteuma.id = toteuma
                   AND urakka.id = :urakka
                   AND alkanut :: DATE >= :alku
