@@ -13,6 +13,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
+(def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
+
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
 ;;
@@ -322,13 +324,12 @@ Optiot on mappi optioita:
   :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                    jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                    rivin alla
-  :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
-  :napit-alaskin?  Boolean: näytetäänkö taulukon muokkauskontrollit alhaallakin. Oletus: false
+  :luokat          Päätason div-elementille annettavat lisäluokat (vectori stringejä)
 
   
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
-           muokkaa-footer muokkaa-aina muutos rivin-luokka napit-alaskin? prosessoi-muutos
+           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
@@ -526,7 +527,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu
-                    muokkaa-footer muokkaa-aina rivin-luokka napit-alaskin? uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
                colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))
@@ -674,8 +675,8 @@ Optiot on mappi optioita:
                                      rivit-jarjestetty)))))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])]
-            ;taulukon allekin saa muokkaustoiminnot jos haluaa, tähän panel-heading ilman otsikkoa
-            (when napit-alaskin?
+            ;taulukon allekin muokkaustoiminnot jos rivejä yli rajamäärän
+            (when (> (count tiedot) +rivimaara-jonka-jalkeen-napit-alaskin+)
               [:span.gridin-napit-alhaalla
                (muokkauspaneeli false)])]))})))
 
