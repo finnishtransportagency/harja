@@ -9,8 +9,7 @@
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [schema.core :as s :include-macros true]
-            [harja.ui.yleiset :as yleiset])
+            [schema.core :as s :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -248,9 +247,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           (muokkaa! id assoc :poistettu true))}
          (ikonit/trash)]
         [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]))
-      (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
-        [:span.rivilla-virheita
-         (ikonit/warning-sign)])]])
+    (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
+      [:span.rivilla-virheita
+       (ikonit/warning-sign)])]])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna]} skeema rivi]
   [:tr {:class    luokka
@@ -266,12 +265,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (if (= tyyppi :komponentti)
           (komponentti rivi)
           (let [haettu-arvo (if hae
-                          (hae rivi)
-                          (get rivi nimi))
+                              (hae rivi)
+                              (get rivi nimi))
                 arvon-pituus-rajattu (if nayta-max-merkkia
                                        (if (> (count haettu-arvo) nayta-max-merkkia)
-                                           (str (subs haettu-arvo 0 nayta-max-merkkia) "...")
-                                           haettu-arvo)
+                                         (str (subs haettu-arvo 0 nayta-max-merkkia) "...")
+                                         haettu-arvo)
                                        haettu-arvo)]
             (if fmt
               (fmt arvon-pituus-rajattu)
@@ -292,40 +291,39 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
-  :nimi                       kentän hakufn
-  :fmt                        kentän näyttämis fn (oletus str)
-  :otsikko                    ihmiselle näytettävä otsikko
-  :otsikko_lyhennne           ihmiselle näytettävä otsikko silloin kun gridissä ei ole tarpeeksi tilaa normaaleille otsikoille
-  :tunniste                   rivin tunnistava kenttä, oletuksena :id
-  :voi-poistaa?               voiko rivin poistaa (funktio)
+  :nimi            kentän hakufn
+  :fmt             kentän näyttämis fn (oletus str)
+  :otsikko         ihmiselle näytettävä otsikko
+  :tunniste        rivin tunnistava kenttä, oletuksena :id
+  :voi-poistaa?    voiko rivin poistaa (funktio)
   :esta-poistaminen?          funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip   funktio, joka palauttaa tooltipin. ks. ylempi.
-  :voi-lisata?                voiko rivin lisätä (boolean)
-  :tyyppi                     kentän tietotyyppi,  #{:string :puhelin :email :pvm}
-  :ohjaus                     gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
+  :voi-lisata?     voiko rivin lisätä (boolean)
+  :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :ohjaus          gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
 Optiot on mappi optioita:
-  :tallenna                   funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
-                              jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
-                              jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
-  :tallenna-vain-muokatut     boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
-  :peruuta                    funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
-  :rivi-klikattu              funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
-  :muokkaa-footer             optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muokkaa-aina               jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
-  :muutos                     jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
-                              Parametrina Grid ohjauskahva
-  :prosessoi-muutos           funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
-                              parametrina muokkausdata, palauttaa uuden muokkausdatan
-  :rivin-luokka               funktio joka palauttaa rivin luokan
-  :uusi-rivi                  jos annettu uuden rivin tiedot käsitellään tällä funktiolla
-  :vetolaatikot               {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
-                              jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
-                              rivin alla
-  :luokat                     Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
-  :napit-alaskin?           Boolean: näytetäänkö taulukon muokkauskontrollit alhaallakin. Oletus: false
+  :tallenna        funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+                   jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
+                   jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
+  :tallenna-vain-muokatut boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
+  :peruuta         funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
+  :rivi-klikattu   funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
+  :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
+  :muokkaa-aina    jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
+  :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
+                   Parametrina Grid ohjauskahva
+  :prosessoi-muutos  funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
+                     parametrina muokkausdata, palauttaa uuden muokkausdatan 
+  :rivin-luokka    funktio joka palauttaa rivin luokan
+  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
+  :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
+                   jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
+                   rivin alla
+  :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :napit-alaskin?  Boolean: näytetäänkö taulukon muokkauskontrollit alhaallakin. Oletus: false
 
   
   "
@@ -398,7 +396,7 @@ Optiot on mappi optioita:
                               (if (empty? (get virheet rivin-id))
                                 (dissoc virheet rivin-id)
                                 virheet)))))
-                 
+
                  (muokkaa-rivit! [this funktio args]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
@@ -530,7 +528,6 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     muokkaa-footer muokkaa-aina rivin-luokka napit-alaskin? uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
-               viewport-leveys @yleiset/leveys
                colspan (inc (count skeema))
                muokataan (not (nil? @muokatut))
                muokkauspaneeli (fn [nayta-otsikko?]
@@ -589,12 +586,9 @@ Optiot on mappi optioita:
                [:table.grid
                 [:thead
                  [:tr
-                  (for [{:keys [otsikko otsikko-lyhenne leveys nimi]} skeema]
-                    (let [lopullinen-otsikko (if (and (>= viewport-leveys 700) (<= (count skeema) 15))
-                                               otsikko
-                                               (or otsikko-lyhenne otsikko))]
-                      ^{:key (str nimi)}
-                      [:th {:width (or leveys "5%")} lopullinen-otsikko]))
+                  (for [{:keys [otsikko leveys nimi]} skeema]
+                    ^{:key (str nimi)}
+                    [:th {:width (or leveys "5%")} otsikko])
                   (when tallenna [:th.toiminnot {:width "40px"} " "])]]
 
                 [:tbody
@@ -757,7 +751,7 @@ Optiot on mappi optioita:
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
                      (log "VANHAT TIEDOT: " (pr-str vanhat-tiedot))
                      (log "UUDET TIEDOT: " (pr-str uudet-tiedot))
-                          
+
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
