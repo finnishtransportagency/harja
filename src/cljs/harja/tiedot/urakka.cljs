@@ -33,8 +33,11 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce urakan-toimenpideinstanssit+lisavalinnat (reaction
+(defonce urakan-toimenpideinstanssit+muut (reaction
                                                     (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
+
+(defonce urakan-toimenpideinstanssit+kaikki (reaction
+                                            (conj @urakan-toimenpideinstanssit {:tpi_nimi "Kaikki"})))
 
 (defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
