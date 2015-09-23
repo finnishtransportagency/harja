@@ -1441,7 +1441,7 @@ INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden muokkaushöyläys', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden pölynsidonta', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden tasaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
-UPDATE toimenpidekoodi SET kokonaishintainen = TRUE WHERE nimi = 'Sorastus' AND emo = (SELECT id FROM toimenpidekoodi WHERE koodi='23124');
+UPDATE toimenpidekoodi SET kokonaishintainen = TRUE WHERE nimi = 'Sorastus' AND emo in (SELECT id FROM toimenpidekoodi WHERE koodi='23124');
 -- Alueurakan liikenneympäristön hoidon
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Tiestotarkastus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Harjaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
