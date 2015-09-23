@@ -3,7 +3,6 @@
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]))
 
-(def muodosta-pdf nil)
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."

@@ -118,7 +118,7 @@
       (.toByteArray out))))
 
 (deftest luo-raportti-pdf
-  (is (> (count (luo-raportti-pdf-bytes)) 16000)))
+  (is (> (count (luo-raportti-pdf-bytes)) 16000) "Testiraportin koko on reilut 16000 tavua"))
 
 ;; Evaluoi tämä, jos haluat saada raportti PDF:n näytölle auki
 #_(do (require '[clojure.java.io :as io])
