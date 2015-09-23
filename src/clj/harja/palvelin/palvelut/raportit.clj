@@ -121,16 +121,16 @@
                                                       (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
                                                       toteutuneet-materiaalit))
                                                   suunnitellut-materiaalit)
-        kaikki-materiaalit (mapv
-                             (fn [materiaalitoteuma]
-                               (if (nil? (:kokonaismaara materiaalitoteuma))
-                                 (assoc materiaalitoteuma :kokonaismaara 0)
-                                 materiaalitoteuma))
-                             (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
+        lopullinen-tulos (mapv
+                           (fn [materiaalitoteuma]
+                             (if (nil? (:kokonaismaara materiaalitoteuma))
+                               (assoc materiaalitoteuma :kokonaismaara 0)
+                               materiaalitoteuma))
+                           (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
     (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
     (log/debug "Haettu urakan suunnitellut materiaalit: " suunnitellut-materiaalit)
-    (log/debug "Kaikki materiaalit: " (pr-str kaikki-materiaalit))
-    kaikki-materiaalit))
+    (log/debug "Kaikki materiaalit: " (pr-str lopullinen-tulos))
+    lopullinen-tulos))
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
