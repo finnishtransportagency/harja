@@ -45,7 +45,10 @@
                                                 (vec (conj (into '() @urakan-toimenpideinstanssit) {:tpi_nimi "Kaikki"}))
                                                 @urakan-toimenpideinstanssit)))
 
-(defonce valittu-toimenpideinstanssi (reaction (first @@kaytossa-oleva-toimenpideinstanssit-lista)))
+(defonce valittu-toimenpideinstanssi (reaction (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit
+                                                     urakan-toimenpideinstanssit+muut @urakan-toimenpideinstanssit+muut
+                                                     urakan-toimenpideinstanssit+kaikki @urakan-toimenpideinstanssit+kaikki]
+                                                 (first @@kaytossa-oleva-toimenpideinstanssit-lista))))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))
