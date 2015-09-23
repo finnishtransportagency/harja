@@ -29,18 +29,28 @@
 (def haetut-asiat (atom nil))
 
 (defn oletusalue [asia]
-  {:type        :circle
-   :coordinates (:sijainti asia)
-   :color       "green"
-   :radius      300
-   :stroke      {:color "black" :width 10}})
+  (merge
+    (:sijainti asia)
+    {:color  "green"
+     :radius 300
+     :stroke {:color "black" :width 10}}))
 
 (defmulti kartalla-xf :tyyppi)
 
-(defmethod kartalla-xf :ilmoitus [ilmoitus]
-  (assoc ilmoitus
-    :type :ilmoitus
-    :alue (oletusalue ilmoitus)))
+(defmethod kartalla-xf :tiedoitus [ilmoitus]
+  [(assoc ilmoitus
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
+
+(defmethod kartalla-xf :kysely [ilmoitus]
+  [(assoc ilmoitus
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
+
+(defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
+  [(assoc ilmoitus
+     :type :ilmoitus
+     :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
   (assoc havainto
@@ -94,13 +104,15 @@
           tulos (yhdista
                   (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit)))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
-                    (<! (k/post! :hae-ilmoitukset (assoc
-                                                    yhteiset-parametrit
-                                                    :aikavali [(:alku yhteiset-parametrit)
-                                                               (:loppu yhteiset-parametrit)]
-                                                    :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
-                                                                          (when @hae-kyselyt? :kysely)
-                                                                          (when @hae-tiedoitukset? :tiedoitus)])))))
+                    (mapv
+                      #(clojure.set/rename-keys % {:ilmoitustyyppi :tyyppi})
+                      (<! (k/post! :hae-ilmoitukset (assoc
+                                                      yhteiset-parametrit
+                                                      :aikavali [(:alku yhteiset-parametrit)
+                                                                 (:loppu yhteiset-parametrit)]
+                                                      :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
+                                                                            (when @hae-kyselyt? :kysely)
+                                                                            (when @hae-tiedoitukset? :tiedoitus)]))))))
                   #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
