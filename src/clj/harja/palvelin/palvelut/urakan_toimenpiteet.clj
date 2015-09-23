@@ -4,25 +4,29 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-            
+
             [harja.kyselyt.urakan-toimenpiteet :as q]))
 
-(declare hae-urakan-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet)
-                        
+(declare hae-urakan-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat)
+
 (defrecord Urakan-toimenpiteet []
   component/Lifecycle
   (start [this]
-   (doto (:http-palvelin this)
-     (julkaise-palvelu
-       :urakan-toimenpiteet-ja-tehtavat (fn [user urakka-id]
-                                          (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
-     (julkaise-palvelu
-       :urakan-toimenpiteet (fn [user urakka-id]
-                              (hae-urakan-toimenpiteet (:db this) user urakka-id))))
-   this)
+    (doto (:http-palvelin this)
+      (julkaise-palvelu
+        :urakan-toimenpiteet-ja-tehtavat (fn [user urakka-id]
+                                           (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
+      (julkaise-palvelu
+        :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
+                                                            (hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
+      (julkaise-palvelu
+        :urakan-toimenpiteet (fn [user urakka-id]
+                               (hae-urakan-toimenpiteet (:db this) user urakka-id))))
+    this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet-ja-tehtavat)
+    (poista-palvelu (:http-palvelin this) :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat)
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet)
     this))
 
@@ -30,8 +34,8 @@
 (defn hae-urakan-toimenpiteet
   "Palvelu, joka palauttaa urakan toimenpiteet"
   [db user urakka-id]
-        (into []
-              (q/hae-urakan-toimenpiteet db urakka-id)))
+  (into []
+        (q/hae-urakan-toimenpiteet db urakka-id)))
 
 
 (defn hae-urakan-toimenpiteet-ja-tehtavat
@@ -39,3 +43,15 @@
   [db user urakka-id]
   (into []
         (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)))
+
+(defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
+  "Palvelu, joka palauttaa urakan yksikkohintaiset toimenpiteet ja tehtävät"
+  [db user urakka-id]
+  (let [kaikki (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)
+        yksikkohintaiset (into []
+                               (filter (fn [toimenpiteet]
+                                         (not-any? (fn [rivi]
+                                                     (true? (:kokonaishintainen rivi)))
+                                                   toimenpiteet))
+                                       kaikki))]
+    yksikkohintaiset))
