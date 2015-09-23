@@ -126,20 +126,20 @@ GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(maara) AS kokonaismaara,
-  urakka.nimi AS urakka_nimi,
-  materiaalikoodi.nimi AS materiaali_nimi,
+  SUM(maara)              AS kokonaismaara,
+  urakka.nimi             AS urakka_nimi,
+  materiaalikoodi.nimi    AS materiaali_nimi,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
-  JOIN toteuma ON toteuma.id = toteuma
-                  AND urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-                  AND alkanut :: DATE >= :alku
-                  AND alkanut :: DATE <= :loppu
-                  AND toteuma.poistettu IS NOT TRUE
-                  AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+  INNER JOIN toteuma ON toteuma.id = toteuma
+                        AND alkanut :: DATE >= :alku
+                        AND alkanut :: DATE <= :loppu
+                        AND toteuma.poistettu IS NOT TRUE
+                        AND toteuma_materiaali.poistettu IS NOT TRUE
+  LEFT JOIN urakka ON urakka.id = toteuma.urakka
+WHERE urakka.hallintayksikko = :hallintayksikko
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, toteuma_materiaali.id;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -151,12 +151,12 @@ SELECT
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
-  JOIN toteuma ON toteuma.id = toteuma
+  INNER JOIN toteuma ON toteuma.id = toteuma
                   AND alkanut :: DATE >= :alku
                   AND alkanut :: DATE <= :loppu
                   AND toteuma.poistettu IS NOT TRUE
                   AND toteuma_materiaali.poistettu IS NOT TRUE
+  LEFT JOIN urakka ON urakka.id = toteuma.urakka
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille

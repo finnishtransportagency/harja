@@ -131,9 +131,9 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                            hallintayksikko-id
                                                                                                             (konv/sql-timestamp alkupvm)
-                                                                                                            (konv/sql-timestamp loppupvm)))]
+                                                                                                            (konv/sql-timestamp loppupvm)
+                                                                                                            hallintayksikko-id))]
     (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 
