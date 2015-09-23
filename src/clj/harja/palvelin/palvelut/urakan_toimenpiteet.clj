@@ -46,12 +46,7 @@
 
 (defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   "Palvelu, joka palauttaa urakan yksikkohintaiset toimenpiteet ja tehtävät"
-  [db user urakka-id]
+  [db _ urakka-id]
   (let [kaikki (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)
-        yksikkohintaiset (into []
-                               (filter (fn [toimenpiteet]
-                                         (not-any? (fn [rivi]
-                                                     (true? (:kokonaishintainen rivi)))
-                                                   toimenpiteet))
-                                       kaikki))]
+        yksikkohintaiset (into [] (filter #(not-any? :kokonaishintainen %) kaikki))]
     yksikkohintaiset))
