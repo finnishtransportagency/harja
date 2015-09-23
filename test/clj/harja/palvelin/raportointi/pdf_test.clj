@@ -2,7 +2,8 @@
   "Raportoinnin PDF elementtien muodostamisen testit"
   (:require [harja.palvelin.raportointi.pdf :refer [muodosta-pdf]]
             [clojure.zip :as zip]
-            [clojure.test :refer [deftest is]]))
+            [clojure.test :refer [deftest is]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
 
 
 ;; Testataan, että virheellisistä syötteistä tulee oikein poikkeukset
@@ -23,7 +24,7 @@
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 
 (deftest otsikko
-  (is (= [:fo:block {:font-size "16pt"} "TÄMÄ ON OTSIKKO"]
+  (is (= [:fo:block {:padding-top "5mm" :font-size "16pt"} "TÄMÄ ON OTSIKKO"]
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
@@ -46,11 +47,12 @@
     (is (= a3 [:fo:table-cell [:fo:block "kolmas"]]))))
 
 (deftest pylvaat
-  (let [fo (muodosta-pdf [:pylvaat [["Q1" 1560
-                                     "Q2" 4333
-                                     "Q3" 3700
-                                     "Q4" 2121]]])
-        [elt _ svg] fo]
+  (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}
+                          [["Q1" 1560
+                            "Q2" 4333
+                            "Q3" 3700
+                            "Q4" 2121]]])
+        [_ _ [elt _ svg]] fo]
     (is (= :fo:instream-foreign-object elt))
     (is (= :svg (first svg)))))
 
@@ -62,14 +64,14 @@
     (is (= s1 [:fo:table-column {:column-width "25%"}]))
     (is (= s2 [:fo:table-column {:column-width "75%"}]))
     (is (= r1 [:fo:table-row
-               [:fo:table-cell [:fo:block "otsikko"]]
-               [:fo:table-cell [:fo:block "arvo"]]]))
+               [:fo:table-cell [:fo:block {:text-align "right" :font-weight "bold"} "otsikko:"]]
+               [:fo:table-cell [:fo:block {:margin-left "5mm"} "arvo"]]]))
     (is (= r2 [:fo:table-row
-               [:fo:table-cell [:fo:block "toinen juttu"]]
-               [:fo:table-cell [:fo:block "4242"]]]))))
+               [:fo:table-cell [:fo:block {:text-align "right" :font-weight "bold"} "toinen juttu:"]]
+               [:fo:table-cell [:fo:block {:margin-left "5mm"} "4242"]]]))))
             
           
-;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti
+;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti ja siitä PDF:n generointi
 
 (def +testiraportti+ [:raportti {}
                       [:otsikko "Tämä on hieno raportti"]
@@ -84,35 +86,32 @@
                         ["Suristin" 10 25 250]]]
 
                       [:otsikko "Tähän taas väliotsikko"]
-                      
+                      [:pylvaat {:otsikko "Kvartaalien luvut"}
+                       [["Q1" 123]
+                        ["Q2" 1500]
+                        ["Q3" 1000]
+                        ["Q4" 777]]]
                       [:yhteenveto [["PDF-generointi" "toimii"]
                                     ["XSL-FO" "hyvin"]]]])
 
 
-;; Lainattu https://gist.github.com/PetrGlad/5027188
-;; Muuntaa hiccupin zipperiksi, josta on helpompi hakea asioita testeissä
-(defn hiccup-zip
-  "Returns a zipper for Hiccup forms, given a root form."
-  [root]
-  (let [children-pos #(if (map? (second %)) 2 1)] 
-    (zip/zipper 
-      vector?
-      #(drop (children-pos %) %) ; get children
-      #(into [] (concat (take (children-pos %1) %1) %2)) ; make new node
-      root)))
-
-
-(deftest raportti-muodostuu-oikein
-  (let [fo (hiccup-zip (muodosta-pdf +testiraportti+))
-
-        ;; Laskeudutan region-body elementtiin
-        body (-> fo zip/down zip/right zip/down zip/down)]
-    ;;(is (= :fo:region-body (first (zip/node body))))
-    
-    ))
-
               
-              
-   
-;; Testataan että raportista, jossa on kaikkia elementtejä, saa muodostettua PDF:n oikein
+(defn luo-raportti-pdf-bytes []
+  (let [fo (muodosta-pdf +testiraportti+)
+        ff (#'pdf-vienti/luo-fop-factory)]
+    (with-open [out (java.io.ByteArrayOutputStream.)]
+      (.write out
+              (#'pdf-vienti/hiccup->pdf
+               ff
+               fo))
+      (.toByteArray out))))
 
+(deftest luo-raportti-pdf
+  (is (> (count (luo-raportti-pdf-bytes)) 16000)))
+
+;; Evaluoi tämä, jos haluat saada raportti PDF:n näytölle auki
+#_(do (require '[clojure.java.io :as io])
+      (require '[clojure.java.shell :as sh])
+      (io/copy (luo-raportti-pdf-bytes)
+               (java.io.File. "raportti.pdf"))
+      (sh/sh "open" "raportti.pdf"))
