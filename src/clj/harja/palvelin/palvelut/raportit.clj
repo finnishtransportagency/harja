@@ -109,19 +109,34 @@
                                       (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
                                                                                                    urakka-id
                                                                                                    (konv/sql-timestamp alkupvm)
-                                                                                                   (konv/sql-timestamp loppupvm)))]
-    (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
-    toteutuneet-materiaalit))
+                                                                                                   (konv/sql-timestamp loppupvm)))
+        suunnitellut-materiaalit (into []
+                                       (materiaalit-q/hae-urakan-suunnitellut-materiaalit-raportille db
+                                                                                                    urakka-id
+                                                                                                    (konv/sql-timestamp alkupvm)
+                                                                                                    (konv/sql-timestamp loppupvm)))
+        suunnitellut-materiaalit-ilman-toteumia (filter
+                                                  (fn [materiaali]
+                                                    (not-any?
+                                                      (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
+                                                      toteutuneet-materiaalit))
+                                                  suunnitellut-materiaalit)
+        lopullinen-tulos (mapv
+                           (fn [materiaalitoteuma]
+                             (if (nil? (:kokonaismaara materiaalitoteuma))
+                               (assoc materiaalitoteuma :kokonaismaara 0)
+                               materiaalitoteuma))
+                           (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
+    lopullinen-tulos))
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                            hallintayksikko-id
                                                                                                             (konv/sql-timestamp alkupvm)
-                                                                                                            (konv/sql-timestamp loppupvm)))]
-    (log/debug "Haettu hallintayksikön toteutuneet materiaalit: " toteutuneet-materiaalit)
+                                                                                                            (konv/sql-timestamp loppupvm)
+                                                                                                            hallintayksikko-id))]
     toteutuneet-materiaalit))
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
@@ -131,7 +146,6 @@
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)
                                                                                                       (konv/sql-timestamp loppupvm)))]
-    (log/debug "Haettu koko maan toteutuneet materiaalit: " toteutuneet-materiaalit)
     toteutuneet-materiaalit))
 (defrecord Raportit []
   component/Lifecycle
