@@ -3,6 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.5. Julkaistu: 2.9.2015. Muutokset:
+    - Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.
     - Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.
     - Suunta lisätty työkone seurantaan. Suunta annetaan astelukuna.
     - Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.
