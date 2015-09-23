@@ -3,29 +3,69 @@
   roles:
     - role-epel
   sudo: yes
+  vars:
+    jdk_download_url: http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.tar.gz
+    download_folder: /opt
+    java_name: "{{download_folder}}/jdk1.8.0_60"
+    java_archive: "{{download_folder}}/jdk-8u60-linux-x64.tar.gz"
   tasks:
+    - name: fix hostname
+      hostname: name={{harja_hostname}}
     - name: install nginx repo rpm
       yum:
         name: http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
     - name: install postgresql repo rpm
       yum:
         name: http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
+    - name: install wget
+      yum: pkg=wget update_cache=yes state=latest
+    - name: install psycopg2
+      yum: pkg=python-psycopg2.x86_64 state=latest
     - name: install nginx
-      yum: pkg=nginx update_cache=yes state=latest
+      yum: pkg=nginx state=latest
     - name: install postgresql
       yum: pkg=postgresql94-server state=latest
     - name: install postgis
       yum: pkg=postgis2_94.x86_64 state=latest
     - name: install maven 3
-      yum: pkg=maven.noarch state=latest
-    - name: install java 8
-      yum: pkg=java-1.8.0-openjdk-devel.x86_64 state=latest
+      yum: pkg=maven.noarch state=latest   
+    - name: download java 8
+      command: "wget -q -O {{java_archive}} --no-cookies --no-check-certificate --header 'Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie' {{jdk_download_url}} creates={{java_archive}}"
+    - name: unpack java 8
+      command: "tar -xzf {{java_archive}} -C {{download_folder}} creates={{java_name}}"
+    - name: fix ownership
+      file: state=directory path={{java_name}} owner=root group=root recurse=yes
     - name: update javac alternatives
-      alternatives: name=javac link=/usr/bin/javac path=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.60-2.b27.el7_1.x86_64/bin/javac
+      alternatives: name=javac link=/usr/bin/javac path={{java_name}}/bin/javac
     - name: update java alternatives
-      alternatives: name=java link=/usr/bin/java path=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.60-2.b27.el7_1.x86_64/jre/bin/java
+      alternatives: name=java link=/usr/bin/java path={{java_name}}/bin/java
+    - name: add Harja user
+      user: name=harja
+    - name: initialize postgres
+      shell: /usr/pgsql-9.4/bin/postgresql94-setup initdb
+      environment:
+        PGSETUP_INITDB_OPTIONS: --encoding=UTF-8 --lc-collate=fi_FI.UTF-8 --lc-ctype=fi_FI.UTF-8
+      ignore_errors: yes
+    - name: start postgres
+      service: name=postgresql-9.4 state=started
+    - name: set up harja database user
+      sudo: yes
+      sudo_user: postgres      
+      postgresql_user: name=harja
+    - name: set up harja database
+      sudo: yes
+      sudo_user: postgres      
+      postgresql_db: name=harja owner=harja encoding='UTF-8' lc_collate='fi_FI.UTF-8' lc_ctype='fi_FI.UTF-8'
+    - name: configure nginx
+      template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
+      notify:
+        - restart nginx
+    - name: start nginx
+      service: name=nginx state=started
+    - name: add HTTP to iptables IN_public_allow chain
+      command: iptables -A IN_public_allow -i eth0 -p tcp --dport 80 -j ACCEPT
   handlers:
     - name: restart nginx
       service: name=nginx state=restarted
     - name: restart postgres
-      service: name=postgres state=restarted
+      service: name=postgresql-9.4 state=restarted
