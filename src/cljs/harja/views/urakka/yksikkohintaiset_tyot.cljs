@@ -96,7 +96,7 @@
                             (reset! urakka ur)
                             ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen urakalle
                             (go (reset! toimenpiteet-ja-tehtavat
-                                        (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
+                                        (<! (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (:id ur))))))
         sopimuksen-tyot
         (reaction
           (into []
