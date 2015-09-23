@@ -56,11 +56,6 @@
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
-
-  (println "+++++Lisattavat: " lisattavat)
-  (println "+++++Muokkatavat: " muokattavat)
-  (println "+++++Poistettavat: " poistettavat)
-
   (jdbc/with-db-transaction [c db]
     (doseq [rivi lisattavat]
       (lisaa-toimenpidekoodi c user rivi))
