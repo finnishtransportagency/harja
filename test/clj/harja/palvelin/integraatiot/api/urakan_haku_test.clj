@@ -25,6 +25,7 @@
     (is (not (nil? (:urakka encoodattu-body))))
     (is (= (get-in encoodattu-body [:urakka :tiedot :id]) urakka))
     (is (>= (count (get-in encoodattu-body [:urakka :sopimukset])) 1))
+    (is (not-empty (get-in encoodattu-body [:urakka :tiedot :alueurakkanumero])))
 
     (let [kokonaishintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
                                     [:sopimus :toteumakirjauskohteet :kokonaishintaiset])
