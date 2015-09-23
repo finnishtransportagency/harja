@@ -115,12 +115,18 @@
                                                                                                     urakka-id
                                                                                                     (konv/sql-timestamp alkupvm)
                                                                                                     (konv/sql-timestamp loppupvm)))
+        suunnitellut-materiaalit-ilman-toteumia (filter
+                                                  (fn [materiaali]
+                                                    (not-any?
+                                                      (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
+                                                      toteutuneet-materiaalit))
+                                                  suunnitellut-materiaalit)
         kaikki-materiaalit (mapv
                              (fn [materiaalitoteuma]
                                (if (nil? (:kokonaismaara materiaalitoteuma))
                                  (assoc materiaalitoteuma :kokonaismaara 0)
                                  materiaalitoteuma))
-                             (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit))]
+                             (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
     (log/debug "Haettu urakan toteutuneet materiaalit: " toteutuneet-materiaalit)
     (log/debug "Haettu urakan suunnitellut materiaalit: " suunnitellut-materiaalit)
     (log/debug "Kaikki materiaalit: " (pr-str kaikki-materiaalit))
