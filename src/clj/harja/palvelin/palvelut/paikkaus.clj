@@ -55,7 +55,8 @@
     ;; Uusi paikkausilmoitus
     (if-not paikkausilmoitus
       ^{:uusi true}
-      {:kohdenimi          (:nimi kohdetiedot)
+      {:kohdenumero (:kohdenumero kohdetiedot)
+       :kohdenimi          (:nimi kohdetiedot)
        :paallystyskohde-id paikkauskohde-id
        :kokonaishinta      kokonaishinta
        :kommentit          []}

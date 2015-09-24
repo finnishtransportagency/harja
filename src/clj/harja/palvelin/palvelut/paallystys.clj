@@ -87,7 +87,8 @@
     (if-not paallystysilmoitus
       ;; Uusi päällystysilmoitus
       ^{:uusi true}
-      {:kohdenimi (:nimi kohdetiedot)
+      {:kohdenumero (:kohdenumero kohdetiedot)
+       :kohdenimi (:nimi kohdetiedot)
        :paallystyskohde-id paallystyskohde-id
        :kokonaishinta kokonaishinta
        :kommentit []}
