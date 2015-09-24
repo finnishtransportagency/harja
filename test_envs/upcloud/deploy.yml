@@ -13,7 +13,40 @@
           user_name: harja
           user_group: harja
           workingdir: /opt/harja
+
+    - name: pysayta harja
+      service: name=harja state=stopped
       
+    - name: tuhoa kanta
+      sudo: yes
+      sudo_user: postgres
+      postgresql_db: name=harja state=absent
+
+    - name: luo kanta
+      sudo: yes
+      sudo_user: postgres
+      postgresql_db: name=harja owner=harja state=present
+
+    - name: tee postgis-extensio
+      sudo: yes
+      sudo_user: postgres
+      postgresql_ext: db=harja name=postgis state=present
+
+    - name: kopioi tietokantamigraatiot
+      unarchive: src=../../tietokanta.tgz dest=/opt/harja owner=harja group=harja
+
+    - name: aja tietokantamigraatiot
+      command: mvn flyway:migrate -Dflyway.password=harja123
+      args:
+        chdir: /opt/harja/tietokanta
+
+    - name: dumppaa testidata
+      sudo: yes
+      sudo_user: harja
+      shell: psql -p5432 harja -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+      args:
+        chdir: /opt/harja/tietokanta
+
     - name: Kopioi viimeisin Harja jar
       copy: src=../../target/harja-0.0.1-SNAPSHOT-standalone.jar dest=/opt/harja/harja-nightly.jar
         
