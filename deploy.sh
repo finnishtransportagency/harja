@@ -19,12 +19,13 @@ fi
 HARJA_ENV="harja-dev$1"
 
 START_TS=`date +%s`
+DEPLOY_OPTS="\"harja_migrate_only=false\""
 
 msg "Deploying to $HARJA_ENV, please have a cup of hot coffee!"
 
 if [ "$2" == "migrate_only" ]; then
     echo "Performing migrate only"
-    DEPLOY_OPTS="--extra-vars harja_migrate_only=true"
+    DEPLOY_OPTS="\"harja_migrate_only=true\""
 fi
 
 lein clean || error_exit "clean failed"
@@ -40,7 +41,7 @@ tar czf tietokanta.tgz tietokanta
 msg "Running deploy playbook"
 
 pushd test_envs/upcloud
-ansible-playbook deploy.yml -i inventory/harjadev $DEPLOY_OPTS --limit $HARJA_ENV || error_exit "Deploy failed"
+ansible-playbook deploy.yml -i inventory/harjadev --extra-vars $DEPLOY_OPTS --limit $HARJA_ENV || error_exit "Deploy failed"
 popd
 
 rm tietokanta.tgz

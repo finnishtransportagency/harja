@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  vars:
+    migrate_only: '{{ harja_migrate_only }}'
   sudo: yes
   tasks:
     - name: Varmistetaan, että Harjan sovellushakemisto on olemassa
@@ -15,26 +17,26 @@
           workingdir: /opt/harja
 
     - name: pysayta harja
-      when: not harja_migrate_only
       service: name=harja state=stopped
+      when: migrate_only == 'false'
 
     - name: tuhoa kanta
-      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_db: name=harja state=absent
+      when: migrate_only == 'false'
 
     - name: luo kanta
-      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_db: name=harja owner=harja state=present
+      when: migrate_only == 'false'
 
     - name: tee postgis-extensio
-      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_ext: db=harja name=postgis state=present
+      when: migrate_only == 'false'
 
     - name: kopioi tietokantamigraatiot
       unarchive: src=../../tietokanta.tgz dest=/opt/harja owner=harja group=harja
@@ -45,12 +47,12 @@
         chdir: /opt/harja/tietokanta
 
     - name: dumppaa testidata
-      when: not harja_migrate_only
       sudo: yes
       sudo_user: harja
       shell: psql -p5432 harja -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
       args:
         chdir: /opt/harja/tietokanta
+      when: migrate_only == 'false'
 
     - name: Kopioi viimeisin Harja jar
       copy: src=../../target/harja-0.0.1-SNAPSHOT-standalone.jar dest=/opt/harja/harja-nightly.jar
