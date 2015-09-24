@@ -226,7 +226,7 @@
             :voi-poistaa?           (constantly false)
             :muokkaa-footer         (fn [g]
                                       [:div.kok-hint-muokkaa-footer
-                                       [raksiboksi "Tallenna myös tuleville hoitokausille"
+                                       [raksiboksi "Tallenna tulevillekin hoitokausille"
                                         @tuleville?
                                         #(swap! tuleville? not)
                                         [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]

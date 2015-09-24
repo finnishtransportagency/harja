@@ -200,7 +200,7 @@
            :voi-lisata?      false
            :voi-poistaa?     (constantly false)
            :muokkaa-footer   (fn [g]
-                               [raksiboksi "Tallenna myös tuleville hoitokausille"
+                               [raksiboksi "Tallenna tulevillekin hoitokausille"
                                 @tuleville?
                                 #(swap! tuleville? not)
                                 [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
