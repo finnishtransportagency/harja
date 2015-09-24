@@ -33,10 +33,22 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce urakan-toimenpideinstanssit+lisavalinnat (reaction
-                                                    (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
+(defonce kaytossa-oleva-toimenpideinstanssit-lista (atom urakan-toimenpideinstanssit))
 
-(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
+(defonce urakan-toimenpideinstanssit+muut (reaction
+                                            (if @urakan-toimenpideinstanssit
+                                              (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})
+                                              @urakan-toimenpideinstanssit)))
+
+(defonce urakan-toimenpideinstanssit+kaikki (reaction
+                                              (if @urakan-toimenpideinstanssit
+                                                (vec (conj (into '() @urakan-toimenpideinstanssit) {:tpi_nimi "Kaikki"}))
+                                                @urakan-toimenpideinstanssit)))
+
+(defonce valittu-toimenpideinstanssi (reaction (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit
+                                                     urakan-toimenpideinstanssit+muut @urakan-toimenpideinstanssit+muut
+                                                     urakan-toimenpideinstanssit+kaikki @urakan-toimenpideinstanssit+kaikki]
+                                                 (first @@kaytossa-oleva-toimenpideinstanssit-lista))))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))

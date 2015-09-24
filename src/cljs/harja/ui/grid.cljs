@@ -247,9 +247,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           (muokkaa! id assoc :poistettu true))}
          (ikonit/trash)]
         [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]))
-      (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
-        [:span.rivilla-virheita
-         (ikonit/warning-sign)])]])
+    (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
+      [:span.rivilla-virheita
+       (ikonit/warning-sign)])]])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna]} skeema rivi]
   [:tr {:class    luokka
@@ -265,12 +265,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (if (= tyyppi :komponentti)
           (komponentti rivi)
           (let [haettu-arvo (if hae
-                          (hae rivi)
-                          (get rivi nimi))
+                              (hae rivi)
+                              (get rivi nimi))
                 arvon-pituus-rajattu (if nayta-max-merkkia
                                        (if (> (count haettu-arvo) nayta-max-merkkia)
-                                           (str (subs haettu-arvo 0 nayta-max-merkkia) "...")
-                                           haettu-arvo)
+                                         (str (subs haettu-arvo 0 nayta-max-merkkia) "...")
+                                         haettu-arvo)
                                        haettu-arvo)]
             (if fmt
               (fmt arvon-pituus-rajattu)
@@ -396,7 +396,7 @@ Optiot on mappi optioita:
                               (if (empty? (get virheet rivin-id))
                                 (dissoc virheet rivin-id)
                                 virheet)))))
-                 
+
                  (muokkaa-rivit! [this funktio args]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
@@ -642,32 +642,36 @@ Optiot on mappi optioita:
                    (let [rivit tiedot]
                      (if (empty? rivit)
                        [:tr.tyhja [:td {:col-span colspan} tyhja]]
-                       (doall (mapcat #(keep identity %)
-                                      (map-indexed
-                                        (fn [i rivi]
-                                          (if (otsikko? rivi)
-                                            [^{:key (:teksti rivi)}
-                                            [:tr.otsikko
-                                             [:td {:colSpan (inc (count skeema))}
-                                              [:h5 (:teksti rivi)]]]]
+                       (doall
+                         (let [rivit-jarjestetty (sort-by
+                                                   (fn [rivi] (if (:yhteenveto rivi) 1 0)) ; Yhteenveto-rivin tulee olla aina viimeisenä
+                                                   rivit)]
+                           (mapcat #(keep identity %)
+                                   (map-indexed
+                                     (fn [i rivi]
+                                       (if (otsikko? rivi)
+                                         [^{:key (:teksti rivi)}
+                                         [:tr.otsikko
+                                          [:td {:colSpan (inc (count skeema))}
+                                           [:h5 (:teksti rivi)]]]]
 
-                                            (let [id ((or tunniste :id) rivi)]
-                                              [^{:key id}
-                                              [naytto-rivi {:ohjaus        ohjaus
-                                                            :vetolaatikot  vetolaatikot
-                                                            :id            id
-                                                            :tallenna      tallenna
-                                                            :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                                (when rivi-klikattu
-                                                                                  " klikattava ")
-                                                                                (when (:yhteenveto rivi) " yhteenveto ")
-                                                                                (when rivin-luokka
-                                                                                  (rivin-luokka rivi)))
-                                                            :rivi-klikattu rivi-klikattu}
-                                               skeema rivi]
-                                               (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
-                                               ])))
-                                        rivit))))))]])
+                                         (let [id ((or tunniste :id) rivi)]
+                                           [^{:key id}
+                                           [naytto-rivi {:ohjaus        ohjaus
+                                                         :vetolaatikot  vetolaatikot
+                                                         :id            id
+                                                         :tallenna      tallenna
+                                                         :luokka        (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                             (when rivi-klikattu
+                                                                               " klikattava ")
+                                                                             (when (:yhteenveto rivi) " yhteenveto ")
+                                                                             (when rivin-luokka
+                                                                               (rivin-luokka rivi)))
+                                                         :rivi-klikattu rivi-klikattu}
+                                            skeema rivi]
+                                            (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
+                                            ])))
+                                     rivit-jarjestetty)))))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])]
             ;taulukon allekin saa muokkaustoiminnot jos haluaa, tähän panel-heading ilman otsikkoa
@@ -751,7 +755,7 @@ Optiot on mappi optioita:
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
                      (log "VANHAT TIEDOT: " (pr-str vanhat-tiedot))
                      (log "UUDET TIEDOT: " (pr-str uudet-tiedot))
-                          
+
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]

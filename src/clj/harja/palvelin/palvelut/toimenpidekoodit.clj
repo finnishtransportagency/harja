@@ -48,7 +48,7 @@
                                         (urakat-q/hae-kaynnissa-olevat-urakat db)))]
                  (when-not (empty? urakat) urakat))
 
-               (if (vector? urakka) urakka (vec urakka)))]
+               (if (vector? urakka) urakka [urakka]))]
       (when ur
         (log/debug "Haetaan urakoille: " (pr-str ur))
         (q/hae-toimenpidekoodit-historiakuvaan db ur)))))
@@ -58,14 +58,11 @@
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
   (jdbc/with-db-transaction [c db]
     (doseq [rivi lisattavat]
-      (lisaa-toimenpidekoodi c user rivi)
-      )
+      (lisaa-toimenpidekoodi c user rivi))
     (doseq [rivi muokattavat]
-      (muokkaa-toimenpidekoodi c user rivi)
-      )
+      (muokkaa-toimenpidekoodi c user rivi))
     (doseq [id poistettavat]
-      (poista-toimenpidekoodi c user id)
-      )
+      (poista-toimenpidekoodi c user id))
     (hae-kaikki-toimenpidekoodit c)))
 
 (defn hae-toimenpidekoodit
@@ -76,13 +73,14 @@
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
   ;;[db {kayttaja :id} {nimi :nimi emo :emo}]
-  [db user {:keys [nimi emo yksikko] :as rivi}]
-  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (:id user))]
-    {:taso    4
-     :emo     emo
-     :nimi    nimi
-     :yksikko yksikko
-     :id      (:id luotu)}))
+  [db user {:keys [nimi emo yksikko kokonaishintainen] :as rivi}]
+  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko kokonaishintainen (:id user))]
+    {:taso              4
+     :emo               emo
+     :nimi              nimi
+     :yksikko           yksikko
+     :kokonaishintainen kokonaishintainen
+     :id                (:id luotu)}))
 
 (defn poista-toimenpidekoodi
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
@@ -91,5 +89,5 @@
 
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
-  [db user {:keys [nimi emo yksikko id] :as rivi}]
-  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko id)))
+  [db user {:keys [nimi emo yksikko id kokonaishintainen] :as rivi}]
+  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko kokonaishintainen id)))

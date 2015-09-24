@@ -6,7 +6,7 @@
 Oletuksena muodostuu A4 sivu.
 
   Optiot mäpissä voi olla seuraavat avaimet:
-  :margin         mäppi eri reunojen margineja, oletus {:left \"2.5cm\" :right \"2.5cm\" :top \"1cm\" :bottom \"2cm\"}
+  :margin         mäppi eri reunojen margineja, oletus {:left \"1cm\" :right \"1cm\" :top \"1cm\" :bottom \"1cm\"}
   :footer         footerin määrittelevä mäppi, jossa avaimet :extent (koko esim. sentteinä) ja :sisalto
   :header         headerin määrittelevä mäppi, jossa avaimet :extent ja :sisalto
 
@@ -14,9 +14,9 @@ Oletuksena muodostuu A4 sivu.
   
   [optiot & sisalto]
   (let [margin (merge (:margin optiot)
-                      {:left "2.5cm" :right "2.5cm" :top "1cm" :bottom "2cm"})
+                      {:left "1cm" :right "1cm" :top "1cm" :bottom "1cm"})
         header (merge (:header optiot) {:extent "1cm"})
-        footer (merge (:footer optiot) {:extent "1.5cm"})]
+        footer (merge (:footer optiot) {:extent "1cm"})]
     
     [:fo:root {:xmlns:fo "http://www.w3.org/1999/XSL/Format"}
      
