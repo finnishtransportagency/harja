@@ -1350,96 +1350,96 @@ INSERT INTO toimenpidekoodi (koodi, nimi,taso, emo) VALUES ('39186', 'Projektinh
 INSERT INTO toimenpidekoodi (koodi, nimi,taso, emo) VALUES ('39187', 'Laadun varmistus', 3, (SELECT id FROM toimenpidekoodi WHERE koodi='39180'));
 
 --Nelostason toimenpiteitä talvihoidon tuotteen alle testikäyttöä varten, otettu 5v-tarjouspyyntölomakkeesta
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is 2-ajorat. KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is 1-ajorat. KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is ohituskaistat KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is rampit KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Is rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('I 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('I 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('I ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('I rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Ib 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Ib 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Ib ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('Ib rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('TIb', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('II', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('III', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('K1', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
-INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko) VALUES ('K2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm');
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is 2-ajorat. KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is 1-ajorat. KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is ohituskaistat KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is rampit KVL >15000', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Is rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('I 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('I 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('I ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('I rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Ib 2-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Ib 1-ajorat.', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Ib ohituskaistat', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('Ib rampit', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('TIb', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('II', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('III', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('K1', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
+INSERT INTO toimenpidekoodi (nimi,taso, emo, yksikko, kokonaishintainen) VALUES ('K2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'tiekm', false);
 
 --Nelostason toimenpiteitä Liikenneympäristön hoidon alle testikäyttöä varten
-INSERT INTO toimenpidekoodi (nimi,yksikko, taso, emo)
+INSERT INTO toimenpidekoodi (nimi,yksikko, taso, emo, kokonaishintainen)
 VALUES
-  ('Fiskarsin tunnelin varaosat', 'hoitovuosi', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Graffitien poisto', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Huonokuntoisten viittojen ja opastetaulujen uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Hylättyjen ajoneuvojen siirto', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Katupölynsidonta', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Kolmannen osapuolen vahinkojen korjaukset', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Fiskarsin tunnelin varaosat', 'hoitovuosi', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Graffitien poisto', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Huonokuntoisten viittojen ja opastetaulujen uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Hylättyjen ajoneuvojen siirto', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Katupölynsidonta', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Kolmannen osapuolen vahinkojen korjaukset', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Kuumapäällyste, ab käsityönä', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Kuumapäällyste, valuasfaltti', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Metsän harvennus', 'ha', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Kuumapäällyste, ab käsityönä', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Kuumapäällyste, valuasfaltti', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Metsän harvennus', 'ha', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen/uuden asentaminen tukirakenteineen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Pensaiden poisto', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Pensaiden täydennysistutus', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen/uuden asentaminen tukirakenteineen', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Pensaiden poisto', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Pensaiden täydennysistutus', 'm2', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Porttaalien vuositarkastus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Puun poisto raivausjätteineen (taajaman ulkopuolella)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Puun poisto raivausjätteineen (taajamassa)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteen korjaus mastiksilla siltakohteiden heitoissa', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteiden paikkaus - konetiivistetty -valuasfaltti', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Porttaalien vuositarkastus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Puun poisto raivausjätteineen (taajaman ulkopuolella)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Puun poisto raivausjätteineen (taajamassa)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteen korjaus mastiksilla siltakohteiden heitoissa', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteiden paikkaus - konetiivistetty -valuasfaltti', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Päällysteiden paikkaus - massasaumaus', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteiden paikkaus - kuumapäällyste', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteiden paikkaus -kylmäpäällyste ml. SOP', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteiden paikkaus -saumojen juottaminen bitumilla', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällysteiden paikkaus -saumojen juottaminen mastiksilla', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Päällysteiden paikkaus - massasaumaus', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteiden paikkaus - kuumapäällyste', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteiden paikkaus -kylmäpäällyste ml. SOP', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteiden paikkaus -saumojen juottaminen bitumilla', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällysteiden paikkaus -saumojen juottaminen mastiksilla', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Päällystettyjen teiden palteiden poisto', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällystettyjen teiden pientareiden täyttö', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällystettyjen teiden sr-pientareen täyttö', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Päällystettyjen teiden sorapientareen kunnossapito', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Reunapalkin ja päällysteen väl. sauman tiivistäminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Päällystettyjen teiden palteiden poisto', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällystettyjen teiden pientareiden täyttö', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällystettyjen teiden sr-pientareen täyttö', 'tonni', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Päällystettyjen teiden sorapientareen kunnossapito', 'h', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Reunapalkin ja päällysteen väl. sauman tiivistäminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Reunapalkin liikuntasauman tiivistäminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Rumpujen korj./uusiminen/rakentaminen ilman siirtymäkiilaa', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Rumpujen korjaus ja uusiminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Rumpujen korjaus ja uusiminen  600 - 1000 mm', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Rumpujen korjaus ja uusiminen <= 600 mm', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Reunapalkin liikuntasauman tiivistäminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Rumpujen korj./uusiminen/rakentaminen ilman siirtymäkiilaa', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Rumpujen korjaus ja uusiminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Rumpujen korjaus ja uusiminen  600 - 1000 mm', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Rumpujen korjaus ja uusiminen <= 600 mm', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Rumpujen korjaus/uusiminen/rakentaminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Runkopuiden poisto', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Runkopuiden täydennysistutus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Sillan kannen päällysteen päätysauman korjaukset', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Sillan päällysteen halkeaman avarrussaumaus', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Rumpujen korjaus/uusiminen/rakentaminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Runkopuiden poisto', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Runkopuiden täydennysistutus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Sillan kannen päällysteen päätysauman korjaukset', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Sillan päällysteen halkeaman avarrussaumaus', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Sillan päällysteen halkeaman sulkeminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Siltojen vuositarkastus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('SIP paikkaus (kesto+kylmä)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Sisääntuloteiden siisteyden varmistaminen', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Tunnelin laitteiden toimivuuden testaukset', 'kk', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+  ('Sillan päällysteen halkeaman sulkeminen', 'jm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Siltojen vuositarkastus', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('SIP paikkaus (kesto+kylmä)', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Sisääntuloteiden siisteyden varmistaminen', 'kpl', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Tunnelin laitteiden toimivuuden testaukset', 'kk', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
 
-  ('Tunnelin paikalliskeskuksen hoito', 'kk', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Tunnelin pesu ja muu puhtaanapito', 'krt', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Tunnelin pumppaamon poistoputken pään laskuojan huolto', 'krt', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-  ('Vesakonraivaus', 'ha', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'));
+  ('Tunnelin paikalliskeskuksen hoito', 'kk', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Tunnelin pesu ja muu puhtaanapito', 'krt', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Tunnelin pumppaamon poistoputken pään laskuojan huolto', 'krt', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false),
+  ('Vesakonraivaus', 'ha', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), false);
 
 --Nelostason toimenpiteitä Sorateiden hoidon alle testikäyttöä varten
-INSERT INTO toimenpidekoodi (nimi,yksikko, taso, emo)
-     VALUES ('Sorastus', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124')),
-            ('Kelirikon hoito ja routaheitt. tas. mursk.', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124')),
-            ('Sorateiden kaventaminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
+INSERT INTO toimenpidekoodi (nimi,yksikko, taso, emo, kokonaishintainen)
+     VALUES ('Sorastus', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false),
+            ('Kelirikon hoito ja routaheitt. tas. mursk.', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false),
+            ('Sorateiden kaventaminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false);
 
 --Tuoteryhmä (taso 1) ja tuote (taso 2) Samposta tuleville kategorisoimattomille toimenpiteille (taso 3)
 INSERT INTO toimenpidekoodi (koodi, nimi,taso, emo) VALUES ('SAMPO_1', 'Kategorisoimattomat toimenpiteet Samposta (Taso 1)', 1, NULL);
