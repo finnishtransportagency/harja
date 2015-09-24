@@ -37,29 +37,40 @@
     (log/debug "Paikkaustoteumat saatu: " (pr-str vastaus))
     vastaus))
 
-(defn
-  hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
+(defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [paikkausilmoitus (first (into []
+  (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
+        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
+                         (:arvonvahennykset kohdetiedot)
+                         (:bitumi_indeksi kohdetiedot)
+                         (:kaasuindeksi kohdetiedot))
+        paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
                                             (map #(konv/string->avain % [:tila]))
                                             (map #(konv/string->avain % [:paatos])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
-    (when paikkausilmoitus
-      (log/debug "Haetaan kommentit...")
-      (let [kommentit (into []
-                            (comp (map konv/alaviiva->rakenne)
-                                  (map (fn [{:keys [liite] :as kommentti}]
-                                         (if (:id
-                                               liite)
-                                           kommentti
-                                           (dissoc kommentti :liite)))))
-                            (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
-        (log/debug "Kommentit saatu: " kommentit)
-        (assoc paikkausilmoitus :kommentit kommentit)))))
+    (if-not paikkausilmoitus
+      ;; Uusi paikkausilmoitus
+      ^{:uusi true}
+      {:kohdenimi          (:nimi kohdetiedot)
+       :paallystyskohde-id paikkauskohde-id
+       :kokonaishinta      kokonaishinta
+       :kommentit          []}
+      (do
+        (log/debug "Haetaan kommentit...")
+        (let [kommentit (into []
+                              (comp (map konv/alaviiva->rakenne)
+                                    (map (fn [{:keys [liite] :as kommentti}]
+                                           (if (:id
+                                                 liite)
+                                             kommentti
+                                             (dissoc kommentti :liite)))))
+                              (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
+          (log/debug "Kommentit saatu: " kommentit)
+          (assoc paikkausilmoitus :kommentit kommentit))))))
 
 
 (defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]

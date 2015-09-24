@@ -517,12 +517,7 @@
           vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id paallystyskohteen-id))]
       (log "Päällystysilmoitus kohteelle " paallystyskohteen-id " => " (pr-str vastaus))
       (if-not (k/virhe? vastaus)
-        (reset! paallystysilmoitus-lomakedata vastaus)
-        #_(-> (assoc vastaus :paallystyskohde-id (:paallystyskohde_id rivi))
-                               (assoc :kokonaishinta (+ (:sopimuksen_mukaiset_tyot rivi)
-                                                        (:arvonvahennykset rivi)
-                                                        (:bitumi_indeksi rivi)
-                                                        (:kaasuindeksi rivi))))))))
+        (reset! paallystysilmoitus-lomakedata vastaus)))))
 
 (defn ilmoitusluettelo
   []

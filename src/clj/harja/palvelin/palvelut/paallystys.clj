@@ -68,8 +68,7 @@
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
 
-(defn
-  hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
+(defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paallystyskohde-id))

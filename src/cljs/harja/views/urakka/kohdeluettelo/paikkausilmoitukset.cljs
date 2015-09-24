@@ -87,8 +87,8 @@
                               :perustelu     (:perustelu @paallystys/paikkausilmoitus-lomakedata)
                               :kasittelyaika (:kasittelyaika @paallystys/paikkausilmoitus-lomakedata)}
                              (fn [uusi-arvo] (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc @paallystys/paikkausilmoitus-lomakedata :paatos (:paatos uusi-arvo))
-                                                                               (assoc :perustelu (:perustelu uusi-arvo))
-                                                                               (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
+                                                                                                (assoc :perustelu (:perustelu uusi-arvo))
+                                                                                                (assoc :kasittelyaika (:kasittelyaika uusi-arvo))))))]
     (when @valmis-kasiteltavaksi?
       [:div.paikkausilmoitus-kasittely
        [:h3 "Käsittely"]
@@ -167,8 +167,8 @@
                                       :valmispvm_paikkaus (:valmispvm_paikkaus @paallystys/paikkausilmoitus-lomakedata)}
                                      (fn [uusi-arvo]
                                        (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc @paallystys/paikkausilmoitus-lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                                         (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
-                                                                         (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
+                                                                                          (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
+                                                                                          (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
 
               toteutuneet-osoitteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @paallystys/paikkausilmoitus-lomakedata)))
@@ -298,9 +298,21 @@
 
            (tallennus valmis-tallennettavaksi?)])))))
 
+(defn avaa-paikkausilmoitus [paikkauskohteen-id]
+  (go
+    (let [urakka-id (:id @nav/valittu-urakka)
+          [sopimus-id _] @u/valittu-sopimusnumero
+          vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id paikkauskohteen-id))]
+      (log "Paikkausilmoitus kohteelle " paikkauskohteen-id " => " (pr-str vastaus))
+      (if-not (k/virhe? vastaus)
+        (reset! paallystys/paikkausilmoitus-lomakedata vastaus)))))
+
 (defn ilmoitusluettelo
   []
   (komp/luo
+    (komp/kuuntelija :avaa-paikkaussilmoitus
+                     (fn [_ rivi]
+                       (avaa-paikkausilmoitus (:paikkauskohde-id rivi))))
     (fn []
       [:div
        [grid/grid
@@ -314,18 +326,9 @@
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
                                                                                                                             (nayta-paatos (:paatos rivi)))}
          {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(go
-                                                                                                       (let [urakka-id (:id @nav/valittu-urakka)
-                                                                                                             [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                             vastaus (<! (paikkaus/hae-paikkausilmoitus-paikkauskohteella urakka-id sopimus-id (:paikkauskohde_id rivi)))]
-                                                                                                         (log "PAI Rivi: " (pr-str rivi))
-                                                                                                         (log "PAI Vastaus: " (pr-str vastaus))
-                                                                                                         (if-not (k/virhe? vastaus)
-                                                                                                           (reset! paallystys/paikkausilmoitus-lomakedata (-> (assoc vastaus :paikkauskohde-id (:paikkauskohde_id rivi)))))))}
+          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
-                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! paallystys/paikkausilmoitus-lomakedata {:kohdenumero      (:kohdenumero rivi)
-                                                                                                                                     :kohdenimi        (:nimi rivi)
-                                                                                                                                     :paikkauskohde-id (:paikkauskohde_id rivi)})}
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)
