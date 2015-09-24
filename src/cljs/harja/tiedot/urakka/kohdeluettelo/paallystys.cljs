@@ -104,11 +104,11 @@
                                         {:type :paallystyskohde
                                          :kohde %
                                          :paallystyskohde-id paallystyskohde-id
-                                         :tila (:paallystysilmoitus_tila %)
+                                         :tila (or (:paallystysilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
                                          :nimi (str (:nimi %) ": " nimi)
                                          :osa osa
                                          :alue (assoc sij
-                                                      :stroke {:color (case (:paallystysilmoitus_tila %)
+                                                      :stroke {:color (case (or (:paallystysilmoitus_tila %) (:tila %))
                                                                         :aloitettu "blue"
                                                                         :valmis "green"
                                                                         "orange")
@@ -130,11 +130,11 @@
                                                {:type :paikkauskohde
                                                 :kohde %
                                                 :paikkauskohde-id paikkauskohde-id
-                                                :tila (:paikkausilmoitus_tila %)
+                                                :tila (or (:paikkausilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
                                                 :nimi (str (:nimi %) ": " nimi)
                                                 :osa osa
                                                 :alue (assoc sij
-                                                        :stroke {:color (case (:paikkausilmoitus_tila %)
+                                                        :stroke {:color (case (or (:paikkausilmoitus_tila %) (:tila %))
                                                                           :aloitettu "blue"
                                                                           :valmis "green"
                                                                           "orange")
