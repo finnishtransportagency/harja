@@ -57,9 +57,8 @@
                                  nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
                                 (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                   (log "PÄÄ Haetaan päällystyskohteet.")
-                                  (let [vastaus (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id)]
-                                    (log "PÄÄ Vastaus saatu: " vastaus)
-                                    vastaus))))
+                                  (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
+(tarkkaile! "Päällystyskohderivit: " paallystyskohderivit)
 
 (defn paivita-kohde! [id funktio & argumentit]
   (swap! paallystyskohderivit
