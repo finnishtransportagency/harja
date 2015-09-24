@@ -70,6 +70,12 @@
       template: src=templates/pg_hba.conf.j2 dest=/var/lib/pgsql/9.4/data/pg_hba.conf owner=postgres group=postgres mode=0600
       notify:
         - restart postgres
+    - name: upload server key
+      copy: src=certs/server.key dest=/etc/nginx/server.key
+    - name: upload server certificate
+      copy: src=certs/server.crt dest=/etc/nginx/server.crt
+    - name: upload certificate authority
+      copy: src=certs/ca.crt dest=/etc/nginx/ca.crt
     - name: configure nginx
       template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
       notify:
@@ -90,8 +96,8 @@
         chdir: "/opt/activemq/apache-activemq-5.12.0"
     - name: start nginx
       service: name=nginx state=started
-    - name: add HTTP to iptables IN_public_allow chain
-      command: iptables -A IN_public_allow -i eth0 -p tcp --dport 80 -j ACCEPT
+    - name: add HTTPS to iptables IN_public_allow chain
+      command: iptables -A IN_public_allow -i eth0 -p tcp --dport 443 -j ACCEPT
   handlers:
     - name: restart nginx
       service: name=nginx state=restarted
