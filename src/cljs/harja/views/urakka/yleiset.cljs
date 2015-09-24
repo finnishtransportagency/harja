@@ -168,7 +168,7 @@
         :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "17%"
         :tyyppi :valinta
-        ; :validoi [[:ei-tyhja "Anna yhteyshenkilön organisaatio"]] FIXME Vaaditaan, mutta e2e:ssä on tällä hetkellä sellainen bugi, että gridin riviltä ei voi valita toista pudotusvalikkoa.
+        :validoi [[:ei-tyhja "Anna yhteyshenkilön organisaatio"]]
         :valinta-arvo :id
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
