@@ -32,7 +32,7 @@
         paikkauskohde-id (:paikkauskohde-id kohdeosa)
         {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
         avaa-ilmoitus #(do (kartta/poista-popup!)
-                           (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
+                           (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
                            (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id}))]
 
     (kartta/nayta-popup!
