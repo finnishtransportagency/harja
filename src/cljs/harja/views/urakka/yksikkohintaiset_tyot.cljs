@@ -157,9 +157,7 @@
 
        :component-will-unmount
        (fn [this]
-         (reset! tuleville? false)
-         (if (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Muut")
-           (reset! u/valittu-toimenpideinstanssi (first @u/urakan-toimenpideinstanssit))))}
+         (reset! tuleville? false))}
 
       (fn [ur]
         [:div.yksikkohintaiset-tyot
