@@ -40,7 +40,7 @@
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
+  (let [kohdetiedot (first (paallystys-q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
         kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
                          (:arvonvahennykset kohdetiedot)
                          (:bitumi_indeksi kohdetiedot)
