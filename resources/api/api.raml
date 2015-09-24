@@ -84,7 +84,7 @@ documentation:
   /{id}:
     get:
       is: [secured]
-      description: Palauttaa id:n mukaisen urakan tiedot sopimus ja työtietoineen. Käytetään mahdollistamaan tietojen kirjaaminen kirjaustasolla urakka, sopimus ja työ.
+      description: Palauttaa id:n mukaisen urakan tiedot sopimuksineen ja tehtävineen. Vastaus kertoo tehtävät, joille voidaan kirjata toteumia. Toteumat kirjataan aina tietyn urakan sopimuksen yksikkö- tai kokonaishintaiselle tehtävälle.
       responses:
         200:
           body:

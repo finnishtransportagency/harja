@@ -10,86 +10,50 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-            [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn muodosta-kokonaishintaiset-tyot [tyot]
-  (for [{:keys [id vuosi kuukausi summa tpi_id tpi_nimi] :as tyo} tyot]
-    {:kokonaishintainenTyo
-     {:id       id
-      :tehtavat [{:tehtava {:id tpi_id :selite tpi_nimi}}]
-      :vuosi    vuosi
-      :kuukausi kuukausi
-      :summa    summa}}))
+(defn muodosta-tehtavat [tehtavat]
+  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data)}}) tehtavat))
 
-(defn muodosta-yksikkohintaiset-tyot [tyot]
-  (for [{:keys [id alkupvm loppupvm maara yksikko yksikkohinta tehtavan_id tehtavan_nimi] :as tyo} tyot]
-    {:yksikkohintainenTyo
-     {:id           id
-      :tehtava      {:id tehtavan_id :selite tehtavan_nimi} ;; 4. tason tehtava
-      :alkupvm      alkupvm
-      :loppupvm     loppupvm
-      :maara        maara
-      :yksikko      yksikko
-      :yksikkohinta yksikkohinta}}))
-
-(defn muodosta-materiaalin-kaytot [materiaalit]
-  (for [{:keys [id alkupvm loppupvm maara materiaali] :as mat} (map konv/alaviiva->rakenne materiaalit)]
-    {:materiaalinKaytto
-     {:materiaali
-      ;; FIXME: Tämä lista pitää tarkistaa Annelta, materiaali UI:n puolella on kommentoitu,
-      ;; että vain suolankäyttö kiinnostaa... turha naulata tätä listaa APIin kiinni, jos sen
-      ;; on asiakas jo huonoksi todennut.
-                (case (:nimi materiaali)
-                  "Talvisuolaliuos NaCl" "talvisuolaliuosNaCl"
-                  "Talvisuolaliuos CaCl2" "talvisuolaliuosCaCl2"
-                  "Erityisalueet NaCl" "erityisalueetNaCl"
-                  "Erityisalueet NaCl-liuos" "erityisalueetNaClLiuos"
-                  "Hiekoitushiekka" "hiekoitushiekka"
-                  "Kaliumformiaatti" "kaliumformiaatti"
-
-                  ;; default
-                  "Talvisuolaliuos NaCl")
-      :maara    {:yksikko (:yksikko materiaali)
-                 :maara   maara}
-      :alkupvm  alkupvm
-      :loppupvm loppupvm}}))
+(defn muodosta-toteumakirjauskohteet [sopimus yksikkohintaiset-tehtavat kokonaishintaiset-tehtavat]
+  (assoc sopimus :toteumakirjauskohteet (merge
+                                          {:yksikkohintaiset (muodosta-tehtavat yksikkohintaiset-tehtavat)}
+                                          {:kokonaishintaiset (muodosta-tehtavat kokonaishintaiset-tehtavat)})))
 
 (defn hae-urakan-sopimukset [db urakka-id]
-  (let [sopimukset (urakat/hae-urakan-sopimukset db urakka-id)
-        kokonaishintaiset (group-by :sopimus (kokonaishintaiset-tyot/listaa-kokonaishintaiset-tyot db urakka-id))
-        yksikkohintaiset (group-by :sopimus (yksikkohintaiset-tyot/listaa-urakan-yksikkohintaiset-tyot db urakka-id))
-        materiaalit (group-by :sopimus (materiaalit/hae-urakan-materiaalit db urakka-id))]
+  (let [sopimukset (urakat/hae-urakan-sopimukset db urakka-id)]
     (for [sopimus sopimukset]
-      {:sopimus (assoc sopimus
-                  :kokonaishintaisetTyot (muodosta-kokonaishintaiset-tyot (get kokonaishintaiset (:id sopimus)))
-                  :yksikkohintaisetTyot (muodosta-yksikkohintaiset-tyot (get yksikkohintaiset (:id sopimus)))
-                  :materiaalinKaytot (muodosta-materiaalin-kaytot (get materiaalit (:id sopimus))))})))
+      (let [sopimus-id (:id sopimus)
+            yksikkohintaiset-tehtavat (yksikkohintaiset-tyot/hae-urakan-sopimuksen-yksikkohintaiset-tehtavat
+                                        db urakka-id sopimus-id)
+            kokonaishintaiset-tehtavat (kokonaishintaiset-tyot/hae-urakan-sopimuksen-kokonaishintaiset-tehtavat
+                                         db urakka-id sopimus-id)]
+        {:sopimus (muodosta-toteumakirjauskohteet sopimus
+                                                  yksikkohintaiset-tehtavat
+                                                  kokonaishintaiset-tehtavat)}))))
 
-(defn muodosta-vastaus-hae-urakka-idlla [db id urakka]
+(defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka
-   {:tiedot     (assoc urakka                               ; perustiedot (pl. väylämuoto) tulevat suoraan hae-urakka kyselystä
-                  :vaylamuoto "tie")
+   {:tiedot     (assoc urakka :vaylamuoto "tie")
     :sopimukset (hae-urakan-sopimukset db id)}})
 
-(defn muodosta-vastaus-hae-urakka-ytunnuksella [db urakat]
-  {:urakat (mapv (fn [urakka] {:urakka
-                    {:tiedot (assoc urakka
-                               :vaylamuoto "tie")}}) urakat)})
+(defn muodosta-vastaus-organisaation-urakoiden-haulle [urakat]
+  {:urakat (mapv (fn [urakka] {:urakka {:tiedot (assoc urakka :vaylamuoto "tie")}}) urakat)})
 
 (defn hae-urakka-idlla [db {:keys [id]} kayttaja]
+  (log/debug "Haetaan urakka id:llä: " id)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
-      (muodosta-vastaus-hae-urakka-idlla db urakka-id urakka))))
+      (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
 (defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
-  (log/debug "Haetaan urakat ytynnuksella " ytunnus)
+  (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
-    (muodosta-vastaus-hae-urakka-ytunnuksella db urakat)))
+    (muodosta-vastaus-organisaation-urakoiden-haulle urakat)))
 
 (def hakutyypit
   [{:palvelu        :hae-urakka
