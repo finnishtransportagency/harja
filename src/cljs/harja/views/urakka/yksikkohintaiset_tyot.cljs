@@ -93,7 +93,7 @@
                             (reset! urakka ur)
                             ;; Tehdään hoitokauden osien (10-12 / 1-9) yhdistäminen urakalle
                             (go (reset! toimenpiteet-ja-tehtavat
-                                        (<! (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat (:id ur))))))
+                                        (<! (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (:id ur))))))
         sopimuksen-tyot
         (reaction
           (into []
@@ -160,9 +160,7 @@
 
        :component-will-unmount
        (fn [this]
-         (reset! tuleville? false)
-         (if (= (:tpi_nimi @u/valittu-toimenpideinstanssi) "Muut")
-           (reset! u/valittu-toimenpideinstanssi (first @u/urakan-toimenpideinstanssit))))}
+         (reset! tuleville? false))}
 
       (fn [ur]
         [:div.yksikkohintaiset-tyot
