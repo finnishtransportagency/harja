@@ -310,7 +310,7 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/kuuntelija :avaa-paikkaussilmoitus
+    (komp/kuuntelija :avaa-paikkausilmoitus
                      (fn [_ rivi]
                        (avaa-paikkausilmoitus (:paikkauskohde-id rivi))))
     (fn []
