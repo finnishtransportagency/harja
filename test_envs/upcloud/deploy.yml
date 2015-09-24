@@ -15,19 +15,23 @@
           workingdir: /opt/harja
 
     - name: pysayta harja
+      when: not harja_migrate_only
       service: name=harja state=stopped
-      
+
     - name: tuhoa kanta
+      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_db: name=harja state=absent
 
     - name: luo kanta
+      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_db: name=harja owner=harja state=present
 
     - name: tee postgis-extensio
+      when: not harja_migrate_only
       sudo: yes
       sudo_user: postgres
       postgresql_ext: db=harja name=postgis state=present
@@ -41,6 +45,7 @@
         chdir: /opt/harja/tietokanta
 
     - name: dumppaa testidata
+      when: not harja_migrate_only
       sudo: yes
       sudo_user: harja
       shell: psql -p5432 harja -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null

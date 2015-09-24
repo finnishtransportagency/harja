@@ -1,18 +1,52 @@
 #!/bin/sh
+
+function msg {
+    echo "**************************************************************"
+    echo "$1"
+}
+
+function error_exit {
+    echo "_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_"
+    echo "$1"
+    exit 1
+}
+
 if [ -z "$1" ]; then
-    echo "Usage: $0 <test-env-number>"
+    echo "Usage: $0 <test-env-number> [migrate_only]"
     exit 1
 fi
 
 HARJA_ENV="harja-dev$1"
 
-echo "Deploying to $HARJA_ENV"
-echo "Please be patient!"
+START_TS=`date +%s`
 
-lein clean
-lein tuotanto
+msg "Deploying to $HARJA_ENV, please have a cup of hot coffee!"
+
+if [ "$2" == "migrate_only" ]; then
+    echo "Performing migrate only"
+    DEPLOY_OPTS="--extra-vars harja_migrate_only=true"
+fi
+
+lein clean || error_exit "clean failed"
+
+msg "Building"
+
+lein tuotanto || error_exit "build failed"
+
+msg "Packing migration scripts"
+
 tar czf tietokanta.tgz tietokanta
-cd test_envs/upcloud
-ansible-playbook deploy.yml -i inventory/harjadev --limit $HARJA_ENV
 
-echo "Done!"
+msg "Running deploy playbook"
+
+pushd test_envs/upcloud
+ansible-playbook deploy.yml -i inventory/harjadev $DEPLOY_OPTS --limit $HARJA_ENV || error_exit "Deploy failed"
+popd
+
+rm tietokanta.tgz
+
+END_TS=`date +%s`
+
+msg "Done!"
+
+echo "It all took `echo "$END_TS-$START_TS"|bc` seconds."
