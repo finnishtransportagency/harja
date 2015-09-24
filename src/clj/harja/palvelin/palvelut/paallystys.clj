@@ -32,7 +32,8 @@
   (log/debug "Haetaan urakan päällystyskohteet. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
-                      (comp (map #(konv/string->avain % [:tila]))
+                      (comp (map #(konv/string->avain % [:paallystysilmoitus_tila]))
+                            (map #(konv/string->avain % [:paikkausilmoitus_tila]))
                             (map #(assoc % :kohdeosat
                                          (into []
                                                kohdeosa-xf

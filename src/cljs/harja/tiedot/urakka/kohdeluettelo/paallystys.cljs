@@ -104,11 +104,11 @@
                                         {:type :paallystyskohde
                                          :kohde %
                                          :paallystyskohde-id paallystyskohde-id
-                                         :tila (:tila %)
+                                         :tila (:paallystysilmoitus_tila %)
                                          :nimi (str (:nimi %) ": " nimi)
                                          :osa osa
                                          :alue (assoc sij
-                                                      :stroke {:color (case (:tila %)
+                                                      :stroke {:color (case (:paallystysilmoitus_tila %)
                                                                         :aloitettu "blue"
                                                                         :valmis "green"
                                                                         "orange")
@@ -130,11 +130,11 @@
                                                {:type :paikkauskohde
                                                 :kohde %
                                                 :paikkauskohde-id paikkauskohde-id
-                                                :tila (:tila %)
+                                                :tila (:paikkausilmoitus_tila %)
                                                 :nimi (str (:nimi %) ": " nimi)
                                                 :osa osa
                                                 :alue (assoc sij
-                                                        :stroke {:color (case (:tila %)
+                                                        :stroke {:color (case (:paikkausilmoitus_tila %)
                                                                           :aloitettu "blue"
                                                                           :valmis "green"
                                                                           "orange")
