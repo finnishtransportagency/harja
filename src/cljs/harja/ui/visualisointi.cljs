@@ -135,6 +135,7 @@
                   value-range (- max-value min-value)
                   scale (/ height value-range)
                   ]
+              (log "Value range " min-value " -- " max-value " == " value-range)
                 [:svg {:width width :height height}
                  (map-indexed (fn [i d]
                                   (let [label (label-fn d)

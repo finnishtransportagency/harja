@@ -19,12 +19,18 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.ui.raportti :as raportti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-raporttityyppi (atom nil))
+
+
+;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
+(defonce suoritettu-raportti (atom nil))
+
 (def raportti-valmis-naytettavaksi?
   (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
                   konteksti (:konteksti valittu-raporttityyppi)
@@ -32,13 +38,15 @@
                   v-hal @nav/valittu-hallintayksikko
                   v-aikavali @u/valittu-aikavali]
               (when valittu-raporttityyppi
-                (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
-                  (and v-ur
-                       v-hal)
-                  (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
-                          (contains? (:parametrit valittu-raporttityyppi) :koko-maan-aikavali))
-                    (and (not (nil? v-aikavali)) (not (empty? (keep identity v-aikavali))))
-                    false))))))
+                (if (= :testiraportti (:nimi valittu-raporttityyppi))
+                  true
+                  (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
+                    (and v-ur
+                         v-hal)
+                    (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
+                            (contains? (:parametrit valittu-raporttityyppi) :koko-maan-aikavali))
+                      (and (not (nil? v-aikavali)) (not (empty? (keep identity v-aikavali))))
+                      false)))))))
 (def nakymassa? (atom nil))
 
 (defonce yksikkohintaiset-toteumat
@@ -215,10 +223,42 @@
                      lopulliset-sarakkeet
                      (if (> (count urakkarivit) 0)
                        lopulliset-rivit
-                       [])]))}])
+                       [])]))}
+
+   {:nimi       :testiraportti
+    :otsikko    "Testiraportti"
+    :konteksti  #{:urakka :hallintayksikko :koko-maa}
+    :parametrit []
+    :render     (fn []
+                  [:raportti {:nimi "Testiraportti"
+                                 :tietoja [["Urakka" "Rymättylän päällystys"]
+                                           ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
+                      [:otsikko "Tämä on hieno raportti"]
+                      [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
+                      [:taulukko [{:otsikko "Nimi" :leveys "50%"}
+                                  {:otsikko "Kappaleita" :leveys "15%"}
+                                  {:otsikko "Hinta" :leveys "15%"}
+                                  {:otsikko "Yhteensä" :leveys "20%"}]
+
+                       [["Fine leather jacket" 2 199 (* 2 199)]
+                        ["Log from blammo" 1 39 39]
+                        ["Suristin" 10 25 250]]]
+
+                      [:otsikko "Tähän taas väliotsikko"]
+                      [:pylvaat {:otsikko "Kvartaalien luvut"}
+                       [["Q1" 123]
+                        ["Q2" 1500]
+                        ["Q3" 1000]
+                        ["Q4" 777]]]
+                      [:yhteenveto [["PDF-generointi" "toimii"]
+                                    ["XSL-FO" "hyvin"]]]])}
+      
+   ])
 
 (defn raporttinakyma [tyyppi]
-  ((:render tyyppi)))
+  (if (= :testiraportti (:nimi tyyppi))
+    (raportti/muodosta-html ((:render tyyppi)))
+    ((:render tyyppi))))
 
 (defn raporttivalinnat []
   (komp/luo
