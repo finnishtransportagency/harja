@@ -6,7 +6,8 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -82,8 +83,8 @@
           (do
             (doseq [i hoitokaudet]
               (if (or
-                    (t/equal? (first i) (first hoitokausi))
-                    (t/after? (first i) (first hoitokausi)))
+                    (t/equal? (c/from-date (first i)) (c/from-date (first hoitokausi)))
+                    (t/after? (c/from-date (first i)) (c/from-date (first hoitokausi))))
                 (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
                     (q/poista-urakan-materiaalinkaytto! c (:id user)
                                                         urakka-id sopimus-id
