@@ -9,10 +9,10 @@
            version="1.0">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/vastauksenStatus"
-               schemaLocation="./entities/vastauksenStatus.xsd"/>
+               schemaLocation="vastauksenStatus.xsd"/>
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
-               schemaLocation="./entities/tietolajikuvaus.xsd"/>
-    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="./entities/tietue.xsd"/>
+               schemaLocation="tietolajikuvaus.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="tietue.xsd"/>
 
     <xs:element name="vastaus">
         <xs:complexType>

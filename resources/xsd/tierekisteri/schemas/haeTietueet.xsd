@@ -4,10 +4,10 @@
            xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tie"
            targetNamespace="http://www.solita.fi/harja/tierekisteri/haeTietueet" version="1.0">
 
-    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tie" schemaLocation="./entities/tie.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tie" schemaLocation="tie.xsd"/>
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
-               schemaLocation="./entities/tietolajitunniste.xsd"/>
+               schemaLocation="tietolajitunniste.xsd"/>
 
     <xs:element name="haeTietueet">
         <xs:complexType>

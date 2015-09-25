@@ -4,9 +4,9 @@
            targetNamespace="http://www.solita.fi/harja/tierekisteri/lisaaTietue" version="1.0">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/suorittaja"
-               schemaLocation="./entities/suorittaja.xsd"/>
+               schemaLocation="suorittaja.xsd"/>
 
-    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="./entities/tietue.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="tietue.xsd"/>
 
     <xs:element name="lisaaTietue">
         <xs:complexType>
