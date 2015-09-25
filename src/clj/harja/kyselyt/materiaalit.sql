@@ -90,6 +90,19 @@ WHERE (SELECT SUM(maara) AS maara
                  poistettu IS NOT TRUE
          ) IS NOT NULL;
 
+-- name: hae-urakan-suunnitellut-materiaalit-raportille
+SELECT DISTINCT
+  urakka.nimi AS urakka_nimi,
+  materiaalikoodi.nimi AS materiaali_nimi,
+  materiaalikoodi.yksikko AS materiaali_yksikko
+FROM materiaalin_kaytto
+    JOIN urakka ON materiaalin_kaytto.urakka = urakka.id
+  JOIN materiaalikoodi ON materiaalikoodi.id = materiaalin_kaytto.materiaali
+WHERE urakka = :urakka
+AND materiaalin_kaytto.alkupvm :: DATE >= :alkuvpm
+AND materiaalin_kaytto.alkupvm :: DATE <= :alkupvm
+AND poistettu IS NOT TRUE;
+
 -- name: hae-urakan-toteutuneet-materiaalit-raportille
 -- Palauttaa urakan materiaalit ja määrät omilla riveillä.
 -- Samat materiaalit summataan yhteen.
@@ -100,7 +113,7 @@ SELECT
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
+  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.toteuma)
   JOIN toteuma ON toteuma.id = toteuma
                   AND urakka.id = :urakka
                   AND alkanut :: DATE >= :alku
@@ -113,20 +126,20 @@ GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(maara) AS kokonaismaara,
-  urakka.nimi AS urakka_nimi,
-  materiaalikoodi.nimi AS materiaali_nimi,
+  SUM(maara)              AS kokonaismaara,
+  urakka.nimi             AS urakka_nimi,
+  materiaalikoodi.nimi    AS materiaali_nimi,
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
-  JOIN toteuma ON toteuma.id = toteuma
-                  AND urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-                  AND alkanut :: DATE >= :alku
-                  AND alkanut :: DATE <= :loppu
-                  AND toteuma.poistettu IS NOT TRUE
-                  AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
+  INNER JOIN toteuma ON toteuma.id = toteuma
+                        AND alkanut :: DATE >= :alku
+                        AND alkanut :: DATE <= :loppu
+                        AND toteuma.poistettu IS NOT TRUE
+                        AND toteuma_materiaali.poistettu IS NOT TRUE
+  LEFT JOIN urakka ON urakka.id = toteuma.urakka
+WHERE urakka.hallintayksikko = :hallintayksikko
+GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, toteuma_materiaali.id;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -138,12 +151,12 @@ SELECT
   materiaalikoodi.yksikko AS materiaali_yksikko
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka FROM toteuma WHERE id = toteuma_materiaali.id)
-  JOIN toteuma ON toteuma.id = toteuma
+  INNER JOIN toteuma ON toteuma.id = toteuma
                   AND alkanut :: DATE >= :alku
                   AND alkanut :: DATE <= :loppu
                   AND toteuma.poistettu IS NOT TRUE
                   AND toteuma_materiaali.poistettu IS NOT TRUE
+  LEFT JOIN urakka ON urakka.id = toteuma.urakka
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille
@@ -225,6 +238,12 @@ UPDATE materiaalin_kaytto
    AND alkupvm = :alkupvm AND loppupvm = :loppupvm
    AND materiaali = :materiaali
    AND pohjavesialue = :pohjavesialue;
+
+-- name: poista-urakan-materiaalinkaytto!
+UPDATE materiaalin_kaytto
+   SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=TRUE
+ WHERE urakka = :urakka AND sopimus = :sopimus
+   AND alkupvm = :alkupvm AND loppupvm = :loppupvm
 
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden materiaalin toteumalle

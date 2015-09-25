@@ -186,13 +186,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
       :geometries
       (doall (concat (cond
-                       (and (= :tilannekuva @nav/sivu) (nil? v-hal))
+                       ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
+                       ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
+                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
                        nil
 
-                       (and (= :tilannekuva @nav/sivu) (nil? @nav/valittu-urakka))
+                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
                        [(assoc v-hal :valittu true)]
 
-                       (and (= :tilannekuva @nav/sivu) @nav/valittu-urakka)
+                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
                        [(assoc @nav/valittu-urakka :valittu true)]
 
                        ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt

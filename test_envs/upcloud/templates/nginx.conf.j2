@@ -1,0 +1,90 @@
+
+events {
+  worker_connections  4096;  ## Default: 1024
+}
+
+http {
+
+proxy_cache_path /var/cache/nginx/kartat keys_zone=kartat:10m;
+
+upstream backend {
+  server localhost:3000;
+}
+
+upstream wmts {
+  server karttakuva.maanmittauslaitos.fi:443;
+}
+
+upstream testisonja {
+  server testisonja.liikennevirasto.fi:443;
+}
+
+upstream activemq {
+  server localhost:8161;
+}
+
+server { 
+    listen       {{ansible_eth0.ipv4.address}}:443 ssl;
+    listen       localhost:443 ssl;
+    server_name  {{ ansible_fqdn }};
+    root         html;
+
+    underscores_in_headers on;
+
+    ssl_certificate /etc/nginx/server.crt;
+    ssl_certificate_key /etc/nginx/server.key;
+    ssl_client_certificate /etc/nginx/ca.crt;
+    ssl_verify_client optional;
+    
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log error;
+
+    location ~ /wmts/(?<path>.*)$ {
+    	proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
+        proxy_set_header Authorization "Basic bGlpa2VubmV2aXJrb2U6VG9yczIydGFp";
+        proxy_pass   https://wmts/$path$is_args$args;
+        proxy_cache  kartat;
+	
+        proxy_cache_key      $request_uri;
+        proxy_cache_valid    200 480m;
+        proxy_cache_revalidate  on;
+    }
+
+    location / {
+      proxy_pass_header OAM_REMOTE_USER;
+      proxy_pass   http://backend;
+    }
+    
+    location ~ /harja/api/(?<path>.*)$ {
+      proxy_pass http://backend/api/$path$is_args$args;
+    }
+    
+    location ~ /harja/apidoc/(?<path>.*)$ {
+      proxy_set_header Host $host;
+      proxy_pass http://backend/apidoc/$path$is_args$args;
+    }
+
+    location ~ /harja/monitor/(?<path>.*)$ {
+      proxy_set_header Host $host;
+      proxy_pass http://founder/monitor/$path$is_args$args;
+      proxy_redirect ~/monitor/(.*)$ /harja/monitor/$1;
+    }
+
+        location ~ /admin/(?<path>.*)$ {
+          proxy_set_header Host $host;
+          proxy_pass http://activemq/admin/$path$is_args$args;
+        }
+
+        location ~ /harja/integraatiotesti/tierekisteri/(?<path>.*)$ {
+          proxy_set_header Host "testisonja.liikennevirasto.fi";
+          proxy_pass https://testisonja/harja/tierekisteri/$path$is_args$args;
+        }
+
+    location ~ /harja/(?<path>.*)$ {
+      proxy_pass_request_headers on;
+      proxy_pass_header OAM_REMOTE_USER;
+      proxy_pass http://backend/$path$is_args$args;
+    }
+    
+}
+}

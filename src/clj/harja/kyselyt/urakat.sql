@@ -1,6 +1,8 @@
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
-  u.id, u.nimi, u.tyyppi
+  u.id,
+  u.nimi,
+  u.tyyppi
 FROM urakka u
 WHERE u.loppupvm IS NULL OR u.loppupvm > NOW();
 
@@ -32,9 +34,9 @@ FROM urakka u
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
 WHERE hallintayksikko = :hallintayksikko
-      AND (('hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi OR
-            'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi)
-           OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND
+      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+            'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+           OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = urk.id));
 
 -- name: hae-urakan-organisaatio
@@ -116,7 +118,7 @@ WHERE id = :urakka;
 -- name: tallenna-urakan-tyyppi!
 -- Vaihtaa urakan tyypin
 UPDATE urakka
-SET tyyppi = :urakkatyyppi::urakkatyyppi
+SET tyyppi = :urakkatyyppi :: urakkatyyppi
 WHERE id = :urakka;
 
 -- name: hae-urakan-sopimustyyppi
@@ -139,14 +141,14 @@ SELECT
   u.hallintayksikko,
   u.sampoid
 FROM urakka u
-     JOIN organisaatio hal ON u.hallintayksikko = hal.id
-     JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE (u.nimi ILIKE :teksti
        OR u.sampoid ILIKE :teksti)
-     AND (('hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi OR
-           'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi)
-          OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND
-              :kayttajan_org_id = urk.id))
+      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+            'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+           OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+               :kayttajan_org_id = urk.id))
 LIMIT 11;
 
 -- name: hae-urakka
@@ -157,9 +159,11 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  h.alueurakkanro AS alueurakkanumero,
+  urk.nimi        AS urakoitsija_nimi,
+  urk.ytunnus     AS urakoitsija_ytunnus
 FROM urakka u
+  JOIN hanke h ON h.id = u.hanke
   JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.id = :id;
 
@@ -174,7 +178,7 @@ SELECT
   urk.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
-  AND urk.ytunnus = :ytunnus;
+                           AND urk.ytunnus = :ytunnus;
 
 -- name: hae-urakan-sopimukset
 -- Hakee urakan sopimukset urakan id:llä.
@@ -294,4 +298,8 @@ SELECT paivita_urakoiden_alueet();
 
 -- name: hae-urakan-alueurakkanumero
 -- Hakee urakan alueurakkanumeron
-SELECT alueurakkanro FROM hanke WHERE id = (SELECT hanke FROM urakka WHERE id = :id)
+SELECT alueurakkanro
+FROM hanke
+WHERE id = (SELECT hanke
+            FROM urakka
+            WHERE id = :id)

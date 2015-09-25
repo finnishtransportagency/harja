@@ -287,12 +287,12 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :boolean [{:keys [otsikko]} data]
+(defmethod tee-kentta :boolean [{:keys [otsikko boolean-otsikko]} data]
   [:div.checkbox
    [:label
     [:input {:type      "checkbox" :checked @data
              :on-change #(do (reset! data (-> % .-target .-checked)) nil)}
-     otsikko]]])
+     (or boolean-otsikko otsikko)]]])
 
 (defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
   [:span (if @data

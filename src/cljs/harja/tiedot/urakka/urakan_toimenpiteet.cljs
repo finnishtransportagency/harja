@@ -11,6 +11,11 @@
   [urakka-id]
   (k/post! :urakan-toimenpiteet-ja-tehtavat urakka-id))
 
+(defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
+  "Hakee urakan yksikköhintaiset toimenpiteet (3. taso) ja tehtävät (4. taso) urakan id:llä."
+  [urakka-id]
+  (k/post! :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat urakka-id))
+
 (defn hae-urakan-toimenpiteet
   "Hakee urakan toimenpiteet (3. taso) urakan id:llä."
   [urakka-id]
