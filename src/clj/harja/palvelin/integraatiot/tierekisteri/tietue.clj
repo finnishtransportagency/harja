@@ -33,7 +33,7 @@
 
 (defn hae-tietue [integraatioloki url id tietolaji]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
-  (let [kutsudata (haku-kutsusanoma/muodosta id tietolaji)
+  (let [kutsudata (haku-kutsusanoma/muodosta-hakukutsu id tietolaji)
         palvelu-url (str url "/haetietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
@@ -70,7 +70,7 @@
 
 (defn lisaa-tietue [integraatioloki url tietue]
   (log/debug "Lisätään tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta tietue)
+  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tietue)
         palvelu-url (str url "/lisaatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu

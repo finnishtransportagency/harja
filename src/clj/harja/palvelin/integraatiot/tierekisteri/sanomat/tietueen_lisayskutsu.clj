@@ -8,13 +8,13 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
-(defn muodosta-viesti [tietue]
+(defn muodosta-xml-sisalto [tietue]
   ; FIXME Skeeman mukainen requesti
   [:ns2:lisaaTietue
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}])
 
-(defn muodosta [tietue]
-  (let [sisalto (muodosta-viesti tietue)
+(defn muodosta-kutsu [tietue]
+  (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "lisaaTietue.xsd" xml)
       xml
