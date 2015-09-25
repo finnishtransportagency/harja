@@ -140,24 +140,26 @@
                  (map-indexed (fn [i d]
                                   (let [label (label-fn d)
                                         value (value-fn d)
-                                        bar-height (* value scale)] ;; FIXME: scale min-max
-                                      ^{:key (key-fn d)}
+                                        bar-height (* value scale)
+                                        x (+ mx (* bar-width i))] ;; FIXME: scale min-max
+                                    ^{:key (key-fn d)}
                                       [:g {:on-mouse-over #(reset! hover d)
                                            :on-mouse-out #(reset! hover nil)}
-                                       [:rect {:x (+ mx (* i bar-width))
+                                       [:rect {:x x
                                                :y (- height bar-height my)
                                                :width (* bar-width 0.75)
                                                :height bar-height
                                                :fill (color-fn d)}]
-                                       (when (= hovered d)
-                                           [:text {:x (/ width 2) :y (- height 5)
-                                                   :text-anchor "middle"}
-                                            (str label ": " (.toFixed value 2))])]))
+                                        ;(when (= hovered d)
+                                       [:text {:x (+ x (/ bar-width 2)) :y (- height bar-height my 2)
+                                       [:text {:x (+ x (/ bar-width 2)) :y (- height 5)
+                                               :text-anchor "middle"}
+                                        (str label ": " (.toFixed value 2))]]))
                               data)
                  ;; first and last labels
-                 [:text {:x mx :y (- height 5) :text-anchor "left"}
-                  (label-fn (first data))]
-                 [:text {:x width :y (- height 5) :text-anchor "end"}
+                 #_[:text {:x mx :y (- height 5) :text-anchor "left"}
+                    (label-fn (first data))]
+                 #_[:text {:x width :y (- height 5) :text-anchor "end"}
                   (label-fn (last data))]
 
                  ;; render ticks that are in the min-value - max-value range
