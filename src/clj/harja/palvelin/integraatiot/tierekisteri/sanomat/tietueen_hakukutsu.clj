@@ -13,7 +13,7 @@
    [:tunniste tunniste]
    [:tietolajitunniste tietolajitunniste]])
 
-(defn muodosta-hakukutsu [tunniste tietolajitunniste]
+(defn muodosta-kutsu [tunniste tietolajitunniste]
   (let [sisalto (muodosta-xml-sisalto tunniste tietolajitunniste)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "haeTietue.xsd" xml)

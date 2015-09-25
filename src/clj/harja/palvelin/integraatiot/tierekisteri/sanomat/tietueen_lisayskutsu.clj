@@ -41,8 +41,7 @@
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
-        xml (xml/tee-xml-sanoma sisalto)
-        _ (log/debug "Lähetettävä XML luotu: " (pr-str xml))]
+        xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "lisaaTietue.xsd" xml)
       xml
       (do
