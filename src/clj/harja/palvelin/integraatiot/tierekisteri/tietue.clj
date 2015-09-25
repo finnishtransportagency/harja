@@ -75,7 +75,7 @@
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
                       integraatioloki
-                      "lisaatietue"
+                      "lisaa-tietue"
                       "tierekisteri"
                       palvelu-url
                       otsikot
