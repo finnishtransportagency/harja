@@ -9,39 +9,39 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tietue]
-  [:ns2:lisaaTietue
-   {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}
+  [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
    [:lisaaja
-    [:henkilo ""]
-    [:jarjestelma ""]
-    [:organisaatio ""]
-    [:ytunnus ""]]
+    [:henkilo "Keijo Käsittelijä"]
+    [:jarjestelma "FastMekka"]
+    [:organisaatio "Asfaltia Oy"]
+    [:yTunnus "1234567-8"]]
    [:tietue
-    [:tunniste ""]
-    [:alkupvm ""]
-    [:loppupvm ""]
-    [:karttapvm ""]
-    [:piiri ""]
-    [:kuntoluokka ""]
-    [:urakka ""]
+    [:tunniste "1245rgfsd"]
+    [:alkupvm "2015-03-03+02:00"]
+    [:loppupvm "2015-03-03+02:00"]
+    [:karttapvm "2015-03-03+02:00"]
+    [:piiri "1"]
+    [:kuntoluokka "1"]
+    [:urakka "100"]
     [:sijainti
      [:tie
-      [:numero ""]
-      [:aet ""]
-      [:aosa ""]
-      [:let ""]
-      [:losa ""]
-      [:ajr ""]
-      [:puoli ""]
-      [:alkupvm ""]]]
+      [:numero "1"]
+      [:aet "1"]
+      [:aosa "1"]
+      [:let "1"]
+      [:losa "1"]
+      [:ajr "1"]
+      [:puoli "1"]
+      [:alkupvm "2017-03-03+02:00"]]]
     [:tietolaji
-     [:tietolajitunniste ""]
-     [:arvot ""]]]
-   [:lisatty ""]])
+     [:tietolajitunniste "tl506"]
+     [:arvot "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"]]]
+   [:lisatty "2015-05-26+03:00"]])
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
-        xml (xml/tee-xml-sanoma sisalto)]
+        xml (xml/tee-xml-sanoma sisalto)
+        _ (log/debug "Lähetettävä XML luotu: " (pr-str xml))]
     (if (xml/validoi +xsd-polku+ "lisaaTietue.xsd" xml)
       xml
       (do
