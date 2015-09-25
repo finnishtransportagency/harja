@@ -9,9 +9,35 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tietue]
-  ; FIXME Skeeman mukainen requesti
   [:ns2:lisaaTietue
-   {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}])
+   {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}
+   [:lisaaja
+    [:henkilo ""]
+    [:jarjestelma ""]
+    [:organisaatio ""]
+    [:ytunnus ""]]
+   [:tietue
+    [:tunniste ""]
+    [:alkupvm ""]
+    [:loppupvm ""]
+    [:karttapvm ""]
+    [:piiri ""]
+    [:kuntoluokka ""]
+    [:urakka ""]
+    [:sijainti
+     [:tie
+      [:numero ""]
+      [:aet ""]
+      [:aosa ""]
+      [:let ""]
+      [:losa ""]
+      [:ajr ""]
+      [:puoli ""]
+      [:alkupvm ""]]]
+    [:tietolaji
+     [:tietolajitunniste ""]
+     [:arvot ""]]]
+   [:lisatty ""]])
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
