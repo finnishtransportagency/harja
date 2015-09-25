@@ -54,7 +54,7 @@
       copy: src=../../target/harja-0.0.1-SNAPSHOT-standalone.jar dest=/opt/harja/harja-nightly.jar
         
     - name: Kopioi sovelluksen konfiguraatio
-      template: src=templates/asetukset.edn dest=/opt/harja/asetukset.edn
+      template: src=templates/asetukset_dev.edn dest=/opt/harja/asetukset.edn
 
     - name: Kopioi käynnistysskripti
       template: src=templates/harja.sh dest=/opt/harja/harja.sh mode=755
