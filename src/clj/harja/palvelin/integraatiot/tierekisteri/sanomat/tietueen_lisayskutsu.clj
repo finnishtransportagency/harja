@@ -9,6 +9,7 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tietue]
+  ; FIXME Dude, tämä olisi hyvä destructoida. Tai oikeastaan tarvitsisimme Clojure Map -> Hiccup/XML konverterin.
   [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
    [:lisaaja
     [:henkilo (get-in tietue [:lisaaja :henkilo])]
@@ -25,17 +26,17 @@
     [:urakka (get-in tietue [:tietue :urakka])]
     [:sijainti
      [:tie
-      [:numero (get-in tietue [:tie :numero])]
-      [:aet (get-in tietue [:tie :aet])]
-      [:aosa (get-in tietue [:tie :aosa])]
-      [:let (get-in tietue [:tie :let])]
-      [:losa (get-in tietue [:tie :losa])]
-      [:ajr (get-in tietue [:tie :ajr])]
-      [:puoli (get-in tietue [:tie :puoli])]
-      [:alkupvm (get-in tietue [:tie :alkupvm])]]]
+      [:numero (get-in tietue [:tietue :sijainti :tie :numero])]
+      [:aet (get-in tietue [:tietue :sijainti :tie :aet])]
+      [:aosa (get-in tietue [:tietue :sijainti :tie :aosa])]
+      [:let (get-in tietue [:tietue :sijainti :tie :let])]
+      [:losa (get-in tietue [:tietue :sijainti :tie :losa])]
+      [:ajr (get-in tietue [:tietue :sijainti :tie :ajr])]
+      [:puoli (get-in tietue [:tietue :sijainti :tie :puoli])]
+      [:alkupvm (get-in tietue [:tietue :sijainti :tie :alkupvm])]]]
     [:tietolaji
-     [:tietolajitunniste (get-in tietue [:tietolaji :tietolajitunniste])]
-     [:arvot (get-in tietue [:tietolaji :arvot])]]]
+     [:tietolajitunniste (get-in tietue [:tietue :tietolaji :tietolajitunniste])]
+     [:arvot (get-in tietue [:tietue :tietolaji :arvot])]]]
    [:lisatty (:lisatty tietue)]])
 
 (defn muodosta-kutsu [tietue]
