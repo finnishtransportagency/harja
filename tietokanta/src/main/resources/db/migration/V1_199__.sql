@@ -150,3 +150,4 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
              loppuet::INTEGER,
              reitti);
 END;
+$$ LANGUAGE plpgsql;
