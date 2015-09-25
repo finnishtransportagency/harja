@@ -120,58 +120,47 @@
 
 
 (defn bars [_ data]
-    (let [hover (atom nil)]
-        (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks]}  data]
-            (let [label-fn (or label-fn first)
-                  value-fn (or value-fn second)
-                  key-fn (or key-fn hash)
-                  color-fn (or color-fn (constantly (or color "blue")))
-                  mx 20 ;; margin-x
-                  my 10 ;; margin-y
-                  bar-width (/ (- width mx) (count data))
-                  hovered @hover
-                  max-value (reduce max (map value-fn data))
-                  min-value (reduce min (map value-fn data))
-                  value-range (- max-value min-value)
-                  scale (/ height value-range)
-                  ]
-              (log "Value range " min-value " -- " max-value " == " value-range)
-                [:svg {:width width :height height}
-                 (map-indexed (fn [i d]
-                                  (let [label (label-fn d)
-                                        value (value-fn d)
-                                        bar-height (* value scale)
-                                        x (+ mx (* bar-width i))] ;; FIXME: scale min-max
-                                    ^{:key (key-fn d)}
-                                      [:g {:on-mouse-over #(reset! hover d)
-                                           :on-mouse-out #(reset! hover nil)}
-                                       [:rect {:x x
-                                               :y (- height bar-height my)
-                                               :width (* bar-width 0.75)
-                                               :height bar-height
-                                               :fill (color-fn d)}]
+  (let [hover (atom nil)]
+    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks]}  data]
+      (let [label-fn (or label-fn first)
+            value-fn (or value-fn second)
+            key-fn (or key-fn hash)
+            color-fn (or color-fn (constantly (or color "blue")))
+            mx 20 ;; margin-x
+            my 40 ;; margin-y
+            hmy (/ my 2)
+            bar-width (/ (- width mx) (count data))
+            hovered @hover
+            max-value (reduce max (map value-fn data))
+            min-value (reduce min (map value-fn data))
+            value-range (- max-value min-value)
+            value-height #(/ (* (- height my) %) max-value)
+            ]
+        (log "Value range " min-value " -- " max-value " == " value-range)
+        [:svg {:width width :height height}
+         (map-indexed (fn [i d]
+                        (let [label (label-fn d)
+                              value (value-fn d)
+                              bar-height (value-height value)
+                              x (+ mx (* bar-width i))] ;; FIXME: scale min-max
+                          ^{:key (key-fn d)}
+                          [:g {:on-mouse-over #(reset! hover d)
+                               :on-mouse-out #(reset! hover nil)}
+                           [:rect {:x x
+                                   :y (- height bar-height hmy)
+                                   :width (* bar-width 0.75)
+                                   :height bar-height
+                                   :fill (color-fn d)}]
                                         ;(when (= hovered d)
-                                       [:text {:x (+ x (/ bar-width 2)) :y (- height bar-height my 2)
-                                       [:text {:x (+ x (/ bar-width 2)) :y (- height 5)
-                                               :text-anchor "middle"}
-                                        (str label ": " (.toFixed value 2))]]))
-                              data)
-                 ;; first and last labels
-                 #_[:text {:x mx :y (- height 5) :text-anchor "left"}
-                    (label-fn (first data))]
-                 #_[:text {:x width :y (- height 5) :text-anchor "end"}
-                  (label-fn (last data))]
+                           [:text {:x (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
+                                   :text-anchor "end"}
+                            (.toFixed value 2)]
+                           [:text {:x (+ x (/ bar-width 2)) :y height
+                                   :text-anchor "end"}
+                            label]]))
+                      data)
 
-                 ;; render ticks that are in the min-value - max-value range
-                 (for [[label value] ticks
-                       :when (< min-value value max-value)
-                       :let [y (- height (* value scale) my)]]
-                     ^{:key label}
-                     [:g
-                      [:line {:x1 mx :y1 y :x2 width :y2 y
-                              :style {:stroke "black" :stroke-dasharray "5, 5"}}]
-                      [:text {:x (- mx 5) :y (+ y 5) :text-anchor "end"} label]])
-                 ]))))
+         ]))))
 
 (defn timeline [opts times]
   (let [component (r/current-component)
