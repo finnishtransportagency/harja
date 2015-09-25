@@ -4,8 +4,8 @@
            targetNamespace="http://www.solita.fi/harja/tierekisteri/paivitaTietue" version="1.0">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/suorittaja"
-               schemaLocation="./entities/suorittaja.xsd"/>
-    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="./entities/tietue.xsd"/>
+               schemaLocation="suorittaja.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="tietue.xsd"/>
 
     <xs:element name="paivitaTietue">
         <xs:complexType>

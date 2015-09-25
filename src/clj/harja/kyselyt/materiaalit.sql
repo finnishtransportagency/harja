@@ -239,6 +239,12 @@ UPDATE materiaalin_kaytto
    AND materiaali = :materiaali
    AND pohjavesialue = :pohjavesialue;
 
+-- name: poista-urakan-materiaalinkaytto!
+UPDATE materiaalin_kaytto
+   SET muokattu=NOW(), muokkaaja=:kayttaja, poistettu=TRUE
+ WHERE urakka = :urakka AND sopimus = :sopimus
+   AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden materiaalin toteumalle
 INSERT

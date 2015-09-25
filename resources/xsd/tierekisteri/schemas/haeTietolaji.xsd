@@ -3,7 +3,7 @@
            xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajitunniste">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
-               schemaLocation="./entities/tietolajitunniste.xsd"/>
+               schemaLocation="tietolajitunniste.xsd"/>
 
     <xs:element name="haeTietolajit">
         <xs:complexType>

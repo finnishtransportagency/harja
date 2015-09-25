@@ -9,6 +9,8 @@ target
 dev-resources/js/harja.js
 dev-resources/js/out/
 logs/
+doc/
+tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures
 figwheel_server.log
