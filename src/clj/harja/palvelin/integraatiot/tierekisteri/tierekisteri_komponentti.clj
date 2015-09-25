@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
   (:require
     [com.stuartsierra.component :as component]
+    [taoensso.timbre :as log]
     [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
     [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]
     [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
@@ -19,7 +20,8 @@
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste])
-  (hae-tietueet [this tr tietolajitunniste muutospvm]))
+  (hae-tietueet [this tr tietolajitunniste muutospvm])
+  (lisaa-tietue [this tietueen-tunniste tietolajitunniste]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
@@ -41,5 +43,10 @@
     (validoi-tunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
       (tietueet/hae-tietueet
-        (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm))))
+        (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm)))
+
+  (lisaa-tietue [this tietue]
+    (validoi-tunniste (get-in tietue [:tietue :tunniste])
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/lisaa-tietue (:integraatioloki this) tierekisteri-api-url tietue)))))
 
