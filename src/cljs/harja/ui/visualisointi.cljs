@@ -126,7 +126,7 @@
             value-fn (or value-fn second)
             key-fn (or key-fn hash)
             color-fn (or color-fn (constantly (or color "blue")))
-            mx 20 ;; margin-x
+            mx 40 ;; margin-x
             my 40 ;; margin-y
             hmy (/ my 2)
             bar-width (/ (- width mx) (count data))
@@ -138,6 +138,16 @@
             ]
         (log "Value range " min-value " -- " max-value " == " value-range)
         [:svg {:width width :height height}
+         ;; render ticks that are in the min-value - max-value range
+         (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
+               :let [tick-y (- height (value-height tick) hmy)]]
+           [:g 
+            [:text {:font-size "8pt" :text-anchor "end" :x (- mx 3) :y tick-y}
+             (str tick)]
+            [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
+                    :style {:stroke "rgb(200,200,200)"
+                            :stroke-width 0.5
+                            :stroke-dasharray "5,1"}}]])
          (map-indexed (fn [i d]
                         (let [label (label-fn d)
                               value (value-fn d)
