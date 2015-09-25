@@ -21,7 +21,7 @@
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste])
   (hae-tietueet [this tr tietolajitunniste muutospvm])
-  (lisaa-tietue [this tietueen-tunniste tietolajitunniste]))
+  (lisaa-tietue [this tietue]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
