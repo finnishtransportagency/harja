@@ -10,7 +10,8 @@
       "vaylamuoto": "tie",
       "tyyppi": "paallystys",
       "alkupvm": "2016-01-30T12:00:00Z",
-      "loppupvm": "2016-01-30T12:00:00Z"
+      "loppupvm": "2016-01-30T12:00:00Z",
+      "alueurakkanumero": "1240"
     },
     "sopimukset": [
       {
@@ -19,53 +20,28 @@
           "nimi": "Kiviharjunlenkin asfaltointi",
           "alkupvm": "2015-01-30T12:00:00Z",
           "loppupvm": "2016-01-30T12:00:00Z",
-          "kokonaishintaisetTyot": [
-            {
-              "kokonaishintainenTyo": {
-                "id": 456468654,
-                "tehtavat": [
-                  {
-                    "tehtava": {
-                      "id": 10000,
-                      "selite": "Uus- tai laajennusinvestointi, rautatie"
-                    }
-                  }
-                ],
-                "vuosi": 2015,
-                "kuukausi": 10,
-                "summa": 3500
-              }
-            }
-          ],
-          "yksikkohintaisetTyot": [
-            {
-              "yksikkohintainenTyo": {
-                "id": 456468654,
+          "toteumakirjauskohteet": {
+            "kokonaishintaiset": [
+              {
                 "tehtava": {
-                  "id": 12341234,
-                  "selite": "Tien auraaminen"
+                  "id": 1399,
+                  "selite": "Auraus ja sohjonpoisto"
                 },
-                "alkupvm": "2015-01-30T12:00:00Z",
-                "loppupvm": "2016-01-30T12:00:00Z",
-                "maara": 525.73,
-                "yksikko": "km",
-                "yksikkohinta": 525.5
+                "tehtava": {
+                  "id": 1400,
+                  "selite": "Suolaus"
+                }
               }
-            }
-          ],
-          "materiaalinKaytot": [
-            {
-              "materiaalinKaytto": {
-                "materiaali": "talvisuolaliuosNaCl",
-                "maara": {
-                  "yksikko": "t",
-                  "maara": 10.92
-                },
-                "alkupvm": "2015-01-30T12:00:00Z",
-                "loppupvm": "2016-01-30T12:00:00Z"
+            ],
+            "yksikkohintaiset": [
+              {
+                "tehtava": {
+                  "id": 1371,
+                  "selite": "Vesakonraivaus"
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]
