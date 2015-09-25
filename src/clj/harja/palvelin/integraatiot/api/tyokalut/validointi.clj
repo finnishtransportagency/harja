@@ -17,17 +17,17 @@
                           :viesti (str "Urakkaa id:llä " urakkaid " ei löydy.")}]}))))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
-  (when
-    (and (not (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo))
-         (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))))
+  (when-not
+    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
+        (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: " urakka-id)}]})))
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
-  (when
-    (and (not (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo))
-         (not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))))
+  (when-not
+    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
+        (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja)))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia organisaatioon: " ytunnus)}]})))
