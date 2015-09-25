@@ -66,7 +66,7 @@
 
                  [cljs-ajax "0.3.13"]
                  ;;[lively "0.2.0"]
-                 [figwheel "0.3.5"]
+                 [figwheel "0.4.0"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
@@ -130,7 +130,7 @@
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.3.3"]
+            [lein-figwheel "0.4.0"]
             [cider/cider-nrepl "0.9.1"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
