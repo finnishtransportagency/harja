@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietue
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as kutsusanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as haku-kutsusanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisays-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
 
@@ -32,7 +33,7 @@
 
 (defn hae-tietue [integraatioloki url id tietolaji]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
-  (let [kutsudata (kutsusanoma/muodosta id tietolaji)
+  (let [kutsudata (haku-kutsusanoma/muodosta id tietolaji)
         palvelu-url (str url "/haetietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
@@ -69,7 +70,7 @@
 
 (defn lisaa-tietue [integraatioloki url tietue]
   (log/debug "Lisätään tietue")
-  (let [kutsudata (kutsusanoma/muodosta-viesti tietue)
+  (let [kutsudata (lisays-kutsusanoma/muodosta tietue)
         palvelu-url (str url "/lisaatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
