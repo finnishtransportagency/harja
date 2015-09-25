@@ -55,6 +55,10 @@
       "type": "string",
       "format": "date-time",
       "required": true
+    },
+    "alueurakkanumero": {
+      "id": "urn:harja/alueurakkanumero",
+      "type": "string"
     }
   }
 }

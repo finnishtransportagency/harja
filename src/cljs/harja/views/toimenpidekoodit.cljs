@@ -4,7 +4,7 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [bootstrap :as bs]
-            
+
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
@@ -15,7 +15,7 @@
 
 
 
- 
+
 ;; PENDING: en laittanut näille omia harja.tiedot alla olevaa nimiavaruutta
 ;; siirretään omaansa, jos näitä kooditietoja tarvitaan muualtakin kuin täältä
 ;; hallintanäkymästä.
@@ -31,7 +31,7 @@
 (defonce valittu-taso2 (atom nil))
 (defonce valittu-taso3 (atom nil))
 
-(defonce valittu-toimenpidekoodi (atom nil))                
+(defonce valittu-toimenpidekoodi (atom nil))
 
 (defn resetoi-koodit [tiedot]
   (loop [acc {}
@@ -43,38 +43,38 @@
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
   (go (let [lisattavat
-          (mapv #(assoc % :emo (:id @valittu-taso3))
-                (into []
-                      (comp (filter 
-                              #(and 
-                                 (not (:poistettu %))
-                                 (< (:id %) 0))))
-                      uudet-tehtavat))
-          muokattavat (into []
-                            (filter (fn [t]
-                                      ;; vain muuttuneet "vanhat" rivit
-                                      (not (some #(= % t) tehtavat)))
-                                    (into []
-                                          (comp (filter 
-                                                  #(and 
-                                                     (not (:poistettu %))
-                                                     (> (:id %) 0))))
-                                          uudet-tehtavat)))
-          poistettavat 
-          (into []
-                (keep #(when (and (:poistettu %)
-                                  (> (:id %) 0))
-                         (:id %)))
-                uudet-tehtavat)
-          res (<! (k/post! :tallenna-tehtavat
-                           {:lisattavat lisattavat
-                            :muokattavat muokattavat
-                            :poistettavat poistettavat}))]
-      (resetoi-koodit res))))
+            (mapv #(assoc % :emo (:id @valittu-taso3))
+                  (into []
+                        (comp (filter
+                                #(and
+                                  (not (:poistettu %))
+                                  (< (:id %) 0))))
+                        uudet-tehtavat))
+            muokattavat (into []
+                              (filter (fn [t]
+                                        ;; vain muuttuneet "vanhat" rivit
+                                        (not (some #(= % t) tehtavat)))
+                                      (into []
+                                            (comp (filter
+                                                    #(and
+                                                      (not (:poistettu %))
+                                                      (> (:id %) 0))))
+                                            uudet-tehtavat)))
+            poistettavat
+            (into []
+                  (keep #(when (and (:poistettu %)
+                                    (> (:id %) 0))
+                          (:id %)))
+                  uudet-tehtavat)
+            res (<! (k/post! :tallenna-tehtavat
+                             {:lisattavat   lisattavat
+                              :muokattavat  muokattavat
+                              :poistettavat poistettavat}))]
+        (resetoi-koodit res))))
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
-  (with-meta 
+  (with-meta
     (fn []
       (let [kaikki-koodit @koodit
             koodit-tasoittain (group-by :taso (sort-by :koodi (vals kaikki-koodit)))
@@ -87,15 +87,15 @@
           [:select#taso1 {:on-change #(do (reset! valittu-taso1 (valinnan-koodi %))
                                           (reset! valittu-taso2 nil)
                                           (reset! valittu-taso3 nil))
-                          :value (str (:id @valittu-taso1))}
-           [:option {:value ""} "-- Valitse 1. taso --"] 
+                          :value     (str (:id @valittu-taso1))}
+           [:option {:value ""} "-- Valitse 1. taso --"]
            (for [tpk (get koodit-tasoittain 1)]
              ^{:key (:id tpk)}
              [:option {:value (:id tpk)} (str (:koodi tpk) " " (:nimi tpk))])]]
          [:div.input-group
           [:select#taso2 {:on-change #(do (reset! valittu-taso2 (valinnan-koodi %))
                                           (reset! valittu-taso3 nil))
-                          :value (str (:id @valittu-taso2))}
+                          :value     (str (:id @valittu-taso2))}
            [:option {:value ""} "-- Valitse 2. taso --"]
            (when-let [emo1 (:id taso1)]
              (for [tpk (filter #(= (:emo %) emo1) (get koodit-tasoittain 2))]
@@ -103,7 +103,7 @@
                [:option {:value (:id tpk)} (str (:koodi tpk) " " (:nimi tpk))]))]]
          [:div.input-group
           [:select#taso3 {:on-change #(reset! valittu-taso3 (valinnan-koodi %))
-                          :value (str (:id @valittu-taso3))}
+                          :value     (str (:id @valittu-taso3))}
            [:option {:value ""} "-- Valitse 3. taso --"]
            (when-let [emo2 (:id taso2)]
              (for [tpk (filter #(= (:emo %) emo2) (get koodit-tasoittain 3))]
@@ -115,19 +115,21 @@
          (when-let [emo3 (:id taso3)]
            (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))]
              [grid/grid
-              {:otsikko "Tehtävät"
-               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+              {:otsikko  "Tehtävät"
+               :tyhja    (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
                :tallenna (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
                                            #(tallenna-tehtavat tehtavat %)
                                            :ei-mahdollinen)
                :tunniste :id}
-              
-              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "85%"}
-               {:otsikko "Yksikkö" :nimi :yksikko    :tyyppi :string :leveys "15%"}]
+
+              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "70%"}
+               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "15%"}
+               {:otsikko "Hinnoittelu" :boolean-otsikko "Kokonaishintainen" :nimi :kokonaishintainen :tyyppi :boolean :leveys "15%"
+                :fmt     #(if % "Kokonaishintainen" "Yksikkohintainen")}]
               tehtavat]))
-          ]))
-    
-    {:displayName  "toimenpidekoodit"
+         ]))
+
+    {:displayName         "toimenpidekoodit"
      :component-did-mount (fn [this]
                             (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
                                   (resetoi-koodit res))))}))

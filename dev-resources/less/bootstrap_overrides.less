@@ -2,8 +2,11 @@
 
 // Leveä Harja on parempi
 .container {
+  padding: 0;
   width: 100%;
-  padding: 2px;
+  &.sisalto {
+    padding: 2px 10px;
+  }
 }
 
 .row { // Jostain syystä välillä negatiiviset marginit, joka aiheuttaa ongelmia mm. lomakkeen kanssa.

@@ -34,14 +34,30 @@
    })
 
 (def Havainto
-  {(s/optional-key :aika)              pvm-tyyppi           ;; ei ole, jos on tarkastuksen havainto
+  {:aika                               pvm-tyyppi
    :kuvaus                             Teksti
    :tekija                             Osapuoli
    (s/optional-key :kohde)             (s/maybe s/Str)
    (s/optional-key :urakka)            s/Any
    (s/optional-key :tekijanimi)        s/Str
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
-   (s/optional-key :uusi-liite)    s/Any
+   (s/optional-key :uusi-liite)        s/Any
+   (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
+   (s/optional-key :id) s/Int
+   (s/optional-key :paatos) Paatos
+   (s/optional-key :sanktiot) {s/Num Sanktio}
+   (s/optional-key :uusi-kommentti) s/Any
+   (s/optional-key :liitteet) s/Any})
+
+(def TarkastuksenHavainto
+  {(s/optional-key :aika)                  pvm-tyyppi
+   :kuvaus                             Teksti
+   :tekija                             Osapuoli
+   (s/optional-key :kohde)             (s/maybe s/Str)
+   (s/optional-key :urakka)            s/Any
+   (s/optional-key :tekijanimi)        s/Str
+   (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
+   (s/optional-key :uusi-liite)        s/Any
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
    (s/optional-key :id) s/Int
    (s/optional-key :paatos) Paatos
@@ -78,7 +94,7 @@
    (s/optional-key :mittaaja)          (s/maybe Teksti)
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus
-   (s/optional-key :havainto)          Havainto})
+   (s/optional-key :havainto)          TarkastuksenHavainto})
 
 (defn validoi-tarkastus [data]
   (skeema/tarkista Tarkastus data))
