@@ -29,6 +29,10 @@
       yum: pkg=postgresql94-server state=latest
     - name: install postgis
       yum: pkg=postgis2_94.x86_64 state=latest
+    - name: install pgrouting
+      yum: pkg=pgrouting_94 state=latest
+    - name: install dblink
+      yum: pkg=postgresql94-contrib state=latest
     - name: install maven 3
       yum: pkg=maven.noarch state=latest   
     - name: download java 8
