@@ -130,7 +130,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
-                  sivu @sivu]
+                  sivu @sivu
+                  v-ur @valittu-urakka]
               (if @tarvitaanko-tai-onko-pakotettu-nakyviin?
                 ;; joku tarvitsee karttaa, pakotetaan M kokoon
                 :M
@@ -140,21 +141,13 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                 (cond (= sivu :hallinta) :hidden
                       (= sivu :about) :hidden
                       (= sivu :tilannekuva) :L
+                      (and (= sivu :urakat)
+                           (not v-ur)) :L
                       :default valittu-koko)))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   (reset! valittu-hallintayksikko-id hy-id)
   (reset! valittu-urakka-id u-id))
-
-  ;; ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
-  ;; (if-not (= hy-id (:id @valittu-hallintayksikko))
-  ;;   (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
-  ;;         (reset! valittu-hallintayksikko yks)
-  ;;         (reset! valittu-urakka-id u-id)
-  ;;         ;;(reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
-  ;;         ;;(aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
-  ;;   ;; else
-  ;;   (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))

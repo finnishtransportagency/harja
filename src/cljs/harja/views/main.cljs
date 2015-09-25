@@ -87,42 +87,30 @@
                 (empty? (:roolit kayttaja)))
           [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
 
-          [:span
+          [:div
            [:div.container
             [header sivu]]
            [:div.container
             [murupolku/murupolku]]
+           [:div#kartta-container.container ;{:class @nav/kartan-luokka}
+            (if (= :S kartan-koko)
+              [:div.avaa-kartta-wrap
+               [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
+                "Näytä kartta"]]
+              [kartta/kartta])]
 
-           (let [[sisallon-luokka kartan-luokka]
-                 (case kartan-koko
-                   :hidden ["col-sm-12" "hide"]
-                   :S ["col-sm-12" "kulma-kartta"]          ;piilota-kartta"]
-                   :M ["col-sm-6" "col-sm-6"]
-                   :L ["hide" "col-sm-12"])]
-             ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-             [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-              [:div.row.row-sisalto
+           [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+            [:div.row.row-sisalto
+             [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+              (case sivu
+                :urakat [urakat/urakat]
+                :raportit [raportit/raportit]
+                :ilmoitukset [ilmoitukset/ilmoitukset]
+                :hallinta [hallinta/hallinta]
+                :tilannekuva [tilannekuva/tilannekuva]
+                :about [about/about])]]]
 
-
-               ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
-               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska välilehtien pitäisi
-               ;; pysyä kartan päällä.
-               [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
-                (case sivu
-                  :urakat [urakat/urakat]
-                  :raportit [raportit/raportit]
-                  :ilmoitukset [ilmoitukset/ilmoitukset]
-                  :hallinta [hallinta/hallinta]
-                  :tilannekuva [tilannekuva/tilannekuva]
-                  :about [about/about]
-                  )]
-               [:div#kartta-container {:class (str "col-kartta " kartan-luokka)}
-                (if (= :S kartan-koko)
-                  [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
-                   [:span.livicon-expand " Avaa kartta"]]
-                  [kartta/kartta])]]])
            [footer]
            [modal-container]
-           [viesti-container]
-           ])))))
+           [viesti-container]])))))
 

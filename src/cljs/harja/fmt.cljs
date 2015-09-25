@@ -8,6 +8,10 @@
 
 (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI)
 
+(defn arvo->pikseleina
+  [arvo]
+  (str arvo "px"))
+
 (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL goog.i18n.NumberFormat/Format))
                           (.setShowTrailingZeros false)
                           (.setMinimumFractionDigits 2)
