@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.varusteet
   "Varusteiden API-kutsut"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET DELETE]]
+            [compojure.core :refer [POST GET DELETE PUT]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
@@ -69,6 +69,17 @@
                              (dissoc :otsikko))]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
+(defn paivita-tietue [tierekisteri data kayttaja]
+  (log/debug "Päivitetään tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [paivitettava-tietue (-> data
+                             (assoc-in [:paivittaja :henkilo] (str (get-in data [:paivittaja :henkilo :etunimi])
+                                                                " "
+                                                                (get-in data [:paivittaja :henkilo :sukunimi])))
+                             (assoc-in [:paivittaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
+                             (assoc-in [:paivittaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+                             (dissoc :otsikko))]
+    (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
+
 (defn poista-tietue [tierekisteri data kayttaja]
   (log/debug "Poistetaan tietue käyttäjän " kayttaja " pyynnöstä.")
   (let [poistettava-tietue {:poistaja          {:henkilo      (str (get-in data [:poistaja :henkilo :etunimi])
@@ -133,6 +144,13 @@
         (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
                          (fn [parametrit data kayttaja db]
                            (lisaa-tietue tierekisteri data kayttaja)))))
+
+    (julkaise-reitti
+      http :paivita-tietue
+      (PUT "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :paivita-tietue request skeemat/+varusteen-paivitys+ nil
+                         (fn [parametrit data kayttaja db]
+                           (paivita-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue
