@@ -31,9 +31,9 @@
                                                 " & tietolajitunnisteella: " tietolaji "."))))]
     vastausdata))
 
-(defn lisaa-tietue [integraatioloki url tietue]
+(defn lisaa-tietue [integraatioloki url tiedot]
   (log/debug "Lisätään tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tietue)
+  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
         palvelu-url (str url "/lisaatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
@@ -51,9 +51,9 @@
                                            (str "Tietueen lisäys palautti virheitä (URL: " url ")"))))]
     vastausdata))
 
-(defn poista-tietue [integraatioloki url tietue]
+(defn poista-tietue [integraatioloki url tiedot]
   (log/debug "Poistetaan tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tietue)
+  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
         palvelu-url (str url "/poistatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
