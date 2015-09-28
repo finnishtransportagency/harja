@@ -58,6 +58,9 @@
         (:tietue vastausdata) muunnettu-vastausdata
         :else {}))))
 
+(defn lisaa-tietue [tierekisteri data kayttaja]
+    (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä."))
+
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
   (let [tr (into {} (filter val {:numero  (get parametrit "numero")
                                  :aet     (get parametrit "aet")
@@ -94,7 +97,6 @@
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu db integraatioloki :hae-tietolaji request nil skeemat/+tietolajien-haku+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
                            (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -102,16 +104,21 @@
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
                            (hae-tietue tierekisteri parametrit kayttaja)))))
+
+    (julkaise-reitti
+      http :lisaa-tietue
+      (POST "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
+                         (fn [parametrit data kayttaja db]
+                           (lisaa-tietue tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
-                           (hae-tietueet tierekisteri parametrit kayttaja)))))
+                           (hae-tietueet tierekisteri data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
