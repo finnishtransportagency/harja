@@ -46,7 +46,7 @@
         (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm)))
 
   (lisaa-tietue [this tietue]
-    (validoi-tunniste (get-in tietue [:tietue :tunniste])
+    (validoi-tunniste (get-in tietue [:tietue :tunniste]))
     (when-not (empty? tierekisteri-api-url)
-      (tietue/lisaa-tietue (:integraatioloki this) tierekisteri-api-url tietue)))))
+      (tietue/lisaa-tietue (:integraatioloki this) tierekisteri-api-url tietue))))
 
