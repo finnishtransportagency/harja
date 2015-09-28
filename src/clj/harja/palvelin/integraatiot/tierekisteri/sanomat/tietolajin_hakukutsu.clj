@@ -8,13 +8,13 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
-(defn muodosta-viesti [tunniste muutospvm]
+(defn muodosta-xml-sisalto [tunniste muutospvm]
   [:haeTietolajit
    [:tietolajitunniste tunniste]
    (when (not (nil? muutospvm)) [:muutospvm (xml/formatoi-paivamaara muutospvm)])])
 
-(defn muodosta [tunniste muutospvm]
-  (let [sisalto (muodosta-viesti tunniste muutospvm)
+(defn muodosta-kutsu [tunniste muutospvm]
+  (let [sisalto (muodosta-xml-sisalto tunniste muutospvm)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "haeTietolaji.xsd" xml)
       xml

@@ -34,11 +34,14 @@
       sudo_user: postgres
       postgresql_ext: db=harja name=postgis state=present
 
+    - name: poista entiset siirretyt migraatioskriptit palvelimelta
+      file: path=/opt/harja/tietokanta state=absent
+      
     - name: kopioi tietokantamigraatiot
       unarchive: src=../../tietokanta.tgz dest=/opt/harja owner=harja group=harja
 
     - name: aja tietokantamigraatiot
-      command: mvn flyway:migrate -Dflyway.password=harja123
+      command: mvn compile flyway:migrate -Dflyway.password=harja123
       args:
         chdir: /opt/harja/tietokanta
 
