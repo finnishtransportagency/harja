@@ -137,7 +137,7 @@
     (julkaise-reitti
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
+        (kasittele-kutsu db integraatioloki :poista-tietue request skeemat/+varusteen-poisto+ nil
                          (fn [parametrit data kayttaja db]
                            (poista-tietue tierekisteri data kayttaja)))))
 
