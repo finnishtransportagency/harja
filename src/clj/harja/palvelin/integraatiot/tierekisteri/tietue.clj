@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as haku-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisays-kutsusanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as poisto-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.tierekisteri.vastauksenkasittely :refer :all])
@@ -53,7 +54,7 @@
 
 (defn poista-tietue [integraatioloki url tiedot]
   (log/debug "Poistetaan tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
+  (let [kutsudata (poisto-kutsusanoma/muodosta-kutsu tiedot)
         palvelu-url (str url "/poistatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
