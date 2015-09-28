@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.lisaa-tietue-test
   (:require [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisaa-tietue]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :refer :all]
             [harja.tyokalut.xml :as xml]))
 
 (def lisattava-testitietue {:lisaaja {:henkilo      "Keijo Käsittelijä"
@@ -31,6 +31,6 @@
 (def +xsd+ "xsd/tierekisteri/schemas/")
 
 (deftest tarkista-kutsu
-  (let [kutsu-xml (lisaa-tietue/muodosta-kutsu lisattava-testitietue)
+  (let [kutsu-xml (muodosta-kutsu lisattava-testitietue)
         xsd "lisaaTietue.xsd"]
     (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))

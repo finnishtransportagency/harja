@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.poista-tietue-test
   (:require [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as poista-tietue]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :refer :all]
             [harja.tyokalut.xml :as xml]))
 
 (def poistettava-testitietue {:poistaja          {:henkilo      "Keijo Käsittelijä"
@@ -15,6 +15,6 @@
 (def +xsd+ "xsd/tierekisteri/schemas/")
 
 (deftest tarkista-kutsu
-  (let [kutsu-xml (poista-tietue/muodosta-kutsu poistettava-testitietue)
+  (let [kutsu-xml (muodosta-kutsu poistettava-testitietue)
         xsd "poistaTietue.xsd"]
     (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))

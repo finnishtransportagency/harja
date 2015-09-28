@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-hakukutsu :as haku-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisays-kutsusanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu :as paivitys-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as poisto-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
@@ -50,6 +51,26 @@
                                            (str "Tietueen lisäys epäonnistui (URL: " url ")")
                                            :tietueen-lisays-epaonnistui
                                            (str "Tietueen lisäys palautti virheitä (URL: " url ")"))))]
+    vastausdata))
+
+(defn paivita-tietue [integraatioloki url tiedot]
+  (log/debug "Päivitetään tietue")
+  (let [kutsudata (paivitys-kutsusanoma/muodosta-kutsu tiedot)
+        palvelu-url (str url "/paivitatietue")
+        otsikot {"Content-Type" "text/xml"}
+        vastausdata (http/laheta-post-kutsu
+                      integraatioloki
+                      "paivita-tietue"
+                      "tierekisteri"
+                      palvelu-url
+                      otsikot
+                      nil
+                      kutsudata
+                      (fn [vastaus-xml]
+                        (kasittele-vastaus vastaus-xml
+                                           (str "Tietueen päivitys epäonnistui (URL: " url ")")
+                                           :tietueen-paivitys-epaonnistui
+                                           (str "Tietueen päivitys palautti virheitä (URL: " url ")"))))]
     vastausdata))
 
 (defn poista-tietue [integraatioloki url tiedot]
