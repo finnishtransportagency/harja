@@ -9,7 +9,6 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tietue]
-  ; FIXME Dude, tämä olisi hyvä destructoida. Tai oikeastaan tarvitsisimme Clojure Map -> Hiccup/XML konverterin.
   [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
    [:lisaaja
     [:henkilo (get-in tietue [:lisaaja :henkilo])]
