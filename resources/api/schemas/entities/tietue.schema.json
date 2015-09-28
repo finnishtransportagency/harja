@@ -100,8 +100,8 @@
       "type": "object",
       "required": true,
       "properties": {
-        "tunniste": {
-          "id": "urn:harja/tietolaji/tunniste",
+        "tietolajitunniste": {
+          "id": "urn:harja/tietolaji/tietolajitunniste",
           "type": "string",
           "required": true
         },

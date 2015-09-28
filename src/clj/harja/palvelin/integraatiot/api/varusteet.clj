@@ -61,52 +61,12 @@
 (defn lisaa-tietue [tierekisteri data kayttaja]
   (log/debug "Tietue" (pr-str data))
   (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
-  (let [hae-tietolajin-arvo (fn [tietolaji-arvot tunniste]
-                              (get-in (first (filter
-                                               (fn [kentta]
-                                                 (= (get-in kentta [:kentta :tunniste]) tunniste))
-                                               tietolaji-arvot)) [:kentta :arvo]))
-        muodosta-tietolajitarvot-string (fn [tietolaji-arvot]
-                                          (str
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMNUMERO")
-                                            (hae-tietolajin-arvo tietolaji-arvot "SIVUTIE")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMALA")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMVANHA")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMTYYPPI")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMKAUSI")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMKIINNIT")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMMATER")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMTEKSTI")
-                                            (hae-tietolajin-arvo tietolaji-arvot "LMOMIST")
-                                            (hae-tietolajin-arvo tietolaji-arvot "OPASTETUNN")
-                                            (hae-tietolajin-arvo tietolaji-arvot "KUNTOLUOKK")
-                                            (hae-tietolajin-arvo tietolaji-arvot "TUNNISTE")
-                                            (hae-tietolajin-arvo tietolaji-arvot "URAKKA")))
-        lisattava-tietue {:lisaaja {:henkilo      (str (get-in data [:lisaaja :henkilo :etunimi])
-                                                       (get-in data [:lisaaja :henkilo :sukunimi]))
-                                    :jarjestelma  (get-in data [:otsikko :lahettaja :jarjestelma])
-                                    :organisaatio (get-in data [:otsikko :lahettaja :organisaatio :nimi])
-                                    :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
-                          :tietue  {:tunniste    (get-in data [:varuste :tunniste])
-                                    :alkupvm     (get-in data [:varuste :alkupvm])
-                                    :loppupvm    (get-in data [:varuste :loppupvm])
-                                    :karttapvm   (get-in data [:varuste :karttapvm])
-                                    :piiri       "???"
-                                    :kuntoluokka (hae-tietolajin-arvo (get-in data [:varuste :tietolaji :arvot]) "KUNTOLUOKK")
-                                    :urakka      (hae-tietolajin-arvo (get-in data [:varuste :tietolaji :arvot]) "URAKKA")
-                                    :sijainti    {:tie {:numero  (get-in data [:varuste :sijainti :tie :numero])
-                                                        :aet     (get-in data [:varuste :sijainti :tie :aet])
-                                                        :aosa    (get-in data [:varuste :sijainti :tie :aosa])
-                                                        :let     (get-in data [:varuste :sijainti :tie :let])
-                                                        :losa    (get-in data [:varuste :sijainti :tie :losa])
-                                                        :ajr     (get-in data [:varuste :ajr])
-                                                        :puoli   "???"
-                                                        :alkupvm "???"}}
-                                    :tietolaji   {:tietolajitunniste (get-in data [:varuste :tietolaji :tunniste])
-                                                  :arvot             (muodosta-tietolajitarvot-string
-                                                                       (get-in data [:varuste :tietolaji :arvot]))}}
-
-                          :lisatty "2015-05-26+03:00"}]
+  (let [lisattava-tietue (-> data
+                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi]) " " (get-in data [:lisaaja :henkilo :sukunimi])))
+                             (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
+                             (assoc-in [:lisaaja :Ytunnus] (get-in data [:lisaaja :lahettaja :organisaatio :ytunnus]))
+                             (dissoc :otsikko))]
+    (log/debug "Lisätään tietue: " (pr-str lisattava-tietue))
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]

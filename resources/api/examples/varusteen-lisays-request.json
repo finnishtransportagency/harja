@@ -41,7 +41,7 @@
       }
     },
     "tietolaji": {
-      "tunniste": "tl506",
+      "tietolajitunniste": "tl506",
       "arvot": "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"
     }
   },
