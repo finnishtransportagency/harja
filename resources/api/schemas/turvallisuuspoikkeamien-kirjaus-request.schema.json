@@ -45,6 +45,7 @@
     "turvallisuuspoikkeamat": {
       "id": "urn:harja/turvallisuuspoikkeamat",
       "type": "array",
+      "maxItems": 100,
       "items": {
         "id": "urn:harja/turvallisuuspoikkeamat/0",
         "type": "object",
@@ -79,6 +80,7 @@
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
             "type": "array",
+            "maxItems": 10,
             "items": {
               "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu/0",
               "type": "string",
@@ -135,6 +137,7 @@
           "korjaavatToimenpiteet": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet",
             "type": "array",
+            "maxItems": 100,
             "items": {
               "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0",
               "type": "object",
@@ -167,6 +170,7 @@
           "kommentit": {
             "id": "urn:harja/kommentit",
             "type": "array",
+            "maxItems": 100,
             "items": {
               "id": "urn:harja/kommentit/0",
               "type": "object",

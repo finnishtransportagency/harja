@@ -14,6 +14,7 @@
     "havainnot": {
       "id": "urn:harja/havainnot",
       "type": "array",
+      "maxItems": 1000,
       "required": true,
       "items": {
         "id": "http://example.com/item-schema",
