@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.varusteet
   "Varusteiden API-kutsut"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
@@ -58,6 +58,30 @@
         (:tietue vastausdata) muunnettu-vastausdata
         :else {}))))
 
+(defn lisaa-tietue [tierekisteri data kayttaja]
+  (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [lisattava-tietue (-> data
+                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
+                                                                " "
+                                                                (get-in data [:lisaaja :henkilo :sukunimi])))
+                             (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
+                             (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+                             (dissoc :otsikko))]
+    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
+
+(defn poista-tietue [tierekisteri data kayttaja]
+  (log/debug "Poistetaan tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [poistettava-tietue {:poistaja          {:henkilo      (str (get-in data [:poistaja :henkilo :etunimi])
+                                                                   " "
+                                                                   (get-in data [:poistaja :henkilo :sukunimi]))
+                                                :jarjestelma  (get-in data [:otsikko :lahettaja :jarjestelma])
+                                                :organisaatio (get-in data [:otsikko :lahettaja :organisaatio :nimi])
+                                                :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
+                            :tunniste          (:tunniste data)
+                            :tietolajitunniste (:tietolajitunniste data)
+                            :poistettu         (:poistettu data)}]
+    (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
+
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
   (let [tr (into {} (filter val {:numero  (get parametrit "numero")
                                  :aet     (get parametrit "aet")
@@ -94,7 +118,6 @@
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu db integraatioloki :hae-tietolaji request nil skeemat/+tietolajien-haku+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
                            (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -102,21 +125,35 @@
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
                            (hae-tietue tierekisteri parametrit kayttaja)))))
+
+    (julkaise-reitti
+      http :lisaa-tietue
+      (POST "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
+                         (fn [parametrit data kayttaja db]
+                           (lisaa-tietue tierekisteri data kayttaja)))))
+
+    (julkaise-reitti
+      http :poista-tietue
+      (DELETE "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :poista-tietue request skeemat/+varusteen-poisto+ nil
+                         (fn [parametrit data kayttaja db]
+                           (poista-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
                          (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
-                           (hae-tietueet tierekisteri parametrit kayttaja)))))
+                           (hae-tietueet tierekisteri data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-tietolaji
                      :hae-tietue
-                     :hae-tietueet)
+                     :lisaa-tietue
+                     :hae-tietueet
+                     :poista-tietue)
     this))

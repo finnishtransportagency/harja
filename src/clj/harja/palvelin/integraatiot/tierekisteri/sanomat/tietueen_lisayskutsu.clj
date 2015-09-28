@@ -8,35 +8,35 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
-(defn muodosta-xml-sisalto [tietue]
+(defn muodosta-xml-sisalto [tiedot]
   [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
    [:lisaaja
-    [:henkilo (get-in tietue [:lisaaja :henkilo])]
-    [:jarjestelma (get-in tietue [:lisaaja :jarjestelma])]
-    [:organisaatio (get-in tietue [:lisaaja :organisaatio])]
-    [:yTunnus (get-in tietue [:lisaaja :yTunnus])]]
+    [:henkilo (get-in tiedot [:lisaaja :henkilo])]
+    [:jarjestelma (get-in tiedot [:lisaaja :jarjestelma])]
+    [:organisaatio (get-in tiedot [:lisaaja :organisaatio])]
+    [:yTunnus (get-in tiedot [:lisaaja :yTunnus])]]
    [:tietue
-    [:tunniste (get-in tietue [:tietue :tunniste])]
-    [:alkupvm (get-in tietue [:tietue :alkupvm])]
-    [:loppupvm (get-in tietue [:tietue :loppupvm])]
-    [:karttapvm (get-in tietue [:tietue :karttapvm])]
-    [:piiri (get-in tietue [:tietue :piiri])]
-    [:kuntoluokka (get-in tietue [:tietue :kuntoluokka])]
-    [:urakka (get-in tietue [:tietue :urakka])]
+    [:tunniste (get-in tiedot [:tietue :tunniste])]
+    [:alkupvm (get-in tiedot [:tietue :alkupvm])]
+    [:loppupvm (get-in tiedot [:tietue :loppupvm])]
+    [:karttapvm (get-in tiedot [:tietue :karttapvm])]
+    [:piiri (get-in tiedot [:tietue :piiri])]
+    [:kuntoluokka (get-in tiedot [:tietue :kuntoluokka])]
+    [:urakka (get-in tiedot [:tietue :urakka])]
     [:sijainti
      [:tie
-      [:numero (get-in tietue [:tietue :sijainti :tie :numero])]
-      [:aet (get-in tietue [:tietue :sijainti :tie :aet])]
-      [:aosa (get-in tietue [:tietue :sijainti :tie :aosa])]
-      [:let (get-in tietue [:tietue :sijainti :tie :let])]
-      [:losa (get-in tietue [:tietue :sijainti :tie :losa])]
-      [:ajr (get-in tietue [:tietue :sijainti :tie :ajr])]
-      [:puoli (get-in tietue [:tietue :sijainti :tie :puoli])]
-      [:alkupvm (get-in tietue [:tietue :sijainti :tie :alkupvm])]]]
+      [:numero (get-in tiedot [:tietue :sijainti :tie :numero])]
+      [:aet (get-in tiedot [:tietue :sijainti :tie :aet])]
+      [:aosa (get-in tiedot [:tietue :sijainti :tie :aosa])]
+      [:let (get-in tiedot [:tietue :sijainti :tie :let])]
+      [:losa (get-in tiedot [:tietue :sijainti :tie :losa])]
+      [:ajr (get-in tiedot [:tietue :sijainti :tie :ajr])]
+      [:puoli (get-in tiedot [:tietue :sijainti :tie :puoli])]
+      [:alkupvm (get-in tiedot [:tietue :sijainti :tie :alkupvm])]]]
     [:tietolaji
-     [:tietolajitunniste (get-in tietue [:tietue :tietolaji :tietolajitunniste])]
-     [:arvot (get-in tietue [:tietue :tietolaji :arvot])]]]
-   [:lisatty (:lisatty tietue)]])
+     [:tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste])]
+     [:arvot (get-in tiedot [:tietue :tietolaji :arvot])]]]
+   [:lisatty (:lisatty tiedot)]])
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
