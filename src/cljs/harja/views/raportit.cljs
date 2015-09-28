@@ -320,6 +320,7 @@
                                                       ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
     [:span
      [raporttivalinnat]
+     [kartta/kartan-paikka]
      (when @raportti-valmis-naytettavaksi?
        [raporttinakyma @valittu-raporttityyppi])]))
 

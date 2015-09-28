@@ -15,12 +15,14 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
 
+            [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
   [:span
+   [kartta/kartan-paikka]
    [:h5.haku-otsikko "Valitse hallintayksikkö"]
    [:div
     ^{:key "hy-lista"}
@@ -35,6 +37,7 @@
       (if (nil? urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
+         [kartta/kartan-paikka]
          [:h5.haku-otsikko "Valitse hallintayksikön urakka"]
          [:div
           ^{:key "ur-lista"}
@@ -67,7 +70,6 @@
 (defn urakat
   "Urakan koko sisältö."
   []
-   ;; TODO: urakkasivun koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä
-   (let [v-ur @nav/valittu-urakka]
-     (or (valitse-hallintayksikko-ja-urakka)
-         [urakka/urakka v-ur])))
+  (let [v-ur @nav/valittu-urakka]
+    (or (valitse-hallintayksikko-ja-urakka)
+        [urakka/urakka v-ur])))

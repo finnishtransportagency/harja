@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      livi-pudotusvalikko +korostuksen-kesto+ kuvaus-ja-avainarvopareja]]
+                                                  livi-pudotusvalikko +korostuksen-kesto+ kuvaus-ja-avainarvopareja]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
@@ -31,7 +31,8 @@
             [cljs-time.core :as t]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -386,6 +387,7 @@
                                                                                (:id @nav/valittu-urakka)))}
             (ikonit/plus) " Lisää toteuma"]
 
+           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt ")
              :tyhja         (if (nil? @valitut-muut-tyot)

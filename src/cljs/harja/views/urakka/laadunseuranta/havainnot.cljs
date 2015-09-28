@@ -22,7 +22,8 @@
             [harja.tiedot.istunto :as istunto]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -117,6 +118,7 @@
    (when @laadunseuranta/voi-kirjata?
      [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
 
+   [kartta/kartan-paikka]
    [grid/grid
     {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
      :tyhja   "Ei havaintoja."}

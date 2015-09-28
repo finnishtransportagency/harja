@@ -18,7 +18,8 @@
             [harja.ui.ikonit :as ikonit]
 
             [harja.loki :refer [log]]
-            [harja.tiedot.urakka :as tiedot-urakka])
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -193,6 +194,7 @@
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
       (ikonit/plus) " Lisää sanktio"])
+   [kartta/kartan-paikka]
    [grid/grid
     {:otsikko       "Sanktiot"
      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])

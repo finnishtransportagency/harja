@@ -27,7 +27,8 @@
             [cljs-time.core :as t]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -265,6 +266,7 @@
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
             (ikonit/plus) " Lisää kustannus"]
 
+           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")
              :tyhja         (if (nil? @valitut-kustannukset)

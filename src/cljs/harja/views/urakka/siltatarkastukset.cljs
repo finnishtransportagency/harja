@@ -105,6 +105,7 @@
                                 }
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
 
+         [kartta/kartan-paikka]
          [grid/grid
           {:otsikko        "Sillat"
            :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
@@ -284,6 +285,7 @@
           [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen true)}
            [:span.livicon-plus " Uusi tarkastus"]]]
 
+        [kartta/kartan-paikka]
         [grid/grid
          {:otsikko      (if @st/valittu-tarkastus
                           (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")

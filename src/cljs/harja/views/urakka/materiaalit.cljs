@@ -16,8 +16,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [cljs-time.coerce :as tc]
-            
-            [cljs.core.async :refer [<!]])
+
+            [cljs.core.async :refer [<!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]))
 
@@ -219,6 +220,7 @@
              ]
     
          [:div.materiaalit
+          [kartta/kartan-paikka]
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}
            ur @u/valittu-hoitokausi @u/valittu-sopimusnumero

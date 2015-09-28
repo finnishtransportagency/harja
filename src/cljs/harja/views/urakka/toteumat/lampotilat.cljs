@@ -19,7 +19,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.indeksit :as i]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
@@ -134,5 +135,6 @@
       (let [ur @nav/valittu-urakka]
         [:span.suolasakot
          [valinnat/urakan-hoitokausi ur]
+         [kartta/kartan-paikka]
          (when @u/valittu-hoitokausi
            [lampotila-lomake])]))))

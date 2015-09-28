@@ -124,6 +124,8 @@
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
       (ikonit/plus) " Lisää turvallisuuspoikkeama"]
+
+     [kartta/kartan-paikka]
      [grid/grid
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])

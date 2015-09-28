@@ -11,12 +11,13 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
-            
+
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.materiaalit :as materiaali-tiedot]
 
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -268,6 +269,7 @@
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-materiaalin-kaytto {})}
     (ikonit/plus) " Lisää toteuma"]
+   [kartta/kartan-paikka]
    [grid/grid
     {:otsikko        "Suunnitellut ja toteutuneet materiaalit"
      :tyhja          (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Toteuman materiaaleja haetaan."] "Ei löytyneitä tietoja.")

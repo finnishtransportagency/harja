@@ -21,7 +21,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -333,6 +334,7 @@
                                       :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
           (ikonit/plus) " Lisää toteuma"]
 
+         [kartta/kartan-paikka]
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi valittu-tpi) " / " (:t3_nimi valittu-tpi) " / " (:tpi_nimi valittu-tpi))
            :tyhja        (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")

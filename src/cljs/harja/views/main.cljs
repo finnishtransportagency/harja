@@ -101,6 +101,7 @@
                 [header sivu]]
                [:div.container
                 [murupolku/murupolku]]
+               ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
                [:div#kartta-container.container
                 (when-not (= :hidden kartan-koko)
                   [kartta/kartta])]
