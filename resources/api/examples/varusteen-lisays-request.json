@@ -20,122 +20,30 @@
       "sukunimi": "Käsittelijä"
     }
   },
-  "varuste": {
+  "tietue": {
     "tunniste": "HARJ123456789",
+    "alkupvm": "2015-03-03+02:00",
+    "loppupvm": "2015-03-03+02:00",
+    "karttapvm": "2015-03-03+02:00",
+    "piiri": 1,
+    "kuntoluokka": 1,
+    "urakka": 100,
     "sijainti": {
       "tie": {
-        "nimi": "tie",
         "numero": 1,
-        "aosa": 1,
         "aet": 4,
+        "aosa": 1,
+        "let": 1,
         "losa": 1,
-        "let": 1
-      },
-      "linkki": {
-        "id": 1,
-        "marvo": 10
-      },
-      "koordinaatit": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "ajr": 1,
+        "puoli": 1,
+        "alkupvm": "2015-03-03+02:00"
       }
     },
-    "ajr": 10.1,
-    "kaista": 2,
-    "alkupvm": "2015-01-30T12:00:00Z",
-    "loppupvm": "2015-01-30T12:00:00Z",
-    "karttapvm": 2,
-    "kuntoluokitus": "1",
-    "ely": 1,
     "tietolaji": {
       "tunniste": "tl506",
-      "arvot": [
-        {
-          "kentta": {
-            "tunniste": "LMNUMERO",
-            "arvo": "9987"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "SIVUTIE",
-            "arvo": "2"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMALA",
-            "arvo": "2"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMVANHA",
-            "arvo": "0"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMTYYPPI",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMKAUSI",
-            "arvo": "0"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMKIINNIT",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMMATER",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMTEKSTI",
-            "arvo": "Testi liikennemerkki"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMOMIST",
-            "arvo": "Omistaja"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "OPASTETUNN",
-            "arvo": ""
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "KUNTOLUOKK",
-            "arvo": "4"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "TUNNISTE",
-            "arvo": "123456789"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "URAKKA",
-            "arvo": "400"
-          }
-        }
-      ]
+      "arvot": "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"
     }
-  }
+  },
+  "lisatty": "2015-05-26+03:00"
 }
