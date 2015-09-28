@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu
+(ns harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
@@ -9,8 +9,8 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tiedot]
-  [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
-   [:lisaaja
+  [:ns2:paivitaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/paivitaTietue"}
+   [:paivittaja
     [:henkilo (get-in tiedot [:lisaaja :henkilo])]
     [:jarjestelma (get-in tiedot [:lisaaja :jarjestelma])]
     [:organisaatio (get-in tiedot [:lisaaja :organisaatio])]
@@ -36,15 +36,15 @@
     [:tietolaji
      [:tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste])]
      [:arvot (get-in tiedot [:tietue :tietolaji :arvot])]]]
-   [:lisatty (:lisatty tiedot)]])
+   [:paivitetty (:paivitetty tiedot)]])
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "lisaaTietue.xsd" xml)
+    (if (xml/validoi +xsd-polku+ "paivitaTietue.xsd" xml)
       xml
       (do
-        (log/error "Tietueenlisäyspyyntöä ei voida lähettää. Pyynnön XML ei ole validi.")
+        (log/error "Tietueenpäivityspyyntöä ei voida lähettää. Pyynnön XML ei ole validi.")
         (throw+
           {:type    :tietueen-lisays-epaonnistui
-           :virheet [{:koodi :ei-validi-xml :viesti "Tietueen lisäyspyyntö Tierekisteriin ei ole validi"}]})))))
+           :virheet [{:koodi :ei-validi-xml :viesti "Tietueen päivityspyyntö Tierekisteriin ei ole validi"}]})))))
