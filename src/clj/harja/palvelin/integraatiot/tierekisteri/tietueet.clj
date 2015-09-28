@@ -41,7 +41,7 @@
 
 (defn hae-tietueet [integraatioloki url tr tietolaji muutospvm]
   (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tr) ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
-  (let [kutsudata (kutsusanoma/muodosta tr tietolaji muutospvm)
+  (let [kutsudata (kutsusanoma/muodosta-kutsu tr tietolaji muutospvm)
         palvelu-url (str url "/haetietueet")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
