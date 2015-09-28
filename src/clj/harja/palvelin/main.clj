@@ -135,7 +135,7 @@
 
       :raportointi (component/using
                     (raportointi/luo-raportointi)
-                    [:db])
+                    [:db :pdf-vienti])
       
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
