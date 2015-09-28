@@ -15,9 +15,12 @@
   "poistaja": {
     "organisaatio": "Asfaltia Oy",
     "henkilo": {
-      "id" : 85644,
+      "id": 85644,
       "etunimi": "Keijo",
       "sukunimi": "Käsittelijä"
     }
-  }
+  },
+  "tunniste": "HAR123456789",
+  "tietolajitunniste": "tl506",
+  "poistettu": "2015-03-03+02:00"
 }

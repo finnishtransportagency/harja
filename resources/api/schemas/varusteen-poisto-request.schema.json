@@ -17,6 +17,25 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
       "required": true
+    },
+    "tietue": {
+      "id": "urn:harja/tietue",
+      "type": "string",
+      "additionalProperties": false,
+      "required": true
+    },
+    "tietolajitunniste": {
+      "id": "urn:harja/tietolajitunniste",
+      "type": "string",
+      "additionalProperties": false,
+      "required": true
+    },
+    "poistettu": {
+      "id": "urn:harja/poistettu",
+      "type": "string",
+      "format": "date-time",
+      "additionalProperties": false,
+      "required": true
     }
   }
 }
