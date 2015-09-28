@@ -1,0 +1,14 @@
+[Unit]
+Description={{item.description}}
+
+[Service]
+ExecStart={{item.start_file}}
+User={{item.user_name}}
+Group={{item.user_group}}
+Type=forking
+KillMode=process
+Restart=always
+WorkingDirectory={{item.workingdir}}
+
+[Install]
+WantedBy=multi-user.target

@@ -146,18 +146,22 @@
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet :valitun-urakan-toimenpiteet+kaikki}
     :render     (fn []
                   (let [filtteroidyt-tehtavat (case (:tpi_nimi @u/valittu-toimenpideinstanssi)
-                                               "Kaikki" @yksikkohintaiset-toteumat-kaikkine-tietoineen
-                                               (filter (fn [tehtava]
-                                                         (or (:yhteenveto tehtava)
-                                                             (= (:t3_koodi tehtava) (:t3_koodi @u/valittu-toimenpideinstanssi))))
-                                                       @yksikkohintaiset-toteumat-kaikkine-tietoineen))
-                        yhteensa {:id                       -1
-                                  :nimi                     "Yhteensä"
-                                  :yhteenveto               true
-                                  :toteutuneet-kustannukset (reduce + (mapv
-                                                                        (fn [rivi]
-                                                                          (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
-                                                                        filtteroidyt-tehtavat))}
+                                                "Kaikki" @yksikkohintaiset-toteumat-kaikkine-tietoineen
+                                                (filter (fn [tehtava]
+                                                          (or (:yhteenveto tehtava)
+                                                              (= (:t3_koodi tehtava) (:t3_koodi @u/valittu-toimenpideinstanssi))))
+                                                        @yksikkohintaiset-toteumat-kaikkine-tietoineen))
+                        yhteensa {:id                                      -1
+                                  :nimi                                    "Yhteensä"
+                                  :yhteenveto                              true
+                                  :toteutuneet-kustannukset                (reduce + (mapv
+                                                                                       (fn [rivi]
+                                                                                         (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))
+                                                                                       filtteroidyt-tehtavat))
+                                  :suunnitellut-kustannukset-hoitokaudella (reduce + (mapv
+                                                                                       (fn [rivi]
+                                                                                         (* (:yksikkohinta rivi) (:suunniteltu-maara-hoitokaudella rivi)))
+                                                                                       filtteroidyt-tehtavat))}
                         naytettavat-rivit (if (empty? filtteroidyt-tehtavat)
                                             []
                                             (conj filtteroidyt-tehtavat yhteensa))]
@@ -171,12 +175,16 @@
                       {:otsikko "Suunniteltu määrä hoitokaudella" :nimi :suunniteltu-maara-hoitokaudella :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Toteutunut määrä" :nimi :toteutunut_maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
                       {:otsikko "Suunnitellut kustannukset hoitokaudella" :nimi :suunnitellut-kustannukset-hoitokaudella :fmt fmt/euro-opt :hae (fn [rivi]
-                                                                                                                                                  (let [yksikkohinta (:yksikkohinta rivi)
-                                                                                                                                                        suunniteltu-maara-hoitokaudella (:suunniteltu-maara-hoitokaudella rivi)]
-                                                                                                                                                    (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
-                                                                                                                                                      (* yksikkohinta suunniteltu-maara-hoitokaudella)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-                      {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi] (or (:toteutuneet-kustannukset rivi)
-                                                                                                                                 (* (:yksikkohinta rivi) (:toteutunut_maara rivi)))) :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
+                                                                                                                                                  (or (:suunnitellut-kustannukset-hoitokaudella rivi)
+                                                                                                                                                      (let [yksikkohinta (:yksikkohinta rivi)
+                                                                                                                                                            suunniteltu-maara-hoitokaudella (:suunniteltu-maara-hoitokaudella rivi)]
+                                                                                                                                                        (when (and yksikkohinta suunniteltu-maara-hoitokaudella)
+                                                                                                                                                          (* yksikkohinta suunniteltu-maara-hoitokaudella)))))
+                       :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+                      {:otsikko "Toteutuneet kustannukset" :nimi :toteutuneet-kustannukset :fmt fmt/euro-opt :hae (fn [rivi]
+                                                                                                                    (or (:toteutuneet-kustannukset rivi)
+                                                                                                                        (* (:yksikkohinta rivi) (:toteutunut_maara rivi))))
+                       :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}]
                      (sort
                        (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
                        naytettavat-rivit)]))}
