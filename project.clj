@@ -84,14 +84,14 @@
                  [org.apache.poi/poi-ooxml "3.12"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
-                 ;; Chime -ajastuskirjasto
+                 ;; Chime -ajastuskirjastoe
                  [jarohen/chime "0.1.6"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [webjure/json-schema "0.3"]
+                 [webjure/json-schema "0.4"]
 
                  [org.clojure/test.check "0.7.0"]
 

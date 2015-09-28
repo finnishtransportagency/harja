@@ -58,6 +58,7 @@
     "kommentit": {
       "id": "urn:harja/kommentit",
       "type": "array",
+      "maxItems" : 1000,
       "items": {
         "id": "urn:harja/kommentit/0",
         "type": "object",

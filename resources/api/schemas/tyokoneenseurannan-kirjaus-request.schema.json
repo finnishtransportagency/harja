@@ -14,6 +14,7 @@
     "havainnot": {
       "id": "urn:harja/havainnot",
       "type": "array",
+      "maxItems": 1000,
       "required": true,
       "items": {
         "id": "http://example.com/item-schema",
@@ -71,6 +72,7 @@
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "array",
+                "maxItems" : 10,
                 "items": {
                   "enum": [
                     "auraus ja sohjonpoisto",

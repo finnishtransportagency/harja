@@ -14,6 +14,7 @@
     "paivystykset": {
       "id": "urn:harja/paivystykset",
       "type": "array",
+      "maxItems": 1000,
       "required": true,
       "items": {
         "id": "urn:harja/paivystykset/0",
