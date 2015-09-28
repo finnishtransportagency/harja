@@ -154,5 +154,6 @@
                      :hae-tietolaji
                      :hae-tietue
                      :lisaa-tietue
-                     :hae-tietueet)
+                     :hae-tietueet
+                     :poista-tietue)
     this))
