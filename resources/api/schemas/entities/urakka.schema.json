@@ -19,6 +19,7 @@
         "sopimukset": {
           "id": "urn:harja/urakka/sopimukset",
           "type": "array",
+          "maxItems" : 100,
           "items": {
             "id": "urn:harja/urakka/sopimukset/0",
             "type": "object",

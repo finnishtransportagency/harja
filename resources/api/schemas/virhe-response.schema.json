@@ -6,6 +6,7 @@
     "virheet": {
       "id": "urn:harja/virheet",
       "type": "array",
+      "maxItems" : 100,
       "items": {
         "id": "urn:harja/virheet/0",
         "type": "object",

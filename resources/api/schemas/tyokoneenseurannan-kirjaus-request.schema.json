@@ -72,6 +72,7 @@
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "array",
+                "maxItems" : 10,
                 "items": {
                   "enum": [
                     "auraus ja sohjonpoisto",

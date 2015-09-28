@@ -18,6 +18,7 @@
     "huomiot": {
       "id": "urn:harja/huomiot",
       "type": "array",
+      "maxItems" : 100,
       "items": {
         "id": "urn:harja/huomiot/0",
         "type": "object",
@@ -32,6 +33,7 @@
           "varoitukset": {
             "id": "urn:harja/huomiot/0/varoitukset",
             "type": "array",
+            "maxItems" : 100,
             "items": {
               "id": "urn:harja/huomiot/0/varoitukset/0",
               "type": "object",
@@ -47,6 +49,7 @@
           "virheet": {
             "id": "urn:harja/huomiot/0/virheet",
             "type": "array",
+            "maxItems" : 100,
             "items": {
               "id": "urn:harja/huomiot/0/virheet/0",
               "type": "object",
@@ -62,6 +65,7 @@
           "ilmoitukset": {
             "id": "urn:harja/huomiot/0/ilmoitukset",
             "type": "array",
+            "maxItems" : 100,
             "items": {
               "id": "urn:harja/huomiot/0/ilmoitukset/0",
               "type": "object",
