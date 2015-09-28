@@ -59,7 +59,33 @@
         :else {}))))
 
 (defn lisaa-tietue [tierekisteri data kayttaja]
-    (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä."))
+  (log/debug "Tietue" (pr-str data))
+  (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
+  ; FIXME Mappaa puuttuvat arvot
+  (let [lisattava-tietue {:lisaaja {:henkilo      (str (get-in data [:lisaaja :henkilo :etunimi]) (get-in data [:lisaaja :henkilo :sukunimi]))
+                                    :jarjestelma  (get-in data [:otsikko :lahettaja :jarjestelma])
+                                    :organisaatio (get-in data [:otsikko :lahettaja :organisaatio :nimi])
+                                    :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
+                          :tietue  {:tunniste    (get-in data [:varuste :tunniste])
+                                    :alkupvm     (get-in data [:varuste :alkupvm])
+                                    :loppupvm    (get-in data [:varuste :loppupvm])
+                                    :karttapvm   (get-in data [:varuste :karttapvm])
+                                    :piiri       "???"
+                                    :kuntoluokka "???"
+                                    :urakka      "???"
+                                    :sijainti    {:tie {:numero  (get-in data [:varuste :sijainti :tie :numero])
+                                                        :aet     (get-in data [:varuste :sijainti :tie :aet])
+                                                        :aosa    (get-in data [:varuste :sijainti :tie :aosa])
+                                                        :let     (get-in data [:varuste :sijainti :tie :let])
+                                                        :losa    (get-in data [:varuste :sijainti :tie :losa])
+                                                        :ajr     (get-in data [:varuste :ajr])
+                                                        :puoli   "???"
+                                                        :alkupvm "???"}}
+                                    :tietolaji   {:tietolajitunniste (get-in data [:varuste :tietolaji :tunniste])
+                                                  :arvot             "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"}}
+
+                          :lisatty "2015-05-26+03:00"}]
+    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
   (let [tr (into {} (filter val {:numero  (get parametrit "numero")
@@ -111,7 +137,7 @@
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
                          (fn [parametrit data kayttaja db]
-                           (lisaa-tietue tierekisteri parametrit kayttaja)))))
+                           (lisaa-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
@@ -125,5 +151,6 @@
     (poista-palvelut http
                      :hae-tietolaji
                      :hae-tietue
+                     :lisaa-tietue
                      :hae-tietueet)
     this))
