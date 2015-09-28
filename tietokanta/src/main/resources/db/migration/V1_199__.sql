@@ -42,14 +42,46 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION tr_osan_etaisyys(
+  piste geometry, tienro INTEGER, treshold INTEGER)
+  RETURNS INTEGER
+AS $$
+DECLARE
+   alkuosa RECORD;
+   alkuet NUMERIC;
+   palojenpit NUMERIC;
+BEGIN
+   SELECT osoite3, tie, ajorata, osa, tiepiiri, path, geom
+      FROM tieverkko_paloina
+      WHERE ST_DWithin(geom, piste, treshold)
+        AND tie=tienro
+      ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
+      LIMIT 1
+   INTO alkuosa;
+   
+   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_Line_Locate_Point(alkuosa.geom, piste))) INTO alkuet;
+   SELECT SUM(ST_Length(geom)) 
+     FROM tieverkko_paloina 
+    WHERE tie=alkuosa.tie 
+      AND osa=alkuosa.osa 
+      AND ajorata=alkuosa.ajorata 
+      AND path<alkuosa.path 
+   INTO palojenpit;
+   
+   IF palojenpit IS NULL THEN
+     palojenpit := 0;
+   END IF;
+   
+   RETURN (palojenpit+alkuet)::INTEGER;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
   alkupiste geometry, loppupiste geometry, treshold INTEGER)
   RETURNS tr_osoite
 AS $$
 DECLARE
   reitti geometry;
-  alkupatka geometry;
-  loppupatka geometry;
   apiste geometry;
   bpiste geometry;
   aosa INTEGER;
@@ -57,8 +89,8 @@ DECLARE
   tienosavali RECORD;
   ap NUMERIC;
   bp NUMERIC;
-  alkuet NUMERIC;
-  loppuet NUMERIC;
+  alkuet INTEGER;
+  loppuet INTEGER;
   tmp geometry;
 BEGIN
    -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
@@ -119,35 +151,14 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
      RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
   END IF;
 
-  -- alkupisteen tienosan geometria loppupituuden määrittämiseksi
-  SELECT geom
-    FROM tieverkko_paloina tv
-   WHERE tv.tie=tienosavali.tie
-     AND tv.osa=aosa
-     AND tv.ajorata=tienosavali.ajorataa
-  LIMIT 1
-  INTO alkupatka;
-
-  -- loppupisteen tienosan geometria loppupituuden määrittämiseksi
-  SELECT geom
-    FROM tieverkko_paloina tv
-   WHERE tv.tie=tienosavali.tie
-     AND tv.osa=bosa
-     AND tv.ajorata=tienosavali.ajoratab
-  LIMIT 1
-  INTO loppupatka;
-  
-  ap := ST_Line_Locate_Point(alkupatka, apiste);
-  bp := ST_Line_Locate_Point(loppupatka, bpiste);
-  
-  alkuet := ST_Length(ST_Line_Substring(alkupatka, 0, ap));
-  loppuet := ST_Length(ST_Line_Substring(loppupatka, 0, bp));
+  alkuet := tr_osan_etaisyys(alkupiste, tienosavali.tie, treshold);
+  loppuet := tr_osan_etaisyys(loppupiste, tienosavali.tie, treshold);
   
   RETURN ROW(tienosavali.tie, 
              aosa, 
-             alkuet::INTEGER, 
+             alkuet, 
              bosa, 
-             loppuet::INTEGER,
+             loppuet,
              reitti);
 END;
 $$ LANGUAGE plpgsql;

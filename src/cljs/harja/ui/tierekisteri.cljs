@@ -9,6 +9,9 @@
             [cljs.core.async :refer [>! <! alts! chan] :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def vkm-alku (atom nil))
+(def vkm-loppu (atom nil))
+
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
   Jos ei kaikkia kenttiä ole saatavilla, palauttaa 'ei saatavilla' -viestin"
