@@ -8,7 +8,7 @@
 
 (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI)
 
-(defn arvo->pikseleina
+(defn pikseleina
   [arvo]
   (str arvo "px"))
 

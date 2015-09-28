@@ -3,17 +3,17 @@
   (:require [bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
+            [harja.ui.komponentti :as komp]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.leaflet :refer [leaflet]]
-            [harja.ui.yleiset :refer [linkki] :as yleiset]
+            [harja.ui.yleiset :refer [linkki elementti-idlla sijainti] :as yleiset]
             [harja.ui.modal :refer [modal-container]]
             [harja.ui.viesti :refer [viesti-container]]
-            [harja.ui.ikonit :as ikonit]
-
             [harja.tiedot.navigaatio :as nav]
-
+            [harja.loki :refer [log logt]]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
+            [harja.fmt :as fmt]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -73,44 +73,50 @@
 (defn main
   "Harjan UI:n pääkomponentti"
   []
-  (let [sivu @nav/sivu
-        aikakatkaistu? @istunto/istunto-aikakatkaistu
-        kartan-koko @nav/kartan-koko
-        korkeus @yleiset/korkeus
-        kayttaja @istunto/kayttaja]
+  (komp/luo
+    (komp/kuuntelija :kartan-paikka (fn [_ {:keys [x y w h] :as event}]
+                                      (let [karttasailio (elementti-idlla "kartta-container")
+                                            tyyli (.-style karttasailio)]
+                                        (log "kartan paikka muuttui, event: " (pr-str event))
+                                        (set! (.-position tyyli) "absolute")
+                                        (set! (.-left tyyli) (fmt/pikseleina x))
+                                        (set! (.-top tyyli) (fmt/pikseleina y)))))
+    (fn []
+      (let [sivu @nav/sivu
+            aikakatkaistu? @istunto/istunto-aikakatkaistu
+            kartan-koko @nav/kartan-koko
+            korkeus @yleiset/korkeus
+            kayttaja @istunto/kayttaja]
 
-    (if aikakatkaistu?
-      [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
-      (if (nil? kayttaja)
-        [ladataan]
-        (if (or (:poistettu kayttaja)
-                (empty? (:roolit kayttaja)))
-          [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+        (if aikakatkaistu?
+          [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
+          (if (nil? kayttaja)
+            [ladataan]
+            (if (or (:poistettu kayttaja)
+                    (empty? (:roolit kayttaja)))
+              [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
 
-          [:div
-           [:div.container
-            [header sivu]]
-           [:div.container
-            [murupolku/murupolku]]
-           [:div#kartta-container.container ;{:class @nav/kartan-luokka}
-            (if (= :S kartan-koko)
-              [:div.avaa-kartta-wrap
-               [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
-                "Näytä kartta"]]
-              [kartta/kartta])]
+              [:div
+               [:div.container
+                [header sivu]]
+               [:div.container
+                [murupolku/murupolku]]
+               [:div#kartta-container.container
+                (when-not (= :hidden kartan-koko)
+                  [kartta/kartta])]
 
-           [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-            [:div.row.row-sisalto
-             [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
-              (case sivu
-                :urakat [urakat/urakat]
-                :raportit [raportit/raportit]
-                :ilmoitukset [ilmoitukset/ilmoitukset]
-                :hallinta [hallinta/hallinta]
-                :tilannekuva [tilannekuva/tilannekuva]
-                :about [about/about])]]]
+               [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+                [:div.row.row-sisalto
+                 [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+                  (case sivu
+                    :urakat [urakat/urakat]
+                    :raportit [raportit/raportit]
+                    :ilmoitukset [ilmoitukset/ilmoitukset]
+                    :hallinta [hallinta/hallinta]
+                    :tilannekuva [tilannekuva/tilannekuva]
+                    :about [about/about])]]]
 
-           [footer]
-           [modal-container]
-           [viesti-container]])))))
+               [footer]
+               [modal-container]
+               [viesti-container]])))))))
 

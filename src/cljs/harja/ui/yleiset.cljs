@@ -9,6 +9,9 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn elementti-idlla [id]
+  (.getElementById js/document (name id)))
+
 (declare kuuntelija)
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
@@ -30,7 +33,6 @@
 ;;(defonce sisallon-koon-kuuntelija (do
 ;;                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
 ;;                                    true))
-
 (defn navigaation-korkeus []
   (some-> js/document
           (.getElementsByTagName "nav")

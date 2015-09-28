@@ -20,15 +20,39 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
+(def +kartan-korkeus-s+ 26)
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
                             kork @yleiset/korkeus]
                         (case koko
-                          :S "0"
+                          :S +kartan-korkeus-s+
                           :M (int (* 0.20 kork))
                           :L (int (* 0.50 kork))
                           (int (* 0.50 kork))))))
+
+;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
+(defn- kartan-paikkavaraus
+  [kartan-koko]
+  (let [paivita (fn [this]
+                  (let [[x y w h] (yleiset/sijainti (yleiset/elementti-idlla "kartan-paikka"))]
+                    (t/julkaise! {:aihe :kartan-paikka
+                                  :x    x :y y :w w :h h})))]
+    (komp/luo
+      {:component-did-mount paivita
+       :component-did-update paivita}
+
+     (fn []
+       [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
+                                    :width  "100%"}}]))))
+
+(defn kartan-paikka
+  []
+  (let [koko @nav/kartan-koko]
+    (if-not (= :hidden koko)
+      [kartan-paikkavaraus koko]
+      [:span.ei-karttaa])))
+
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
@@ -67,29 +91,35 @@
         v-ur @nav/valittu-urakka
         muuta-kokoa-teksti (case koko
                              :M "Suurenna kartta"
-                             :L "Pienennä kartta")]
+                             :L "Pienennä kartta"
+                             "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or @nav/tarvitaanko-tai-onko-pakotettu-nakyviin?
                                                                      (= sivu :tilannekuva)
                                                                      (and (= sivu :urakat)
                                                                           (not v-ur))) "hide")}
 
-     ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
-     [:div.kartan-koko-napit {:style {:left "-50%"
-                                      :opacity .8
-                                      :position   "absolute"
-                                      :text-align "center"
-                                      :top        (fmt/arvo->pikseleina (- kartan-korkeus 26))
-                                      :width "100%"
-                                      :z-index    100}}
-      [:button.btn-xs.nappi-toissijainen {:class    (when (= koko :S) "hide")
-                                   :on-click #(nav/vaihda-kartan-koko! (case koko
-                                                                         :M :L
-                                                                         :L :M))}
-       muuta-kokoa-teksti]
-      [:button.btn-xs.nappi-ensisijainen {:class    (when (= koko :S) "hide")
-                                   :on-click #(nav/vaihda-kartan-koko! :S)}
-       "Piilota kartta"]]]))
+
+       ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
+       [:div.kartan-koko-napit {:style {:left "-50%"
+                                        :opacity .8
+                                        :position   "absolute"
+                                        :text-align "center"
+                                        :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
+                                        :width "100%"
+                                        :z-index    100}}
+        (if (= :S koko)
+          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
+           "Näytä kartta"]
+          [:span
+           [:button.btn-xs.nappi-toissijainen {:class    (when (= koko :S) "hide")
+                                              :on-click #(nav/vaihda-kartan-koko! (case koko
+                                                                                    :M :L
+                                                                                    :L :M))}
+           muuta-kokoa-teksti]
+          [:button.btn-xs.nappi-ensisijainen {:class    (when (= koko :S) "hide")
+                                              :on-click #(nav/vaihda-kartan-koko! :S)}
+           "Piilota kartta"]])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -191,7 +221,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
         {:id          "kartta"
          :width       "100%"
          ;; set width/height as CSS units, must set height as pixels!
-         :height      (fmt/arvo->pikseleina @kartan-korkeus)
+         :height      (fmt/pikseleina @kartan-korkeus)
          :style       (when (= koko :S)
                         {:display "none"})
          :view        kartta-sijainti

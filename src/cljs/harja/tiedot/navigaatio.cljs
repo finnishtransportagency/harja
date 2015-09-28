@@ -32,7 +32,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defonce kartalla-nakyva-alue (atom nil))
 
-;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
+;; Kartan koko voi olla
+;; :hidden (ei näy mitään)
+;; :S (näkyy Näytä kartta -nappi)
+;; :M (matalampi täysleveä)
+;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
 
 (defn vaihda-kartan-koko! [uusi-koko]
@@ -119,7 +123,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
 (def tarvitsen-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin. 
-  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyissä."
+  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyvissä."
   (atom #{}))
 
 (def pakota-nakyviin? (atom false))
