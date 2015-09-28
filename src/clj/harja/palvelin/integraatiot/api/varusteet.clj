@@ -64,7 +64,7 @@
   (let [lisattava-tietue (-> data
                              (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi]) " " (get-in data [:lisaaja :henkilo :sukunimi])))
                              (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
-                             (assoc-in [:lisaaja :Ytunnus] (get-in data [:lisaaja :lahettaja :organisaatio :ytunnus]))
+                             (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
                              (dissoc :otsikko))]
     (log/debug "Lisätään tietue: " (pr-str lisattava-tietue))
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
