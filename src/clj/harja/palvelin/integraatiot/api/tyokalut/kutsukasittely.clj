@@ -102,12 +102,14 @@
   (tee-sisainen-kasittelyvirhevastaus virheet))
 
 (defn lue-kutsu
-  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-kutsu. Muille kutsuille palauttaa arvon nil.
+  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu. Muille kutsuille palauttaa arvon nil.
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
   (log/debug "Luetaan kutsua")
-  (when (= :post (:request-method request))
+  (when (or (= :post (:request-method request))
+            (= :put (:request-method request))
+            (= :delete (:request-method request)))
     (json/validoi skeema body)
     (cheshire/decode body true)))
 
