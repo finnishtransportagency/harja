@@ -2,7 +2,8 @@
   "Harjan raporttielementtien HTML näyttäminen."
   (:require [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.visualisointi :as vis]))
+            [harja.ui.visualisointi :as vis]
+            [harja.loki :refer [log]]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -14,6 +15,7 @@
     (first elementti)))
 
 (defmethod muodosta-html :taulukko [[_ sarakkeet data]]
+  (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   [grid/grid {:otsikko "" :tunniste hash}
    (into []
          (map-indexed (fn [i sarake]
@@ -46,9 +48,14 @@
   
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   [:div.raportti
-   (for [elementti sisalto]
-     ^{:key (hash elementti)}
-     [muodosta-html elementti])])
+   (map-indexed (fn [i elementti]
+                  ^{:key i}
+                  [muodosta-html elementti])
+                (mapcat (fn [sisalto]
+                          (if (list? sisalto)
+                            sisalto
+                            [sisalto]))
+                        sisalto))])
 
                                    
   
