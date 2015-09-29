@@ -21,7 +21,8 @@
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste])
   (hae-tietueet [this tr tietolajitunniste muutospvm])
-  (lisaa-tietue [this tietue]))
+  (poista-tietue [this tiedot])
+  (lisaa-tietue [this tiedot]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
@@ -44,6 +45,11 @@
     (when-not (empty? tierekisteri-api-url)
       (tietueet/hae-tietueet
         (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm)))
+
+  (poista-tietue [this tiedot]
+    (validoi-tietolajitunniste (:tunniste tiedot))
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/poista-tietue (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (lisaa-tietue [this tiedot]
     (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
