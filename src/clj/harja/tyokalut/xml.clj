@@ -99,5 +99,5 @@
 (defn joda-time->xml-xs-date
   "Muuntaa joda-timen XML:n xs:date-muotoon (esim. 2015-03-03+00:00)."
   [joda-time]
-  (let [formatter (f/formatter "yyyy-MM-dd+00:00")]
+  (let [formatter (f/formatter "yyyy-MM-dd+HH:mm")]
     (f/unparse formatter joda-time)))
