@@ -10,7 +10,8 @@
    :alkuosa s/Int
    :alkuetaisyys s/Int
    (s/optional-key :loppuosa) (s/maybe s/Int)
-   (s/optional-key :loppuetaisyys) (s/maybe s/Int)})
+   (s/optional-key :loppuetaisyys) (s/maybe s/Int)
+   (s/optional-key :geometria) s/Any})
 
 (def Coordinate [s/Num])
 
