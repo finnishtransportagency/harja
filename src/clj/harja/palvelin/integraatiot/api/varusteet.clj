@@ -75,12 +75,21 @@
 (defn paivita-tietue [tierekisteri data kayttaja]
   (log/debug "Päivitetään tietue käyttäjän " kayttaja " pyynnöstä.")
   (let [paivitettava-tietue (-> data
-                             (assoc-in [:paivittaja :henkilo] (str (get-in data [:paivittaja :henkilo :etunimi])
-                                                                " "
-                                                                (get-in data [:paivittaja :henkilo :sukunimi])))
-                             (assoc-in [:paivittaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
-                             (assoc-in [:paivittaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
-                             (dissoc :otsikko))]
+                                (assoc-in [:paivittaja :henkilo] (str (get-in data [:paivittaja :henkilo :etunimi])
+                                                                      " "
+                                                                      (get-in data [:paivittaja :henkilo :sukunimi])))
+                                (assoc-in [:paivittaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
+                                (assoc-in [:paivittaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+                                (assoc-in [:tietue :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                           (get-in data [:tietue :alkupvm]))))
+                                (assoc-in [:tietue :loppupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                            (get-in data [:tietue :loppupvm]))))
+                                (assoc-in [:tietue :karttapvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                             (get-in data [:tietue :karttapvm]))))
+                                (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                                          (get-in data [:tietue :sijainti :tie :alkupvm]))))
+                                (assoc :paivitetty (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time (:paivitetty data))))
+                                (dissoc :otsikko))]
     (log/debug (str "Pvm tyyppi on " (type (get-in data [:otsikko :lahetysaika]))))
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
 
