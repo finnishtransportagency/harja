@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as tc])
+            [clj-time.coerce :as coerce])
   (:import (java.text SimpleDateFormat)))
 
 (defn formatoi-paivamaara [date]
@@ -15,12 +15,22 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
+(defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
+  (let [alkupvm (formatoi-paivamaara (coerce/to-sql-time (time/first-day-of-the-month vuosi 1)))
+        loppupvm (formatoi-paivamaara (coerce/to-sql-time (time/last-day-of-the-month vuosi 12)))]
+    [:segment
+     {:value  vuosittainen-summa
+      :finish alkupvm
+      :start  loppupvm}]))
+
 (defn luo-summat [alkupvm loppupvm maksuera]
-  [:Cost
-   [:segment
-    {:value  (:summa (:maksuera maksuera))
-     :finish alkupvm
-     :start  loppupvm}]])
+  (let [alkuvuosi (time/year (coerce/from-sql-date alkupvm))
+        loppuvuosi (time/year (coerce/from-sql-date loppupvm))
+        vuodet (range alkuvuosi (+ 1 loppuvuosi))
+        summa-yhteensa (:summa (:maksuera maksuera))
+        vuosittainen-summa (if summa-yhteensa (/ summa-yhteensa (count vuodet)) 0)
+        segmentti-elementit (mapv #(muodosta-kustannuselementti % vuosittainen-summa) vuodet)]
+    (reduce conj [:Cost] segmentti-elementit)))
 
 (defn muodosta-custom-information [nimi arvo]
   [:CustomInformation
@@ -53,12 +63,12 @@
           (throw (RuntimeException. viesti)))))))
 
 (defn tee-kustannussuunnitelman-alku [alkupvm]
-  (let [vuosi (time/year (tc/from-sql-date alkupvm))]
-    (tc/to-sql-date (time/first-day-of-the-month vuosi 1))))
+  (let [vuosi (time/year (coerce/from-sql-date alkupvm))]
+    (coerce/to-sql-date (time/first-day-of-the-month vuosi 1))))
 
 (defn tee-kustannussuunnitelman-loppu [loppupvm]
-  (let [vuosi (time/year (tc/from-sql-date loppupvm))]
-    (tc/to-sql-date (time/last-day-of-the-month vuosi 12))))
+  (let [vuosi (time/year (coerce/from-sql-date loppupvm))]
+    (coerce/to-sql-date (time/last-day-of-the-month vuosi 12))))
 
 (defn muodosta [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
@@ -88,7 +98,7 @@
         [:GroupingAttribute "lov1_id"]]
        [:Details
         [:Detail
-         (luo-summat (formatoi-paivamaara alkupvm) (formatoi-paivamaara loppupvm) maksuera)
+         (luo-summat alkupvm loppupvm maksuera)
          [:GroupingAttributes
           (muodosta-grouping-attribute "lov1_id" "3110201")
           (muodosta-grouping-attribute "role_id" (valitse-lkp-tilinumero koodi tuotenumero))]

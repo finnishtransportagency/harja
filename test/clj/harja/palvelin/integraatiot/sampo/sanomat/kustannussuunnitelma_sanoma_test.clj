@@ -31,9 +31,9 @@
                  :tuotenumero          111})
 
 (deftest tarkista-kustannussuunnitelman-validius
-  (let [maksuera (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
+  (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
-    (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+    (is (xml/validoi +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely
   (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
