@@ -12,8 +12,8 @@
                                                   :jarjestelma  "FastMekka"
                                                   :organisaatio "Asfaltia Oy"
                                                   :yTunnus      "1234567-8"}
-                              :tunniste          "HAR123456789"
-                              :tietolajitunniste "tl506"
+                              :tunniste          "HARJ951547ZK"
+                              :tietolajitunniste "tl505"
                               :poistettu         "2015-05-26+03:00"})
 
 (def +xsd+ "xsd/tierekisteri/schemas/")
