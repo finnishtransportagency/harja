@@ -7,6 +7,7 @@
     "urakat": {
       "id": "urn:harja/urakat",
       "type": "array",
+      "maxItems" : 100,
       "items": {
         "id": "http://example.com/item-schema",
         "type": "object",

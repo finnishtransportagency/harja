@@ -10,7 +10,8 @@
    :alkuosa s/Int
    :alkuetaisyys s/Int
    (s/optional-key :loppuosa) (s/maybe s/Int)
-   (s/optional-key :loppuetaisyys) (s/maybe s/Int)})
+   (s/optional-key :loppuetaisyys) (s/maybe s/Int)
+   (s/optional-key :geometria) s/Any})
 
 (def Coordinate [s/Num])
 
@@ -24,6 +25,6 @@
             :coordinates Coordinate})
 
 ;; Sijainti on joko viiva tai piste
-(def Sijainti (s/either MultiLine Point))
+(def Sijainti (s/either MultiLine Point Line))
 
 (def Teksti (s/both s/Str (s/pred (comp not str/blank?))))

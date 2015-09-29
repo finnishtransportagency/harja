@@ -174,9 +174,11 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  h.alueurakkanro AS alueurakkanumero,
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
+  JOIN hanke h ON h.id = u.hanke
   JOIN organisaatio urk ON u.urakoitsija = urk.id
                            AND urk.ytunnus = :ytunnus;
 

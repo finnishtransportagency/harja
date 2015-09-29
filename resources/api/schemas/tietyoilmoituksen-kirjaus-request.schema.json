@@ -161,6 +161,7 @@
             "tehtavatTyot": {
               "id": "urn:harja/tietyoilmoitus/tyo/tehtavatTyot",
               "type": "array",
+              "maxItems": 10,
               "items": [
                 {
                   "id": "urn:harja/tietyoilmoitus/tyo/tehtavatTyot/0",
