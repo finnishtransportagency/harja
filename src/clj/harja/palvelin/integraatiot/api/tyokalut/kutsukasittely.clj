@@ -75,11 +75,14 @@
   ([status skeema payload]
    (if payload
      (let [json (cheshire/encode payload)]
-       (json/validoi skeema json)
-       {:status  status
-        :headers {"Content-Type" "application/json"}
-        :body    json})
-
+       (if skeema
+         (do
+           (json/validoi skeema json)
+           {:status  status
+            :headers {"Content-Type" "application/json"}
+            :body    json})
+         {:status  status
+          :headers {"Content-Type" "application/json"}}))
      (if skeema
        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi  virheet/+tyhja-vastaus+

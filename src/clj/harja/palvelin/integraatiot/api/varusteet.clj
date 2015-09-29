@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [taoensso.timbre :as log]
-            [clojure.string :as string])
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 
@@ -59,15 +59,19 @@
         :else {}))))
 
 (defn lisaa-tietue [tierekisteri data kayttaja]
-  (log/debug "Tietue" (pr-str data))
   (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
   (let [lisattava-tietue (-> data
-                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi]) " "
+                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
+                                                                " "
                                                                 (get-in data [:lisaaja :henkilo :sukunimi])))
                              (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
                              (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+                             (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :alkupvm])))
+                             (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :loppupvm])))
+                             (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :karttapvm])))
+                             (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :sijainti :tie :alkupvm])))
+                             (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
                              (dissoc :otsikko))]
-    (log/debug "Lisätään tietue: " (pr-str lisattava-tietue))
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
