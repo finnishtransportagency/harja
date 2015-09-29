@@ -9,6 +9,8 @@
             [cljs.core.async :refer [>! <! alts! chan] :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def vkm-alku (atom nil))
+(def vkm-loppu (atom nil))
 
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
@@ -48,7 +50,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
-
+        alkupiste (atom nil)
         tr-osoite (atom {})
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
@@ -64,7 +66,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
               (if (= kanava vkm-haku)
                 ;; Saatiin VKM vastaus paikkahakuun, käsittele se
                 (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo]
+                      osoite arvo] 
                   (if (vkm/virhe? osoite)
                     (do (reset! virhe (vkm/virhe osoite))
                         (recur nil))
@@ -76,24 +78,24 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                         (let [osoite (swap! tr-osoite
                                             (fn [tr]
                                               (dissoc (merge tr
-                                                             {:numero (get osoite "tie")
-                                                              :alkuosa (get osoite "osa")
-                                                              :alkuetaisyys (get osoite "etaisyys")})
+                                                             {:numero (:tie osoite)
+                                                              :alkuosa (:aosa osoite)
+                                                              :alkuetaisyys (:aet osoite)})
                                                       :loppuosa
                                                       :loppuetaisyys)))]
                           (paivita osoite)
                           (reset! tila :alku-valittu))
                         
                         :alku-valittu
-                        (if-not (= (:numero @tr-osoite)
-                                   (get osoite "tie"))
-                          (reset! virhe "Loppuosan tulee olla samalla tiellä")
-                          
-                          (let [osoite (swap! tr-osoite
-                                              merge 
-                                              {:loppuosa (get osoite "osa")
-                                               :loppuetaisyys (get osoite "etaisyys")})]
-                            (kun-valmis osoite))))
+                        (let [osoite (swap! tr-osoite
+                                            merge 
+                                            {:numero (:tie osoite)
+                                             :alkuosa (:aosa osoite)
+                                             :alkuetaisyys (:aet osoite)
+                                             :loppuosa (:losa osoite)
+                                             :loppuetaisyys (:let osoite)
+                                             :geometria (:geometria osoite)})]
+                          (kun-valmis osoite)))
                       (recur nil))))
                 
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
@@ -111,7 +113,11 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                     nil)
                   
                   (recur (if (= :click tyyppi)
-                           (vkm/koordinaatti->tieosoite sijainti)
+                           (if (= :alku-valittu @tila)
+                             (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
+                             (do
+                               (reset! alkupiste sijainti) 
+                               (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
     
     (komp/luo
@@ -119,8 +125,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
       (fn [_ _ uudet-optiot]
         (reset! optiot uudet-optiot))}
      
-     (komp/sisaan-ulos #(swap! nav/tarvitsen-karttaa conj :tr-karttavalitsin)
-                       #(swap! nav/tarvitsen-karttaa disj :tr-karttavalitsin))
+     (komp/sisaan #(nav/vaihda-kartan-koko! :M))
      (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
                        #(kartta/aseta-kursori! nil))
      (komp/ulos (kartta/kaappaa-hiiri tapahtumat))

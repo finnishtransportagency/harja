@@ -126,7 +126,7 @@
   (when urakka (roolit/vaadi-lukuoikeus-urakkaan user urakka))
   (jdbc/with-db-transaction [db db]
     (let [urakka-idt (if-not (nil? urakka)
-                       (if (vector? urakka) urakka (vec urakka))
+                       (if (vector? urakka) urakka [urakka])
 
                        (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user))))
           ;; Tuloksia ei rajata urakalla, jos urakkaa ei ole valittu ja käyttäjä on järjestelmavastuuhenkilö
