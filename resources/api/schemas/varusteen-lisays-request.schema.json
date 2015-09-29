@@ -27,7 +27,6 @@
     "lisatty": {
       "id": "urn:harja/lisatty",
       "type": "string",
-      "format": "date-time",
       "additionalProperties": false,
       "required": true
     }
