@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "array",
+  "maxItems" : 1000,
   "items": [
     {
       "id": "urn:harja/havainnot/0",

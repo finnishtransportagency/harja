@@ -33,8 +33,8 @@ server {
 
     ssl_certificate /etc/nginx/server.crt;
     ssl_certificate_key /etc/nginx/server.key;
-    ssl_client_certificate /etc/nginx/ca.crt;
-    ssl_verify_client optional;
+    #ssl_client_certificate /etc/nginx/ca.crt;
+    #ssl_verify_client optional;
     
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log error;

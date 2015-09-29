@@ -23,7 +23,10 @@
     (.setResourceResolver schema-factory
                           (reify LSResourceResolver
                             (resolveResource [this type namespaceURI publicId systemId baseURI]
-                              (let [xsd-file (io/resource (str xsd-polku systemId))]
+                              (let [systemId (if (.startsWith systemId "./")
+                                               (.substring systemId 2)
+                                               systemId)
+                                    xsd-file (io/resource (str xsd-polku systemId))]
                                 (reify LSInput
                                   (getByteStream [_] (io/input-stream xsd-file))
                                   (getPublicId [_] publicId)
