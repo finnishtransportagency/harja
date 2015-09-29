@@ -12,16 +12,19 @@
     "alkupvm": {
       "id": "urn:harja/alkupvm",
       "type": "string",
+      "format": "date-time",
       "required": true
     },
     "loppupvm": {
       "id": "urn:harja/loppupvm",
+      "format": "date-time",
       "type": "string",
       "required": true
     },
     "karttapvm": {
       "id": "urn:harja/karttapvm",
       "type": "string",
+      "format": "date-time",
       "required": true
     },
     "piiri": {
@@ -87,6 +90,7 @@
             "alkupvm": {
               "id": "urn:harja/sijainti/tie/alkupvm",
               "required": true,
+              "format": "date-time",
               "type": "string"
             }
           },
