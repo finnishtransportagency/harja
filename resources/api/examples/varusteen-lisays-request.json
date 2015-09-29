@@ -22,9 +22,9 @@
   },
   "tietue": {
     "tunniste": "HARJ123456789",
-    "alkupvm": "2015-03-03+02:00",
-    "loppupvm": "2015-03-03+02:00",
-    "karttapvm": "2015-03-03+02:00",
+    "alkupvm": "2016-01-30T12:00:00Z",
+    "loppupvm": "2016-01-30T12:00:00Z",
+    "karttapvm": "2016-01-30T12:00:00Z",
     "piiri": 1,
     "kuntoluokka": 1,
     "urakka": 100,
@@ -45,5 +45,5 @@
       "arvot": "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"
     }
   },
-  "lisatty": "2015-05-26+03:00"
+  "lisatty": "2016-01-30T12:00:00Z"
 }
