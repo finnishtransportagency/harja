@@ -89,7 +89,6 @@
                                 (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date(get-in data [:tietue :sijainti :tie :alkupvm])))
                                 (assoc :paivitetty (xml/json-date-time->xml-xs-date (:paivitetty data)))
                                 (dissoc :otsikko))]
-    (log/debug (str "Pvm tyyppi on " (type (get-in data [:otsikko :lahetysaika]))))
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
 
 (defn poista-tietue [tierekisteri data kayttaja]
