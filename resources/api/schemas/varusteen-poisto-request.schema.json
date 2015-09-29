@@ -33,7 +33,6 @@
     "poistettu": {
       "id": "urn:harja/poistettu",
       "type": "string",
-      "format": "date-time",
       "additionalProperties": false,
       "required": true
     }
