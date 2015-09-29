@@ -41,7 +41,7 @@
     (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
 
 ; REPL-testausta varten
-(defn paivita-testitietue []
+#_(defn paivita-testitietue []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
