@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.poista-tietue-test
   (:require [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as poista-tietue]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :refer :all]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
