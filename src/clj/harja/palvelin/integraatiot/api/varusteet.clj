@@ -8,8 +8,11 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [taoensso.timbre :as log]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [harja.tyokalut.xml]
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+ throw+]]))
+
 
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
@@ -78,6 +81,7 @@
                              (assoc-in [:paivittaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
                              (assoc-in [:paivittaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
                              (dissoc :otsikko))]
+    (log/debug (str "Pvm tyyppi on " (type (get-in data [:otsikko :lahetysaika]))))
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
 
 (defn poista-tietue [tierekisteri data kayttaja]
@@ -90,7 +94,7 @@
                                                 :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
                             :tunniste          (:tunniste data)
                             :tietolajitunniste (:tietolajitunniste data)
-                            :poistettu         (:poistettu data)}]
+                            :poistettu         (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time (:poistettu data)))}]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
