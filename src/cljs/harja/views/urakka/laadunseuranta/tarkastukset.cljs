@@ -228,7 +228,9 @@
                                                           (when sanktiot
                                                             (vals sanktiot))))))
         
-        {:disabled (not (validi-tarkastus? tarkastus))
+        {:disabled (let [validi? (validi-tarkastus? tarkastus)]
+                     (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
+                     (not validi?))
          :kun-onnistuu (fn [tarkastus]
                          (reset! laadunseuranta/valittu-tarkastus nil)
                          (laadunseuranta/paivita-tarkastus-listaan! tarkastus))

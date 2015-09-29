@@ -7,6 +7,7 @@
     "ilmoitukset": {
       "id": "urn:harja/ilmoitukset",
       "type": "array",
+      "maxItems" : 1000,
       "items": {
         "id": "urn:harja/ilmoitukset/0",
         "type": "object",
@@ -64,6 +65,7 @@
                   "selite": {
                     "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite",
                     "type": "array",
+                    "maxItems" : 10,
                     "items": [
                       {
                         "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0",

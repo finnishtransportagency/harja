@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "array",
+  "maxItems" : 100,
   "items": {
     "id": "urn:harja/materiaalit/0/materiaali",
     "type": "object",

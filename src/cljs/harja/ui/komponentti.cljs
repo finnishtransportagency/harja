@@ -83,6 +83,13 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
    :component-will-unmount (fn [& _]
                              (ulos))})
 
+(defn sisaan
+  "Mixin, joka käsittelee component-will-mount ja component-will-unmount elinkaaret. Tällä voi kätevästi tehdä jotain
+  komponentin tullessa näkyviin ja perua se komponentin poistuessa."
+  [sisaan]
+  {:component-will-mount (fn [& _]
+                           (sisaan))})
+
 (defn lippu
   "Mixin, joka asettaa annetun atomin tilan joko true tai false sen mukaan onko komponentti näkyvissä."
   [& lippu-atomit]
