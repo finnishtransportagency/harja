@@ -21,29 +21,21 @@
     }
   },
   "tietue": {
-    "tunniste": "HARJ123456789",
-    "alkupvm": "2016-01-30T12:00:00Z",
-    "loppupvm": "2016-01-30T12:00:00Z",
-    "karttapvm": "2016-01-30T12:00:00Z",
-    "piiri": 1,
-    "kuntoluokka": 1,
-    "urakka": 100,
+    "tunniste": "HARJ951547ZK",
+    "alkupvm": "2016-05-22T12:00:00Z",
     "sijainti": {
       "tie": {
-        "numero": 1,
-        "aet": 4,
+        "numero": 89,
+        "aet": 12,
         "aosa": 1,
-        "let": 1,
-        "losa": 1,
-        "ajr": 1,
-        "puoli": 1,
-        "alkupvm": "2016-01-30T12:00:00Z"
+        "ajr": 0,
+        "puoli": 1
       }
     },
     "tietolaji": {
-      "tietolajitunniste": "tl506",
-      "arvot": "998 2 0 1 0 1 1 Testi liikennemerkki Omistaja O 4 123456789 40"
+      "tietolajitunniste": "tl505",
+      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  "
     }
   },
-  "lisatty": "2016-01-30T12:00:00Z"
+  "lisatty": "2015-05-26T12:00:00Z"
 }

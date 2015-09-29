@@ -8,8 +8,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [taoensso.timbre :as log]
-            [clojure.string :as string]
-            [harja.tyokalut.xml]
             [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -69,15 +67,11 @@
                                                                 (get-in data [:lisaaja :henkilo :sukunimi])))
                              (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
                              (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
-                             (assoc-in [:tietue :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
-                                                                                        (get-in data [:tietue :alkupvm]))))
-                             (assoc-in [:tietue :loppupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
-                                                                                         (get-in data [:tietue :loppupvm]))))
-                             (assoc-in [:tietue :karttapvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
-                                                                                          (get-in data [:tietue :karttapvm]))))
-                             (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
-                                                                                                       (get-in data [:tietue :sijainti :tie :alkupvm]))))
-                             (assoc :lisatty (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time (:lisatty data))))
+                             (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :alkupvm])))
+                             (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :loppupvm])))
+                             (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :karttapvm])))
+                             (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:tietue :sijainti :tie :alkupvm])))
+                             (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
                              (dissoc :otsikko))]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
@@ -112,7 +106,7 @@
                                                 :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
                             :tunniste          (:tunniste data)
                             :tietolajitunniste (:tietolajitunniste data)
-                            :poistettu         (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time (:poistettu data)))}]
+                            :poistettu         (xml/json-date-time->xml-xs-date (:poistettu data))}]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
@@ -150,21 +144,21 @@
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu db integraatioloki :hae-tietolaji request nil skeemat/+tietolajien-haku+
-                         (fn [parametrit data kayttaja db]
+                         (fn [parametrit _ kayttaja _]
                            (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
+                         (fn [parametrit _ kayttaja _]
                            (hae-tietue tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (lisaa-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
@@ -178,14 +172,14 @@
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :poista-tietue request skeemat/+varusteen-poisto+ nil
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (poista-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (hae-tietueet tierekisteri data kayttaja)))))
     this)
 

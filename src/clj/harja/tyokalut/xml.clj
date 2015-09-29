@@ -86,7 +86,7 @@
 (defn parsi-aikaleima [teksti]
   (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
 
-(defn parsi-paivamaara [teksti](f/formatters :date-time-no-ms)
+(defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
 
 (defn json-date-time->joda-time
@@ -101,3 +101,9 @@
   [joda-time]
   (let [formatter (f/formatter "yyyy-MM-dd+HH:mm")]
     (f/unparse formatter joda-time)))
+
+(defn json-date-time->xml-xs-date [aika]
+  "Muuntaa JSON aikaleiman XML:n xs-date-muotoon"
+  (when aika
+    (joda-time->xml-xs-date
+      (json-date-time->joda-time aika))))
