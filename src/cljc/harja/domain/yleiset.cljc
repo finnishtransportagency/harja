@@ -25,6 +25,6 @@
             :coordinates Coordinate})
 
 ;; Sijainti on joko viiva tai piste
-(def Sijainti (s/either MultiLine Point))
+(def Sijainti (s/either MultiLine Point Line))
 
 (def Teksti (s/both s/Str (s/pred (comp not str/blank?))))
