@@ -125,7 +125,6 @@
       {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
       (ikonit/plus) " Lisää turvallisuuspoikkeama"]
 
-     [kartta/kartan-paikka]
      [grid/grid
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
@@ -156,6 +155,8 @@
        (reset! tiedot/karttataso-turvallisuuspoikkeamat false))}
 
     (fn []
-      (if @tiedot/valittu-turvallisuuspoikkeama
-        [turvallisuuspoikkeaman-tiedot]
-        [turvallisuuspoikkeamalistaus]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @tiedot/valittu-turvallisuuspoikkeama
+         [turvallisuuspoikkeaman-tiedot]
+         [turvallisuuspoikkeamalistaus])])))
