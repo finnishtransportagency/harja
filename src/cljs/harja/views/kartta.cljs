@@ -32,6 +32,7 @@
                           :S +kartan-korkeus-s+
                           :M (int (* 0.20 kork))
                           :L (int (* 0.50 kork))
+                          :XL (int (* 0.80 kork))
                           (int (* 0.50 kork))))))
 
 

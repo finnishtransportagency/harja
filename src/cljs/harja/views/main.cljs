@@ -84,7 +84,8 @@
                            (do
                              (set! (.-position tyyli) "fixed")
                              (set! (.-left tyyli) (fmt/pikseleina x))
-                             (set! (.-top tyyli) "0px"))
+                             (set! (.-top tyyli) "0px")
+                             (set! (.-width tyyli) (fmt/pikseleina w)))
                            (do
                              (set! (.-position tyyli) "absolute")
                              (set! (.-left tyyli) (fmt/pikseleina x))

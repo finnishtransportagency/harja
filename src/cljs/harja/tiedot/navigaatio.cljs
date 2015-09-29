@@ -144,7 +144,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                 ;; tai palautetaan käyttäjän valitsema koko
                 (cond (= sivu :hallinta) :hidden
                       (= sivu :about) :hidden
-                      (= sivu :tilannekuva) :L
+                      (= sivu :tilannekuva) :XL
                       (and (= sivu :urakat)
                            (not v-ur)) :L
                       :default valittu-koko)))))
