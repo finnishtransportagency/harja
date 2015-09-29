@@ -143,7 +143,7 @@
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :poista-tietue request skeemat/+varusteen-poisto+ nil
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (poista-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti

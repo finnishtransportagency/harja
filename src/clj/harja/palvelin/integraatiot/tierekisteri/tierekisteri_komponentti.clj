@@ -48,8 +48,8 @@
         (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm)))
 
   (poista-tietue [this tiedot]
-    (validoi-tietolajitunniste (:tunniste tiedot))
-    (when-not (empty? tierekisteri-api-url)
+    (validoi-tietolajitunniste (:tietolajitunniste tiedot))
+    (when-not (empty? tierekisteri-api-url)   ()
       (tietue/poista-tietue (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (lisaa-tietue [this tiedot]
