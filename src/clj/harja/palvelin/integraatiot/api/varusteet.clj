@@ -69,6 +69,15 @@
                                                                 (get-in data [:lisaaja :henkilo :sukunimi])))
                              (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
                              (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+                             (assoc-in [:tietue :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                        (get-in data [:tietue :alkupvm]))))
+                             (assoc-in [:tietue :loppupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                         (get-in data [:tietue :loppupvm]))))
+                             (assoc-in [:tietue :karttapvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                          (get-in data [:tietue :karttapvm]))))
+                             (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time
+                                                                                                       (get-in data [:tietue :sijainti :tie :alkupvm]))))
+                             (assoc :lisatty (xml/joda-time->xml-xs-date (xml/json-date-time->joda-time (:lisatty data))))
                              (dissoc :otsikko))]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
