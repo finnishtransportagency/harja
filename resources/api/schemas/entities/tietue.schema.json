@@ -12,32 +12,35 @@
     "alkupvm": {
       "id": "urn:harja/alkupvm",
       "type": "string",
+      "format": "date-time",
       "required": true
     },
     "loppupvm": {
       "id": "urn:harja/loppupvm",
       "type": "string",
-      "required": true
+      "format": "date-time",
+      "required": false
     },
     "karttapvm": {
       "id": "urn:harja/karttapvm",
       "type": "string",
-      "required": true
+      "format": "date-time",
+      "required": false
     },
     "piiri": {
       "id": "urn:harja/piiri",
       "type": "integer",
-      "required": true
+      "required": false
     },
     "kuntoluokka": {
       "id": "urn:harja/kuntoluokka",
       "type": "integer",
-      "required": true
+      "required": false
     },
     "urakka": {
       "id": "urn:harja/urakka",
       "type": "integer",
-      "required": true
+      "required": false
     },
     "sijainti": {
       "id": "urn:harja/sijainti",
@@ -66,28 +69,35 @@
             },
             "let": {
               "id": "urn:harja/sijainti/tie/let",
-              "required": true,
+              "required": false,
               "type": "integer"
             },
             "losa": {
               "id": "urn:harja/sijainti/tie/losa",
-              "required": true,
+              "required": false,
               "type": "integer"
             },
             "ajr": {
               "id": "urn:harja/sijainti/tie/ajr",
-              "required": true,
+              "required": false,
               "type": "integer"
             },
             "puoli": {
               "id": "urn:harja/sijainti/tie/puoli",
-              "required": true,
+              "required": false,
               "type": "integer"
             },
             "alkupvm": {
               "id": "urn:harja/sijainti/tie/alkupvm",
-              "required": true,
-              "type": "string"
+              "required": false,
+              "type": "string",
+              "format": "date-time"
+            },
+            "loppupvm": {
+              "id": "urn:harja/sijainti/tie/loppupvm",
+              "required": false,
+              "type": "string",
+              "format": "date-time"
             }
           },
           "additionalProperties": false

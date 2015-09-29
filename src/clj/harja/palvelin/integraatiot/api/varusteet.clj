@@ -62,7 +62,8 @@
   (log/debug "Tietue" (pr-str data))
   (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
   (let [lisattava-tietue (-> data
-                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi]) " " (get-in data [:lisaaja :henkilo :sukunimi])))
+                             (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi]) " "
+                                                                (get-in data [:lisaaja :henkilo :sukunimi])))
                              (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
                              (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
                              (dissoc :otsikko))]
@@ -104,28 +105,28 @@
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu db integraatioloki :hae-tietolaji request nil skeemat/+tietolajien-haku+
-                         (fn [parametrit data kayttaja db]
+                         (fn [parametrit _ kayttaja _]
                            (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
+                         (fn [parametrit _ kayttaja _]
                            (hae-tietue tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (lisaa-tietue tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
+                         (fn [_ data kayttaja _]
                            (hae-tietueet tierekisteri data kayttaja)))))
     this)
 
