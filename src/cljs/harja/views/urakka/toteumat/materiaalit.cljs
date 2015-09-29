@@ -269,7 +269,7 @@
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-materiaalin-kaytto {})}
     (ikonit/plus) " Lisää toteuma"]
-   [kartta/kartan-paikka]
+
    [grid/grid
     {:otsikko        "Suunnitellut ja toteutuneet materiaalit"
      :tyhja          (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Toteuman materiaaleja haetaan."] "Ei löytyneitä tietoja.")
@@ -310,8 +310,9 @@
 (defn materiaalit-nakyma [ur]
   (komp/luo
     (komp/lippu materiaali-tiedot/materiaalinakymassa?)
-
     (fn [ur]
-      (if @valittu-materiaalin-kaytto
-        [materiaalit-tiedot ur]
-        [materiaalit-paasivu ur]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @valittu-materiaalin-kaytto
+         [materiaalit-tiedot ur]
+         [materiaalit-paasivu ur])])))

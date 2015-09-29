@@ -108,12 +108,16 @@
               [:div
                [:div.container
                 [header sivu]]
+
                [:div.container
                 [murupolku/murupolku]]
+
                ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-               [:div#kartta-container.container
-                (when-not (= :hidden kartan-koko)
-                  [kartta/kartta])]
+               [:div#kartta-container.container #_{:class (when (or
+                                                                (= :hidden kartan-koko)
+                                                                (= :S kartan-koko))
+                                                          "piilossa")}
+                [kartta/kartta]]
 
                [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
                 [:div.row.row-sisalto

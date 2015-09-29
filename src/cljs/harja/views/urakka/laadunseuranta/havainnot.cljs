@@ -118,7 +118,6 @@
    (when @laadunseuranta/voi-kirjata?
      [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
 
-   [kartta/kartan-paikka]
    [grid/grid
     {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
      :tyhja   "Ei havaintoja."}
@@ -439,9 +438,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 
 (defn havainnot []
-  (if @valittu-havainto
-    [havainto {} valittu-havainto]
-    [havaintolistaus]))
-  
+  (fn []
+    [:span
+     [kartta/kartan-paikka]
+     (if @valittu-havainto
+       [havainto {} valittu-havainto]
+       [havaintolistaus])]))
+
   
   

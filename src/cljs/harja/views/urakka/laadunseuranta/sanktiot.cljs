@@ -194,7 +194,7 @@
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
       (ikonit/plus) " Lisää sanktio"])
-   [kartta/kartan-paikka]
+
    [grid/grid
     {:otsikko       "Sanktiot"
      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
@@ -212,13 +212,9 @@
 (defn sanktiot []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-
     (fn []
-      (if @tiedot/valittu-sanktio
-        [sanktion-tiedot]
-        [sanktiolistaus]))))
-
-
-  
-
-  
+      [:span
+       [kartta/kartan-paikka]
+       (if @tiedot/valittu-sanktio
+         [sanktion-tiedot]
+         [sanktiolistaus])])))

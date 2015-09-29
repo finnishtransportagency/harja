@@ -1,6 +1,17 @@
-
+@kartan-transition-kesto: .1s;
 #kartta {
   border: @primaari-sininen 1px ridge;
+  &.piilossa {
+    border: @primaari-sininen 0 ridge;
+  }
+  -webkit-backface-visibility: hidden;
+  -moz-transition: height @kartan-transition-kesto ease;
+  -webkit-transition: height @kartan-transition-kesto ease;
+  -o-transition: height @kartan-transition-kesto ease;
+  transition: height @kartan-transition-kesto ease;
+  * {
+    -webkit-transform: translate3d(0,0,0);
+  }
   }
 .ol-control {
   > .ol-zoom-in,
@@ -90,4 +101,3 @@
     background-image: url("../images/pohjavesialue.png");
   }
 }
-

@@ -266,7 +266,6 @@
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
             (ikonit/plus) " Lisää kustannus"]
 
-           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")
              :tyhja         (if (nil? @valitut-kustannukset)
@@ -299,6 +298,9 @@
 
 
 (defn erilliskustannusten-toteumat []
-  (if @valittu-kustannus
-    [erilliskustannusten-toteuman-muokkaus]
-    [erilliskustannusten-toteumalistaus]))
+  (fn []
+    [:span
+     [kartta/kartan-paikka]
+     (if @valittu-kustannus
+       [erilliskustannusten-toteuman-muokkaus]
+       [erilliskustannusten-toteumalistaus])]))

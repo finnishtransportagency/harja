@@ -74,11 +74,14 @@
                               (paivita %))
        :component-did-update paivita
        :component-will-unmount (fn [this]
+                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
+                                 (t/julkaise! {:aihe :kartan-paikka
+                                               :x 0 :y (- @yleiset/korkeus) :w 0 :h 0})
                                  (events/unlisten js/window EventType/SCROLL paivita))}
 
      (fn []
-       [:div#kartan-paikka {
-                            :style {:height (fmt/pikseleina @kartan-korkeus)
+       [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
+                                    :margin-bottom "5px"
                                     :width  "100%"}}]))))
 
 (defn kartan-paikka
@@ -257,7 +260,11 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          ;; set width/height as CSS units, must set height as pixels!
          :height      (fmt/pikseleina @kartan-korkeus)
          :style       (when (= koko :S)
-                        {:display "none"})
+                        {:display "none"}) ;;display none estää kartan korkeuden animoinnin suljettaessa
+         :class (when (or
+                        (= :hidden koko)
+                        (= :S koko))
+                  "piilossa")
          :view        kartta-sijainti
          :zoom        zoom-taso
          :selection   nav/valittu-hallintayksikko

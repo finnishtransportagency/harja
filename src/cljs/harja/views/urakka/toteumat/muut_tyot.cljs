@@ -387,7 +387,6 @@
                                                                                (:id @nav/valittu-urakka)))}
             (ikonit/plus) " Lisää toteuma"]
 
-           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt ")
              :tyhja         (if (nil? @valitut-muut-tyot)
@@ -434,6 +433,9 @@
 
 
 (defn muut-tyot-toteumat []
-  (if @valittu-toteuma
-    [toteutuneen-muun-tyon-muokkaus]
-    [muut-tyot-toteumalistaus]))
+  (fn []
+    [:span
+     [kartta/kartan-paikka]
+     (if @valittu-toteuma
+       [toteutuneen-muun-tyon-muokkaus]
+       [muut-tyot-toteumalistaus])]))

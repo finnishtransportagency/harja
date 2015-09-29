@@ -387,6 +387,7 @@
   (let [c (reagent/current-component)]
     [:span
      [:div {:id    (:id mapspec)
+            :class (:class mapspec)
             :style (merge {:width  (:width mapspec)
                            :height (:height mapspec)}
                           (:style mapspec))}]

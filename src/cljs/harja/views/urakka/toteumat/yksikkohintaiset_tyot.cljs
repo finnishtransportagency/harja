@@ -334,7 +334,6 @@
                                       :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
           (ikonit/plus) " Lisää toteuma"]
 
-         [kartta/kartan-paikka]
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat: " (:t2_nimi valittu-tpi) " / " (:t3_nimi valittu-tpi) " / " (:tpi_nimi valittu-tpi))
            :tyhja        (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
@@ -360,6 +359,8 @@
     (komp/lippu toteumat/yksikkohintaiset-tyot-nakymassa?)
 
     (fn []
-      (if @toteumat/valittu-yksikkohintainen-toteuma
-        [yksikkohintainen-toteumalomake]
-        [yksikkohintaisten-toteumalistaus]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @toteumat/valittu-yksikkohintainen-toteuma
+         [yksikkohintainen-toteumalomake]
+         [yksikkohintaisten-toteumalistaus])])))
