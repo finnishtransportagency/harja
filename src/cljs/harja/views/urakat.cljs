@@ -22,7 +22,6 @@
 
 (defn valitse-hallintayksikko []
   [:span
-   [kartta/kartan-paikka]
    [:h5.haku-otsikko "Valitse hallintayksikkö"]
    [:div
     ^{:key "hy-lista"}
@@ -37,7 +36,6 @@
       (if (nil? urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
-         [kartta/kartan-paikka]
          [:h5.haku-otsikko "Valitse hallintayksikön urakka"]
          [:div
           ^{:key "ur-lista"}
@@ -62,6 +60,8 @@
   []
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
+    ;; FIXME: hack joka parantaa kartan ulkonäköä kun tullaan murupolkua ylöspäin. Korvaa user skrollin.
+    (reagent/next-tick #(.scrollTo js/window 0 (inc (.-scrollY js/window))))
     (if-not v-hal
       (valitse-hallintayksikko)
       (when-not v-ur
@@ -71,5 +71,10 @@
   "Urakan koko sisältö."
   []
   (let [v-ur @nav/valittu-urakka]
-    (or (valitse-hallintayksikko-ja-urakka)
-        [urakka/urakka v-ur])))
+    (if v-ur
+      [urakka/urakka v-ur]
+      [:span
+       [:div.col-sm-4
+       [valitse-hallintayksikko-ja-urakka]]
+      [:div.col-sm-8
+       [kartta/kartan-paikka]]])))

@@ -146,7 +146,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                       (= sivu :about) :hidden
                       (= sivu :tilannekuva) :XL
                       (and (= sivu :urakat)
-                           (not v-ur)) :L
+                           (not v-ur)) :XL
                       :default valittu-koko)))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
@@ -193,7 +193,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
   (paivita-url)
   (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
-    (reset! kartan-kokovalinta :S)))
+    (reset! kartan-kokovalinta :M)))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]

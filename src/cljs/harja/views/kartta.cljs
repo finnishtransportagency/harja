@@ -36,49 +36,56 @@
                           (int (* 0.50 kork))))))
 
 
-
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
   [kartan-koko]
   (let [naulattu? (atom nil)
         paivita (fn [this]
-                  (let [naulattu-nyt? @naulattu?
-                        elt (yleiset/elementti-idlla "kartan-paikka")
-                        [x y w h] (yleiset/sijainti elt)
-                        offset-y (yleiset/offset-korkeus elt)]
-                    (cond
+                  (reagent/next-tick
+                    #(let [naulattu-nyt? @naulattu?
+                          elt (yleiset/elementti-idlla "kartan-paikka")
+                          [x y w h] (yleiset/sijainti elt)
+                          offset-y (yleiset/offset-korkeus elt)]
+                      (cond
 
-                      ;; Eka kerta, julkaistaan kartan sijainti
-                      (nil? naulattu-nyt?)
-                      (let [naulattu-nyt? (neg? y)]
-                        (t/julkaise! {:aihe :kartan-paikka
-                                        :x x :y offset-y :w w :h h :naulattu? naulattu-nyt?})
-                        (reset! naulattu? naulattu-nyt?))
+                        ;; Eka kerta, julkaistaan kartan sijainti
+                        (nil? naulattu-nyt?)
+                        (let [naulattu-nyt? (neg? y)]
+                          (t/julkaise! {:aihe :kartan-paikka
+                                        :x    x :y offset-y :w w :h h :naulattu? naulattu-nyt?})
+                          (reset! naulattu? naulattu-nyt?))
 
-                      ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
-                      ;; koko pitää asettaa
-                      (and (not naulattu-nyt?) (neg? y))
-                      (do (t/julkaise! {:aihe :kartan-paikka :naulattu? true})
-                          (reset! naulattu? true))
+                        ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
+                        ;; koko pitää asettaa
+                        (and (not naulattu-nyt?) (neg? y))
+                        (do (t/julkaise! {:aihe :kartan-paikka :naulattu? true})
+                            (reset! naulattu? true))
 
-                      ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
-                      (and naulattu-nyt? (pos? y))
-                      (do (t/julkaise! {:aihe :kartan-paikka
-                                        :x x :y offset-y :w w :h h})
-                          (reset! naulattu? false)))))]
+                        ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
+                        (and naulattu-nyt? (pos? y))
+                        (do (t/julkaise! {:aihe :kartan-paikka
+                                          :x    x :y offset-y :w w :h h})
+                            (reset! naulattu? false)))
+                      (openlayers/invalidate-size!))))]
 
     (komp/luo
-      {:component-did-mount #(do
-                              (events/listen js/window
-                                             EventType/SCROLL
-                                             paivita)
-                              (paivita %))
-       :component-did-update paivita
+      {:component-did-mount    #(do
+                                 (events/listen js/window
+                                                EventType/SCROLL
+                                                paivita)
+                                 (paivita %))
+       :component-did-update   paivita
        :component-will-unmount (fn [this]
                                  ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
-                                 (t/julkaise! {:aihe :kartan-paikka
-                                               :x 0 :y (- @yleiset/korkeus) :w 0 :h 0})
-                                 (events/unlisten js/window EventType/SCROLL paivita))}
+                                 (events/unlisten js/window EventType/SCROLL paivita)
+                                 (reagent/next-tick
+                                   #(let [kp (yleiset/elementti-idlla "kartan-paikka")]
+                                     (log "KARTTA POISTUI? " kp)
+                                     (when (nil? kp)
+                                       (t/julkaise! {:aihe :kartan-paikka
+                                                     :x    0 :y (- @yleiset/korkeus) :w "100%" :h @kartan-korkeus}))))
+
+                                 )}
 
      (fn []
        [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
@@ -118,9 +125,10 @@
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
-  (run! (do @nav/kartan-koko
-            @yleiset/ikkunan-koko
+  (run! (do @yleiset/ikkunan-koko
             (openlayers/invalidate-size!))))
+
+(tarkkaile! "zoom" zoom-taso)
 
 (defn kartan-koko-kontrollit
   []
@@ -133,7 +141,7 @@
                              :L "Pienennä kartta"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
-    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or @nav/tarvitaanko-tai-onko-pakotettu-nakyviin?
+    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
                                                                      (= sivu :tilannekuva)
                                                                      (and (= sivu :urakat)
                                                                           (not v-ur))) "hide")}

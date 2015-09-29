@@ -77,8 +77,7 @@
     (komp/kuuntelija :kartan-paikka
                      (fn [_ {:keys [x y w h naulattu?] :as event}]
                        (log "KARTAN PAIKKA: " (pr-str event))
-                       (let [
-                             karttasailio (elementti-idlla "kartta-container")
+                       (let [karttasailio (elementti-idlla "kartta-container")
                              tyyli (.-style karttasailio)]
                          (if naulattu?
                            (do
@@ -94,7 +93,6 @@
     (fn []
       (let [sivu @nav/sivu
             aikakatkaistu? @istunto/istunto-aikakatkaistu
-            kartan-koko @nav/kartan-koko
             korkeus @yleiset/korkeus
             kayttaja @istunto/kayttaja]
 
@@ -114,10 +112,7 @@
                 [murupolku/murupolku]]
 
                ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-               [:div#kartta-container.container #_{:class (when (or
-                                                                (= :hidden kartan-koko)
-                                                                (= :S kartan-koko))
-                                                          "piilossa")}
+               [:div#kartta-container.container
                 [kartta/kartta]]
 
                [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
