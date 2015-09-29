@@ -1,9 +1,11 @@
 (ns harja.tyokalut.xml
+  "Tämä namespace sisältää apufunktioita XML-tiedostojen käsittelyyn"
   (:require [clojure.xml :refer [parse]]
             [clojure.java.io :as io]
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
-            [hiccup.core :refer [html]])
+            [hiccup.core :refer [html]]
+            [clj-time.format :as f])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -84,5 +86,24 @@
 (defn parsi-aikaleima [teksti]
   (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
 
-(defn parsi-paivamaara [teksti]
+(defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
+
+(defn json-date-time->joda-time
+  "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
+  org.joda.time.DateTime -muotoon."
+  [aika-teksti]
+  (let [formatter (f/formatters :date-time-no-ms)]
+    (f/parse formatter aika-teksti)))
+
+(defn joda-time->xml-xs-date
+  "Muuntaa joda-timen XML:n xs:date-muotoon (esim. 2015-03-03+00:00)."
+  [joda-time]
+  (let [formatter (f/formatter "yyyy-MM-dd+HH:mm")]
+    (f/unparse formatter joda-time)))
+
+(defn json-date-time->xml-xs-date [aika]
+  "Muuntaa JSON aikaleiman XML:n xs-date-muotoon"
+  (when aika
+    (joda-time->xml-xs-date
+      (json-date-time->joda-time aika))))
