@@ -10,6 +10,15 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn suorita-raportti-urakka
+  "Suorittaa raportin annetun urakan kontekstissa."
+  [urakka-id nimi parametrit]
+  (k/post! :suorita-raportti
+           {:nimi nimi
+            :konteksti :urakka
+            :urakka-id urakka-id
+            :parametrit parametrit}))
+
 (defn hae-yksikkohintaisten-toiden-kuukausiraportti [urakka-id alkupvm loppupvm]
   (k/post! :yksikkohintaisten-toiden-kuukausiraportti
            {:urakka-id urakka-id

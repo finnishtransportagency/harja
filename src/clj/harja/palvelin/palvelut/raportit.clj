@@ -23,40 +23,6 @@
   (:import (java.sql Timestamp)))
 
 
-(defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
-  (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [urakan-indeksi "MAKU 2010"]                         ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
-    (into []
-          (comp
-            (map #(konv/decimal->double %
-                                        :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_laskutettu_ind_korotus
-                                        :kaikki_paitsi_kht_laskutetaan_ind_korotus :kaikki_laskutetaan_ind_korotus
-                                        :kaikki_paitsi_kht_laskutettu :kaikki_laskutettu
-                                        :kaikki_paitsi_kht_laskutetaan :kaikki_laskutetaan
-
-                                        :kht_laskutettu :kht_laskutettu_ind_korotettuna :kht_laskutettu_ind_korotus
-                                        :kht_laskutetaan :kht_laskutetaan_ind_korotettuna :kht_laskutetaan_ind_korotus
-                                        :yht_laskutettu :yht_laskutettu_ind_korotettuna :yht_laskutettu_ind_korotus
-                                        :yht_laskutetaan :yht_laskutetaan_ind_korotettuna :yht_laskutetaan_ind_korotus
-                                        :sakot_laskutettu :sakot_laskutettu_ind_korotettuna :sakot_laskutettu_ind_korotus
-                                        :sakot_laskutetaan :sakot_laskutetaan_ind_korotettuna :sakot_laskutetaan_ind_korotus
-                                        :suolasakot_laskutettu :suolasakot_laskutettu_ind_korotettuna :suolasakot_laskutettu_ind_korotus
-                                        :suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotettuna :suolasakot_laskutetaan_ind_korotus
-                                        :muutostyot_laskutettu :muutostyot_laskutettu_ind_korotettuna :muutostyot_laskutettu_ind_korotus
-                                        :muutostyot_laskutetaan :muutostyot_laskutetaan_ind_korotettuna :muutostyot_laskutetaan_ind_korotus
-                                        :erilliskustannukset_laskutettu :erilliskustannukset_laskutettu_ind_korotettuna :erilliskustannukset_laskutettu_ind_korotus
-                                        :erilliskustannukset_laskutetaan :erilliskustannukset_laskutetaan_ind_korotettuna :erilliskustannukset_laskutetaan_ind_korotus))
-            )
-          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                     (konv/sql-date hk-alkupvm)
-                                                     (konv/sql-date hk-loppupvm)
-                                                     (konv/sql-date aikavali-alkupvm)
-                                                     (konv/sql-date aikavali-loppupvm)
-                                                     urakka-id
-                                                     urakan-indeksi))))
-
 (defn yhdista-saman-paivan-samat-tehtavat
   "Ottaa joukon toteuma_tehtava-taulun rivejä ja yhdistää sellaiset rivit, joiden tehtävän toimenpidekoodi ja aloituspvm
    ovat samat. Aloituspvm voi olla joko java.util.Date tai java.sql.Timestamp."
@@ -182,36 +148,8 @@
 
                        :materiaaliraportti-koko-maalle
                        (fn [user tiedot]
-                         (muodosta-materiaaliraportti-koko-maalle db user tiedot))
+                         (muodosta-materiaaliraportti-koko-maalle db user tiedot)))
 
-                       :hae-laskutusyhteenvedon-tiedot
-                       (fn [user tiedot]
-                         (hae-laskutusyhteenvedon-tiedot db user tiedot)))
-
-    (rekisteroi-pdf-kasittelija! pdf-vienti
-                                 :laskutusyhteenveto
-                                 ;; PENDING: tämä on karvalakki "raportti", jolla koestetaan PDF:n vientitoimintoa
-                                 ;; koko raportit ja niiden html/pdf näkymä tulee refaktoroida yhtenäiseen malliin
-                                 (fn [user params]
-                                   (let [{:keys [nimi alkupvm loppupvm urakoitsija_nimi]}
-                                         (some->> (get params "u")
-                                                  (Integer/parseInt)
-                                                  (qu/hae-urakka db)
-                                                  first)
-                                         pvm #(.format (java.text.SimpleDateFormat. "dd.MM.yyyy") %)]
-                                   (fo/dokumentti
-                                    {:header {:sisalto [:fo:block "HARJA: LASKUTUSYHTEENVETO"]}}
-                                    (fo/otsikko "Urakka")
-                                    (fo/tietoja
-                                     {}
-                                     "Urakka" nimi
-                                     "Aika" (str (pvm alkupvm) " \u2014 " (pvm loppupvm))
-                                     "Urakoitsija" urakoitsija_nimi)
-                                    (fo/vali)
-                                    (fo/otsikko "Raportti")
-                                    (fo/tietoja
-                                     {}
-                                     "Laskutusyhteenvedon kuukausi" (str (get params "vuosi") "/" (get params "kk")))))))
     this)
 
   (stop [{http :http-palvelin pdf-vienti :pdf-vienti :as this}]
@@ -221,7 +159,5 @@
                      :materiaaliraportti-urakalle
                      :materiaaliraportti-hallintayksikolle
                      :materiaaliraportti-koko-maalle
-                     :suorita-raportti
-                     :hae-laskutusyhteenvedon-tiedot)
-    (poista-pdf-kasittelija! pdf-vienti :laskutusyhteenveto)
+                     :suorita-raportti)
     this))

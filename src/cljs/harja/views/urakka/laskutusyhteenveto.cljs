@@ -8,7 +8,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             
-            [harja.tiedot.urakka.laskutusyhteenveto :as laskutus-tiedot]
+            [harja.tiedot.raportit :as raportit]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valinnat :as valinnat]
@@ -19,6 +19,7 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.raportti :refer [muodosta-html]] 
             [harja.asiakas.kommunikaatio :as k])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -36,11 +37,12 @@
                                                 (when (and ur hk-alkupvm hk-loppupvm
                                                            aikavali-alkupvm aikavali-loppupvm
                                                            nakymassa?)
-                                                  (laskutus-tiedot/hae-laskutusyhteenvedon-tiedot {:hk-alkupvm        hk-alkupvm
-                                                                                                   :hk-loppupvm       hk-loppupvm
-                                                                                                   :aikavali-alkupvm  aikavali-alkupvm
-                                                                                                   :aikavali-loppupvm aikavali-loppupvm
-                                                                                                   :urakka-id         (:id ur)}))))
+                                                  (raportit/suorita-raportti-urakka (:id ur)
+                                                                                    :laskutusyhteenveto
+                                                                                    {:hk-alkupvm        hk-alkupvm
+                                                                                     :hk-loppupvm       hk-loppupvm
+                                                                                     :aikavali-alkupvm  aikavali-alkupvm
+                                                                                     :aikavali-loppupvm aikavali-loppupvm}))))
 
 
 (defn laskutusyhteenveto

@@ -101,6 +101,7 @@
                               :string
              :leveys          "33%"})
           materiaalit)))
+
 (defn muodosta-materiaaliraportin-rivit
   "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
   [materiaalitoteumat]
