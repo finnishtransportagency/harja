@@ -128,8 +128,6 @@
   (run! (do @yleiset/ikkunan-koko
             (openlayers/invalidate-size!))))
 
-(tarkkaile! "zoom" zoom-taso)
-
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
