@@ -7,6 +7,7 @@
     "urakat": {
       "id": "urn:harja/urakat",
       "type": "array",
+      "maxItems" : 100,
       "items": {
         "id": "urn:harja/urakat/0",
         "type": "object",
@@ -27,6 +28,7 @@
               "paivystykset": {
                 "id": "urn:harja/urakat/0/urakka/paivystykset",
                 "type": "array",
+                "maxItems" : 1000,
                 "items": {
                   "id": "urn:harja/urakat/0/urakka/paivystykset/0",
                   "type": "object",
