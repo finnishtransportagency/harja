@@ -1,10 +1,4 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.lisaa-tietue-test
-<<<<<<< HEAD
-  (:require [taoensso.timbre :as log]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisaa-tietue]
-            [harja.tyokalut.xml :as xml]))
-=======
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as tietue-sanoma]
             [harja.tyokalut.xml :as xml]
@@ -12,7 +6,6 @@
             [harja.testi :as testi]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]))
->>>>>>> develop
 
 (def lisattava-testitietue
   {:lisaaja {:henkilo      "Keijo Käsittelijä"
