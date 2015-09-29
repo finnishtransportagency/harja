@@ -32,8 +32,7 @@
             (maksuera/kasittele-maksuera-kuittaus db kuittaus viesti-id)
             (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id)))
         (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))
-    ;    (log/error "Samposta vastaanotettu kuittaus ei ole validia XML:ää."))
-    ))
+    #_(log/error "Samposta vastaanotettu kuittaus ei ole validia XML:ää.")))
 
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
