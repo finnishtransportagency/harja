@@ -20,8 +20,9 @@
 
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
-  (hae-tietue [this tietueen-tunniste tietolajitunniste])
   (hae-tietueet [this tr tietolajitunniste muutospvm])
+  (hae-tietue [this tietueen-tunniste tietolajitunniste])
+  (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])
   (lisaa-tietue [this tiedot]))
 
@@ -36,16 +37,21 @@
     (when (not (empty? tierekisteri-api-url))
       (tietolajit/hae-tietolajit (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
 
-  (hae-tietue [this tietueen-tunniste tietolajitunniste]
-    (validoi-tietolajitunniste tietolajitunniste)
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/hae-tietue (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste)))
-
   (hae-tietueet [this tr tietolajitunniste muutospvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
       (tietueet/hae-tietueet
         (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste muutospvm)))
+
+  (hae-tietue [this tietueen-tunniste tietolajitunniste]
+    (validoi-tietolajitunniste tietolajitunniste)
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/hae-tietue (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste)))
+
+  (paivita-tietue [this tiedot]
+    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/paivita-tietue (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (poista-tietue [this tiedot]
     (validoi-tietolajitunniste (:tietolajitunniste tiedot))
