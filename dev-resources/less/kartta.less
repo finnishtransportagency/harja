@@ -1,14 +1,21 @@
 
 #kartta {
-  .leaflet-top.leaflet-left {
-    z-index: 1; //ettei zoominapit peitä urakoitsija-pudotusvalikkoa
+  border: @primaari-sininen 1px ridge;
   }
-  .ol-control button {
-    background-color: @sininen5; //Harjan primäärisininen openlayersiin
+.ol-control {
+  > .ol-zoom-in,
+  > .ol-zoom-out {
+    background-color: @primaari-sininen;
+    &:hover,
+    &:active,
+    &.active {
+      background-color: @primaari-sininen-valittuna;
+    }
   }
 }
 
-.ikoni-kartta-ctrl {
+
+  .ikoni-kartta-ctrl {
   background-color: #FFF;
   display: inline-block;
   height: 40px;
@@ -23,7 +30,7 @@
 
 .kartan-kontrollit {
   position: absolute;
-  z-index: 1; //kartan päällä > 0
+  z-index: 2; //kartan päällä
 }
 
 .kartan-koko-kontrollit {
@@ -38,6 +45,10 @@
 .kartan-yleiset-kontrollit {
   left: 0;
   top: 60px;
+}
+#kartta-container {
+  border-bottom: @harjan-taustavari 5px solid;
+  z-index: 1;
 }
 .avaa-kartta-wrap {
   text-align: center;

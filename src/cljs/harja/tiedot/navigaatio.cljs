@@ -122,6 +122,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
+;; master-tila sille, onko kartta näkymässä mahdollinen. Seuraa DOM:sta #kartan-paikka säiliön olemassaoloa
+(def kartta-mahdollinen? (atom nil))
+
 (def tarvitsen-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin. 
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyvissä."
   (atom #{}))

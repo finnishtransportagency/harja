@@ -153,8 +153,7 @@
 
 (defn- mml-wmts-layer [url layer]
   (ol.layer.Tile.
-    #js {:opacity 0.8
-         :source  (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
+    #js {:source  (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
                                         :url          url   ;; Tämä pitää olla nginx proxyssa
                                         :layer        layer
                                         :matrixSet    "ETRS-TM35FIN"

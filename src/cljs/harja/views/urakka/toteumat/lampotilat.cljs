@@ -135,6 +135,5 @@
       (let [ur @nav/valittu-urakka]
         [:span.suolasakot
          [valinnat/urakan-hoitokausi ur]
-         [kartta/kartan-paikka]
          (when @u/valittu-hoitokausi
            [lampotila-lomake])]))))

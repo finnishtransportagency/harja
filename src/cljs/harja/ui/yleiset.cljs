@@ -61,6 +61,15 @@
         sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
     sijainti))
 
+(defn offset-korkeus [elt]
+  (loop [offset (.-offsetTop elt)
+         parent (.-offsetParent elt)]
+    (if (or (nil? parent)
+            (= js/document.body parent))
+      offset
+      (recur (+ offset (.-offsetTop parent))
+             (.-offsetParent parent)))))
+
 (defn sijainti-sailiossa
   "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
   [elt]

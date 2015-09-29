@@ -2,6 +2,9 @@
   "Harjan kartta."
   (:require [reagent.core :refer [atom] :as reagent]
 
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
+
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
@@ -31,19 +34,51 @@
                           :L (int (* 0.50 kork))
                           (int (* 0.50 kork))))))
 
+
+
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
   [kartan-koko]
-  (let [paivita (fn [this]
-                  (let [[x y w h] (yleiset/sijainti (yleiset/elementti-idlla "kartan-paikka"))]
-                    (t/julkaise! {:aihe :kartan-paikka
-                                  :x    x :y y :w w :h h})))]
+  (let [naulattu? (atom nil)
+        paivita (fn [this]
+                  (let [naulattu-nyt? @naulattu?
+                        elt (yleiset/elementti-idlla "kartan-paikka")
+                        [x y w h] (yleiset/sijainti elt)
+                        offset-y (yleiset/offset-korkeus elt)]
+                    (cond
+
+                      ;; Eka kerta, julkaistaan kartan sijainti
+                      (nil? naulattu-nyt?)
+                      (let [naulattu-nyt? (neg? y)]
+                        (t/julkaise! {:aihe :kartan-paikka
+                                        :x x :y offset-y :w w :h h :naulattu? naulattu-nyt?})
+                        (reset! naulattu? naulattu-nyt?))
+
+                      ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
+                      ;; koko pitää asettaa
+                      (and (not naulattu-nyt?) (neg? y))
+                      (do (t/julkaise! {:aihe :kartan-paikka :naulattu? true})
+                          (reset! naulattu? true))
+
+                      ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
+                      (and naulattu-nyt? (pos? y))
+                      (do (t/julkaise! {:aihe :kartan-paikka
+                                        :x x :y offset-y :w w :h h})
+                          (reset! naulattu? false)))))]
+
     (komp/luo
-      {:component-did-mount paivita
-       :component-did-update paivita}
+      {:component-did-mount #(do
+                              (events/listen js/window
+                                             EventType/SCROLL
+                                             paivita)
+                              (paivita %))
+       :component-did-update paivita
+       :component-will-unmount (fn [this]
+                                 (events/unlisten js/window EventType/SCROLL paivita))}
 
      (fn []
-       [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
+       [:div#kartan-paikka {
+                            :style {:height (fmt/pikseleina @kartan-korkeus)
                                     :width  "100%"}}]))))
 
 (defn kartan-paikka
@@ -102,7 +137,6 @@
 
        ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
        [:div.kartan-koko-napit {:style {:left "-50%"
-                                        :opacity .8
                                         :position   "absolute"
                                         :text-align "center"
                                         :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
