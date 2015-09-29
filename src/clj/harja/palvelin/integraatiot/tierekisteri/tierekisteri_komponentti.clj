@@ -9,10 +9,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn validoi-tietolajitunniste [tunniste]
-  <<<<<<< HEAD
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
-  =======
-  >>>>>>> develop
   (when (not
           (contains? #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506" "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
                        "tl504" "tl198" "tl518" "tl514" "tl509" "tl515" "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"}

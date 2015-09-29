@@ -84,7 +84,7 @@
                                                 :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
                             :tunniste          (:tunniste data)
                             :tietolajitunniste (:tietolajitunniste data)
-                            :poistettu         (:poistettu data)}]
+                            :poistettu         (xml/json-date-time->xml-xs-date (:poistettu data))}]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
