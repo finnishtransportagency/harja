@@ -158,7 +158,7 @@
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    #_(paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    (paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
     (log/debug "Tietojen päivitys tierekisteriin suoritettu")
     (tee-onnistunut-vastaus)))
 
