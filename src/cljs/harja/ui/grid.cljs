@@ -372,7 +372,8 @@ Optiot on mappi optioita:
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut assoc id
                                              ((or uusi-rivi identity)
-                                               (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))]
+                                               (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))
+                         uusi-jarjestys (swap! jarjestys conj id)]
                      (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanha-jarjestys])
                      (swap! virheet (fn [virheet]
                                       (validoi-ja-anna-virheet virheet uudet-tiedot :validoi)))
