@@ -27,8 +27,6 @@
         },
         "suunta": 90,
         "havaintoaika": "2016-01-30T12:00:00Z",
-        "urakkaid": 123456789,
-        "sopimusid": 123456789,
         "suoritettavatTehtavat": [
           "auraus ja sohjonpoisto",
           "suolaus"

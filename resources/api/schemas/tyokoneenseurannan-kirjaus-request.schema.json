@@ -39,8 +39,12 @@
                   },
                   "tyokonetyyppi": {
                     "id": "urn:harja/havainnot/0/tyokone/tyyppi",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "enum": [
+                      "aura-auto",
+                      "traktori",
+                      "muu"
+                    ]
                   }
                 }
               },
@@ -61,18 +65,10 @@
                 "format": "date-time",
                 "required": true
               },
-              "urakkaid": {
-                "id": "urn:harja/havainnot/0/urakkaid",
-                "type": "integer"
-              },
-              "sopimusid": {
-                "id": "urn:harja/havainnot/0/sopimusid",
-                "type": "integer"
-              },
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "array",
-                "maxItems" : 10,
+                "maxItems": 10,
                 "items": {
                   "enum": [
                     "auraus ja sohjonpoisto",
