@@ -39,12 +39,8 @@
                   },
                   "tyokonetyyppi": {
                     "id": "urn:harja/havainnot/0/tyokone/tyyppi",
-                    "required": true,
-                    "enum": [
-                      "aura-auto",
-                      "traktori",
-                      "muu"
-                    ]
+                    "type": "string",
+                    "required": true
                   }
                 }
               },
