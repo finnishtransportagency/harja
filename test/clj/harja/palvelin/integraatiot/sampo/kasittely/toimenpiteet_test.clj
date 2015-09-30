@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot]))
 
 (deftest tarkista-toimenpiteen-tallentuminen
   (tuo-toimenpide)
@@ -39,3 +41,28 @@
   (is (= 8 (count (hae-kustannussuunnitelmat))) "Toimenpiteen päivitys ei saa lisätä uusia kustannussuunnitelmia.")
 
   (poista-toimenpide))
+
+(deftest tarkista-duplikaatti-toimenpiteiden-perustaminen
+  (tuo-toimenpide)
+  (is (= 1 (count (hae-toimenpiteet))) "Tuonnin jälkeen löytyy toimenpide.")
+  (try+
+    (do
+      (tuo-duplikaatti-toimenpide)
+      (is false "Duplikaatin perustaminen pitäisi aiheuttaa poikkeuksen"))
+    (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
+      (is (.contains kuittaus "Project: TESTIURAKKA already has operation: 22111") "Oikea virhe palautetaan kuittauksessa")
+      (is (= "Sampon projektille (id: TESTIURAKKA) on jo perustettu toimenpidekoodi: 22111" (:virhe (first virheet))))))
+  (is (= 1 (count (hae-toimenpiteet))) "Uutta toimenpidettä jo olemassa olevalla toimenpidekoodilla ei tuotu urakalle.")
+  (poista-toimenpide))
+
+(deftest tarkista-toimenpidekoodittoman-toimenpiteiden-perustaminen
+  (try+
+    (do
+      (tuo-toimenpidekooditon-toimenpide)
+      (is false "Toimenpidekoodittoman toimenpiteen perustaminen pitäisi aiheuttaa poikkeuksen"))
+    (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
+      (is (.contains kuittaus "No operation code provided.") "Oikea virhe palautetaan kuittauksessa")
+      (is (= "Toimenpiteelle ei ole annettu toimenpidekoodia (vv_operation)" (:virhe (first virheet))))))
+
+  (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI';")))
+      "Toimenpidekooditonta toimenpidettä ei perusteta."))

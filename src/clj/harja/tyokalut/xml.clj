@@ -1,4 +1,5 @@
 (ns harja.tyokalut.xml
+  "Tämä namespace sisältää apufunktioita XML-tiedostojen käsittelyyn"
   (:require [clojure.xml :refer [parse]]
             [clojure.java.io :as io]
             [clojure.zip :refer [xml-zip]]
@@ -85,7 +86,7 @@
 (defn parsi-aikaleima [teksti]
   (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
 
-(defn parsi-paivamaara [teksti]
+(defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
 
 (defn json-date-time->joda-time

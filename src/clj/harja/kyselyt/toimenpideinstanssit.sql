@@ -12,13 +12,14 @@ VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_i
          WHERE sampoid = :urakka_sampoid));
 
 -- name: onko-tuotu-samposta
--- Tarkistaa onko Samposta tuodulla urakalla jo toimenpideinstanssi
+-- Tarkistaa onko Samposta tuodulla urakalla jo toimenpidekoodilla tuotu toimenpideinstanssi
 SELECT exists(
     SELECT id
     FROM toimenpideinstanssi
     WHERE toimenpide = (SELECT id
                         FROM toimenpidekoodi
                         WHERE koodi = :sampo_toimenpidekoodi) AND
+          sampoid != :sampo_toimenpide_id AND
           urakka_sampoid = :urakka_sampoid);
 
 -- name: paivita-toimenpideinstanssi!
