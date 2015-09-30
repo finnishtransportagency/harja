@@ -104,7 +104,7 @@
   "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri kirjaaja urakka-id data]
+  [tierekisteri kirjaaja data]
   (case (get-in data [:varustetoteuma :varuste :toimenpide])
     "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja data)
     "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
@@ -160,7 +160,7 @@
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    (paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    (paivita-muutos-tierekisteriin tierekisteri kirjaaja data)
     (log/debug "Tietojen päivitys tierekisteriin suoritettu")
     (tee-onnistunut-vastaus)))
 
