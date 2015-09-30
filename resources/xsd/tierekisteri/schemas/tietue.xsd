@@ -22,10 +22,10 @@
             </xs:element>
             <xs:element minOccurs="1" name="alkupvm" type="xs:date"/>
             <xs:element minOccurs="0" name="loppupvm" type="xs:date"/>
-            <xs:element minOccurs="1" name="karttapvm" type="xs:date"/>
-            <xs:element minOccurs="1" name="piiri" type="xs:int"/>
-            <xs:element minOccurs="1" name="kuntoluokka" type="ns3:kuntoluokka"/>
-            <xs:element minOccurs="1" name="urakka" type="ns4:urakka"/>
+            <xs:element minOccurs="0" name="karttapvm" type="xs:date"/>
+            <xs:element minOccurs="0" name="piiri" type="xs:int"/>
+            <xs:element minOccurs="0" name="kuntoluokka" type="ns3:kuntoluokka"/>
+            <xs:element minOccurs="0" name="urakka" type="ns4:urakka"/>
             <xs:element minOccurs="1" name="sijainti" type="ns1:sijainti"/>
             <xs:element minOccurs="1" name="tietolaji" type="ns2:tietolaji"/>
         </xs:sequence>

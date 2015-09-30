@@ -174,6 +174,31 @@
               :clj Exception) e
       nil)))
 
+(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
+  #?(:cljs 
+     (doto (goog.date.DateTime.)
+       (.setYear (.getYear dt))
+       (.setMonth (.getMonth dt))
+       (.setDate (.getDate dt))
+       (.setHours tunnit)
+       (.setMinutes minuutit)
+       (.setSeconds sekunnit)
+       (.setMilliseconds millisekunnit))
+
+     :clj
+     (.getTime (doto (Calendar/getInstance)
+                 (.setTime dt)
+                 (.set Calendar/HOUR_OF_DAY tunnit)
+                 (.set Calendar/MINUTE minuutit)
+                 (.set Calendar/SECOND sekunnit)
+                 (.set Calendar/MILLISECOND millisekunnit)))))
+
+(defn paivan-alussa [dt]
+  (aikana dt 0 0 0 0))
+
+(defn paivan-lopussa [dt]
+  (aikana dt 23 59 59 999))
+
  (defn kuukauden-nimi [kk]
    (case kk
      1 "tammikuu"
@@ -255,24 +280,7 @@
          ]
      [ed-vuosi ed-kk]))
 
-(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
-  #?(:cljs 
-     (doto (goog.date.DateTime.)
-       (.setYear (.getYear dt))
-       (.setMonth (.getMonth dt))
-       (.setDate (.getDate dt))
-       (.setHours tunnit)
-       (.setMinutes minuutit)
-       (.setSeconds sekunnit)
-       (.setMilliseconds millisekunnit))
 
-     :clj
-     (.getTime (doto (Calendar/getInstance)
-                 (.setTime dt)
-                 (.set Calendar/HOUR_OF_DAY tunnit)
-                 (.set Calendar/MINUTE minuutit)
-                 (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))))
   
 #?(:cljs
    (defn kuukauden-aikavali

@@ -67,6 +67,30 @@
     </Resource>
 </Sampo2harja>")
 
+(def +testi-duplikaatti-toimenpide-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Operation financialDepartmentHash=\"KP921303\"
+               financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Varsinais-Suomen ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
+               id=\"TESTIDUPTOIMENPI\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
+               name=\"TESTIDUPTOIMENPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
+               schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
+               vv_operation=\"22111\">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>")
+
+(def +testi-toimenpidekooditon-toimenpide-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Operation financialDepartmentHash=\"KP921303\"
+               financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Varsinais-Suomen ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
+               id=\"TESTITPKTPI\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
+               name=\"TESTITPKTPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
+               schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
+               vv_operation=\"\">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>")
+
 (def +lahetysjono-sisaan+ "lahetysjono-sisaan")
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 (def +lahetysjono-ulos+ "lahetysjono-ulos")
@@ -151,6 +175,14 @@
 
 (defn tuo-toimenpide []
   (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testitoimenpide-sanoma+))]
+    (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
+
+(defn tuo-duplikaatti-toimenpide []
+  (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testi-duplikaatti-toimenpide-sanoma+))]
+    (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
+
+(defn tuo-toimenpidekooditon-toimenpide []
+  (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testi-toimenpidekooditon-toimenpide-sanoma+))]
     (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
 
 (defn poista-toimenpide []

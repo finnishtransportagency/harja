@@ -23,4 +23,9 @@ DELETE FROM tieverkko
 
 -- name: tuhoa-hoitoluokkadata!
 -- poistaa kaikki hoitoluokkien tiedot taulusta. ajetaan transaktiossa
-DELETE FROM hoitoluokka;
+DELETE FROM hoitoluokka
+
+
+-- name: paivita-paloiteltu-tieverkko!
+-- päivittää materialisoidun näkymän
+REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA
