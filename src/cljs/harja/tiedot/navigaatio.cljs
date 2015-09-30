@@ -137,8 +137,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                   sivu @sivu
                   v-ur @valittu-urakka]
               (if @tarvitaanko-tai-onko-pakotettu-nakyviin?
-                ;; joku tarvitsee karttaa, pakotetaan M kokoon
-                :M
+                (if (or
+                      (= :hidden valittu-koko)
+                      (= :S valittu-koko))
+                  :M
+                  valittu-koko)
 
                 ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
                 ;; tai palautetaan käyttäjän valitsema koko

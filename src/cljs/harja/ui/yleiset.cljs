@@ -7,7 +7,7 @@
             [reagent.core :as r])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 (defn elementti-idlla [id]
   (.getElementById js/document (name id)))
@@ -22,6 +22,11 @@
 
 ;;(defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
 
+(defonce ikkunan-koko-tapahtuman-julkaisu
+         (run!
+           (let [h @korkeus
+                 w @leveys]
+             (t/julkaise! {:aihe :ikkunan-koko-muuttunut :leveys w :korkeus h}))))
 
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
@@ -57,6 +62,7 @@
 (defn sijainti
   "Laskee DOM-elementin sijainnin, palauttaa [x y w h]."
   [elt]
+  (assert elt (str "Ei voida laskea sijaintia elementille null"))
   (let [r (.getBoundingClientRect elt)
         sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
     sijainti))

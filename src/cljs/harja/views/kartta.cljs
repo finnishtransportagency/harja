@@ -69,6 +69,14 @@
                       (openlayers/invalidate-size!))))]
 
     (komp/luo
+      (komp/kuuntelija :ikkunan-koko-muuttunut
+                       (fn [this event]
+                         (let [naulattu-nyt? @naulattu?
+                               elt (yleiset/elementti-idlla "kartan-paikka")
+                               [x y w h] (yleiset/sijainti elt)
+                               offset-y (yleiset/offset-korkeus elt)]
+                           (t/julkaise! {:aihe :kartan-paikka
+                                         :x    x :y offset-y :w w :h h :naulattu? naulattu-nyt?}))))
       {:component-did-mount    #(do
                                  (events/listen js/window
                                                 EventType/SCROLL
@@ -160,8 +168,9 @@
                                                                                     :M :L
                                                                                     :L :M))}
            muuta-kokoa-teksti]
-          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-           "Piilota kartta"]])]]))
+           (when-not @nav/pakota-nakyviin?
+             [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
+              "Piilota kartta"])])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
