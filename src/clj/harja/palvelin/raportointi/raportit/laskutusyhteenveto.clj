@@ -30,23 +30,21 @@
                     (fmt/euro laskutettu-yht)
                     (fmt/euro laskutetaan-yht)
                     (fmt/euro (+ laskutettu-yht laskutetaan-yht))]]
-    (list 
-     [:otsikko otsikko]
-     [:taulukko 
-      [{:otsikko "Toimenpide" :leveys "40%"}
-       {:otsikko laskutettu-teksti :leveys "20%"} ;; FIXME: format ja tasaus
-       {:otsikko  laskutetaan-teksti :leveys "20%"}
-       {:otsikko "Hoitokaudella yhteensä" :leveys "20%"}]
+    [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
+     [{:otsikko "Toimenpide" :leveys "40%"}
+      {:otsikko laskutettu-teksti :leveys "20%"} ;; FIXME: format ja tasaus
+      {:otsikko  laskutetaan-teksti :leveys "20%"}
+      {:otsikko "Hoitokaudella yhteensä" :leveys "20%"}]
 
-      (into []
-            (concat
-             (map (fn [rivi]
-                    [(:nimi rivi)
-                     (fmt/euro-opt (rivi laskutettu-kentta))
-                     (fmt/euro-opt (rivi laskutetaan-kentta))
-                     (fmt/euro-opt (+ (rivi laskutettu-kentta)
-                                      (rivi laskutetaan-kentta)))]) tiedot)
-             [yhteenveto]))])))
+     (into []
+           (concat
+            (map (fn [rivi]
+                   [(:nimi rivi)
+                    (fmt/euro-opt (rivi laskutettu-kentta))
+                    (fmt/euro-opt (rivi laskutetaan-kentta))
+                    (fmt/euro-opt (+ (rivi laskutettu-kentta)
+                                     (rivi laskutetaan-kentta)))]) tiedot)
+            [yhteenveto]))]))
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
   (log/info "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
@@ -63,11 +61,11 @@
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
     (log/info "TIETOJA: " tiedot)
     [:raportti {:nimi "Laskutusyhteenveto"}
-     (mapcat (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
-               (taulukko otsikko tyhja
-                         laskutettu-teksti laskutettu
-                         laskutetaan-teksti laskutetaan
-                         tiedot))
+     (map (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
+            (taulukko otsikko tyhja
+                      laskutettu-teksti laskutettu
+                      laskutetaan-teksti laskutetaan
+                      tiedot))
              [["Kokonaishintaiset työt" "Ei kokonaishintaisia töitä"
                :kht_laskutettu :kht_laskutetaan tiedot]
               ["Yksikköhintaiset työt" "Ei yksikköhintaisia töitä"

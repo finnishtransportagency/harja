@@ -14,9 +14,9 @@
             "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä.")
     (first elementti)))
 
-(defmethod muodosta-html :taulukko [[_ sarakkeet data]]
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?]} sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  [grid/grid {:otsikko "" :tunniste hash}
+  [grid/grid {:otsikko (or otsikko "") :tunniste hash}
    (into []
          (map-indexed (fn [i sarake]
                         {:hae #(nth % i)
@@ -24,7 +24,13 @@
                          :otsikko (:otsikko sarake)
                          :nimi (str "sarake" i)})
                       sarakkeet))
-   data])
+   (if viimeinen-rivi-yhteenveto?
+     (let [viimeinen-rivi (last data)]
+       (mapv #(if (= viimeinen-rivi %)
+                (assoc % :yhtenveto true)
+                %)
+             data))
+     data)])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
