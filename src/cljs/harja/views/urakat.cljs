@@ -73,7 +73,7 @@
   (let [v-ur @nav/valittu-urakka]
     (if v-ur
       [urakka/urakka v-ur]
-      [:span
+      [:div.row
        [:div.col-md-4
        [valitse-hallintayksikko-ja-urakka]]
       [:div.col-md-8

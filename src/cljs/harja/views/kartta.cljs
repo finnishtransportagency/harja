@@ -356,7 +356,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                         :layer "taustakartta"}]}]))))
 
 (defn kartta []
-  [:div.row
+  [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartta-openlayers]])
