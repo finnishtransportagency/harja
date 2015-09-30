@@ -115,7 +115,7 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri tierekisteriurakkakoodi]} toteuma-id]
+                                            kuntoluokitus piiri tierekisteriurakkakoodi ajorata alkupvm loppupvm]} toteuma-id]
   (toteumat/luo-varustetoteuma<!
     db
     tunniste
@@ -130,6 +130,9 @@
     (get-in sijainti [:tie :let])
     (get-in sijainti [:tie :aet])
     (get-in sijainti [:tie :puoli])
+    (get-in sijainti [:tie :ajorata])
+    alkupvm
+    loppupvm
     piiri
     kuntoluokitus
     tierekisteriurakkakoodi
@@ -155,7 +158,7 @@
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    (paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    #_(paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
     (log/debug "Tietojen päivitys tierekisteriin suoritettu")
     (tee-onnistunut-vastaus)))
 
