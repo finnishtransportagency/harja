@@ -33,7 +33,7 @@
                                     :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
                                     :piiri       (get-in varustetoteuma [:varuste :piiri])
                                     :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-                                    :urakka      100; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
+                                    :urakka      100 ; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
                                     :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
                                                         :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
                                                         :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
@@ -45,20 +45,52 @@
                                     :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                   :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
-                          :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}] ; TODO Onko tämä oikea pvm?
+                          :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id data]
+(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
-  (let [valitettava-data data]
-    #_(tierekisteri/paivita-tietue tierekisteri valitettava-data))) ; TODO
+  (let [valitettava-data {:paivittaja {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                       :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
+                                       :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
+                                       :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
+                          :tietue     {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
+                                       :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
+                                       :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :paattynyt]))
+                                       :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
+                                       :piiri       (get-in varustetoteuma [:varuste :piiri])
+                                       :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
+                                       :urakka      100 ; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
+                                       :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
+                                                           :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
+                                                           :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
+                                                           :let     (get-in varustetoteuma [:varuste :sijainti :tie :let])
+                                                           :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
+                                                           :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
+                                                           :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
+                                                           :alkupvm nil}}
+                                       :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
+                                                     :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
-(defn poista-varuste-tierekisterista [tierekisteri kirjaaja urakka-id data]
+                          :paivitetty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}]
+    (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
+      (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
+      vastaus)))
+
+(defn poista-varuste-tierekisterista [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
   (log/debug "Poistetaan varuste tierekisteristä")
-  (let [valitettava-data data]
-    #_(tierekisteri/poista-tietue tierekisteri valitettava-data))) ; TODO
+  (let [valitettava-data {:poistaja          {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                              :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
+                                              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
+                                              :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
+                          :tunniste          (get-in varustetoteuma [:varuste :tunniste])
+                          :tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
+                          :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}]
+    (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
+      (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
+      vastaus)))
 
 (defn paivita-muutos-tierekisteriin
   "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
