@@ -22,6 +22,17 @@
   [db user params]
   (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+)))
 
+(defn hae-tr-viiva
+  "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
+  [db user params]
+  (let [geom (first (tv/tierekisteriosoite-viivaksi db
+                                                    (:tie params)
+                                                    (:aosa params)
+                                                    (:aet params)
+                                                    (:losa params)
+                                                    (:let params)))]
+    (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [this]
@@ -30,7 +41,10 @@
                                           (hae-tr-pisteilla (:db this) user params)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-tr-pisteella (fn [user params]
-                                       (hae-tr-pisteella (:db this) user params)))
+                                          (hae-tr-pisteella (:db this) user params)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-tr-viivaksi (fn [user params]
+                                         (hae-tr-viiva (:db this) user params)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-tr-pisteella)
