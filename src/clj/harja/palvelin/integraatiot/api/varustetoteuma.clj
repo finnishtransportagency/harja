@@ -22,14 +22,15 @@
     vastauksen-data))
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
+  (log/debug "Lisätään varuste tierekisteriin")
   (let [valitettava-data {:lisaaja {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                                     :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                                     :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                                     :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
                           :tietue  {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
-                                    :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :toteuma :alkanut]))
-                                    :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :toteuma :paattynyt]))
-                                    :karttapvm   (get-in varustetoteuma [:varuste :karttapvm])
+                                    :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
+                                    :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :paattynyt]))
+                                    :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
                                     :piiri       (get-in varustetoteuma [:varuste :piiri])
                                     :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
                                     :urakka      urakka-id
@@ -44,14 +45,18 @@
                                     :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                   :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
-                          :lisatty "2015-05-26+03:00"}]
-    (tierekisteri/lisaa-tietue tierekisteri valitettava-data)))
+                          :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}] ; TODO Onko tämä oikea pvm?
+    (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
+      (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
+      vastaus)))
 
 (defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id data]
+  (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data data]
     #_(tierekisteri/paivita-tietue tierekisteri valitettava-data))) ; TODO
 
 (defn poista-varuste-tierekisterista [tierekisteri kirjaaja urakka-id data]
+  (log/debug "Poistetaan varuste tierekisteristä")
   (let [valitettava-data data]
     #_(tierekisteri/poista-tietue tierekisteri valitettava-data))) ; TODO
 
@@ -61,16 +66,9 @@
   nähdään, että toteumaa on yritetty kirjata."
   [tierekisteri kirjaaja urakka-id data]
   (case (get-in data [:varustetoteuma :varuste :toimenpide])
-    :lisatty
-    (do
-      (log/debug "Lisätään varuste tierekisteriin")
-      (lisaa-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data))
-    :paivitetty
-    (do (log/debug "Päivitetään varuste tierekisteriin")
-        (paivita-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data))
-    :poistettu
-    (do (log/debug "Poistetaan varuste tierekisteristä")
-        (poista-varuste-tierekisterista tierekisteri kirjaaja urakka-id data))))
+    "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja urakka-id data)))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
