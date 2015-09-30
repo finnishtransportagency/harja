@@ -53,7 +53,10 @@
           "losa": 73,
           "aet": 100,
           "let": 20,
-          "puoli": 1
+          "ajr": 1,
+          "puoli": 1,
+          "alkupvm": "2016-01-30T12:00:00Z",
+          "loppupvm": "2016-01-30T12:00:00Z"
         }
       },
       "kuntoluokitus": 1,
