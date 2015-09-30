@@ -3,7 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.5. Julkaistu: - . Muutokset:
-    - Tyokoneseurannasta pudotettu urakka ja sopimus id:t. Työkonetyyppi on muutettu enumeraatioksi.
+    - Tyokoneseurannasta pudotettu sopimus id. Työkonetyyppi on muutettu enumeraatioksi.
     - Urakoiden hakuun lisätty alueurakkanumero
     - Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.
     - Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.

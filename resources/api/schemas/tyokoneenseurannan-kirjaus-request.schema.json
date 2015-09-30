@@ -59,6 +59,10 @@
                 "id": "urn:harja/havainnot/0/suunta",
                 "type": "number"
               },
+              "urakkaid": {
+                "id": "urn:harja/havainnot/0/urakkaid",
+                "type": "integer"
+              },
               "havaintoaika": {
                 "id": "urn:harja/havainnot/0/havaintoaika",
                 "type": "string",
