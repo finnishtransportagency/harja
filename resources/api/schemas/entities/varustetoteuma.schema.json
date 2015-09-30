@@ -23,9 +23,15 @@
       ],
       "required": true
     },
-    "ominaisuudet": {
-      "id": "urn:harja/ominaisuudet",
+    "arvot": {
+      "id": "urn:harja/arvot",
       "type": "string"
+    },
+    "karttapvm": {
+      "id": "urn:harja/karttapvm",
+      "type": "string",
+      "required": true,
+      "format": "date-string"
     },
     "sijainti": {
       "id": "urn:harja/sijainti",

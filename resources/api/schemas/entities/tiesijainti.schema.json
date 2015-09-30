@@ -30,6 +30,10 @@
     "let": {
       "id": "urn:harja/sijainti/tie/let",
       "type": "integer"
+    },
+    "puoli": {
+      "id": "urn:harja/sijainti/tie/puoli",
+      "type": "integer"
     }
   }
 }

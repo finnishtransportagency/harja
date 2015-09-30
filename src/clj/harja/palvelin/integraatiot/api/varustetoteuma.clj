@@ -13,37 +13,64 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri])
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn lisaa-varuste-tierekisteriin [tierekisteri data]
-  #_(tierekisteri/lisaa-tietue tierekisteri))
-(defn paivita-varuste-tierekisteriin [tierekisteri data]
-  #_(tierekisteri/paivita-tietue tierekisteri))
-(defn poista-varuste-tierekisterista [tierekisteri data]
-  #_(tierekisteri/poista-tietue tierekisteri))
+(defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
+  (let [valitettava-data {:lisaaja {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                    :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
+                                    :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
+                                    :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
+                          :tietue  {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
+                                    :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :toteuma :alkanut]))
+                                    :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :toteuma :paattynyt]))
+                                    :karttapvm   (get-in varustetoteuma [:varuste :karttapvm])
+                                    :piiri       (get-in varustetoteuma [:varuste :piiri])
+                                    :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
+                                    :urakka      urakka-id
+                                    :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
+                                                        :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
+                                                        :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
+                                                        :let     (get-in varustetoteuma [:varuste :sijainti :tie :let])
+                                                        :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
+                                                        :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
+                                                        :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
+                                                        :alkupvm nil}}
+                                    :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
+                                                  :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
+                          :lisatty "2015-05-26+03:00"}]
+    (tierekisteri/lisaa-tietue tierekisteri valitettava-data)))
+
+(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id data]
+  (let [valitettava-data data]
+    #_(tierekisteri/paivita-tietue tierekisteri valitettava-data))) ; TODO
+
+(defn poista-varuste-tierekisterista [tierekisteri kirjaaja urakka-id data]
+  (let [valitettava-data data]
+    #_(tierekisteri/poista-tietue tierekisteri valitettava-data))) ; TODO
 
 (defn paivita-muutos-tierekisteriin
   "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri data]
+  [tierekisteri kirjaaja urakka-id data]
   (case (get-in data [:varustetoteuma :varuste :toimenpide])
     :lisatty
     (do
       (log/debug "Lisätään varuste tierekisteriin")
-      (lisaa-varuste-tierekisteriin tierekisteri data))
+      (lisaa-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data))
     :paivitetty
     (do (log/debug "Päivitetään varuste tierekisteriin")
-        (paivita-varuste-tierekisteriin tierekisteri data))
+        (paivita-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data))
     :poistettu
     (do (log/debug "Poistetaan varuste tierekisteristä")
-        (poista-varuste-tierekisterista tierekisteri data))))
+        (poista-varuste-tierekisterista tierekisteri kirjaaja urakka-id data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -51,21 +78,22 @@
     db
     toteuma-id))
 
-(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide ominaisuudet sijainti
+(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot sijainti
                                             kuntoluokitus piiri]} toteuma-id]
-  (log/debug "Luodaan uusi varustetoteuma toteumalle " toteuma-id)
   (toteumat/luo-varustetoteuma<!
     db
     tunniste
     toteuma-id
     toimenpide
     tietolaji
-    ominaisuudet
+    arvot
+    ; FIXME Karttapvm:n tallennus puuttuu
     (get-in sijainti [:tie :numero])
     (get-in sijainti [:tie :aosa])
     (get-in sijainti [:tie :losa])
     (get-in sijainti [:tie :let])
     (get-in sijainti [:tie :aet])
+    ; FIXME Puolen tallennus puuttuu
     piiri
     kuntoluokitus
     (:id kirjaaja)))
@@ -86,10 +114,11 @@
 
 (defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
+    (log/debug "Kirjaaja: " (pr-str kirjaaja))
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    (paivita-muutos-tierekisteriin tierekisteri data)
+    (paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []

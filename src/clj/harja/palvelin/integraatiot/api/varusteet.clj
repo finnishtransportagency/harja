@@ -18,8 +18,8 @@
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
-          muunnettu-vastausdata (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
+          ominaisuudet (get-in vastausdata [:tietolaji :arvot])
+          muunnettu-vastausdata (dissoc (assoc-in vastausdata [:tietolaji :arvot]
                                                   (map (fn [o]
                                                          {:ominaisuus o})
                                                        ominaisuudet)) :onnistunut)]
