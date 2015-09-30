@@ -230,7 +230,6 @@
 
         (when @tiedot/pollaus-id (pollauksen-merkki))
 
-        [kartta/kartan-paikka]
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
           :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
@@ -249,6 +248,8 @@
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
 
     (fn []
-      (if @tiedot/valittu-ilmoitus
-        [ilmoituksen-tiedot]
-        [ilmoitusten-paanakyma]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @tiedot/valittu-ilmoitus
+         [ilmoituksen-tiedot]
+         [ilmoitusten-paanakyma])])))
