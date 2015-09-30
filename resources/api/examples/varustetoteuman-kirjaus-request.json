@@ -47,13 +47,13 @@
       "karttapvm": "2016-01-30T12:00:00Z",
       "sijainti": {
         "tie": {
-          "numero": 1234,
+          "numero": 89,
           "nimi": "Kiviharjunlenkki",
           "aosa": 1,
-          "losa": 73,
-          "aet": 100,
-          "let": 20,
-          "ajr": 1,
+          "losa": ,
+          "aet": 12,
+          "let": 0,
+          "ajr": 0,
           "puoli": 1,
           "alkupvm": "2016-01-30T12:00:00Z",
           "loppupvm": "2016-01-30T12:00:00Z"
