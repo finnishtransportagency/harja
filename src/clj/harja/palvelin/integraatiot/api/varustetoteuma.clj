@@ -33,7 +33,7 @@
                                     :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
                                     :piiri       (get-in varustetoteuma [:varuste :piiri])
                                     :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-                                    :urakka      urakka-id
+                                    :urakka      100; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
                                     :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
                                                         :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
                                                         :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
