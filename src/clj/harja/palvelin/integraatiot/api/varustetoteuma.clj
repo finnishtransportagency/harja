@@ -21,7 +21,7 @@
   (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
+(defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [valitettava-data {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                                     (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
@@ -43,7 +43,8 @@
                                                         :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
                                                         :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
                                                         :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
-                                                        :alkupvm nil}}
+                                                        :alkupvm (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm])
+                                                        :loppupvm (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm])}}
                                     :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                   :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
@@ -52,7 +53,7 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
+(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                                        (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
@@ -74,7 +75,8 @@
                                                            :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
                                                            :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
                                                            :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
-                                                           :alkupvm nil}}
+                                                           :alkupvm (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm])
+                                                           :loppupvm (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm])}}
                                        :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                      :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
@@ -104,8 +106,8 @@
   nähdään, että toteumaa on yritetty kirjata."
   [tierekisteri kirjaaja urakka-id data]
   (case (get-in data [:varustetoteuma :varuste :toimenpide])
-    "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
-    "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja data)
+    "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
     "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
