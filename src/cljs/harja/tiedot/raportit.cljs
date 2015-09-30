@@ -10,14 +10,23 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn suorita-raportti-urakka-parametrit [urakka-id nimi parametrit]
+  {:nimi nimi
+   :konteksti :urakka
+   :urakka-id urakka-id
+   :parametrit parametrit})
+  
 (defn suorita-raportti-urakka
   "Suorittaa raportin annetun urakan kontekstissa."
   [urakka-id nimi parametrit]
   (k/post! :suorita-raportti
-           {:nimi nimi
-            :konteksti :urakka
-            :urakka-id urakka-id
-            :parametrit parametrit}))
+           (suorita-raportti-urakka-parametrit urakka-id nimi parametrit)))
+
+(defn suorita-raportti
+  "Suorittaa raportin valmiiksi tehdyllä parametri payloadilla.
+ks. esim. suorita-raportti-urakka-parametrit"
+  [parametrit]
+  (k/post! :suorita-raportti parametrit))
 
 (defn hae-yksikkohintaisten-toiden-kuukausiraportti [urakka-id alkupvm loppupvm]
   (k/post! :yksikkohintaisten-toiden-kuukausiraportti

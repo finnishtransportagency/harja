@@ -19,18 +19,22 @@
   [grid/grid {:otsikko (or otsikko "") :tunniste hash}
    (into []
          (map-indexed (fn [i sarake]
-                        {:hae #(nth % i)
+                        {:hae #(get % i)
                          :leveys (:leveys sarake)
                          :otsikko (:otsikko sarake)
                          :nimi (str "sarake" i)})
                       sarakkeet))
-   (if viimeinen-rivi-yhteenveto?
-     (let [viimeinen-rivi (last data)]
-       (mapv #(if (= viimeinen-rivi %)
-                (assoc % :yhtenveto true)
-                %)
-             data))
-     data)])
+   (let [viimeinen-rivi (last data)]
+     (into []
+           (map (fn [rivi]
+                  (let [mappina (zipmap (range (count sarakkeet))
+                                        rivi)]
+                    (if (and viimeinen-rivi-yhteenveto?
+                             (= viimeinen-rivi rivi))
+                      (assoc mappina :yhteenveto true)
+                      mappina))))
+           data))])
+
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])

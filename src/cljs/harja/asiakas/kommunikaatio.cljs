@@ -104,7 +104,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (str (polku) "lataa-pikkukuva?id=" liite-id))
 
 (defn pdf-url [tyyppi & parametrit]
-  (str (polku) "pdf?" (name tyyppi)
+  (str (polku) "pdf?_=" (name tyyppi)
        "&" (str/join "&"
                      (map (fn [[nimi arvo]]
                             (str (name nimi) "=" arvo))

@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.pdf
   "Raportoinnin elementtien renderöinti PDF:ksi"
   (:require [harja.tyokalut.xsl-fo :as fo]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -10,7 +11,8 @@
     (assert (and (vector? elementti)
                  (> (count elementti) 1)
                  (keyword? (first elementti)))
-            "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä.")
+            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
+                 (pr-str elementti)))
     (first elementti)))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
@@ -136,5 +138,9 @@
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                     [:fo:block {:padding "2mm" :border "solid 0.2mm black"}
                      (muodosta-pdf [:yhteenveto tiedot])])]
-                 (map muodosta-pdf sisalto)
+                 (mapcat #(do (log/info "tää on: " (type %))
+                              (if (seq? %)
+                                (map muodosta-pdf %)
+                                [(muodosta-pdf %)]))
+                         sisalto)
                  [[:fo:block {:id "raportti-loppu"}]])))

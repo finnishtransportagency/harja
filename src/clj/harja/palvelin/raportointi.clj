@@ -4,7 +4,7 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
-
+            [taoensso.timbre :as log]
             ;; vaaditaan built in raportit
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]))
 
@@ -36,8 +36,10 @@
     (pdf-vienti/rekisteroi-pdf-kasittelija!
      pdf-vienti :raportointi
      (fn [kayttaja params]
-       (pdf/muodosta-pdf
-        (suorita-raportti this kayttaja {:raportti (get params "raportti")}))))
+       (let [rapos (suorita-raportti this kayttaja params)]
+         (log/info "SUORITETTU RAPSA: " (pr-str rapos))
+         (pdf/muodosta-pdf
+          rapos))))
     this)
 
   (stop [this]
