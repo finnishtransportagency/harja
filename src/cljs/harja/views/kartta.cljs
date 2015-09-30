@@ -153,16 +153,14 @@
                                         :width "100%"
                                         :z-index    100}}
         (if (= :S koko)
-          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
+          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(nav/vaihda-kartan-koko! :M)}
            "Näytä kartta"]
           [:span
-           [:button.btn-xs.nappi-toissijainen {:class    (when (= koko :S) "hide")
-                                              :on-click #(nav/vaihda-kartan-koko! (case koko
+           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! (case koko
                                                                                     :M :L
                                                                                     :L :M))}
            muuta-kokoa-teksti]
-          [:button.btn-xs.nappi-ensisijainen {:class    (when (= koko :S) "hide")
-                                              :on-click #(nav/vaihda-kartan-koko! :S)}
+          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
            "Piilota kartta"]])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
