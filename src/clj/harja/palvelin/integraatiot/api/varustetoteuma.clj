@@ -12,20 +12,38 @@
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn paivita-muutos-tierekisteriin [db urakka-id kirjaaja data]
-  ; TODO Postaa muutos tierekisteriin. Oletetaan, että APIn kautta tullut lisäys/päivitys/poisto on aina uusin tieto
-  ; reaalimaailmasta, joten muutos viedään aina tierekisteriin.
-  ; Tässä täytyy huomioida tierekisteripäivityksen mahdollinen epäonnistuminen, jolloin Harjaan ei saa jäädä
-  ; tietoa, joka ei ole synkassa tierekisterin kanssa. Voidaanko tämä esim. kääriä samaan transaktioon
-  ; Harjan tietokantaoperaation kanssa ja jos päivitys tierekisteriin ei onnistu, peruutetaan transaktio?
-  )
+(defn lisaa-varuste-tierekisteriin [tierekisteri data]
+  #_(tierekisteri/lisaa-tietue tierekisteri))
+(defn paivita-varuste-tierekisteriin [tierekisteri data]
+  #_(tierekisteri/paivita-tietue tierekisteri))
+(defn poista-varuste-tierekisterista [tierekisteri data]
+  #_(tierekisteri/poista-tietue tierekisteri))
+
+
+(defn paivita-muutos-tierekisteriin
+  "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
+  Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
+  nähdään, että toteumaa on yritetty kirjata."
+  [tierekisteri data]
+  (case (get-in data [:varustetoteuma :varuste :toimenpide])
+    :lisatty
+    (do
+      (log/debug "Lisätään varuste tierekisteriin")
+      (lisaa-varuste-tierekisteriin tierekisteri data))
+    :paivitetty
+    (do (log/debug "Päivitetään varuste tierekisteriin")
+        (paivita-varuste-tierekisteriin tierekisteri data))
+    :poistettu
+    (do (log/debug "Poistetaan varuste tierekisteristä")
+        (poista-varuste-tierekisterista tierekisteri data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -66,17 +84,17 @@
                               (poista-toteuman-varustetiedot transaktio toteuma-id)
                               (tallenna-varuste transaktio kirjaaja varustetiedot toteuma-id))))
 
-(defn kirjaa-toteuma [db {id :id} data kirjaaja]
+(defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    (paivita-muutos-tierekisteriin db urakka-id kirjaaja data)
+    (paivita-muutos-tierekisteriin tierekisteri data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
     (julkaise-reitti
       http :lisaa-varustetoteuma
       (POST "/api/urakat/:id/toteumat/varuste" request
@@ -86,7 +104,7 @@
                          request
                          skeemat/+varustetoteuman-kirjaus+
                          skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-varustetoteuma)
