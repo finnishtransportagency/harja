@@ -2,6 +2,8 @@
 <b>Julkaistu: 2.9.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.6. Julkaistu: -. Muutokset:
+    - Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa
 - Versionumero: 0.0.5. Julkaistu: - . Muutokset:
     - Urakoiden hakuun lisätty alueurakkanumero
     - Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.
