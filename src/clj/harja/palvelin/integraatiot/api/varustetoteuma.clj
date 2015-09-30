@@ -43,8 +43,8 @@
                                                         :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
                                                         :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
                                                         :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
-                                                        :alkupvm (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm])
-                                                        :loppupvm (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm])}}
+                                                        :alkupvm (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm]))
+                                                        :loppupvm (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm]))}}
                                     :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                   :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
@@ -75,13 +75,13 @@
                                                            :losa    (get-in varustetoteuma [:varuste :sijainti :tie :losa])
                                                            :ajr     (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
                                                            :puoli   (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
-                                                           :alkupvm (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm])
-                                                           :loppupvm (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm])}}
+                                                           :alkupvm (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm]))
+                                                           :loppupvm (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm]))}}
                                        :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                                                      :arvot             (get-in varustetoteuma [:varuste :arvot])}}
 
                           :paivitetty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}]
-    (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
+    (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
@@ -96,7 +96,7 @@
                           :tunniste          (get-in varustetoteuma [:varuste :tunniste])
                           :tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
                           :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))}]
-    (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
+    (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
