@@ -23,7 +23,9 @@
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
-  (let [valitettava-data {:lisaaja {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+  (let [valitettava-data {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
+                                                    (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                                    (:kayttajanimi kirjaaja))
                                     :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                                     :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                                     :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
@@ -52,7 +54,9 @@
 
 (defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
-  (let [valitettava-data {:paivittaja {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+  (let [valitettava-data {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
+                                                       (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                                       (:kayttajanimi kirjaaja))
                                        :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                                        :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                                        :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
@@ -79,9 +83,11 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn poista-varuste-tierekisterista [tierekisteri kirjaaja urakka-id {:keys [otsikko varustetoteuma]}]
+(defn poista-varuste-tierekisterista [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Poistetaan varuste tierekisteristä")
-  (let [valitettava-data {:poistaja          {:henkilo      (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+  (let [valitettava-data {:poistaja          {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
+                                                              (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                                                              (:kayttajanimi kirjaaja))
                                               :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                                               :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                                               :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
@@ -100,7 +106,7 @@
   (case (get-in data [:varustetoteuma :varuste :toimenpide])
     "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
     "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja urakka-id data)
-    "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja urakka-id data)))
+    "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -108,7 +114,7 @@
     db
     toteuma-id))
 
-(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot sijainti
+(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
                                             kuntoluokitus piiri]} toteuma-id]
   (toteumat/luo-varustetoteuma<!
     db
@@ -117,13 +123,13 @@
     toimenpide
     tietolaji
     arvot
-    ; FIXME Karttapvm:n tallennus puuttuu
+    (pvm-string->java-sql-date karttapvm)
     (get-in sijainti [:tie :numero])
     (get-in sijainti [:tie :aosa])
     (get-in sijainti [:tie :losa])
     (get-in sijainti [:tie :let])
     (get-in sijainti [:tie :aet])
-    ; FIXME Puolen tallennus puuttuu
+    (get-in sijainti [:tie :puoli])
     piiri
     kuntoluokitus
     (:id kirjaaja)))
@@ -149,6 +155,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
     (paivita-muutos-tierekisteriin tierekisteri kirjaaja urakka-id data)
+    (log/debug "Tietojen päivitys tierekisteriin suoritettu")
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []

@@ -43,7 +43,8 @@
       "tunniste": "HAR560",
       "tietolaji": "tl506",
       "toimenpide": "lisatty",
-      "ominaisuudet": "-",
+      "karttapvm": "2016-01-30T12:00:00Z",
+      "arvot": "-",
       "sijainti": {
         "tie": {
           "numero": 1234,
@@ -51,7 +52,8 @@
           "aosa": 1,
           "losa": 73,
           "aet": 100,
-          "let": 20
+          "let": 20,
+          "puoli": 1
         }
       },
       "kuntoluokitus": 1,
