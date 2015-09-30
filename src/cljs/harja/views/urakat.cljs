@@ -74,7 +74,7 @@
     (if v-ur
       [urakka/urakka v-ur]
       [:span
-       [:div.col-sm-4
+       [:div.col-md-4
        [valitse-hallintayksikko-ja-urakka]]
-      [:div.col-sm-8
+      [:div.col-md-8
        [kartta/kartan-paikka]]])))
