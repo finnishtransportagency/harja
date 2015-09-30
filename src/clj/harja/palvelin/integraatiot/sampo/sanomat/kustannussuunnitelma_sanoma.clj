@@ -28,7 +28,7 @@
         loppuvuosi (time/year (coerce/from-sql-date loppupvm))
         vuodet (range alkuvuosi (+ 1 loppuvuosi))
         summa-yhteensa (:summa (:maksuera maksuera))
-        vuosittainen-summa (if summa-yhteensa (/ summa-yhteensa (count vuodet)) 0)
+        vuosittainen-summa (if (and summa-yhteensa (not (= 0 summa-yhteensa))) (/ summa-yhteensa (count vuodet)) 0)
         segmentti-elementit (mapv #(muodosta-kustannuselementti % vuosittainen-summa) vuodet)]
     (reduce conj [:Cost] segmentti-elementit)))
 
