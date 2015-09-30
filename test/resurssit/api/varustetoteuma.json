@@ -57,7 +57,8 @@
         }
       },
       "kuntoluokitus": 1,
-      "piiri": 1
+      "piiri": 1,
+      "tierekisteriurakkakoodi": 100
     }
   }
 }

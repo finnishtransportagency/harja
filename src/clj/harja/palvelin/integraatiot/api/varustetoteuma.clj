@@ -35,7 +35,7 @@
                                     :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
                                     :piiri       (get-in varustetoteuma [:varuste :piiri])
                                     :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-                                    :urakka      100 ; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
+                                    :urakka      (get-in varustetoteuma [:varuste :tierekisteriurakkakoodi])
                                     :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
                                                         :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
                                                         :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
@@ -66,7 +66,7 @@
                                        :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
                                        :piiri       (get-in varustetoteuma [:varuste :piiri])
                                        :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-                                       :urakka      100 ; FIXME Tässä pitäisi oletettavasti olla urakka-id, mutta urakka.xsd vaatii sen olevan tietyssä joukossa?
+                                       :urakka      (get-in varustetoteuma [:varuste :tierekisteriurakkakoodi])
                                        :sijainti    {:tie {:numero  (get-in varustetoteuma [:varuste :sijainti :tie :numero])
                                                            :aet     (get-in varustetoteuma [:varuste :sijainti :tie :aet])
                                                            :aosa    (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
@@ -115,7 +115,7 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri]} toteuma-id]
+                                            kuntoluokitus piiri tierekisteriurakkakoodi]} toteuma-id]
   (toteumat/luo-varustetoteuma<!
     db
     tunniste
@@ -132,6 +132,7 @@
     (get-in sijainti [:tie :puoli])
     piiri
     kuntoluokitus
+    tierekisteriurakkakoodi
     (:id kirjaaja)))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]

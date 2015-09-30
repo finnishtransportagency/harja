@@ -525,6 +525,7 @@ INSERT INTO varustetoteuma (tunniste,
                             tr_puoli,
                             piiri,
                             kuntoluokka,
+                            tierekisteriurakkakoodi,
                             luoja,
                             luotu)
     VALUES (
@@ -542,6 +543,7 @@ INSERT INTO varustetoteuma (tunniste,
     :tr_puoli,
     :piiri,
     :kuntoluokka,
+    :tierekisteriurakkakoodi,
     :luoja,
     NOW());
 
