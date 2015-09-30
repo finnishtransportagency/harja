@@ -52,7 +52,10 @@
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (println "RAPORTTI: " suoritettava-raportti)
       (binding [*raportin-suoritus* this]
-        ((:suorita suoritettava-raportti) db kayttaja parametrit)))))
+        ((:suorita suoritettava-raportti) db kayttaja
+         (condp = konteksti
+           :urakka (assoc parametrit
+                          :urakka-id (:urakka-id suorituksen-tiedot))))))))
 
 
 (defn luo-raportointi []

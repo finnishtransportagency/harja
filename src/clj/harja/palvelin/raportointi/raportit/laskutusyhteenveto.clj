@@ -4,7 +4,8 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
@@ -12,26 +13,6 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
     (into []
-          (comp
-           (map #(konv/decimal->double %
-                                       :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_laskutettu_ind_korotus
-                                       :kaikki_paitsi_kht_laskutetaan_ind_korotus :kaikki_laskutetaan_ind_korotus
-                                       :kaikki_paitsi_kht_laskutettu :kaikki_laskutettu
-                                       :kaikki_paitsi_kht_laskutetaan :kaikki_laskutetaan
-                                       
-                                       :kht_laskutettu :kht_laskutettu_ind_korotettuna :kht_laskutettu_ind_korotus
-                                       :kht_laskutetaan :kht_laskutetaan_ind_korotettuna :kht_laskutetaan_ind_korotus
-                                       :yht_laskutettu :yht_laskutettu_ind_korotettuna :yht_laskutettu_ind_korotus
-                                       :yht_laskutetaan :yht_laskutetaan_ind_korotettuna :yht_laskutetaan_ind_korotus
-                                       :sakot_laskutettu :sakot_laskutettu_ind_korotettuna :sakot_laskutettu_ind_korotus
-                                       :sakot_laskutetaan :sakot_laskutetaan_ind_korotettuna :sakot_laskutetaan_ind_korotus
-                                       :suolasakot_laskutettu :suolasakot_laskutettu_ind_korotettuna :suolasakot_laskutettu_ind_korotus
-                                       :suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotettuna :suolasakot_laskutetaan_ind_korotus
-                                       :muutostyot_laskutettu :muutostyot_laskutettu_ind_korotettuna :muutostyot_laskutettu_ind_korotus
-                                       :muutostyot_laskutetaan :muutostyot_laskutetaan_ind_korotettuna :muutostyot_laskutetaan_ind_korotus
-                                       :erilliskustannukset_laskutettu :erilliskustannukset_laskutettu_ind_korotettuna :erilliskustannukset_laskutettu_ind_korotus
-                                       :erilliskustannukset_laskutetaan :erilliskustannukset_laskutetaan_ind_korotettuna :erilliskustannukset_laskutetaan_ind_korotus))
-           )
           (laskutus-q/hae-laskutusyhteenvedon-tiedot db
                                                      (konv/sql-date hk-alkupvm)
                                                      (konv/sql-date hk-loppupvm)
@@ -46,9 +27,9 @@
   (let [laskutettu-yht (reduce + (map laskutettu-kentta tiedot))
         laskutetaan-yht (reduce + (map laskutetaan-kentta tiedot))
         yhteenveto ["Toimenpiteet yhteensä"
-                    laskutettu-yht
-                    laskutetaan-yht
-                    (+ laskutettu-yht laskutetaan-yht)]]
+                    (fmt/euro laskutettu-yht)
+                    (fmt/euro laskutetaan-yht)
+                    (fmt/euro (+ laskutettu-yht laskutetaan-yht))]]
     (list 
      [:otsikko otsikko]
      [:taulukko 
@@ -61,15 +42,14 @@
             (concat
              (map (fn [rivi]
                     [(:nimi rivi)
-                     (rivi laskutettu-kentta)
-                     (rivi laskutetaan-kentta)
-                     (+ (rivi laskutettu-kentta)
-                        (rivi laskutetaan-kentta))]) tiedot)
+                     (fmt/euro-opt (rivi laskutettu-kentta))
+                     (fmt/euro-opt (rivi laskutetaan-kentta))
+                     (fmt/euro-opt (+ (rivi laskutettu-kentta)
+                                      (rivi laskutetaan-kentta)))]) tiedot)
              [yhteenveto]))])))
 
-(defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm]:as parametrit}]
-  (log/info "PARAMETRIT: " (pr-str parametrit))
-  ;; FIXME: pvm geneeriseksi cljc?
+(defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
+  (log/info "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [
         laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
                                 (pvm/kuukauden-nimi (pvm/kuukausi aikavali-alkupvm))
@@ -81,6 +61,7 @@
                                  (pvm/vuosi aikavali-alkupvm))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
+    (log/info "TIETOJA: " tiedot)
     [:raportti {:nimi "Laskutusyhteenveto"}
      (mapcat (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
                (taulukko otsikko tyhja
