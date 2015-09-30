@@ -1,25 +1,32 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
-            [goog.i18n.currencyCodeMap]
-            [goog.i18n.NumberFormatSymbols]
-            [goog.i18n.NumberFormatSymbols_fi_FI]
-            [goog.i18n.NumberFormat]))
+            #?(:cljs [goog.i18n.currencyCodeMap])
+            #?(:cljs [goog.i18n.NumberFormatSymbols])
+            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+            #?(:cljs [goog.i18n.NumberFormat]))
+  #?(:clj (:import (java.text NumberFormat))))
 
-(set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI)
+#?(:cljs
+   (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))
 
-(def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL goog.i18n.NumberFormat/Format))
-                          (.setShowTrailingZeros false)
-                          (.setMinimumFractionDigits 2)
-                          (.setMaximumFractionDigits 2)))
+#?(:cljs
+   (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL goog.i18n.NumberFormat/Format))
+                             (.setShowTrailingZeros false)
+                             (.setMinimumFractionDigits 2)
+                             (.setMaximumFractionDigits 2))))
 
 (defn euro [eur]
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja euromerkin kanssa."
-  ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
-  ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
-  ;; vasta IE11 versiosta lähtien. 
-  (str (.format euro-number-format eur) " \u20AC"))
+  #?(:cljs
+     ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
+     ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
+     ;; vasta IE11 versiosta lähtien. 
+     (str (.format euro-number-format eur) " \u20AC")
 
+     :clj
+     (.format (NumberFormat/getCurrencyInstance) eur)))
+   
 
 (defn euro-opt
   "Formatoi euromäärän tai tyhjä, jos nil."

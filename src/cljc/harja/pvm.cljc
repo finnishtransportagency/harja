@@ -89,7 +89,7 @@
   #?(:cljs (df/unparse format date)
      :clj (.format format date)))
 (defn parsi [format teksti]
-  #?(:cljs (df/parse fmt teksti)
+  #?(:cljs (df/parse format teksti)
      :clj (.parse format teksti)))
 
  (def fi-pvm
@@ -119,8 +119,7 @@
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
-  #?(:cljs (df/unparse fi-pvm-aika pvm)
-     :clj (.format fi-pvm-aika pvm)))
+   (formatoi fi-pvm-aika pvm))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
