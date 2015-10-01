@@ -179,6 +179,7 @@
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
+        :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
        {:otsikko "Tarkastus" :nimi :tyyppi
@@ -196,6 +197,7 @@
        
        {:otsikko "Tarkastaja" :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
+        :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
         :leveys-col 4}
 
@@ -206,6 +208,7 @@
        
        (when-not (= :soratie (:tyyppi tarkastus))
          {:otsikko "Mittaaja" :nimi :mittaaja
+          :pakollinen? true
           :tyyppi :string :pituus-max 256
           :leveys-col 4})
        ]

@@ -36,7 +36,7 @@
     },
     "karttapvm": {
       "id": "urn:harja/karttapvm",
-      "type": "integer",
+      "type": "string",
       "format": "date-time"
     },
     "kuntoluokitus": {

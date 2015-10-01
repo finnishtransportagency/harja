@@ -1,20 +1,11 @@
-−− Kuvaus: tierekisteriosoitteelle viiva
+-- Kuvaus: Lisää varustetoteumaan puuttuvat sarakkeet
 
-CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
-  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
-  RETURNS geometry
-AS $$
-DECLARE
-   rval geometry;
-BEGIN
-   SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aosa_ THEN ST_Line_Substring(geom, LEAST(1, aet_/ST_Length(geom)), 1)
-                                      WHEN osa=losa_ THEN ST_Line_Substring(geom, 0, LEAST(1,let_/ST_Length(geom)))
-				      ELSE geom END) ORDER BY osa, path)) FROM tieverkko_paloina
-    WHERE tie = tie_
-      AND osa >= aosa_
-      AND osa <= losa_
-   INTO rval;
-
-   RETURN rval;
-END;
-$$ LANGUAGE plpgsql;
+ALTER TABLE varustetoteuma ADD COLUMN karttapvm date;
+ALTER TABLE varustetoteuma ADD COLUMN tr_puoli integer;
+ALTER TABLE varustetoteuma ADD COLUMN tr_ajorata integer;
+ALTER TABLE varustetoteuma ADD COLUMN alkupvm date;
+ALTER TABLE varustetoteuma ADD COLUMN loppupvm date;
+ALTER TABLE varustetoteuma ADD COLUMN arvot varchar(4096);
+ALTER TABLE varustetoteuma ADD COLUMN tierekisteriurakkakoodi integer;
+UPDATE varustetoteuma SET arvot=ominaisuudet;
+ALTER TABLE varustetoteuma DROP COLUMN ominaisuudet;
