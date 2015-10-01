@@ -32,24 +32,25 @@
     "Ei tyyppiä"))
 
 (defn sorttausjarjestys [tyyppi numero]
-  (let [tyyppi-jarjestys (case tyyppi
-                           :kokonaishintainen 1
-                           :yksikkohintainen 2
-                           :lisatyo 3
-                           :indeksi 4
-                           :bonus 5
-                           :sakko 6
-                           :akillinen-hoitotyo 7
-                           :muu 8
-                           9)]
-    [tyyppi-jarjestys numero]))
+  (log "Sortataan tyypillä " tyyppi " ja numerolla " numero)
+  (let [tyyppi-jarjestysnumero (case tyyppi
+                                 :kokonaishintainen 1
+                                 :yksikkohintainen 2
+                                 :lisatyo 3
+                                 :indeksi 4
+                                 :bonus 5
+                                 :sakko 6
+                                 :akillinen-hoitotyo 7
+                                 :muu 8
+                                 9)]
+    [tyyppi-jarjestysnumero numero]))
 
 (defn ryhmittele-maksuerat [rivit]
   (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
         otsikon-mukaan (group-by otsikko (sort-by
                                            #(sorttausjarjestys
                                                     (:tyyppi (:maksuera %))
-                                                    (:numero (:maksuera %)))
+                                                    (:numero %))
                                            rivit))]
     (doall (mapcat (fn [[otsikko rivit]]
                      (concat [(grid/otsikko otsikko)] rivit))
