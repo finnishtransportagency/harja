@@ -121,4 +121,4 @@
           toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           varuste-kannassa (first (q (str "SELECT tunniste FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
-      (is (= varuste-kannassa ["HAR560"])))))
+      (is (= varuste-kannassa ["HARJ951547ZK"])))))

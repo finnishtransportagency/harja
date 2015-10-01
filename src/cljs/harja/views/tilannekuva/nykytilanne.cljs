@@ -35,7 +35,7 @@
                       :vaihtoehto-nayta {
                                          :toimenpidepyynnot "Toimenpidepyynnöt"
                                          :kyselyt "Kyselyt"
-                                         :tiedoitukset "Tiedoitukset"
+                                         :tiedoitukset "Tiedotukset"
                                          :tyokoneet "Työkoneiden seuranta"
                                          :onnettomuudet "Onnettomuudet"
                                          :havainnot "Havainnot"

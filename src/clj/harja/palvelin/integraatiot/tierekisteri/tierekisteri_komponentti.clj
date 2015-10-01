@@ -55,7 +55,7 @@
 
   (poista-tietue [this tiedot]
     (validoi-tietolajitunniste (:tietolajitunniste tiedot))
-    (when-not (empty? tierekisteri-api-url)   ()
+    (when-not (empty? tierekisteri-api-url)
       (tietue/poista-tietue (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (lisaa-tietue [this tiedot]

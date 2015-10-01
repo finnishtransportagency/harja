@@ -20,6 +20,8 @@
         ominaisuus (first (:ominaisuudet (:tietolaji vastaus)))
         koodisto (:koodisto (second  (:ominaisuudet (:tietolaji vastaus))))
         koodi (first koodisto)]
+
+    (println vastaus)
     (is (= "tl506" (:tunniste tietolaji)))
     (is (= 14 (count (:ominaisuudet (:tietolaji vastaus)))))
 

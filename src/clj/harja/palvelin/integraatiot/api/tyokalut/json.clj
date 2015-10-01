@@ -40,15 +40,6 @@
           ((fn [{x :x y :y}]
              [x y]))))
 
-; NOTE: Ei ole testattu toimivaksi.
-(defn parsi-json-pvm
-  "Muuntaa JSONissa olevan pvm:n Clojurelle sopivaan muotoon."
-  [json avainpolku]
-  (-> json
-      (assoc-in avainpolku
-                (when-let [dt (some-> json (get-in avainpolku))]
-                  (coerce/to-date (format/parse (format/formatters :date-time) dt))))))
-
 (defn parsi-json-pvm-vectorista
   "Muuntaa avainpolussa olevan vectorin jokaisen mapin itemin pvm-avain -kentän Clojurelle sopivaan muotoon."
   [map avainpolku pvm-avain]
