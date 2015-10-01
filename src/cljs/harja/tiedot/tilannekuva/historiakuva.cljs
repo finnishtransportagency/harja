@@ -96,23 +96,28 @@
      :alue (oletusalue tarkastus))])
 
 (defmethod kartalla-xf :toteuma [toteuma]
-  (conj
-    (mapv
-      (fn [rp]
-        (assoc rp
-          :type :reittipiste
-          :alue {:type        :clickable-area
-                 :coordinates (get-in rp [:sijainti :coordinates])
-                 :zindex      3}))
-      (:reittipisteet toteuma))
-    (assoc toteuma
-      :type :toteuma
-      :alue {
-             :type   :arrow-line
-             :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                  :aika
-                                                                  pvm/ennen?
-                                                                  (:reittipisteet toteuma)))})))
+  ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
+  ;; monta kertaa fronttiin.
+  (let [reittipisteet (map
+                        (fn [[_ arvo]] (first arvo))
+                        (group-by :id (:reittipisteet toteuma)))]
+    (conj
+     (mapv
+       (fn [rp]
+         (assoc rp
+           :type :reittipiste
+           :alue {:type        :clickable-area
+                  :coordinates (get-in rp [:sijainti :coordinates])
+                  :zindex      3}))
+       reittipisteet)
+     (assoc toteuma
+       :type :toteuma
+       :alue {
+              :type   :arrow-line
+              :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
+                                                                   :aika
+                                                                   pvm/ennen?
+                                                                   reittipisteet))}))))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   [(assoc tp
