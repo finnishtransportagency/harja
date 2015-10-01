@@ -15,6 +15,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
 
+            [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -59,6 +60,8 @@
   []
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
+    ;; FIXME: hack joka parantaa kartan ulkonäköä kun tullaan murupolkua ylöspäin. Korvaa user skrollin.
+    (reagent/next-tick #(.scrollTo js/window 0 (inc (.-scrollY js/window))))
     (if-not v-hal
       (valitse-hallintayksikko)
       (when-not v-ur
@@ -67,7 +70,11 @@
 (defn urakat
   "Urakan koko sisältö."
   []
-   ;; TODO: urakkasivun koon (col-sm-?) oltava dynaaminen perustuen kartan kokoon joka on navigaatio.cljs:ssä
-   (let [v-ur @nav/valittu-urakka]
-     (or (valitse-hallintayksikko-ja-urakka)
-         [urakka/urakka v-ur])))
+  (let [v-ur @nav/valittu-urakka]
+    (if v-ur
+      [urakka/urakka v-ur]
+      [:div.row
+       [:div.col-md-4
+       [valitse-hallintayksikko-ja-urakka]]
+      [:div.col-md-8
+       [kartta/kartan-paikka]]])))
