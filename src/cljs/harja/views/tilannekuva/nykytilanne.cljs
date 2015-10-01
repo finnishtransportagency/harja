@@ -2,6 +2,7 @@
   "Harjan tilannekuvan pääsivu."
   (:require [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.tilannekuva.nykytilanne :as tiedot]
             [harja.loki :refer [log]]
             [harja.ui.kentat :as kentat]
@@ -88,7 +89,7 @@
 
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
-                                 [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-nykytilanne)
