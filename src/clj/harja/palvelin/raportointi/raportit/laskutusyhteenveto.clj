@@ -21,6 +21,9 @@
                                                      urakka-id
                                                      urakan-indeksi))))
 
+(defn- kuukausi [date]
+  (.format (java.text.SimpleDateFormat. "MMMM") date))
+
 (defn- taulukko [otsikko otsikko-jos-tyhja
                  laskutettu-teksti laskutettu-kentta
                  laskutetaan-teksti laskutetaan-kentta tiedot]
@@ -50,11 +53,11 @@
   (log/info "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [
         laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
-                                (pvm/kuukauden-nimi (pvm/kuukausi aikavali-alkupvm))
+                                (kuukausi aikavali-alkupvm)
                                 "ta "
                                 (pvm/vuosi aikavali-alkupvm))
         laskutetaan-teksti  (str "Laskutetaan "
-                                 (pvm/kuukauden-nimi (pvm/kuukausi aikavali-alkupvm))
+                                 (kuukausi aikavali-alkupvm)
                                  "ssa "
                                  (pvm/vuosi aikavali-alkupvm))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)

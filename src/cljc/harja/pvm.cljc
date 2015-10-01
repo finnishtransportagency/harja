@@ -44,7 +44,7 @@
 
 (defn luo-pvm [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
-     :clj (Date. (- vuosi 1900) (dec kk) pv)))
+     :clj (Date. (- vuosi 1900) kk pv)))
 
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
@@ -265,8 +265,11 @@
 
 (defn kuukausi
    "Palauttaa annetun DateTime kuukauden."
-   [pvm]
-   (t/month (d pvm)))
+  [pvm]
+  ;; PENDING: tämä ei clj puolella toimi, jos ollaan kk alussa
+  ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
+  ;; pitäisi joda date timeihin vaihtaa koko backend puolella
+  (t/month (d pvm)))
 
  (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
    (let [vuosi (first vuosi-kk)
