@@ -72,7 +72,7 @@
   ([] (ajax-loader-pisteet nil))
   ([viesti]
    [:span.ajax-loader-pisteet
-    [:img {:class "ajax-loader-pisteet" :src "/images/ajax-loader-pisteet.gif"}]
+    [:img {:class "ajax-loader-pisteet" :src "images/ajax-loader-pisteet.gif"}]
     (when viesti
       [:div.viesti viesti])]))
 
