@@ -69,10 +69,6 @@
                     (when-not (k/virhe? tulos)
                       (jarjesta-ilmoitukset tulos)))))))
 
-;; POLLAUS
-(def pollaus-id (atom nil))
-(def +intervalli+ 60000) ;60000ms -> 1min
-
 (def ilmoitus-kartalla-xf
   #(assoc %
     :type :ilmoitus
@@ -94,13 +90,3 @@
            @valittu-ilmoitus
            (when @karttataso-ilmoitukset
              (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
-
-
-(defn lopeta-pollaus []
-  (when-let [lopeta @pollaus-id]
-    (lopeta)))
-
-(defn aloita-pollaus
-  []
-  (lopeta-pollaus)
-  (reset! pollaus-id (paivita-periodisesti haetut-ilmoitukset +intervalli+)))
