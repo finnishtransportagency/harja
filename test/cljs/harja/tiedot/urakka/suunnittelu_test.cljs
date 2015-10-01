@@ -154,8 +154,8 @@
                                                  rivit
                                                  [alkupvm loppupvm])]
     (is (= 4 (count kopioidut)))
-    (is (= (->pvm "01.10.2006") (:alkupvm (first kopioidut))))
-    (is (= (->pvm "30.09.2010") (:loppupvm (last kopioidut))))
+    (is (pvm/sama-pvm? (->pvm "01.10.2006") (:alkupvm (first kopioidut))))
+    (is (pvm/sama-pvm? (->pvm "30.09.2010") (:loppupvm (last kopioidut))))
     (is (every? #(= (:maara %) 66))) 
     ))
 
@@ -272,8 +272,8 @@
                                :loppupvm (pvm/->pvm "1.8.2012")})]
     (is (= 1 (count kaudet)) "1 sopimuskausi")
     (let [[alku loppu] (first kaudet)]
-      (is (= alku (pvm/->pvm "7.7.2012")))
-      (is (= loppu (pvm/->pvm "1.8.2012"))))))
+      (is (pvm/sama-pvm? alku (pvm/->pvm "7.7.2012")))
+      (is (pvm/sama-pvm? loppu (pvm/->pvm "1.8.2012"))))))
 
 (deftest yllapitourakan-sopimuskaudet-kaksi-vuotta
   (let [kaudet (u/hoitokaudet {:tyyppi :paallystys
@@ -281,11 +281,11 @@
                                :loppupvm (pvm/->pvm "8.4.2015")})]
     (is (= 2 (count kaudet)))
     (let [[alku loppu] (first kaudet)]
-      (is (= alku (pvm/->pvm "1.11.2014")))
-      (is (= loppu (pvm/->pvm "31.12.2014"))))
+      (is (pvm/sama-pvm? alku (pvm/->pvm "1.11.2014")))
+      (is (pvm/sama-pvm? loppu (pvm/->pvm "31.12.2014"))))
     (let [[alku loppu] (second kaudet)]
-      (is (= alku (pvm/->pvm "1.1.2015")))
-      (is (= loppu (pvm/->pvm "8.4.2015"))))))
+      (is (pvm/sama-pvm? alku (pvm/->pvm "1.1.2015")))
+      (is (pvm/sama-pvm? loppu (pvm/->pvm "8.4.2015"))))))
 
 
 (def +prosessoitavat-rivit+

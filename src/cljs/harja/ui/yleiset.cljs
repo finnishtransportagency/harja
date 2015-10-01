@@ -72,7 +72,7 @@
   ([] (ajax-loader-pisteet nil))
   ([viesti]
    [:span.ajax-loader-pisteet
-    [:img {:class "ajax-loader-pisteet" :src "/images/ajax-loader-pisteet.gif"}]
+    [:img {:class "ajax-loader-pisteet" :src "images/ajax-loader-pisteet.gif"}]
     (when viesti
       [:div.viesti viesti])]))
 
@@ -459,3 +459,11 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
       [:span
        " / " [:span.loppuosa loppuosa]
        " / " [:span.loppuetaisyys loppuetaisyys]])]))
+
+(defn vihje
+  [vihje luokka]
+  [:div {:class
+         (str "lomake-vihje " (or luokka ""))}
+   [:div.vihjeen-sisalto
+    (harja.ui.ikonit/info-sign)
+    (str " " vihje)]])

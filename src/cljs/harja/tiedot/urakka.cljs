@@ -98,9 +98,11 @@
 
         ;; Jos urakka on käynnissä, valitaan hoitokausi, joka on käynnissä
         :default
-        (first (filter (fn [[alku loppu]]
-                         (pvm/valissa? nyt alku loppu))
-                       hoitokaudet))))))
+        (or (first (filter (fn [[alku loppu]]
+                             (pvm/valissa? nyt alku loppu))
+                           hoitokaudet))
+            ;; ultimate fallback, jos ei löydy jostain syystä, käytä ensimmäistä
+            (first hoitokaudet))))))
 
 
 (defonce valittu-hoitokausi

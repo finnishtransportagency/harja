@@ -262,9 +262,9 @@
          (doall
           (for [skeema (keep identity skeema)]
             (if-let [ryhma (and (ryhma? skeema) skeema)]
-              (do (log "kenttäryhmä " (:otsikko ryhma))
-                  ^{:key (:otsikko ryhma)}
-                  (kenttaryhma luokka ryhma (keep identity (:skeemat ryhma)) #(kentta identity %)))
+              (do
+                ^{:key (:otsikko ryhma)}
+                (kenttaryhma luokka ryhma (keep identity (:skeemat ryhma)) #(kentta identity %)))
 
               ^{:key (:nimi skeema)}
               (apply kentta-ui (kentta (fn [k]
