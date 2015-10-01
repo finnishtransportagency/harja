@@ -1,6 +1,8 @@
 (ns harja.atom
   "Erinäisiä atomien ja tilan käsittelyn apureita"
-  (:require [cljs.core.async :refer [<! >! chan put! alts! timeout]])
+  (:require
+    [harja.loki :refer [log]]
+    [cljs.core.async :refer [<! >! chan put! alts! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
