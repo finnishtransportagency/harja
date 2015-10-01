@@ -12,10 +12,10 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
-            
+
             [harja.domain.paallystys.pot :as pot]
             [harja.domain.roolit :as roolit]
-            
+
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [paallystystoteumat paallystysilmoitus-lomakedata] :as paallystys]
             [harja.tiedot.navigaatio :as nav]
@@ -23,9 +23,10 @@
 
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
-            
+
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -573,6 +574,8 @@
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa? paallystys/karttataso-paallystyskohteet)
 
     (fn []
-      (if @paallystysilmoitus-lomakedata
-        [paallystysilmoituslomake]
-        [ilmoitusluettelo]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @paallystysilmoitus-lomakedata
+         [paallystysilmoituslomake]
+         [ilmoitusluettelo])])))

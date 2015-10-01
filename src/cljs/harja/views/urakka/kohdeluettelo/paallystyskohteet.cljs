@@ -166,6 +166,7 @@
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 
           [:div
+           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko                  "Kohteet"
              :tyhja                    (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")

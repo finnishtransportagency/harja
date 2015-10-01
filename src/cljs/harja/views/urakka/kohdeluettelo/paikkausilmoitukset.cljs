@@ -22,7 +22,8 @@
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -347,6 +348,8 @@
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa paallystys/karttataso-paikkauskohteet)
 
     (fn []
-      (if @paallystys/paikkausilmoitus-lomakedata
-        [paikkausilmoituslomake]
-        [ilmoitusluettelo]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @paallystys/paikkausilmoitus-lomakedata
+         [paikkausilmoituslomake]
+         [ilmoitusluettelo])])))
