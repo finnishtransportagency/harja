@@ -123,7 +123,8 @@
 (def +bufferi+ 500)
 
 (def asioiden-haku (reaction<!
-                     [_ @hae-toimenpidepyynnot?
+                     [nakymassa? @nakymassa?
+                      _ @hae-toimenpidepyynnot?
                       _ @hae-kyselyt?
                       _ @hae-tiedoitukset?
                       _ @hae-tyokoneet?
@@ -131,4 +132,4 @@
                       _ @hae-onnettomuudet?
                       _ @livesuodattimen-asetukset]
                      {:odota +bufferi+}
-                     (when @nakymassa? (hae-asiat))))
+                     (when nakymassa? (hae-asiat))))

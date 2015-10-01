@@ -133,76 +133,82 @@
 
 (defonce hallintapaneeli (atom {1 {:auki true :otsikko "Historiakuva" :sisalto [suodattimet]}}))
 
+(defmulti nayta-popup :aihe)
+
+(defmethod nayta-popup :toteuma-klikattu [tapahtuma]
+  (log "toteuma-klikattu")
+  (log (pr-str (dissoc tapahtuma :reittipisteet)))
+  (log (pr-str (:tehtava tapahtuma)))
+  (log (pr-str (get-in tapahtuma [:tehtava :id])))
+  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+                       [:div.kartta-toteuma-popup
+                        [:p [:b "Toteuma"]]
+                        [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                        (when (:suorittaja tapahtuma)
+                          [:span
+                           [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                        (when-not (empty? (:tehtavat tapahtuma))
+                          (doall
+                            (for [tehtava (:tehtavat tapahtuma)]
+                              [:span
+                               [:p "Toimenpide: " (:toimenpide tehtava)]
+                               [:p "Määrä: " (:maara tehtava)]
+                               [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                               [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                        (when-not (empty? (:materiaalit tapahtuma))
+                          (doall
+                            (for [toteuma (:materiaalit tapahtuma)]
+                              [:span
+                               [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                               [:p "Määrä: " (:maara toteuma)]])))
+                        (when (:lisatieto tapahtuma)
+                          [:p "Lisätieto: " (:lisatieto tapahtuma)])]))
+
+
+(defmethod nayta-popup :reittipiste-klikattu [tapahtuma]
+  (log "reittipiste-klikattu")
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
+                       [:div.kartta-reittipiste-popup
+                        [:p [:b "Reittipiste"]]
+                        [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
+                        (when (get-in tapahtuma [:tehtava :id])
+                          [:span
+                           [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
+                           [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
+                        (when (get-in tapahtuma [:materiaali :id])
+                          [:span
+                           [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
+                           [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])]))
+
+(defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
+  (log "ilmoitus-klikattu")
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
+                       [:div.kartta-ilmoitus-popup
+                        (log (pr-str tapahtuma))
+                        [:p [:b (name (:tyyppi tapahtuma))]]
+                        [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+                        [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
+                        [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
+                        [:a {:href     "#"
+                             :on-click #(do (.preventDefault %)
+                                            (let [putsaa (fn [asia]
+                                                           (clojure.set/rename-keys
+                                                             (dissoc asia :type :alue)
+                                                             {:tyyppi :ilmoitustyyppi}))]
+                                              (reset! nav/sivu :ilmoitukset)
+                                              ;; FIXME: tämä putsailu mielestäni karvaista ja hyvä miettiä uudestaan. -jv
+                                              (reset! ilmoitukset/haetut-ilmoitukset
+                                                      (map putsaa (filter
+                                                                    (fn [asia] (= (:type asia) :ilmoitus))
+                                                                    @tiedot/historiakuvan-asiat-kartalla)))
+                                              (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))
+                                              ))}
+                         "Siirry ilmoitusnäkymään"]]))
+
 (defn historiakuva []
   (komp/luo
     (komp/ulos (paivita-periodisesti tiedot/asioiden-haku 60000)) ;1min
-    (komp/kuuntelija :toteuma-klikattu
-                     (fn [this tapahtuma]
-                       (log (pr-str (dissoc tapahtuma :reittipisteet)))
-                       (log (pr-str (:tehtava tapahtuma)))
-                       (log (pr-str (get-in tapahtuma [:tehtava :id])))
-                       (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
-                                            [:div.kartta-toteuma-popup
-                                             [:p [:b "Toteuma"]]
-                                             [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
-                                             (when (:suorittaja tapahtuma)
-                                               [:span
-                                                [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
-                                             (when-not (empty? (:tehtavat tapahtuma))
-                                               (doall
-                                                 (for [tehtava (:tehtavat tapahtuma)]
-                                                   [:span
-                                                    [:p "Toimenpide: " (:toimenpide tehtava)]
-                                                    [:p "Määrä: " (:maara tehtava)]
-                                                    [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                                                    [:p "Lisätieto: " (:lisatieto tehtava)]])))
-                                             (when-not (empty? (:materiaalit tapahtuma))
-                                               (doall
-                                                 (for [toteuma (:materiaalit tapahtuma)]
-                                                   [:span
-                                                    [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                                                    [:p "Määrä: " (:maara toteuma)]])))
-                                             (when (:lisatieto tapahtuma)
-                                               [:p "Lisätieto: " (:lisatieto tapahtuma)])]))
-                     :reittipiste-klikattu
-                     (fn [this tapahtuma]
-                       (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
-                                            [:div.kartta-reittipiste-popup
-                                             [:p [:b "Reittipiste"]]
-                                             [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
-                                             (when (get-in tapahtuma [:tehtava :id])
-                                               [:span
-                                                [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
-                                                [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
-                                             (when (get-in tapahtuma [:materiaali :id])
-                                               [:span
-                                                [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
-                                                [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])]))
-                     :ilmoitus-klikattu
-                     (fn [this tapahtuma]
-                       (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
-                                            [:div.kartta-ilmoitus-popup
-                                             (log (pr-str tapahtuma))
-                                             [:p [:b (name (:tyyppi tapahtuma))]]
-                                             [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-                                             [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
-                                             [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
-                                             [:a {:href     "#"
-                                                  :on-click #(do (.preventDefault %)
-                                                                 (let [putsaa (fn [asia]
-                                                                                (clojure.set/rename-keys
-                                                                                  (dissoc asia :type :alue)
-                                                                                  {:tyyppi :ilmoitustyyppi}))]
-                                                                   (reset! nav/sivu :ilmoitukset)
-                                                                   ;; FIXME: tämä putsailu mielestäni karvaista ja hyvä miettiä uudestaan. -jv
-                                                                   (reset! ilmoitukset/haetut-ilmoitukset
-                                                                           (map putsaa (filter
-                                                                                         (fn [asia] (= (:type asia) :ilmoitus))
-                                                                                         @tiedot/historiakuvan-asiat-kartalla)))
-                                                                   (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))
-                                                                   ))}
-                                              "Siirry ilmoitusnäkymään"]]))
-                     )
+    (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu] #(nayta-popup %2))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))

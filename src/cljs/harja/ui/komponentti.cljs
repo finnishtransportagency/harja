@@ -54,7 +54,7 @@ metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että 
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
 Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
-aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoja) ja käsittelyfunktio,
+aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai vektori avainsanoja) ja käsittelyfunktio,
   jolle annetaan kaksi parametria: komponentti ja tapahtuma."
   [& aiheet-ja-kasittelijat]
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
