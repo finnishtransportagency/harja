@@ -32,7 +32,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defonce kartalla-nakyva-alue (atom nil))
 
-;; Kartan koko. Voi olla aluksi: S (pieni, urakan pääsivulla), M (puolen ruudun leveys) tai L (koko leveys)
+;; Kartan koko voi olla
+;; :hidden (ei näy mitään)
+;; :S (näkyy Näytä kartta -nappi)
+;; :M (matalampi täysleveä)
+;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :M))
 
 (defn vaihda-kartan-koko! [uusi-koko]
@@ -119,7 +123,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
 (def tarvitsen-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin. 
-  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyissä."
+  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyvissä."
   (atom #{}))
 
 (def pakota-nakyviin? (atom false))
@@ -130,31 +134,27 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
-                  sivu @sivu]
+                  sivu @sivu
+                  v-ur @valittu-urakka]
               (if @tarvitaanko-tai-onko-pakotettu-nakyviin?
-                ;; joku tarvitsee karttaa, pakotetaan M kokoon
-                :M
+                (if (or
+                      (= :hidden valittu-koko)
+                      (= :S valittu-koko))
+                  :M
+                  valittu-koko)
 
                 ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
                 ;; tai palautetaan käyttäjän valitsema koko
                 (cond (= sivu :hallinta) :hidden
                       (= sivu :about) :hidden
-                      (= sivu :tilannekuva) :L
+                      (= sivu :tilannekuva) :XL
+                      (and (= sivu :urakat)
+                           (not v-ur)) :XL
                       :default valittu-koko)))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   (reset! valittu-hallintayksikko-id hy-id)
   (reset! valittu-urakka-id u-id))
-
-  ;; ;; jos hy sama kuin jo valittu, ei haeta sitä uudestaan vaan asetetaan vain urakka
-  ;; (if-not (= hy-id (:id @valittu-hallintayksikko))
-  ;;   (go (let [yks (<! (hy/hae-hallintayksikko hy-id))]
-  ;;         (reset! valittu-hallintayksikko yks)
-  ;;         (reset! valittu-urakka-id u-id)
-  ;;         ;;(reset! urakkalista (<! (ur/hae-hallintayksikon-urakat yks)))
-  ;;         ;;(aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
-  ;;   ;; else
-  ;;   (aseta-urakka-ja-urakkatyyppi @urakkalista u-id)))
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
@@ -196,7 +196,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
   (paivita-url)
   (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
-    (reset! kartan-kokovalinta :S)))
+    (reset! kartan-kokovalinta :M)))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]

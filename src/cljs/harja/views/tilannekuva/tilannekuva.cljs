@@ -6,18 +6,19 @@
             [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
             [harja.views.tilannekuva.historiakuva :as historiakuva]
             [harja.views.tilannekuva.nykytilanne :as nykytilanne]
-            ))
+            [harja.views.kartta :as kartta]))
 
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tilannekuva/tilannekuvassa?)
     (fn []
-      [bs/tabs
-       {:active tilannekuva/valittu-valilehti}
+      [:span.tilannekuva
+       [bs/tabs
+        {:active tilannekuva/valittu-valilehti}
 
-       "Nykytilanne" :nykytilanne
-       [nykytilanne/nykytilanne]
+        "Nykytilanne" :nykytilanne
+        [nykytilanne/nykytilanne]
 
-       "Historia" :historiakuva
-       [historiakuva/historiakuva]
-       ])))
+        "Historia" :historiakuva
+        [historiakuva/historiakuva]]
+       [kartta/kartan-paikka]])))

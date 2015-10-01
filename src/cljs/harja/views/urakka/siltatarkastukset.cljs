@@ -105,6 +105,7 @@
                                 }
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
 
+         [kartta/kartan-paikka]
          [grid/grid
           {:otsikko        "Sillat"
            :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
