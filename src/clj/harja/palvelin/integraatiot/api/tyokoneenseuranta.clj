@@ -18,20 +18,21 @@
                                                                (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
-    (validointi/tarkista-urakka db (get-in havainto [:havainto :urakkaid]))
-    (tks/tallenna-tyokonehavainto db
-                                  (get-in data [:otsikko :lahettaja :jarjestelma])
-                                  (get-in data [:otsikko :lahettaja :organisaatio :nimi])
-                                  (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
-                                  (get-in data [:otsikko :viestintunniste :id])
-                                  (get-in data [:otsikko :lahetysaika])
-                                  (get-in havainto [:havainto :tyokone :id])
-                                  (get-in havainto [:havainto :tyokone :tyokonetyyppi])
-                                  (get-in havainto [:havainto :sijainti :koordinaatit :x])
-                                  (get-in havainto [:havainto :sijainti :koordinaatit :y])
-                                  (get-in havainto [:havainto :suunta])
-                                  (get-in havainto [:havainto :urakkaid])
-                                  (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))))
+    (let [urakka-id (get-in havainto [:havainto :urakkaid])]
+      (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (tks/tallenna-tyokonehavainto db
+                                    (get-in data [:otsikko :lahettaja :jarjestelma])
+                                    (get-in data [:otsikko :lahettaja :organisaatio :nimi])
+                                    (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
+                                    (get-in data [:otsikko :viestintunniste :id])
+                                    (get-in data [:otsikko :lahetysaika])
+                                    (get-in havainto [:havainto :tyokone :id])
+                                    (get-in havainto [:havainto :tyokone :tyokonetyyppi])
+                                    (get-in havainto [:havainto :sijainti :koordinaatit :x])
+                                    (get-in havainto [:havainto :sijainti :koordinaatit :y])
+                                    (get-in havainto [:havainto :suunta])
+                                    urakka-id
+                                    (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat])))))
   {:ilmoitukset "Kirjauksen tallennus onnistui"})
 
 (defrecord Tyokoneenseuranta []
