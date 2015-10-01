@@ -27,7 +27,8 @@
             [cljs-time.core :as t]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -297,6 +298,9 @@
 
 
 (defn erilliskustannusten-toteumat []
-  (if @valittu-kustannus
-    [erilliskustannusten-toteuman-muokkaus]
-    [erilliskustannusten-toteumalistaus]))
+  (fn []
+    [:span
+     [kartta/kartan-paikka]
+     (if @valittu-kustannus
+       [erilliskustannusten-toteuman-muokkaus]
+       [erilliskustannusten-toteumalistaus])]))

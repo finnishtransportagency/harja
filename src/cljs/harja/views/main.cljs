@@ -3,17 +3,17 @@
   (:require [bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
+            [harja.ui.komponentti :as komp]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.leaflet :refer [leaflet]]
-            [harja.ui.yleiset :refer [linkki] :as yleiset]
+            [harja.ui.yleiset :refer [linkki elementti-idlla sijainti] :as yleiset]
             [harja.ui.modal :refer [modal-container]]
             [harja.ui.viesti :refer [viesti-container]]
-            [harja.ui.ikonit :as ikonit]
-
             [harja.tiedot.navigaatio :as nav]
-
+            [harja.loki :refer [log logt]]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
+            [harja.fmt :as fmt]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -73,56 +73,60 @@
 (defn main
   "Harjan UI:n pääkomponentti"
   []
-  (let [sivu @nav/sivu
-        aikakatkaistu? @istunto/istunto-aikakatkaistu
-        kartan-koko @nav/kartan-koko
-        korkeus @yleiset/korkeus
-        kayttaja @istunto/kayttaja]
+  (komp/luo
+    (komp/kuuntelija :kartan-paikka
+                     (fn [_ {:keys [x y w h naulattu?] :as event}]
+                       (log "KARTAN PAIKKA: " (pr-str event))
+                       (let [karttasailio (elementti-idlla "kartta-container")
+                             tyyli (.-style karttasailio)]
+                         (if naulattu?
+                           (do
+                             (set! (.-position tyyli) "fixed")
+                             (set! (.-left tyyli) (fmt/pikseleina x))
+                             (set! (.-top tyyli) "0px")
+                             (set! (.-width tyyli) (fmt/pikseleina w)))
+                           (do
+                             (set! (.-position tyyli) "absolute")
+                             (set! (.-left tyyli) (fmt/pikseleina x))
+                             (set! (.-top tyyli) (fmt/pikseleina y))
+                             (set! (.-width tyyli) (fmt/pikseleina w)))))))
+    (fn []
+      (let [sivu @nav/sivu
+            aikakatkaistu? @istunto/istunto-aikakatkaistu
+            korkeus @yleiset/korkeus
+            kayttaja @istunto/kayttaja]
 
-    (if aikakatkaistu?
-      [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
-      (if (nil? kayttaja)
-        [ladataan]
-        (if (or (:poistettu kayttaja)
-                (empty? (:roolit kayttaja)))
-          [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+        (if aikakatkaistu?
+          [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
+          (if (nil? kayttaja)
+            [ladataan]
+            (if (or (:poistettu kayttaja)
+                    (empty? (:roolit kayttaja)))
+              [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
 
-          [:span
-           [:div.container
-            [header sivu]]
-           [:div.container
-            [murupolku/murupolku]]
+              [:div
+               [:div.container
+                [header sivu]]
 
-           (let [[sisallon-luokka kartan-luokka]
-                 (case kartan-koko
-                   :hidden ["col-sm-12" "hide"]
-                   :S ["col-sm-12" "kulma-kartta"]          ;piilota-kartta"]
-                   :M ["col-sm-6" "col-sm-6"]
-                   :L ["hide" "col-sm-12"])]
-             ;; Bootstrap grid system: http://getbootstrap.com/css/#grid
-             [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-              [:div.row.row-sisalto
+               [:div.container
+                [murupolku/murupolku]]
 
+               ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
+               [:div#kartta-container
+                [kartta/kartta]]
 
-               ;; Kun kartta on iso, se piilottaa oletuksena kaiken muun sisällön - sisallolle
-               ;; annetaan luokka 'hide'. Tilannekuvassa tätä ei haluta, koska välilehtien pitäisi
-               ;; pysyä kartan päällä.
-               [:div {:class (str "col-sisalto " (when-not (= sivu :tilannekuva) sisallon-luokka))}
-                (case sivu
-                  :urakat [urakat/urakat]
-                  :raportit [raportit/raportit]
-                  :ilmoitukset [ilmoitukset/ilmoitukset]
-                  :hallinta [hallinta/hallinta]
-                  :tilannekuva [tilannekuva/tilannekuva]
-                  :about [about/about]
-                  )]
-               [:div#kartta-container {:class (str "col-kartta " kartan-luokka)}
-                (if (= :S kartan-koko)
-                  [:button.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(reset! nav/kartan-koko :M)}
-                   [:span.livicon-expand " Avaa kartta"]]
-                  [kartta/kartta])]]])
-           [footer]
-           [modal-container]
-           [viesti-container]
-           ])))))
+               [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+                [:div.row.row-sisalto
+                 [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+                  (case sivu
+                    :urakat [urakat/urakat]
+                    :raportit [raportit/raportit]
+                    :ilmoitukset [ilmoitukset/ilmoitukset]
+                    :hallinta [hallinta/hallinta]
+                    :tilannekuva [tilannekuva/tilannekuva]
+                    :about [about/about])]]]
+
+               [footer]
+               [modal-container]
+               [viesti-container]])))))))
 

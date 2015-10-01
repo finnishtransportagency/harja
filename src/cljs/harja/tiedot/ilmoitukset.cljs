@@ -19,6 +19,14 @@
 (defonce valittu-ilmoitus (atom nil))
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
+
+(defn ilmoitustyypin-nimi
+  [tyyppi]
+  (case tyyppi
+    :kysely "Kysely"
+    :toimenpidepyynto "Toimenpidepyyntö"
+    :tiedoitus "Tiedoksi"))
+
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
@@ -61,12 +69,6 @@
                     (when-not (k/virhe? tulos)
                       (jarjesta-ilmoitukset tulos)))))))
 
-;; POLLAUS
-(def pollaus-id (atom nil))
-(def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
-(def +intervalli+ +minuutti+)
-
 (def ilmoitus-kartalla-xf
   #(assoc %
     :type :ilmoitus
@@ -88,13 +90,3 @@
            @valittu-ilmoitus
            (when @karttataso-ilmoitukset
              (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
-
-
-(defn lopeta-pollaus []
-  (when-let [lopeta @pollaus-id]
-    (lopeta)))
-
-(defn aloita-pollaus
-  []
-  (lopeta-pollaus)
-  (reset! pollaus-id (paivita-periodisesti haetut-ilmoitukset +intervalli+)))

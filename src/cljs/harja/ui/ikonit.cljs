@@ -172,8 +172,6 @@
   [:span.glyphicon.glyphicon-ok-sign])
 (defn question-sign []
   [:span.glyphicon.glyphicon-question-sign])
-(defn info-sign []
-  [:span.glyphicon.glyphicon-info-sign])
 (defn screenshot []
   [:span.glyphicon.glyphicon-screenshot])
 (defn remove-circle []
@@ -515,6 +513,8 @@
   [:span.livicon-chevron-left])
 (defn download []
   [:span.livicon-download])
+(defn info-sign []
+  [:span.livicon-info-circle])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []

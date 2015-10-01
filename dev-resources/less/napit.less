@@ -41,17 +41,17 @@
 /* Ensisijaista toimintoa indikoiva nappi. */
 .nappi-ensisijainen {
     .nappi(@vari:                 @valkoinen;
-    @tausta:               @sininen4;
-    @tausta-osoitettaessa: @sininen5);
+    @tausta:               @primaari-sininen;
+    @tausta-osoitettaessa: @primaari-sininen-valittuna);
 }
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
-    @vari:                 @sininen4;
+    @vari:                 @primaari-sininen;
     @vari-osoitettaessa:   @valkoinen;
     @tausta:               @valkoinen;
-    @tausta-osoitettaessa: @sininen5;
-    @reunus:               @sininen4;
+    @tausta-osoitettaessa: @primaari-sininen-valittuna;
+    @reunus:               @primaari-sininen;
     );
 }
 /* Myönteinen toiminto */
@@ -97,7 +97,7 @@
     width:                 100%;
     &:active,
     &:focus {
-        border: 1px solid @sininen4;
+        border: 1px solid @primaari-sininen;
         outline: none;
     }
     &[disabled] {
@@ -110,7 +110,7 @@
     padding: 1px;
     width: 32px;
     .livicon-chevron-down {
-        color: @sininen4;
+        color: @primaari-sininen;
         position: relative;
         top: 2px;
     }

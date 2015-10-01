@@ -1,11 +1,32 @@
-
+@kartan-transition-kesto: .1s;
 #kartta {
-  .leaflet-top.leaflet-left {
-    z-index: 1; //ettei zoominapit peitä urakoitsija-pudotusvalikkoa
+  border: @primaari-sininen 1px ridge;
+  &.piilossa {
+    border: @primaari-sininen 0 ridge;
+  }
+  -webkit-backface-visibility: hidden;
+  -moz-transition: height @kartan-transition-kesto ease;
+  -webkit-transition: height @kartan-transition-kesto ease;
+  -o-transition: height @kartan-transition-kesto ease;
+  transition: height @kartan-transition-kesto ease;
+  * {
+    -webkit-transform: translate3d(0,0,0);
+  }
+  }
+.ol-control {
+  > .ol-zoom-in,
+  > .ol-zoom-out {
+    background-color: @primaari-sininen;
+    &:hover,
+    &:active,
+    &.active {
+      background-color: @primaari-sininen-valittuna;
+    }
   }
 }
 
-.ikoni-kartta-ctrl {
+
+  .ikoni-kartta-ctrl {
   background-color: #FFF;
   display: inline-block;
   height: 40px;
@@ -20,30 +41,15 @@
 
 .kartan-kontrollit {
   position: absolute;
-  z-index: 1; //kartan päällä > 0
+  z-index: 2; //kartan päällä
 }
 
 .kartan-koko-kontrollit {
-  padding-right: 15px;
-  right: 0;
-  top: 0;
-
-  button {
-    height: 39px;
-    width: 44px;
-  }
-  .otsikko {
-    bottom: 5px;
-    height: 39px;
-    position: relative;
-  }
-  .gi-2x {
-    font-size: 2em;
-    margin-top: 3px;
-  }
-
-  .kartta-kontrolli {
-    font-size: 32px;
+  left: 50%;
+  position: absolute;
+  width: 50%;
+  button:nth-of-type(2) {
+    margin-left: 20px;
   }
 }
 
@@ -51,15 +57,13 @@
   left: 0;
   top: 60px;
 }
-
-.kulma-kartta {
-  .nappi-avaa-kartta {
-    position: absolute;
-    right: 0;
-    top: 150px;
-  }
+#kartta-container {
+  border-bottom: @harjan-taustavari 5px solid;
+  z-index: 1;
 }
-
+.avaa-kartta-wrap {
+  text-align: center;
+}
 .piilota-kartta {
   position: relative;
   right: 0;
@@ -97,4 +101,3 @@
     background-image: url("../images/pohjavesialue.png");
   }
 }
-

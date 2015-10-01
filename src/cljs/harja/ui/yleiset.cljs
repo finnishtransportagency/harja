@@ -7,7 +7,10 @@
             [reagent.core :as r])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]))
+                   [reagent.ratom :refer [reaction run!]]))
+
+(defn elementti-idlla [id]
+  (.getElementById js/document (name id)))
 
 (declare kuuntelija)
 
@@ -19,6 +22,11 @@
 
 ;;(defonce sisallon-korkeus (atom (-> js/document .-body .-clientHeight)))
 
+(defonce ikkunan-koko-tapahtuman-julkaisu
+         (run!
+           (let [h @korkeus
+                 w @leveys]
+             (t/julkaise! {:aihe :ikkunan-koko-muuttunut :leveys w :korkeus h}))))
 
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
@@ -30,7 +38,6 @@
 ;;(defonce sisallon-koon-kuuntelija (do
 ;;                                    (js/setInterval #(reset! sisallon-korkeus (-> js/document .-body .-clientHeight)) 200)
 ;;                                    true))
-
 (defn navigaation-korkeus []
   (some-> js/document
           (.getElementsByTagName "nav")
@@ -55,9 +62,19 @@
 (defn sijainti
   "Laskee DOM-elementin sijainnin, palauttaa [x y w h]."
   [elt]
+  (assert elt (str "Ei voida laskea sijaintia elementille null"))
   (let [r (.getBoundingClientRect elt)
         sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
     sijainti))
+
+(defn offset-korkeus [elt]
+  (loop [offset (.-offsetTop elt)
+         parent (.-offsetParent elt)]
+    (if (or (nil? parent)
+            (= js/document.body parent))
+      offset
+      (recur (+ offset (.-offsetTop parent))
+             (.-offsetParent parent)))))
 
 (defn sijainti-sailiossa
   "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
@@ -459,3 +476,11 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
       [:span
        " / " [:span.loppuosa loppuosa]
        " / " [:span.loppuetaisyys loppuetaisyys]])]))
+
+(defn vihje
+  [vihje luokka]
+  [:div {:class
+         (str "lomake-vihje " (or luokka ""))}
+   [:div.vihjeen-sisalto
+    (harja.ui.ikonit/info-sign)
+    (str " " vihje)]])
