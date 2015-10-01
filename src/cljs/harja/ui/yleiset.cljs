@@ -459,3 +459,11 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
       [:span
        " / " [:span.loppuosa loppuosa]
        " / " [:span.loppuetaisyys loppuetaisyys]])]))
+
+(defn vihje
+  [vihje luokka]
+  [:div {:class
+         (str "lomake-vihje " (or luokka ""))}
+   [:div.vihjeen-sisalto
+    (harja.ui.ikonit/info-sign)
+    (str " " vihje)]])

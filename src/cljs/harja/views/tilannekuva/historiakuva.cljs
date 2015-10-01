@@ -68,7 +68,7 @@
                       :vaihtoehto-nayta {
                                          :toimenpidepyynnot      "Toimenpidepyynnöt"
                                          :kyselyt                "Kyselyt"
-                                         :tiedoitukset           "Tiedoitukset"
+                                         :tiedoitukset           "Tiedotukset"
                                          :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
                                          :tarkastukset           "Tarkastukset"
                                          :havainnot              "Havainnot"
