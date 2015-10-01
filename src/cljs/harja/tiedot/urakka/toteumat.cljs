@@ -20,10 +20,11 @@
          (assoc %
          :type :yksikkohintainen-toteuma
          :alue {:type   :arrow-line
-                :points (mapv :sijainti (sort-by
-                                          :aika
-                                          pvm/ennen?
-                                          (:reittipisteet %)))}))))
+                :points (mapv (comp :coordinates :sijainti)
+                              (sort-by
+                               :aika
+                               pvm/ennen?
+                               (:reittipisteet %)))}))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
