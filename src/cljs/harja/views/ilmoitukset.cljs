@@ -17,11 +17,12 @@
             [bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [clojure.string :refer [capitalize]]))
+            [clojure.string :refer [capitalize]]
+            [harja.views.kartta :as kartta]))
 
 (defn pollauksen-merkki
   []
-  [:span " Automaattinen päivittäminen päällä."])
+  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" ""])
 
 (defn urakan-sivulle-nappi
   [ilmoitus]
@@ -104,15 +105,7 @@
       [yleiset/tietoja {}
        "Kuittaaja: " (nayta-henkilo (:kuittaaja kuittaus))
        "Puhelinnumero: " (parsi-puhelinnumero (:kuittaaja kuittaus))
-       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
-      ;;[:br]
-      ;; Otettu pois 11.8.2015 asiakkaan kommenttien perusteella. Pelkäsivät että tämä siirtää vastuuta
-      ;; pois urakoitsijalta, ja antaa tekosyyn syyttää aliurakoitsijaa.
-      ;; Jätin tämän tänne, koska voihan olla että mieli esim. käyttäjätesteissä muuttuu..
-      #_[yleiset/tietoja {}
-         "Käsittelijä: " (nayta-henkilo (:kasittelija kuittaus))
-         "Puhelinnumero: " (parsi-puhelinnumero (:kasittelija kuittaus))
-         "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])]]]
+       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]]]
     {:key (:id kuittaus)}))
 
 (defn luo-ilmoituksen-otsikko [ilm]
@@ -159,7 +152,12 @@
 
 (defn ilmoitusten-paanakyma
   []
+  (tiedot/hae-ilmoitukset)
+  (tiedot/aloita-pollaus)
   (komp/luo
+    {:component-will-unmount (fn []
+                               ;;FIXME: lopeta-pollaus ei toimi HAR-835
+                               (tiedot/lopeta-pollaus))}
     (fn []
       [:span
 
@@ -167,6 +165,7 @@
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
                      (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
+                     (tiedot/hae-ilmoitukset)
                      (swap! tiedot/valinnat
                             (fn [vanha]
                               (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
@@ -197,44 +196,34 @@
                         :aseta      #(assoc-in %1 [:aikavali 1] %2)
                         :tyyppi     :pvm})
 
-         {:nimi        :hakuehto :otsikko "Hae ilmoituksia"
+         {:nimi        :hakuehto :otsikko "Hakusana"
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
-          :leveys-col  4}
+          :leveys-col  6}
 
-         {:nimi        :tilat :otsikko "Tilat"
-          :tyyppi      :boolean-group
-          :vaihtoehdot [:suljetut :avoimet]}
+         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat" :leveys-col 6}
+                       {:nimi        :tilat :otsikko "Tila"
+                        :tyyppi      :boolean-group
+                        :vaihtoehdot [:suljetut :avoimet]}
 
-         {:nimi             :tyypit :otsikko "Tyyppi"
-          :tyyppi           :boolean-group
-          :vaihtoehdot      [:kysely :toimenpidepyynto :tiedoitus]
-          :nayta-vaihtoehto #(case %
-                              :kysely "Kysely"
-                              :toimenpidepyynto "Toimenpidepyyntö"
-                              :tiedoitus "Tiedoitus")}
-         ]
+                       {:nimi             :tyypit :otsikko "Tyyppi"
+                        :tyyppi           :boolean-group
+                        :vaihtoehdot      [:kysely :toimenpidepyynto :tiedoitus]
+                        :vaihtoehto-nayta tiedot/ilmoitustyypin-nimi})]
 
         @tiedot/valinnat
         ]
 
-       [:div.container
-
-        [palvelinkutsu-nappi
-         "Hae ilmoitukset"
-         #(tiedot/hae-ilmoitukset)
-         {:ikoni        (harja.ui.ikonit/search)
-          :kun-onnistuu #(tiedot/aloita-pollaus)}]
-
+       [:div
         (when @tiedot/pollaus-id (pollauksen-merkki))
-
 
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)}
+          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)
+          :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae (comp capitalize name :ilmoitustyyppi) :leveys "20%"}
+          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(tiedot/ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "20%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
            :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
@@ -247,6 +236,8 @@
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
 
     (fn []
-      (if @tiedot/valittu-ilmoitus
-        [ilmoituksen-tiedot]
-        [ilmoitusten-paanakyma]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @tiedot/valittu-ilmoitus
+         [ilmoituksen-tiedot]
+         [ilmoitusten-paanakyma])])))

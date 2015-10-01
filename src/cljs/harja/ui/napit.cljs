@@ -96,9 +96,9 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
   :disabled  jos true, nappi on disabloitu"
 
   ([teksti uusi-fn] (uusi teksti uusi-fn {}))
-  ([teksti uusi-fn {:keys [disabled]}]
+  ([teksti uusi-fn {:keys [disabled luokka]}]
    [:button.nappi-ensisijainen
-    {:class    (when disabled "disabled")
+    {:class    (str (when disabled "disabled ") (or luokka ""))
      :disabled disabled
      :on-click #(uusi-fn)}
     [:span.livicon-plus " " teksti]]))

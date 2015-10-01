@@ -42,6 +42,10 @@
     (euro summa)
     "Indeksi puuttuu"))
 
+(defn pikseleina
+  [arvo]
+  (str arvo "px"))
+
 (defn kayttaja
   "Formatoi käyttäjän nimen."
   [{:keys [etunimi sukunimi]}]

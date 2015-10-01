@@ -338,5 +338,7 @@
     (komp/lippu nakymassa?)
     (fn []
       (if (roolit/roolissa? roolit/tilaajan-kayttaja)
-        (raporttivalinnat-ja-raportti)
+        [:span
+         [kartta/kartan-paikka]
+         (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))

@@ -22,7 +22,8 @@
             [harja.tiedot.istunto :as istunto]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -437,9 +438,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 
 (defn havainnot []
-  (if @valittu-havainto
-    [havainto {} valittu-havainto]
-    [havaintolistaus]))
-  
+  (fn []
+    [:span
+     [kartta/kartan-paikka]
+     (if @valittu-havainto
+       [havainto {} valittu-havainto]
+       [havaintolistaus])]))
+
   
   
