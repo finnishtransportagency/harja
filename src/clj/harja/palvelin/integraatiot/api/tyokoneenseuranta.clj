@@ -18,6 +18,7 @@
                                                                (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
+    (validointi/tarkista-urakka db (get-in havainto [:havainto :urakkaid]))
     (tks/tallenna-tyokonehavainto db
                                   (get-in data [:otsikko :lahettaja :jarjestelma])
                                   (get-in data [:otsikko :lahettaja :organisaatio :nimi])
