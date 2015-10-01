@@ -168,7 +168,6 @@
            [grid/grid
             {:otsikko                  "Kohteet"
              :tyhja                    (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-             :luokat                   ["paallysteurakka-kohteet-paasisalto"]
              :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero
@@ -206,6 +205,7 @@
            [grid/grid
             {:otsikko                  "Muut kohteet" ; NOTE: Muut kohteet ovat alkuperäiseen sopimukseen kuulumattomia töitä.
              :tyhja                    (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
+             :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero
                                                   payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
@@ -239,7 +239,7 @@
            [grid/grid
             {:otsikko "Yhteensä"
              :tyhja   (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
-            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys "5%"}
              {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
              {:otsikko "" :nimi :nimi :tyyppi :string :leveys "25%"}
              (when paallystysnakyma?
