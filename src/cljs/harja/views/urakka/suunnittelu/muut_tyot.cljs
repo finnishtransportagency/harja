@@ -13,7 +13,8 @@
 
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.views.kartta :as kartta])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -56,6 +57,7 @@
     (komp/luo
       (fn []
         [:div.muut-tyot
+         [kartta/kartan-paikka]
          [grid/grid
           {:otsikko      "Muutos- ja lisätyöhinnat"
            :tyhja        (if (nil? @u/muutoshintaiset-tyot)

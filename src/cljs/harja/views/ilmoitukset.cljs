@@ -17,7 +17,8 @@
             [bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [clojure.string :refer [capitalize]]))
+            [clojure.string :refer [capitalize]]
+            [harja.views.kartta :as kartta]))
 
 (defn pollauksen-merkki
   []
@@ -216,7 +217,6 @@
        [:div
         (when @tiedot/pollaus-id (pollauksen-merkki))
 
-
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
           :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)
@@ -236,6 +236,8 @@
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
 
     (fn []
-      (if @tiedot/valittu-ilmoitus
-        [ilmoituksen-tiedot]
-        [ilmoitusten-paanakyma]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @tiedot/valittu-ilmoitus
+         [ilmoituksen-tiedot]
+         [ilmoitusten-paanakyma])])))

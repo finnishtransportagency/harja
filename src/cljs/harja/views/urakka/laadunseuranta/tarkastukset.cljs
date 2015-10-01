@@ -93,8 +93,9 @@
 
         (when @laadunseuranta/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
-                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus)) {}])
-        
+                           #(reset! laadunseuranta/valittu-tarkastus (uusi-tarkastus))
+           {:luokka "alle-marginia"}])
+
         [grid/grid
          {:otsikko "Tarkastukset"
           :tyhja "Ei tarkastuksia"
@@ -256,6 +257,8 @@
         (valitse-tarkastus tarkastus)))
 
     (fn []
-      (if @laadunseuranta/valittu-tarkastus
-        [tarkastus laadunseuranta/valittu-tarkastus]
-        [tarkastuslistaus]))))
+      [:span.tarkastukset
+       [kartta/kartan-paikka]
+       (if @laadunseuranta/valittu-tarkastus
+         [tarkastus laadunseuranta/valittu-tarkastus]
+         [tarkastuslistaus])])))
