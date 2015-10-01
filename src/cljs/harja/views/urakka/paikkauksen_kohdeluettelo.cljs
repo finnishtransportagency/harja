@@ -19,7 +19,8 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.paallystys.pot :as paallystys-pot])
+            [harja.domain.paallystys.pot :as paallystys-pot]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -59,6 +60,7 @@
   [ur]
   (komp/luo
     (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/lippu paallystys/karttataso-paikkauskohteet)
     (fn [ur]
       [bs/tabs {:active kohdeluettelo-valilehti}
 

@@ -345,7 +345,7 @@
 
 (defn paikkausilmoitukset []
   (komp/luo
-    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa paallystys/karttataso-paikkauskohteet)
+    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa)
 
     (fn []
       [:span

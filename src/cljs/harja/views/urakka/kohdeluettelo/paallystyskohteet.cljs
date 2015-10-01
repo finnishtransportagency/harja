@@ -159,9 +159,7 @@
                                :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
-      (komp/lippu paallystys-tai-paikkauskohteet-nakymassa
-                  paallystys/karttataso-paallystyskohteet
-                  paallystys/karttataso-paikkauskohteet)
+      (komp/lippu paallystys-tai-paikkauskohteet-nakymassa)
       (fn []
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 

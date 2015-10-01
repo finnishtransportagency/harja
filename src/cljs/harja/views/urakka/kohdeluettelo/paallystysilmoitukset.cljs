@@ -571,7 +571,7 @@
 
 (defn paallystysilmoitukset []
   (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-nakymassa? paallystys/karttataso-paallystyskohteet)
+    (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn []
       [:span
