@@ -196,11 +196,7 @@
                                                                   haettavat-toimenpidekoodit)))))]
       (reset! haetut-asiat tulos))))
 
-(def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
-
-(def +intervalli+ (* 1 +minuutti+))
-(def +bufferi+ (* 1 +sekuntti+))
+(def +bufferi+ 1000) ;1s
 
 (def asioiden-haku (reaction<!
                      [_ @hae-toimenpidepyynnot?
@@ -231,6 +227,3 @@
                                     (= @valittu-aikasuodatin :pitka)
                                     (not (some nil? (vals @pitkan-suodattimen-asetukset))))))
                        (hae-asiat))))
-
-(def lopeta-asioiden-haku (paivita-periodisesti asioiden-haku +intervalli+))
-
