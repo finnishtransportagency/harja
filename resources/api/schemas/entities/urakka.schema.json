@@ -19,6 +19,7 @@
         "sopimukset": {
           "id": "urn:harja/urakka/sopimukset",
           "type": "array",
+          "maxItems" : 100,
           "items": {
             "id": "urn:harja/urakka/sopimukset/0",
             "type": "object",
@@ -53,146 +54,63 @@
                     "id": "urn:harja/urakka/sopimukset/0/sopimus/paasopimusId",
                     "type": "integer"
                   },
-                  "kokonaishintaisetTyot": {
-                    "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot",
-                    "type": "array",
-                    "items": {
-                      "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0",
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "kokonaishintainenTyo": {
-                          "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo",
+                  "toteumakirjauskohteet": {
+                    "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kokonaishintaiset": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset",
+                        "type": "array",
+                        "items": {
+                          "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0",
                           "type": "object",
                           "additionalProperties": false,
                           "properties": {
-                            "id": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/id",
-                              "type": "integer",
-                              "required": true
-                            },
-                            "tehtavat": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/tehtavat",
-                              "type": "array",
-                              "items": {
-                                "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/tehtavat/0",
-                                "type": "object",
-                                "properties": {
-                                  "tehtava": {
-                                    "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/tehtavat/0/tehtava",
-                                    "type": "object",
-                                    "$ref": "file:resources/api/schemas/entities/tehtava.schema.json"
-                                  }
+                            "tehtava": {
+                              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava",
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": true,
+                              "properties": {
+                                "id": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/id",
+                                  "type": "integer",
+                                  "required": true
+                                },
+                                "selite": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/selite",
+                                  "type": "string"
                                 }
                               }
-                            },
-                            "vuosi": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/vuosi",
-                              "type": "integer"
-                            },
-                            "kuukausi": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/kuukausi",
-                              "type": "integer"
-                            },
-                            "summa": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/kokonaishintaisetTyot/0/kokonaishintainenTyo/summa",
-                              "type": "number"
                             }
                           }
                         }
-                      }
-                    }
-                  },
-                  "yksikkohintaisetTyot": {
-                    "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot",
-                    "type": "array",
-                    "items": {
-                      "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0",
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "yksikkohintainenTyo": {
-                          "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo",
+                      },
+                      "yksikkohintaiset": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset",
+                        "type": "array",
+                        "items": {
+                          "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0",
                           "type": "object",
                           "additionalProperties": false,
                           "properties": {
-                            "id": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/id",
-                              "type": "integer",
-                              "required": true
-                            },
                             "tehtava": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/tehtava",
+                              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava",
                               "type": "object",
                               "additionalProperties": false,
-                              "$ref": "file:resources/api/schemas/entities/tehtava.schema.json",
-                              "required": true
-                            },
-                            "alkupvm": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/alkupvm",
-                              "type": "string",
-                              "format": "date-time"
-                            },
-                            "loppupvm": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/loppupvm",
-                              "type": "string",
-                              "format": "date-time"
-                            },
-                            "maara": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/maara",
-                              "type": "number"
-                            },
-                            "yksikko": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/yksikko",
-                              "type": "string"
-                            },
-                            "yksikkohinta": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/yksikkohintaisetTyot/0/yksikkohintainenTyo/yksikkohinta",
-                              "type": "number"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "materiaalinKaytot": {
-                    "id": "urn:harja/materiaalinKaytot",
-                    "type": "array",
-                    "items": {
-                      "id": "urn:harja/materiaalinKaytot/0",
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "materiaalinKaytto": {
-                          "id": "urn:harja/materiaalinKaytot/0/materiaalinKaytto",
-                          "type": "object",
-                          "additionalProperties": false,
-                          "additionalProperties": false,
-                          "properties": {
-                            "materiaali": {
-                              "id": "urn:harja/maara/materiaali",
-                              "enum": [
-                                "talvisuolaliuosNaCl",
-                                "talvisuolaliuosCaCl2",
-                                "erityisalueetNaCl",
-                                "erityisalueetNaClLiuos",
-                                "hiekoitushiekka",
-                                "kaliumformiaatti"
-                              ]
-                            },
-                            "maara": {
-                              "id": "urn:harja/materiaalinKaytot/0/materiaalinKaytto/maara",
-                              "type": "object",
-                              "additionalProperties": false,
-                              "$ref": "file:resources/api/schemas/entities/maara.schema.json"
-                            },
-                            "alkupvm": {
-                              "id": "urn:harja/materiaalinKaytot/0/materiaalinKaytto/alkupvm",
-                              "type": "string"
-                            },
-                            "loppupvm": {
-                              "id": "urn:harja/materiaalinKaytot/0/materiaalinKaytto/loppupvm",
-                              "type": "string"
+                              "required": true,
+                              "properties": {
+                                "id": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/id",
+                                  "type": "integer",
+                                  "required": true
+                                },
+                                "selite": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/selite",
+                                  "type": "string"
+                                }
+                              }
                             }
                           }
                         }

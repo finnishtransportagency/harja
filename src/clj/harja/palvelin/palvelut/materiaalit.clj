@@ -5,7 +5,9 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -63,8 +65,8 @@
     (log/debug "Hae toteuman materiaalitiedot:")
     tulos))
 
-  
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id materiaalit] :as tiedot}]
+
+(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana?  materiaalit] :as tiedot}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
@@ -72,9 +74,31 @@
           vanhat-materiaalit (ryhmittele
                               (filter #(= sopimus-id (:sopimus %))
                                       (hae-urakan-materiaalit c user urakka-id)))]
+      ;; Ei materiaaleja, poista kaikki urakan materiaalit
+      (when (empty? materiaalit)
+        (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan materiaalit valitulta hoitokaudelta")
+        (log/debug "Poistetaanko myös tulevilta? " tulevat-hoitokaudet-mukana?)
+
+        (if tulevat-hoitokaudet-mukana?
+          (do
+            (doseq [i hoitokaudet]
+              (if (or
+                    (t/equal? (c/from-date (first i)) (c/from-date (first hoitokausi)))
+                    (t/after? (c/from-date (first i)) (c/from-date (first hoitokausi))))
+                (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
+                    (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                                        urakka-id sopimus-id
+                                                        (konv/sql-date (first i)) (konv/sql-date (second i)))))))
+          (do
+            (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str hoitokausi))
+            (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                                urakka-id sopimus-id
+                                                (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))))
+
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (log/debug "PÄIVITETÄÄN HOITOKAUDEN " hoitokausi " materiaalit")
-        
+        (log/debug "PÄIVITETÄÄN saadut materiaalit")
+        (log/debug "Päivitetäänkö myös tulevilta? " tulevat-hoitokaudet-mukana?)
+
         (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
@@ -97,8 +121,8 @@
                   :when (not (materiaalit-sisaan avain))]
             (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
             (q/poista-materiaalinkaytto-id! c (:id user) id))
-          
-      
+
+
           ;; Käydään läpi frontin lähettämät uudet materiaalit
           ;; Jos materiaali on kannassa, päivitetään sen määrä tarvittaessa
           ;; Jos materiaali ei ole kannassa, syötetään se uutena
@@ -113,13 +137,13 @@
                     (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
                         (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
                         )))
-          
+
               (let [{:keys [alkupvm loppupvm maara materiaali pohjavesialue]} materiaali]
                 (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
                 (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
                                     urakka-id sopimus-id (:id pohjavesialue) (:id user)))))))
-          
-          
+
+
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi
       (hae-urakan-materiaalit c user urakka-id))))
 
@@ -214,7 +238,7 @@
                                                            (:hk-alku tiedot)
                                                            (:hk-loppu tiedot)
                                                            (:sopimus tiedot))))
-                           
+
     this)
 
   (stop [this]
@@ -227,5 +251,5 @@
                      :hae-urakassa-kaytetyt-materiaalit
                      :poista-toteuma-materiaali!
                      :tallenna-toteuma-materiaaleja!)
-                    
+
     this))

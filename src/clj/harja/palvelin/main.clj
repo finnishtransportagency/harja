@@ -135,7 +135,7 @@
 
       :raportointi (component/using
                     (raportointi/luo-raportointi)
-                    [:db])
+                    [:db :pdf-vienti])
       
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -265,7 +265,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-varustetoteuma (component/using
                            (api-varustetoteuma/->Varustetoteuma)
-                           [:http-palvelin :db :integraatioloki])
+                           [:http-palvelin :db :tierekisteri :integraatioloki])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])

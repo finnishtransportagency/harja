@@ -18,10 +18,17 @@
       "required": true
     },
     "varuste": {
-      "id": "urn:harja/varuste",
+      "id": "urn:harja/tietue",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/varuste.schema.json",
+      "$ref": "file:resources/api/schemas/entities/tietue.schema.json",
+      "required": true
+    },
+    "lisatty": {
+      "id": "urn:harja/lisatty",
+      "type": "string",
+      "format": "date-time",
+      "additionalProperties": false,
       "required": true
     }
   }

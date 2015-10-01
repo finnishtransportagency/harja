@@ -40,22 +40,19 @@
       }
     },
     "varuste": {
-      "tunniste": "HAR560",
-      "tietolaji": "tl506",
+      "tunniste": "HARJ951547ZK",
+      "tietolaji": "tl505",
       "toimenpide": "lisatty",
-      "ominaisuudet": "-",
+      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  ",
       "sijainti": {
         "tie": {
-          "numero": 1234,
-          "nimi": "Kiviharjunlenkki",
+          "numero": 89,
+          "aet": 12,
           "aosa": 1,
-          "losa": 73,
-          "aet": 100,
-          "let": 20
+          "ajr": 0,
+          "puoli": 1
         }
-      },
-      "kuntoluokitus": 1,
-      "piiri": 1
+      }
     }
   }
 }

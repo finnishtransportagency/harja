@@ -1,50 +1,46 @@
 (ns harja.palvelin.integraatiot.api.varusteet
   "Varusteiden API-kutsut"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE PUT]]
+            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [taoensso.timbre :as log]
-            [clojure.string :as string])
+            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
-          muunnettu-vastausdata (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
-                                                  (map (fn [o]
-                                                         {:ominaisuus o})
-                                                       ominaisuudet)) :onnistunut)]
+          ominaisuudet (get-in vastausdata [:tietolaji :arvot])
+          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
-;; Muokkaa tietuetta siten, että se vastaa json skemaa
-;; Esimerkiksi koordinaatteja ja linkkejä ei ole toistaiseksi tarkoituskaan laittaa eteenpäin,
-;; vaan ne ovat 'future prooffausta'. Näiden poistaminen payloadista on kasattu tänne, jotta JOS joskus halutaankin
-;; palauttaa esim koordinaatit, ei tarvi kuin poistaa niiden dissoccaaminen täältä.
-;; Tietueille ja tietueelle tehdään myös muita samankaltaisia operaatiota, esim :tietue -> :varuste uudelleennimeäminen,
-;; mutta näitä operaatioita ei tehdä täällä em. syystä.
-(def puhdista-tietue-xf
-  #(-> %
-       (update-in [:tietue] dissoc :kuntoluokka :urakka :piiri)
-       (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
-       (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
+(defn hae-tietueet [tierekisteri parametrit kayttaja]
+  (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
+        tietolajitunniste (get parametrit "tietolajitunniste")
+        muutospvm (get parametrit "muutospaivamaara")]
+    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
+               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
+    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste muutospvm)
+          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
+
+      ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet
+      ;; Tässä tapauksessa palautamme tyhjän kartan
+      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
+        muunnettu-vastausdata
+        {}))))
 
 (defn hae-tietue [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
-          muunnettu-vastausdata (-> vastausdata
-                                    (dissoc :onnistunut)
-                                    (puhdista-tietue-xf)
-                                    (clojure.set/rename-keys {:tietue :varuste}))]
+          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueen-hakuvastaus vastausdata)]
 
       ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
       ;; Tässä tapauksessa me palautamme tyhjän kartan. Samalla tunnisteella voi myös virheellisesti löytyä
@@ -58,33 +54,20 @@
         (:tietue vastausdata) muunnettu-vastausdata
         :else {}))))
 
-(defn hae-tietueet [tierekisteri parametrit kayttaja]
-  (let [tr (into {} (filter val {:numero  (get parametrit "numero")
-                                 :aet     (get parametrit "aet")
-                                 :aosa    (get parametrit "aosa")
-                                 :let     (get parametrit "let")
-                                 :losa    (get parametrit "losa")
-                                 :ajr     (get parametrit "ajr")
-                                 :puoli   (get parametrit "puoli")
-                                 :alkupvm (get parametrit "alkupvm")}))
-        tietolajitunniste (get parametrit "tietolajitunniste")
-        muutospvm (get parametrit "muutospaivamaara")]
-    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
-               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tr))
-    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tr tietolajitunniste muutospvm)
-          muunnettu-vastausdata (-> vastausdata
-                                    (dissoc :onnistunut)
-                                    (update-in [:tietueet] #(map puhdista-tietue-xf %))
-                                    (update-in [:tietueet] #(into [] (remove nil? (remove empty? %))))
-                                    (update-in [:tietueet] (fn [tietue]
-                                                             (map #(clojure.set/rename-keys % {:tietue :varuste}) tietue)))
-                                    (clojure.set/rename-keys {:tietueet :varusteet}))]
+(defn lisaa-tietue [tierekisteri data kayttaja]
+  (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
+    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
 
-      ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet
-      ;; Tässä tapauksessa palautamme tyhjän kartan
-      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
-        muunnettu-vastausdata
-        {}))))
+(defn paivita-tietue [tierekisteri data kayttaja]
+  (log/debug "Päivitetään tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma data)]
+    (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
+
+(defn poista-tietue [tierekisteri data kayttaja]
+  (log/debug "Poistetaan tietue käyttäjän " kayttaja " pyynnöstä.")
+  (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma data)]
+    (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
 
 (defrecord Varusteet []
   component/Lifecycle
@@ -93,30 +76,51 @@
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu db integraatioloki :hae-tietolaji request nil skeemat/+tietolajien-haku+
-                         (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
+                         (fn [parametrit _ kayttaja _]
                            (hae-tietolaji tierekisteri parametrit kayttaja)))))
-
-    (julkaise-reitti
-      http :hae-tietue
-      (GET "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
-                           (hae-tietue tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil skeemat/+varusteiden-haku-vastaus+
-                         (fn [parametrit data kayttaja db]
-                           (log/debug "parametrit" parametrit)
-                           (hae-tietueet tierekisteri parametrit kayttaja)))))
+                         (fn [_ data kayttaja _]
+                           (hae-tietueet tierekisteri data kayttaja)))))
+
+    (julkaise-reitti
+      http :hae-tietue
+      (GET "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :hae-tietue request nil skeemat/+varusteen-haku-vastaus+
+                         (fn [parametrit _ kayttaja _]
+                           (hae-tietue tierekisteri parametrit kayttaja)))))
+
+    (julkaise-reitti
+      http :lisaa-tietue
+      (POST "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :lisaa-tietue request skeemat/+varusteen-lisays+ nil
+                         (fn [_ data kayttaja _]
+                           (lisaa-tietue tierekisteri data kayttaja)))))
+
+    (julkaise-reitti
+      http :paivita-tietue
+      (PUT "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :paivita-tietue request skeemat/+varusteen-paivitys+ nil
+                         (fn [_ data kayttaja _]
+                           (paivita-tietue tierekisteri data kayttaja)))))
+
+    (julkaise-reitti
+      http :poista-tietue
+      (DELETE "/api/varusteet/varuste" request
+        (kasittele-kutsu db integraatioloki :poista-tietue request skeemat/+varusteen-poisto+ nil
+                         (fn [_ data kayttaja _]
+                           (poista-tietue tierekisteri data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :hae-tietolaji
+                     :hae-tietueet
                      :hae-tietue
-                     :hae-tietueet)
+                     :lisaa-tietue
+                     :paivita-tietue
+                     :poista-tietue)
     this))

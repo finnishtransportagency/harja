@@ -21,121 +21,21 @@
     }
   },
   "varuste": {
-    "tunniste": "HARJ123456789",
+    "tunniste": "HARJ951547ZK",
+    "alkupvm": "2016-05-22T12:00:00Z",
     "sijainti": {
       "tie": {
-        "nimi": "tie",
-        "numero": 1,
+        "numero": 89,
+        "aet": 12,
         "aosa": 1,
-        "aet": 4,
-        "losa": 1,
-        "let": 1
-      },
-      "linkki": {
-        "id": 1,
-        "marvo": 10
-      },
-      "koordinaatit": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "ajr": 0,
+        "puoli": 1
       }
     },
-    "ajr": 10.1,
-    "kaista": 2,
-    "alkupvm": "2015-01-30T12:00:00Z",
-    "loppupvm": "2015-01-30T12:00:00Z",
-    "karttapvm": 2,
-    "kuntoluokitus": "1",
-    "ely": 1,
     "tietolaji": {
-      "tunniste": "tl506",
-      "arvot": [
-        {
-          "kentta": {
-            "tunniste": "LMNUMERO",
-            "arvo": "9987"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "SIVUTIE",
-            "arvo": "2"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMALA",
-            "arvo": "2"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMVANHA",
-            "arvo": "0"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMTYYPPI",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMKAUSI",
-            "arvo": "0"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMKIINNIT",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMMATER",
-            "arvo": "1"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMTEKSTI",
-            "arvo": "Testi liikennemerkki"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "LMOMIST",
-            "arvo": "Omistaja"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "OPASTETUNN",
-            "arvo": ""
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "KUNTOLUOKK",
-            "arvo": "4"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "TUNNISTE",
-            "arvo": "123456789"
-          }
-        },
-        {
-          "kentta": {
-            "tunniste": "URAKKA",
-            "arvo": "400"
-          }
-        }
-      ]
+      "tietolajitunniste": "tl505",
+      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  "
     }
-  }
+  },
+  "lisatty": "2015-05-26T12:00:00Z"
 }

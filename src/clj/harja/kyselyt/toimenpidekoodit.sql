@@ -6,26 +6,27 @@ SELECT
   nimi,
   emo,
   taso,
-  yksikko
+  yksikko,
+  kokonaishintainen
 FROM toimenpidekoodi
 WHERE poistettu = FALSE;
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
-INSERT INTO toimenpidekoodi (nimi, emo, taso, yksikko, luoja, luotu, muokattu)
-VALUES (:nimi, :emo, 4, :yksikko, :kayttajaid, NOW(), NOW());
+INSERT INTO toimenpidekoodi (nimi, emo, taso, yksikko, kokonaishintainen, luoja, luotu, muokattu)
+VALUES (:nimi, :emo, 4, :yksikko, :kokonaishintainen, :kayttajaid, NOW(), NOW());
 
 -- name: poista-toimenpidekoodi!
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
 UPDATE toimenpidekoodi
 SET poistettu = TRUE, muokkaaja = :kayttajaid, muokattu = NOW()
-WHERE id = :id
+WHERE id = :id;
 
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
 UPDATE toimenpidekoodi
-SET muokkaaja = :kayttajaid, muokattu = NOW(), nimi = :nimi, yksikko = :yksikko
-WHERE id = :id
+SET muokkaaja = :kayttajaid, muokattu = NOW(), nimi = :nimi, yksikko = :yksikko, kokonaishintainen = :kokonaishintainen
+WHERE id = :id;
 
 -- name: viimeisin-muokkauspvm
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista

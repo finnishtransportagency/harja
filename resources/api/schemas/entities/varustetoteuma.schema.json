@@ -23,9 +23,14 @@
       ],
       "required": true
     },
-    "ominaisuudet": {
-      "id": "urn:harja/ominaisuudet",
+    "arvot": {
+      "id": "urn:harja/arvot",
       "type": "string"
+    },
+    "karttapvm": {
+      "id": "urn:harja/karttapvm",
+      "type": "string",
+      "format": "date-string"
     },
     "sijainti": {
       "id": "urn:harja/sijainti",
@@ -41,6 +46,35 @@
     "piiri": {
       "id": "urn:harja/piiri",
       "type": "integer"
+    },
+    "tierekisteriurakkakoodi": {
+      "id": "urn:harja/piiri",
+      "enum": [
+        100,
+        400,
+        2062,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        4001,
+        4002,
+        4003,
+        4004,
+        4005,
+        4006,
+        4007,
+        4008,
+        4009,
+        5001,
+        5002,
+        5003,
+        6001,
+        6002,
+        9001
+      ]
     }
   }
 }

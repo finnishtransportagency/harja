@@ -14,15 +14,21 @@
     "paivittaja": {
       "id": "urn:harja/lisaaVaruste/lisaaja",
       "type": "object",
-      "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
       "required": true
     },
     "varuste": {
-      "id": "urn:harja/varuste",
+      "id": "urn:harja/tietue",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/varuste.schema.json",
+      "$ref": "file:resources/api/schemas/entities/tietue.schema.json",
+      "required": true
+    },
+    "paivitetty": {
+      "id": "urn:harja/paivitetty",
+      "type": "string",
+      "format": "date-time",
+      "additionalProperties": false,
       "required": true
     }
   }

@@ -151,6 +151,21 @@
       #_(.log js/console "E: " e)
       nil)))
 
+(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
+  (doto (goog.date.DateTime.)
+    (.setYear (.getYear dt))
+    (.setMonth (.getMonth dt))
+    (.setDate (.getDate dt))
+    (.setHours tunnit)
+    (.setMinutes minuutit)
+    (.setSeconds sekunnit)
+    (.setMilliseconds millisekunnit)))
+
+(defn paivan-alussa [dt]
+  (aikana dt 0 0 0 0))
+(defn paivan-lopussa [dt]
+  (aikana dt 23 59 59 999))
+
 (defn kuukauden-nimi [kk]
   (case kk
     1 "tammikuu"
@@ -187,22 +202,22 @@
 (defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
   [vuosi]
-  (luo-pvm vuosi 0 1))
+  (paivan-alussa (luo-pvm vuosi 0 1)))
 
 (defn vuoden-viim-pvm
   "Palauttaa vuoden viimeisen päivän 31.12.vuosi"
   [vuosi]
-  (luo-pvm vuosi 11 31))
+  (paivan-lopussa (luo-pvm vuosi 11 31)))
 
 (defn hoitokauden-alkupvm
   "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
   [vuosi]
-  (luo-pvm vuosi 9 1))
+  (paivan-alussa (luo-pvm vuosi 9 1)))
 
 (defn hoitokauden-loppupvm
   "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
   [vuosi]
-  (luo-pvm vuosi 8 30))
+  (paivan-lopussa (luo-pvm vuosi 8 30)))
 
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
@@ -226,15 +241,7 @@
         ]
     [ed-vuosi ed-kk]))
 
-(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
-  (doto (goog.date.DateTime.)
-    (.setYear (.getYear dt))
-    (.setMonth (.getMonth dt))
-    (.setDate (.getDate dt))
-    (.setHours tunnit)
-    (.setMinutes minuutit)
-    (.setSeconds sekunnit)
-    (.setMilliseconds millisekunnit)))
+
   
 (defn kuukauden-aikavali
   "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä

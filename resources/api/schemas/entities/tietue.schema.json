@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "string",
+      "required": true
+    },
+    "alkupvm": {
+      "id": "urn:harja/alkupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "loppupvm": {
+      "id": "urn:harja/loppupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": false
+    },
+    "karttapvm": {
+      "id": "urn:harja/karttapvm",
+      "type": "string",
+      "format": "date-time",
+      "required": false
+    },
+    "piiri": {
+      "id": "urn:harja/piiri",
+      "type": "integer",
+      "required": false
+    },
+    "kuntoluokka": {
+      "id": "urn:harja/kuntoluokka",
+      "type": "integer",
+      "required": false
+    },
+    "urakka": {
+      "id": "urn:harja/urakka",
+      "type": "integer",
+      "required": false
+    },
+    "sijainti": {
+      "id": "urn:harja/sijainti",
+      "type": "object",
+      "required": true,
+      "properties": {
+        "tie": {
+          "id": "urn:harja/sijainti/tie",
+          "type": "object",
+          "required": true,
+          "properties": {
+            "numero": {
+              "id": "urn:harja/sijainti/tie/numero",
+              "required": true,
+              "type": "integer"
+            },
+            "aet": {
+              "id": "urn:harja/sijainti/tie/aet",
+              "required": true,
+              "type": "integer"
+            },
+            "aosa": {
+              "id": "urn:harja/sijainti/tie/aosa",
+              "required": true,
+              "type": "integer"
+            },
+            "let": {
+              "id": "urn:harja/sijainti/tie/let",
+              "required": false,
+              "type": "integer"
+            },
+            "losa": {
+              "id": "urn:harja/sijainti/tie/losa",
+              "required": false,
+              "type": "integer"
+            },
+            "ajr": {
+              "id": "urn:harja/sijainti/tie/ajr",
+              "required": false,
+              "type": "integer"
+            },
+            "puoli": {
+              "id": "urn:harja/sijainti/tie/puoli",
+              "required": false,
+              "type": "integer"
+            },
+            "alkupvm": {
+              "id": "urn:harja/sijainti/tie/alkupvm",
+              "required": false,
+              "type": "string",
+              "format": "date-time"
+            },
+            "loppupvm": {
+              "id": "urn:harja/sijainti/tie/loppupvm",
+              "required": false,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "tietolaji": {
+      "id": "urn:harja/tietolaji",
+      "type": "object",
+      "required": true,
+      "properties": {
+        "tietolajitunniste": {
+          "id": "urn:harja/tietolaji/tietolajitunniste",
+          "type": "string",
+          "required": true
+        },
+        "arvot": {
+          "id": "urn:harja/tietolaji/arvot",
+          "type": "string",
+          "required": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

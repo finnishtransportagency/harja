@@ -33,13 +33,22 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
+(defonce kaytossa-oleva-toimenpideinstanssit-lista (atom urakan-toimenpideinstanssit))
+
 (defonce urakan-toimenpideinstanssit+muut (reaction
-                                                    (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})))
+                                            (if @urakan-toimenpideinstanssit
+                                              (conj @urakan-toimenpideinstanssit {:tpi_nimi "Muut"})
+                                              @urakan-toimenpideinstanssit)))
 
 (defonce urakan-toimenpideinstanssit+kaikki (reaction
-                                            (conj @urakan-toimenpideinstanssit {:tpi_nimi "Kaikki"})))
+                                              (if @urakan-toimenpideinstanssit
+                                                (vec (conj (into '() @urakan-toimenpideinstanssit) {:tpi_nimi "Kaikki"}))
+                                                @urakan-toimenpideinstanssit)))
 
-(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
+(defonce valittu-toimenpideinstanssi (reaction (let [urakan-toimenpideinstanssit @urakan-toimenpideinstanssit
+                                                     urakan-toimenpideinstanssit+muut @urakan-toimenpideinstanssit+muut
+                                                     urakan-toimenpideinstanssit+kaikki @urakan-toimenpideinstanssit+kaikki]
+                                                 (first @@kaytossa-oleva-toimenpideinstanssit-lista))))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))
@@ -89,9 +98,11 @@
 
         ;; Jos urakka on käynnissä, valitaan hoitokausi, joka on käynnissä
         :default
-        (first (filter (fn [[alku loppu]]
-                         (pvm/valissa? nyt alku loppu))
-                       hoitokaudet))))))
+        (or (first (filter (fn [[alku loppu]]
+                             (pvm/valissa? nyt alku loppu))
+                           hoitokaudet))
+            ;; ultimate fallback, jos ei löydy jostain syystä, käytä ensimmäistä
+            (first hoitokaudet))))))
 
 
 (defonce valittu-hoitokausi

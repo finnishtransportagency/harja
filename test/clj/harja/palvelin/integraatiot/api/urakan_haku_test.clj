@@ -2,29 +2,18 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.urakat :as api-urakat]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
             [taoensso.timbre :as log]
-            [clojure.data.json :as json]
-            [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [cheshire.core :as cheshire])
-  (:import (java.util Date)
-           (java.text SimpleDateFormat)))
+            [cheshire.core :as cheshire]))
 
 (def kayttaja "yit-rakennus")
 
-(def jarjestelma-fixture (laajenna-integraatiojarjestelmafixturea kayttaja
-                                                                  :api-urakat (component/using
-                                                                               (api-urakat/->Urakat)
-                                                                               [:http-palvelin :db :integraatioloki])))
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea kayttaja
+                                           :api-urakat (component/using
+                                                         (api-urakat/->Urakat)
+                                                         [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -36,13 +25,19 @@
     (is (not (nil? (:urakka encoodattu-body))))
     (is (= (get-in encoodattu-body [:urakka :tiedot :id]) urakka))
     (is (>= (count (get-in encoodattu-body [:urakka :sopimukset])) 1))
-    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :kokonaishintaisetTyot])) 1))
-    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :yksikkohintaisetTyot])) 1))
-    (is (>= (count (get-in (first (get-in encoodattu-body [:urakka :sopimukset])) [:sopimus :materiaalinKaytot])) 1))))
+    (is (not-empty (get-in encoodattu-body [:urakka :tiedot :alueurakkanumero])))
+
+    (let [kokonaishintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
+                                    [:sopimus :toteumakirjauskohteet :kokonaishintaiset])
+          yksikkohintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
+                                   [:sopimus :toteumakirjauskohteet :yksikkohintaiset])]
+      (is (= 12 (count kokonaishintaiset)))
+      (is (= 2 (count yksikkohintaiset))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
-    (is (not (= 200 (:status vastaus))))))
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
 
 (deftest urakan-haku-ytunnuksella-toimii
   (let [ytunnus "1565583-5"

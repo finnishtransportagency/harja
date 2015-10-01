@@ -10,8 +10,14 @@
             [harja.views.tilannekuva.tyokoneet :as tyokoneet]
             [harja.views.kartta :as kartta]
             [clojure.string :as str]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.ilmoitukset :as ilmoitukset])
   (:require-macros [reagent.ratom :refer [run!]]))
+
+(defonce kuuntelut (atom []))
+(declare luo-kuuntelijat)
 
 (defn aikavalinta []
   [kentat/tee-kentta {:tyyppi   :radio
@@ -29,7 +35,7 @@
                       :vaihtoehto-nayta {
                                          :toimenpidepyynnot "Toimenpidepyynnöt"
                                          :kyselyt "Kyselyt"
-                                         :tiedoitukset "Tiedoitukset"
+                                         :tiedoitukset "Tiedotukset"
                                          :tyokoneet "Työkoneiden seuranta"
                                          :onnettomuudet "Onnettomuudet"
                                          :havainnot "Havainnot"
@@ -62,9 +68,37 @@
 (defn nykytilanne []
   (komp/luo {:component-will-mount   (fn [_]
                                        (kartta/aseta-yleiset-kontrollit [harja.ui.yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}])
-                                       (tiedot/aloita-asioiden-haku))
+                                       (tiedot/aloita-asioiden-haku)
+                                       (luo-kuuntelijat))
              :component-will-unmount (fn [_]
                                        (kartta/tyhjenna-yleiset-kontrollit)
-                                       (tiedot/lopeta-asioiden-haku))}
+                                       (tiedot/lopeta-asioiden-haku)
+                                       (doseq [lopeta-kuuntelija @kuuntelut]
+                                         (lopeta-kuuntelija)))}
             (komp/lippu tiedot/nakymassa? tiedot/karttataso-nykytilanne)
             (constantly nil)))
+
+(defn luo-kuuntelijat []
+  (reset! kuuntelut
+          [(tapahtumat/kuuntele! :ilmoitus-klikattu
+                                 (fn [tapahtuma]
+                                   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
+                                                        [:div.kartta-ilmoitus-popup
+                                                         (log (pr-str tapahtuma))
+                                                         [:p [:b (name (:tyyppi tapahtuma))]]
+                                                         [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+                                                         [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
+                                                         [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
+                                                         [:a {:href     "#"
+                                                              :on-click #(do (.preventDefault %)
+                                                                             (let [putsaa (fn [asia]
+                                                                                            (clojure.set/rename-keys
+                                                                                              (dissoc asia :type :alue)
+                                                                                              {:tyyppi :ilmoitustyyppi}))]
+                                                                               (reset! nav/sivu :ilmoitukset)
+                                                                               (reset! ilmoitukset/haetut-ilmoitukset
+                                                                                       (map putsaa (filter
+                                                                                                     (fn [asia] (= (:type asia) :ilmoitus))
+                                                                                                     @tiedot/nykytilanteen-asiat-kartalla)))
+                                                                               (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}
+                                                          "Siirry ilmoitusnäkymään"]])))]))

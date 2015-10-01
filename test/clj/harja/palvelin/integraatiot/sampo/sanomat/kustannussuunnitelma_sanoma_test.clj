@@ -13,7 +13,7 @@
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
-(def +maksuera+ {:numero 123456789
+(def +maksuera+ {:numero               123456789
                  :maksuera             {:nimi
                                                 "Testimaksuera"
                                         :tyyppi "kokonaishintainen"}
@@ -31,9 +31,9 @@
                  :tuotenumero          111})
 
 (deftest tarkista-kustannussuunnitelman-validius
-  (let [maksuera (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
+  (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
-    (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+    (is (xml/validoi +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely
   (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
@@ -44,3 +44,15 @@
   (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
   (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
   (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
+
+(deftest tarkista-kulun-jakaminen-vuosille
+  (let [segmentit (kustannussuunnitelma-sanoma/luo-summat
+                    (parsi-paivamaara "12.12.2015")
+                    (parsi-paivamaara "1.11.2017") +maksuera+)]
+    (is (= 4 (count segmentit)) "Segmentit on jaoteltu 3 vuodelle")
+
+    (let [segmentti (second (second segmentit))
+          odotettu-summa (/ (double (get-in +maksuera+ [:kustannussuunnitelma :summa])) 3)]
+      (is (= odotettu-summa (:value segmentti)))
+      (is (= "2015-12-31T02:00:00.0" (:start segmentti)))
+      (is (= "2015-01-01T02:00:00.0" (:finish segmentti))))))

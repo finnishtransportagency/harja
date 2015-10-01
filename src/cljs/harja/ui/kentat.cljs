@@ -287,12 +287,12 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :boolean [{:keys [otsikko]} data]
+(defmethod tee-kentta :boolean [{:keys [otsikko boolean-otsikko]} data]
   [:div.checkbox
    [:label
     [:input {:type      "checkbox" :checked @data
              :on-change #(do (reset! data (-> % .-target .-checked)) nil)}
-     otsikko]]])
+     (or boolean-otsikko otsikko)]]])
 
 (defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
   [:span (if @data
@@ -640,38 +640,17 @@
                                                                       :stroke {:width 4})
                                                          :type :tr-valittu-osoite})
                                (let [e (geo/extent arvo)]
-                                 (kartta/keskita-kartta-alueeseen! e)
+                                 #_(kartta/keskita-kartta-alueeseen! e)
                                  (reset! edellinen-extent e)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
-      (go (loop [vkm-haku nil]
-            (let [[arvo kanava] (alts! (if vkm-haku
-                                         [vkm-haku tr-osoite-ch]
-                                         [tr-osoite-ch]))]
+      (go (loop []
+            (let [arvo (<! tr-osoite-ch)]
               (log "VKM/TR: " (pr-str arvo))
               (when arvo
-                (if (= kanava vkm-haku)
-                  ;; Saatiin VKM vastaus, päivitetään sijaintiin
-                  (do (reset! sijainti arvo)
-                      (nayta-kartalla arvo)
-                      (recur nil))
-                  
-                  ;; Saatiin uusi osoite, tehdään VKM haku jos osoite muodollisesti pätevä
-                  ;; eli sisältää tien ja alkupisteen sekä valinnaisesti loppupisteen
-                  (cond
-                    (not (some str/blank? (map arvo [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])))
-                    ;; Kaikki TR-osoitteen kentät täytetty, haetaan tieviiva (otetaan ensimmäinen)
-                    (recur (go (let [viivat (<! (vkm/tieosoite->viiva arvo))]
-                                 (if (vkm/virhe? viivat)
-                                   viivat
-                                   (first viivat)))))
-
-                    (not (some str/blank? (map arvo [:numero :alkuosa :alkuetaisyys])))
-                    ;; tie ja alkupiste annettu, haetaan pistemäinen osoite
-                    (recur (vkm/tieosoite->sijainti arvo))
-
-                    :default
-                    (recur nil))))))))
+                (do (reset! sijainti (:geometria arvo))
+                    (nayta-kartalla (:geometria arvo))
+                    (recur)))))))
                                        
     (komp/luo
      {:component-will-update
@@ -679,10 +658,6 @@
         (when sijainti
           (nayta-kartalla @sijainti)))}
 
-     (komp/kuuntelija :kartta-nakyy
-                      #(when-let [e @edellinen-extent]
-                         ;; Jos kartta tulee näkyviin, viedään se viimeksi zoomattuun extentiin
-                         (kartta/keskita-kartta-alueeseen! e)))
      (komp/ulos #(do 
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
@@ -742,6 +717,7 @@
               (if-not @karttavalinta-kaynnissa
                 [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
                                                                  (reset! osoite-ennen-karttavalintaa osoite)
+                                                                 (reset! data {})
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
                 [tr/karttavalitsin {:kun-peruttu #(do

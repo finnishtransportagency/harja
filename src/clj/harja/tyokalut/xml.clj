@@ -1,10 +1,11 @@
 (ns harja.tyokalut.xml
+  "Tämä namespace sisältää apufunktioita XML-tiedostojen käsittelyyn"
   (:require [clojure.xml :refer [parse]]
             [clojure.java.io :as io]
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clojure.string :as str])
+            [clj-time.format :as f])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -14,45 +15,28 @@
            (java.text SimpleDateFormat ParseException)
            (java.util Date)))
 
-(defn listaa-xsd-tiedostot [polku]
-  (let [xsdt (mapcat (fn [f]
-                       (if (.isDirectory f)
-                         (listaa-xsd-tiedostot f)
-                         (if-not (.endsWith (.getName f) ".xsd")
-                           nil
-                           [[(.getName f) (.getAbsolutePath f)]])))
-                     (seq (.listFiles polku)))]
-    (zipmap (map first xsdt)
-            (map second xsdt))))
-
-;; Validointi hakee rekursiivisesti kaikki xsd-tiedostot annetun polun alta
-;; on tärkeää välttää duplikaattinimiä tiedostoissa. Esimerkiksi xsd/tierekisteri/schemas ja
-;; xsd/jokumuu/schemas saavat sisältää samannimisiä tiedostoja, mutta tierekisteri/schemas sisällä tiedostoilla
-;; pitää olla uniikit nimet.
-;; Ratkaisuun päädyttiin koska aiempi versio ei tukenut tilanteita, joissa xsd keskenäiset riippuvuudet menivät
-;; syvemmälle kuin 1 taso (sijainti->tie->puoli)
 (defn validoi
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
   String, joka on sisältö."
   [xsd-polku xsd xml]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisältö on:" xml)
-  (let [xsd-tiedostot (listaa-xsd-tiedostot (io/as-file (io/resource xsd-polku)))
-        schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
-
+  (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
 
     (.setResourceResolver schema-factory
-                            (reify LSResourceResolver
-                              (resolveResource [this type namespaceURI publicId systemId baseURI]
-                                (let [xsd-file (xsd-tiedostot (last (str/split systemId #"/")))]
-                                  (reify LSInput
-                                    (getByteStream [_] (io/input-stream xsd-file))
-                                    (getPublicId [_] publicId)
-                                    (getSystemId [_] systemId)
-                                    (getBaseURI [_] baseURI)
-                                    (getCharacterStream [_] (io/reader xsd-file))
-                                    (getEncoding [_] "UTF-8")
-                                    (getStringData [_] (slurp xsd-file)))))))
-
+                          (reify LSResourceResolver
+                            (resolveResource [this type namespaceURI publicId systemId baseURI]
+                              (let [systemId (if (.startsWith systemId "./")
+                                               (.substring systemId 2)
+                                               systemId)
+                                    xsd-file (io/resource (str xsd-polku systemId))]
+                                (reify LSInput
+                                  (getByteStream [_] (io/input-stream xsd-file))
+                                  (getPublicId [_] publicId)
+                                  (getSystemId [_] systemId)
+                                  (getBaseURI [_] baseURI)
+                                  (getCharacterStream [_] (io/reader xsd-file))
+                                  (getEncoding [_] "UTF-8")
+                                  (getStringData [_] (slurp xsd-file)))))))
     (try (-> schema-factory
              (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-polku xsd)))))
              .newValidator
@@ -90,7 +74,7 @@
   (when (and data (not (empty? data))) (Boolean/parseBoolean data)))
 
 (defn parsi-avain [data]
-  (when (and data (not (empty? data))) (keyword (str/lower-case data))))
+  (when (and data (not (empty? data))) (keyword (clojure.string/lower-case data))))
 
 (defn parsi-aika [formaatti data]
   (when (and data (not (empty? data)))
@@ -102,5 +86,24 @@
 (defn parsi-aikaleima [teksti]
   (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
 
-(defn parsi-paivamaara [teksti]
+(defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
+
+(defn json-date-time->joda-time
+  "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
+  org.joda.time.DateTime -muotoon."
+  [aika-teksti]
+  (let [formatter (f/formatters :date-time-no-ms)]
+    (f/parse formatter aika-teksti)))
+
+(defn joda-time->xml-xs-date
+  "Muuntaa joda-timen XML:n xs:date-muotoon (esim. 2015-03-03+00:00)."
+  [joda-time]
+  (let [formatter (f/formatter "yyyy-MM-dd+HH:mm")]
+    (f/unparse formatter joda-time)))
+
+(defn json-date-time->xml-xs-date [aika]
+  "Muuntaa JSON aikaleiman XML:n xs-date-muotoon"
+  (when aika
+    (joda-time->xml-xs-date
+      (json-date-time->joda-time aika))))
