@@ -32,7 +32,6 @@
     "Ei tyyppiä"))
 
 (defn sorttausjarjestys [tyyppi numero]
-  (log "Sortataan tyypillä " tyyppi " ja numerolla " numero)
   (let [tyyppi-jarjestysnumero (case tyyppi
                                  :kokonaishintainen 1
                                  :yksikkohintainen 2
