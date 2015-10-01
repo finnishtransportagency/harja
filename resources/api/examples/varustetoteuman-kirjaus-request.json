@@ -41,27 +41,18 @@
     },
     "varuste": {
       "tunniste": "HARJ951547ZK",
-      "tietolaji": "tl506",
+      "tietolaji": "tl505",
       "toimenpide": "lisatty",
       "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  ",
-      "karttapvm": "2016-01-30T12:00:00Z",
       "sijainti": {
         "tie": {
           "numero": 89,
-          "nimi": "Kiviharjunlenkki",
-          "aosa": 1,
-          "losa": 0,
           "aet": 12,
-          "let": 0,
+          "aosa": 1,
           "ajr": 0,
-          "puoli": 1,
-          "alkupvm": "2016-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+          "puoli": 1
         }
-      },
-      "kuntoluokitus": 1,
-      "piiri": 1,
-      "tierekisteriurakkakoodi": 100
+      }
     }
   }
 }

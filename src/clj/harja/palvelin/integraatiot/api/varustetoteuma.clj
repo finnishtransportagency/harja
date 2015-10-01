@@ -46,10 +46,11 @@
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
   [tierekisteri kirjaaja data]
-  (case (get-in data [:varustetoteuma :varuste :toimenpide])
-    "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja data)
-    "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
-    "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)))
+  (when tierekisteri
+    (case (get-in data [:varustetoteuma :varuste :toimenpide])
+      "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja data)
+      "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
+      "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)

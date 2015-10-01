@@ -42,12 +42,12 @@
                       (when (not (empty? koodisto)) koodisto))})
 
 (defn parsi-ominaisuudet [data]
-  (z/xml-> data :arvot :ominaisuus parsi-ominaisuus))
+  (z/xml-> data :ominaisuudet :ominaisuus parsi-ominaisuus))
 
 (defn parsi-tietolaji [data]
   (let [tietolaji (z/xml1-> data :ns2:tietolajit :ns2:tietolaji)]
     {:tunniste     (parsi-tunniste tietolaji)
-     :arvot (parsi-ominaisuudet tietolaji)}))
+     :ominaisuudet (parsi-ominaisuudet tietolaji)}))
 
 (defn parsi-tietueen-sijainti [data]
   (let [koordinaatit (z/xml1-> data :koordinaatit)
