@@ -1,4 +1,4 @@
-−− Kuvaus: tierekisteriosoitteelle viiva
+-- Kuvaus: tierekisteriosoitteelle viiva
 
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
@@ -15,6 +15,10 @@ BEGIN
       AND osa <= losa_
    INTO rval;
 
+   IF rval IS NULL THEN
+     RAISE EXCEPTION 'Virheellinen tierekisteriosoite';
+   END IF;
+   
    RETURN rval;
 END;
 $$ LANGUAGE plpgsql;
