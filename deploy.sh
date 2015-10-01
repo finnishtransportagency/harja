@@ -30,6 +30,10 @@ lein clean || error_exit "clean failed"
 
 msg "Building"
 
+pushd vagrant
+sh migrate_test.sh || error_exit "test migrate failed"
+popd
+
 lein tuotanto || error_exit "build failed"
 
 msg "Packing migration scripts"
