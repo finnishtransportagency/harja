@@ -26,11 +26,12 @@
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
   (let [geom (first (tv/tierekisteriosoite-viivaksi db
-                                                    (:tie params)
-                                                    (:aosa params)
-                                                    (:aet params)
-                                                    (:losa params)
-                                                    (:let params)))]
+                                                    (:numero params)
+                                                    (:alkuosa params)
+                                                    (:alkuetaisyys params)
+                                                    (:loppuosa params)
+                                                    (:loppuetaisyys params)))]
+    (log/debug "hae-tr-viiva " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
 (defrecord TierekisteriHaku []

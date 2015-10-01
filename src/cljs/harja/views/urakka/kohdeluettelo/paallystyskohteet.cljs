@@ -101,7 +101,8 @@
                                      (do (swap! tr-virheet dissoc id)
                                          (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
                                            (grid/poista-virhe! g id kentta))
-                                         (swap! tr-sijainnit assoc osoite (first sijainti)))))))))))))
+                                         (log "sain sijainnin " (clj->js sijainti))
+                                         (swap! tr-sijainnit assoc osoite sijainti))))))))))))
          
          }
         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
