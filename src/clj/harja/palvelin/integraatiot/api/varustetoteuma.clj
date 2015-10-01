@@ -22,7 +22,7 @@
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
-  (let [valitettava-data  (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)      ]
+  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
@@ -36,7 +36,7 @@
 
 (defn poista-varuste-tierekisterista [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Poistetaan varuste tierekisteristä")
-  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma otsikko kirjaaja varustetoteuma) ]
+  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))

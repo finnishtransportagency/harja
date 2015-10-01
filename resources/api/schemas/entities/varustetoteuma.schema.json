@@ -30,7 +30,6 @@
     "karttapvm": {
       "id": "urn:harja/karttapvm",
       "type": "string",
-      "required": true,
       "format": "date-string"
     },
     "sijainti": {
