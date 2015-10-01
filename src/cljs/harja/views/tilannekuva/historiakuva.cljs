@@ -194,6 +194,7 @@
                                                                                   (dissoc asia :type :alue)
                                                                                   {:tyyppi :ilmoitustyyppi}))]
                                                                    (reset! nav/sivu :ilmoitukset)
+                                                                   ;; FIXME: tämä putsailu mielestäni karvaista ja hyvä miettiä uudestaan. -jv
                                                                    (reset! ilmoitukset/haetut-ilmoitukset
                                                                            (map putsaa (filter
                                                                                          (fn [asia] (= (:type asia) :ilmoitus))
@@ -206,8 +207,7 @@
                                (kartta/aseta-yleiset-kontrollit
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
      :component-will-unmount (fn [_]
-                               (kartta/tyhjenna-yleiset-kontrollit)
-                               (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma)))}
+                               (kartta/tyhjenna-yleiset-kontrollit))}
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-historiakuva)
     (fn []
       (run! (reset! tiedot/valittu-aikasuodatin (if (get-in @aikasuodattimet-rivit [1 :auki])
