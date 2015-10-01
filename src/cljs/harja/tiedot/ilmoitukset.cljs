@@ -63,9 +63,7 @@
 
 ;; POLLAUS
 (def pollaus-id (atom nil))
-(def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
-(def +intervalli+ +minuutti+)
+(def +intervalli+ 60000) ;60000ms -> 1min
 
 (def ilmoitus-kartalla-xf
   #(assoc %
