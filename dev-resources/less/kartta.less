@@ -9,9 +9,6 @@
     -webkit-transition: height @kartan-transition-kesto ease;
     -o-transition: height @kartan-transition-kesto ease;
     transition: height @kartan-transition-kesto ease;
-    * {
-        -webkit-transform: translate3d(0, 0, 0);
-    }
 }
 
 .ol-control {
@@ -47,12 +44,11 @@
 .kartan-koko-kontrollit {
     left: 50%;
     position: absolute;
-    width: 50%;
+    width: 80%;
     button:nth-of-type(2) {
         margin-left: 20px;
     }
 }
-
 .kartan-yleiset-kontrollit {
     left: 0;
     top: 60px;
@@ -61,19 +57,6 @@
 #kartta-container {
     border-bottom: @harjan-taustavari 5px solid;
     z-index: 1;
-}
-
-.avaa-kartta-wrap {
-    text-align: center;
-}
-
-.piilota-kartta {
-    position: relative;
-    right: 0;
-    top: 0;
-    #kartta {
-        display: none;
-    }
 }
 
 .kartta-tyokone-popup {
