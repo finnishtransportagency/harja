@@ -26,14 +26,12 @@
                                     :kyselyt
                                     :tiedoitukset
                                     :tyokoneet
-                                    :onnettomuudet
                                     :havainnot]
                       :vaihtoehto-nayta {
                                          :toimenpidepyynnot "Toimenpidepyynnöt"
                                          :kyselyt "Kyselyt"
                                          :tiedoitukset "Tiedotukset"
                                          :tyokoneet "Työkoneiden seuranta"
-                                         :onnettomuudet "Onnettomuudet"
                                          :havainnot "Havainnot"
                                          }}
    (r/wrap
@@ -42,7 +40,6 @@
           [(when @tiedot/hae-toimenpidepyynnot? :toimenpidepyynnot)
            (when @tiedot/hae-kyselyt? :kyselyt)
            (when @tiedot/hae-tiedoitukset? :tiedoitukset)
-           (when @tiedot/hae-onnettomuudet? :onnettomuudet)
            (when @tiedot/hae-tyokoneet? :tyokoneet)
            (when @tiedot/hae-havainnot? :havainnot)])
     
@@ -51,7 +48,6 @@
       (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
       (reset! tiedot/hae-tyokoneet? (:tyokoneet uusi))
       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
-      (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
       (reset! tiedot/hae-havainnot? (:havainnot uusi))))])
 
 (defonce suodattimet [:span

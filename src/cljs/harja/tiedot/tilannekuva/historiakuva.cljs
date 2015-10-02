@@ -19,7 +19,6 @@
 (defonce hae-turvallisuuspoikkeamat? (atom true))
 (defonce hae-tarkastukset? (atom true))
 (defonce hae-havainnot? (atom true))
-(defonce hae-onnettomuudet? (atom true))
 (defonce hae-paikkaustyot? (atom true))
 (defonce hae-paallystystyot? (atom true))
 
@@ -197,7 +196,6 @@
                                                                                    {:urakka :urakka-id
                                                                                     :alku :alkupvm
                                                                                     :loppu :loppupvm}))))
-                  #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet yhteiset-parametrit)))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot yhteiset-parametrit)))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot yhteiset-parametrit)))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot yhteiset-parametrit)))
@@ -225,7 +223,6 @@
                       _ @hae-turvallisuuspoikkeamat?
                       _ @hae-tarkastukset?
                       _ @hae-havainnot?
-                      _ @hae-onnettomuudet?
                       _ @hae-paikkaustyot?
                       _ @hae-paallystystyot?
                       _ @toimenpidekoodit

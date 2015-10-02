@@ -18,7 +18,6 @@
 (defonce hae-kyselyt? (atom true))
 (defonce hae-tiedoitukset? (atom true))
 (defonce hae-havainnot? (atom true))
-(defonce hae-onnettomuudet? (atom true))
 (defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
@@ -114,7 +113,6 @@
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
                   #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
-                  #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
       (reset! haetut-asiat tulos)
       (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
@@ -129,7 +127,6 @@
                       _ @hae-tiedoitukset?
                       _ @hae-tyokoneet?
                       _ @hae-havainnot?
-                      _ @hae-onnettomuudet?
                       _ @livesuodattimen-asetukset]
                      {:odota +bufferi+}
                      (when nakymassa? (hae-asiat))))

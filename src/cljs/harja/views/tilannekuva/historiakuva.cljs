@@ -57,7 +57,6 @@
                                          :turvallisuuspoikkeamat
                                          :tarkastukset
                                          :havainnot
-                                         :onnettomuudet
                                          :paikkaustyot
                                          :paallystystyot]
 
@@ -68,7 +67,6 @@
                                          :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
                                          :tarkastukset           "Tarkastukset"
                                          :havainnot              "Havainnot"
-                                         :onnettomuudet          "Onnettomuudet"
                                          :paikkaustyot           "Paikkaustyöt"
                                          :paallystystyot         "Päällystystyöt"
                                          }}
@@ -82,7 +80,6 @@
             (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
             (when @tiedot/hae-tarkastukset? :tarkastukset)
             (when @tiedot/hae-havainnot? :havainnot)
-            (when @tiedot/hae-onnettomuudet? :onnettomuudet)
             (when @tiedot/hae-paikkaustyot? :paikkaustyot)
             (when @tiedot/hae-paallystystyot? :paallystystyot)])
 
@@ -92,7 +89,6 @@
        (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
        (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat uusi))
        (reset! tiedot/hae-tarkastukset? (:tarkastukset uusi))
-       (reset! tiedot/hae-onnettomuudet? (:onnettomuudet uusi))
        (reset! tiedot/hae-havainnot? (:havainnot uusi))
        (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
        (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
