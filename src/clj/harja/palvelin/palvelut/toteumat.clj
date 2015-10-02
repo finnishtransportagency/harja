@@ -62,7 +62,7 @@
   [(:urakka-id toteuma) (:sopimus-id toteuma)
    (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
    (name (:tyyppi toteuma)) (:id kayttaja)
-   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil])
+   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil nil])
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
