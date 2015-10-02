@@ -68,7 +68,14 @@
      :radius 300
      :stroke {:color "black" :width 10}}))
 
-(defmulti kartalla-xf :tyyppi)
+;; Aiemmin kartalla-xf palautti dispatching valuena yksinkertaisesti :tyyppi avaimen alla olevan arvon.
+;; Tämä rikkoontui kun vastaan tuli erikoistapauksia - ilmoituksilla ei ole :tyyppiä vaan :ilmoitustyyppi, ja
+;; turvallisuuspoikkeamilla on 0-3 tyyppiä.
+(defmulti kartalla-xf (fn [kartta]
+                        (cond
+                          (coll? (:tyyppi kartta)) (:tilannekuvatyyppi kartta)
+                          (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
+                          :else (:tyyppi kartta))))
 
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
   [(assoc ilmoitus
@@ -175,25 +182,22 @@
                                            (get @valitut-toteumatyypit nimi))
                                          @toimenpidekoodit))
           tulos (yhdista
-                  #_(when @hae-toimenpidepyynnot? (<! (k/post! :hae-toimenpidepyynnot yhteiset-parametrit)))
-                  #_(when @hae-tiedoitukset? (<! (k/post! :hae-tiedoitukset yhteiset-parametrit)))
-                  #_(when @hae-kyselyt? (<! (k/post! :hae-kyselyt yhteiset-parametrit)))
-                  #_(when @hae-turvallisuuspoikkeamat? (<! (k/post! :hae-turvallisuuspoikkeamat yhteiset-parametrit)))
+                  (when @hae-turvallisuuspoikkeamat? (mapv
+                                                       #(assoc % :tilannekuvatyyppi :turvallisuuspoikkeama)
+                                                       (<! (k/post! :hae-turvallisuuspoikkeamat yhteiset-parametrit))))
                   #_(when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset yhteiset-parametrit)))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet yhteiset-parametrit)))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot yhteiset-parametrit)))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot yhteiset-parametrit)))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot yhteiset-parametrit)))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
-                    (mapv
-                      #(clojure.set/rename-keys % {:ilmoitustyyppi :tyyppi})
-                      (<! (k/post! :hae-ilmoitukset (assoc
+                    (<! (k/post! :hae-ilmoitukset (assoc
                                                       yhteiset-parametrit
                                                       :aikavali [(:alku yhteiset-parametrit)
                                                                  (:loppu yhteiset-parametrit)]
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
-                                                                            (when @hae-tiedoitukset? :tiedoitus)]))))))
+                                                                            (when @hae-tiedoitukset? :tiedoitus)])))))
                   (when-not (empty? haettavat-toimenpidekoodit)
                       (<! (k/post! :hae-toteumat-historiakuvaan (assoc
                                                                   yhteiset-parametrit

@@ -192,11 +192,8 @@
                         [:a {:href     "#"
                              :on-click #(do (.preventDefault %)
                                             (let [putsaa (fn [asia]
-                                                           (clojure.set/rename-keys
-                                                             (dissoc asia :type :alue)
-                                                             {:tyyppi :ilmoitustyyppi}))]
+                                                           (dissoc asia :type :alue))]
                                               (reset! nav/sivu :ilmoitukset)
-                                              ;; FIXME: tämä putsailu mielestäni karvaista ja hyvä miettiä uudestaan. -jv
                                               (reset! ilmoitukset/haetut-ilmoitukset
                                                       (map putsaa (filter
                                                                     (fn [asia] (= (:type asia) :ilmoitus))
