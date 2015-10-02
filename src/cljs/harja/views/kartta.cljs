@@ -90,7 +90,7 @@
                         (let [[arvo ch] (async/alts! [paivita-kartan-sijainti (timeout 20)])]
                           (if (nil? arvo)
                             ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
-                            (do (aseta-kartan-sijainti x (- h) w h false)
+                            (do (aseta-kartan-sijainti x (- @yleiset/korkeus) w h false)
                                 (recur nil nil nil w h nil))))
                         true)
                 paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
