@@ -2,23 +2,21 @@
    Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
 
 .tabs-taso1 {
-  a {
+  > li:not(.active) > a {
     background-color: @sininen4;
     text-transform: uppercase;
     color: @valkoinen;
+    font-weight: normal;
   }
 
   > li:not(.active) > a:hover {
     background-color: @sininen5;
     color: @valkoinen;
+    border-bottom: none;
   }
 }
 
 .tabs-taso2 {
-  > li.active a {
-    border-bottom: none !important;
-  }
-
   > li:not(.active) > a {
     font-weight: bold;
     border-left: 1px solid @sininen4;
@@ -29,11 +27,11 @@
     color: @sininen4;
   }
 
-  > li:not(.active) a:hover {
+  > li:not(.active) > a:hover {
     color: @sininen5;
-    border-left: 1px solid @sininen5 !important;
-    border-top: 1px solid @sininen5 !important;
-    border-right: 1px solid @sininen5 !important;
+    border-left: 1px solid @sininen5;
+    border-top: 1px solid @sininen5;
+    border-right: 1px solid @sininen5;
     background-color: @harmaa11;
   }
 }
