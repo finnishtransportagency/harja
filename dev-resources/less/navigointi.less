@@ -19,8 +19,8 @@
 .tabs-taso2 {
   /* Normaalisti 1. tason välilehden sisällöllä on padding. Tabit ovat kuitenkin poikkeustapaus,
      ja siksi pakotetaan ne kiinni reunoihin. */
-  margin-left: -11px;
-  margin-right: -11px;
+  margin-left: -10px;
+  margin-right: -10px;
 
   > li:not(.active) > a {
     font-weight: bold;
@@ -38,5 +38,9 @@
     border-top: 1px solid @sininen5;
     border-right: 1px solid @sininen5;
     background-color: @harmaa11;
+  }
+
+  > li:first-child > a {
+    border-left: none !important;
   }
 }
