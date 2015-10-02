@@ -1,16 +1,8 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit)
 
 (def +hae-tietolaji-request+ "xsd/tierekisteri/examples/hae-tietolaji-request.xml")
-(def +hae-tietolaji-response+ "xsd/tierekisteri/examples/hae-tietolaji-response.xml")
 (def +hae-tietue-request+ "xsd/tierekisteri/examples/hae-tietue-request.xml")
-(def +hae-tietue-response+ "xsd/tierekisteri/examples/hae-tietue-response.xml")
-(def +hae-tietueet-request+ "xsd/tierekisteri/examples/kirjaus-response.xml")
 (def +hae-tietueet-request+ "xsd/tierekisteri/examples/hae-tietueet-request.xml")
 (def +lisaa-tietue-request+ "xsd/tierekisteri/examples/lisaa-tietue-request.xml")
 (def +paivita-tietue-request+ "xsd/tierekisteri/examples/paivita-tietue-request.xml")
 (def +poista-tietue-request+ "xsd/tierekisteri/examples/poista-tietue-request.xml")
-
-(def +virhe-tietueen-lisays-epaonnistui-response+ "xsd/tierekisteri/examples/virhe-tietueen-lisays-epaonnistui-response.xml")
-(def +virhe-vastaus-tietolajia-ei-loydy+ "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy.xml")
-(def +hae-tietue-request+ "xsd/tierekisteri/examples/hae-tietue-request.xml")
-(def +ok-vastaus-response+ "xsd/tierekisteri/examples/ok-vastaus-responsexml")
