@@ -149,8 +149,6 @@
         materiaalit (reaction (let [hk @u/valittu-hoitokausi]
                                 (get @sopimuksen-materiaalit-hoitokausittain hk)))
         
-        uusi-id (atom 0)
-        
         ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
         materiaalikoodit (reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
         
@@ -260,5 +258,4 @@
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
                                     (reset! urakan-materiaalit uudet-materiaalit)))))}
-              "Tallenna materiaalit"]])
-          ]))))) 
+              "Tallenna materiaalit"]])])))))
