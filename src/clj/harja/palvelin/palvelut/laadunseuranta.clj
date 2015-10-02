@@ -20,6 +20,7 @@
             [clojure.java.jdbc :as jdbc]))
 
 (def havainto-xf (comp
+                   (geo/muunna-pg-tulokset :sijainti)
                    (map konv/alaviiva->rakenne)
                    (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
                    (map #(dissoc % :selvityspyydetty))
@@ -57,17 +58,32 @@
              :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
-    (into []
-          havainto-xf
+  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (jdbc/with-db-transaction [db db]
+    (let [listaus (or listaus :tilannekuva)
+          urakka-idt (if-not (nil? urakka-id)
+                       (if (vector? urakka-id) urakka-id [urakka-id])
 
-          (if (= :omat listaus)
-            (apply havainnot/hae-omat-havainnot (conj parametrit (:id user)))
-            (apply (case listaus
-                     :kaikki havainnot/hae-kaikki-havainnot
-                     :selvitys havainnot/hae-selvitysta-odottavat-havainnot
-                     :kasitellyt havainnot/hae-kasitellyt-havainnot) parametrit)))))
+                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
+                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
+                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+          _ (log/debug "Haetaan havaintoja urakoista " (pr-str urakka-idt))
+          tulos (apply (comp vec flatten merge)
+                       (for [urakka-id urakka-idt]
+                         (into []
+                               havainto-xf
+
+                               (if (= :omat listaus)
+                                 (apply havainnot/hae-omat-havainnot
+                                        (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
+                                 (apply (case listaus
+                                          :kaikki havainnot/hae-kaikki-havainnot
+                                          :selvitys havainnot/hae-selvitysta-odottavat-havainnot
+                                          :kasitellyt havainnot/hae-kasitellyt-havainnot
+                                          :tilannekuva havainnot/hae-havainnot-tilannekuvaan)
+                                        [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))]
+      (log/debug "Löydettiin havainnot: " (pr-str (mapv :id tulos)))
+      tulos)))
 
 
 (defn hae-havainnon-tiedot
@@ -203,24 +219,25 @@
   [db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
 
-  (let [urakka-idt (if-not (nil? urakka-id)
-                     (if (vector? urakka-id) urakka-id [urakka-id])
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-idt (if-not (nil? urakka-id)
+                       (if (vector? urakka-id) urakka-id [urakka-id])
 
-                     (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-                       (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
-                       (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-        _ (log/debug "Haetaan tarkastuksia urakoista " (pr-str urakka-idt))
-        tulos (apply (comp vec flatten merge)
-                     (for [urakka-id urakka-idt]
-                       (into []
-                             tarkastus-xf
-                             (tarkastukset/hae-urakan-tarkastukset db urakka-id
-                                                                   (konv/sql-timestamp alkupvm)
-                                                                   (konv/sql-timestamp loppupvm)
-                                                                   (if tienumero true false) tienumero
-                                                                   (if tyyppi true false) (and tyyppi (name tyyppi))))))]
-    (log/debug "Löydettiin tarkastukset: " (pr-str (mapv :id tulos)))
-    tulos))
+                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
+                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+          _ (log/debug "Haetaan tarkastuksia urakoista " (pr-str urakka-idt))
+          tulos (apply (comp vec flatten merge)
+                       (for [urakka-id urakka-idt]
+                         (into []
+                               tarkastus-xf
+                               (tarkastukset/hae-urakan-tarkastukset db urakka-id
+                                                                     (konv/sql-timestamp alkupvm)
+                                                                     (konv/sql-timestamp loppupvm)
+                                                                     (if tienumero true false) tienumero
+                                                                     (if tyyppi true false) (and tyyppi (name tyyppi))))))]
+      (log/debug "Löydettiin tarkastukset: " (pr-str (mapv :id tulos)))
+      tulos)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)

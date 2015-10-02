@@ -7,7 +7,9 @@
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+
+            [clojure.set :refer [rename-keys]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -72,8 +74,8 @@
 ;; turvallisuuspoikkeamilla on 0-3 tyyppiä.
 (defmulti kartalla-xf (fn [kartta]
                         (cond
-                          (coll? (:tyyppi kartta)) (:tilannekuvatyyppi kartta)
                           (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
+                          (:tilannekuvatyyppi kartta) (:tilannekuvatyyppi kartta)
                           :else (:tyyppi kartta))))
 
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
@@ -188,15 +190,19 @@
           tulos (yhdista
                   (when @hae-turvallisuuspoikkeamat? (mapv
                                                        #(assoc % :tilannekuvatyyppi :turvallisuuspoikkeama)
-                                                       (<! (k/post! :hae-turvallisuuspoikkeamat (clojure.set/rename-keys
+                                                       (<! (k/post! :hae-turvallisuuspoikkeamat (rename-keys
                                                                                                   yhteiset-parametrit
                                                                                                   {:urakka :urakka-id})))))
-                  (when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset (clojure.set/rename-keys
+                  (when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset (rename-keys
                                                                                    yhteiset-parametrit
                                                                                    {:urakka :urakka-id
                                                                                     :alku :alkupvm
                                                                                     :loppu :loppupvm}))))
-                  #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot yhteiset-parametrit)))
+                  (when @hae-havainnot? (mapv
+                                          #(assoc % :tilannekuvatyyppi :havainto)
+                                          (<! (k/post! :hae-urakan-havainnot (rename-keys
+                                                                              yhteiset-parametrit
+                                                                              {:urakka :urakka-id})))))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot yhteiset-parametrit)))
                   #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot yhteiset-parametrit)))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
