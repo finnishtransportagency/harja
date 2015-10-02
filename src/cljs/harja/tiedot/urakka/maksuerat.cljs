@@ -2,7 +2,7 @@
   "Tämä nimiavaruus hallinnoi urakan maksueria."
   (:require [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]

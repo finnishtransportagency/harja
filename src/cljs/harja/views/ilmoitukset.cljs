@@ -1,7 +1,7 @@
 (ns harja.views.ilmoitukset
   "Harjan ilmoituksien pääsivu."
   (:require [reagent.core :refer [atom] :as r]
-
+            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
@@ -118,7 +118,7 @@
   [:div
    [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
    (urakan-sivulle-nappi @tiedot/valittu-ilmoitus)
-   (when @tiedot/pollaus-id (pollauksen-merkki))
+   (pollauksen-merkki)
    [bs/panel {}
     (luo-ilmoituksen-otsikko @tiedot/valittu-ilmoitus)
     [:span
@@ -153,14 +153,9 @@
 (defn ilmoitusten-paanakyma
   []
   (tiedot/hae-ilmoitukset)
-  (tiedot/aloita-pollaus)
   (komp/luo
-    {:component-will-unmount (fn []
-                               ;;FIXME: lopeta-pollaus ei toimi HAR-835
-                               (tiedot/lopeta-pollaus))}
     (fn []
       [:span
-
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
@@ -215,8 +210,7 @@
         ]
 
        [:div
-        (when @tiedot/pollaus-id (pollauksen-merkki))
-
+        (pollauksen-merkki)
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
           :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)
@@ -234,6 +228,7 @@
 (defn ilmoitukset []
   (komp/luo
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
+    (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
     (fn []
       [:span
