@@ -138,9 +138,8 @@
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                     [:fo:block {:padding "2mm" :border "solid 0.2mm black"}
                      (muodosta-pdf [:yhteenveto tiedot])])]
-                 (mapcat #(do (log/info "tää on: " (type %))
-                              (if (seq? %)
+                 (mapcat #(if (seq? %)
                                 (map muodosta-pdf %)
-                                [(muodosta-pdf %)]))
+                                [(muodosta-pdf %)])
                          sisalto)
                  [[:fo:block {:id "raportti-loppu"}]])))
