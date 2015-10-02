@@ -14,7 +14,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -47,7 +48,7 @@
               (concat [(grid/otsikko otsikko)] rivit))
       (seq otsikon-mukaan))))
 
-(defn muut-tyot []
+(defn muut-tyot [ur]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
@@ -57,6 +58,7 @@
     (komp/luo
       (fn []
         [:div.muut-tyot
+         [valinnat/urakan-sopimus ur]
          [kartta/kartan-paikka]
          [grid/grid
           {:otsikko      "Muutos- ja lisätyöhinnat"
