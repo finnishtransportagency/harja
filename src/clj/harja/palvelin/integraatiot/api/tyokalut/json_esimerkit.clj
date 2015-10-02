@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.tyokalut.esimerkit)
+(ns harja.palvelin.integraatiot.api.tyokalut.json-esimerkit)
 
 (def +onnistunut-kirjaus+ "api/examples/kirjaus-response.json")
 (def +virhevastaus+ "api/examples/virhe-response.json")

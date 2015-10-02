@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
@@ -64,15 +64,15 @@
 (def tarkastukset
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
-    :pyynto-skeema skeemat/+tiestotarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/+tiestotarkastuksen-kirjaus+
     :tyyppi        :tiesto}
    {:palvelu       :lisaa-talvihoitotarkastus
     :polku         "/api/urakat/:id/tarkastus/talvihoitotarkastus"
-    :pyynto-skeema skeemat/+talvihoitotarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/+talvihoitotarkastuksen-kirjaus+
     :tyyppi        :talvihoito}
    {:palvelu       :lisaa-soratietarkastus
     :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
-    :pyynto-skeema skeemat/+soratietarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/+soratietarkastuksen-kirjaus+
     :tyyppi        :soratie}])
 
 (defrecord Tarkastukset []

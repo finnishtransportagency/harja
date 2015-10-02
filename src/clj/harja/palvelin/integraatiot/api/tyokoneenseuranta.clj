@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tyokoneseuranta :as tks]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]))
 
@@ -43,7 +43,7 @@
                      (POST +tyokone-seurantakirjaus-url+ request
                        (kasittele-kutsu db nil
                                         :tallenna-tyokoneenseurantakirjaus
-                                        request skeemat/+tyokoneenseuranta-kirjaus+ skeemat/+kirjausvastaus+
+                                        request json-skeemat/+tyokoneenseuranta-kirjaus+ json-skeemat/+kirjausvastaus+
                                         tallenna-seurantakirjaus)))
     this)
   (stop [{http :http-palvelin :as this}]
