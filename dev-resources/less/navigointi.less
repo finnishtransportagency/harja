@@ -9,12 +9,17 @@
     font-weight: normal;
   }
 
+  > li.active {
+    background-color: @valkoinen;
+    text-transform: uppercase;
+    color: @musta;
+    font-weight: normal;
+  }
+
   > li:not(.active) > a:hover {
     background-color: @sininen5;
-    text-transform: uppercase;
     color: @valkoinen;
     border-bottom: none;
-    font-weight: normal;
   }
 }
 
