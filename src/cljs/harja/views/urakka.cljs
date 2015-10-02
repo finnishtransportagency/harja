@@ -18,8 +18,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
-            [harja.views.urakka.turvallisuus :as turvallisuus]
-            )
+            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -82,10 +81,10 @@
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
-     "Turvallisuus"
-     :turvallisuus
-     ^{:key "turvallisuus"}
-     [turvallisuus/turvallisuus ur]
+     "Turvallisuuspoikkeamat"
+     :turvallisuuspoikkeamat
+     ^{:key "turvallisuuspoikkeamat"}
+     [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
 
      "Laskutusyhteenveto"
      :laskutusyhteenveto
