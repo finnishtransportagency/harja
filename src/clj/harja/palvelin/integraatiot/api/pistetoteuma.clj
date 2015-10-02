@@ -19,7 +19,7 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-                            (let [toteuma (get-in data [:pistetoteuma :toteuma])
+                            (let [toteuma (assoc (get-in data [:pistetoteuma :toteuma]) :reitti nil)
                                   toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
                               (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
                               (log/debug "Aloitetaan sijainnin tallennus")
