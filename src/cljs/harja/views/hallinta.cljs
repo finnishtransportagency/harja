@@ -16,7 +16,7 @@
 (defn hallinta []
   ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
 
-  [bs/tabs {:style :tabs :active valittu-valilehti}
+  [bs/tabs {:style :tabs :classes "tabs-taso1" :active valittu-valilehti}
 
    "Käyttäjät"
    :kayttajat
