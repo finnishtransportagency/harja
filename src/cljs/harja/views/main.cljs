@@ -114,6 +114,8 @@
                [viesti-container]
 
                ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-               [:div#kartta-container 
+               ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
+               ;; se asemoidaan mountin jälkeen
+               [:div#kartta-container {:style {:position "absolute" :top (- @yleiset/korkeus)}}
                 [kartta/kartta]]])))))))
 
