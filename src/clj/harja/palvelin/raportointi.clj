@@ -37,7 +37,7 @@
      pdf-vienti :raportointi
      (fn [kayttaja params]
        (let [rapos (suorita-raportti this kayttaja params)]
-         (log/info "SUORITETTU RAPSA: " (pr-str rapos))
+         (log/debug "SUORITETTU RAPSA: " (pr-str rapos))
          (pdf/muodosta-pdf
           rapos))))
     this)
@@ -50,9 +50,8 @@
   (hae-raportit [this] @raportit)
   (hae-raportti [this nimi] (get @raportit nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
-    (println "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
+    (log/debug "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
-      (println "RAPORTTI: " suoritettava-raportti)
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
          (condp = konteksti
