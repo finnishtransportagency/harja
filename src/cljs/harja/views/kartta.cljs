@@ -81,7 +81,8 @@
                offset-y nil]
 
           (let [ensimmainen-kerta? (nil? naulattu?)
-                aseta (when-not (<! paivita-kartan-sijainti)
+                paivita (<! paivita-kartan-sijainti)
+                aseta (when-not paivita
                         ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
                         ;; seuraava päivitys aina asettaa kartan paikan.
                         
@@ -105,7 +106,7 @@
             
             (cond
               ;; Eka kerta, asetetaan kartan sijainti
-              (or aseta (nil? naulattu?))
+              (or (= :aseta paivita) aseta (nil? naulattu?))
               (let [naulattu? (neg? uusi-y)]
                 ;(log "EKA KERTA")
                 (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
@@ -142,7 +143,7 @@
 
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
-  [kartan-koko]
+  [kartan-koko & args]
   (log "KARTAN-PAIKKAVARAUS!")
   (let [paivita (fn [paikkavaraus]
                   (go (>! paivita-kartan-sijainti paikkavaraus)))]
@@ -153,7 +154,7 @@
                                              EventType/SCROLL
                                              (fn [_] (paivita true)))
                               (paivita true))
-      :component-did-update   #(paivita true)
+      :component-did-update   #(paivita :aseta)
       :component-will-unmount (fn [this]
                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
                                 (events/unlisten js/window EventType/SCROLL paivita)
@@ -165,10 +166,10 @@
                                     :width  "100%"}}]))))
 
 (defn kartan-paikka
-  []
+  [& args]
   (let [koko @nav/kartan-koko]
     (if-not (= :hidden koko)
-      [kartan-paikkavaraus koko]
+      [kartan-paikkavaraus koko args]
       [:span.ei-karttaa])))
 
 

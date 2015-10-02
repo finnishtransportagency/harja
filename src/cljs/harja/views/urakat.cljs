@@ -20,18 +20,26 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
-  [:span
-   [:h5.haku-otsikko "Valitse hallintayksikkö"]
-   [:div
-    ^{:key "hy-lista"}
-    [suodatettu-lista {:format :nimi :haku :nimi
-                       :selection nav/valittu-hallintayksikko
-                       :on-select nav/valitse-hallintayksikko
-                       :aputeksti "Kirjoita hallintayksikön nimi tähän"}
-     @hal/hallintayksikot]]])
+  (let [hallintayksikot @hal/hallintayksikot]
+    [:div.row
+     [:div.col-md-4
+      [:span
+       [:h5.haku-otsikko "Valitse hallintayksikkö"]
+       [:div
+        ^{:key "hy-lista"}
+        [suodatettu-lista {:format :nimi :haku :nimi
+                           :selection nav/valittu-hallintayksikko
+                           :on-select nav/valitse-hallintayksikko
+                           :aputeksti "Kirjoita hallintayksikön nimi tähän"}
+         hallintayksikot]]]
+      [:div.col-md-8
+       [kartta/kartan-paikka hallintayksikot]]]]))
 
 (defn valitse-urakka []
-  (let [urakkalista @nav/urakkalista]
+  (let [urakkalista @nav/urakkalista
+        suodatettu-urakkalista @nav/suodatettu-urakkalista]
+    [:div.row
+     [:div.col-md-4
       (if (nil? urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
@@ -43,14 +51,16 @@
                              :nayta-ryhmat   [:kaynnissa :paattyneet]
                              :ryhmittely     (let [nyt (pvm/nyt)]
                                                #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                                 :paattyneet
-                                                 :kaynnissa))
+                                                  :paattyneet
+                                                  :kaynnissa))
                              :ryhman-otsikko #(case %
-                                               :kaynnissa "Käynnissä olevat urakat"
-                                               :paattyneet "Päättyneet urakat")
+                                                :kaynnissa "Käynnissä olevat urakat"
+                                                :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka
                              :aputeksti      "Kirjoita urakan nimi tähän"}
-           @nav/suodatettu-urakkalista]]])))
+           suodatettu-urakkalista]]])]
+     [:div.col-md-8
+      [kartta/kartan-paikka suodatettu-urakkalista]]]))
 
 (defn valitse-hallintayksikko-ja-urakka
   "Jos hallintayksikköä ei ole valittu, palauttaa hallintayksikönvalintakomponentin
@@ -60,9 +70,9 @@
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
     (if-not v-hal
-      (valitse-hallintayksikko)
+      [valitse-hallintayksikko]
       (when-not v-ur
-        (valitse-urakka)))))
+        [valitse-urakka]))))
 
 (defn urakat
   "Urakan koko sisältö."
@@ -70,8 +80,4 @@
   (let [v-ur @nav/valittu-urakka]
     (if v-ur
       [urakka/urakka v-ur]
-      [:div.row
-       [:div.col-md-4
-        [valitse-hallintayksikko-ja-urakka]]
-       [:div.col-md-8
-        [kartta/kartan-paikka]]])))
+      [valitse-hallintayksikko-ja-urakka])))
