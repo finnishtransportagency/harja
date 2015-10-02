@@ -15,16 +15,25 @@
 }
 
 .tabs-taso2 {
+  li.active a {
+    border-bottom: none !important; // FIXME Korjaa important...
+  }
+
   a {
+    font-weight: bold;
     border-left: 1px solid @sininen4 !important; // FIXME Korjaa important...
     border-top: 1px solid @sininen4 !important; // FIXME Korjaa important...
     border-right: 1px solid @sininen4 !important; // FIXME Korjaa important...
-    border-bottom: none;
+    border-bottom: 1px solid @harmaa7 !important; // FIXME Korjaa important...
     background-color: @harmaa11;
     color: @sininen4;
   }
 
   li:not(.active) a:hover {
     color: @sininen5;
+    border-left: 1px solid @sininen5 !important; // FIXME Korjaa important...
+    border-top: 1px solid @sininen5 !important; // FIXME Korjaa important...
+    border-right: 1px solid @sininen5 !important; // FIXME Korjaa important...
+    background-color: @harmaa11;
   }
 }
