@@ -137,10 +137,13 @@
      :type :turvallisuuspoikkeama
      :alue (oletusalue tp))])
 
-(defmethod kartalla-xf :paallystystyo [pt]
-  [(assoc pt
-     :type :paallystystyo
-     :alue (oletusalue pt))])
+(defmethod kartalla-xf :paallystyskohde [pt]
+  (mapv
+    (fn [kohdeosa]
+      (assoc kohdeosa
+        :type :paallystyskohde
+        :alue (:sijainti kohdeosa)))
+    (:kohdeosat pt)))
 
 (defmethod kartalla-xf :paikkaustoteuma [pt]
   ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
@@ -214,7 +217,13 @@
                                                (<! (k/post! :urakan-paikkaustoteumat (rename-keys
                                                                                        yhteiset-parametrit
                                                                                        {:urakka :urakka-id}))))))
-                  #_(when @hae-paallystystyot? (<! (k/post! :hae-paallystystyot yhteiset-parametrit)))
+                  (when @hae-paallystystyot? (remove
+                                               #(empty? (:kohdeosat %))
+                                               (mapv
+                                                 #(assoc % :tilannekuvatyyppi :paallystyskohde)
+                                                 (<! (k/post! :urakan-paallystyskohteet (rename-keys
+                                                                                          yhteiset-parametrit
+                                                                                          {:urakka :urakka-id}))))))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
                     (<! (k/post! :hae-ilmoitukset (assoc
                                                     yhteiset-parametrit
