@@ -6,6 +6,7 @@
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
             
             [ol]
@@ -289,6 +290,11 @@
         item-geometry (or (:geometry-fn mapspec) identity)
         unmount-ch (chan)]
 
+    ;; Lisää kartan animoinnin jälkeinen updateSize kutsu
+    (when (animaatio/transition-end-tuettu?)
+      (animaatio/kasittele-transition-end (.getElementById js/document (:id mapspec))
+                                          #(.updateSize ol3)))
+    
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
@@ -305,7 +311,9 @@
                    (nayta-popup! this coordinate content))
 
                  ::invalidate-size
-                 (.updateSize ol3)
+                 (do (log "OL3:updateSize kutsuttu")
+                     (.updateSize ol3)
+                     (.render ol3))
 
                  ::hide-popup
                  (poista-popup! this)

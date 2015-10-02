@@ -74,22 +74,6 @@
   "Harjan UI:n pääkomponentti"
   []
   (komp/luo
-    (komp/kuuntelija :kartan-paikka
-                     (fn [_ {:keys [x y w h naulattu?] :as event}]
-                       (log "KARTAN PAIKKA: " (pr-str event))
-                       (let [karttasailio (elementti-idlla "kartta-container")
-                             tyyli (.-style karttasailio)]
-                         (if naulattu?
-                           (do
-                             (set! (.-position tyyli) "fixed")
-                             (set! (.-left tyyli) (fmt/pikseleina x))
-                             (set! (.-top tyyli) "0px")
-                             (set! (.-width tyyli) (fmt/pikseleina w)))
-                           (do
-                             (set! (.-position tyyli) "absolute")
-                             (set! (.-left tyyli) (fmt/pikseleina x))
-                             (set! (.-top tyyli) (fmt/pikseleina y))
-                             (set! (.-width tyyli) (fmt/pikseleina w)))))))
     (fn []
       (let [sivu @nav/sivu
             aikakatkaistu? @istunto/istunto-aikakatkaistu

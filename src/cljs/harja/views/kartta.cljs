@@ -12,11 +12,12 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.views.kartta.tasot :as tasot]
-            [cljs.core.async :refer [timeout <! >!] :as async]
+            [cljs.core.async :refer [timeout <! >! chan] :as async]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.geo :as geo]
             [harja.ui.komponentti :as komp]
+            [harja.ui.animaatio :as animaatio]
             [harja.fmt :as fmt])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -35,65 +36,92 @@
                           :XL (int (* 0.80 kork))
                           (int (* 0.50 kork))))))
 
+;; Kanava, jonne kartan uusi sijainti kirjoitetaan
+(defonce paivita-kartan-sijainti (chan))
+
+(defn- aseta-kartan-sijainti [x y w h naulattu?]
+  (let [karttasailio (yleiset/elementti-idlla "kartta-container")
+        tyyli (.-style karttasailio)]
+    (log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+    (if naulattu?
+      (do
+        (set! (.-position tyyli) "fixed")
+        (set! (.-left tyyli) (fmt/pikseleina x))
+        (set! (.-top tyyli) "0px")
+        (set! (.-width tyyli) (fmt/pikseleina w))
+        (set! (.-height tyyli) (fmt/pikseleina h)))
+      (do
+        (set! (.-position tyyli) "absolute")
+        (set! (.-left tyyli) (fmt/pikseleina x))
+        (set! (.-top tyyli) (fmt/pikseleina y))
+        (set! (.-width tyyli) (fmt/pikseleina w))
+        (set! (.-height tyyli) (fmt/pikseleina h))))))
+
+(defonce kartan-sijaintipaivitys
+  (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
+    (go (loop [naulattu? nil
+               x nil
+               y nil
+               w nil
+               h nil
+               offset-y nil]
+          (<! paivita-kartan-sijainti)
+          (let [paikka-elt (yleiset/elementti-idlla "kartan-paikka")
+                [uusi-x uusi-y uusi-w uusi-h] (yleiset/sijainti paikka-elt)
+                uusi-offset-y (yleiset/offset-korkeus paikka-elt)]
+            (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ")")
+            
+            (cond
+              ;; Eka kerta, asetetaan kartan sijainti
+              (nil? naulattu?)
+              (let [naulattu? (neg? uusi-y)]
+                (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h naulattu?)
+                (recur naulattu?
+                       uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+              ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
+              ;; koko pitää asettaa
+              (and (not naulattu?) (neg? uusi-y))
+              (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                  (recur true
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+              
+              ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
+              (and naulattu? (pos? uusi-y))
+              (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                  (recur false
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+              ;; jos w/h muuttuu
+              (or (not= w uusi-w)
+                  (not= h uusi-h))
+              (do (when-not transition-end-tuettu?
+                    (go (<! (async/timeout 150))
+                        (openlayers/invalidate-size!)))
+                  (recur naulattu?
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+              :default
+              (recur naulattu?
+                     uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
 
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
   [kartan-koko]
-  (let [naulattu? (atom nil)
-        paivita (fn [this]
-                  (reagent/next-tick
-                    #(let [naulattu-nyt? @naulattu?
-                          elt (yleiset/elementti-idlla "kartan-paikka")
-                          [x y w h] (yleiset/sijainti elt)
-                          offset-y (yleiset/offset-korkeus elt)]
-                      (cond
-
-                        ;; Eka kerta, julkaistaan kartan sijainti
-                        (nil? naulattu-nyt?)
-                        (let [naulattu-nyt? (neg? y)]
-                          (t/julkaise! {:aihe :kartan-paikka
-                                        :x    x :y offset-y :w w :h h :naulattu? naulattu-nyt?})
-                          (reset! naulattu? naulattu-nyt?))
-
-                        ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
-                        ;; koko pitää asettaa
-                        (and (not naulattu-nyt?) (neg? y))
-                        (do (t/julkaise! {:aihe :kartan-paikka :naulattu? true})
-                            (reset! naulattu? true))
-
-                        ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
-                        (and naulattu-nyt? (pos? y))
-                        (do (t/julkaise! {:aihe :kartan-paikka
-                                          :x    x :y offset-y :w w :h h})
-                            (reset! naulattu? false)))
-                      (openlayers/invalidate-size!))))]
-
+  (let [paivita (fn [& _]
+                  (go (>! paivita-kartan-sijainti true)))]
     (komp/luo
-      (komp/kuuntelija :ikkunan-koko-muuttunut
-                       (fn [this event]
-                         (let [naulattu-nyt? @naulattu?
-                               elt (yleiset/elementti-idlla "kartan-paikka")
-                               [x y w h] (yleiset/sijainti elt)
-                               offset-y (yleiset/offset-korkeus elt)]
-                           (t/julkaise! {:aihe :kartan-paikka
-                                         :x    x :y offset-y :w w :h h :naulattu? naulattu-nyt?}))))
-      {:component-did-mount    #(do
-                                 (events/listen js/window
-                                                EventType/SCROLL
-                                                paivita)
-                                 (paivita %))
-       :component-did-update   paivita
-       :component-will-unmount (fn [this]
-                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
-                                 (events/unlisten js/window EventType/SCROLL paivita)
-                                 (reagent/next-tick
-                                   #(let [kp (yleiset/elementti-idlla "kartan-paikka")]
-                                     (log "KARTTA POISTUI? " kp)
-                                     (when (nil? kp)
-                                       (t/julkaise! {:aihe :kartan-paikka
-                                                     :x    0 :y (- @yleiset/korkeus) :w "100%" :h @kartan-korkeus}))))
-
-                                 )}
+     (komp/kuuntelija :ikkunan-koko-muuttunut paivita)
+     {:component-did-mount #(do
+                              (events/listen js/window
+                                             EventType/SCROLL
+                                             paivita)
+                              (paivita))
+      :component-did-update   paivita
+      :component-will-unmount (fn [this]
+                                ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
+                                (events/unlisten js/window EventType/SCROLL paivita)
+                                (paivita))}
 
      (fn []
        [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
