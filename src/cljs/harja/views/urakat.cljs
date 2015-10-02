@@ -4,7 +4,6 @@
             [cljs.core.async :as async :refer [chan <! >!]]
             [bootstrap :as bs]
             [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.leaflet :refer [leaflet] :as leaflet]
             [harja.ui.yleiset :as yleiset]
             
             [harja.tiedot.hallintayksikot :as hal]

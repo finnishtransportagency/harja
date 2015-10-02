@@ -107,6 +107,7 @@
                           :string
              :leveys      "33%"})
           materiaalit)))
+
 (defn muodosta-materiaaliraportin-rivit
   "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
   [materiaalitoteumat]
@@ -251,7 +252,8 @@
                                         ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
                    [:otsikko "Tämä on hieno raportti"]
                    [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
-                   [:taulukko [{:otsikko "Nimi" :leveys "50%"}
+                   [:taulukko {:otsikko "Testidataa"}
+                    [{:otsikko "Nimi" :leveys "50%"}
                                {:otsikko "Kappaleita" :leveys "15%"}
                                {:otsikko "Hinta" :leveys "15%"}
                                {:otsikko "Yhteensä" :leveys "20%"}]

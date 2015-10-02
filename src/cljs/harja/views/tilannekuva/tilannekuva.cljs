@@ -14,7 +14,7 @@
     (fn []
       [:span.tilannekuva
        [bs/tabs
-        {:active tilannekuva/valittu-valilehti}
+        {:style :tabs :classes "tabs-taso1" :active tilannekuva/valittu-valilehti}
 
         "Nykytilanne" :nykytilanne
         [nykytilanne/nykytilanne]

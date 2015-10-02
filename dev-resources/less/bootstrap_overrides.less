@@ -4,10 +4,21 @@
 .container {
   padding: 0;
   width: 100%;
-  &.sisalto {
-    padding: 2px 10px;
+}
+// kapeilla laitteilla vähennetään marginaalia
+// on hyvä näissä seurata bs:n raja-arvoja.
+// tarkistettava bs:n LESS-muuttujien nimet jos bs päivitetään (deprikoitumisvaara)
+@media (max-width: @screen-sm) {
+  .row-sisalto > [class^="col-"], [class*=" col-"] {
+    padding: 0 6px;
   }
 }
+@media (max-width: @screen-xs) {
+  .row-sisalto > [class^="col-"], [class*=" col-"] {
+    padding: 0 2px;
+  }
+}
+
 
 .row { // Jostain syystä välillä negatiiviset marginit, joka aiheuttaa ongelmia mm. lomakkeen kanssa.
   margin-left: 0;
@@ -56,12 +67,6 @@
 
 li.active > a {
   font-weight: bold;
-}
-
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover,
-.nav-tabs > li.active > a:focus {
-  background-color: @harjan-taustavari;
 }
 
 // BS itse yliratsastaa nappityylit modaalissa käyttäen btn-luokkaa

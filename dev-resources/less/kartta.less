@@ -1,65 +1,66 @@
 @kartan-transition-kesto: .1s;
 #kartta {
-  border: @primaari-sininen 1px ridge;
-  &.piilossa {
-    border: @primaari-sininen 0 ridge;
-  }
-  -webkit-backface-visibility: hidden;
-  -moz-transition: height @kartan-transition-kesto ease;
-  -webkit-transition: height @kartan-transition-kesto ease;
-  -o-transition: height @kartan-transition-kesto ease;
-  transition: height @kartan-transition-kesto ease;
-  * {
-    -webkit-transform: translate3d(0,0,0);
-  }
-  }
-.ol-control {
-  > .ol-zoom-in,
-  > .ol-zoom-out {
-    background-color: @primaari-sininen;
-    &:hover,
-    &:active,
-    &.active {
-      background-color: @primaari-sininen-valittuna;
+    border: @primaari-sininen 1px ridge;
+    &.piilossa {
+        border: @primaari-sininen 0 ridge;
     }
-  }
+    -webkit-backface-visibility: hidden;
+    -moz-transition: height @kartan-transition-kesto ease;
+    -webkit-transition: height @kartan-transition-kesto ease;
+    -o-transition: height @kartan-transition-kesto ease;
+    transition: height @kartan-transition-kesto ease;
 }
 
-
-  .ikoni-kartta-ctrl {
-  background-color: #FFF;
-  display: inline-block;
-  height: 40px;
-  margin-right: 5px;
-  opacity: 0.7;
-  width: 40px;
-  &:hover {
-    background-color: #F4F4F4;
-    cursor: pointer;
-  }
+.ol-control {
+    &.ol-zoom {
+        left: 0;
+        top: 0;
+    }
+    > .ol-zoom-in,
+    > .ol-zoom-out {
+        background-color: @primaari-sininen;
+        &:hover,
+        &:active,
+        &.active {
+            background-color: @primaari-sininen-valittuna;
+        }
+    }
+}
+.ikoni-kartta-ctrl {
+    background-color: #FFF;
+    display: inline-block;
+    height: 40px;
+    margin-right: 5px;
+    opacity: 0.7;
+    width: 40px;
+    &:hover {
+        background-color: #F4F4F4;
+        cursor: pointer;
+    }
 }
 
 .kartan-kontrollit {
-  position: absolute;
-  z-index: 2; //kartan päällä
+    position: absolute;
+    z-index: 2; //kartan päällä
 }
 
 .kartan-koko-kontrollit {
-  left: 50%;
-  position: absolute;
-  width: 50%;
-  button:nth-of-type(2) {
-    margin-left: 20px;
-  }
+    left: 50%;
+    position: absolute;
+    width: 80%;
+    button:nth-of-type(2) {
+        margin-left: 20px;
+    }
+}
+.kartan-yleiset-kontrollit {
+    left: 0;
+    top: 60px;
 }
 
-.kartan-yleiset-kontrollit {
-  left: 0;
-  top: 60px;
-}
 #kartta-container {
   z-index: 1;
 }
+
 .avaa-kartta-wrap {
   text-align: center;
 }
@@ -73,30 +74,30 @@
 }
 
 .kartta-tyokone-popup {
-  width: 300px;
-  cursor: default;
+    width: 300px;
+    cursor: default;
 }
 
 .kartta-tooltip {
-  z-index: 10;
-  display: block;
-  position: absolute;
+    z-index: 10;
+    display: block;
+    position: absolute;
 
-  box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
-  border-radius: 1px;
-  border: 1px solid #bbb;
-  background-color: #fff;
-  cursor: default;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
+    box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
+    border-radius: 1px;
+    border: 1px solid #bbb;
+    background-color: #fff;
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 
-  .pohjavesialue {
-    padding-left: 37px;
-    margin-right: 5px;
-    background-size: 32px 20px;
-    background-position: 0 0;
-    background-repeat: no-repeat;
-    background-image: url("../images/pohjavesialue.png");
-  }
+    .pohjavesialue {
+        padding-left: 37px;
+        margin-right: 5px;
+        background-size: 32px 20px;
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-image: url("../images/pohjavesialue.png");
+    }
 }
