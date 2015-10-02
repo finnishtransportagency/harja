@@ -8,32 +8,32 @@
     color: @valkoinen;
   }
 
-  li:not(.active) a:hover {
-    background-color: @sininen5 !important; // FIXME Korjaa important...
+  > li:not(.active) > a:hover {
+    background-color: @sininen5;
     color: @valkoinen;
   }
 }
 
 .tabs-taso2 {
-  li.active a {
-    border-bottom: none !important; // FIXME Korjaa important...
+  > li.active a {
+    border-bottom: none !important;
   }
 
-  a {
+  > li:not(.active) > a {
     font-weight: bold;
-    border-left: 1px solid @sininen4 !important; // FIXME Korjaa important...
-    border-top: 1px solid @sininen4 !important; // FIXME Korjaa important...
-    border-right: 1px solid @sininen4 !important; // FIXME Korjaa important...
-    border-bottom: 1px solid @harmaa7 !important; // FIXME Korjaa important...
+    border-left: 1px solid @sininen4;
+    border-top: 1px solid @sininen4;
+    border-right: 1px solid @sininen4;
+    border-bottom: 1px solid @harmaa7;
     background-color: @harmaa11;
     color: @sininen4;
   }
 
-  li:not(.active) a:hover {
+  > li:not(.active) a:hover {
     color: @sininen5;
-    border-left: 1px solid @sininen5 !important; // FIXME Korjaa important...
-    border-top: 1px solid @sininen5 !important; // FIXME Korjaa important...
-    border-right: 1px solid @sininen5 !important; // FIXME Korjaa important...
+    border-left: 1px solid @sininen5 !important;
+    border-top: 1px solid @sininen5 !important;
+    border-right: 1px solid @sininen5 !important;
     background-color: @harmaa11;
   }
 }
