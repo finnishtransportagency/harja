@@ -1,0 +1,30 @@
+/* Tässä tiedostossa on navigointiin liittyvien komponenttien tyylejä.
+   Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
+
+.tabs-taso1 {
+  a {
+    background-color: @sininen4;
+    text-transform: uppercase;
+    color: @valkoinen;
+  }
+
+  li:not(.active) a:hover {
+    background-color: @sininen5 !important; // FIXME Korjaa important...
+    color: @valkoinen;
+  }
+}
+
+.tabs-taso2 {
+  a {
+    border-left: 1px solid @sininen4 !important; // FIXME Korjaa important...
+    border-top: 1px solid @sininen4 !important; // FIXME Korjaa important...
+    border-right: 1px solid @sininen4 !important; // FIXME Korjaa important...
+    border-bottom: none;
+    background-color: @harmaa11;
+    color: @sininen4;
+  }
+
+  li:not(.active) a:hover {
+    color: @sininen5;
+  }
+}

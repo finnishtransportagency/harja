@@ -46,7 +46,7 @@
             :materiaalit [valinnat/urakan-sopimus-ja-hoitokausi ur])
 
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :active u/suunnittelun-valittu-valilehti}
+          [bs/tabs {:style :tabs :classes "tabs-taso2":active u/suunnittelun-valittu-valilehti}
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset

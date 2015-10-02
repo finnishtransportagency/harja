@@ -15,7 +15,5 @@
 
        "Turvallisuuspoikkeamat"
        :turvallisuuspoikkeamat
-       [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
-
-       ])))
+       [turvallisuuspoikkeamat/turvallisuuspoikkeamat]])))
 

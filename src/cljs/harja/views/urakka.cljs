@@ -37,7 +37,7 @@
     @u/valittu-toimenpideinstanssi
     
     (hae-urakan-tyot ur)
-    [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
+    [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/urakan-valittu-valilehti}
      "Yleiset"
      :yleiset
      ^{:key "yleiset"}
