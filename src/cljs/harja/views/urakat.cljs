@@ -31,9 +31,9 @@
                            :selection nav/valittu-hallintayksikko
                            :on-select nav/valitse-hallintayksikko
                            :aputeksti "Kirjoita hallintayksikön nimi tähän"}
-         hallintayksikot]]]
-      [:div.col-md-8
-       [kartta/kartan-paikka hallintayksikot]]]]))
+         hallintayksikot]]]]
+     [:div.col-md-8
+      [kartta/kartan-paikka hallintayksikot]]]))
 
 (defn valitse-urakka []
   (let [urakkalista @nav/urakkalista
