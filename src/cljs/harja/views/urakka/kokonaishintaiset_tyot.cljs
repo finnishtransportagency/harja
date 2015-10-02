@@ -19,7 +19,8 @@
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -192,7 +193,7 @@
 
      (fn [ur]
        [:div.kokonaishintaiset-tyot
-
+        [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
         [kartta/kartan-paikka]
         ;; Näytetään kustannusten summat ja piirakkadiagrammit
         [kustannukset

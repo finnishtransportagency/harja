@@ -18,7 +18,8 @@
             [cljs-time.coerce :as tc]
 
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]))
 
@@ -148,9 +149,7 @@
         ;; valitaan materiaaleista vain valitun hoitokauden
         materiaalit (reaction (let [hk @u/valittu-hoitokausi]
                                 (get @sopimuksen-materiaalit-hoitokausittain hk)))
-        
-        uusi-id (atom 0)
-        
+
         ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
         materiaalikoodit (reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
         
@@ -197,10 +196,7 @@
                                                                @u/valittu-hoitokausi)]
                     (if-not kopioi?
                       false
-                      varoita?)))
-        
-        
-        ]
+                      varoita?)))]
 
     (hae-urakan-materiaalit ur)
 
@@ -220,6 +216,7 @@
              ]
     
          [:div.materiaalit
+          [valinnat/urakan-sopimus-ja-hoitokausi ur]
           [kartta/kartan-paikka]
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}
@@ -260,5 +257,4 @@
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
                                     (reset! urakan-materiaalit uudet-materiaalit)))))}
-              "Tallenna materiaalit"]])
-          ]))))) 
+              "Tallenna materiaalit"]])])))))
