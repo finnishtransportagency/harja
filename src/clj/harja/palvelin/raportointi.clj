@@ -3,7 +3,10 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [harja.palvelin.raportointi.pdf :as pdf]))
+            [harja.palvelin.raportointi.pdf :as pdf]
+            [taoensso.timbre :as log]
+            ;; vaaditaan built in raportit
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -33,8 +36,10 @@
     (pdf-vienti/rekisteroi-pdf-kasittelija!
      pdf-vienti :raportointi
      (fn [kayttaja params]
-       (pdf/muodosta-pdf
-        (suorita-raportti this kayttaja {:raportti (get params "raportti")}))))
+       (let [rapos (suorita-raportti this kayttaja params)]
+         (log/debug "SUORITETTU RAPSA: " (pr-str rapos))
+         (pdf/muodosta-pdf
+          rapos))))
     this)
 
   (stop [this]
@@ -44,12 +49,14 @@
   RaportointiMoottori
   (hae-raportit [this] @raportit)
   (hae-raportti [this nimi] (get @raportit nimi))
-  (suorita-raportti [this kayttaja {raportin-nimi :raportti
-                                    :as suorituksen-tiedot}]
-    (println "SUORITELLAAN RAPSAA " raportin-nimi " , rapsat: " raportit)
-    (when-let [suoritettava-raportti (hae-raportti this raportin-nimi)]
+  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
+    (log/debug "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
+    (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (binding [*raportin-suoritus* this]
-        ((:tiedot suoritettava-raportti) suorituksen-tiedot)))))
+        ((:suorita suoritettava-raportti) db kayttaja
+         (condp = konteksti
+           :urakka (assoc parametrit
+                          :urakka-id (:urakka-id suorituksen-tiedot))))))))
 
 
 (defn luo-raportointi []
@@ -63,11 +70,7 @@
                                                            :tyyppi  :valinta
                                                            :valinnat :valitun-aikavalin-kuukaudet}
                                                           ]
-                                             :suorita (fn [tiedot]
-                                                     [:raportti
-                                                      [:header "Laskutusyhteenveto " 2015]
-                                                      [:taulukko
-                                                       {:otsikko "Toimenpide" :nimi :toimenpide}]])}
+                                             :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita}
                         :testiraportti {:otsikko "Testiraportti"
                                         :konteksti #{:urakka :koko-maa :hallintayksikko}
                                         :parametrit []

@@ -2,7 +2,8 @@
   "Harjan raporttielementtien HTML näyttäminen."
   (:require [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.visualisointi :as vis]))
+            [harja.ui.visualisointi :as vis]
+            [harja.loki :refer [log]]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -13,16 +14,27 @@
             "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä.")
     (first elementti)))
 
-(defmethod muodosta-html :taulukko [[_ sarakkeet data]]
-  [grid/grid {:otsikko "" :tunniste hash}
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?]} sarakkeet data]]
+  (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
+  [grid/grid {:otsikko (or otsikko "") :tunniste hash}
    (into []
          (map-indexed (fn [i sarake]
-                        {:hae #(nth % i)
+                        {:hae #(get % i)
                          :leveys (:leveys sarake)
                          :otsikko (:otsikko sarake)
                          :nimi (str "sarake" i)})
                       sarakkeet))
-   data])
+   (let [viimeinen-rivi (last data)]
+     (into []
+           (map (fn [rivi]
+                  (let [mappina (zipmap (range (count sarakkeet))
+                                        rivi)]
+                    (if (and viimeinen-rivi-yhteenveto?
+                             (= viimeinen-rivi rivi))
+                      (assoc mappina :yhteenveto true)
+                      mappina))))
+           data))])
+
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
@@ -46,9 +58,14 @@
   
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   [:div.raportti
-   (for [elementti sisalto]
-     ^{:key (hash elementti)}
-     [muodosta-html elementti])])
+   (map-indexed (fn [i elementti]
+                  ^{:key i}
+                  [muodosta-html elementti])
+                (mapcat (fn [sisalto]
+                          (if (list? sisalto)
+                            sisalto
+                            [sisalto]))
+                        sisalto))])
 
                                    
   

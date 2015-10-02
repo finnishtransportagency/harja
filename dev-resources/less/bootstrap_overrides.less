@@ -8,6 +8,20 @@
     padding: 0;
   }
 }
+// kapeilla laitteilla vähennetään marginaalia
+// on hyvä näissä seurata bs:n raja-arvoja.
+// tarkistettava bs:n LESS-muuttujien nimet jos bs päivitetään (deprikoitumisvaara)
+@media (max-width: @screen-sm) {
+  .row-sisalto > [class^="col-"], [class*=" col-"] {
+    padding: 0 6px;
+  }
+}
+@media (max-width: @screen-xs) {
+  .row-sisalto > [class^="col-"], [class*=" col-"] {
+    padding: 0 2px;
+  }
+}
+
 
 .row { // Jostain syystä välillä negatiiviset marginit, joka aiheuttaa ongelmia mm. lomakkeen kanssa.
   margin-left: 0;

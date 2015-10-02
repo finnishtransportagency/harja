@@ -5,7 +5,6 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
             [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.yleiset :refer [linkki elementti-idlla sijainti] :as yleiset]
             [harja.ui.modal :refer [modal-container]]
             [harja.ui.viesti :refer [viesti-container]]

@@ -13,23 +13,62 @@
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.ui.komponentti :as komp]
+            [harja.views.kartta :as kartta]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit]
+            [harja.domain.paallystys.pot :as paallystys-pot]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
 (defonce kohdeluettelo-valilehti (atom :paikkauskohteet))
 
+(defn kohdeosan-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
+  (let [osa (:osa kohdeosa)
+        kohde (:kohde kohdeosa)
+        paikkauskohde-id (:paikkauskohde-id kohdeosa)
+        {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
+        avaa-ilmoitus #(do (kartta/poista-popup!)
+                           (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
+                           (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id}))]
+
+    (kartta/nayta-popup!
+      klikkaus-koordinaatit
+      [:div.paallystyskohde
+       [yleiset/tietoja {:otsikot-omalla-rivilla? true}
+        "Kohde" (:nimi kohde)
+        "Tierekisterikohde" (:nimi osa)
+        "Osoite" (yleiset/tierekisteriosoite tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys)
+        "Nykyinen päällyste" (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste osa))
+        "Toimenpide" (:toimenpide osa)
+        "Tila" (case (:tila kohdeosa)
+                 :valmis "Valmis"
+                 :aloitettu "Aloitettu"
+                 "Ei aloitettu")]
+       (if (:tila kohdeosa)
+         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
+          (ikonit/eye-open) " Paikkausilmoitus"]
+         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
+          "Aloita paikkausilmoitus"])])))
+
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
   [ur]
-  [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
+  (komp/luo
+    (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/lippu paallystys/karttataso-paikkauskohteet)
+    (fn [ur]
+      [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
 
-   "Paikkauskohteet"
-   :paikkauskohteet
-   [paallystyskohteet-yhteenveto/paallystyskohteet]
+       "Paikkauskohteet"
+       :paikkauskohteet
+       [paallystyskohteet-yhteenveto/paallystyskohteet]
 
-   "Paikkausilmoitukset"
-   :paikkausilmoitukset
-   [paikkausilmoitukset/paikkausilmoitukset ur]])
+       "Paikkausilmoitukset"
+       :paikkausilmoitukset
+       [paikkausilmoitukset/paikkausilmoitukset ur]])))
 

@@ -122,8 +122,8 @@
                                                                         :paikkauskohde-id paikkauskohde-id})]
         (log/debug "MINIPOTTI kannassa: " (pr-str paikkausilmoitus-kannassa))
         (is (not (nil? paikkausilmoitus-kannassa)))
-        (is (= (:tila paikkausilmoitus-kannassa) :valmis))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (:tila paikkausilmoitus-kannassa) :valmis))
         (u (str "DELETE FROM paikkausilmoitus WHERE paikkauskohde = " paikkauskohde-id ";"))))))
 
 (deftest paivita-paikkausilmoitukselle-paatostiedot
