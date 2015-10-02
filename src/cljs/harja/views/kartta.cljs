@@ -57,6 +57,20 @@
         (set! (.-width tyyli) (fmt/pikseleina w))
         (set! (.-height tyyli) (fmt/pikseleina h))))))
 
+;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
+;; kerralla paikan asetuksen... läheta false kanavaan
+
+(defn- elementti-idlla-odota 
+  "Pollaa DOMia 10ms välein kunnes annettu elementti löytyy. Palauttaa kanavan, josta
+  elementin voi lukea."
+  [id]
+  (go (loop [elt (.getElementById js/document id)]
+        (if elt
+          elt
+          (do (<! (timeout 10))
+              (recur (.getElementById js/document id)))))))
+
+
 (defonce kartan-sijaintipaivitys
   (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
     (go (loop [naulattu? nil
@@ -65,17 +79,38 @@
                w nil
                h nil
                offset-y nil]
-          (<! paivita-kartan-sijainti)
-          (let [paikka-elt (yleiset/elementti-idlla "kartan-paikka")
+
+          (let [ensimmainen-kerta? (nil? naulattu?)
+                aseta (when-not (<! paivita-kartan-sijainti)
+                        ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
+                        ;; seuraava päivitys aina asettaa kartan paikan.
+                        
+                        ;; Odotetaan joko seuraavaa eventtiä paivita-kartan-sijainti (jos uusi komponentti
+                        ;; tuli näkyviin, tai timeout 20ms (jos kartta oikeasti lähti näkyvistä)
+                        (let [[arvo ch] (async/alts! [paivita-kartan-sijainti (timeout 20)])]
+                          (if (nil? arvo)
+                            ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
+                            (do (aseta-kartan-sijainti x (- h) w h false)
+                                (recur nil nil nil w h nil))))
+                        true)
+                paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
                 [uusi-x uusi-y uusi-w uusi-h] (yleiset/sijainti paikka-elt)
-                uusi-offset-y (yleiset/offset-korkeus paikka-elt)]
-            (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ")")
+                uusi-offset-y (yleiset/offset-korkeus paikka-elt)
+                #_uusi-offset-y #_(if (and (> uusi-offset-y 150) ensimmainen-kerta?)
+                                (<! (odota-kunnes-offset-korkeus-alle paikka-elt 150))
+                                uusi-offset-y)]
+
+            ;(log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
+
             
             (cond
               ;; Eka kerta, asetetaan kartan sijainti
-              (nil? naulattu?)
+              (or aseta (nil? naulattu?))
               (let [naulattu? (neg? uusi-y)]
-                (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h naulattu?)
+                ;(log "EKA KERTA")
+                (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
+                (when (or (not= w uusi-w) (not= h uusi-h))
+                    (reagent/next-tick #(openlayers/invalidate-size!)))
                 (recur naulattu?
                        uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
@@ -108,20 +143,21 @@
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
   [kartan-koko]
-  (let [paivita (fn [& _]
-                  (go (>! paivita-kartan-sijainti true)))]
+  (log "KARTAN-PAIKKAVARAUS!")
+  (let [paivita (fn [paikkavaraus]
+                  (go (>! paivita-kartan-sijainti paikkavaraus)))]
     (komp/luo
      (komp/kuuntelija :ikkunan-koko-muuttunut paivita)
      {:component-did-mount #(do
                               (events/listen js/window
                                              EventType/SCROLL
-                                             paivita)
-                              (paivita))
-      :component-did-update   paivita
+                                             (fn [_] (paivita true)))
+                              (paivita true))
+      :component-did-update   #(paivita true)
       :component-will-unmount (fn [this]
                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
                                 (events/unlisten js/window EventType/SCROLL paivita)
-                                (paivita))}
+                                (paivita false))}
 
      (fn []
        [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)

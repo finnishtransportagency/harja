@@ -334,7 +334,7 @@
     (.setView ol3 (ol.View. #js {:center (clj->js @view)
                                  :zoom   @zoom
                                  :maxZoom 20
-                                 :minZoom 4}))
+                                 :minZoom 5}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3            ol3

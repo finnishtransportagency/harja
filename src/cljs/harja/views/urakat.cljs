@@ -60,8 +60,6 @@
   []
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
-    ;; FIXME: hack joka parantaa kartan ulkonäköä kun tullaan murupolkua ylöspäin. Korvaa user skrollin.
-    (reagent/next-tick #(.scrollTo js/window 0 (inc (.-scrollY js/window))))
     (if-not v-hal
       (valitse-hallintayksikko)
       (when-not v-ur
@@ -75,6 +73,6 @@
       [urakka/urakka v-ur]
       [:div.row
        [:div.col-md-4
-       [valitse-hallintayksikko-ja-urakka]]
-      [:div.col-md-8
-       [kartta/kartan-paikka]]])))
+        [valitse-hallintayksikko-ja-urakka]]
+       [:div.col-md-8
+        [kartta/kartan-paikka]]])))

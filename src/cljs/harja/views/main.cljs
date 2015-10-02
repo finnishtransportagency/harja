@@ -95,9 +95,7 @@
                [:div.container
                 [murupolku/murupolku]]
 
-               ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-               [:div#kartta-container
-                [kartta/kartta]]
+               
 
                [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
                 [:div.row.row-sisalto
@@ -110,7 +108,13 @@
                     :tilannekuva [tilannekuva/tilannekuva]
                     :about [about/about])]]]
 
+               
+               
                [footer]
                [modal-container]
-               [viesti-container]])))))))
+               [viesti-container]
+
+               ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
+               [:div#kartta-container 
+                [kartta/kartta]]])))))))
 
