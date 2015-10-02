@@ -97,7 +97,12 @@
      :type :havainto
      :alue (oletusalue havainto))])
 
-(defmethod kartalla-xf :tarkastus [tarkastus]
+(defmethod kartalla-xf :pistokoe [tarkastus]
+  [(assoc tarkastus
+     :type :tarkastus
+     :alue (oletusalue tarkastus))])
+
+(defmethod kartalla-xf :laaduntarkastus [tarkastus]
   [(assoc tarkastus
      :type :tarkastus
      :alue (oletusalue tarkastus))])
@@ -184,8 +189,14 @@
           tulos (yhdista
                   (when @hae-turvallisuuspoikkeamat? (mapv
                                                        #(assoc % :tilannekuvatyyppi :turvallisuuspoikkeama)
-                                                       (<! (k/post! :hae-turvallisuuspoikkeamat yhteiset-parametrit))))
-                  #_(when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset yhteiset-parametrit)))
+                                                       (<! (k/post! :hae-turvallisuuspoikkeamat (clojure.set/rename-keys
+                                                                                                  yhteiset-parametrit
+                                                                                                  {:urakka :urakka-id})))))
+                  (when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset (clojure.set/rename-keys
+                                                                                   yhteiset-parametrit
+                                                                                   {:urakka :urakka-id
+                                                                                    :alku :alkupvm
+                                                                                    :loppu :loppupvm}))))
                   #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet yhteiset-parametrit)))
                   #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot yhteiset-parametrit)))
                   #_(when @hae-paikkaustyot? (<! (k/post! :hae-paikkaustyot yhteiset-parametrit)))
