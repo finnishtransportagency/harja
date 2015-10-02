@@ -87,12 +87,10 @@
 (defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body 
                                                query-params :params
                                                :as req}]
-  (log/info "PDF body: " body)
-  (log/info "REQ: " (pr-str req))
   (let [tyyppi (keyword (get query-params "_"))
         params (lue-body-parametrit body)
         kasittelija (get kasittelijat tyyppi)]
-    (log/info "PARAMS: " params)
+    (log/debug "PARAMS: " params)
     (if-not kasittelija
       {:status 404
        :body (str "Tuntematon PDF: " tyyppi)}
@@ -105,8 +103,3 @@
               (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
               {:status 500
                :body "Virhe PDF-muodostuksessa"}))))))
-
-              
-                                      
-
-
