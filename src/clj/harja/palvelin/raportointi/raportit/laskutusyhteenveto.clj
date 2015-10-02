@@ -50,7 +50,7 @@
             [yhteenveto]))]))
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
-  (log/info "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
+  (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [
         laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
                                 (kuukausi aikavali-alkupvm)
@@ -62,7 +62,6 @@
                                  (pvm/vuosi aikavali-alkupvm))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
-    (log/info "TIETOJA: " tiedot)
     [:raportti {:nimi "Laskutusyhteenveto"}
      (map (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
             (taulukko otsikko tyhja
