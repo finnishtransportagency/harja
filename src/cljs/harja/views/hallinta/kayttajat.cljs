@@ -15,7 +15,6 @@
             [harja.ui.komponentti :as komp]
             [bootstrap :as bs]
 
-            [harja.ui.leaflet :refer [leaflet]]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.kentat :refer [tee-kentta]]
 

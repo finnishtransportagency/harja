@@ -2,18 +2,21 @@
   "PDF-vientin komponentti, tarjoaa reitin, jonka kautta PDF:n voi ladata selaimelle.
   Lisäksi tänne voi muut komponentit rekisteröidä PDF:n luontimekanismin.
   Tämä komponentti ei ota kantaa PDF:n sisältöön, se vain generoi Hiccup muotoisesta FOPista PDF:n."
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [ring.middleware.params :refer [wrap-params]]
+  (:require [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer
+             [julkaise-palvelu poista-palvelu]]
+            [harja.transit :as t]
             [hiccup.core :refer [html]]
-            [clojure.java.io :as io]
-            [harja.tyokalut.xsl-fo :as fo])
-  (:import (org.apache.fop.apps FopConfParser MimeConstants)
-           (javax.xml.transform TransformerFactory)
-           (javax.xml.transform.stream StreamSource)
-           (javax.xml.transform.sax SAXResult)))
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.util.codec :as codec]
+            [taoensso.timbre :as log])
+  (:import javax.xml.transform.sax.SAXResult
+           javax.xml.transform.stream.StreamSource
+           javax.xml.transform.TransformerFactory
+           [org.apache.fop.apps FopConfParser MimeConstants]
+           java.io.ByteArrayInputStream))
 
 (defprotocol PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [this nimi kasittely-fn]
@@ -28,7 +31,7 @@
     (log/info "PDF-vientikomponentti aloitettu")
     (julkaise-palvelu http
                       :pdf (wrap-params (fn [req]
-                                     (muodosta-pdf fop-factory @pdf-kasittelijat req)))
+                                          (muodosta-pdf fop-factory @pdf-kasittelijat req)))
                       {:ring-kasittelija? true})
     this)
 
@@ -68,11 +71,26 @@
       (.toByteArray out))))
 
 
+;; Jostain syystä wrap-params ei lue meidän POSTattua formia
+;; Luetaan se ja otetaan "parametrit" niminen muuttuja ja
+;; muunnetaan se transit+json muodosta Clojure dataksi
+(defn- lue-body-parametrit [body]
+  (-> body
+      .bytes
+      (String.)
+      codec/form-decode
+      (get "parametrit")
+      .getBytes
+      (ByteArrayInputStream.)
+      t/lue-transit))
 
-(defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja q :query-string
-                                              params :params :as req}]
-  (let [tyyppi (keyword (get params "_"))
+(defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body 
+                                               query-params :params
+                                               :as req}]
+  (let [tyyppi (keyword (get query-params "_"))
+        params (lue-body-parametrit body)
         kasittelija (get kasittelijat tyyppi)]
+    (log/debug "PARAMS: " params)
     (if-not kasittelija
       {:status 404
        :body (str "Tuntematon PDF: " tyyppi)}
@@ -85,8 +103,3 @@
               (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
               {:status 500
                :body "Virhe PDF-muodostuksessa"}))))))
-
-              
-                                      
-
-
