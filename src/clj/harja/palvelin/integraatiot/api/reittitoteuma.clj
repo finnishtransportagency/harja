@@ -19,7 +19,7 @@
   (:import (org.postgresql.util PSQLException)))
 
 (defn- yhdista-viivat [viivat]
-  {:type   :multi-line
+  {:type   :multiline
    :lines (mapcat
              (fn [viiva]
                (if (= :line (:type viiva))
