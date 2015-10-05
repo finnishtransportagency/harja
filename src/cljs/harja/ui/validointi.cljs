@@ -76,9 +76,6 @@
                                            (map (comp clojure.string/capitalize name) avaimet))))]
     (when-not (some #(not (str/blank? (% rivi))) avaimet) viesti)))
 
-(defmethod validoi-saanto :positiivinen-luku [_ _ data _ _ & [viesti]]
-  (when (not (pos? data)) (or viesti "Luvun täytyy olla positiivinen")))
-
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
     (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
