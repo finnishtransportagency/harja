@@ -40,6 +40,7 @@
 
 (defn luo-reitti-geometria [db reitti]
   (->> reitti
+       (sort-by (comp :aika :reittipiste))
        (map piste)
        (partition 2 1)
        (map #(hae-reitti db %))
