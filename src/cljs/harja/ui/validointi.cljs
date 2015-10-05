@@ -84,6 +84,12 @@
              (not (pos? data)))
     (or viesti "Luvun täytyy olla 0 tai positiivinen")))
 
+(defmethod validoi-saanto :tyhja-tai-nolla-tai-positiivinen-luku [_ _ data _ _ & [viesti]]
+  (when (and (not (nil? data))
+             (not= data 0)
+             (not (pos? data)))
+    (or viesti "Luvun täytyy olla 0 tai positiivinen")))
+
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
     (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
