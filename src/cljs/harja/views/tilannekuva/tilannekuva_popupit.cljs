@@ -146,12 +146,16 @@
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
-                        [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
+                        [:p [:b "Päällystyskohde"]]
+                        [:p (:nimi tapahtuma)]
+                        [:p "Toimenpide: " (:toimenpide tapahtuma)]
+                        [:p "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
 
 (defmethod nayta-popup :paikkaustoteuma-klikattu [tapahtuma]
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
-                        [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
+                        [:p [:b "Paikkaustoteuma"]]
+                        [:p (:nimi tapahtuma)]
+                        [:p "Toimenpide: " (:toimenpide tapahtuma)]
+                        [:p "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
