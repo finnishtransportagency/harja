@@ -12,7 +12,6 @@
             [harja.loki :refer [log logt]]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
-            [harja.fmt :as fmt]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]

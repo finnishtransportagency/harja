@@ -269,7 +269,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
-  (let [uri (goog.Uri/parse url)
+  (let [uri (Uri/parse url)
         polku (.getPath uri)
         parametrit (.getQueryData uri)]
     (if-let [hy (some-> parametrit (.get "hy") js/parseInt)]
