@@ -1,5 +1,5 @@
 (ns harja.views.urakka.toteumat.muut-tyot
-  "Urakan 'Toteumat' välilehden 'Muut työt' osio"
+  "Urakan 'Toteumat' välilehden 'Muutos -ja lisätyöt' osio"
   (:require [reagent.core :refer [atom] :as r]
 
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
@@ -285,7 +285,7 @@
                           "Käytät muutoshintaa. Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä.")
                :aseta   (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :validoi (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                          [[:ei-tyhja "Määrä antamatta."]])
+                          [[:ei-tyhja "Määrä antamatta."] [:positiivinen-luku]])
                :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
                 {:otsikko "Päivän hinta" :nimi :paivanhinta
