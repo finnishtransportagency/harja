@@ -15,25 +15,27 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:import (org.postgresql.util PSQLException)))
 
-(defn yhdista-viivat [viivat]
-  {:type :line
-   :points (mapcat (fn [viiva]
-                     (if (= :line (:type viiva))
-                       (:points viiva)
-                       (mapcat :points (:lines viiva))))
-                   viivat)})
+(defn- yhdista-viivat [viivat]
+  {:type   :line
+   :points (mapcat
+             (fn [viiva]
+               (if (= :line (:type viiva))
+                 (:points viiva)
+                 (mapcat :points (:lines viiva))))
+             viivat)})
 
 (defn- piste [pistepari]
   [(get-in pistepari [:reittipiste :koordinaatit :x])
    (get-in pistepari [:reittipiste :koordinaatit :y])])
 
-(defn hae-reitti [db [[x1 y1] [x2 y2]]]
+(defn- hae-reitti [db [[x1 y1] [x2 y2]]]
   (try
     (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
-    (catch Exception e
-      (log/warn "Reittitoteuman väli ei osunut tieverkolle: " e)
+    (catch PSQLException e
+      (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " ) ei ole yhteistä tietä: " e)
       [[x1 y1] [x2 y2]])))
 
 (defn luo-reitti-geometria [db reitti]
