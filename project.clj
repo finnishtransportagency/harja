@@ -20,8 +20,8 @@
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
-                 [com.taoensso/timbre "3.4.0"] ;; FIXME: päivitä v4, jossa myös CLJS tuki
-                 
+                 [com.taoensso/timbre "3.4.0"]              ;; FIXME: päivitä v4, jossa myös CLJS tuki
+
                  [com.narkisr/gelfino-client "0.7.0"]
 
                  ;; HTTP palvelin ja reititys
@@ -30,7 +30,7 @@
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
-                 
+
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -44,8 +44,8 @@
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]
                  [org.geotools/gt-process-raster "12.2"]
-                 [org.geotools/gt-epsg-wkt "12.2"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "12.2"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-epsg-wkt "12.2"]          ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "12.2"]             ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"]
@@ -74,14 +74,14 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
 
                  [clj-time "0.10.0"]
-                 [com.andrewmcveigh/cljs-time "0.3.3"] ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
+                 [com.andrewmcveigh/cljs-time "0.3.3"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
                  [cljsjs/openlayers "3.5.0-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.12"] ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
-                 [org.apache.poi/poi-scratchpad "3.12"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.12"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.12"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
+                 [org.apache.poi/poi-scratchpad "3.12"]     ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.12"]          ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
@@ -98,14 +98,15 @@
                  [prismatic/dommy "1.1.0"]
 
                  [com.cemerick/clojurescript.test "0.3.3"]
-                 
+
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
                  [org.apache.xmlgraphics/fop "2.0"]
-                 
-                 ]
+
+                 ;; Fake-HTTP testaukseen
+                 [http-kit.fake "0.2.1"]]
 
   :dev-dependencies [;; Selain REPL
 
@@ -115,14 +116,14 @@
                      ]
 
 
-  :profiles {:dev {:dependencies []
-                   :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.1.0"]]}
+  :profiles {:dev  {:dependencies []
+                    :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
+                                   [test2junit "1.1.0"]]}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
 
-  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]  ;; FIXME: move artifacts to mvn.solita.fi
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
                  ]
 
@@ -136,41 +137,40 @@
             [jonase/eastwood "0.2.1"]
             [lein-auto "0.1.2"]
             ;;[mvxcvi/whidbey "0.5.1"]
-            ]  ;; Asiakaspuolen cljs buildin tietoja
+            ]                                               ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
-              :builds [{:id "dev"
+              :builds [{:id           "dev"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
-                        :compiler {:optimizations :none
-                                   :source-map true
-                                   ;;:preamble ["reagent/react.js"]
-                                   :output-to "dev-resources/js/harja.js"
-                                   :output-dir "dev-resources/js/out"
+                        :compiler     {:optimizations :none
+                                       :source-map    true
+                                       ;;:preamble ["reagent/react.js"]
+                                       :output-to     "dev-resources/js/harja.js"
+                                       :output-dir    "dev-resources/js/out"
 
-
-                                   }}
-                       {:id "test"
-                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
-                        :compiler {:output-to "target/cljs/test/test.js"
-                                   :output-dir "target/cljs/test"
-                                   :optimizations :none
-                                   :pretty-print true
-                                   :source-map "target/cljs/test/test.js.map"}
+                                       }}
+                       {:id             "test"
+                        :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                        :compiler       {:output-to     "target/cljs/test/test.js"
+                                         :output-dir    "target/cljs/test"
+                                         :optimizations :none
+                                         :pretty-print  true
+                                         :source-map    "target/cljs/test/test.js.map"}
                         :notify-command ["./run-karma.sh"]}
                        ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
 
-                       {:id "prod"
+                       {:id           "prod"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
-                        :compiler {:optimizations :advanced
-                                   :recompile-dependents false ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
-                                   ;;:preamble ["reagent/react.min.js"]
-                                   :output-to "resources/public/js/harja.js"
-                                   :closure-extra-annotations #{"api" "observable"}
+                        :compiler     {:optimizations             :advanced
+                                       :recompile-dependents      false ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
+                                       ;;:preamble ["reagent/react.min.js"]
+                                       :output-to                 "resources/public/js/harja.js"
+                                       :closure-extra-annotations #{"api" "observable"}
 
-                                   ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
-                                   :source-map "resources/public/js/harja.js.map"
-                                   :output-dir "resources/public/js/"
-                                   }}
+                                       ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
+                                       :source-map                "resources/public/js/harja.js.map"
+                                       :output-dir                "resources/public/js/"
+                                       }}
 
                        ]}
 
@@ -180,7 +180,7 @@
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"]
-         :target-path "resources/public/css/"}
+         :target-path  "resources/public/css/"}
 
 
   ;; Palvelimen buildin tietoja
@@ -188,42 +188,42 @@
   :test-paths ["test/clj"]
   :aot :all
   :main harja.palvelin.main
-  :auto-clean false ;; for uberjar
+  :auto-clean false                                         ;; for uberjar
 
   :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)
-                 :port 4005
+                 :init    (harja.palvelin.main/-main)
+                 :port    4005
                  :timeout 120000}
 
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :nrepl-port 4006
+             :nrepl-port  4006
              }
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
+  :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
-            "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
-            "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
-            "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
-            "testit" ["with-profiles" "test" "do" "clean," "compile," "test"]
-            
-            "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
+            "elyt"                ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
+            "sampo"               ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
+            "gitlog"              ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
+            "testit"              ["with-profiles" "test" "do" "clean," "compile," "test"]
+
+            "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
   ;; ne pitää kopioida 
-  :manifest {"Specification-Title" "Java Advanced Imaging Image I/O Tools"
-             "Specification-Version" "1.1"
-             "Specification-Vendor" "Sun Microsystems, Inc."
-             "Implementation-Title" "com.sun.media.imageio"
+  :manifest {"Specification-Title"    "Java Advanced Imaging Image I/O Tools"
+             "Specification-Version"  "1.1"
+             "Specification-Vendor"   "Sun Microsystems, Inc."
+             "Implementation-Title"   "com.sun.media.imageio"
              "Implementation-Version" "1.1"
-             "Implementation-Vendor" "Sun Microsystems, Inc."
-             "Extension-Name" "com.sun.media.imageio"}
+             "Implementation-Vendor"  "Sun Microsystems, Inc."
+             "Extension-Name"         "com.sun.media.imageio"}
   )
