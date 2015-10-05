@@ -22,15 +22,31 @@
   [db user params]
   (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+)))
 
+(defn jarjestele-tr-osoite [osoite]
+  (let [aosa (:alkuosa osoite)
+        losa (:loppuosa osoite)
+        alkuet (:alkuetaisyys osoite)
+        loppuet (:loppuetaisyys osoite)]
+    (if (> aosa losa)
+      (assoc osoite
+             :alkuosa losa
+             :loppuosa aosa)
+      (if (= aosa losa)
+        (assoc osoite
+               :alkuetaisyys (min alkuet loppuet)
+               :loppuetaisyys (max alkuet loppuet))
+        osoite))))
+
 (defn hae-tr-viiva
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
-  (let [geom (first (tv/tierekisteriosoite-viivaksi db
-                                                    (:numero params)
-                                                    (:alkuosa params)
-                                                    (:alkuetaisyys params)
-                                                    (:loppuosa params)
-                                                    (:loppuetaisyys params)))]
+  (let [korjattu-osoite (jarjestele-tr-osoite params)
+        geom (first (tv/tierekisteriosoite-viivaksi db
+                                                    (:numero korjattu-osoite)
+                                                    (:alkuosa korjattu-osoite)
+                                                    (:alkuetaisyys korjattu-osoite)
+                                                    (:loppuosa korjattu-osoite)
+                                                    (:loppuetaisyys korjattu-osoite)))]
     (log/debug "hae-tr-viiva " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
