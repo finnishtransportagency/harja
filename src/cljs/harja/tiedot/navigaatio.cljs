@@ -260,9 +260,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 
 (def render-lupa-hy? (reaction
-                       (or
-                         (nil? @valittu-hallintayksikko-id)
-                         (some? @hy/hallintayksikot))))
+                       (some? @hy/hallintayksikot)))
 
 (def render-lupa-u? (reaction
                       (or (nil? @valittu-urakka-id) ;; urakkaa ei annettu urlissa, ei estetä latausta
