@@ -99,7 +99,7 @@
        :aseta         (fn [rivi arvo] (assoc rivi
                                         :tehtava arvo
                                         :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"]]}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"] [:positiivinen-luku]]}
       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
      tehtavat]))
 
