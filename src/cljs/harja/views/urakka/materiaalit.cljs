@@ -82,14 +82,12 @@
            :muokattava? (constantly voi-muokata?)
            :nimi :materiaali :fmt :nimi :leveys "35%"
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
-          {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
+          {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
            :muokattava? (constantly voi-muokata?)
-           :validoi [[:nolla-tai-positiivinen-luku "Kirjoita määrä"]]}
+           :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
-          
-         materiaalit
-         ]])
+         materiaalit]])
      )))
       
      
