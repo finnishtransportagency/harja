@@ -23,3 +23,7 @@ harja.iml
 build.xml
 test2junit
 \#*\#
+shp
+tl132
+tuotanto/harja.jar
+tuotanto_test.sh

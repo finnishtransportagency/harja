@@ -34,6 +34,11 @@
       sudo_user: postgres
       postgresql_ext: db=harja name=postgis state=present
 
+    - name: tee pg_stat_statements -ekstensio
+      sudo: yes
+      sudo_user: postgres
+      postgresql_ext: db=harja name=pg_stat_statements state=present
+      
     - name: poista entiset siirretyt migraatioskriptit palvelimelta
       file: path=/opt/harja/tietokanta state=absent
       
