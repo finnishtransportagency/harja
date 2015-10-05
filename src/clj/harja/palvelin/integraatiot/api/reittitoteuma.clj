@@ -36,7 +36,7 @@
     (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
     (catch PSQLException e
       (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " ) ei ole yhteistä tietä: " e)
-      [[x1 y1] [x2 y2]])))
+      {:type :line :lines [[x1 y1] [x2 y2]]})))
 
 (defn luo-reitti-geometria [db reitti]
   (->> reitti
