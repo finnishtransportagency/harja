@@ -111,3 +111,34 @@
         (is (true? (:onnistunut vastausdata)))
         (is (= odotettu-tietue tietue))))))
 
+
+(deftest tarkista-tietueen-lisays
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml]
+      (let [tietue {:lisaaja {:henkilo      "Keijo Käsittelijä"
+                              :jarjestelma  "FastMekka"
+                              :organisaatio "Asfaltia Oy"
+                              :yTunnus      "1234567-8"}
+                    :tietue  {:tunniste    "HARJ951547ZK"
+                              :alkupvm     "2015-05-22"
+                              :loppupvm    nil
+                              :karttapvm   nil
+                              :piiri       nil
+                              :kuntoluokka nil
+                              :urakka      nil
+                              :sijainti    {:tie {:numero  "89"
+                                                  :aet     "12"
+                                                  :aosa    "1"
+                                                  :let     nil
+                                                  :losa    nil
+                                                  :ajr     "0"
+                                                  :puoli   "1"
+                                                  :alkupvm nil}}
+                              :tietolaji   {:tietolajitunniste "tl505"
+                                            :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+                    :lisatty "2015-05-26+03:00"}
+            vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
+        (is (true? (:onnistunut vastausdata)))))))
+
+
