@@ -119,13 +119,11 @@
           }
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
           :muokattava? (constantly voi-muokata?)
-          :tyyppi :numero}
+          :tyyppi :positiivinen-numero}
          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
           :tyyppi :string :muokattava? (constantly false)}]
    
         yleiset-materiaalit-muokattu]))))
-
-
   
 (defn materiaalit [ur]
   (let [;; haetaan kaikki materiaalit urakalle
