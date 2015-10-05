@@ -61,7 +61,7 @@
   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-ilmoitus-popup
                         (log (pr-str tapahtuma))
-                        [:p [:b (name (:tyyppi tapahtuma))]]
+                        [:p [:b (name (:ilmoitustyyppi tapahtuma))]]
                         [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
                         [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
                         [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
