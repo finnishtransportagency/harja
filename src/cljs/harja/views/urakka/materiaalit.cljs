@@ -87,10 +87,8 @@
            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
-         materiaalit]])
-     )))
-      
-     
+         materiaalit]]))))
+
 (defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
                                 ur valittu-hk valittu-sop
                                 materiaalikoodit yleiset-materiaalit-muokattu]
