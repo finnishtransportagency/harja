@@ -19,12 +19,12 @@
   (:import (org.postgresql.util PSQLException)))
 
 (defn- yhdista-viivat [viivat]
-  {:type   :line
-   :points (mapcat
+  {:type   :multi-line
+   :lines (mapcat
              (fn [viiva]
                (if (= :line (:type viiva))
-                 (:points viiva)
-                 (mapcat :points (:lines viiva))))
+                 (list viiva)
+                 (:lines viiva)))
              viivat)})
 
 (defn- piste [pistepari]
