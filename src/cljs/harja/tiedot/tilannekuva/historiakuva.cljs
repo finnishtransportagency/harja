@@ -252,20 +252,20 @@
                       _ @hae-paallystystyot?
                       _ @toimenpidekoodit
                       _ @valitut-toteumatyypit
-                      _ @valittu-aikasuodatin
-                      _ @lyhyen-suodattimen-asetukset
-                      _ @pitkan-suodattimen-asetukset
-                      _ @nakymassa?
+                      valittu-aikasuodatin @valittu-aikasuodatin
+                      lyhyen-suodattimen-asetukset @lyhyen-suodattimen-asetukset
+                      pitkan-suodattimen-asetukset @pitkan-suodattimen-asetukset
+                      nakymassa @nakymassa?
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       _ @nav/valittu-hallintayksikko-id]
                      {:odota +bufferi+}
-                     (when (and @nakymassa?
+                     (when (and nakymassa?
                                 (or
                                   (and
-                                    (= @valittu-aikasuodatin :lyhyt)
-                                    (not (some nil? (vals @lyhyen-suodattimen-asetukset))))
+                                    (= valittu-aikasuodatin :lyhyt)
+                                    (not (some nil? (vals lyhyen-suodattimen-asetukset))))
                                   (and
-                                    (= @valittu-aikasuodatin :pitka)
-                                    (not (some nil? (vals @pitkan-suodattimen-asetukset))))))
+                                    (= valittu-aikasuodatin :pitka)
+                                    (not (some nil? (vals pitkan-suodattimen-asetukset))))))
                        (hae-asiat))))
