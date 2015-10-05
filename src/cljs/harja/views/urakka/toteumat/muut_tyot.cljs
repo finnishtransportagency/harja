@@ -276,7 +276,7 @@
                :valinta-nayta second
                :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                :leveys-col 3}
-              {:otsikko "Määrä" :nimi :maara :tyyppi :numero
+              {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
                :pakollinen? true
                :hae     #(get-in % [:tehtava :maara])
                :vihje   (if (= :paivanhinta (:hinnoittelu @muokattu))
@@ -285,7 +285,7 @@
                           "Käytät muutoshintaa. Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä.")
                :aseta   (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :validoi (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                          [[:ei-tyhja "Määrä antamatta."] [:positiivinen-luku]])
+                          [[:ei-tyhja "Määrä antamatta."]])
                :yksikko (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
               (when (= (:hinnoittelu @muokattu) :paivanhinta)
                 {:otsikko "Päivän hinta" :nimi :paivanhinta
