@@ -106,7 +106,8 @@
                  [org.apache.xmlgraphics/fop "2.0"]
 
                  ;; Fake-HTTP testaukseen
-                 [http-kit.fake "0.2.1"]]
+                 [http-kit.fake "0.2.1"]
+                 ]
 
   :dev-dependencies [;; Selain REPL
 

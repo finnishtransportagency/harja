@@ -3,7 +3,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.testi :refer :all]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.data :refer [diff]])
   (:use org.httpkit.fake))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -37,3 +38,44 @@
                                    :ylaraja         nil}]
           (is (= odotettu-ominaisuus ominaisuus)))))))
 
+(deftest tarkista-tietueiden-haku
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietueet-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietueet") vastaus-xml]
+      (let [tierekisteriosoitevali {:numero  1
+                                    :aet     1
+                                    :aosa    1
+                                    :let     1
+                                    :losa    1
+                                    :ajr     1
+                                    :puoli   1
+                                    :alkupvm "2015-05-25"}
+            vastausdata (tierekisteri/hae-tietueet (:tierekisteri jarjestelma) tierekisteriosoitevali "tl506" nil)]
+        (is (true? (:onnistunut vastausdata)))
+        (is (= 3 (count (:tietueet vastausdata))))
+
+
+        (let [tietue (:tietue (first (:tietueet vastausdata)))
+              odotettu-tietue {:sijainti    {:koordinaatit {:x 0.0,
+                                                            :y 0.0,
+                                                            :z 0.0},
+                                             :linkki       {:id    1,
+                                                            :marvo 10},
+                                             :tie          {:numero  1,
+                                                            :aet     1,
+                                                            :aosa    1,
+                                                            :let     1,
+                                                            :losa    1,
+                                                            :ajr     1,
+                                                            :puoli   1,
+                                                            :alkupvm #inst "2017-03-02T22:00:00.000-00:00"}},
+                               :loppupvm    #inst "2015-03-02T22:00:00.000-00:00",
+                               :piiri       "1",
+                               :karttapvm   #inst "2015-03-02T22:00:00.000-00:00",
+                               :urakka      100,
+                               :tietolaji   {:tietolajitunniste "tl506",
+                                             :arvot             "9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"},
+                               :kuntoluokka "1",
+                               :alkupvm     #inst "2015-03-02T22:00:00.000-00:00",
+                               :tunniste    "1245rgfsd"}]
+          (is (= odotettu-tietue tietue)))))))
