@@ -1,10 +1,10 @@
-(ns harja.palvelin.integraatiot.tierekisteri.tietolajin_haku_test.clj
+(ns harja.palvelin.integraatiot.tierekisteri.tietolajin_haku_test.tierekisterikomponentti-test
   (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.testi :refer :all]
             [clojure.java.io :as io]
-            [clojure.data :refer [diff]])
+            [slingshot.slingshot :refer [try+]])
   (:use org.httpkit.fake))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -141,4 +141,55 @@
             vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
         (is (true? (:onnistunut vastausdata)))))))
 
+
+(deftest tarkista-tietueen-muokkaus
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/paivitatietue") vastaus-xml]
+      (let [tietue {:paivittaja {:henkilo      "Keijo Käsittelijä"
+                                 :jarjestelma  "FastMekka"
+                                 :organisaatio "Asfaltia Oy"
+                                 :yTunnus      "1234567-8"}
+                    :tietue     {:tunniste    "HARJ951547ZK"
+                                 :alkupvm     "2015-05-22"
+                                 :loppupvm    nil
+                                 :karttapvm   nil
+                                 :piiri       nil
+                                 :kuntoluokka nil
+                                 :urakka      nil
+                                 :sijainti    {:tie {:numero  "89"
+                                                     :aet     "12"
+                                                     :aosa    "1"
+                                                     :let     nil
+                                                     :losa    nil
+                                                     :ajr     "0"
+                                                     :puoli   "1"
+                                                     :alkupvm nil}}
+                                 :tietolaji   {:tietolajitunniste "tl505"
+                                               :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+
+                    :paivitetty "2015-05-26+03:00"}
+            vastausdata (tierekisteri/paivita-tietue (:tierekisteri jarjestelma) tietue)]
+        (is (true? (:onnistunut vastausdata)))))))
+
+(deftest tarkista-tietueen-poisto
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/poistatietue") vastaus-xml]
+      (let [tiedot {:poistaja          {:henkilo      "Keijo Käsittelijä"
+                                        :jarjestelma  "FastMekka"
+                                        :organisaatio "Asfaltia Oy"
+                                        :yTunnus      "1234567-8"}
+                    :tunniste          "HARJ951547ZK"
+                    :tietolajitunniste "tl505"
+                    :poistettu         "2015-05-26+03:00"}
+            vastausdata (tierekisteri/poista-tietue (:tierekisteri jarjestelma) tiedot)]
+        (is (true? (:onnistunut vastausdata)))))))
+
+(deftest tarkista-virhevastauksen-kasittely
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
+      (
+        (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)))))
 
