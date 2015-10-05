@@ -102,7 +102,7 @@
             :leveys        "45%"}
            {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
            {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna muutoshinta / yksikkö"]]
+            :validoi [[:ei-tyhja "Anna muutoshinta / yksikkö"] [:nolla-tai-positiivinen-luku]]
             :tyyppi :numero :fmt fmt/euro-opt :leveys "20%"}]
 
           @ryhmitellyt-muutoshintaiset-tyot]]))))
