@@ -259,6 +259,7 @@
                                                    @u/erilliskustannukset-hoitokaudella)))))]
 
     (komp/luo
+      (komp/lippu toteumat/erilliskustannukset-nakymassa?)
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.erilliskustannusten-toteumat
@@ -292,10 +293,7 @@
              {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
               :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
              {:otsikko "Lisätieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
-            @valitut-kustannukset
-            ]])))))
-
-
+            @valitut-kustannukset]])))))
 
 (defn erilliskustannusten-toteumat []
   (fn []

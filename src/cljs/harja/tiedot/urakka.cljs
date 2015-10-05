@@ -224,7 +224,8 @@
 (defonce erilliskustannukset-hoitokaudella
          (reaction<! [ur (:id @nav/valittu-urakka)
                       aikavali @valittu-hoitokausi
-                      sivu @toteumat-valilehti]
+                      sivu @toteumat-valilehti
+                      _ @toteumat/erilliskustannukset-nakymassa?]
                      (when (and ur aikavali (= :erilliskustannukset sivu))
                        (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
