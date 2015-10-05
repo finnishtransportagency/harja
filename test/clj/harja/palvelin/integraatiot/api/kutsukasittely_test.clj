@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.kutsukasittely-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsukasittely]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki] :as integraatioloki]
@@ -27,8 +27,8 @@
                                                 (:integraatioloki jarjestelma)
                                                 "hae-urakka"
                                                 {:body kutsun-data :request-method :post :headers {"oam_remote_user" "yit-rakennus",}}
-                                                skeemat/+havainnon-kirjaus+
-                                                skeemat/+kirjausvastaus+
+                                                json-skeemat/+havainnon-kirjaus+
+                                                json-skeemat/+kirjausvastaus+
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "invalidi-json"))))
@@ -40,8 +40,8 @@
                                                 (:integraatioloki jarjestelma)
                                                 "hae-urakka"
                                                 {:body kutsun-data :request-method :post :headers {"oam_remote_user" "tuntematon",}}
-                                                skeemat/+havainnon-kirjaus+
-                                                skeemat/+kirjausvastaus+
+                                                json-skeemat/+havainnon-kirjaus+
+                                                json-skeemat/+kirjausvastaus+
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-kayttaja"))))

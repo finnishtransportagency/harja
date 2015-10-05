@@ -2,6 +2,10 @@
    Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
 
 .tabs-taso1 {
+  > li {
+    margin-top: 3px;
+  }
+
   > li:not(.active) > a {
     background-color: @sininen4;
     text-transform: uppercase;
@@ -28,6 +32,10 @@
 }
 
 .tabs-taso2 {
+  > li {
+    margin-top: 3px;
+  }
+  
   /* Normaalisti 1. tason välilehden sisällöllä on padding. Tabit ovat kuitenkin poikkeustapaus,
      ja siksi pakotetaan ne kiinni reunoihin. */
   margin-left: -10px;
@@ -49,7 +57,7 @@
 
   > li:not(.active) > a:hover {
     color: @sininen5;
-    background-color: @harmaa11;
+    background-color: @harmaa10;
   }
 
   > li.active > a:hover {

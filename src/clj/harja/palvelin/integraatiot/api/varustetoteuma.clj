@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -115,8 +115,8 @@
                          integraatioloki
                          :lisaa-varustetoteuma
                          request
-                         skeemat/+varustetoteuman-kirjaus+
-                         skeemat/+kirjausvastaus+
+                         json-skeemat/+varustetoteuman-kirjaus+
+                         json-skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

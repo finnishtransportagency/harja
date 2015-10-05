@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.tyokalut.skeemat)
+(ns harja.palvelin.integraatiot.api.tyokalut.json-skeemat)
 
 (def +onnistunut-kirjaus+ "api/schemas/kirjaus-response.schema.json")
 (def +virhevastaus+ "api/schemas/virhe-response.schema.json")

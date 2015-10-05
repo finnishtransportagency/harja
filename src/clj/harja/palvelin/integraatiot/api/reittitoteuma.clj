@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
@@ -19,13 +19,13 @@
   (:import (org.postgresql.util PSQLException)))
 
 (defn- yhdista-viivat [viivat]
-  {:type   :multiline
+  {:type  :multiline
    :lines (mapcat
-             (fn [viiva]
-               (if (= :line (:type viiva))
-                 (list viiva)
-                 (:lines viiva)))
-             viivat)})
+            (fn [viiva]
+              (if (= :line (:type viiva))
+                (list viiva)
+                (:lines viiva)))
+            viivat)})
 
 (defn- piste [pistepari]
   [(get-in pistepari [:reittipiste :koordinaatit :x])
@@ -129,10 +129,9 @@
                          integraatioloki
                          :lisaa-reittitoteuma
                          request
-                         skeemat/+reittitoteuman-kirjaus+
-                         skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja db]
-                           (kirjaa-toteuma db parametit data kayttaja)))))
+                         json-skeemat/+reittitoteuman-kirjaus+
+                         json-skeemat/+kirjausvastaus+
+                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)

@@ -144,7 +144,9 @@ dynamic_shared_memory_type = posix	# the default is the first option
 
 #max_files_per_process = 1000		# min 25
 					# (change requires restart)
-#shared_preload_libraries = ''		# (change requires restart)
+shared_preload_libraries = 'pg_stat_statements'		# (change requires restart)
+pg_stat_statements.max = 10000
+pg_stat_statements.track = all
 
 # - Cost-Based Vacuum Delay -
 
@@ -447,8 +449,8 @@ log_timezone = 'Europe/Helsinki'
 #track_activities = on
 #track_counts = on
 #track_io_timing = off
-#track_functions = none			# none, pl, all
-#track_activity_query_size = 1024	# (change requires restart)
+track_functions = pl			# none, pl, all
+track_activity_query_size = 2048	# (change requires restart)
 #update_process_title = on
 #stats_temp_directory = 'pg_stat_tmp'
 

@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as xml-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.havainnot :as havainnot]
             [harja.kyselyt.kommentit :as kommentit]
@@ -84,7 +84,7 @@
     (julkaise-reitti
       http :lisaa-havainto
       (POST "/api/urakat/:id/havainto" request
-        (kasittele-kutsu db integraatioloki :lisaa-havainto request skeemat/+havainnon-kirjaus+ skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :lisaa-havainto request xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db] (kirjaa-havainto liitteiden-hallinta db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
