@@ -18,28 +18,31 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn yhdista-viivat [viivat]
-  (first (map (fn [viiva]
-                (if (= :line (:type viiva))
-                  (:points viiva)
-                  (mapcat :points (:lines viiva))))
-              viivat)))
+  {:type :line
+   :points (mapcat (fn [viiva]
+                     (if (= :line (:type viiva))
+                       (:points viiva)
+                       (mapcat :points (:lines viiva))))
+                   viivat)})
+
+(defn- piste [pistepari]
+  [(get-in pistepari [:reittipiste :koordinaatit :x])
+   (get-in pistepari [:reittipiste :koordinaatit :y])])
+
+(defn hae-reitti [db [[x1 y1] [x2 y2]]]
+  (try
+    (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
+    (catch Exception e
+      (log/warn "Reittitoteuman väli ei osunut tieverkolle: " e)
+      [[x1 y1] [x2 y2]])))
 
 (defn luo-reitti-geometria [db reitti]
-  (try
-    (let [pisteparit (partition 2 1
-                                (map (fn [pistepari]
-                                       [(get-in pistepari [:reittipiste :koordinaatit :x])
-                                        (get-in pistepari [:reittipiste :koordinaatit :y])])
-                                     reitti))
-          viivat (map (fn [[[x1 y1] [x2 y2]]]
-                        (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250)))))
-                      pisteparit)
-          yhdistetyt-viivat (yhdista-viivat viivat)
-          reitti-geometria (geo/geometry (geo/clj->pg {:type :line :points yhdistetyt-viivat}))]
-      reitti-geometria)
-    (catch Exception e
-      (log/warn "Reittitoteuman reittisnapshotin luonnissa tapahtui poikkeus: " e)
-      nil)))
+  (->> reitti
+       (map piste)
+       (partition 2 1)
+       (map #(hae-reitti db %))
+       yhdista-viivat
+       geo/clj->pg geo/geometry))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}]
