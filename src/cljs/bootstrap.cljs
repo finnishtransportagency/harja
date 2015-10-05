@@ -14,7 +14,7 @@ The following keys are supported in the configuration:
   (let [active (or (:active config) (atom nil))
         style-class (case (or (:style config) :tabs)
                       :pills "nav-pills"
-                      :tabs "nav-tabs")]
+                      :tabs (str "nav-tabs " (:classes config)))]
     (fn [config & alternating-title-and-component]
       (let [tabs (filter #(not (nil? (nth % 2))) (partition 3 alternating-title-and-component))
             [active-tab-title active-tab-keyword active-component] (first (filter #(= @active (nth % 1)) tabs))]

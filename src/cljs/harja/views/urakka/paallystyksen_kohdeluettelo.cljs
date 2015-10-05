@@ -64,7 +64,7 @@
     (komp/kuuntelija :paallystyskohde-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
-      [bs/tabs {:active kohdeluettelo-valilehti}
+      [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
 
        "Päällystyskohteet"
        :paallystyskohteet
