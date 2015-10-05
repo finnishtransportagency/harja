@@ -25,10 +25,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (:import goog.History))
 
 
-;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
-(def render-lupa-hy? (atom false))
-(def render-lupa-u? (atom false))
-(def render-lupa? (reaction (and @render-lupa-hy? @render-lupa-u?)))
 
 (declare kasittele-url! paivita-url valitse-urakka)
 
@@ -78,7 +74,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction (let [id @valittu-hallintayksikko-id
                   yksikot @hy/hallintayksikot]
               (when (and id yksikot)
-                (when-not @render-lupa-hy? (reset! render-lupa-hy? true))
                 (some #(and (= id (:id %)) %) yksikot)))))
 
 (def hallintayksikot-kartalla
@@ -101,7 +96,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction (let [id @valittu-urakka-id
                   urakat @urakkalista]
               (when (and id urakat)
-                (when-not @render-lupa-u? (reset! render-lupa-u? true))
                 (some #(when (= id (:id %)) %) urakat)))))
 
 (defonce edellinen-valittu-urakkatyyppi (atom nil))
@@ -265,6 +259,20 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                   @suodatettu-urakkalista)))
 
 
+(def render-lupa-hy? (reaction
+                       (or
+                         (nil? @valittu-hallintayksikko-id)
+                         (some? @hy/hallintayksikot))))
+
+(def render-lupa-u? (reaction
+                      (or (nil? @valittu-urakka-id) ;; urakkaa ei annettu urlissa, ei estetä latausta
+                          (nil? @valittu-hallintayksikko) ;; hy:tä ei saatu asetettua -> ei estetä latausta
+                          (some? @urakkalista))))
+
+;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
+(def render-lupa? (reaction
+                    (and @render-lupa-hy? @render-lupa-u?)))
+
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
@@ -277,13 +285,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
         (do (reset! valittu-hallintayksikko-id hy)
             (reset! valittu-urakka-id u))
         (do
-          (when-not @render-lupa-u? (reset! render-lupa-u? true))
           (reset! valittu-hallintayksikko-id hy)
           (reset! valittu-urakka-id nil)
-          (reset! valittu-urakka nil)))
-      (do
-        (when-not @render-lupa-hy? (reset! render-lupa-hy? true))
-        (when-not @render-lupa-u? (reset! render-lupa-u? true))))
+          (reset! valittu-urakka nil))))
 
     (case polku
       "urakat" (vaihda-sivu! :urakat)
