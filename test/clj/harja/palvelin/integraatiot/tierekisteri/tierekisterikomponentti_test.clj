@@ -190,6 +190,10 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
-      (
-        (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)))))
+      (try+
+        (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
+        (is false "Pitäisi tapahtua poikkeus")
+        (catch [:type :http-kutsu-epaonnistui] {:keys [virheet]}
+          (let [virhe (first virheet)]
+            (is (= :poikkeus (:koodi virhe)))))))))
 
