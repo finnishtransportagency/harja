@@ -32,9 +32,11 @@
         _ (log/debug "Haetaan turvallisuuspoikkeamia urakoista " (pr-str urakka-idt) ", aikaväliltä " alku " - " loppu)
         tulos (apply (comp vec flatten merge)
                      (for [urakka-id urakka-idt]
-                       (into []
-                             turvallisuuspoikkeama-xf
-                             (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))))]
+                       (konv/sarakkeet-vektoriin
+                         (into []
+                               turvallisuuspoikkeama-xf
+                               (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+                         {:korjaavatoimenpide :korjaavattoimenpiteet})))]
     (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
     tulos))
 

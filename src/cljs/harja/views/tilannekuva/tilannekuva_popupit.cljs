@@ -107,7 +107,10 @@
   (for [avain (keys kartta)]
     (cond
       (map? (get kartta avain)) (into [:p [:b (pr-str avain)]] (rakenna (get kartta avain)))
-      (vector? (get kartta avain)) [:p [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
+
+      (or (set? (get kartta avain)) (vector? (get kartta avain)))
+      [:p [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
+
       :else [:p [:b (pr-str avain)] (pr-str (get kartta avain))])))
 
 (defmethod nayta-popup :havainto-klikattu [tapahtuma]
@@ -115,32 +118,40 @@
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
                         [:p [:b "Havainto"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue)))]))
+                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
-                        [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue)))]))
+                        [:p [:b (str/capitalize (name (:tyyppi tapahtuma)))]]
+                        [:p "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
+                        [:p "Mittaaja: " (:mittaaja tapahtuma)]]))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
-                        [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue)))]))
+                        [:p [:b (str/join ", " (map (comp str/capitalize name) (:tyyppi tapahtuma)))]]
+                        [:p (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
+                        [:p "Käsitelty: " (pvm/pvm-aika (:kasitelty tapahtuma))]
+                        [:p "Työtehtävä: " (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                        [:p (:vammat tapahtuma) ", " (:sairaalavuorokaudet tapahtuma) "/" (:sairauspoissaolopaivat tapahtuma)]
+                        [:p (:kuvaus tapahtuma)]
+                        [:p "Korjaavat toimenpiteet: "
+                         (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
+                         "/" (count (:korjaavattoimenpiteet tapahtuma))]]))
 
 (defmethod nayta-popup :paallystyskohde-klikattu [tapahtuma]
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
                         [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue)))]))
+                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
 
 (defmethod nayta-popup :paikkaustoteuma-klikattu [tapahtuma]
   (log "Näytä popup!")
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
                         [:p [:b "Otsikko"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue)))]))
+                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
