@@ -4,7 +4,7 @@
             [bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
-            [harja.views.urakka.toteumat.lampotilat :refer [suolasakot]]
+            [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.kohdeluettelo.paallystyskohteet :as paallystyskohteet-yhteenveto]
             [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]
