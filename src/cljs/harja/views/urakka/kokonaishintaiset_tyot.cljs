@@ -238,7 +238,7 @@
              :tyyppi  :numero :leveys "25%"}
             {:otsikko       "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
              :tyyppi        :numero :leveys "25%"
-             :validoi       [[:tyhja-tai-nolla-tai-positiivinen-luku]]
+             :validoi       [[:nolla-tai-positiivinen-luku-opt]]
              :tayta-alas?   #(not (nil? %))
              :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
             {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
