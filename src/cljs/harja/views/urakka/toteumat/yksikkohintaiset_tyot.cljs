@@ -99,7 +99,7 @@
        :aseta         (fn [rivi arvo] (assoc rivi
                                         :tehtava arvo
                                         :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"] [:positiivinen-luku]]}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"]]}
       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
      tehtavat]))
 
@@ -216,7 +216,7 @@
          :voi-lisata? false
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
-         {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :numero :leveys "20%" :validoi [[:positiivinen-luku]]}
+         {:otsikko "Määrä" :nimi :maara :muokattava? (constantly true) :tyyppi :positiivinen-numero :leveys "20%"}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
