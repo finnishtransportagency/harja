@@ -59,6 +59,8 @@
                                                 :kaynnissa "Käynnissä olevat urakat"
                                                 :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka
+                             :vinkki         #(when (empty? suodatettu-urakkalista)
+                                               "Hakuehdoilla ei löytynyt urakoita")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
            suodatettu-urakkalista]]])]
      [:div.col-md-8
