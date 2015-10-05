@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
@@ -40,7 +40,7 @@
     (julkaise-reitti
       http :lisaa-pistetoteuma
       (POST "/api/urakat/:id/toteumat/piste" request
-        (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request skeemat/+pistetoteuman-kirjaus+ skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/+pistetoteuman-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
