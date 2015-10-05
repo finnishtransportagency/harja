@@ -2,16 +2,13 @@
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
-            [harja.asiakas.tapahtumat :as t]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
+            [harja.views.urakka.laskutus :as laskutus]
             [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
-            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
-            [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
-            [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -69,30 +66,18 @@
      ^{:key "laadunseuranta"}
      [laadunseuranta/laadunseuranta]
 
-     "Siltatarkastukset"
-     :siltatarkastukset
-     (when (= :hoito (:tyyppi ur))
-       ^{:key "siltatarkastukset"}
-       [siltatarkastukset/siltatarkastukset ur])
-
      "Välitavoitteet"
      :valitavoitteet
      (when-not (= :hoito (:tyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
-     "Turvallisuuspoikkeamat"
+     "Turvallisuus"
      :turvallisuuspoikkeamat
      ^{:key "turvallisuuspoikkeamat"}
      [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
 
-     "Laskutusyhteenveto"
-     :laskutusyhteenveto
-     ^{:key "laskutusyhteenveto"}
-     [laskutusyhteenveto/laskutusyhteenveto]
-
-     "Maksuerät"
-     :maksuerat
-     ^{:key "maksuerat"}
-     [maksuerat/maksuerat-listaus ur]
-     ]))
+     "Laskutus"
+     :laskutus
+     ^{:key "laskutus"}
+     [laskutus/laskutus]]))

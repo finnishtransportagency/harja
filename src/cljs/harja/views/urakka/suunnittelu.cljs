@@ -4,16 +4,10 @@
             [bootstrap :as bs]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
-            [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
-
-            [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.materiaalit :as mat]
-
-            [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
 
