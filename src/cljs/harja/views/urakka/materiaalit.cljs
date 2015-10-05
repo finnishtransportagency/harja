@@ -84,7 +84,7 @@
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
            :muokattava? (constantly voi-muokata?)
-           :validoi [[:ei-tyhja "Kirjoita määrä"]]}
+           :validoi [[:nolla-tai-positiivinen-luku "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
           
