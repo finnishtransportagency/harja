@@ -23,15 +23,17 @@
   (let [hallintayksikot @hal/hallintayksikot]
     [:div.row
      [:div.col-md-4
-      [:span
-       [:h5.haku-otsikko "Valitse hallintayksikkö"]
-       [:div
-        ^{:key "hy-lista"}
-        [suodatettu-lista {:format :nimi :haku :nimi
-                           :selection nav/valittu-hallintayksikko
-                           :on-select nav/valitse-hallintayksikko
-                           :aputeksti "Kirjoita hallintayksikön nimi tähän"}
-         hallintayksikot]]]]
+      (if (nil? hallintayksikot)
+        [yleiset/ajax-loader "Hallintayksiköitä haetaan..."]
+        [:span
+         [:h5.haku-otsikko "Valitse hallintayksikkö"]
+         [:div
+          ^{:key "hy-lista"}
+          [suodatettu-lista {:format :nimi :haku :nimi
+                             :selection nav/valittu-hallintayksikko
+                             :on-select nav/valitse-hallintayksikko
+                             :aputeksti "Kirjoita hallintayksikön nimi tähän"}
+           hallintayksikot]]])]
      [:div.col-md-8
       [kartta/kartan-paikka hallintayksikot]]]))
 
@@ -57,6 +59,8 @@
                                                 :kaynnissa "Käynnissä olevat urakat"
                                                 :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka
+                             :vinkki         #(when (empty? suodatettu-urakkalista)
+                                               "Hakuehdoilla ei löytynyt urakoita")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
            suodatettu-urakkalista]]])]
      [:div.col-md-8
