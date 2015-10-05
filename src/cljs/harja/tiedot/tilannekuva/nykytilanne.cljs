@@ -8,7 +8,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [clojure.set :refer [rename-keys]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -34,7 +35,11 @@
      :radius 300
      :stroke {:color "black" :width 10}}))
 
-(defmulti kartalla-xf :tyyppi)
+(defmulti kartalla-xf (fn [kartta]
+                        (cond
+                          (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
+                          (:tilannekuvatyyppi kartta) (:tilannekuvatyyppi kartta)
+                          :else (:tyyppi kartta))))
 
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
   [(assoc ilmoitus
@@ -112,8 +117,11 @@
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
-                  #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
-                  #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
+                  (when @hae-havainnot? (mapv
+                                          #(assoc % :tilannekuvatyyppi :havainto)
+                                          (<! (k/post! :hae-urakan-havainnot (rename-keys
+                                                                               yhteiset-parametrit
+                                                                               {:urakka :urakka-id}))))))]
       (reset! haetut-asiat tulos)
       (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                              :tyokoneet tulos}))))
