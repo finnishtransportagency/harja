@@ -3,8 +3,9 @@
 SELECT
   paallystyskohde.id,
   pi.id as paallystysilmoitus_id,
-  pi.tila,
+  pi.tila as paallystysilmoitus_tila,
   pai.id as paikkausilmoitus_id,
+  pai.tila as paikkausilmoitus_tila,
   kohdenumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,

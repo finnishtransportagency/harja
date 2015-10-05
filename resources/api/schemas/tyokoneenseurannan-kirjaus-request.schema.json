@@ -55,24 +55,20 @@
                 "id": "urn:harja/havainnot/0/suunta",
                 "type": "number"
               },
+              "urakkaid": {
+                "id": "urn:harja/havainnot/0/urakkaid",
+                "type": "integer"
+              },
               "havaintoaika": {
                 "id": "urn:harja/havainnot/0/havaintoaika",
                 "type": "string",
                 "format": "date-time",
                 "required": true
               },
-              "urakkaid": {
-                "id": "urn:harja/havainnot/0/urakkaid",
-                "type": "integer"
-              },
-              "sopimusid": {
-                "id": "urn:harja/havainnot/0/sopimusid",
-                "type": "integer"
-              },
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "array",
-                "maxItems" : 10,
+                "maxItems": 10,
                 "items": {
                   "enum": [
                     "auraus ja sohjonpoisto",

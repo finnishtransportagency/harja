@@ -32,9 +32,10 @@
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 
 (deftest taulukko
-  (let [fo (muodosta-pdf [:taulukko [{:otsikko "Eka" :leveys "10%"}
-                                     {:otsikko "Toka" :leveys "60%"}
-                                     {:otsikko "Kolmas" :leveys "30%"}]
+  (let [fo (muodosta-pdf [:taulukko {}
+                          [{:otsikko "Eka" :leveys "10%"}
+                           {:otsikko "Toka" :leveys "60%"}
+                           {:otsikko "Kolmas" :leveys "30%"}]
                           [["eka" "toka" "kolmas"]]])]
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
@@ -87,10 +88,11 @@
                                            ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
                       [:otsikko "Tämä on hieno raportti"]
                       [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
-                      [:taulukko [{:otsikko "Nimi" :leveys "50%"}
-                                  {:otsikko "Kappaleita" :leveys "15%"}
-                                  {:otsikko "Hinta" :leveys "15%"}
-                                  {:otsikko "Yhteensä" :leveys "20%"}]
+                      [:taulukko {}
+                       [{:otsikko "Nimi" :leveys "50%"}
+                        {:otsikko "Kappaleita" :leveys "15%"}
+                        {:otsikko "Hinta" :leveys "15%"}
+                        {:otsikko "Yhteensä" :leveys "20%"}]
 
                        [["Fine leather jacket" 2 199 (* 2 199)]
                         ["Log from blammo" 1 39 39]

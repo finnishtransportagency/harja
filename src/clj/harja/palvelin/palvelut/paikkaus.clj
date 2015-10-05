@@ -11,14 +11,15 @@
             [harja.domain.paikkaus.minipot :as minipot]
 
             [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
+            [harja.kyselyt.paallystys :as paallystys-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [clj-time.format :as format]
             [clj-time.coerce :as coerce]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.palvelut.paallystys :as paallystys]))
 
 (defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan paikkaustoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -26,34 +27,51 @@
   (let [vastaus (into []
                       (comp
                         (map #(konv/string->avain % [:paatos]))
-                        (map #(konv/string->avain % [:tila])))
+                        (map #(konv/string->avain % [:tila]))
+                        (map #(assoc % :kohdeosat
+                                       (into []
+                                             paallystys/kohdeosa-xf
+                                             (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                               db urakka-id sopimus-id (:paikkauskohde_id %))))))
                       (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str vastaus))
     vastaus))
 
-(defn
-  hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
+(defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [paikkausilmoitus (first (into []
+  (let [kohdetiedot (first (paallystys-q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
+        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
+                         (:arvonvahennykset kohdetiedot)
+                         (:bitumi_indeksi kohdetiedot)
+                         (:kaasuindeksi kohdetiedot))
+        paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
                                             (map #(konv/string->avain % [:tila]))
                                             (map #(konv/string->avain % [:paatos])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
-    (when paikkausilmoitus
-      (log/debug "Haetaan kommentit...")
-      (let [kommentit (into []
-                            (comp (map konv/alaviiva->rakenne)
-                                  (map (fn [{:keys [liite] :as kommentti}]
-                                         (if (:id
-                                               liite)
-                                           kommentti
-                                           (dissoc kommentti :liite)))))
-                            (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
-        (log/debug "Kommentit saatu: " kommentit)
-        (assoc paikkausilmoitus :kommentit kommentit)))))
+    ;; Uusi paikkausilmoitus
+    (if-not paikkausilmoitus
+      ^{:uusi true}
+      {:kohdenumero (:kohdenumero kohdetiedot)
+       :kohdenimi          (:nimi kohdetiedot)
+       :paallystyskohde-id paikkauskohde-id
+       :kokonaishinta      kokonaishinta
+       :kommentit          []}
+      (do
+        (log/debug "Haetaan kommentit...")
+        (let [kommentit (into []
+                              (comp (map konv/alaviiva->rakenne)
+                                    (map (fn [{:keys [liite] :as kommentti}]
+                                           (if (:id
+                                                 liite)
+                                             kommentti
+                                             (dissoc kommentti :liite)))))
+                              (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
+          (log/debug "Kommentit saatu: " kommentit)
+          (assoc paikkausilmoitus :kommentit kommentit))))))
 
 
 (defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
@@ -114,40 +132,43 @@
   (skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
-    (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella c user {:urakka-id        urakka-id
-                                                                                           :sopimus-id       sopimus-id
-                                                                                           :paikkauskohde-id (:paikkauskohde-id paikkausilmoitus)})]
-      (log/debug "MINIPOT kannassa: " paikkausilmoitus-kannassa)
+                            (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella c user {:urakka-id        urakka-id
+                                                                                                                   :sopimus-id       sopimus-id
+                                                                                                                   :paikkauskohde-id (:paikkauskohde-id paikkausilmoitus)})
+                                  paikkausilmoitus-kannassa (when-not (:uusi (meta paikkausilmoitus-kannassa))
+                                                              ;; Tunnistetaan uuden tallentaminen
+                                                              paikkausilmoitus-kannassa)]
+                              (log/debug "MINIPOT kannassa: " paikkausilmoitus-kannassa)
 
-      ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
-      ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      (if (or
-            (not (= (:paatos_tekninen_osa paikkausilmoitus-kannassa) (or (:paatos_tekninen_osa paikkausilmoitus) nil)))
-            (not (= (:perustelu paikkausilmoitus-kannassa) (or (:perustelu paikkausilmoitus) nil))))
-        (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
+                              ; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+                              ; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+                              (if (or
+                                    (not (= (:paatos_tekninen_osa paikkausilmoitus-kannassa) (or (:paatos_tekninen_osa paikkausilmoitus) nil)))
+                                    (not (= (:perustelu paikkausilmoitus-kannassa) (or (:perustelu paikkausilmoitus) nil))))
+                                (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id))
 
-      ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
-      (log/debug "Tarkistetaan onko MINIPOT lukittu...")
-      (if (= :lukittu (:tila paikkausilmoitus-kannassa))
-        (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
-        (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))
+                              ; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen, mutta tehdään silti tarkistus
+                              (log/debug "Tarkistetaan onko MINIPOT lukittu...")
+                              (if (= :lukittu (:tila paikkausilmoitus-kannassa))
+                                (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
+                                    (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
+                                (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))
 
-      (let [paikkausilmoitus-id (luo-tai-paivita-paikkausilmoitus c user paikkausilmoitus paikkausilmoitus-kannassa)]
+                              (let [paikkausilmoitus-id (luo-tai-paivita-paikkausilmoitus c user paikkausilmoitus paikkausilmoitus-kannassa)]
 
-        ;; Luodaan uusi kommentti
-        (when-let [uusi-kommentti (:uusi-kommentti paikkausilmoitus)]
-          (log/info "Uusi kommentti: " uusi-kommentti)
-          (let [kommentti (kommentit/luo-kommentti<! c
-                                                     nil
-                                                     (:kommentti uusi-kommentti)
-                                                     nil
-                                                     (:id user))]
-            ;; Liitä kommentti paikkausilmoitukseen
-            (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
+                                ;; Luodaan uusi kommentti
+                                (when-let [uusi-kommentti (:uusi-kommentti paikkausilmoitus)]
+                                  (log/info "Uusi kommentti: " uusi-kommentti)
+                                  (let [kommentti (kommentit/luo-kommentti<! c
+                                                                             nil
+                                                                             (:kommentti uusi-kommentti)
+                                                                             nil
+                                                                             (:id user))]
+                                    ;; Liitä kommentti paikkausilmoitukseen
+                                    (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
 
-        (hae-urakan-paikkaustoteumat c user {:urakka-id  urakka-id
-                                             :sopimus-id sopimus-id})))))
+                                (hae-urakan-paikkaustoteumat c user {:urakka-id  urakka-id
+                                                                     :sopimus-id sopimus-id})))))
 
 
 (defrecord Paikkaus []

@@ -16,7 +16,9 @@
 .alasveto-urakoitsija {
   .livi-alasveto(200px);
 }
-
+.nappi-ensisijainen.alle-marginia {
+  margin-bottom: 10px;
+}
 .label-ja-alasveto.alasveto-sillan-tarkastaja {
   @leveys: 330px;
   width: @leveys;
@@ -45,7 +47,17 @@ ul#sivut {
 }
 
 div.valilehti {
-  margin-top: 1em;
+  padding: 10px;
+}
+
+.tabs-taso1 + .valilehti {
+  border-right: 1px solid @harmaa7;
+  border-left: 1px solid @harmaa7;
+  border-bottom: 1px solid @harmaa7;
+}
+
+.tabs-taso2 {
+  padding-top: 40px;
 }
 
 .haku-container {

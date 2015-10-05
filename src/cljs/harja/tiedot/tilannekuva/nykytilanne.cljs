@@ -120,15 +120,11 @@
       (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                              :tyokoneet tulos}))))
 
-
-(def +sekuntti+ 1000)
-(def +minuutti+ (* 60 +sekuntti+))
-
-(def +intervalli+ (* 3 +sekuntti+))
 (def +bufferi+ 500)
 
 (def asioiden-haku (reaction<!
-                     [_ @hae-toimenpidepyynnot?
+                     [nakymassa? @nakymassa?
+                      _ @hae-toimenpidepyynnot?
                       _ @hae-kyselyt?
                       _ @hae-tiedoitukset?
                       _ @hae-tyokoneet?
@@ -136,9 +132,4 @@
                       _ @hae-onnettomuudet?
                       _ @livesuodattimen-asetukset]
                      {:odota +bufferi+}
-                     (when @nakymassa? (hae-asiat))))
-
-(defn aloita-asioiden-haku []
-  (paivita-periodisesti asioiden-haku +intervalli+))
-
-(def lopeta-asioiden-haku (aloita-asioiden-haku))
+                     (when nakymassa? (hae-asiat))))

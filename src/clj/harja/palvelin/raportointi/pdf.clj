@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.pdf
   "Raportoinnin elementtien renderöinti PDF:ksi"
   (:require [harja.tyokalut.xsl-fo :as fo]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -10,10 +11,11 @@
     (assert (and (vector? elementti)
                  (> (count elementti) 1)
                  (keyword? (first elementti)))
-            "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä.")
+            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
+                 (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-pdf :taulukko [[_ sarakkeet data]]
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
   [:fo:table {:border "solid 0.1mm black"}
    (for [{:keys [otsikko leveys]} sarakkeet]
      [:fo:table-column {:column-width leveys}])
@@ -23,12 +25,17 @@
        [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
         [:fo:block otsikko]])]]
    [:fo:table-body
-    (for [rivi data]
-      [:fo:table-row
-       (for [i (range (count sarakkeet))
-             :let [arvo (nth rivi i)]]
-         [:fo:table-cell {:border "solid 0.1mm black" :padding "1mm"}
-          [:fo:block (str arvo)]])])]])
+    (let [viimeinen-rivi (last data)]
+      (for [rivi data]
+        (let [korosta? (when (and viimeinen-rivi-yhteenveto?
+                                  (= viimeinen-rivi rivi))
+                         {:font-weight "bold"})]
+          [:fo:table-row
+           (for [i (range (count sarakkeet))
+                 :let [arvo (nth rivi i)]]
+             [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                                    korosta?)
+              [:fo:block (str arvo)]])])))]])
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
@@ -131,5 +138,8 @@
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                     [:fo:block {:padding "2mm" :border "solid 0.2mm black"}
                      (muodosta-pdf [:yhteenveto tiedot])])]
-                 (map muodosta-pdf sisalto)
+                 (mapcat #(if (seq? %)
+                                (map muodosta-pdf %)
+                                [(muodosta-pdf %)])
+                         sisalto)
                  [[:fo:block {:id "raportti-loppu"}]])))

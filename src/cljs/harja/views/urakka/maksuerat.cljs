@@ -19,7 +19,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn tyyppi-enum->string-plural [tyyppi]
+(defn tyyppi-enum->string-monikko [tyyppi]
   (case tyyppi
     :kokonaishintainen "Kokonaishintaiset"
     :yksikkohintainen "Yksikköhintaiset"
@@ -31,26 +31,26 @@
     :muu "Muut"
     "Ei tyyppiä"))
 
-(defn sorttausjarjestys [tyyppi]
-  (case tyyppi
-    :kokonaishintainen 1
-    :yksikkohintainen 2
-    :lisatyo 3
-    :indeksi 4
-    :bonus 5
-    :sakko 6
-    :akillinen-hoitotyo 7
-    :muu 8
-    9))
-
-(defn hae-urakan-maksuerat [urakka]
-  (go
-    (log (str "Urakan id: " (:id urakka)))
-    (sort-by :numero (<! (maksuerat/hae-urakan-maksuerat (:id urakka))))))
+(defn sorttausjarjestys [tyyppi numero]
+  (let [tyyppi-jarjestysnumero (case tyyppi
+                                 :kokonaishintainen 1
+                                 :yksikkohintainen 2
+                                 :lisatyo 3
+                                 :indeksi 4
+                                 :bonus 5
+                                 :sakko 6
+                                 :akillinen-hoitotyo 7
+                                 :muu 8
+                                 9)]
+    [tyyppi-jarjestysnumero numero]))
 
 (defn ryhmittele-maksuerat [rivit]
-  (let [otsikko (fn [rivi] (tyyppi-enum->string-plural (:tyyppi (:maksuera rivi))))
-        otsikon-mukaan (group-by otsikko (sort-by #(sorttausjarjestys (:tyyppi (:maksuera %))) rivit))]
+  (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
+        otsikon-mukaan (group-by otsikko (sort-by
+                                           #(sorttausjarjestys
+                                                    (:tyyppi (:maksuera %))
+                                                    (:numero %))
+                                           rivit))]
     (doall (mapcat (fn [[otsikko rivit]]
                      (concat [(grid/otsikko otsikko)] rivit))
                    (seq otsikon-mukaan)))))
@@ -65,7 +65,7 @@
                   (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
             maksuerat))))
 
-(def urakka-id (atom nil))
+(def urakka (atom nil))
 (def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat/maksuerat)))
 (def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
 (def pollaus-id (atom nil))
@@ -129,7 +129,7 @@
   (if (not (empty? @kuittausta-odottavat-maksuerat))
     (do
       (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
-      (go (reset! maksuerat/maksuerat (<! (hae-urakan-maksuerat @urakka-id)))))
+      (go (reset! maksuerat/maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id @urakka))))))
     (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
         (lopeta-pollaus))))
 
@@ -153,8 +153,7 @@
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   [ur]
-  (reset! urakka-id ur)
-  (hae-urakan-maksuerat ur)
+  (reset! urakka ur)
   (aloita-pollaus)
   (komp/luo
     {:component-will-unmount

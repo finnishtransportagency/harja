@@ -2,7 +2,6 @@
   "Urakan 'Kokonaishintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.domain.roolit :as roolit]
-            [bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
@@ -12,17 +11,16 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.tiedot.istunto :as istunto]
 
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            
+
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -195,7 +193,8 @@
 
      (fn [ur]
        [:div.kokonaishintaiset-tyot
-
+        [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+        [kartta/kartan-paikka]
         ;; Näytetään kustannusten summat ja piirakkadiagrammit
         [kustannukset
          @valitun-hoitokauden-ja-tpin-kustannukset

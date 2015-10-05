@@ -11,7 +11,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [kohderivit paallystys-tai-paikkausnakymassa? paivita-kohde!] :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [paallystyskohderivit paallystys-tai-paikkauskohteet-nakymassa paivita-kohde!] :as paallystys]
             [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
@@ -38,7 +38,7 @@
 (defn laske-sarakkeen-summa [sarake]
   (reduce + (mapv
               (fn [rivi] (sarake rivi))
-              @kohderivit)))
+              @paallystyskohderivit)))
 
 (defn paallystyskohdeosa-virheet [tr-virheet]
   [:div.tr-virheet
@@ -134,12 +134,12 @@
        ])))
 
 (defn paallystyskohteet []
-  (let [paallystyskohteet (reaction (let [kohteet @kohderivit]
+  (let [paallystyskohteet (reaction (let [kohteet @paallystyskohderivit]
                                       (filter #(false? (:muu_tyo %))
                                               kohteet)))
-        muut-tyot (reaction (let [kohteet @kohderivit]
+        muut-tyot (reaction (let [kohteet @paallystyskohderivit]
                               (filter #(true? (:muu_tyo %)) kohteet)))
-        yhteensa (reaction (let [_ @kohderivit
+        yhteensa (reaction (let [_ @paallystyskohderivit
                                  sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen_mukaiset_tyot)
                                  toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut_hinta)
                                  muutoshinta-yhteensa (laske-sarakkeen-summa :muutoshinta)
@@ -160,23 +160,23 @@
                                :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
-      (komp/lippu paallystys-tai-paikkausnakymassa? paallystys/karttataso-paallystyskohteet)
+      (komp/lippu paallystys-tai-paikkauskohteet-nakymassa)
       (fn []
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 
           [:div
+           [kartta/kartan-paikka]
            [grid/grid
             {:otsikko                  "Kohteet"
-             :tyhja                    (if (nil? @kohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-             :luokat                   ["paallysteurakka-kohteet-paasisalto"]
-             :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @kohderivit))
+             :tyhja                    (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+             :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero
                                                   payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
                                                   _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
                                                   vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                               (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                              (reset! kohderivit vastaus)))
+                                              (reset! paallystyskohderivit vastaus)))
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
@@ -206,13 +206,14 @@
            [grid/grid
             {:otsikko                  "Muut kohteet" ; NOTE: Muut kohteet ovat alkuperäiseen sopimukseen kuulumattomia töitä.
              :tyhja                    (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
+             :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero
                                                   payload (mapv (fn [rivi] (assoc rivi :muu_tyo true)) %)
                                                   _ (log "PÄÄ Lähetetään päällystyskohteet: " (pr-str payload))
                                                   vastaus (<! (paallystys/tallenna-paallystyskohteet urakka-id sopimus-id payload))]
                                               (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                              (reset! kohderivit vastaus)))
+                                              (reset! paallystyskohderivit vastaus)))
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
@@ -239,7 +240,7 @@
            [grid/grid
             {:otsikko "Yhteensä"
              :tyhja   (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
-            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys "5%"}
              {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
              {:otsikko "" :nimi :nimi :tyyppi :string :leveys "25%"}
              (when paallystysnakyma?

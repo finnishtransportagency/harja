@@ -21,7 +21,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -358,6 +359,8 @@
     (komp/lippu toteumat/yksikkohintaiset-tyot-nakymassa?)
 
     (fn []
-      (if @toteumat/valittu-yksikkohintainen-toteuma
-        [yksikkohintainen-toteumalomake]
-        [yksikkohintaisten-toteumalistaus]))))
+      [:span
+       [kartta/kartan-paikka]
+       (if @toteumat/valittu-yksikkohintainen-toteuma
+         [yksikkohintainen-toteumalomake]
+         [yksikkohintaisten-toteumalistaus])])))
