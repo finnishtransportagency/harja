@@ -73,49 +73,52 @@
   "Harjan UI:n pääkomponentti"
   []
   (komp/luo
+
     (fn []
-      (let [sivu @nav/sivu
-            aikakatkaistu? @istunto/istunto-aikakatkaistu
-            korkeus @yleiset/korkeus
-            kayttaja @istunto/kayttaja]
+      (if @nav/render-lupa?
+        (let [sivu @nav/sivu
+              aikakatkaistu? @istunto/istunto-aikakatkaistu
+              korkeus @yleiset/korkeus
+              kayttaja @istunto/kayttaja]
 
-        (if aikakatkaistu?
-          [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
-          (if (nil? kayttaja)
-            [ladataan]
-            (if (or (:poistettu kayttaja)
-                    (empty? (:roolit kayttaja)))
-              [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+          (if aikakatkaistu?
+            [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
+            (if (nil? kayttaja)
+              [ladataan]
+              (if (or (:poistettu kayttaja)
+                      (empty? (:roolit kayttaja)))
+                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
 
-              [:div
-               [:div.container
-                [header sivu]]
+                [:div
+                 [:div.container
+                  [header sivu]]
 
-               [:div.container
-                [murupolku/murupolku]]
+                 [:div.container
+                  [murupolku/murupolku]]
 
-               
 
-               [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-                [:div.row.row-sisalto
-                 [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
-                  (case sivu
-                    :urakat [urakat/urakat]
-                    :raportit [raportit/raportit]
-                    :ilmoitukset [ilmoitukset/ilmoitukset]
-                    :hallinta [hallinta/hallinta]
-                    :tilannekuva [tilannekuva/tilannekuva]
-                    :about [about/about])]]]
 
-               
-               
-               [footer]
-               [modal-container]
-               [viesti-container]
+                 [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+                  [:div.row.row-sisalto
+                   [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+                    (case sivu
+                      :urakat [urakat/urakat]
+                      :raportit [raportit/raportit]
+                      :ilmoitukset [ilmoitukset/ilmoitukset]
+                      :hallinta [hallinta/hallinta]
+                      :tilannekuva [tilannekuva/tilannekuva]
+                      :about [about/about])]]]
 
-               ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-               ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
-               ;; se asemoidaan mountin jälkeen
-               [:div#kartta-container {:style {:position "absolute" :top (- @yleiset/korkeus)}}
-                [kartta/kartta]]])))))))
+
+
+                 [footer]
+                 [modal-container]
+                 [viesti-container]
+
+                 ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
+                 ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
+                 ;; se asemoidaan mountin jälkeen
+                 [:div#kartta-container {:style {:position "absolute" :top (- @yleiset/korkeus)}}
+                  [kartta/kartta]]]))))
+        [ladataan]))))
 

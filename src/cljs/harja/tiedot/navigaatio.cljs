@@ -25,6 +25,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (:import goog.History))
 
 
+;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
+(def render-lupa-hy? (atom false))
+(def render-lupa-u? (atom false))
+(def render-lupa? (reaction (and @render-lupa-hy? @render-lupa-u?)))
+
 (declare kasittele-url! paivita-url valitse-urakka)
 
 ;; Atomi, joka sisältää valitun sivun
@@ -73,6 +78,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction (let [id @valittu-hallintayksikko-id
                   yksikot @hy/hallintayksikot]
               (when (and id yksikot)
+                (when-not @render-lupa-hy? (reset! render-lupa-hy? true))
                 (some #(and (= id (:id %)) %) yksikot)))))
 
 (def hallintayksikot-kartalla
@@ -95,6 +101,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction (let [id @valittu-urakka-id
                   urakat @urakkalista]
               (when (and id urakat)
+                (when-not @render-lupa-u? (reset! render-lupa-u? true))
                 (some #(when (= id (:id %)) %) urakat)))))
 
 (defonce edellinen-valittu-urakkatyyppi (atom nil))
@@ -257,12 +264,27 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                   (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
                   @suodatettu-urakkalista)))
 
+
+
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
   (let [uri (goog.Uri/parse url)
         polku (.getPath uri)
         parametrit (.getQueryData uri)]
+    (if-let [hy (some-> parametrit (.get "hy") js/parseInt)]
+      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
+        (do (reset! valittu-hallintayksikko-id hy)
+            (reset! valittu-urakka-id u))
+        (do
+          (when-not @render-lupa-u? (reset! render-lupa-u? true))
+          (reset! valittu-hallintayksikko-id hy)
+          (reset! valittu-urakka-id nil)
+          (reset! valittu-urakka nil)))
+      (do
+        (when-not @render-lupa-hy? (reset! render-lupa-hy? true))
+        (when-not @render-lupa-u? (reset! render-lupa-u? true))))
+
     (case polku
       "urakat" (vaihda-sivu! :urakat)
       "raportit" (vaihda-sivu! :raportit)
@@ -270,17 +292,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       "ilmoitukset" (vaihda-sivu! :ilmoitukset)
       "hallinta" (vaihda-sivu! :hallinta)
       "about" (vaihda-sivu! :about)
-      (vaihda-sivu! :urakat))
-    (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
-      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
-        (do (reset! valittu-hallintayksikko-id hy)
-            (reset! valittu-urakka-id u)
-            (reset! kartan-kokovalinta :S))
-        (do
-          (reset! valittu-hallintayksikko-id hy)
-          (reset! valittu-urakka-id nil)
-          (reset! valittu-urakka nil)
-          (reset! kartan-kokovalinta :M))))))
+      (vaihda-sivu! :urakat))))
 
 (.setEnabled historia true)
 
