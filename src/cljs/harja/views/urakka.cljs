@@ -78,8 +78,9 @@
 
      "Turvallisuus"
      :turvallisuuspoikkeamat
-     ^{:key "turvallisuuspoikkeamat"}
-     [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
+     (when (= :hoito (:tyyppi ur))
+       ^{:key "turvallisuuspoikkeamat"}
+       [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
      "Laskutus"
      :laskutus
