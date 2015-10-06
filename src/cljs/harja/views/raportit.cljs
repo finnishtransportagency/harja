@@ -22,7 +22,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+                   [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-raporttityyppi (atom nil))
@@ -93,69 +93,32 @@
                                                         (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
                                                 @yksikkohintaiset-toteumat)]
                toteumat-tehtavatietoineen))))
-(defn muodosta-materiaalisarakkeet
-  "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
-  [materiaalitoteumat]
-  (let [materiaalit (distinct (mapv (fn [materiaali]
-                                      (select-keys materiaali [:materiaali_nimi :materiaali_nimi_lyhenne]))
-                                    materiaalitoteumat))]
-    (mapv (fn [materiaali]
-            {:otsikko     (:materiaali_nimi materiaali)
-             :nimi        (keyword (:materiaali_nimi materiaali))
-             :muokattava? (constantly false)
-             :tyyppi
-                          :string
-             :leveys      "33%"})
-          materiaalit)))
 
-(defn muodosta-materiaaliraportin-rivit
-  "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
-  [materiaalitoteumat]
-  (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
-        urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
-        urakkarivit (vec (map-indexed (fn [index urakka]
-                                        (reduce ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
-                                          (fn [eka toka]
-                                            (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
-                                          (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
-                                                    (assoc eka (keyword toka) 0))
-                                                  {:id index :urakka_nimi urakka}
-                                                  materiaali-nimet)
-                                          (filter
-                                            #(= (:urakka_nimi %) urakka)
-                                            materiaalitoteumat)))
-                                      urakka-nimet))]
-    urakkarivit))
-(defn muodosta-materiaaliraportin-yhteensa-rivi
-  "Palauttaa rivin, jossa eri materiaalien määrät on summattu yhteen"
-  [materiaalitoteumat]
-  (let [materiaalinimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
-    (reduce (fn [eka toka]
-              (assoc eka (keyword toka) (reduce + (mapv
-                                                    :kokonaismaara
-                                                    (filter
-                                                      #(= (:materiaali_nimi %) toka)
-                                                      materiaalitoteumat)))))
-            {:id -1 :urakka_nimi "Yhteensä" :yhteenveto true}
-            materiaalinimet)))
-(defonce materiaalitoteumat
-         (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      hallintayksikko-id (:id @nav/valittu-hallintayksikko)
-                      hoitokauden-alkupvm (first @u/valittu-hoitokausi)
-                      hoitokauden-loppupvm (second @u/valittu-hoitokausi)
-                      aikavali-alkupvm (first @u/valittu-aikavali)
-                      aikavali-loppupvm (second @u/valittu-aikavali)
-                      nakymassa? @nakymassa?
-                      tama-raportti-valittu? (= :materiaaliraportti (:nimi @valittu-raporttityyppi))]
-                     (when (and nakymassa? tama-raportti-valittu?)
-                       (if (and urakka-id hoitokauden-alkupvm hoitokauden-loppupvm)
-                         (raportit/hae-materiaaliraportti-urakalle urakka-id hoitokauden-alkupvm hoitokauden-loppupvm)
-                         (if hallintayksikko-id
-                           (raportit/hae-materiaaliraportti-hallintayksikolle hallintayksikko-id aikavali-alkupvm aikavali-loppupvm)
-                           (raportit/hae-materiaaliraportti-koko-maalle aikavali-alkupvm aikavali-loppupvm))))))
 
-(def +raporttityypit+
-  [{:nimi       :yks-hint-raportti
+(defonce raporttityypit
+  (reaction<! [nakymassa? @nakymassa?]
+    (when nakymassa?
+      (raportit/hae-raportit))))
+
+(defonce mahdolliset-raporttityypit
+  (reaction (let [v-ur @nav/valittu-urakka
+                  v-hal @nav/valittu-hallintayksikko
+                  mahdolliset-kontekstit (into #{"koko maa"}
+                                               (keep identity [(when v-ur "urakka")
+                                                               (when v-hal "hallintayksikko")]))
+                  tyypit (vals @raporttityypit)]
+              (into []
+                    (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                    tyypit))))
+
+(defonce poista-ei-mahdollinen-raporttityyppivalinta
+  (run! (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
+              valittu @valittu-raporttityyppi]
+          (when-not (mahdolliset valittu)
+            (reset! valittu-raporttityyppi nil)))))
+
+
+#_[{:nimi       :yks-hint-raportti
     :otsikko    "Yksikköhintaisten töiden raportti"
     :konteksti  #{:urakka}
     :parametrit #{:valitun-urakan-hoitokaudet :valitun-aikavalin-kuukaudet :valitun-urakan-toimenpiteet+kaikki}
@@ -271,49 +234,53 @@
                    [:yhteenveto [["PDF-generointi" "toimii"]
                                  ["XSL-FO" "hyvin"]]]])}
 
-   ])
+   ]
 
 (defn raporttinakyma [tyyppi]
   (if (= :testiraportti (:nimi tyyppi))
     (raportti/muodosta-html ((:render tyyppi)))
     ((:render tyyppi))))
 
+(defmulti raportin-parametri :tyyppi)
+
+(defmethod raportin-parametri "hoitokausi" [p]
+  [valinnat/urakan-hoitokausi @nav/valittu-urakka])
+
+(defmethod raportin-parametri :default [p]
+  [:span (pr-str p)])
+
+(defn raportin-parametrit [raporttityyppi konteksti]
+  [:span
+   [:ul
+    (for [p (filter #(let [k (:konteksti %)]
+                       (or (nil? k)
+                           (= k konteksti)))
+                    (:parametrit raporttityyppi))]
+      [:ul [raportin-parametri p]])]])
+
+
 (defn raporttivalinnat []
   (komp/luo
     (fn []
       (let [v-ur @nav/valittu-urakka
-            v-hal @nav/valittu-hallintayksikko]
+            v-hal @nav/valittu-hallintayksikko
+            konteksti (cond
+                        v-ur "urakka"
+                        v-hal "hallintayksikko"
+                        :default "koko maa")]
         [:div.raporttivalinnat
          [:div.raportin-tyyppi
           [:div.label-ja-alasveto
            [:span.alasvedon-otsikko "Valitse raportti"]
            [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
                                  ;;\u2014 on väliviivan unikoodi
-                                 :format-fn  #(if % (:otsikko %) "Valitse")
+                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                  :valitse-fn #(reset! valittu-raporttityyppi %)
                                  :class      "valitse-raportti-alasveto"}
-            +raporttityypit+]]]
+            @mahdolliset-raporttityypit]]]
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
-            ; Jos kontekstissa ainoastaan urakka, pakota valitsemaan hallintayksikkö ja urakka (jos ei ole jo valittu)
-            (when (= (:konteksti @valittu-raporttityyppi) #{:urakka})
-              (urakat/valitse-hallintayksikko-ja-urakka))
-            (when (and (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-hoitokaudet)
-                       v-ur
-                       v-hal)
-              [valinnat/urakan-hoitokausi @nav/valittu-urakka])
-            (when (and (contains? (:parametrit @valittu-raporttityyppi) :valitun-aikavalin-kuukaudet)
-                       v-ur
-                       v-hal)
-              [valinnat/hoitokauden-kuukausi])
-            (when
-              (and (or (contains? (:parametrit @valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
-                       (contains? (:parametrit @valittu-raporttityyppi) :koko-maan-aikavali))
-                   (nil? v-ur))
-              [valinnat/aikavali])
-            (when
-              (and (contains? (:parametrit @valittu-raporttityyppi) :valitun-urakan-toimenpiteet+kaikki) v-ur)
-              [valinnat/urakan-toimenpide+kaikki])])]))))
+            [raportin-parametrit @valittu-raporttityyppi konteksti]])]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [v-ur @nav/valittu-urakka

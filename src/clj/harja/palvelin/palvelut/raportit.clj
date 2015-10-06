@@ -9,7 +9,6 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
@@ -67,51 +66,11 @@
     (log/debug "Samana päivänä toteutuneet tehtävät summattu : " toteutuneet-tehtavat-summattu)
     toteutuneet-tehtavat-summattu))
 
-(defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
-                                                                                                   urakka-id
-                                                                                                   (konv/sql-timestamp alkupvm)
-                                                                                                   (konv/sql-timestamp loppupvm)))
-        suunnitellut-materiaalit (into []
-                                       (materiaalit-q/hae-urakan-suunnitellut-materiaalit-raportille db
-                                                                                                    urakka-id
-                                                                                                    (konv/sql-timestamp alkupvm)
-                                                                                                    (konv/sql-timestamp loppupvm)))
-        suunnitellut-materiaalit-ilman-toteumia (filter
-                                                  (fn [materiaali]
-                                                    (not-any?
-                                                      (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
-                                                      toteutuneet-materiaalit))
-                                                  suunnitellut-materiaalit)
-        lopullinen-tulos (mapv
-                           (fn [materiaalitoteuma]
-                             (if (nil? (:kokonaismaara materiaalitoteuma))
-                               (assoc materiaalitoteuma :kokonaismaara 0)
-                               materiaalitoteuma))
-                           (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
-    lopullinen-tulos))
 
-(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                            (konv/sql-timestamp alkupvm)
-                                                                                                            (konv/sql-timestamp loppupvm)
-                                                                                                            hallintayksikko-id))]
-    toteutuneet-materiaalit))
 
-(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
-  (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
-                                                                                                      (konv/sql-timestamp alkupvm)
-                                                                                                      (konv/sql-timestamp loppupvm)))]
-    toteutuneet-materiaalit))
+
+
+
 (defrecord Raportit []
   component/Lifecycle
   (start [{raportointi :raportointi
@@ -123,9 +82,9 @@
     (julkaise-palvelut http
                        :hae-raportit
                        (fn [user]
-                         (reduce-kv (fn [raportit nimi raportti]
-                                      (assoc raportit
-                                        nimi (dissoc raportti :suorita)))
+                         (reduce-kv (fn [acc nimi raportti]
+                                      ;; Otetaan suoritus fn pois frontille lähetettävästä
+                                      (assoc acc nimi (dissoc raportti :suorita)))
                                     {}
                                     (hae-raportit raportointi)))
 
@@ -135,19 +94,7 @@
 
                        :yksikkohintaisten-toiden-kuukausiraportti
                        (fn [user tiedot]
-                         (muodosta-yksikkohintaisten-toiden-kuukausiraportti db user tiedot))
-
-                       :materiaaliraportti-urakalle
-                       (fn [user tiedot]
-                         (muodosta-materiaaliraportti-urakalle db user tiedot))
-
-                       :materiaaliraportti-hallintayksikolle
-                       (fn [user tiedot]
-                         (muodosta-materiaaliraportti-hallintayksikolle db user tiedot))
-
-                       :materiaaliraportti-koko-maalle
-                       (fn [user tiedot]
-                         (muodosta-materiaaliraportti-koko-maalle db user tiedot)))
+                         (muodosta-yksikkohintaisten-toiden-kuukausiraportti db user tiedot)))
 
     this)
 
@@ -155,8 +102,5 @@
     (poista-palvelut http
                      :hae-raportit
                      :yksikkohintaisten-toiden-kuukausiraportti
-                     :materiaaliraportti-urakalle
-                     :materiaaliraportti-hallintayksikolle
-                     :materiaaliraportti-koko-maalle
-                     :suorita-raportti)
+                     :suorita-razaportti)
     this))

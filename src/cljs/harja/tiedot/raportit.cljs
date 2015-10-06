@@ -10,6 +10,9 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn hae-raportit []
+  (k/get! :hae-raportit))
+
 (defn suorita-raportti-urakka-parametrit [urakka-id nimi parametrit]
   {:nimi nimi
    :konteksti :urakka
