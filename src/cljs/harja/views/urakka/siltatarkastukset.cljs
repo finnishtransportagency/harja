@@ -90,8 +90,10 @@
     (komp/luo
       (fn []
         [:div.sillat
+         [kartta/kartan-paikka]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Siltojen hakuehto"]
+
           [livi-pudotusvalikko {:valinta    @sillat/listaus
                                 ;;\u2014 on väliviivan unikoodi
                                 :format-fn  #(case %
@@ -104,13 +106,11 @@
                                 :class      "suunnittelu-alasveto"
                                 }
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
-
-         [kartta/kartan-paikka]
          [grid/grid
-          {:otsikko        "Sillat"
-           :tyhja          (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
+          {:otsikko       "Sillat"
+           :tyhja         (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
-           :tunniste :siltanro
+           :tunniste      :siltanro
            }
 
           ;; sarakkeet
