@@ -57,7 +57,7 @@
     - name: set up harja database user
       sudo: yes
       sudo_user: postgres      
-      postgresql_user: name=harja password=harja123
+      postgresql_user: name=harja password=harja123 role_attr_flags=SUPERUSER
     - name: set up harja database
       sudo: yes
       sudo_user: postgres      
