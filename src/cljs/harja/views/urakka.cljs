@@ -15,15 +15,17 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
-            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
+            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn urakka
   "Urakkanäkymä"
-  [ur]
-  (let [hae-urakan-tyot (fn [ur]
+  []
+  (let [ur @nav/valittu-urakka
+        hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot
                                       (s/prosessoi-tyorivit ur
@@ -41,13 +43,15 @@
 
      "Suunnittelu"
      :suunnittelu
-     ^{:key "suunnittelu"}
-     [suunnittelu/suunnittelu ur]
+     (when-not (= "kokonaisurakka" (:sopimustyyppi ur))
+       ^{:key "suunnittelu"}
+       [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     ^{:key "toteumat"}
-     [toteumat/toteumat ur]
+     (when-not (= "kokonaisurakka" (:sopimustyyppi ur))
+       ^{:key "toteumat"}
+     [toteumat/toteumat ur])
 
      "Kohdeluettelo"
      :kohdeluettelo

@@ -83,5 +83,5 @@
   []
   (let [v-ur @nav/valittu-urakka]
     (if v-ur
-      [urakka/urakka v-ur]
+      [urakka/urakka]
       [valitse-hallintayksikko-ja-urakka])))
