@@ -3,11 +3,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce])
-  (:import (java.text SimpleDateFormat)))
-
-(defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
+            [clj-time.coerce :as coerce]
+            [harja.pvm :as pvm]))
 
 (defn muodosta-maksueranumero [numero]
   (str/join "" ["HA" numero]))
@@ -16,8 +13,8 @@
   (str/join "" ["AK" numero]))
 
 (defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
-  (let [alkupvm (formatoi-paivamaara (coerce/to-sql-time (time/first-day-of-the-month vuosi 1)))
-        loppupvm (formatoi-paivamaara (coerce/to-sql-time (time/last-day-of-the-month vuosi 12)))]
+  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvmvuosi))
+        loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))]
     [:segment
      {:value  vuosittainen-summa
       :finish loppupvm
