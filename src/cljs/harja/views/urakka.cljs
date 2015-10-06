@@ -94,5 +94,4 @@
      "Maksuerät"
      :maksuerat
      ^{:key "maksuerat"}
-     [maksuerat/maksuerat-listaus ur]
-     ]))
+     [maksuerat/maksuerat-listaus ur]]))
