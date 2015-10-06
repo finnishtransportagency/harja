@@ -84,7 +84,7 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma (get-in data [:varustetoteuma :toteuma])
+    (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
           varustetiedot (get-in data [:varustetoteuma :varuste])]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
