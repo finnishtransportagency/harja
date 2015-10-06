@@ -40,6 +40,17 @@
   (is (= 8 (count (hae-maksuerat))) "Toimenpiteen päivitys ei saa lisätä uusia maksueriä.")
   (is (= 8 (count (hae-kustannussuunnitelmat))) "Toimenpiteen päivitys ei saa lisätä uusia kustannussuunnitelmia.")
 
+  (let [nimet (hae-maksuerien-nimet)]
+    (is (some #(= (first %) "Laiturialue: Kokonaishintaiset") nimet))
+    (is (some #(= (first %) "Laiturialue: Yksikköhintaiset") nimet))
+    (is (some #(= (first %) "Laiturialue: Lisatyöt") nimet))
+    (is (some #(= (first %) "Laiturialue: Indeksit") nimet))
+    (is (some #(= (first %) "Laiturialue: Bonukset") nimet))
+    (is (some #(= (first %) "Laiturialue: Sakot") nimet))
+    (is (some #(= (first %) "Laiturialue: Äkilliset hoitotyöt") nimet))
+    (is (some #(= (first %) "Laiturialue: Muut") nimet))
+    (println "nimet: " nimet))
+
   (poista-toimenpide))
 
 (deftest tarkista-duplikaatti-toimenpiteiden-perustaminen

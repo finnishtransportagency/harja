@@ -8,15 +8,15 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
-(defn muodosta-xml-sisalto [tr tietolajitunniste muutospvm]
+(defn muodosta-xml-sisalto [tierekisteriosoitevali tietolajitunniste muutospvm]
   [:ns2:haeTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietueet"}
    [:tietolajitunniste tietolajitunniste]
    (when muutospvm [:muutospvm muutospvm])
-   (into [:tie] (map (fn[[avain arvo]] [avain arvo]) tr))])
+   (into [:tie] (map (fn[[avain arvo]] [avain arvo]) tierekisteriosoitevali))])
 
-(defn muodosta-kutsu [tr tietolajitunniste muutospvm]
-  (let [sisalto (muodosta-xml-sisalto tr tietolajitunniste muutospvm)
+(defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste muutospvm]
+  (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste muutospvm)
         xml (xml/tee-xml-sanoma sisalto)]
     (log/debug (pr-str xml))
     (if (xml/validoi +xsd-polku+ "haeTietueet.xsd" xml)

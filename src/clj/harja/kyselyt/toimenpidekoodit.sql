@@ -64,3 +64,10 @@ FROM toimenpidekoodi tpk4
                                         AND tpi.urakka IN (:urakat)
 WHERE poistettu IS NOT TRUE
       AND tpk4.taso = 4;
+
+--name: hae-emon-nimi
+SELECT nimi
+FROM toimenpidekoodi
+WHERE id = (SELECT emo
+            FROM toimenpidekoodi
+            WHERE koodi = :id);

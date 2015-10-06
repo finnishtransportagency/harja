@@ -57,7 +57,7 @@ SELECT
          JOIN yksikkohintainen_tyo yt
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
               t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'yksikkohintainen')
+       WHERE t.tyyppi = 'yksikkohintainen' AND NOT t.poistettu)
 
   WHEN m.tyyppi = 'lisatyo'
     THEN
@@ -71,14 +71,14 @@ SELECT
          JOIN yksikkohintainen_tyo yt
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
               t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'lisatyo')
+       WHERE t.tyyppi = 'lisatyo' AND NOT t.poistettu)
 
   WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
       (SELECT (sum(ek.rahasumma))
        FROM erilliskustannus ek
        WHERE ek.toimenpideinstanssi = tpi.id AND
-             ek.tyyppi = 'akillinen-hoitotyo')
+             ek.tyyppi = 'akillinen-hoitotyo' AND NOT ek.poistettu)
 
   WHEN m.tyyppi = 'sakko'
     THEN
@@ -110,7 +110,7 @@ SELECT
                      JOIN yksikkohintainen_tyo yt
                        ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
                           t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-                   WHERE t.tyyppi = 'muutostyo'),
+                   WHERE t.tyyppi = 'muutostyo' AND NOT t.poistettu),
                   0)
          +
          -- Erilliskustannukset
@@ -118,7 +118,7 @@ SELECT
          coalesce((SELECT (sum(ek.rahasumma))
                    FROM erilliskustannus ek
                    WHERE ek.toimenpideinstanssi = tpi.id AND
-                         ek.tyyppi != 'akillinen-hoitotyo'),
+                         ek.tyyppi != 'akillinen-hoitotyo' AND NOT ek.poistettu),
                   0))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
@@ -199,7 +199,7 @@ SELECT
                                                   WHERE emo.id = tpi.toimenpide))
          JOIN yksikkohintainen_tyo yt
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'yksikkohintainen')
+       WHERE t.tyyppi = 'yksikkohintainen' AND NOT t.poistettu)
 
   WHEN m.tyyppi = 'lisatyo'
     THEN
@@ -212,14 +212,15 @@ SELECT
                                                   WHERE emo.id = tpi.toimenpide))
          JOIN yksikkohintainen_tyo yt
            ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'lisatyo')
+       WHERE t.tyyppi = 'lisatyo' AND NOT t.poistettu)
 
   WHEN m.tyyppi = 'akillinen-hoitotyo'
     THEN
       (SELECT (sum(ek.rahasumma))
        FROM erilliskustannus ek
        WHERE ek.toimenpideinstanssi = tpi.id AND
-             ek.tyyppi = 'akillinen-hoitotyo')
+             ek.tyyppi = 'akillinen-hoitotyo' AND
+             NOT ek.poistettu)
 
   WHEN m.tyyppi = 'sakko'
     THEN
@@ -250,14 +251,14 @@ SELECT
                     JOIN yksikkohintainen_tyo yt
                       ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND
                          t.alkanut <= yt.loppupvm
-                  WHERE t.tyyppi = 'muutostyo'),
+                  WHERE t.tyyppi = 'muutostyo' AND NOT t.poistettu),
                  0)
         +
         -- Erilliskustannukset
         coalesce((SELECT (sum(ek.rahasumma))
                   FROM erilliskustannus ek
                   WHERE ek.toimenpideinstanssi = tpi.id AND
-                        ek.tyyppi != 'akillinen-hoitotyo')
+                        ek.tyyppi != 'akillinen-hoitotyo' AND NOT ek.poistettu)
         , 0)))
 
   -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
