@@ -44,21 +44,25 @@
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Tiedotus")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :kysely [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Kysely")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
   (assoc havainto
     :type :havainto
+    :nimi (or (:nimi havainto) "Havainto")
     :alue (oletusalue havainto)))
 
 (defn suunta-radiaaneina [tyokone]
@@ -77,6 +81,7 @@
 (defmethod kartalla-xf :tyokone [tyokone]
   (assoc tyokone
     :type :tyokone
+    :nimi (or (:nimi tyokone) (clojure.string/capitalize (name (:tyokonetyyppi tyokone))))
     :alue {:type        :icon
            :coordinates (:sijainti tyokone)
            :direction   (- (suunta-radiaaneina tyokone))

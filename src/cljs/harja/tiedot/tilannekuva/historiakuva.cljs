@@ -8,6 +8,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
+            [clojure.string :as str]
 
             [clojure.set :refer [rename-keys]])
 
@@ -81,31 +82,37 @@
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Tiedotus")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :kysely [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Kysely")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
   [(assoc havainto
      :type :havainto
+     :nimi (or (:nimi havainto) "Havainto")
      :alue (oletusalue havainto))])
 
 (defmethod kartalla-xf :pistokoe [tarkastus]
   [(assoc tarkastus
      :type :tarkastus
+     :nimi (or (:nimi tarkastus) "Pistokoe")
      :alue (oletusalue tarkastus))])
 
 (defmethod kartalla-xf :laaduntarkastus [tarkastus]
   [(assoc tarkastus
      :type :tarkastus
+     :nimi (or (:nimi tarkastus) "Laaduntarkastus")
      :alue (oletusalue tarkastus))])
 
 (defmethod kartalla-xf :toteuma [toteuma]
@@ -114,27 +121,22 @@
   (let [reittipisteet (map
                         (fn [[_ arvo]] (first arvo))
                         (group-by :id (:reittipisteet toteuma)))]
-    (conj
-      (mapv
-        (fn [rp]
-          (assoc rp
-            :type :reittipiste
-            :alue {:type        :clickable-area
-                   :coordinates (get-in rp [:sijainti :coordinates])
-                   :zindex      3}))
-        reittipisteet)
-      (assoc toteuma
-        :type :toteuma
-        :alue {
-               :type   :arrow-line
-               :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                    :aika
-                                                                    pvm/ennen?
-                                                                    reittipisteet))}))))
+    [(assoc toteuma
+       :type :toteuma
+       :nimi (or (:nimi toteuma) (if (> 1 (count (:tehtavat toteuma)))
+                                   (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
+                                   (str (:toimenpide (first (:tehtavat toteuma))))))
+       :alue {
+              :type   :arrow-line
+              :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
+                                                                   :aika
+                                                                   pvm/ennen?
+                                                                   reittipisteet))})]))
 
 (defmethod kartalla-xf :turvallisuuspoikkeama [tp]
   [(assoc tp
      :type :turvallisuuspoikkeama
+     :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
      :alue (oletusalue tp))])
 
 (defmethod kartalla-xf :paallystyskohde [pt]
@@ -142,6 +144,7 @@
     (fn [kohdeosa]
       (assoc kohdeosa
         :type :paallystyskohde
+        :nimi (or (:nimi pt) "Päällystyskohde")
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 
@@ -151,6 +154,7 @@
     (fn [kohdeosa]
       (assoc kohdeosa
         :type :paikkaustoteuma
+        :nimi (or (:nimi pt) "Paikkaus")
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 

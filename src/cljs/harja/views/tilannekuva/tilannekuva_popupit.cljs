@@ -9,6 +9,19 @@
 
 (def klikattu-tyokone (atom nil))
 
+(defn- rakenna [kartta]
+  "Funktio, joka rakentaa mapistä hiccup-rakenteen. Ei ole tarkoituskaan olla kovin älykäs, vaan helpottaa lähinnä
+  kehitystyötä."
+  (log (pr-str kartta))
+  (for [avain (keys kartta)]
+    (cond
+      (map? (get kartta avain)) (into [:div [:b (pr-str avain)]] (rakenna (get kartta avain)))
+
+      (or (set? (get kartta avain)) (vector? (get kartta avain)))
+      [:div [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
+
+      :else [:div [:b (pr-str avain)] (pr-str (get kartta avain))])))
+
 (defmulti nayta-popup :aihe)
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
@@ -54,7 +67,9 @@
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-ilmoitus-popup
-                        [:p [:b (name (:ilmoitustyyppi tapahtuma))]]
+                        [:p [:b (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
+                                  "Toimenpidepyyntö"
+                                  (str/capitalize (name (:ilmoitustyyppi tapahtuma))))]]
                         [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
                         [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
                         [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
@@ -93,18 +108,6 @@
       (kartta/poista-popup!)
       (nayta-popup (assoc haettu :aihe :tyokone-klikattu)))))
 
-(defn- rakenna [kartta]
-  "Funktio, joka rakentaa mapistä hiccup-rakenteen. Ei ole tarkoituskaan olla kovin älykäs, vaan helpottaa lähinnä
-  kehitystyötä."
-  (log (pr-str kartta))
-  (for [avain (keys kartta)]
-    (cond
-      (map? (get kartta avain)) (into [:div [:b (pr-str avain)]] (rakenna (get kartta avain)))
-
-      (or (set? (get kartta avain)) (vector? (get kartta avain)))
-      [:div [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
-
-      :else [:div [:b (pr-str avain)] (pr-str (get kartta avain))])))
 
 (defmethod nayta-popup :havainto-klikattu [tapahtuma]
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
