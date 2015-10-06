@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.tierekisteri.tietolajin_haku_test.tierekisterikomponentti-test
+(ns harja.palvelin.integraatiot.tierekisteri.tierekisterikomponentti-test
   (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
