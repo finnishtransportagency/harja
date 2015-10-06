@@ -61,7 +61,7 @@
             (log/warn e "Raporttien hakemisessa virhe!")
             {}))))
 
-  (hae-raportti [this nimi] (get @raportit nimi))
+  (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
     (log/debug "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
