@@ -35,7 +35,6 @@
                            :on-click #(.reload js/window.location)}]
    [haku/haku]
 
-   ;; FIXME: active luokka valitulle sivulle
    [:ul#sivut.nav.nav-pills
 
     [:li {:role "presentation" :class (when (= s :urakat) "active")}
