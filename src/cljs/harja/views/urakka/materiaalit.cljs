@@ -241,6 +241,7 @@
              [:button.btn.btn-primary
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
+                              (reset! tuleville? false)
                               (go 
                                 (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
                                                     (vals @pohjavesialue-materiaalit-muokattu))
