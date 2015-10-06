@@ -43,15 +43,15 @@
 
      "Suunnittelu"
      :suunnittelu
-     (when-not (= "kokonaisurakka" (:sopimustyyppi ur))
+     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
        ^{:key "suunnittelu"}
        [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     (when-not (= "kokonaisurakka" (:sopimustyyppi ur))
+     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
        ^{:key "toteumat"}
-     [toteumat/toteumat ur])
+       [toteumat/toteumat ur])
 
      "Kohdeluettelo"
      :kohdeluettelo

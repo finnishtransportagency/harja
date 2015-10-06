@@ -70,7 +70,7 @@
     organisaatio))
 
 (defn hae-urakan-sopimustyyppi [db user urakka-id]
-  (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
+  (keyword (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id)))))
 
 (defn hae-urakan-tyyppi [db user urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
