@@ -9,6 +9,7 @@
     "properties": {
       "materiaali": {
         "id": "urn:harja/maara/materiaali",
+        "required": true,
         "enum": [
           "talvisuolaliuosNaCl",
           "talvisuolaliuosCaCl2",
@@ -21,6 +22,7 @@
       "maara": {
         "id": "urn:harja/maarat/0/maara",
         "type": "object",
+        "required": true,
         "additionalProperties": false,
         "$ref": "file:resources/api/schemas/entities/maara.schema.json"
       }
