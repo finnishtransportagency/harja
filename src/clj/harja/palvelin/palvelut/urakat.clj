@@ -77,7 +77,7 @@
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
-  (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
+  (q/tallenna-urakan-sopimustyyppi! db (name sopimustyyppi) urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
 (defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]

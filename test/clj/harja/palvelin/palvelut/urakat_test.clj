@@ -34,8 +34,8 @@
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-urakan-sopimustyyppi urakanvalvoja
                         {:urakka-id     @oulun-alueurakan-2005-2010-id
-                         :sopimustyyppi "kokonaisurakka"})]
-    (is (= uusi-sopimustyyppi "kokonaisurakka"))
+                         :sopimustyyppi :kokonaisurakka})]
+    (is (= uusi-sopimustyyppi :kokonaisurakka))
     (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-2005-2010-id))))
 
 
