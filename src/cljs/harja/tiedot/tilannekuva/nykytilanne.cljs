@@ -119,6 +119,7 @@
                                                       yhteiset-parametrit
                                                       :aikavali [(:alku yhteiset-parametrit)
                                                                  (:loppu yhteiset-parametrit)]
+                                                      :tilat #{:avoimet}
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
