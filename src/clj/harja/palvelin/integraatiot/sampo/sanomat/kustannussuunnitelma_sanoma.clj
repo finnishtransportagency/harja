@@ -63,13 +63,9 @@
           (log/error viesti)
           (throw (RuntimeException. viesti)))))))
 
-(defn tee-kustannussuunnitelman-alku [alkupvm]
-  (let [vuosi (time/year (coerce/from-sql-date alkupvm))]
-    (coerce/to-sql-date (time/first-day-of-the-month vuosi 1))))
-
-(defn tee-kustannussuunnitelman-loppu [loppupvm]
-  (let [vuosi (time/year (coerce/from-sql-date loppupvm))]
-    (coerce/to-sql-date (time/last-day-of-the-month vuosi 12))))
+(defn tee-kustannussuunnitelmajakso [pvm]
+  (let [vuosi (time/year (coerce/from-sql-date pvm))]
+    (str "Jan 1, " vuosi "-Dec 31, " vuosi)))
 
 (defn muodosta [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
@@ -85,8 +81,8 @@
        :version        "13.1.0.0248"}]
      [:CostPlans
       [:CostPlan
-       {:finishPeriod   (tee-kustannussuunnitelman-loppu loppupvm)
-        :startPeriod    (tee-kustannussuunnitelman-alku alkupvm)
+       {:finishPeriod   (tee-kustannussuunnitelmajakso loppupvm)
+        :startPeriod    (tee-kustannussuunnitelmajakso alkupvm)
         :periodType     "ANNUALLY"
         :investmentType "PRODUCT"
         :investmentCode maksueranumero

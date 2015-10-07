@@ -36,14 +36,22 @@
     (is (xml/validoi +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely
-  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero "20112" nil)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 112)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 536)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 30)) "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 242)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 318)) "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil nil)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
-  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 1)) "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero "20112" nil))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 112))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "43021" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 536))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 30))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 242))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "12981" (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 318))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil nil))
+      "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
+  (is (thrown? RuntimeException (kustannussuunnitelma-sanoma/valitse-lkp-tilinumero nil 1))
+      "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
 
 (deftest tarkista-kulun-jakaminen-vuosille
   (let [segmentit (kustannussuunnitelma-sanoma/luo-summat
@@ -56,3 +64,8 @@
       (is (= odotettu-summa (:value segmentti)))
       (is (= "2015-01-01T00:00:00.0" (:start segmentti)))
       (is (= "2015-12-31T00:00:00.0" (:finish segmentti))))))
+
+(deftest tarkista-kustannussuunnitelmajakson-muodostus
+  (is (= "Jan 1, 2015-Dec 31, 2015"
+         (kustannussuunnitelma-sanoma/tee-kustannussuunnitelmajakso
+           (parsi-paivamaara "12.12.2015")))))
