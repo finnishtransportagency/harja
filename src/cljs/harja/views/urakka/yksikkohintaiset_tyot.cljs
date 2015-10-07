@@ -1,7 +1,7 @@
 (ns harja.views.urakka.yksikkohintaiset-tyot
   "Urakan 'Yksikkohintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]

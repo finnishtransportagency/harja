@@ -1,7 +1,8 @@
 (ns harja.views.urakka
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
+            [harja.asiakas.tapahtumat :as t]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]

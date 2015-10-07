@@ -1,4 +1,4 @@
-(ns bootstrap
+(ns harja.ui.bootstrap
   "Common Bootstrap components for Reagent UI."
   (:require [reagent.core :refer [atom]]))
 

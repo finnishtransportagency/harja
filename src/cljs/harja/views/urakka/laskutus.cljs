@@ -1,7 +1,7 @@
 (ns harja.views.urakka.laskutus
   "Päätason sivu Laskutus"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.tiedot.urakka :as u]
 
             [harja.loki :refer [log]]

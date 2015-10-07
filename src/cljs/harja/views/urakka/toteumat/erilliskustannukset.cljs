@@ -1,7 +1,7 @@
 (ns harja.views.urakka.toteumat.erilliskustannukset
   "Urakan 'Toteumat' välilehden Erilliskustannuksien osio"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]

@@ -1,6 +1,6 @@
 (ns harja.views.urakka.laadunseuranta
   (:require [reagent.core :refer [atom]]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]

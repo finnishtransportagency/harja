@@ -1,7 +1,7 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.tiedot.urakka :as u]
