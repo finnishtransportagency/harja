@@ -353,10 +353,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          :height      (fmt/pikseleina @kartan-korkeus)
          :style       (when (= koko :S)
                         {:display "none"}) ;;display none estää kartan korkeuden animoinnin suljettaessa
-         :class (when (or
-                        (= :hidden koko)
-                        (= :S koko))
-                  "piilossa")
+         :class       (when (or
+                              (= :hidden koko)
+                              (= :S koko))
+                        "piilossa")
          :view        kartta-sijainti
          :zoom        zoom-taso
          :selection   nav/valittu-hallintayksikko
@@ -375,7 +375,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                   (nav/valitse-hallintayksikko item))
                             :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
                                   (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                            (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+                            (do
+                              (keskita-kartta-pisteeseen (js->clj (.-coordinate event)))
+                              (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))))))
          :tooltip-fn  (fn [geom]
                         (and geom
                              [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
