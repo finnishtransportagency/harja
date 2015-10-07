@@ -244,7 +244,7 @@
                                                                 haettavat-toimenpidekoodit)))))]
       (reset! haetut-asiat tulos))))
 
-(def +bufferi+ 1000)                                        ;1s
+(def +bufferi+ 1000) ;1s
 
 (def asioiden-haku (reaction<!
                      [_ @hae-toimenpidepyynnot?
