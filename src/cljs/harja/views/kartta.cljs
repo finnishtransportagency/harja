@@ -287,7 +287,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                         (paivita-extent item event)
                         (t/julkaise! {:aihe :karttaa-vedetty}))
          :on-mount    (fn [initialextent] (paivita-extent nil initialextent))
-         :on-click    (fn [at] (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at}))
+         :on-click    (fn [at]
+                        (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
+                        (poista-popup!))
          :on-select   (fn [item event]
                         (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
                           (condp = (:type item)

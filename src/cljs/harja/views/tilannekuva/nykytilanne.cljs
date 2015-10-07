@@ -1,7 +1,7 @@
 (ns harja.views.tilannekuva.nykytilanne
   "Harjan tilannekuvan pääsivu."
   (:require [reagent.core :refer [atom]]
-            [harja.views.tilannekuva.tilannekuva-popupit :refer [nayta-popup]]
+            [harja.views.tilannekuva.tilannekuva-popupit :refer [nayta-popup] :as popupit]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.tilannekuva.nykytilanne :as tiedot]
@@ -58,7 +58,8 @@
 (defn nykytilanne []
   (komp/luo
     (komp/ulos (paivita-periodisesti tiedot/asioiden-haku 3000)) ;3s
-    (komp/kuuntelija [:ilmoitus-klikattu :tyokone-klikattu :uusi-tyokonedata :havainto-klikattu] #(nayta-popup %2))
+    (komp/kuuntelija [:ilmoitus-klikattu :tyokone-klikattu :uusi-tyokonedata :havainto-klikattu] #(nayta-popup %2)
+                     :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
 
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit

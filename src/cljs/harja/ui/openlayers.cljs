@@ -7,7 +7,7 @@
 
             [harja.ui.ikonit :as ikonit]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            
+
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -36,7 +36,7 @@
             [ol.interaction :as ol-interaction]
 
             [ol.Overlay]                                    ;; popup
-            )
+            [harja.asiakas.tapahtumat :as t])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -153,15 +153,15 @@
 
 (defn- mml-wmts-layer [url layer]
   (ol.layer.Tile.
-    #js {:source  (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
-                                        :url          url   ;; Tämä pitää olla nginx proxyssa
-                                        :layer        layer
-                                        :matrixSet    "ETRS-TM35FIN"
-                                        :format       "image/png"
-                                        :projection   projektio
-                                        :tileGrid     (luo-tilegrid)
-                                        :style        "default"
-                                        :wrapX        true})}))
+    #js {:source (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
+                                       :url          url    ;; Tämä pitää olla nginx proxyssa
+                                       :layer        layer
+                                       :matrixSet    "ETRS-TM35FIN"
+                                       :format       "image/png"
+                                       :projection   projektio
+                                       :tileGrid     (luo-tilegrid)
+                                       :style        "default"
+                                       :wrapX        true})}))
 
 (defn- tapahtuman-geometria
   "Hakee annetulle ol3 tapahtumalle geometrian. Jos monta löytyy, palauttaa viimeisen löytyneen."
@@ -184,13 +184,13 @@
   [e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
-    {:tyyppi (case tyyppi
-               "pointermove" :hover
-               "click" :click
-               "singleclick" :click)
+    {:tyyppi   (case tyyppi
+                 "pointermove" :hover
+                 "click" :click
+                 "singleclick" :click)
      :sijainti [(aget c 0) (aget c 1)]
-     :x (aget (.-pixel e) 0)
-     :y (aget (.-pixel e) 1)}))
+     :x        (aget (.-pixel e) 0)
+     :y        (aget (.-pixel e) 1)}))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution" (fn [e]
@@ -219,12 +219,12 @@
        (fn [e]
          (if-let [kasittelija @hover-kasittelija]
            (kasittelija (tapahtuman-kuvaus e))
-           
+
            (reagent/set-state this
                               (if-let [g (tapahtuman-geometria this e)]
                                 {:hover (assoc g
-                                               :x (aget (.-pixel e) 0)
-                                               :y (aget (.-pixel e) 1))}
+                                          :x (aget (.-pixel e) 0)
+                                          :y (aget (.-pixel e) 1))}
                                 {:hover nil}))))))
 
 
@@ -262,6 +262,7 @@
                               [:a.ol-popup-closer {:on-click #(do
                                                                (.stopPropagation %)
                                                                (.preventDefault %)
+                                                               (t/julkaise! {:aihe :popup-suljettu})
                                                                (poista-popup! this))}]
                               sisalto])]
       (.addOverlay ol3 popup)
@@ -322,7 +323,7 @@
                    (reagent/set-state this
                                       {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
-    
+
     (.setView ol3 (ol.View. #js {:center (clj->js @view)
                                  :zoom   @zoom}))
 
@@ -459,8 +460,8 @@
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
   (luo-feature (assoc point
-                      :type :circle
-                      :radius (or radius 10))))
+                 :type :circle
+                 :radius (or radius 10))))
 
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
@@ -477,17 +478,17 @@
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
-                #js {:image  (ol.style.Icon.
-                              #js {:src          img
-                                   :anchor       (if anchor
-                                                   (clj->js anchor)
-                                                   #js [0.5 1])
-                                   :opacity      1
-                                   ;;:size         #js [40 40]
-                                   :rotation     (or direction 0)
-                                   :anchorXUnits "fraction"
-                                   :anchorYUnits "fraction"})
-                     :zIndex 4}))))
+                 #js {:image  (ol.style.Icon.
+                                #js {:src          img
+                                     :anchor       (if anchor
+                                                     (clj->js anchor)
+                                                     #js [0.5 1])
+                                     :opacity      1
+                                     ;;:size         #js [40 40]
+                                     :rotation     (or direction 0)
+                                     :anchorXUnits "fraction"
+                                     :anchorYUnits "fraction"})
+                      :zIndex 4}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
