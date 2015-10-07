@@ -54,5 +54,5 @@
     (let [segmentti (second (second segmentit))
           odotettu-summa (/ (double (get-in +maksuera+ [:kustannussuunnitelma :summa])) 3)]
       (is (= odotettu-summa (:value segmentti)))
-      (is (= "2015-01-01T02:00:00.0" (:start segmentti)))
-      (is (= "2015-12-31T02:00:00.0" (:finish segmentti))))))
+      (is (= "2015-01-01T00:00:00.0" (:start segmentti)))
+      (is (= "2015-12-31T00:00:00.0" (:finish segmentti))))))
