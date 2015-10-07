@@ -239,6 +239,7 @@
 (defn- poista-popup!
   "Poistaa kartan popupin, jos sellainen on."
   [this]
+  (t/julkaise! {:aihe :popup-suljettu})
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup)
@@ -263,7 +264,6 @@
                               [:a.ol-popup-closer {:on-click #(do
                                                                (.stopPropagation %)
                                                                (.preventDefault %)
-                                                               (t/julkaise! {:aihe :popup-suljettu})
                                                                (poista-popup! this))}]
                               sisalto])]
       (.addOverlay ol3 popup)
