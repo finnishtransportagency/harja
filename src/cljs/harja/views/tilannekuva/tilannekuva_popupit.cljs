@@ -82,8 +82,7 @@
                                                       (map putsaa (filter
                                                                     (fn [asia] (= (:type asia) :ilmoitus))
                                                                     @tiedot/historiakuvan-asiat-kartalla)))
-                                              (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))
-                                              ))}
+                                              (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}
                          "Siirry ilmoitusnäkymään"]]))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
