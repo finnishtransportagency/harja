@@ -1,7 +1,7 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [clojure.string :as string]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]

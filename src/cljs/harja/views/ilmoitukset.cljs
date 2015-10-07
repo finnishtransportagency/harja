@@ -14,7 +14,7 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
 
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [clojure.string :refer [capitalize]]

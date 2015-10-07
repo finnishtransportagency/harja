@@ -1,7 +1,7 @@
 (ns harja.views.hallinta
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.domain.roolit :as roolit]
             [harja.views.toimenpidekoodit :as tp]
