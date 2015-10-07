@@ -29,3 +29,7 @@ DELETE FROM hoitoluokka
 -- name: paivita-paloiteltu-tieverkko!
 -- päivittää materialisoidun näkymän
 REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA
+
+-- name: tierekisteriosoite-viivaksi
+-- hakee geometrian annetulle tierekisteriosoitteelle
+SELECT * FROM tierekisteriosoitteelle_viiva(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER), CAST(:losa AS INTEGER), CAST(:loppuet AS INTEGER))

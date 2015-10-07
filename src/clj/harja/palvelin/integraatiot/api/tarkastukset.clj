@@ -20,8 +20,11 @@
         ulkoinen-id (-> tarkastus :tunniste :id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
+    (log/debug "tyyppi: " tyyppi)
     (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id havainto-id :havainto} (first (tarkastukset/hae-tarkastus-ulkoisella-idlla db ulkoinen-id (:id kayttaja)))
+      (let [{tarkastus-id :id havainto-id :havainto}
+            (first
+              (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
 
         (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))

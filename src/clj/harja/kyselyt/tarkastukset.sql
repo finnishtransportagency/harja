@@ -100,6 +100,10 @@ UPDATE soratiemittaus
        sivukaltevuus = :sivukaltevuus
  WHERE tarkastus = :tarkastus
 
--- name: hae-tarkastus-ulkoisella-idlla
+-- name: hae-tarkastus-ulkoisella-idlla-ja-tyypilla
 -- Hakee tarkastuksen ja sen havainnon id:t ulkoisella id:lla ja luojalla.
-SELECT id,havainto FROM tarkastus WHERE ulkoinen_id = :id AND luoja = :luoja
+SELECT id, havainto
+  FROM tarkastus
+ WHERE ulkoinen_id = :id
+   AND tyyppi = :tyyppi :: tarkastustyyppi
+   AND luoja = :luoja

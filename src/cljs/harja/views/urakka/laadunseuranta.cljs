@@ -8,25 +8,30 @@
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.komponentti :as komp]
-            ))
+            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
 
 
 
 
 (defn laadunseuranta []
-  (komp/luo
-   (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
-   (fn []
-     [bs/tabs
-      {:style :tabs :classes "tabs-taso2" :active urakka-laadunseuranta/valittu-valilehti}
-   
-      "Tarkastukset" :tarkastukset
-      [tarkastukset/tarkastukset]
+  (let [ur @nav/valittu-urakka]
+    (komp/luo
+      (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
+      (fn []
+        [bs/tabs
+         {:style :tabs :classes "tabs-taso2" :active urakka-laadunseuranta/valittu-valilehti}
 
-      "Havainnot" :havainnot 
-      [havainnot/havainnot]
+         "Tarkastukset" :tarkastukset
+         [tarkastukset/tarkastukset]
 
-      "Sanktiot" :sanktiot
-      [sanktiot/sanktiot]
-      ])))
+         "Havainnot" :havainnot
+         [havainnot/havainnot]
+
+         "Sanktiot" :sanktiot
+         [sanktiot/sanktiot]
+
+         "Siltatarkastukset" :siltatarkastukset
+         (when (= :hoito (:tyyppi ur))
+           ^{:key "siltatarkastukset"}
+           [siltatarkastukset/siltatarkastukset])]))))
 
