@@ -13,7 +13,7 @@
   (str/join "" ["AK" numero]))
 
 (defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
-  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvmvuosi))
+  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm vuosi))
         loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))]
     [:segment
      {:value  vuosittainen-summa
