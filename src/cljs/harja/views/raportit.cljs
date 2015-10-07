@@ -5,24 +5,25 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
             [harja.views.urakat :as urakat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko] :as yleiset]
             [harja.fmt :as fmt]
             [harja.tiedot.raportit :as raportit]
             [harja.ui.grid :as grid]
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
-            [cljs-time.core :as t]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
-            [harja.ui.raportti :as raportti])
+            [harja.ui.raportti :as raportti]
+            [harja.transit :as t])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -238,14 +239,18 @@
 
    ]
 
-(defn raporttinakyma [tyyppi]
-  (if (= :testiraportti (:nimi tyyppi))
-    (raportti/muodosta-html ((:render tyyppi)))
-    ((:render tyyppi))))
+;; Raportin parametrit, parametrityypin lisäämiseksi luo
+;; defmethodit parametrin tyypin mukaan
 
-(defmulti raportin-parametri :tyyppi)
+(defmulti raportin-parametri
+  "Muodosta UI-komponentti raportin parametristä. Komponentin tulee olla täysin
+itsenäinen ja sisällettävä otsikon ja muun tarpeellisen."
+  :tyyppi)
 
-(defmulti raportin-parametri-arvo :tyyppi)
+(defmulti raportin-parametri-arvo
+  "Hae raportin parametrin arvo. Palauttaa mäppinä raportin parametrin arvon (tai arvot).
+Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
+  :tyyppi)
 
 (defmethod raportin-parametri "hoitokausi" [p]
   [valinnat/urakan-hoitokausi @nav/valittu-urakka])
@@ -268,8 +273,10 @@
 
 (defmethod raportin-parametri-arvo "aikavali" [p]
   (let [[alku loppu] @u/valittu-aikavali]
-    {:alkupvm alku
-     :loppupvm loppu}))
+    (if (and alku loppu)
+      {:alkupvm alku
+       :loppupvm loppu}
+      {:virhe "Aseta alku ja loppupäivä"})))
 
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
@@ -282,24 +289,57 @@
                               (or (nil? k)
                                   (= k konteksti)))
                            (:parametrit raporttityyppi))
-        arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))]
+        arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))
+        arvot-nyt (arvot)]
     [:span
-     [:ul
-      (for [p parametrit]
-        [:ul [raportin-parametri p]])]
-     [napit/palvelinkutsu-nappi "Suorita"
-      #(go (let [raportti (<! (case konteksti
-                                "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                               (arvot))
-                                "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                                             (:nimi raporttityyppi) (arvot))
-                                "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                           (:nimi raporttityyppi)
-                                                                           (arvot))))]
-             (if-not (k/virhe? raportti)
-               (reset! suoritettu-raportti raportti)
-               raportti)))
-      {:disabled (contains? arvot :virhe)}]
+     
+     (map-indexed (fn [i cols]
+                    ^{:key i}
+                    [:div.row cols])
+                  (partition 3 3 (repeat nil)
+                             (concat (for [p parametrit]
+                                       ^{:key (:nimi p)}
+                                       [:div.col-md-4 [raportin-parametri p]])
+                                     )))
+
+     [:div.row
+      [:div.col-md-4
+       [napit/palvelinkutsu-nappi "Suorita"
+        #(go (reset! suoritettu-raportti :ladataan)
+             (let [raportti (<! (case konteksti
+                                  "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                                 (arvot))
+                                  "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                                               (:nimi raporttityyppi) (arvot))
+                                  "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
+                                                                             (:nimi raporttityyppi)
+                                                                             (arvot))))]
+               (if-not (k/virhe? raportti)
+                 (reset! suoritettu-raportti raportti)
+                 (do
+                   (reset! suoritettu-raportti nil)
+                   raportti))))
+        {:disabled (contains? arvot-nyt :virhe)}]]
+      [:div.col-md-2.col-md-offset-6.raportin-pdf
+       [:form {:target "_blank" :method "POST" :id "raporttipdf"
+               :action (k/pdf-url :raportointi)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value ""}]
+        [:button.nappi-ensisijainen.pull-right
+         {:type "submit"
+          :on-click #(do (let [input (-> js/document
+                                         (.getElementById "raporttipdf")
+                                         (aget "parametrit"))
+                               parametrit (case konteksti
+                                            "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) (arvot))
+                                            "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) (arvot))
+                                            "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) (arvot)))]
+                           (set! (.-value input)
+                                 (t/clj->transit parametrit)))
+                         true)}
+         (ikonit/print) " Tallenna PDF"]]]]
+
+     
      ]))
 
 
@@ -346,8 +386,12 @@
                                                       ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
     [:span
      [raporttivalinnat]
-     (when-let [r @suoritettu-raportti]
-       [raportti/muodosta-html r])]))
+     (let [r @suoritettu-raportti]
+       (cond (= :ladataan r)
+             [yleiset/ajax-loader "Raporttia suoritetaan..."]
+
+             (not (nil? r))
+             [raportti/muodosta-html r]))]))
 
 (defn raportit []
   (komp/luo

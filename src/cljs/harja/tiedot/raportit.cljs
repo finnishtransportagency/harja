@@ -26,22 +26,28 @@
   (k/post! :suorita-raportti
            (suorita-raportti-urakka-parametrit urakka-id nimi parametrit)))
 
+(defn suorita-raportti-koko-maa-parametrit [nimi parametrit]
+  {:nimi nimi
+   :konteksti "koko maa"
+   :parametrit parametrit})
+
 (defn suorita-raportti-koko-maa
   "Suorittaa raportin koko maan kontekstissa."
   [nimi parametrit]
   (k/post! :suorita-raportti
-           {:nimi nimi
-            :konteksti "koko maa"
-            :parametrit parametrit}))
+           (suorita-raportti-koko-maa-parametrit nimi parametrit)))
+
+(defn suorita-raportti-hallintayksikko-parametrit [hallintayksikko-id nimi parametrit]
+  {:nimi nimi
+   :konteksti "hallintayksikko"
+   :hallintayksikko-id hallintayksikko-id
+   :parametrit parametrit})
 
 (defn suorita-raportti-hallintayksikko
   "Suorittaa raportin hallintayksikon kontekstisssa."
   [hallintayksikko-id nimi parametrit]
   (k/post! :suorita-raportti
-           {:nimi nimi
-            :konteksti "hallintayksikko"
-            :hallintayksikko-id hallintayksikko-id
-            :parametrit parametrit}))
+           (suorita-raportti-hallintayksikko-parametrit hallintayksikko-id nimi parametrit)))
 
 (defn suorita-raportti
   "Suorittaa raportin valmiiksi tehdyllä parametri payloadilla.
