@@ -2,31 +2,30 @@
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
   (:require [reagent.core :refer [atom] :as reagent]
             [bootstrap :as bs]
-            [harja.asiakas.tapahtumat :as t]
 
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
+            [harja.views.urakka.laskutus :as laskutus]
             [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
-            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]
-            [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
-            [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
-            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
+            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn urakka
   "Urakkanäkymä"
-  [ur]
-  (let [hae-urakan-tyot (fn [ur]
+  []
+  (let [ur @nav/valittu-urakka
+        hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot
                                       (s/prosessoi-tyorivit ur
@@ -44,13 +43,15 @@
 
      "Suunnittelu"
      :suunnittelu
-     ^{:key "suunnittelu"}
-     [suunnittelu/suunnittelu ur]
+     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+       ^{:key "suunnittelu"}
+       [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     ^{:key "toteumat"}
-     [toteumat/toteumat ur]
+     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+       ^{:key "toteumat"}
+       [toteumat/toteumat ur])
 
      "Kohdeluettelo"
      :kohdeluettelo
@@ -69,29 +70,19 @@
      ^{:key "laadunseuranta"}
      [laadunseuranta/laadunseuranta]
 
-     "Siltatarkastukset"
-     :siltatarkastukset
-     (when (= :hoito (:tyyppi ur))
-       ^{:key "siltatarkastukset"}
-       [siltatarkastukset/siltatarkastukset ur])
-
      "Välitavoitteet"
      :valitavoitteet
      (when-not (= :hoito (:tyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
-     "Turvallisuuspoikkeamat"
+     "Turvallisuus"
      :turvallisuuspoikkeamat
-     ^{:key "turvallisuuspoikkeamat"}
-     [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
+     (when (= :hoito (:tyyppi ur))
+       ^{:key "turvallisuuspoikkeamat"}
+       [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
-     "Laskutusyhteenveto"
-     :laskutusyhteenveto
-     ^{:key "laskutusyhteenveto"}
-     [laskutusyhteenveto/laskutusyhteenveto]
-
-     "Maksuerät"
-     :maksuerat
-     ^{:key "maksuerat"}
-     [maksuerat/maksuerat-listaus ur]]))
+     "Laskutus"
+     :laskutus
+     ^{:key "laskutus"}
+     [laskutus/laskutus]]))

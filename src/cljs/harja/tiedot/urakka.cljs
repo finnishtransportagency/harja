@@ -193,6 +193,7 @@
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
+(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)]

@@ -78,7 +78,7 @@
         true)))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
-  (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
+  (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
         (if-not (k/virhe? res)
           (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
           true))))

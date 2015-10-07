@@ -70,14 +70,14 @@
     organisaatio))
 
 (defn hae-urakan-sopimustyyppi [db user urakka-id]
-  (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id))))
+  (keyword (:sopimustyyppi (first (q/hae-urakan-sopimustyyppi db urakka-id)))))
 
 (defn hae-urakan-tyyppi [db user urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
-  (q/tallenna-urakan-sopimustyyppi! db sopimustyyppi urakka-id)
+  (q/tallenna-urakan-sopimustyyppi! db (name sopimustyyppi) urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
 (defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]
