@@ -156,6 +156,7 @@
 
     (fn []
       [:span
+       [:h3 "Turvallisuuspoikkeamat"]
        [kartta/kartan-paikka]
        (if @tiedot/valittu-turvallisuuspoikkeama
          [turvallisuuspoikkeaman-tiedot]
