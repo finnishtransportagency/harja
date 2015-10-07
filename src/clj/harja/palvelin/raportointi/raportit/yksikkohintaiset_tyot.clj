@@ -10,7 +10,7 @@
 ;; Yhteensä					72 000,00 €	3 000,00 €
 
 
-(defn suorita [db parametrit]
+(defn suorita [db user parametrit]
   ;; Placeholder tällä hetkellä
   (let [naytettavat-rivit []]
     [:raportti {:nimi "Yksikköhintaisten töiden raportti"}

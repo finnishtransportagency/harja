@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
             [harja.views.urakat :as urakat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
@@ -243,20 +244,56 @@
 
 (defmulti raportin-parametri :tyyppi)
 
+(defmulti raportin-parametri-arvo :tyyppi)
+
 (defmethod raportin-parametri "hoitokausi" [p]
   [valinnat/urakan-hoitokausi @nav/valittu-urakka])
+
+(defmethod raportin-parametri-arvo "hoitokausi" [p]
+  (let [[alku loppu] @u/valittu-hoitokausi]
+    {:hk-alku alku
+     :hk-loppu loppu}))
+
+(defmethod raportin-parametri "hoitokauden-kuukausi" [p]
+  [valinnat/hoitokauden-kuukausi])
+
+(defmethod raportin-parametri-arvo "hoitokauden-kuukausi" [p]
+  (let [[alku loppu] @u/valittu-hoitokauden-kuukausi]
+    {:aikavali-alkupvm alku
+     :aikavali-loppupvm loppu}))
+
+(defmethod raportin-parametri "aikavali" [p]
+  [valinnat/aikavali @nav/valittu-urakka])
+
+(defmethod raportin-parametri-arvo "aikavali" [p]
+  (let [[alku loppu] @u/valittu-aikavali]
+    {:alkupvm alku
+     :loppupvm loppu}))
 
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
 
-(defn raportin-parametrit [raporttityyppi konteksti]
-  [:span
-   [:ul
-    (for [p (filter #(let [k (:konteksti %)]
-                       (or (nil? k)
-                           (= k konteksti)))
-                    (:parametrit raporttityyppi))]
-      [:ul [raportin-parametri p]])]])
+(defmethod raportin-parametri-arvo :default [p]
+  {:virhe (str "Ei arvoa parametrilla: " (:nimi p))})
+
+(defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
+  (let [parametrit (filter #(let [k (:konteksti %)]
+                              (or (nil? k)
+                                  (= k konteksti)))
+                           (:parametrit raporttityyppi))
+        arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))]
+    [:span
+     [:ul
+      (for [p parametrit]
+        [:ul [raportin-parametri p]])]
+     [napit/palvelinkutsu-nappi "Suorita"
+      #(go (reset! suoritettu-raportti
+                   ;; FIXME: kontekstin mukaan
+                   (<! (raportit/suorita-raportti-urakka (:id v-ur)
+                                                         (:nimi raporttityyppi)
+                                                         (arvot)))))
+      {:disabled (contains? arvot :virhe)}]
+     ]))
 
 
 (defn raporttivalinnat []
@@ -267,7 +304,10 @@
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
-                        :default "koko maa")]
+                        :default "koko maa")
+            
+                               
+            ]
         [:div.raporttivalinnat
          [:div.raportin-tyyppi
           [:div.label-ja-alasveto
@@ -280,7 +320,9 @@
             @mahdolliset-raporttityypit]]]
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
-            [raportin-parametrit @valittu-raporttityyppi konteksti]])]))))
+            [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]
+            
+            ])]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [v-ur @nav/valittu-urakka
@@ -297,8 +339,8 @@
                                                       ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
     [:span
      [raporttivalinnat]
-     (when @raportti-valmis-naytettavaksi?
-       [raporttinakyma @valittu-raporttityyppi])]))
+     (when-let [r @suoritettu-raportti]
+       [raportti/muodosta-html r])]))
 
 (defn raportit []
   (komp/luo

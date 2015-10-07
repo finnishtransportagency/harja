@@ -59,10 +59,6 @@
                                     materiaalitoteumat))]
     (mapv (fn [materiaali]
             {:otsikko     (:materiaali_nimi materiaali)
-             :nimi        (keyword (:materiaali_nimi materiaali))
-             :muokattava? (constantly false)
-             :tyyppi
-                          :string
              :leveys      "33%"})
           materiaalit)))
 
@@ -95,7 +91,7 @@
                                                     (filter
                                                       #(= (:materiaali_nimi %) toka)
                                                       materiaalitoteumat)))))
-            {:id -1 :urakka_nimi "Yhteensä" :yhteenveto true}
+            ["Yhteensä" :yhteenveto true}
             materiaalinimet)))
 
 
@@ -118,11 +114,32 @@
 
                    :default
                    ;; Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
-                   nil)]
-
+                   nil)
+        materiaalit (distinct (map :materiaali_nimi toteumat))
+        toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
     [:raportti {:nimi "Materiaaliraportti"}
-     [:taulukko {:otsikko "FIXME: Urakan nimi alkuvuosi-loppuvuosi - Materiaaliraportti hkalku - hkloppu"}
-      (muodosta-materiaalisarakkeet toteumat)
-      (concat (muodosta-materiaaliraportin-rivit toteumat)
-              (muodosta-materiaaliraportin-yhteensa-rivi toteumat))]]))
+     [:taulukko {:otsikko "FIXME: Urakan nimi alkuvuosi-loppuvuosi - Materiaaliraportti hkalku - hkloppu"
+                 :viimeinen-rivi-yhteenveto? true}
+      (into []
+            (concat 
+             [{:otsikko "Urakka"}]
+             (map (fn [mat]
+                    {:otsikko mat}) materiaalit)))
+      (into
+       []
+       (concat 
+        (for [[urakka toteumat] toteumat-urakan-mukaan]
+          (into []
+                (concat [urakka]
+                        (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                          (for [m materiaalit]
+                            (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+        [(concat ["Yhteensä"]
+                 (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                   (for [m materiaalit]
+                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))
+                      
+        
+      ]]))
+
     

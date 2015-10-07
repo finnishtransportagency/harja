@@ -14,6 +14,7 @@
   (k/get! :hae-raportit))
 
 (defn suorita-raportti-urakka-parametrit [urakka-id nimi parametrit]
+  (log "SUORITA RAPORTTI PARAMETREILLA: " (pr-str parametrit))
   {:nimi nimi
    :konteksti :urakka
    :urakka-id urakka-id
