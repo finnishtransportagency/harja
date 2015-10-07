@@ -5,8 +5,11 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
             [taoensso.timbre :as log]
+            [harja.kyselyt.raportit :as raportit-q]
             ;; vaaditaan built in raportit
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto]))
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
+            [harja.palvelin.raportointi.raportit.materiaali]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -40,6 +43,7 @@
          (log/debug "SUORITETTU RAPSA: " (pr-str rapos))
          (pdf/muodosta-pdf
           rapos))))
+
     this)
 
   (stop [this]
@@ -47,8 +51,17 @@
 
   
   RaportointiMoottori
-  (hae-raportit [this] @raportit)
-  (hae-raportti [this nimi] (get @raportit nimi))
+  (hae-raportit [this]
+    (or @raportit
+        (try
+          (let [r (raportit-q/raportit (:db this))]
+            (reset! raportit r)
+            r)
+          (catch Exception e
+            (log/warn e "Raporttien hakemisessa virhe!")
+            {}))))
+
+  (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
     (log/debug "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
@@ -60,42 +73,43 @@
 
 
 (defn luo-raportointi []
-  ;; FIXME: nämä ladataan tietokannasta
-  (->Raportointi (atom {:laskutusyhteenveto {:otsikko "Laskutusyhteenveto"
-                                             :konteksti #{:urakka}
-                                             :parametrit [{:otsikko "Hoitokausi ":nimi :hoitokausi
-                                                           :tyyppi :valinta
-                                                           :valinnat :valitun-urakan-hoitokaudet}
-                                                          {:otsikko  "Kuukausi" :nimi :kuukausi
-                                                           :tyyppi  :valinta
-                                                           :valinnat :valitun-aikavalin-kuukaudet}
-                                                          ]
-                                             :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita}
-                        :testiraportti {:otsikko "Testiraportti"
-                                        :konteksti #{:urakka :koko-maa :hallintayksikko}
-                                        :parametrit []
-                                        :suorita (fn [tiedot]
-                                                   [:raportti {:nimi "Testiraportti"
-                                                               :tietoja [["Urakka" "Rymättylän päällystys"]
-                                                                         ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
-                                                    [:otsikko "Tämä on hieno raportti"]
-                                                    [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
-                                                    [:taulukko [{:otsikko "Nimi" :leveys "50%"}
-                                                                {:otsikko "Kappaleita" :leveys "15%"}
-                                                                {:otsikko "Hinta" :leveys "15%"}
-                                                                {:otsikko "Yhteensä" :leveys "20%"}]
+  (->Raportointi (atom nil)))
 
-                                                     [["Fine leather jacket" 2 199 (* 2 199)]
-                                                      ["Log from blammo" 1 39 39]
-                                                      ["Suristin" 10 25 250]]]
+#_{:laskutusyhteenveto {:otsikko "Laskutusyhteenveto"
+                        :konteksti #{:urakka}
+                        :parametrit [{:otsikko "Hoitokausi ":nimi :hoitokausi
+                                      :tyyppi :valinta
+                                      :valinnat :valitun-urakan-hoitokaudet}
+                                     {:otsikko  "Kuukausi" :nimi :kuukausi
+                                      :tyyppi  :valinta
+                                      :valinnat :valitun-aikavalin-kuukaudet}
+                                     ]
+                        :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita}
+   :testiraportti {:otsikko "Testiraportti"
+                   :konteksti #{:urakka :koko-maa :hallintayksikko}
+                   :parametrit []
+                   :suorita (fn [tiedot]
+                              [:raportti {:nimi "Testiraportti"
+                                          :tietoja [["Urakka" "Rymättylän päällystys"]
+                                                    ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
+                               [:otsikko "Tämä on hieno raportti"]
+                               [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
+                               [:taulukko [{:otsikko "Nimi" :leveys "50%"}
+                                           {:otsikko "Kappaleita" :leveys "15%"}
+                                           {:otsikko "Hinta" :leveys "15%"}
+                                           {:otsikko "Yhteensä" :leveys "20%"}]
 
-                                                    [:otsikko "Tähän taas väliotsikko"]
-                                                    [:pylvaat {:otsikko "Kvartaalien luvut"}
-                                                     [["Q1" 123]
-                                                      ["Q2" 1500]
-                                                      ["Q3" 1000]
-                                                      ["Q4" 777]]]
-                                                    [:yhteenveto [["PDF-generointi" "toimii"]
-                                                                  ["XSL-FO" "hyvin"]]]])}
+                                [["Fine leather jacket" 2 199 (* 2 199)]
+                                 ["Log from blammo" 1 39 39]
+                                 ["Suristin" 10 25 250]]]
 
-                        })))
+                               [:otsikko "Tähän taas väliotsikko"]
+                               [:pylvaat {:otsikko "Kvartaalien luvut"}
+                                [["Q1" 123]
+                                 ["Q2" 1500]
+                                 ["Q3" 1000]
+                                 ["Q4" 777]]]
+                               [:yhteenveto [["PDF-generointi" "toimii"]
+                                             ["XSL-FO" "hyvin"]]]])}
+
+   }

@@ -5,15 +5,47 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc])
-  (:use [slingshot.slingshot :only [throw+]]))
+            [harja.kyselyt.tieverkko :as tieverkko]
+            [clojure.java.jdbc :as jdbc]
+            [harja.geo :as geo])
+  (:use [slingshot.slingshot :only [throw+]])
+  (:import (org.postgresql.util PSQLException)))
+
+(defn- yhdista-viivat [viivat]
+  {:type  :multiline
+   :lines (mapcat
+            (fn [viiva]
+              (if (= :line (:type viiva))
+                (list viiva)
+                (:lines viiva)))
+            viivat)})
+
+(defn- piste [pistepari]
+  [(get-in pistepari [:reittipiste :koordinaatit :x])
+   (get-in pistepari [:reittipiste :koordinaatit :y])])
+
+(defn- hae-reitti [db [[x1 y1] [x2 y2]]]
+  (try
+    (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
+    (catch PSQLException e
+      (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " ) ei ole yhteistä tietä: " e)
+      {:type :line :points [[x1 y1] [x2 y2]]})))
+
+(defn luo-reitti-geometria [db reitti]
+  (->> reitti
+       (sort-by (comp :aika :reittipiste))
+       (map piste)
+       (partition 2 1)
+       (map #(hae-reitti db %))
+       yhdista-viivat
+       geo/clj->pg geo/geometry))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}]
@@ -65,18 +97,19 @@
 
 (defn tallenna-toteuma-ja-reitti [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-                            (let [toteuma (get-in data [:reittitoteuma :toteuma])
-                                  reitti (get-in data [:reittitoteuma :reitti])
-                                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
-                              (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-                              (log/debug "Aloitetaan toteuman tehtävien tallennus")
-                              (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
-                              (log/debug "Aloitetaan toteuman materiaalien tallennus")
-                              (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
-                              (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-                              (poista-toteuman-reitti transaktio toteuma-id)
-                              (log/debug "Aloitetaan reitin tallennus")
-                              (luo-reitti transaktio reitti toteuma-id))))
+    (let [reitti (get-in data [:reittitoteuma :reitti])
+          toteuma (get-in data [:reittitoteuma :toteuma])
+          toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
+      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+      (log/debug "Aloitetaan toteuman tehtävien tallennus")
+      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
+      (log/debug "Aloitetaan toteuman materiaalien tallennus")
+      (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
+      (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
+      (poista-toteuman-reitti transaktio toteuma-id)
+      (log/debug "Aloitetaan reitin tallennus")
+      (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -96,8 +129,8 @@
                          integraatioloki
                          :lisaa-reittitoteuma
                          request
-                         skeemat/+reittitoteuman-kirjaus+
-                         skeemat/+kirjausvastaus+
+                         json-skeemat/+reittitoteuman-kirjaus+
+                         json-skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

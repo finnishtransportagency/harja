@@ -23,6 +23,9 @@
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
+
+  (println "++++++++++++++ reitti: " (:reitti toteuma))
+
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
          (pvm-string->java-sql-date (:alkanut toteuma))
@@ -32,6 +35,7 @@
          (get-in toteuma [:suorittaja :ytunnus])
          ""
          (:toteumatyyppi toteuma)
+         (:reitti toteuma)
          (get-in toteuma [:tunniste :id])
          urakka-id)))
 
@@ -48,7 +52,8 @@
          (get-in toteuma [:suorittaja :nimi])
          (get-in toteuma [:suorittaja :ytunnus])
          ""
-         (get-in toteuma [:tunniste :id]))))
+         (get-in toteuma [:tunniste :id])
+         (:reitti toteuma))))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))

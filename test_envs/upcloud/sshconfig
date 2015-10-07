@@ -17,3 +17,5 @@ IdentityFile ~/.ssh/harja_upcloud_rsa
 Host 80.69.173.64
 IdentityFile ~/.ssh/harja_upcloud_rsa
 
+Host 185.20.138.52
+IdentityFile ~/.ssh/harja_upcloud_rsa

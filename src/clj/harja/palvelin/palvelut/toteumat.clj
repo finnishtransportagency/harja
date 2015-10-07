@@ -62,7 +62,7 @@
   [(:urakka-id toteuma) (:sopimus-id toteuma)
    (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
    (name (:tyyppi toteuma)) (:id kayttaja)
-   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil])
+   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil nil])
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
@@ -89,8 +89,8 @@
                       (q/hae-urakan-toteuma db urakka-id toteuma-id))
         kasitelty-toteuma (first
                             (konv/sarakkeet-vektoriin
-                            toteuma
-                            {:reittipiste :reittipisteet}))]
+                              toteuma
+                              {:reittipiste :reittipisteet}))]
     (log/debug "Käsitelty toteuma: " (pr-str kasitelty-toteuma))
     kasitelty-toteuma))
 
@@ -210,7 +210,8 @@
 
 (defn paivita-toteuma [c user toteuma]
   (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:toteuma-id toteuma) (:urakka-id toteuma))
+                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
+                      (:toteuma-id toteuma) (:urakka-id toteuma))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 
@@ -352,7 +353,7 @@
       (apply q/poista-toteuman-tehtavat! params)
       (apply q/poista-toteuma! params))
     (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma)
+                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
                             (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))
@@ -425,7 +426,8 @@
                       (do
                         (log/debug "Pävitetään toteumaa " (:id t))
                         (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
-                                            (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) (:id t) (:urakka t))
+                                            (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) nil
+                                            (:id t) (:urakka t))
                         t))
                     ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                     ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
@@ -437,6 +439,7 @@
                         (:suorittajan-nimi t)
                         (:suorittajan-ytunnus t)
                         (:lisatieto t)
+                        nil
                         nil)))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 

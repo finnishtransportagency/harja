@@ -12,6 +12,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
+(defonce erilliskustannukset-nakymassa? (atom false))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 

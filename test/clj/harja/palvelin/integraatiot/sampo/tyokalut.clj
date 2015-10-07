@@ -228,6 +228,13 @@
                           FROM toimenpideinstanssi
                           WHERE sampoid = 'TESTITOIMENPIDE'));"))
 
+(defn hae-maksuerien-nimet []
+  (q "SELECT nimi
+      FROM maksuera
+      WHERE toimenpideinstanssi = (
+        SELECT id
+        FROM toimenpideinstanssi
+        WHERE sampoid = 'TESTITOIMENPIDE');"))
 
 (defn tuo-organisaatio []
   (let [organisaatiot (:organisaatiot (sampo-sanoma/lue-viesti +testiorganisaatio-sanoma+))]

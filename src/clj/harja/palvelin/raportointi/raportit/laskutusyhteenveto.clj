@@ -27,8 +27,8 @@
 (defn- taulukko [otsikko otsikko-jos-tyhja
                  laskutettu-teksti laskutettu-kentta
                  laskutetaan-teksti laskutetaan-kentta tiedot]
-  (let [laskutettu-yht (reduce + (map laskutettu-kentta tiedot))
-        laskutetaan-yht (reduce + (map laskutetaan-kentta tiedot))
+  (let [laskutettu-yht (reduce + (keep laskutettu-kentta tiedot))
+        laskutetaan-yht (reduce + (keep laskutetaan-kentta tiedot))
         yhteenveto ["Toimenpiteet yhteensä"
                     (fmt/euro laskutettu-yht)
                     (fmt/euro laskutetaan-yht)
@@ -45,8 +45,8 @@
                    [(:nimi rivi)
                     (fmt/euro-opt (rivi laskutettu-kentta))
                     (fmt/euro-opt (rivi laskutetaan-kentta))
-                    (fmt/euro-opt (+ (rivi laskutettu-kentta)
-                                     (rivi laskutetaan-kentta)))]) tiedot)
+                    (fmt/euro-opt (+ (or (rivi laskutettu-kentta) 0)
+                                     (or (rivi laskutetaan-kentta) 0)))]) tiedot)
             [yhteenveto]))]))
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
