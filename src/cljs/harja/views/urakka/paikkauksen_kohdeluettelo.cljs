@@ -62,7 +62,7 @@
     (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paikkauskohteet)
     (fn [ur]
-      [bs/tabs {:active kohdeluettelo-valilehti}
+      [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
 
        "Paikkauskohteet"
        :paikkauskohteet

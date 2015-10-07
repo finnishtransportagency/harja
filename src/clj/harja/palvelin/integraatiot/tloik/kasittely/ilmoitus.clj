@@ -37,7 +37,7 @@
     (:puhelinnumero lahettaja)
     (:sahkoposti lahettaja)
     id)
-  (ilmoitukset/aseta-ilmoituksen-sijainti! db (:x sijainti) (:y sijainti) (:tienumero sijainti) id))
+  (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
 
 (defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi vapaateksti yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   ;; todo tallenna vastaanottaja, jos on jo välitetty
@@ -62,7 +62,7 @@
                   (:sukunimi lahettaja)
                   (:puhelinnumero lahettaja)
                   (:sahkoposti lahettaja)))]
-    (ilmoitukset/aseta-ilmoituksen-sijainti! db (:x sijainti) (:y sijainti) (:tienumero sijainti) id)))
+    (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)))
 
 (defn kasittele-ilmoitus [db ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))

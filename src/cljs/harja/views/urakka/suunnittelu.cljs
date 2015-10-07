@@ -39,14 +39,8 @@
        (fn [ur]
 
          [:span.suunnittelu
-          (case @u/suunnittelun-valittu-valilehti
-            :kokonaishintaiset [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
-            :yksikkohintaiset [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
-            :muut [valinnat/urakan-sopimus ur]
-            :materiaalit [valinnat/urakan-sopimus-ja-hoitokausi ur])
-
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :active u/suunnittelun-valittu-valilehti}
+          [bs/tabs {:style :tabs :classes "tabs-taso2":active u/suunnittelun-valittu-valilehti}
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset
@@ -61,14 +55,9 @@
            "Muutos- ja lisätyöt"
            :muut
            ^{:key "muut-tyot"}
-           [muut-tyot/muut-tyot]
+           [muut-tyot/muut-tyot ur]
 
            "Materiaalit"
            :materiaalit
            ^{:key "materiaalit"}
-           [mat/materiaalit ur]
-           ]])
-
-       })))
-
-
+           [mat/materiaalit ur]]])})))

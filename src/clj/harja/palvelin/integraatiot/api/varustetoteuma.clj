@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -84,7 +84,7 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma (get-in data [:varustetoteuma :toteuma])
+    (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
           varustetiedot (get-in data [:varustetoteuma :varuste])]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
@@ -115,8 +115,8 @@
                          integraatioloki
                          :lisaa-varustetoteuma
                          request
-                         skeemat/+varustetoteuman-kirjaus+
-                         skeemat/+kirjausvastaus+
+                         json-skeemat/+varustetoteuman-kirjaus+
+                         json-skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db] (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

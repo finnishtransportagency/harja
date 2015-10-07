@@ -25,6 +25,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (:import goog.History))
 
 
+
 (declare kasittele-url! paivita-url valitse-urakka)
 
 ;; Atomi, joka sisältää valitun sivun
@@ -257,12 +258,35 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                   (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
                   @suodatettu-urakkalista)))
 
+
+(def render-lupa-hy? (reaction
+                       (some? @hy/hallintayksikot)))
+
+(def render-lupa-u? (reaction
+                      (or (nil? @valittu-urakka-id) ;; urakkaa ei annettu urlissa, ei estetä latausta
+                          (nil? @valittu-hallintayksikko) ;; hy:tä ei saatu asetettua -> ei estetä latausta
+                          (some? @urakkalista))))
+
+;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
+(def render-lupa? (reaction
+                    (and @render-lupa-hy? @render-lupa-u?)))
+
+
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
-  (let [uri (goog.Uri/parse url)
+  (let [uri (Uri/parse url)
         polku (.getPath uri)
         parametrit (.getQueryData uri)]
+    (if-let [hy (some-> parametrit (.get "hy") js/parseInt)]
+      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
+        (do (reset! valittu-hallintayksikko-id hy)
+            (reset! valittu-urakka-id u))
+        (do
+          (reset! valittu-hallintayksikko-id hy)
+          (reset! valittu-urakka-id nil)
+          (reset! valittu-urakka nil))))
+
     (case polku
       "urakat" (vaihda-sivu! :urakat)
       "raportit" (vaihda-sivu! :raportit)
@@ -270,17 +294,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
       "ilmoitukset" (vaihda-sivu! :ilmoitukset)
       "hallinta" (vaihda-sivu! :hallinta)
       "about" (vaihda-sivu! :about)
-      (vaihda-sivu! :urakat))
-    (when-let [hy (some-> parametrit (.get "hy") js/parseInt)]
-      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
-        (do (reset! valittu-hallintayksikko-id hy)
-            (reset! valittu-urakka-id u)
-            (reset! kartan-kokovalinta :S))
-        (do
-          (reset! valittu-hallintayksikko-id hy)
-          (reset! valittu-urakka-id nil)
-          (reset! valittu-urakka nil)
-          (reset! kartan-kokovalinta :M))))))
+      (vaihda-sivu! :urakat))))
 
 (.setEnabled historia true)
 

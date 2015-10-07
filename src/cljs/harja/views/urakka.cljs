@@ -18,8 +18,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
-            [harja.views.urakka.turvallisuus :as turvallisuus]
-            )
+            [harja.views.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -37,7 +36,7 @@
     @u/valittu-toimenpideinstanssi
     
     (hae-urakan-tyot ur)
-    [bs/tabs {:style :tabs :active u/urakan-valittu-valilehti}
+    [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/urakan-valittu-valilehti}
      "Yleiset"
      :yleiset
      ^{:key "yleiset"}
@@ -82,10 +81,10 @@
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
-     "Turvallisuus"
-     :turvallisuus
-     ^{:key "turvallisuus"}
-     [turvallisuus/turvallisuus ur]
+     "Turvallisuuspoikkeamat"
+     :turvallisuuspoikkeamat
+     ^{:key "turvallisuuspoikkeamat"}
+     [turvallisuuspoikkeamat/turvallisuuspoikkeamat]
 
      "Laskutusyhteenveto"
      :laskutusyhteenveto
@@ -95,5 +94,4 @@
      "Maksuerät"
      :maksuerat
      ^{:key "maksuerat"}
-     [maksuerat/maksuerat-listaus ur]
-     ]))
+     [maksuerat/maksuerat-listaus ur]]))

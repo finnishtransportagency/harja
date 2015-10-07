@@ -20,7 +20,7 @@
 
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
-  (hae-tietueet [this tr tietolajitunniste muutospvm])
+  (hae-tietueet [this tierekisteriosoitevali tietolajitunniste muutospvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste])
   (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])

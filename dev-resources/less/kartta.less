@@ -12,6 +12,10 @@
 }
 
 .ol-control {
+    &.ol-zoom {
+        left: 0;
+        top: 0;
+    }
     > .ol-zoom-in,
     > .ol-zoom-out {
         background-color: @primaari-sininen;
@@ -22,7 +26,6 @@
         }
     }
 }
-
 .ikoni-kartta-ctrl {
     background-color: #FFF;
     display: inline-block;
@@ -55,8 +58,19 @@
 }
 
 #kartta-container {
-    border-bottom: @harjan-taustavari 5px solid;
-    z-index: 1;
+  z-index: 1;
+}
+
+.avaa-kartta-wrap {
+  text-align: center;
+}
+.piilota-kartta {
+  position: relative;
+  right: 0;
+  top: 0;
+  #kartta {
+    display: none;
+  }
 }
 
 .kartta-tyokone-popup {

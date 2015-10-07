@@ -47,7 +47,17 @@ ul#sivut {
 }
 
 div.valilehti {
-  margin-top: 1em;
+  padding: 10px;
+}
+
+.tabs-taso1 + .valilehti {
+  border-right: 1px solid @harmaa7;
+  border-left: 1px solid @harmaa7;
+  border-bottom: 1px solid @harmaa7;
+}
+
+.tabs-taso2 {
+  padding-top: 40px;
 }
 
 .haku-container {
@@ -228,11 +238,6 @@ tr.uusitehtavakoodi td {
   > input {
     text-align: right;
   }
-}
-
-// FIXME: tilapäinen hack, koska kartta meni "muokkaa" napin päälle
-div.valitavoitteet {
-  margin-top: 100px;
 }
 
 .mukana-urakoissa {

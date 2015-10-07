@@ -25,7 +25,7 @@
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  [bs/tabs {:active u/toteumat-valilehti}
+  [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
 
    "Yksikköhintaiset työt" :yksikkohintaiset-tyot
    [yks-hint-tyot/yksikkohintaisten-toteumat]

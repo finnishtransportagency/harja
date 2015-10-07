@@ -19,7 +19,8 @@
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -192,8 +193,9 @@
 
      (fn [ur]
        [:div.kokonaishintaiset-tyot
-
         [kartta/kartan-paikka]
+        [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
+
         ;; Näytetään kustannusten summat ja piirakkadiagrammit
         [kustannukset
          @valitun-hoitokauden-ja-tpin-kustannukset
@@ -228,8 +230,7 @@
                                         @tuleville?
                                         #(swap! tuleville? not)
                                         [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                        (and @tuleville? @varoita-ylikirjoituksesta?)]])
-            }
+                                        (and @tuleville? @varoita-ylikirjoituksesta?)]])}
            
            ;; sarakkeet
            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}

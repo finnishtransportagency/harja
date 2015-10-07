@@ -20,8 +20,8 @@
         loppupvm (formatoi-paivamaara (coerce/to-sql-time (time/last-day-of-the-month vuosi 12)))]
     [:segment
      {:value  vuosittainen-summa
-      :finish alkupvm
-      :start  loppupvm}]))
+      :finish loppupvm
+      :start  alkupvm}]))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
   (let [alkuvuosi (time/year (coerce/from-sql-date alkupvm))

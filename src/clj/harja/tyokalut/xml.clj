@@ -16,10 +16,9 @@
            (java.util Date)))
 
 (defn validoi
-  "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. XSD:n tulee olla tiedosto annettussa XSD-polussa. XML on
-  String, joka on sisältö."
-  [xsd-polku xsd xml]
-  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd ". XML:n sisältö on:" xml)
+  "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
+  [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
+  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
   (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
 
     (.setResourceResolver schema-factory
@@ -28,7 +27,7 @@
                               (let [systemId (if (.startsWith systemId "./")
                                                (.substring systemId 2)
                                                systemId)
-                                    xsd-file (io/resource (str xsd-polku systemId))]
+                                    xsd-file (io/resource (str xsd-skeema-polku systemId))]
                                 (reify LSInput
                                   (getByteStream [_] (io/input-stream xsd-file))
                                   (getPublicId [_] publicId)
@@ -38,9 +37,9 @@
                                   (getEncoding [_] "UTF-8")
                                   (getStringData [_] (slurp xsd-file)))))))
     (try (-> schema-factory
-             (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-polku xsd)))))
+             (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-skeema-polku xsd-skeema-tiedosto)))))
              .newValidator
-             (.validate (StreamSource. (ByteArrayInputStream. (.getBytes xml)))))
+             (.validate (StreamSource. (ByteArrayInputStream. (.getBytes xml-sisalto)))))
          true
          (catch SAXParseException e
            (log/error "Invalidi XML: " e)

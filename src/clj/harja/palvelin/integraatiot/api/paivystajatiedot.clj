@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
@@ -61,7 +61,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (julkaise-reitti
       http :lisaa-paivystajatiedot
       (POST "/api/urakat/:id/paivystajatiedot" request
-        (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request skeemat/+paivystajatietojen-kirjaus+ skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request json-skeemat/+paivystajatietojen-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametit data kayttaja db]
                            (kirjaa-paivystajatiedot db parametit data kayttaja)))))
     this)

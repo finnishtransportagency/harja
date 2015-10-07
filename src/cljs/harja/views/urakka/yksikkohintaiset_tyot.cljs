@@ -20,7 +20,8 @@
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
 
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -165,6 +166,7 @@
       (fn [ur]
         [:div.yksikkohintaiset-tyot
          [kartta/kartan-paikka]
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
          [:div.hoitokauden-kustannukset
           [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
            [:div.col-xs-6.piirakka
