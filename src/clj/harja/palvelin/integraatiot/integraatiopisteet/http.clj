@@ -49,7 +49,7 @@
             (throw+ {:type    :http-kutsu-epaonnistui
                      :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
           (do
-            (let [vastausdata (kasittele-vastaus body)]
+            (let [vastausdata (kasittele-vastaus body headers)]
               (log/debug " Kutsu palveluun: " url " onnistui. ")
               (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti nil tapahtuma-id nil)
               vastausdata))))

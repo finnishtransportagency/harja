@@ -22,7 +22,7 @@
                       otsikot
                       nil
                       kutsudata
-                      (fn [vastaus-xml]
+                      (fn [vastaus-xml _]
                         (kasittele-vastaus vastaus-xml
                                            (str "Tietueen haku epäonnistui (URL: " url ") tunnisteella: " id
                                                 " & tietolajitunnisteella: " tietolaji ".")
@@ -44,7 +44,7 @@
                       otsikot
                       nil
                       kutsudata
-                      (fn [vastaus-xml]
+                      (fn [vastaus-xml _]
                         (kasittele-vastaus vastaus-xml
                                            (str "Tietueen lisäys epäonnistui (URL: " url ")")
                                            :tietueen-lisays-epaonnistui
@@ -64,7 +64,7 @@
                       otsikot
                       nil
                       kutsudata
-                      (fn [vastaus-xml]
+                      (fn [vastaus-xml _]
                         (kasittele-vastaus vastaus-xml
                                            (str "Tietueen päivitys epäonnistui (URL: " url ")")
                                            :tietueen-paivitys-epaonnistui
@@ -84,7 +84,7 @@
                       otsikot
                       nil
                       kutsudata
-                      (fn [vastaus-xml]
+                      (fn [vastaus-xml _]
                         (kasittele-vastaus vastaus-xml
                                            (str "Tietueen poisto epäonnistui (URL: " url ")")
                                            :tietueen-poisto-epaonnistui
