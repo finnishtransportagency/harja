@@ -3,7 +3,8 @@ CREATE TABLE geometriapaivitys (
   id                 SERIAL PRIMARY KEY,
   nimi               VARCHAR(20) NOT NULL,
   url                TEXT,
-  viimeisin_paivitys TIMESTAMP
+  viimeisin_paivitys TIMESTAMP,
+  CONSTRAINT uniikki_geometriapaivitys UNIQUE (nimi)
 );
 
 INSERT INTO geometriapaivitys (nimi) VALUES ('tieverkko');

@@ -17,8 +17,7 @@
 (defn kasittele-tiedoston-muutospaivamaaran-hakuvastaus [otsikko]
   (let [muutospaivamaara (:last-modified otsikko)]
     (if muutospaivamaara
-      (println
-        (time-coerce/to-sql-time (java.util.Date. muutospaivamaara)))
+      (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))
       nil)))
 
 (defn kasittele-tiedoston-hakuvastaus [vastaus]
