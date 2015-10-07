@@ -210,8 +210,8 @@
              ]
     
          [:div.materiaalit
-          [valinnat/urakan-sopimus-ja-hoitokausi ur]
           [kartta/kartan-paikka]
+          [valinnat/urakan-sopimus-ja-hoitokausi ur]
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}
            ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
@@ -235,6 +235,7 @@
              [:button.btn.btn-primary
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
+                              (reset! tuleville? false)
                               (go 
                                 (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
                                                     (vals @pohjavesialue-materiaalit-muokattu))

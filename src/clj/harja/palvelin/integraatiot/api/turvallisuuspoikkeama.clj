@@ -6,7 +6,7 @@
 
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
              [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
@@ -139,7 +139,7 @@
       http :lisaa-turvallisuuspoikkeama
       (POST "/api/urakat/:id/poikkeamat/turvallisuuspoikkeamat" request
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
-                         skeemat/+turvallisuuspoikkeama-kirjaus+ skeemat/+kirjausvastaus+
+                         json-skeemat/+turvallisuuspoikkeama-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db]
                            (kirjaa-turvallisuuspoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)

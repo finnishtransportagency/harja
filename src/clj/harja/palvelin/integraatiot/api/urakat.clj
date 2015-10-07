@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
-            [harja.palvelin.integraatiot.api.tyokalut.skeemat :as skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.urakat :as urakat]
@@ -58,12 +58,12 @@
 (def hakutyypit
   [{:palvelu        :hae-urakka
     :polku          "/api/urakat/:id"
-    :vastaus-skeema skeemat/+urakan-haku-vastaus+
+    :vastaus-skeema json-skeemat/+urakan-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-urakka-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-urakka-ytunnuksella
     :polku          "/api/urakat/haku/:ytunnus"
-    :vastaus-skeema skeemat/+urakoiden-haku-vastaus+
+    :vastaus-skeema json-skeemat/+urakoiden-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
 

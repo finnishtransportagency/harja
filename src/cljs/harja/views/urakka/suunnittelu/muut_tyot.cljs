@@ -58,8 +58,8 @@
     (komp/luo
       (fn []
         [:div.muut-tyot
-         [valinnat/urakan-sopimus ur]
          [kartta/kartan-paikka]
+         [valinnat/urakan-sopimus ur]
          [grid/grid
           {:otsikko      "Muutos- ja lisätyöhinnat"
            :tyhja        (if (nil? @u/muutoshintaiset-tyot)

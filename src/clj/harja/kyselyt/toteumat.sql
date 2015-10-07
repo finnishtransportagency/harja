@@ -47,7 +47,7 @@ SELECT
   rp.id         AS reittipiste_id,
   rp.aika       AS reittipiste_aika,
   rp.sijainti   AS reittipiste_sijainti,
-    (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
+  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
@@ -143,14 +143,14 @@ FROM toteuma_tehtava tt
 -- name: hae-urakan-toteutuneet-tehtavat-kuukausiraportille
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät
 SELECT
-  tt.id as id,
-  tt.maara as toteutunut_maara,
-  t.lisatieto as lisatieto,
+  tt.id                           AS id,
+  tt.maara                        AS toteutunut_maara,
+  t.lisatieto                     AS lisatieto,
   t.alkanut,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS nimi,
-   (SELECT id
+  (SELECT id
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpidekoodi_id
 FROM toteuma_tehtava tt
@@ -312,7 +312,8 @@ SET alkanut           = :alkanut,
   muokkaaja           = :kayttaja,
   suorittajan_nimi    = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
-  lisatieto           = :lisatieto
+  lisatieto           = :lisatieto,
+  reitti              = :reitti
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
@@ -324,7 +325,8 @@ SET alkanut           = :alkanut,
   suorittajan_nimi    = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
-  tyyppi              = :tyyppi :: toteumatyyppi
+  tyyppi              = :tyyppi :: toteumatyyppi,
+  reitti              = :reitti
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 
@@ -333,9 +335,9 @@ WHERE ulkoinen_id = :id AND urakka = :urakka;
 INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
- poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id)
+ poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
-        FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id);
+        FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
 
 -- name: poista-toteuma!
 UPDATE toteuma
@@ -455,9 +457,9 @@ WHERE
 
 -- name: luo-reittipiste<!
 -- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka) 
-  VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y)::point,
-          hoitoluokka_pisteelle(ST_MakePoint(:x,:y)::geometry, 250::INTEGER));
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y) :: POINT,
+        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 250 :: INTEGER));
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
@@ -531,28 +533,29 @@ INSERT INTO varustetoteuma (tunniste,
                             tierekisteriurakkakoodi,
                             luoja,
                             luotu)
-    VALUES (
-    :tunniste,
-    :toteuma,
-    :toimenpide :: varustetoteuma_tyyppi,
-    :tietolaji,
-    :arvot,
-    :karttapvm,
-    :tr_numero,
-    :tr_alkuosa,
-    :tr_loppuosa,
-    :tr_loppuetaisyys,
-    :tr_alkuetaisyys,
-    :tr_puoli,
-    :tr_ajorata,
-    :alkupvm,
-    :loppupvm,
-    :piiri,
-    :kuntoluokka,
-    :tierekisteriurakkakoodi,
-    :luoja,
-    NOW());
+VALUES (
+  :tunniste,
+  :toteuma,
+  :toimenpide :: varustetoteuma_tyyppi,
+  :tietolaji,
+  :arvot,
+  :karttapvm,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :tr_alkuetaisyys,
+  :tr_puoli,
+  :tr_ajorata,
+  :alkupvm,
+  :loppupvm,
+  :piiri,
+  :kuntoluokka,
+  :tierekisteriurakkakoodi,
+  :luoja,
+  NOW());
 
 -- name: poista-toteuman-varustetiedot!
-DELETE FROM varustetoteuma WHERE toteuma = :id;
+DELETE FROM varustetoteuma
+WHERE toteuma = :id;
 
