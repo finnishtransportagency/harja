@@ -3,7 +3,10 @@
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.materiaalit :as materiaalit-q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -62,63 +65,38 @@
              :leveys      "33%"})
           materiaalit)))
 
-(defn muodosta-materiaaliraportin-rivit
-  "Yhdistää saman urakan materiaalitoteumat yhdeksi grid-komponentin riviksi."
-  [materiaalitoteumat]
-  (let [materiaali-nimet (distinct (mapv :materiaali_nimi materiaalitoteumat))
-        urakka-nimet (distinct (mapv :urakka_nimi materiaalitoteumat))
-        urakkarivit (vec (map-indexed (fn [index urakka]
-                                        (reduce ; Lisää urakkaan liittyvien materiaalien kokonaismäärät avain-arvo pareina tälle riville
-                                          (fn [eka toka]
-                                            (assoc eka (keyword (:materiaali_nimi toka)) (:kokonaismaara toka)))
-                                          (reduce (fn [eka toka] ; Lähtöarvona rivi, jossa urakan nimi ja kaikki materiaalit nollana
-                                                    (assoc eka (keyword toka) 0))
-                                                  {:id index :urakka_nimi urakka}
-                                                  materiaali-nimet)
-                                          (filter
-                                            #(= (:urakka_nimi %) urakka)
-                                            materiaalitoteumat)))
-                                      urakka-nimet))]
-    urakkarivit))
-
-(defn muodosta-materiaaliraportin-yhteensa-rivi
-  "Palauttaa rivin, jossa eri materiaalien määrät on summattu yhteen"
-  [materiaalitoteumat]
-  (let [materiaalinimet (distinct (mapv :materiaali_nimi materiaalitoteumat))]
-    (reduce (fn [eka toka]
-              (assoc eka (keyword toka) (reduce + (mapv
-                                                    :kokonaismaara
-                                                    (filter
-                                                      #(= (:materiaali_nimi %) toka)
-                                                      materiaalitoteumat)))))
-            ["Yhteensä" :yhteenveto true}
-            materiaalinimet)))
-
 
 (defn suorita [db user {:keys [urakka-id hk-alku hk-loppu
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+  (let [[konteksti toteumat]
+        (cond
+          (and urakka-id hk-alku hk-loppu)
+          [:urakka (muodosta-materiaaliraportti-urakalle db user {:urakka-id urakka-id
+                                                                           :alkupvm hk-alku
+                                                                           :loppupvm hk-loppu})]
 
-  (let [toteumat (cond
-                   (and urakka-id hk-alku hk-loppu)
-                   (muodosta-materiaaliraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm hk-alku
-                                                                  :loppupvm hk-loppu})
+          (and hallintayksikko-id alkupvm loppupvm)
+          [:hallintayksikko (muodosta-materiaaliraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
+                                                                                    :alkupvm alkupvm
+                                                                                    :loppupvm loppupvm})]
+          
+          (and alkupvm loppupvm)
+          [:koko-maa (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
 
-                   (and hallintayksikko-id alkupvm loppupvm)
-                   (muodosta-materiaaliraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                           :alkupvm alkupvm
-                                                                           :loppupvm loppupvm})
-                   
-                   (and alkupvm loppupvm)
-                   (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})
-
-                   :default
-                   ;; Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
-                   nil)
+          :default
+          ;; Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
+          nil)
+        otsikko (str (case konteksti
+                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                       :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                       :koko-maa "KOKO MAA")
+                     ", Materiaaliraportti "
+                     (pvm/pvm (or hk-alku alkupvm)) " \u2010 " (pvm/pvm (or hk-alku loppupvm)))
         materiaalit (distinct (map :materiaali_nimi toteumat))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
-    [:raportti {:nimi "Materiaaliraportti"}
-     [:taulukko {:otsikko "FIXME: Urakan nimi alkuvuosi-loppuvuosi - Materiaaliraportti hkalku - hkloppu"
+    (println "TOTEUMAT: " toteumat)
+    [:raportti {:nimi otsikko}
+     [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat 
@@ -127,19 +105,19 @@
                     {:otsikko mat}) materiaalit)))
       (into
        []
-       (concat 
+       (concat
+        ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
         (for [[urakka toteumat] toteumat-urakan-mukaan]
           (into []
                 (concat [urakka]
                         (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
                           (for [m materiaalit]
                             (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+
+        ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
         [(concat ["Yhteensä"]
                  (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
                    (for [m materiaalit]
-                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))
-                      
-        
-      ]]))
+                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))]]))
 
     

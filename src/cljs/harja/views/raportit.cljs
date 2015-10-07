@@ -1,6 +1,7 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
   (:require [reagent.core :refer [atom] :as reagent]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
@@ -287,11 +288,17 @@
       (for [p parametrit]
         [:ul [raportin-parametri p]])]
      [napit/palvelinkutsu-nappi "Suorita"
-      #(go (reset! suoritettu-raportti
-                   ;; FIXME: kontekstin mukaan
-                   (<! (raportit/suorita-raportti-urakka (:id v-ur)
-                                                         (:nimi raporttityyppi)
-                                                         (arvot)))))
+      #(go (let [raportti (<! (case konteksti
+                                "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                               (arvot))
+                                "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                                             (:nimi raporttityyppi) (arvot))
+                                "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
+                                                                           (:nimi raporttityyppi)
+                                                                           (arvot))))]
+             (if-not (k/virhe? raportti)
+               (reset! suoritettu-raportti raportti)
+               raportti)))
       {:disabled (contains? arvot :virhe)}]
      ]))
 

@@ -11,3 +11,10 @@ SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
   FROM organisaatio o
  WHERE o.nimi ILIKE :teksti
  LIMIT 11;
+
+-- name: hae-organisaatio
+-- Hakee organisaation perustiedot id:llä
+SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
+  FROM organisaatio o
+ WHERE o.id = :id
+ 

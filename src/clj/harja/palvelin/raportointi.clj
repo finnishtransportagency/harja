@@ -68,8 +68,11 @@
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
          (condp = konteksti
-           :urakka (assoc parametrit
-                          :urakka-id (:urakka-id suorituksen-tiedot))))))))
+           "urakka" (assoc parametrit
+                           :urakka-id (:urakka-id suorituksen-tiedot))
+           "hallintayksikko" (assoc parametrit
+                                    :hallintayksikko-id (:hallintayksikko-id suorituksen-tiedot))
+           "koko maa" parametrit))))))
 
 
 (defn luo-raportointi []

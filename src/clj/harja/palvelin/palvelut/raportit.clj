@@ -102,5 +102,5 @@
     (poista-palvelut http
                      :hae-raportit
                      :yksikkohintaisten-toiden-kuukausiraportti
-                     :suorita-razaportti)
+                     :suorita-raportti)
     this))
