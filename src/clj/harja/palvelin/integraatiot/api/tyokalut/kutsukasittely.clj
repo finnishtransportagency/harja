@@ -8,7 +8,8 @@
             [harja.palvelin.palvelut.kayttajat :as q]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clojure.walk :as walk])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import [java.sql SQLException]))
 
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta        suunta
@@ -151,11 +152,16 @@
               (kasittele-sisainen-kasittelyvirhe virheet))
             (catch #(get % :virheet) poikkeus
               (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
-            (catch Exception e
-              (log/error "Tapahtui poikkeus: " e)
+            (catch SQLException e
+              (log/error "Tapahtui SQL-poikkeus: " e)
               (let [w (java.io.StringWriter.)]
-                (.printStackTrace (.getNextException e) (java.io.PrintWriter. w))
-                (log/error "Sisempi virhe" (.toString w)))
+                (loop [ex (.getNextException e)]
+                  (when (not (nil? ex))
+                    (.printStackTrace ex (java.io.PrintWriter. w))
+                    (recur (.getNextException ex))))
+                (log/error "Sisemmät virheet: " (.toString w))))
+            (catch Exception e
+              (log/error "Tapahtui poikkeus: " e) 
               (kasittele-sisainen-kasittelyvirhe
                 [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                   :viesti (.getMessage e)}]))
