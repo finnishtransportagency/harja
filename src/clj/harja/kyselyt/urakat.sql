@@ -1,9 +1,11 @@
 -- name: hae-kaikki-urakat-aikavalilla
 SELECT
-  u.id, u.nimi, u.tyyppi FROM urakka u
-WHERE loppupvm BETWEEN :alku AND :loppu
-OR alkupvm BETWEEN :alku AND :loppu
-OR loppupvm IS NULL AND :loppu > NOW();
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
+WHERE (loppupvm IS NULL OR loppupvm > :alku)
+      AND alkupvm < :loppu;
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT u.id, u.nimi, u.tyyppi
@@ -180,8 +182,8 @@ SELECT
   u.alkupvm,
   u.loppupvm,
   h.alueurakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  urk.nimi        AS urakoitsija_nimi,
+  urk.ytunnus     AS urakoitsija_ytunnus
 FROM urakka u
   JOIN hanke h ON h.id = u.hanke
   JOIN organisaatio urk ON u.urakoitsija = urk.id
