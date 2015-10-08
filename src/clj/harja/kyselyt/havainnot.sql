@@ -1,6 +1,6 @@
 -- name: hae-havainnot-tilannekuvaan
 -- Hakee havainnot urakasta aikavälillä. Muuten voitaisiin käyttää esim hae-kaikki-havainnot, mutta siinä
--- filtteröidään pois suorasanktiona luodut havainnot. Historiakuvassa näin ei haluta tehdä.
+-- filtteröidään pois suorasanktiona luodut havainnot. Tilannekuvassa näin ei haluta tehdä.
 SELECT
   h.id,
   h.aika,

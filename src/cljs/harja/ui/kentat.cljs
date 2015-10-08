@@ -287,7 +287,7 @@
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
     [:span
-     ;; Esimerkiksi historiakuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
+     ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
      ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
      ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
      (when tyhjenna-kaikki?

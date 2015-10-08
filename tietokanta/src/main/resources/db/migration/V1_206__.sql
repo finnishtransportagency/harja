@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 CREATE OR REPLACE FUNCTION tallenna_tai_paivita_tyokonehavainto(
   jarjestelma_ character varying,
   organisaationimi_ character varying,

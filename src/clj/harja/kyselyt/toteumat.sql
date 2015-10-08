@@ -241,8 +241,8 @@ FROM toteuma_tehtava tt
                           AND t.poistettu IS NOT TRUE
   JOIN kayttaja k ON k.id = t.luoja;
 
--- name: hae-toteumat-historiakuvaan
--- Hakee toteumat historiakuvaan toimenpidekoodin perusteella.
+-- name: hae-toteumat-tilannekuvaan
+-- Hakee toteumat tilannekuvaan toimenpidekoodin perusteella.
 -- Hakua saatetaan suodattaa myös hallintayksikön, urakan, tai päivämäärän perusteella
 SELECT
   t.id,
