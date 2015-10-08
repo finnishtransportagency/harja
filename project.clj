@@ -107,6 +107,9 @@
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.1"]
+
+                 ;; Apache ANT core
+                 [org.apache.ant/ant "1.9.6"]
                  ]
 
   :dev-dependencies [;; Selain REPL
