@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.komponentit.pdf-vienti :refer [rekisteroi-pdf-kasittelija! poista-pdf-kasittelija!] :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
             [harja.tyokalut.xsl-fo :as fo])
