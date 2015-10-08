@@ -75,27 +75,13 @@
         chdir: /opt/harja-build/harja-repo/tietokanta
       when: '{{harja_migrate_only}} == false'
 
-    - name: build preparation
+    - name: buildi
       sudo: yes
       sudo_user: harja
-      command: /usr/local/bin/lein pre-pdo
+      command: /usr/local/bin/lein tuotanto-notest
       args:
         chdir: /opt/harja-build/harja-repo
 
-    - name: rinnakkainen buildi
-      sudo: yes
-      sudo_user: harja
-      command: /usr/local/bin/lein pdo-tuotanto
-      args:
-        chdir: /opt/harja-build/harja-repo
-
-    - name: buildin viimeistely
-      sudo: yes
-      sudo_user: harja
-      command: /usr/local/bin/lein post-pdo
-      args:
-        chdir: /opt/harja-build/harja-repo
-        
     - name: Kopioi viimeisin Harja jar
       command: cp target/harja-0.0.1-SNAPSHOT-standalone.jar /opt/harja/harja-nightly.jar
       args:
