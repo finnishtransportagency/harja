@@ -14,7 +14,6 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -58,7 +57,6 @@
     (komp/luo
       (fn []
         [:div.muut-tyot
-         [kartta/kartan-paikka]
          [valinnat/urakan-sopimus ur]
          [grid/grid
           {:otsikko      "Muutos- ja lisätyöhinnat"

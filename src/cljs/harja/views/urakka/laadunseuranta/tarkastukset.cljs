@@ -68,7 +68,7 @@
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
 
-        [yleiset/taulukko2 "col-sm-6" "col-sm-6" "350px" "350px"
+        [yleiset/taulukko2 "col-md-6" "col-md-6" "350px" "350px"
          
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
@@ -172,7 +172,7 @@
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
-      {:luokka :horizontal
+      {:luokka :default
        :muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? @laadunseuranta/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
@@ -240,6 +240,8 @@
                          }]]]
      ]))
 
+(def kartan-edellinen-koko (atom nil))
+
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   []
@@ -247,8 +249,11 @@
 
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
-    (komp/lippu laadunseuranta/karttataso-tarkastukset)
-
+    (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
+    (komp/sisaan-ulos #(do
+                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (nav/vaihda-kartan-koko! :XL))
+                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
     (komp/kuuntelija
       :tarkastus-klikattu
       (fn [e tarkastus]
@@ -257,7 +262,14 @@
 
     (fn []
       [:span.tarkastukset
-       [kartta/kartan-paikka]
-       (if @laadunseuranta/valittu-tarkastus
-         [tarkastus laadunseuranta/valittu-tarkastus]
-         [tarkastuslistaus])])))
+       [:div.row
+        [:div {:class (if (= @nav/kartan-koko :S)
+                        "col-sm-12"
+                        "col-sm-6")}
+         (if @laadunseuranta/valittu-tarkastus
+           [tarkastus laadunseuranta/valittu-tarkastus]
+           [tarkastuslistaus])]
+        [:div {:class (if (= @nav/kartan-koko :S)
+                        ""
+                        "col-sm-6")}
+         [kartta/kartan-paikka]]]])))
