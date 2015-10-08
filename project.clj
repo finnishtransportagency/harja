@@ -217,10 +217,10 @@
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
-            "tuotanto-notest" ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
-            "pre-pdo"          ["do" "clean," "deps"]
-            "pdo-tuotanto"       ["pdo" "gitlog," "cljsbuild" "once" "prod"]
-            "post-pdo"         ["do" "less" "once," "doc," "uberjar"]
+            "tuotanto-notest"     ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
+            "pre-pdo"             ["do" "clean," "deps"]
+            "pdo-tuotanto"        ["pdo" "gitlog," "compile," "cljsbuild" "once" "prod"]
+            "post-pdo"            ["do" "less" "once," "doc," "uberjar"]
             }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
