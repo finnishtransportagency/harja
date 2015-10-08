@@ -21,6 +21,8 @@
         name: http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
     - name: install wget
       yum: pkg=wget update_cache=yes state=latest
+    - name: install git
+      yum: pkg=git state=latest
     - name: install psycopg2
       yum: pkg=python-psycopg2.x86_64 state=latest
     - name: install nginx
@@ -47,6 +49,17 @@
       alternatives: name=java link=/usr/bin/java path={{java_name}}/bin/java
     - name: add Harja user
       user: name=harja
+    - name: install Leiningen
+      get_url: url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein dest=/usr/local/bin mode=0755
+    - name: set up harja-repo directory
+      file: state=directory path=/opt/harja-repo owner=harja group=harja
+    - name: initialize git repo if not already initialized
+      sudo: yes
+      sudo_user: harja
+      command: git init
+      ignore_errors: yes
+      args:
+        chdir: "/opt/harja-repo"
     - name: initialize postgres
       shell: /usr/pgsql-9.4/bin/postgresql94-setup initdb
       environment:
