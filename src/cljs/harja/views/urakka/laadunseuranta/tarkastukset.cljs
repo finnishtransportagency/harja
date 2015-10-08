@@ -174,9 +174,7 @@
      [lomake/lomake
       {:luokka :horizontal
        :muokkaa! #(reset! tarkastus-atom %)
-       :vihje-pakollinen-kentta? false
        :voi-muokata? @laadunseuranta/voi-kirjata?}
-
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr
