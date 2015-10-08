@@ -1,4 +1,4 @@
-(ns harja.palvelin.tyokalut.tieverkon-tuonti
+(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tieverkon-tuonti
   (:require [harja.shp :as shp]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]

@@ -11,7 +11,7 @@
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.kansio :as kansio]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
-            [harja.palvelin.tyokalut.tieverkon-tuonti :as tieverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tieverkon-tuonti :as tieverkon-tuonti]
     ;; poista
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]

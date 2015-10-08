@@ -53,7 +53,7 @@
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
 
     ;; Tieosoiteverkon tuonti
-    [harja.palvelin.tyokalut.tieverkon-tuonti :as tieosoiteverkko]
+    [harja.palvelin.integraatiot.paikkatietojarjestelma.tieverkon-tuonti :as tieosoiteverkko]
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
     [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
 
