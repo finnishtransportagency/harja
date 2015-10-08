@@ -138,8 +138,8 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
 
 (defmethod raportin-parametri-arvo "hoitokausi" [p]
   (let [[alku loppu] @u/valittu-hoitokausi]
-    {:hk-alku alku
-     :hk-loppu loppu}))
+    {:hk-alkupvm alku
+     :hk-loppupvm loppu}))
 
 (defmethod raportin-parametri "hoitokauden-kuukausi" [p]
   [valinnat/hoitokauden-kuukausi])

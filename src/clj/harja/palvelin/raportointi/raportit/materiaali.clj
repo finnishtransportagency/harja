@@ -66,14 +66,14 @@
           materiaalit)))
 
 
-(defn suorita [db user {:keys [urakka-id hk-alku hk-loppu
+(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [[konteksti toteumat]
         (cond
-          (and urakka-id hk-alku hk-loppu)
+          (and urakka-id hk-alkupvm hk-loppupvm)
           [:urakka (muodosta-materiaaliraportti-urakalle db user {:urakka-id urakka-id
-                                                                           :alkupvm hk-alku
-                                                                           :loppupvm hk-loppu})]
+                                                                  :alkupvm hk-alkupvm
+                                                                  :loppupvm hk-loppupvm})]
 
           (and hallintayksikko-id alkupvm loppupvm)
           [:hallintayksikko (muodosta-materiaaliraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
@@ -91,7 +91,7 @@
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Materiaaliraportti "
-                     (pvm/pvm (or hk-alku alkupvm)) " \u2010 " (pvm/pvm (or hk-alku loppupvm)))
+                     (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
         materiaalit (distinct (map :materiaali_nimi toteumat))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
     (println "TOTEUMAT: " toteumat)
