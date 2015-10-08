@@ -31,14 +31,14 @@
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "20%" :otsikko "Päivämäärä"}
-       {:leveys "30%" :otsikko "Tehtävä"}
-       {:leveys "10%" :otsikko "Yksikkö"}
-       {:leveys "20%" :otsikko "Yksikköhinta"}
-       {:leveys "20%" :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys "20%" :otsikko "Toteutunut määrä"}
-       {:leveys "20%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "20%" :otsikko "Toteutuneet kustannukset"}]
+      [{:leveys "15%" :otsikko "Päivämäärä"}
+       {:leveys "25%" :otsikko "Tehtävä"}
+       {:leveys "5%" :otsikko "Yksikkö"}
+       {:leveys "10%" :otsikko "Yksikköhinta"}
+       {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
+       {:leveys "10%" :otsikko "Toteutunut määrä"}
+       {:leveys "10%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
+       {:leveys "10%" :otsikko "Toteutuneet kustannukset"}]
 
       (map (juxt (comp pvm/pvm :pvm)
                  :nimi
