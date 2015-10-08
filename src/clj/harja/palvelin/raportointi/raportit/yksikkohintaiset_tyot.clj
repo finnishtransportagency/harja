@@ -31,6 +31,7 @@
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}
      [:taulukko {:otsikko otsikko
+                 :viimeinen-rivi-yhteenveto? true
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       [{:leveys "10%" :otsikko "Päivämäärä"}
        {:leveys "25%" :otsikko "Tehtävä"}
@@ -41,13 +42,16 @@
        {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
        {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
 
-      (map (juxt (comp pvm/pvm :pvm)
-                 :nimi
-                 :yksikko
-                 (comp fmt/euro-opt :yksikkohinta)
-                 :suunniteltu_maara
-                 :toteutunut_maara
-                 (comp fmt/euro-opt :suunnitellut_kustannukset)
-                 (comp fmt/euro-opt :toteutuneet_kustannukset))
-           naytettavat-rivit)]]))
+      (conj (mapv (juxt (comp pvm/pvm :pvm)
+                        :nimi
+                        :yksikko
+                        (comp fmt/euro-opt :yksikkohinta)
+                        :suunniteltu_maara
+                        :toteutunut_maara
+                        (comp fmt/euro-opt :suunnitellut_kustannukset)
+                        (comp fmt/euro-opt :toteutuneet_kustannukset))
+                  naytettavat-rivit)
+            [nil "Yhteensä" nil nil nil nil
+             (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+             (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])]]))
 
