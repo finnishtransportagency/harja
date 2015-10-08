@@ -153,6 +153,9 @@
               (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
             (catch Exception e
               (log/error "Tapahtui poikkeus: " e)
+              (let [w (java.io.StringWriter.)]
+                (.printStackTrace (.getNextException e) (java.io.PrintWriter. w))
+                (log/error "Sisempi virhe" (.toString w)))
               (kasittele-sisainen-kasittelyvirhe
                 [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                   :viesti (.getMessage e)}]))
