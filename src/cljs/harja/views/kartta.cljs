@@ -221,8 +221,9 @@
         sivu @nav/sivu
         v-ur @nav/valittu-urakka
         muuta-kokoa-teksti (case koko
-                             :M "Suurenna kartta"
-                             :L "Pienennä kartta"
+                             :M "Suurenna karttaa"
+                             :L "Pienennä karttaa"
+                             :XL "Pienennä karttaa"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
@@ -243,10 +244,14 @@
           [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
            "Näytä kartta"]
           [:span
-           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! (case koko
-                                                                                    :M :L
-                                                                                    :L :M))}
-           muuta-kokoa-teksti]
+           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
+                                                           (case koko
+                                                             :M :L
+                                                             :L :M
+                                                             ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
+                                                             ;; suurenna | pienennä | piilota
+                                                             :XL :M))}
+            muuta-kokoa-teksti]
 
            [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
             "Piilota kartta"]])]]))
