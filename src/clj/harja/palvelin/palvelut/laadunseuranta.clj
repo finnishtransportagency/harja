@@ -9,6 +9,8 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.tarkastukset :as tarkastukset]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.kyselyt.urakat :as urakat-q]
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -18,6 +20,7 @@
             [clojure.java.jdbc :as jdbc]))
 
 (def havainto-xf (comp
+                   (geo/muunna-pg-tulokset :sijainti)
                    (map konv/alaviiva->rakenne)
                    (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
                    (map #(dissoc % :selvityspyydetty))
@@ -29,43 +32,58 @@
                                     (fn [k]
                                       (when k (keyword k)))))
                    (map #(if (nil? (:kasittelyaika (:paatos %)))
-                           (dissoc % :paatos)
-                           %))))
+                          (dissoc % :paatos)
+                          %))))
 
 (def tarkastus-xf
   (comp
-   (geo/muunna-pg-tulokset :sijainti)
-   (map konv/alaviiva->rakenne)
-   (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
-   (map #(-> %1
-             (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
-             (update-in [:havainto] dissoc :selvityspyydetty)
-             (update-in [:havainto] (fn [h]
-                                      (if (nil? (:selvitys-pyydetty h))
-                                        (dissoc h :selvitys-pyydetty)
-                                        h)))))
+    (geo/muunna-pg-tulokset :sijainti)
+    (map konv/alaviiva->rakenne)
+    (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+    (map #(-> %1
+              (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
+              (update-in [:havainto] dissoc :selvityspyydetty)
+              (update-in [:havainto] (fn [h]
+                                       (if (nil? (:selvitys-pyydetty h))
+                                         (dissoc h :selvitys-pyydetty)
+                                         h)))))
 
-   (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
-   (map (fn [tarkastus]
-          (condp = (:tyyppi tarkastus)
-            :talvihoito (dissoc tarkastus :soratiemittaus)
-            :soratie (dissoc tarkastus :talvihoitomittaus)
-            :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-            :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-            :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
+    (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
+    (map (fn [tarkastus]
+           (condp = (:tyyppi tarkastus)
+             :talvihoito (dissoc tarkastus :soratiemittaus)
+             :soratie (dissoc tarkastus :talvihoitomittaus)
+             :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+             :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+             :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
 (defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [parametrit [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]]
-    (into []
-          havainto-xf
+  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (jdbc/with-db-transaction [db db]
+    (let [listaus (or listaus :tilannekuva)
+          urakka-idt (if-not (nil? urakka-id)
+                       (if (vector? urakka-id) urakka-id [urakka-id])
 
-          (if (= :omat listaus)
-            (apply havainnot/hae-omat-havainnot (conj parametrit (:id user)))
-            (apply (case listaus
-                     :kaikki havainnot/hae-kaikki-havainnot
-                     :selvitys havainnot/hae-selvitysta-odottavat-havainnot
-                     :kasitellyt havainnot/hae-kasitellyt-havainnot) parametrit)))))
+                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
+                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
+                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+          _ (log/debug "Haetaan havaintoja urakoista " (pr-str urakka-idt))
+          tulos (apply (comp vec flatten merge)
+                       (for [urakka-id urakka-idt]
+                         (into []
+                               havainto-xf
+
+                               (if (= :omat listaus)
+                                 (apply havainnot/hae-omat-havainnot
+                                        (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
+                                 (apply (case listaus
+                                          :kaikki havainnot/hae-kaikki-havainnot
+                                          :selvitys havainnot/hae-selvitysta-odottavat-havainnot
+                                          :kasitellyt havainnot/hae-kasitellyt-havainnot
+                                          :tilannekuva havainnot/hae-havainnot-tilannekuvaan)
+                                        [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))]
+      (log/debug "Löydettiin havainnot: " (pr-str (mapv :id tulos)))
+      tulos)))
 
 
 (defn hae-havainnon-tiedot
@@ -79,23 +97,23 @@
                               (havainnot/hae-havainnon-tiedot db urakka-id havainto-id)))]
     (when havainto
       (assoc havainto
-             :kommentit (into []
-                              (comp (map konv/alaviiva->rakenne)
-                                    (map #(assoc % :tekija (name (:tekija %))))
-                                    (map (fn [{:keys [liite] :as kommentti}]
-                                           (if (:id liite)
-                                             kommentti
-                                             (dissoc kommentti :liite)))))
-                              (havainnot/hae-havainnon-kommentit db havainto-id))
-             :sanktiot (into []
-                             (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
-                                   (map konv/alaviiva->rakenne)
-                                   (map #(konv/string->keyword % :laji))
-                                   (map #(assoc %
-                                                :sakko? (not (nil? (:summa %)))
-                                                :summa (some-> % :summa double))))
-                             (sanktiot/hae-havainnon-sanktiot db havainto-id))
-             :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
+        :kommentit (into []
+                         (comp (map konv/alaviiva->rakenne)
+                               (map #(assoc % :tekija (name (:tekija %))))
+                               (map (fn [{:keys [liite] :as kommentti}]
+                                      (if (:id liite)
+                                        kommentti
+                                        (dissoc kommentti :liite)))))
+                         (havainnot/hae-havainnon-kommentit db havainto-id))
+        :sanktiot (into []
+                        (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
+                              (map konv/alaviiva->rakenne)
+                              (map #(konv/string->keyword % :laji))
+                              (map #(assoc %
+                                     :sakko? (not (nil? (:summa %)))
+                                     :summa (some-> % :summa double))))
+                        (sanktiot/hae-havainnon-sanktiot db havainto-id))
+        :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
@@ -199,13 +217,27 @@
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   [db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]}]
-  (into []
-        tarkastus-xf
-        (tarkastukset/hae-urakan-tarkastukset db urakka-id
-                                              (konv/sql-timestamp alkupvm)
-                                              (konv/sql-timestamp loppupvm)
-                                              (if tienumero true false) tienumero
-                                              (if tyyppi true false) (and tyyppi (name tyyppi)))))
+  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-idt (if-not (nil? urakka-id)
+                       (if (vector? urakka-id) urakka-id [urakka-id])
+
+                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
+                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+          _ (log/debug "Haetaan tarkastuksia urakoista " (pr-str urakka-idt))
+          tulos (apply (comp vec flatten merge)
+                       (for [urakka-id urakka-idt]
+                         (into []
+                               tarkastus-xf
+                               (tarkastukset/hae-urakan-tarkastukset db urakka-id
+                                                                     (konv/sql-timestamp alkupvm)
+                                                                     (konv/sql-timestamp loppupvm)
+                                                                     (if tienumero true false) tienumero
+                                                                     (if tyyppi true false) (and tyyppi (name tyyppi))))))]
+      (log/debug "Löydettiin tarkastukset: " (pr-str (mapv :id tulos)))
+      tulos)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -248,10 +280,10 @@
     (let [;; FIXME: Suorasanktiolle pyydetty/annettu flagit?
           #_osapuoli #_(roolit/osapuoli user urakka)
           #_havainto #_(assoc havainto
-                     :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                             (:selvitys-pyydetty havainto))
-                     :selvitys-annettu (and (:uusi-kommentti havainto)
-                                            (= :urakoitsija osapuoli)))
+                         :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                                 (:selvitys-pyydetty havainto))
+                         :selvitys-annettu (and (:uusi-kommentti havainto)
+                                                (= :urakoitsija osapuoli)))
           id (havainnot/luo-tai-paivita-havainto c user (assoc havainto :tekija "tilaaja"))]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]

@@ -222,7 +222,7 @@
             :nimi        :rahasumma
             :pakollinen? true
             :yksikko     "€"
-            :tyyppi      :numero
+            :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
             :leveys-col  3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
