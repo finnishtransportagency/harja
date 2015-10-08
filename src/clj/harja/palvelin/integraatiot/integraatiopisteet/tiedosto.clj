@@ -11,6 +11,11 @@
       (with-open [in (io/input-stream lahde)
                   out (io/output-stream kohde)]
         (io/copy in out))
+      (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki
+                                                     nil
+                                                     (str "Tiedosto siirretty onnistuneesti kohteeseen: " kohde)
+                                                     tapahtuma-id
+                                                     nil)
       (catch Exception e
         (let [viesti (str "Tiedoston latauksessa lähteestä: " lahde " kohteeseen: " kohde " tapahtui poikkeus: " e)]
           (log/error viesti)
