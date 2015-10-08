@@ -133,7 +133,8 @@
   
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (apply fo/dokumentti {:footer {:sisalto (luo-footer (:nimi raportin-tunnistetiedot))}}
+  (apply fo/dokumentti {:orientation (or (:orientaatio raportin-tunnistetiedot) :portrait)
+                        :footer {:sisalto (luo-footer (:nimi raportin-tunnistetiedot))}}
          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                     [:fo:block {:padding "2mm" :border "solid 0.2mm black"}

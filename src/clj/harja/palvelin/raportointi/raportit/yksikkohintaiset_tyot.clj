@@ -27,23 +27,24 @@
                               (hae-urakan-toimenpideinstanssi db urakka-id)
                               first :nimi
                               (str ", "))
-                     ", " (pvm/pvm aikavali-alkupvm) " \u2010 " (pvm/pvm aikavali-loppupvm))]
-    [:raportti {:nimi otsikko}
+                     ", " (pvm/pvm aikavali-alkupvm) " - " (pvm/pvm aikavali-loppupvm))]
+    [:raportti {:orientaatio :landscape
+                :nimi otsikko}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "15%" :otsikko "Päivämäärä"}
+      [{:leveys "10%" :otsikko "Päivämäärä"}
        {:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "5%" :otsikko "Yksikkö"}
-       {:leveys "10%" :otsikko "Yksikköhinta"}
+       {:leveys "5%" :otsikko "Yks."}
+       {:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
        {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
        {:leveys "10%" :otsikko "Toteutunut määrä"}
-       {:leveys "10%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "10%" :otsikko "Toteutuneet kustannukset"}]
+       {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
+       {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
 
       (map (juxt (comp pvm/pvm :pvm)
                  :nimi
                  :yksikko
-                 :yksikkohinta
+                 (comp fmt/euro-opt :yksikkohinta)
                  :suunniteltu_maara
                  :toteutunut_maara
                  (comp fmt/euro-opt :suunnitellut_kustannukset)
