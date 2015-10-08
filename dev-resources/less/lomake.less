@@ -29,9 +29,21 @@
   }
 
   .form-group.required label.control-label:after {
-    content: " \25A0";
+    content: " *";
     color: red;
-    font-size: 0.8em;
+    font-size: 0.9em;
+    position: relative;
+    top: -0.15em;
+  }
+
+  .pakollinen-kentta-vihje {
+    font-size: 0.9em;
+  }
+
+  .pakollinen-kentta-vihje:before {
+    content: " *";
+    color: red;
+    font-size: 0.9em;
     position: relative;
     top: -0.15em;
   }

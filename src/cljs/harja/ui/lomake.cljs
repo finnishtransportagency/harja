@@ -168,9 +168,10 @@
   :varoitukset    atomi, joka sisältää mäpin kentän nimestä varoituksiin, jos tätä ei
                   anneta, lomake luo sisäisesti uuden atomin.
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
+  :vihje-pakollinen-kentta? näytetäänkö lomakkeen yhteydessä vihje: '* = Pakollinen kenttä'
   "
 
-  [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata?] :as opts} skeema data]
+  [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata? vihje-pakollinen-kentta?] :as opts} skeema data]
   (let [luokka (or luokka :default)
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
@@ -193,10 +194,13 @@
                                       varoitukset (into {}
                                                         (validointi/validoi-rivi nil data skeema :varoita)))
 
-    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema data]
+    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata? vihje-pakollinen-kentta?] :as opts} skeema data]
       (let [voi-muokata? (if (some? voi-muokata?)
                            voi-muokata?
                            true)
+            vihje-pakollinen-kentta? (if (nil? vihje-pakollinen-kentta?)
+                                       true
+                                       vihje-pakollinen-kentta?)
             kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
@@ -274,5 +278,7 @@
          (if footer-fn
            [lomake-footer luokka (footer-fn kaikki-virheet kaikki-varoitukset)]
            (if footer
-             [lomake-footer luokka footer]))]))))
+             [lomake-footer luokka footer]))
+         (when vihje-pakollinen-kentta?
+         [:span.pakollinen-kentta-vihje " = Pakollinen kenttä"])]))))
 
