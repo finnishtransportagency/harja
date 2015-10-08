@@ -243,9 +243,9 @@
       
       ;; tieosoiteverkon tuonti
       :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
-                                                (:tieosoiteverkon-shapefile asetukset)
-                                                (:hoitoluokkien-shapefile asetukset)
-                                                (:tieosoiteverkon-tuontivali asetukset))
+                                                (:tieosoiteverkon-shapefile (:geometriapaivitykset asetukset))
+                                                (:hoitoluokkien-shapefile (:geometriapaivitykset asetukset))
+                                                (:tieosoiteverkon-tuontivali (:geometriapaivitykset asetukset)))
                                                [:db])
       
       ;; Harja API
