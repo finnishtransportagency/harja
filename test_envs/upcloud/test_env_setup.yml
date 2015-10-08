@@ -51,15 +51,27 @@
       user: name=harja
     - name: install Leiningen
       get_url: url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein dest=/usr/local/bin mode=0755
+    - name: tuhoa temp harja-repo
+      file: path=/opt/harja-repo state=absent
+    - name: tuhoa temp harja-build
+      file: path=/opt/harja-build state=absent
     - name: set up harja-repo directory
       file: state=directory path=/opt/harja-repo owner=harja group=harja
+    - name: set up harja-build directory
+      file: state=directory path=/opt/harja-build owner=harja group=harja
     - name: initialize git repo if not already initialized
       sudo: yes
       sudo_user: harja
-      command: git init
+      command: git init --bare
       ignore_errors: yes
       args:
         chdir: "/opt/harja-repo"
+    - name: kloonaa repo valmiiksi
+      sudo: yes
+      sudo_user: harja
+      command: git clone /opt/harja-repo
+      args:
+        chdir: "/opt/harja-build"
     - name: initialize postgres
       shell: /usr/pgsql-9.4/bin/postgresql94-setup initdb
       environment:

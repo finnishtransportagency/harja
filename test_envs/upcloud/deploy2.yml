@@ -39,26 +39,40 @@
       sudo_user: postgres
       postgresql_ext: db=harja name=pg_stat_statements state=present
 
+    - name: fetch
+      sudo: yes
+      sudo_user: harja
+      command: git fetch
+      args:
+        chdir: /opt/harja-build/harja-repo
+
     - name: checkaa ulos oikea branch
       sudo: yes
       sudo_user: harja
       command: git checkout '{{harja_branch}}'
       args:
-        chdir: /opt/harja-repo
-        
+        chdir: /opt/harja-build/harja-repo
+
+    - name: pull
+      sudo: yes
+      sudo_user: harja
+      command: git pull
+      args:
+        chdir: /opt/harja-build/harja-repo
+
     - name: aja tietokantamigraatiot
       sudo: yes
       sudo_user: harja
       command: mvn compile flyway:migrate -Dflyway.password=harja123
       args:
-        chdir: /opt/harja-repo/tietokanta
+        chdir: /opt/harja-build/harja-repo/tietokanta
 
     - name: dumppaa testidata
       sudo: yes
       sudo_user: harja
       shell: psql -p5432 harja -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
       args:
-        chdir: /opt/harja-repo/tietokanta
+        chdir: /opt/harja-build/harja-repo/tietokanta
       when: '{{harja_migrate_only}} == false'
 
     - name: build preparation
@@ -66,43 +80,36 @@
       sudo_user: harja
       command: /usr/local/bin/lein pre-pdo
       args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
 
     - name: rinnakkainen buildi
       sudo: yes
       sudo_user: harja
       command: /usr/local/bin/lein pdo-tuotanto
       args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
 
     - name: buildin viimeistely
       sudo: yes
       sudo_user: harja
       command: /usr/local/bin/lein post-pdo
       args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
         
     - name: Kopioi viimeisin Harja jar
       command: cp target/harja-0.0.1-SNAPSHOT-standalone.jar /opt/harja/harja-nightly.jar
       args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
 
     - name: Kopioi sovelluksen konfiguraatio
       command: cp test_envs/upcloud/templates/asetukset_dev.edn /opt/harja/asetukset.edn
       args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
         
     - name: Kopioi käynnistysskripti
       command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
       args:
-        chdir: /opt/harja-repo
-
-    - name: repon resetointi
-      sudo: yes
-      sudo_user: harja
-      command: git checkout master
-      args:
-        chdir: /opt/harja-repo
+        chdir: /opt/harja-build/harja-repo
 
     - name: Käynnistä Harja
       sudo: yes

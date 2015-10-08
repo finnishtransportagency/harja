@@ -21,8 +21,6 @@ fi
 
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
-ssh -t root@$HARJA_ENV "cd /opt/harja-repo; sudo -u harja git checkout master"
-
 git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui"
 
 pushd test_envs/upcloud
