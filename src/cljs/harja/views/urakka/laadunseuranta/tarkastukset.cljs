@@ -175,7 +175,6 @@
       {:luokka :default
        :muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? @laadunseuranta/voi-kirjata?}
-
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr
