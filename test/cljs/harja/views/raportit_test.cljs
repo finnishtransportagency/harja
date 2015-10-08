@@ -9,7 +9,7 @@
     [harja.domain.paallystys.pot :as pot]
     [harja.views.raportit :as raportit]))
 
-(deftest materiaalisarakkeiden-muodostus-toimii
+#_(deftest materiaalisarakkeiden-muodostus-toimii
   (let [materiaalitoteumat [{:urakka_nimi "Pirkanmaan raivausurakka 2130" :materiaali_nimi "NACL" :kokonaismaara 1}
                             {:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL2" :kokonaismaara 2}
                             {:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL" :kokonaismaara 1}]
@@ -19,7 +19,7 @@
     (is (= (:nimi (first sarakkeet)) :NACL))
     (is (= (:nimi (second sarakkeet)) :NACL2))))
 
-(deftest materiaaliraportin-rivien-muodostus-toimii
+#_(deftest materiaaliraportin-rivien-muodostus-toimii
   (let [materiaalitoteumat [{:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL2" :kokonaismaara 2}
                             {:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL" :kokonaismaara 1}
                             {:urakka_nimi "Pirkanmaan raivausurakka 2130" :materiaali_nimi "NACL" :kokonaismaara 1}]
@@ -31,7 +31,7 @@
     (is (= (:NACL (second rivit)) 1))
     (is (= (:NACL2 (second rivit)) 0))))
 
-(deftest materiaaliraportin-yhteensa-rivin-muodostus-toimii
+#_(deftest materiaaliraportin-yhteensa-rivin-muodostus-toimii
   (let [materiaalitoteumat [{:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL2" :kokonaismaara 2}
                             {:urakka_nimi "Oulun alueurakka 2005-2010" :materiaali_nimi "NACL" :kokonaismaara 1}
                             {:urakka_nimi "Pirkanmaan raivausurakka 2130" :materiaali_nimi "NACL" :kokonaismaara 5}]

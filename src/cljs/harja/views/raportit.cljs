@@ -278,6 +278,14 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
        :loppupvm loppu}
       {:virhe "Aseta alku ja loppupäivä"})))
 
+(defmethod raportin-parametri "urakan-toimenpide" [p]
+  [valinnat/urakan-toimenpide+kaikki])
+
+(defmethod raportin-parametri-arvo "urakan-toimenpide" [p]
+  (if-let [tpi @u/valittu-toimenpideinstanssi]
+    {:toimenpideinstanssi-id (:id tpi)}
+    {:virhe "Ei tpi valintaa"}))
+
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
 
@@ -337,10 +345,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                            (set! (.-value input)
                                  (t/clj->transit parametrit)))
                          true)}
-         (ikonit/print) " Tallenna PDF"]]]]
-
-     
-     ]))
+         (ikonit/print) " Tallenna PDF"]]]]]))
 
 
 (defn raporttivalinnat []
