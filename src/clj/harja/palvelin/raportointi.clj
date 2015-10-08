@@ -40,7 +40,7 @@
      pdf-vienti :raportointi
      (fn [kayttaja params]
        (let [rapos (suorita-raportti this kayttaja params)]
-         (log/debug "SUORITETTU RAPSA: " (pr-str rapos))
+         (log/debug "SUORITETTU RAPORTTI: " (pr-str rapos))
          (pdf/muodosta-pdf
           rapos))))
 
@@ -63,7 +63,7 @@
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
-    (log/debug "SUORITELLAAN RAPSAA " nimi " , rapsat: " raportit)
+    (log/debug "SUORITETAAN RAPORTTI " nimi)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
@@ -78,41 +78,3 @@
 (defn luo-raportointi []
   (->Raportointi (atom nil)))
 
-#_{:laskutusyhteenveto {:otsikko "Laskutusyhteenveto"
-                        :konteksti #{:urakka}
-                        :parametrit [{:otsikko "Hoitokausi ":nimi :hoitokausi
-                                      :tyyppi :valinta
-                                      :valinnat :valitun-urakan-hoitokaudet}
-                                     {:otsikko  "Kuukausi" :nimi :kuukausi
-                                      :tyyppi  :valinta
-                                      :valinnat :valitun-aikavalin-kuukaudet}
-                                     ]
-                        :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita}
-   :testiraportti {:otsikko "Testiraportti"
-                   :konteksti #{:urakka :koko-maa :hallintayksikko}
-                   :parametrit []
-                   :suorita (fn [tiedot]
-                              [:raportti {:nimi "Testiraportti"
-                                          :tietoja [["Urakka" "Rymättylän päällystys"]
-                                                    ["Aika" "15.7.2015 \u2014 30.9.2015"]]}
-                               [:otsikko "Tämä on hieno raportti"]
-                               [:teksti "Tässäpä on sitten kappale tekstiä, joka raportissa tulee. Tämähän voisi olla mitä vain, kuten vaikka lorem ipsum dolor sit amet."]
-                               [:taulukko [{:otsikko "Nimi" :leveys "50%"}
-                                           {:otsikko "Kappaleita" :leveys "15%"}
-                                           {:otsikko "Hinta" :leveys "15%"}
-                                           {:otsikko "Yhteensä" :leveys "20%"}]
-
-                                [["Fine leather jacket" 2 199 (* 2 199)]
-                                 ["Log from blammo" 1 39 39]
-                                 ["Suristin" 10 25 250]]]
-
-                               [:otsikko "Tähän taas väliotsikko"]
-                               [:pylvaat {:otsikko "Kvartaalien luvut"}
-                                [["Q1" 123]
-                                 ["Q2" 1500]
-                                 ["Q3" 1000]
-                                 ["Q4" 777]]]
-                               [:yhteenveto [["PDF-generointi" "toimii"]
-                                             ["XSL-FO" "hyvin"]]]])}
-
-   }
