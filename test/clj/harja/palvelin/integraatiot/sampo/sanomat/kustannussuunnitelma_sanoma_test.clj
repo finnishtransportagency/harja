@@ -66,6 +66,6 @@
       (is (= "2015-12-31T00:00:00.0" (:finish segmentti))))))
 
 (deftest tarkista-kustannussuunnitelmajakson-muodostus
-  (is (= "Jan 1, 2015-Dec 31, 2015"
+  (is (= "1.1.2015-31.12.2015"
          (kustannussuunnitelma-sanoma/tee-kustannussuunnitelmajakso
            (parsi-paivamaara "12.12.2015")))))

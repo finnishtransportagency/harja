@@ -65,7 +65,7 @@
 
 (defn tee-kustannussuunnitelmajakso [pvm]
   (let [vuosi (time/year (coerce/from-sql-date pvm))]
-    (str "Jan 1, " vuosi "-Dec 31, " vuosi)))
+    (str "1.1." vuosi "-31.12." vuosi)))
 
 (defn muodosta [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
