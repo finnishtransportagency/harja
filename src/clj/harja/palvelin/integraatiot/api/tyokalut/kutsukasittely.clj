@@ -159,7 +159,10 @@
                   (when (not (nil? ex))
                     (.printStackTrace ex (java.io.PrintWriter. w))
                     (recur (.getNextException ex))))
-                (log/error "Sisemmät virheet: " (.toString w))))
+                (log/error "Sisemmät virheet: " (.toString w)))
+              (kasittele-sisainen-kasittelyvirhe
+                [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                  :viesti (.getMessage e)}]))
             (catch Exception e
               (log/error "Tapahtui poikkeus: " e) 
               (kasittele-sisainen-kasittelyvirhe
