@@ -64,27 +64,21 @@
     - name: buildaa
       sudo: yes
       sudo_user: harja
-      command: lein tuotanto-notest
+      command: /usr/local/bin/lein tuotanto-notest
       args:
         chdir: /opt/harja-repo
         
     - name: Kopioi viimeisin Harja jar
-      sudo: yes
-      sudo_user: harja
       command: cp target/harja-0.0.1-SNAPSHOT-standalone.jar /opt/harja/harja-nightly.jar
       args:
         chdir: /opt/harja-repo
 
     - name: Kopioi sovelluksen konfiguraatio
-      sudo: yes
-      sudo_user: harja
       command: cp test_envs/upcloud/templates/asetukset_dev.edn /opt/harja/asetukset.edn
       args:
         chdir: /opt/harja-repo
 
     - name: Kopioi käynnistysskripti
-      sudo: yes
-      sudo_user: harja
       command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
       args:
         chdir: /opt/harja-repo
