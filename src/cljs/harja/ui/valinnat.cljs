@@ -63,7 +63,7 @@
                                                 (second (pvm/kuukauden-aikavali uusi-arvo))
                                                 (second @valittu-aikavali-atom))])
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
-    [:span " \u2014 "]
+    [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]

@@ -249,7 +249,7 @@
 
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
-    (komp/lippu laadunseuranta/karttataso-tarkastukset)
+    (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
                         (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
                         (nav/vaihda-kartan-koko! :XL))
