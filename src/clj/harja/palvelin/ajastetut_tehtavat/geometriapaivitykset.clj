@@ -16,18 +16,36 @@
             )
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn poista-tiedostot-kansiosta [kansio]
+  (let [kansio (clojure.java.io/file kansio)
+        tiedostot (.listFiles kansio)]
+    (doseq [tiedosto tiedostot]
+      (clojure.java.io/delete-file tiedosto))))
 
-(defn aja-paivitys [alk db paivitystunnus tiedostourl kohdetiedosto]
+(defn onko-kohdetiedosto-ok? [kohdepolku kohdetiedoston-nimi]
+  (and
+    (and
+      (not (empty kohdepolku))
+      (not (empty kohdetiedoston-nimi)))
+    (.isDirectory (clojure.java.io/file kohdepolku))))
+
+(defn aja-paivitys [alk db paivitystunnus tiedostourl kohdepolku kohdetiedoston-nimi]
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
-        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
-    (when (and (not-empty tiedostourl) (not (empty kohdetiedosto)))
+        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)
+        kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
+
+    ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
+    (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdepolku kohdetiedoston-nimi))
       (try+
-        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str paivitystunnus "muutospaivamaaran-haku") tiedostourl)]
+        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str paivitystunnus "-muutospaivamaaran-haku") tiedostourl)]
           (when (or (not viimeisin-paivitys)
                     (pvm/jalkeen?
                       (time-coerce/from-sql-time tiedoston-muutospvm)
                       (time-coerce/from-sql-time viimeisin-paivitys)))
-            (alk/hae-tiedosto alk (str paivitystunnus "haku") tiedostourl kohdetiedosto)
+
+            (poista-tiedostot-kansiosta kohdetiedoston-polku)
+            (alk/hae-tiedosto alk (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
+
 
             ;; todo: nuketa tiedostot kohdekansiosta
             ;; todo: laita uusi paketti kohdekansioon
@@ -42,7 +60,12 @@
   (chime-at (periodic-seq (time/now) (-> 5 time/minutes))
             (fn [_]
               (log/debug "Tarkistetaan onko tieverkko päivittynyt")
-              (aja-paivitys (:alk this) (:db this) "tieverkko" (:tieosoiteverkon-alk-osoite asetukset) (:tieosoiteverkon-alk-tuontikohde asetukset)))))
+              (aja-paivitys (:alk this)
+                            (:db this)
+                            "tieverkko"
+                            (:tieosoiteverkon-alk-osoite asetukset)
+                            (:tieosoiteverkon-alk-tuontikohde asetukset)
+                            "Tieosoiteverkko.zip"))))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
@@ -58,4 +81,4 @@
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
     (component/start alk)
-    (aja-paivitys alk testitietokanta "tieverkko" "http://185.26.50.104/Tieosoiteverkko.zip" "/Users/mikkoro/Desktop/Sources/harja/shp")))
+    (aja-paivitys alk testitietokanta "tieverkko" "http://185.26.50.104/Tieosoiteverkko.zip" "/Users/mikkoro/Desktop/Tieverkko-testi/" "Tieosoiteverkko.zip")))
