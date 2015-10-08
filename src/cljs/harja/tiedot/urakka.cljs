@@ -100,13 +100,30 @@
   (reset! valittu-hoitokausi hk))
 
 (defonce valittu-hoitokauden-kuukausi
-         (reaction
-           (let [hk @valittu-hoitokausi
-                 ur @nav/valittu-urakka]
-             (when (and hk ur)
-               (if (pvm/valissa? (pvm/nyt) (:alkupvm ur) (:loppupvm ur))
-                 (pvm/ed-kk-aikavalina (pvm/nyt))
-                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
+  (reaction
+   (let [hk @valittu-hoitokausi
+         ur @nav/valittu-urakka
+         kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
+         nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
+         edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+     (when (and hk ur)
+       (cond
+         ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
+         ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
+         (kuuluu-hoitokauteen? edellinen-kk)
+         edellinen-kk
+
+         ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
+         (kuuluu-hoitokauteen? nykyinen-kk)
+         nykyinen-kk
+
+         ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
+         (pvm/ennen? (pvm/nyt) (first hk))
+         (first (pvm/hoitokauden-kuukausivalit hk))
+         
+         ;; fallback on hoitokauden viimeinen kuukausi
+         :default
+         (last (pvm/hoitokauden-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
