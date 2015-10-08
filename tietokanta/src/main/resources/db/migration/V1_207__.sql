@@ -3,6 +3,8 @@ CREATE TABLE geometriapaivitys (
   id                 SERIAL PRIMARY KEY,
   nimi               VARCHAR(20) NOT NULL,
   viimeisin_paivitys TIMESTAMP,
+  lukko              CHAR(36),
+  lukittu            TIMESTAMP,
   CONSTRAINT uniikki_geometriapaivitys UNIQUE (nimi)
 );
 

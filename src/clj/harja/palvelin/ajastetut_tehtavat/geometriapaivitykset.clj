@@ -15,11 +15,11 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as testi])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (java.util UUID)))
 
 (defn aja-paivitys [alk db geometria-aineisto kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm]
   (log/debug "Ajetaan geometriapäivitys: " geometria-aineisto)
-  ;; todo: lisää ja tarkista lukko
   (kansio/poista-tiedostot kohdepolku)
   (alk/hae-tiedosto alk (str geometria-aineisto "-haku") tiedostourl kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
@@ -34,39 +34,46 @@
       (not (empty kohdetiedoston-nimi)))
     (.isDirectory (clojure.java.io/file kohdepolku))))
 
-(defn pitaako-paivittaa? [viimeisin-paivitys tiedoston-muutospvm]
-  (or (not viimeisin-paivitys)
-      (pvm/jalkeen?
-        (time-coerce/from-sql-time tiedoston-muutospvm)
-        (time-coerce/from-sql-time viimeisin-paivitys))))
-
-(defn tarkista-paivitys [alk db geometria-aineisto tiedostourl kohdepolku kohdetiedoston-nimi]
+(defn pitaako-paivittaa? [db geometria-aineisto tiedoston-muutospvm]
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db geometria-aineisto))
         viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)
-        kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
+        lukko (str (UUID/randomUUID))]
+    (and
+      (or (not viimeisin-paivitys)
+          (pvm/jalkeen?
+            (time-coerce/from-sql-time tiedoston-muutospvm)
+            (time-coerce/from-sql-time viimeisin-paivitys)))
+      (= 1 (geometriapaivitykset/lukitse-paivitys! db lukko geometria-aineisto)))))
 
+(defn tarkista-paivitys [alk db geometria-aineisto tiedostourl kohdepolku kohdetiedoston-nimi]
+  (log/debug "Tarkistetaan onko geometria-aineisto: " geometria-aineisto " päivittynyt")
+  (let [kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
+    (log/debug "Geometria-aineisto: " geometria-aineisto " on muuttunut ja tarvitaan päivittää")
     ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
     (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdepolku kohdetiedoston-nimi))
-      (try+
-        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str geometria-aineisto "-muutospaivamaaran-haku") tiedostourl)]
-          (if (pitaako-paivittaa? viimeisin-paivitys tiedoston-muutospvm)
-            (aja-paivitys alk db geometria-aineisto kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm)
-            (log/debug "Geometria: " geometria-aineisto ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
-        (catch Exception e
-          (log/error "Geometriapäivityksessä: " geometria-aineisto ", tapahtui poikkeus: " e))))))
+      (do
+        (try+
+          (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str geometria-aineisto "-muutospaivamaaran-haku") tiedostourl)]
+            (if (pitaako-paivittaa? db geometria-aineisto tiedoston-muutospvm)
+              (aja-paivitys alk db geometria-aineisto kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm)
+              (log/debug "Geometria-aineisto: " geometria-aineisto ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
+          (catch Exception e
+            (log/error "Geometria-aineiston päivityksessä: " geometria-aineisto ", tapahtui poikkeus: " e)))
+        (geometriapaivitykset/avaa-paivityksen-lukko! db geometria-aineisto)))))
 
-(defn tee-tieverkon-paivitystehtava [this asetukset]
-  (let [paivitystiheys-minuuteissa (:tieosoiteverkon-alk-tuontivali asetukset)]
-    (log/debug " Ajastetaan tieverkon päivitys ajettavaksi " paivitystiheys-minuuteissa "minuutin välein ")
-    (chime-at (periodic-seq (time/now) (-> paivitystiheys-minuuteissa time/minutes))
-              (fn [_]
-                (log/debug "Tarkistetaan onko tieverkko päivittynyt")
-                (tarkista-paivitys (:alk this)
-                                   (:db this)
-                                   "tieverkko"
-                                   (:tieosoiteverkon-alk-osoite asetukset)
-                                   (:tieosoiteverkon-alk-tuontikohde asetukset)
-                                   "Tieosoiteverkko.zip")))))
+(defn ajasta-paivitys [this geometria-aineisto tuontivali osoite kohdepolku kohdetiedosto]
+  (log/debug " Ajastetaan geometria-aineiston " geometria-aineisto " päivitys ajettavaksi " tuontivali "minuutin välein ")
+  (chime-at (periodic-seq (time/now) (-> tuontivali time/minutes))
+            (fn [_]
+              (tarkista-paivitys (:alk this) (:db this) geometria-aineisto osoite kohdepolku kohdetiedosto))))
+
+(defn tee-tieverkon-paivitystehtava [this {:keys [tieosoiteverkon-alk-tuontivali tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde]}]
+  (ajasta-paivitys this
+                   "tieverkko"
+                   tieosoiteverkon-alk-tuontivali
+                   tieosoiteverkon-alk-osoite
+                   tieosoiteverkon-alk-tuontikohde
+                   "Tieosoiteverkko.zip"))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
