@@ -126,6 +126,7 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
+                 ["harja-data" "http://185.26.50.104/mvn/"]
                  ]
 
 
@@ -215,6 +216,7 @@
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
+            "tuotanto-notest" ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
             }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
