@@ -32,9 +32,9 @@
                         (case koko
                           :S +kartan-korkeus-s+
                           :M (int (* 0.20 kork))
-                          :L (int (* 0.50 kork))
+                          :L (int (* 0.60 kork))
                           :XL (int (* 0.80 kork))
-                          (int (* 0.50 kork))))))
+                          (int (* 0.60 kork))))))
 
 ;; Kanava, jonne kartan uusi sijainti kirjoitetaan
 (defonce paivita-kartan-sijainti (chan))
@@ -226,9 +226,10 @@
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
-                                                                     (= sivu :tilannekuva)
-                                                                     (and (= sivu :urakat)
-                                                                          (not v-ur))) "hide")}
+                                                                   (not (empty? @nav/tarvitsen-isoa-karttaa))
+                                                                   (= sivu :tilannekuva)
+                                                                   (and (= sivu :urakat)
+                                                                        (not v-ur))) "hide")}
 
 
        ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
@@ -239,16 +240,16 @@
                                         :width "100%"
                                         :z-index    100}}
         (if (= :S koko)
-          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(nav/vaihda-kartan-koko! :M)}
+          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
            "Näytä kartta"]
           [:span
            [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! (case koko
                                                                                     :M :L
                                                                                     :L :M))}
            muuta-kokoa-teksti]
-           (when-not @nav/pakota-nakyviin?
-             [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-              "Piilota kartta"])])]]))
+
+           [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
+            "Piilota kartta"]])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -342,8 +343,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (let [hals @hal/hallintayksikot
            v-hal @nav/valittu-hallintayksikko
            koko @nav/kartan-koko
-           koko (if-not (empty? @nav/tarvitsen-karttaa)
-                  :M
+           koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+                  :L
                   koko)]
 
        [openlayers

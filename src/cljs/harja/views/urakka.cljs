@@ -52,7 +52,7 @@
      :toteumat
      (when-not (= :kokonaisurakka (:sopimustyyppi ur))
        ^{:key "toteumat"}
-       [toteumat/toteumat ur])
+       [toteumat/toteumat])
 
      "Kohdeluettelo"
      :kohdeluettelo
