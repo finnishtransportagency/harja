@@ -24,6 +24,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
+(def kartta-kontentin-vieressa? (atom false))
+
 (def +kartan-korkeus-s+ 26)
 
 (def kartan-korkeus (reaction
@@ -32,9 +34,9 @@
                         (case koko
                           :S +kartan-korkeus-s+
                           :M (int (* 0.20 kork))
-                          :L (int (* 0.50 kork))
+                          :L (int (* 0.60 kork))
                           :XL (int (* 0.80 kork))
-                          (int (* 0.50 kork))))))
+                          (int (* 0.60 kork))))))
 
 ;; Kanava, jonne kartan uusi sijainti kirjoitetaan
 (defonce paivita-kartan-sijainti (chan))
@@ -221,14 +223,16 @@
         sivu @nav/sivu
         v-ur @nav/valittu-urakka
         muuta-kokoa-teksti (case koko
-                             :M "Suurenna kartta"
-                             :L "Pienennä kartta"
+                             :M "Suurenna karttaa"
+                             :L "Pienennä karttaa"
+                             :XL "Pienennä karttaa"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
-                                                                     (= sivu :tilannekuva)
-                                                                     (and (= sivu :urakat)
-                                                                          (not v-ur))) "hide")}
+                                                                   (not (empty? @nav/tarvitsen-isoa-karttaa))
+                                                                   (= sivu :tilannekuva)
+                                                                   (and (= sivu :urakat)
+                                                                        (not v-ur))) "hide")}
 
 
        ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
@@ -239,16 +243,21 @@
                                         :width "100%"
                                         :z-index    100}}
         (if (= :S koko)
-          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta {:on-click #(nav/vaihda-kartan-koko! :M)}
+          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
            "Näytä kartta"]
           [:span
-           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! (case koko
-                                                                                    :M :L
-                                                                                    :L :M))}
-           muuta-kokoa-teksti]
-           (when-not @nav/pakota-nakyviin?
-             [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-              "Piilota kartta"])])]]))
+           (when-not @kartta-kontentin-vieressa? ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
+             [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
+                                                             (case koko
+                                                               :M :L
+                                                               :L :M
+                                                               ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
+                                                               ;; suurenna | pienennä | piilota
+                                                               :XL :M))}
+              muuta-kokoa-teksti])
+
+           [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
+            "Piilota kartta"]])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -329,10 +338,21 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
-(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
-
-         (run!
-           (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
+(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner 
+  (let [ch (chan)]
+    (run! @nav/valittu-hallintayksikko
+          @nav/valittu-urakka
+          (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+    (run! (let [koko @nav/kartan-koko]
+            (go (>! ch koko))))
+    (go (loop [edellinen-koko @nav/kartan-koko]
+          (let [nykyinen-koko (<! ch)]
+            (log "KARTAN KOKO " (pr-str edellinen-koko) " => " (pr-str nykyinen-koko))
+            (when (and (= :S edellinen-koko)
+                       (not= :S nykyinen-koko))
+              (<! (timeout 150))
+              (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+            (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
@@ -342,8 +362,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (let [hals @hal/hallintayksikot
            v-hal @nav/valittu-hallintayksikko
            koko @nav/kartan-koko
-           koko (if-not (empty? @nav/tarvitsen-karttaa)
-                  :M
+           koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+                  :L
                   koko)]
 
        [openlayers

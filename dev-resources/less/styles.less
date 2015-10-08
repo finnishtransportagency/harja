@@ -198,12 +198,26 @@ tr.uusitehtavakoodi td {
 .label-ja-aikavali {
   display: inline-block;
   margin: 10px 5px 20px;
+  max-width: 100%;
   width: @valintakontrollin-leveys;
+  .aikavali-valinnat {
+    text-align: center;
+  }
+  .pvm-kentta {
+    width: 46%;
+  }
+  .pvm-valiviiva-wrap {
+    display: inline-block;
+    height: 32px;
+    text-align: center;
+    width: 7%;
+
+  }
   .pvm {
     height: @valintakontrollin-korkeus;
+    max-width: 100%;
     position: relative;
     top: 1px;
-    width: 139px;
   }
 }
 

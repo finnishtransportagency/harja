@@ -38,14 +38,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; :S (näkyy Näytä kartta -nappi)
 ;; :M (matalampi täysleveä)
 ;; :L (korkeampi täysleveä)
-(def kartan-kokovalinta "Kartan koko" (atom :M))
+(def kartan-kokovalinta "Kartan koko" (atom :S))
 
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
-    (reset! kartan-kokovalinta uusi-koko)
-    (t/julkaise! {:aihe :kartan-koko-vaihdettu
-                  :vanha-koko vanha-koko
-                  :uusi-koko uusi-koko})))
+    (when uusi-koko
+      (reset! kartan-kokovalinta uusi-koko)
+      (t/julkaise! {:aihe :kartan-koko-vaihdettu
+                    :vanha-koko vanha-koko
+                    :uusi-koko uusi-koko}))))
 
 ;; I-vaiheessa aina :tie
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
@@ -123,27 +124,17 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
-(def tarvitsen-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin. 
-  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin vaikka se ei olisikaan muuten näkyvissä."
+(def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
+  Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
   (atom #{}))
-
-(def pakota-nakyviin? (atom false))
-
-(def tarvitaanko-tai-onko-pakotettu-nakyviin?
-  (reaction (not (and (empty? @tarvitsen-karttaa) (not @pakota-nakyviin?)))))
 
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
                   sivu @sivu
                   v-ur @valittu-urakka]
-              (if @tarvitaanko-tai-onko-pakotettu-nakyviin?
-                (if (or
-                      (= :hidden valittu-koko)
-                      (= :S valittu-koko))
-                  :M
-                  valittu-koko)
-
+              (if-not (empty? @tarvitsen-isoa-karttaa)
+                :L
                 ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
                 ;; tai palautetaan käyttäjän valitsema koko
                 (cond (= sivu :hallinta) :hidden
@@ -179,11 +170,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
-  ;;(js* "debugger;")
   (reset! valittu-hallintayksikko yks)
   (reset! valittu-urakka-id nil)
   (reset! valittu-urakka nil)
-  (reset! kartan-kokovalinta :M)
   (paivita-url))
 
 (defonce ilmoita-hallintayksikkovalinnasta
@@ -195,9 +184,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defn valitse-urakka [ur]
   (reset! valittu-urakka ur)
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
-  (paivita-url)
-  (when-not @tarvitaanko-tai-onko-pakotettu-nakyviin?
-    (reset! kartan-kokovalinta :M)))
+  (paivita-url))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]

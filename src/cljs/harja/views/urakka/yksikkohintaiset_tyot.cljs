@@ -1,7 +1,6 @@
 (ns harja.views.urakka.yksikkohintaiset-tyot
   "Urakan 'Yksikkohintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -15,12 +14,9 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
-            [cljs-time.core :as t]
 
-            [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -165,7 +161,6 @@
 
       (fn [ur]
         [:div.yksikkohintaiset-tyot
-         [kartta/kartan-paikka]
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
          [:div.hoitokauden-kustannukset
           [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row

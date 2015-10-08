@@ -143,17 +143,16 @@
       @tiedot/haetut-turvallisuuspoikkeamat
       ]]))
 
+(def kartan-edellinen-koko (atom nil))
+
 (defn turvallisuuspoikkeamat []
   (komp/luo
-    {:component-will-mount
-     (fn []
-       (reset! tiedot/nakymassa? true)
-       (reset! tiedot/karttataso-turvallisuuspoikkeamat true))
-     :component-will-unmount
-     (fn []
-       (reset! tiedot/nakymassa? false)
-       (reset! tiedot/karttataso-turvallisuuspoikkeamat false))}
-
+    (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
+    (komp/sisaan-ulos #(do
+                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (nav/vaihda-kartan-koko! :L))
+                      #(do
+                        (nav/vaihda-kartan-koko! @kartan-edellinen-koko)))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]
