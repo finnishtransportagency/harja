@@ -335,8 +335,11 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
-(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
+(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner 
   (let [ch (chan)]
+    (run! @nav/valittu-hallintayksikko
+          @nav/valittu-urakka
+          (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
     (run! (let [koko @nav/kartan-koko]
             (go (>! ch koko))))
     (go (loop [edellinen-koko @nav/kartan-koko]
