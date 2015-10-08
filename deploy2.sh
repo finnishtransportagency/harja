@@ -1,7 +1,19 @@
 #!/bin/sh
 
+if [ -z "$1" ]; then
+    echo "Usage: $0 <env> [branch]"
+    exit 1
+fi
+
+CURRENT_BRANCH=`git symbolic-ref --short HEAD`
 HARJA_ENV=harja-dev$1
 BRANCH=$2
+
+if [ -z "$BRANCH" ]; then
+    BRANCH=$CURRENT_BRANCH
+fi
+
+echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
 git push $HARJA_ENV $BRANCH
 
