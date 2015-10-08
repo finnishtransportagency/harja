@@ -45,8 +45,8 @@
 
  :geometriapaivitykset {:tieosoiteverkon-tuontivali      1
                         :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko.shp"
-                        :hoitoluokkien-shapefile         "file://tl132/tl132.shp"
                         :tieosoiteverkon-alk-osoite      ""
                         :tieosoiteverkon-alk-tuontivali  1
-                        :tieosoiteverkon-alk-tuontikohde ""}
+                        :tieosoiteverkon-alk-tuontikohde ""
+                        :hoitoluokkien-shapefile         "file://tl132/tl132.shp"}
  }
