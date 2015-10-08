@@ -219,7 +219,7 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest"     ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
             "pre-pdo"             ["do" "clean," "deps"]
-            "pdo-tuotanto"        ["pdo" "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "doc"]
+            "pdo-tuotanto"        ["pdo" "gitlog," "compile," "cljsbuild" "once" "prod," "doc"]
             "post-pdo"            ["do" "less" "once," "uberjar"]
             }
 
