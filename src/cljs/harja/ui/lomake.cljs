@@ -170,7 +170,7 @@
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
   "
 
-  [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata? vihje-pakollinen-kentta?] :as opts} skeema data]
+  [{:keys [muokkaa! luokka footer virheet varoitukset voi-muokata?] :as opts} skeema data]
   (let [luokka (or luokka :default)
         ;; Kaikki kentät, joita käyttäjä on muokannut
         muokatut (atom #{})
@@ -193,7 +193,7 @@
                                       varoitukset (into {}
                                                         (validointi/validoi-rivi nil data skeema :varoita)))
 
-    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata? vihje-pakollinen-kentta?] :as opts} skeema data]
+    (fn [{:keys [muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema data]
       (let [voi-muokata? (if (some? voi-muokata?)
                            voi-muokata?
                            true)
