@@ -122,7 +122,8 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
   (into []
-        (comp (map #(konv/string->keyword % :havainto_paatos_kasittelytapa))
+        (comp (geo/muunna-pg-tulokset :havainto_sijainti)
+              (map #(konv/string->keyword % :havainto_paatos_kasittelytapa))
               (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa))
               (map #(assoc % :laji (keyword (:laji %)))))
