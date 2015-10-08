@@ -17,38 +17,37 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 
-(defn aja-paivitys [alk db paivitystunnus]
+(defn aja-paivitys [alk db paivitystunnus tiedostourl kohdetiedosto]
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
-        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)
-        url (:url paivityksen-tiedot)]
-    (when (not-empty url)
+        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
+    (when (and (not-empty tiedostourl) (not (empty kohdetiedosto)))
       (try+
-        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk "" url)]
+        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str paivitystunnus "muutospaivamaaran-haku") tiedostourl)]
           (when (or (not viimeisin-paivitys)
                     (pvm/jalkeen?
                       (time-coerce/from-sql-time tiedoston-muutospvm)
                       (time-coerce/from-sql-time viimeisin-paivitys)))
-            (let [data (alk/hae-tiedosto alk "" url "")]
-              (println "data: data")
-              ;; todo: nuketa tiedostot kohdekansiosta
-              ;; todo: laita uusi paketti kohdekansioon
-              ;; todo: pura paketti
-              )))
+            (alk/hae-tiedosto alk (str paivitystunnus "haku") tiedostourl kohdetiedosto)
+
+            ;; todo: nuketa tiedostot kohdekansiosta
+            ;; todo: laita uusi paketti kohdekansioon
+            ;; todo: pura paketti
+            ))
         (catch Exception e
           ;; todo: tee parempi poikkeuskäsittely
           (log/debug "Poikkeus: " e))))))
 
-(defn tee-tieverkon-paivitystehtava [this]
+(defn tee-tieverkon-paivitystehtava [this asetukset]
   (log/debug "Ajastetaan tieverkon päivitys ajettavaksi 5 minuutin välein")
   (chime-at (periodic-seq (time/now) (-> 5 time/minutes))
             (fn [_]
               (log/debug "Tarkistetaan onko tieverkko päivittynyt")
-              (aja-paivitys (:alk this) (:db this) "tieverkko"))))
+              (aja-paivitys (:alk this) (:db this) "tieverkko" (:tieosoiteverkon-alk-osoite asetukset) (:tieosoiteverkon-alk-tuontikohde asetukset)))))
 
-(defrecord Geometriapaivitykset []
+(defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
-    (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paivitystehtava this)))
+    (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paivitystehtava this asetukset)))
   (stop [this]
     (:tieverkon-paivitystehtava this)
     this))
@@ -59,4 +58,4 @@
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
     (component/start alk)
-    (aja-paivitys alk testitietokanta "tieverkko")))
+    (aja-paivitys alk testitietokanta "tieverkko" "http://185.26.50.104/Tieosoiteverkko.zip" "/Users/mikkoro/Desktop/Sources/harja/shp")))

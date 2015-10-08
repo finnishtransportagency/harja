@@ -1,16 +1,15 @@
 -- Kuvaus: Lisää PTJ:n integraatiot
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'tieverkon-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'tieverkon-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'talvihoitoluokkien-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'talvihoitoluokkien-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'soratienhoitoluokkien-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'soratienhoitoluokkien-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'pohjavesialueiden-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'pohjavesialueiden-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'siltojen-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'siltojen-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'ely-alueiden-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'ely-alueiden-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'hoidon-alueurakoiden-haku');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'hoidon-alueurakoiden-muutospaivamaaran-haku');
-
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'tieverkko-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'tieverkko-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'talvihoitoluokat-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'talvihoitoluokat-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'soratieluokat-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'soratieluokat-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'pohjavesialueet-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'pohjavesialueet-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'sillat-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'sillat-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'ely-alueet-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'ely-alueet-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'hoidon-alueurakat-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'hoidon-alueurakat-muutospaivamaaran-haku');
