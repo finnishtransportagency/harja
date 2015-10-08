@@ -8,7 +8,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [clojure.set :refer [rename-keys]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -18,7 +19,6 @@
 (defonce hae-kyselyt? (atom true))
 (defonce hae-tiedoitukset? (atom true))
 (defonce hae-havainnot? (atom true))
-(defonce hae-onnettomuudet? (atom true))
 (defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
@@ -35,26 +35,34 @@
      :radius 300
      :stroke {:color "black" :width 10}}))
 
-(defmulti kartalla-xf :tyyppi)
+(defmulti kartalla-xf (fn [kartta]
+                        (cond
+                          (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
+                          (:tilannekuvatyyppi kartta) (:tilannekuvatyyppi kartta)
+                          :else (:tyyppi kartta))))
 
 (defmethod kartalla-xf :tiedoitus [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Tiedotus")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :kysely [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Kysely")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
   [(assoc ilmoitus
      :type :ilmoitus
+     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
      :alue (oletusalue ilmoitus))])
 
 (defmethod kartalla-xf :havainto [havainto]
   (assoc havainto
     :type :havainto
+    :nimi (or (:nimi havainto) "Havainto")
     :alue (oletusalue havainto)))
 
 (defn suunta-radiaaneina [tyokone]
@@ -73,6 +81,7 @@
 (defmethod kartalla-xf :tyokone [tyokone]
   (assoc tyokone
     :type :tyokone
+    :nimi (or (:nimi tyokone) (clojure.string/capitalize (name (:tyokonetyyppi tyokone))))
     :alue {:type        :icon
            :coordinates (:sijainti tyokone)
            :direction   (- (suunta-radiaaneina tyokone))
@@ -110,12 +119,15 @@
                                                       yhteiset-parametrit
                                                       :aikavali [(:alku yhteiset-parametrit)
                                                                  (:loppu yhteiset-parametrit)]
+                                                      :tilat #{:avoimet}
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
-                  #_(when @hae-kaluston-gps? (<! (k/post! :hae-tyokoneseurantatiedot (kasaa-parametrit))))
-                  #_(when @hae-onnettomuudet? (<! (k/post! :hae-urakan-onnettomuudet (kasaa-parametrit))))
-                  #_(when @hae-havainnot? (<! (k/post! :hae-urakan-havainnot (kasaa-parametrit)))))]
+                  (when @hae-havainnot? (mapv
+                                          #(assoc % :tilannekuvatyyppi :havainto)
+                                          (<! (k/post! :hae-urakan-havainnot (rename-keys
+                                                                               yhteiset-parametrit
+                                                                               {:urakka :urakka-id}))))))]
       (reset! haetut-asiat tulos)
       (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                              :tyokoneet tulos}))))
@@ -129,7 +141,6 @@
                       _ @hae-tiedoitukset?
                       _ @hae-tyokoneet?
                       _ @hae-havainnot?
-                      _ @hae-onnettomuudet?
                       _ @livesuodattimen-asetukset]
                      {:odota +bufferi+}
                      (when nakymassa? (hae-asiat))))

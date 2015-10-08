@@ -1,7 +1,7 @@
 (ns harja.views.urakka.suunnittelu
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]

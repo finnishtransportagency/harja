@@ -389,17 +389,17 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +korostuksen-kesto+ 4000)
 
 (defn taulukko2
-  [otsikko-tyyppi-col otsikko-leveys-col arvo-tyypppi-col arvo-leveys-col & otsikot-ja-arvot]
-  (let [otsikko-class (str "col-" otsikko-tyyppi-col "-" otsikko-leveys-col)
-        arvo-class (str "col-" arvo-tyypppi-col "-" arvo-leveys-col)]
-    [:span
-     (keep-indexed (fn [i [otsikko arvo]]
-                     (and otsikko arvo
-                          ^{:key i}
-                          [:div.row
-                           [:div {:class otsikko-class} otsikko]
-                           [:div {:class arvo-class} arvo]]))
-                   (partition 2 otsikot-ja-arvot))]))
+  "Otsikoille ja arvoille annettavien luokkien tulee noudattaa Bootstrap-sarakkeille annettavien luokkien kaavaa.
+  "
+  [otsikko-class arvo-class otsikko-max-pituus arvo-max-pituus & otsikot-ja-arvot]
+  [:span
+   (keep-indexed (fn [i [otsikko arvo]]
+                   (and otsikko arvo
+                        ^{:key i}
+                        [:div.row
+                         [:div {:class otsikko-class :style {:max-width otsikko-max-pituus}} otsikko]
+                         [:div {:class arvo-class :style {:max-width arvo-max-pituus}} arvo]]))
+                 (partition 2 otsikot-ja-arvot))])
 
 (defn- luo-haitarin-rivi [piiloita? rivi]
   ^{:key (:otsikko @rivi)}

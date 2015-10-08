@@ -68,7 +68,7 @@
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
 
-        [yleiset/taulukko2 "sm" 6 "sm" 6
+        [yleiset/taulukko2 "col-sm-6" "col-sm-6" "350px" "350px"
          
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
@@ -175,7 +175,6 @@
       {:luokka :horizontal
        :muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? @laadunseuranta/voi-kirjata?}
-
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr

@@ -13,7 +13,7 @@
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.ui.protokollat :as protokollat]
             [harja.ui.kentat :refer [tee-kentta]]

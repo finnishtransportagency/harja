@@ -1,3 +1,23 @@
+-- name: hae-havainnot-tilannekuvaan
+-- Hakee havainnot urakasta aikavälillä. Muuten voitaisiin käyttää esim hae-kaikki-havainnot, mutta siinä
+-- filtteröidään pois suorasanktiona luodut havainnot. Historiakuvassa näin ei haluta tehdä.
+SELECT
+  h.id,
+  h.aika,
+  h.kohde,
+  h.tekija,
+  CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
+  h.kasittelyaika                    AS paatos_kasittelyaika,
+  h.paatos                           AS paatos_paatos,
+  h.kasittelytapa                    AS paatos_kasittelytapa,
+  h.kuvaus,
+  h.sijainti
+FROM havainto h
+  JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN sanktio s ON h.id=s.havainto
+WHERE h.urakka = :urakka
+      AND (aika >= :alku AND aika <= :loppu);
+
 -- name: hae-kaikki-havainnot
 -- Hakee listaukseen kaikki urakan havainnot annetulle aikavälille
 -- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
@@ -11,7 +31,8 @@ SELECT
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus
+  h.kuvaus,
+  h.sijainti
 FROM havainto h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON h.id=s.havainto
@@ -33,6 +54,7 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
+  h.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -61,6 +83,7 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
+  h.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -91,6 +114,7 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
+  h.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
@@ -119,6 +143,7 @@ SELECT
   h.kohde,
   h.tekija,
   h.kuvaus,
+  h.sijainti,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
   h.kasittelyaika                    AS paatos_kasittelyaika,
   h.paatos                           AS paatos_paatos,

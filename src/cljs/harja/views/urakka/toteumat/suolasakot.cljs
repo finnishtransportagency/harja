@@ -1,5 +1,5 @@
-(ns harja.views.urakka.toteumat.lampotilat
-  "Urakan toteumat: lämpötilat"
+(ns harja.views.urakka.toteumat.suolasakot
+  "Urakan toteumien suolasakot-näkymä"
   (:require [reagent.core :refer [atom wrap]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.tiedot.urakka.lampotilat :as lampotilat]
@@ -79,7 +79,7 @@
                                       :kun-onnistuu #(do
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [{:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :numero :leveys-col 2 :yksikko "€ / 5% rajan ylittävä tonni"}
+          [{:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / 5% rajan ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
             :valinta-nayta #(if (nil? %) yleiset/+valitse-kuukausi+ (second %))

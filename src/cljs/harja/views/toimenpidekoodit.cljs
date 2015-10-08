@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom wrap] :as reagent]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.roolit :as roolit]
