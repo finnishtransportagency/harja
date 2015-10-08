@@ -24,7 +24,6 @@
   (valinnat/aikavali u/valittu-aikavali))
 
 (defn urakan-toimenpide []
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-toimenpide+kaikki []
@@ -41,14 +40,12 @@
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!))
 
 (defn urakan-sopimus-ja-toimenpide [ur]
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
   (valinnat/urakan-sopimus-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
@@ -60,13 +57,12 @@
    ur
    u/valittu-sopimusnumero u/valitse-sopimusnumero!
    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
-   (r/wrap (vec (concat @u/urakan-toimenpideinstanssitu/urakan-toimenpideinstanssit+muut
-                        {:tpi_nimi "Muut"}))
+   (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                        [{:tpi_nimi "Muut"}]))
            identity)
    u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
   (valinnat/urakan-hoitokausi-ja-toimenpide
     ur
     (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
@@ -79,7 +75,6 @@
     u/valittu-aikavali))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
-  (reset! u/kaytossa-oleva-toimenpideinstanssit-lista u/urakan-toimenpideinstanssit)
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
