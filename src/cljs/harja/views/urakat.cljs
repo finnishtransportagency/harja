@@ -2,7 +2,7 @@
   "Harjan näkymä, jossa näytetään karttaa sekä kontekstisidonnaiset asiat."
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :as yleiset]
             
@@ -83,5 +83,5 @@
   []
   (let [v-ur @nav/valittu-urakka]
     (if v-ur
-      [urakka/urakka v-ur]
+      [urakka/urakka]
       [valitse-hallintayksikko-ja-urakka])))

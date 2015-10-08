@@ -1,7 +1,7 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [clojure.string :as string]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
@@ -78,7 +78,7 @@
         true)))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
-  (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) (name uusi-sopimustyyppi)))]
+  (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
         (if-not (k/virhe? res)
           (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
           true))))

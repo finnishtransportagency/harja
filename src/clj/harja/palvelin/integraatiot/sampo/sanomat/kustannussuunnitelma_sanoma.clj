@@ -3,11 +3,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce])
-  (:import (java.text SimpleDateFormat)))
-
-(defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
+            [clj-time.coerce :as coerce]
+            [harja.pvm :as pvm]))
 
 (defn muodosta-maksueranumero [numero]
   (str/join "" ["HA" numero]))
@@ -16,8 +13,8 @@
   (str/join "" ["AK" numero]))
 
 (defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
-  (let [alkupvm (formatoi-paivamaara (coerce/to-sql-time (time/first-day-of-the-month vuosi 1)))
-        loppupvm (formatoi-paivamaara (coerce/to-sql-time (time/last-day-of-the-month vuosi 12)))]
+  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm vuosi))
+        loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))]
     [:segment
      {:value  vuosittainen-summa
       :finish loppupvm
@@ -66,13 +63,9 @@
           (log/error viesti)
           (throw (RuntimeException. viesti)))))))
 
-(defn tee-kustannussuunnitelman-alku [alkupvm]
-  (let [vuosi (time/year (coerce/from-sql-date alkupvm))]
-    (coerce/to-sql-date (time/first-day-of-the-month vuosi 1))))
-
-(defn tee-kustannussuunnitelman-loppu [loppupvm]
-  (let [vuosi (time/year (coerce/from-sql-date loppupvm))]
-    (coerce/to-sql-date (time/last-day-of-the-month vuosi 12))))
+(defn tee-kustannussuunnitelmajakso [pvm]
+  (let [vuosi (time/year (coerce/from-sql-date pvm))]
+    (str "1.1." vuosi "-31.12." vuosi)))
 
 (defn muodosta [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
@@ -88,8 +81,8 @@
        :version        "13.1.0.0248"}]
      [:CostPlans
       [:CostPlan
-       {:finishPeriod   (tee-kustannussuunnitelman-loppu loppupvm)
-        :startPeriod    (tee-kustannussuunnitelman-alku alkupvm)
+       {:finishPeriod   (tee-kustannussuunnitelmajakso loppupvm)
+        :startPeriod    (tee-kustannussuunnitelmajakso alkupvm)
         :periodType     "ANNUALLY"
         :investmentType "PRODUCT"
         :investmentCode maksueranumero

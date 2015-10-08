@@ -52,7 +52,7 @@
         }
       },
       "vaylamuoto": "tie",
-      "luokittelu": ["tyotapaturma"],
+      "luokittelu": ["tyoturvallisuuspoikkeama"],
       "ilmoittaja": {
         "id":5468135,
         "etunimi": "Veera",
@@ -77,12 +77,9 @@
           }
         }
       ],
-
       "kommentit":[
         {"kommentti": "Kommentin sisältö"}
       ],
-
-
       "liitteet": [
         {
           "liite": {

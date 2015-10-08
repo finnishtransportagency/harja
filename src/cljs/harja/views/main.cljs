@@ -1,6 +1,6 @@
 (ns harja.views.main
   "Harjan päänäkymä"
-  (:require [bootstrap :as bs]
+  (:require [harja.ui.bootstrap :as bs]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
@@ -35,7 +35,6 @@
                            :on-click #(.reload js/window.location)}]
    [haku/haku]
 
-   ;; FIXME: active luokka valitulle sivulle
    [:ul#sivut.nav.nav-pills
 
     [:li {:role "presentation" :class (when (= s :urakat) "active")}

@@ -1,11 +1,11 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.tiedot.urakka :as u]
-            [harja.views.urakka.toteumat.lampotilat :refer [suolasakot]]
+            [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]

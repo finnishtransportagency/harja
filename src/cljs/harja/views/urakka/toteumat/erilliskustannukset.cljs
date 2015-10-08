@@ -1,7 +1,7 @@
 (ns harja.views.urakka.toteumat.erilliskustannukset
   "Urakan 'Toteumat' välilehden Erilliskustannuksien osio"
   (:require [reagent.core :refer [atom] :as r]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
@@ -223,7 +223,7 @@
             :nimi        :rahasumma
             :pakollinen? true
             :yksikko     "€"
-            :tyyppi      :numero
+            :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
             :leveys-col  3}
            {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
@@ -259,6 +259,7 @@
                                                    @u/erilliskustannukset-hoitokaudella)))))]
 
     (komp/luo
+      (komp/lippu toteumat/erilliskustannukset-nakymassa?)
       (fn []
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.erilliskustannusten-toteumat
@@ -292,10 +293,7 @@
              {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
               :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
              {:otsikko "Lisätieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
-            @valitut-kustannukset
-            ]])))))
-
-
+            @valitut-kustannukset]])))))
 
 (defn erilliskustannusten-toteumat []
   (fn []

@@ -116,6 +116,9 @@
   "Päivämäärän ja ajan formatointi suomalaisessa muodossa"
   (luo-format "dd.MM.yyyy HH:mm:ss"))
 
+(def iso8601-aikaleimalla
+  (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
+
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
@@ -153,6 +156,10 @@
  (defn aika-sek
    [pvm]
    (formatoi fi-aika-sek pvm))
+
+(defn aika-iso8601
+  [pvm]
+  (formatoi iso8601-aikaleimalla pvm))
 
  (defn ->pvm-aika [teksti]
    "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."

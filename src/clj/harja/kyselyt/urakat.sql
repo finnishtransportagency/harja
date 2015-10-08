@@ -1,3 +1,10 @@
+-- name: hae-kaikki-urakat-aikavalilla
+SELECT
+  u.id, u.nimi, u.tyyppi FROM urakka u
+WHERE loppupvm BETWEEN :alku AND :loppu
+OR alkupvm BETWEEN :alku AND :loppu
+OR loppupvm IS NULL AND :loppu > NOW();
+
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
   u.id,

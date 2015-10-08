@@ -7,7 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.maksuerat :as maksuerat]
-            [harja.views.urakka.toteumat.lampotilat :refer [suolasakot]]
+            [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
@@ -65,7 +65,6 @@
                   (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
             maksuerat))))
 
-(def urakka (atom nil))
 (def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat/maksuerat)))
 (def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
 (def pollaus-id (atom nil))
@@ -126,12 +125,13 @@
 (defn pollaa-kantaa
   "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
   []
-  (if (not (empty? @kuittausta-odottavat-maksuerat))
-    (do
-      (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
-      (go (reset! maksuerat/maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id @urakka))))))
-    (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
-        (lopeta-pollaus))))
+  (let [ur @nav/valittu-urakka]
+    (if (not (empty? @kuittausta-odottavat-maksuerat))
+      (do
+        (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
+        (go (reset! maksuerat/maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
+      (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
+          (lopeta-pollaus)))))
 
 (defn aloita-pollaus
   "Aloittaa kannan pollaamisen jos pollaus ei jo ole käynnissä"
@@ -152,8 +152,7 @@
 
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
-  [ur]
-  (reset! urakka ur)
+  []
   (aloita-pollaus)
   (komp/luo
     {:component-will-unmount

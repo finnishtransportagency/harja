@@ -1,4 +1,5 @@
 (ns harja.e2e.macros
+  (:refer-clojure :exclude [run!])
   (:require [reagent.ratom :refer [run!]]))
 
 

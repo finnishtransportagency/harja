@@ -14,7 +14,7 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
 
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [clojure.string :refer [capitalize]]
@@ -213,7 +213,9 @@
         (pollauksen-merkki)
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)
+          :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %)
+                              (kartta/keskita-kartta-pisteeseen
+                                (get-in % [:sijainti :coordinates])))
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}

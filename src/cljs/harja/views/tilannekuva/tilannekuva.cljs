@@ -1,6 +1,6 @@
 (ns harja.views.tilannekuva.tilannekuva
   (:require [reagent.core :refer [atom]]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
 
             [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]

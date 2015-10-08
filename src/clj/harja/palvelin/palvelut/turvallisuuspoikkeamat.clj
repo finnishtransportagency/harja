@@ -9,6 +9,9 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.kyselyt.urakat :as urakat-q]
+
             [harja.geo :as geo]))
 
 (def turvallisuuspoikkeama-xf
@@ -19,11 +22,21 @@
         (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/debug "Haetaan turvallisuuspoikkeamia urakasta " urakka-id ", aikaväliltä " alku " - " loppu)
-  (let [tulos (into []
-                    turvallisuuspoikkeama-xf
-                    (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))]
+  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (let [urakka-idt (if-not (nil? urakka-id)
+                     (if (vector? urakka-id) urakka-id [urakka-id])
+
+                     (if (get (:roolit user) "jarjestelmavastuuhenkilo")
+                       (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
+                       (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+        _ (log/debug "Haetaan turvallisuuspoikkeamia urakoista " (pr-str urakka-idt) ", aikaväliltä " alku " - " loppu)
+        tulos (apply (comp vec flatten merge)
+                     (for [urakka-id urakka-idt]
+                       (konv/sarakkeet-vektoriin
+                         (into []
+                               turvallisuuspoikkeama-xf
+                               (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+                         {:korjaavatoimenpide :korjaavattoimenpiteet})))]
     (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
     tulos))
 
@@ -33,21 +46,21 @@
   (-> (first (konv/sarakkeet-vektoriin (into []
                                              turvallisuuspoikkeama-xf
                                              (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                       {:kommentti :kommentit
+                                       {:kommentti          :kommentit
                                         :korjaavatoimenpide :korjaavattoimenpiteet
-                                        :liite :liitteet}))
+                                        :liite              :liitteet}))
 
       (update-in [:kommentit]
                  (fn [kommentit]
                    (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                          (dissoc % :liite)
-                                          %)
+                                         (dissoc % :liite)
+                                         %)
                                        kommentit))))))
-  
+
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
 
-  (log/debug "Tallennetaan korjaavatoimenpide ("id") turvallisuuspoikkeamalle " tp-id ".")
+  (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
   ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
@@ -80,23 +93,23 @@
         tr_alkuosa (:alkuosa tr)
         tr_loppuosa (:loppuosa tr)]
     (if id
-     (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                            (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                            kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                            (str "{" (clojure.string/join "," (map name tyyppi)) "}")
-                                            (:id user) id)
-         (q/aseta-turvallisuuspoikkeaman-sijainti! db
-                                                   sijainti
-                                                   tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
-         id)
+      (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                             (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                             kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
+                                             (:id user) id)
+          (q/aseta-turvallisuuspoikkeaman-sijainti! db
+                                                    sijainti
+                                                    tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+          id)
 
-     (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                                  (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                                  kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                  (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
-       (q/aseta-turvallisuuspoikkeaman-sijainti! db
-                                                 sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
-       id))))
+      (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
+                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                                   (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
+        (q/aseta-turvallisuuspoikkeaman-sijainti! db
+                                                  sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+        id))))
 
 (defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
@@ -139,7 +152,7 @@
                        :hae-turvallisuuspoikkeama
                        (fn [user tiedot]
                          (hae-turvallisuuspoikkeama (:db this) user tiedot))
-                       
+
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
                          (tallenna-turvallisuuspoikkeama (:db this) user tiedot)))

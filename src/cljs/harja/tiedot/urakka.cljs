@@ -178,6 +178,7 @@
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
+(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)]
@@ -209,7 +210,8 @@
 (defonce erilliskustannukset-hoitokaudella
          (reaction<! [ur (:id @nav/valittu-urakka)
                       aikavali @valittu-hoitokausi
-                      sivu @toteumat-valilehti]
+                      sivu @toteumat-valilehti
+                      _ @toteumat/erilliskustannukset-nakymassa?]
                      (when (and ur aikavali (= :erilliskustannukset sivu))
                        (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 

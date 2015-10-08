@@ -82,17 +82,13 @@
            :muokattava? (constantly voi-muokata?)
            :nimi :materiaali :fmt :nimi :leveys "35%"
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
-          {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :numero
+          {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
            :muokattava? (constantly voi-muokata?)
            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
-          
-         materiaalit
-         ]])
-     )))
-      
-     
+         materiaalit]]))))
+
 (defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
                                 ur valittu-hk valittu-sop
                                 materiaalikoodit yleiset-materiaalit-muokattu]
@@ -123,13 +119,11 @@
           }
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
           :muokattava? (constantly voi-muokata?)
-          :tyyppi :numero}
+          :tyyppi :positiivinen-numero}
          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
           :tyyppi :string :muokattava? (constantly false)}]
    
         yleiset-materiaalit-muokattu]))))
-
-
   
 (defn materiaalit [ur]
   (let [;; haetaan kaikki materiaalit urakalle
@@ -241,6 +235,7 @@
              [:button.btn.btn-primary
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
+                              (reset! tuleville? false)
                               (go 
                                 (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
                                                     (vals @pohjavesialue-materiaalit-muokattu))
