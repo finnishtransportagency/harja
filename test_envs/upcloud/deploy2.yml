@@ -91,16 +91,16 @@
       command: cp test_envs/upcloud/templates/asetukset_dev.edn /opt/harja/asetukset.edn
       args:
         chdir: /opt/harja-repo
+        
+    - name: Kopioi käynnistysskripti
+      command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
+      args:
+        chdir: /opt/harja-repo
 
     - name: repon resetointi
       sudo: yes
       sudo_user: harja
       command: git checkout master
-      args:
-        chdir: /opt/harja-repo
-        
-    - name: Kopioi käynnistysskripti
-      command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
       args:
         chdir: /opt/harja-repo
 
