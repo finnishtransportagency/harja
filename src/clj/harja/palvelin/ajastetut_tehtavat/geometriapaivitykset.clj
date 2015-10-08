@@ -4,23 +4,19 @@
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]
             [chime :refer [chime-at]]
+            [clj-time.core :as time]
+            [clj-time.coerce :as time-coerce]
             [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.alk-komponentti :as alk]
             [harja.pvm :as pvm]
-            [clj-time.core :as time]
-            [clj-time.coerce :as time-coerce]
+            [harja.palvelin.tyokalut.kansio :as kansio]
+            [harja.palvelin.tyokalut.arkisto :as arkisto]
     ;; poista
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as testi]
-            )
+            [clojure.java.io :as io])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn poista-tiedostot-kansiosta [kansio]
-  (let [kansio (clojure.java.io/file kansio)
-        tiedostot (.listFiles kansio)]
-    (doseq [tiedosto tiedostot]
-      (clojure.java.io/delete-file tiedosto))))
 
 (defn onko-kohdetiedosto-ok? [kohdepolku kohdetiedoston-nimi]
   (and
@@ -42,14 +38,13 @@
                     (pvm/jalkeen?
                       (time-coerce/from-sql-time tiedoston-muutospvm)
                       (time-coerce/from-sql-time viimeisin-paivitys)))
-
-            (poista-tiedostot-kansiosta kohdetiedoston-polku)
+            ;; todo: lisää ja tarkista lukko
+            (kansio/poista-tiedostot kohdepolku)
             (alk/hae-tiedosto alk (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
-
-
-            ;; todo: nuketa tiedostot kohdekansiosta
-            ;; todo: laita uusi paketti kohdekansioon
+            (arkisto/pura-paketti kohdetiedoston-polku)
             ;; todo: pura paketti
+            ;; todo: aja päivitys
+            ;; todo: päivitä viimeisin hakuaika
             ))
         (catch Exception e
           ;; todo: tee parempi poikkeuskäsittely

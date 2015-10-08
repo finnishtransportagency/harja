@@ -11,6 +11,7 @@
       (with-open [in (io/input-stream lahde)
                   out (io/output-stream kohde)]
         (io/copy in out))
+      (log/debug "Tiedosto ladattu onnistuneesti lähteestä: " lahde " kohteeseen: " kohde)
       (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki
                                                      nil
                                                      (str "Tiedosto siirretty onnistuneesti kohteeseen: " kohde)
