@@ -55,3 +55,24 @@ WHERE maksuera IN (SELECT m.numero
                      JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                    WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id IN (:tehtavat));
 
+
+-- name: hae-yksikkohintaiset-tyot-per-paiva
+-- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
+-- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
+SELECT date_trunc('day', tot.alkanut) as pvm,
+       t4.nimi, yht.yksikko, yht.yksikkohinta,
+       yht.maara as suunniteltu_maara, SUM(tt.maara) as toteutunut_maara,
+       (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
+       (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset
+  FROM toteuma tot
+       JOIN toteuma_tehtava tt ON tt.toteuma=tot.id
+       JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+       JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+                                         yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
+ WHERE tot.urakka = :urakka
+       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      
+ GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
+ ORDER BY pvm ASC;
+       

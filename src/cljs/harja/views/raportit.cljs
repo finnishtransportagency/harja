@@ -283,7 +283,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
 
 (defmethod raportin-parametri-arvo "urakan-toimenpide" [p]
   (if-let [tpi @u/valittu-toimenpideinstanssi]
-    {:toimenpideinstanssi-id (:id tpi)}
+    {:toimenpide-id (:id tpi)}
     {:virhe "Ei tpi valintaa"}))
 
 (defmethod raportin-parametri :default [p]
@@ -292,11 +292,21 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
 (defmethod raportin-parametri-arvo :default [p]
   {:virhe (str "Ei arvoa parametrilla: " (:nimi p))})
 
+(def parametrien-jarjestys
+  ;; Koska parametreillä ei ole mitään järjestysnumeroa
+  ;; annetaan osalle sellainen, että esim. kuukauden hoitokausi
+  ;; ei tule hoitokausivalinnan yläpuolelle.
+  {"hoitokausi" 1
+   "hoitokauden-kuukausi" 2
+   "urakan-toimenpide" 3})
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametrit (filter #(let [k (:konteksti %)]
-                              (or (nil? k)
-                                  (= k konteksti)))
-                           (:parametrit raporttityyppi))
+  (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
+                                 100)
+                            (filter #(let [k (:konteksti %)]
+                                       (or (nil? k)
+                                           (= k konteksti)))
+                                    (:parametrit raporttityyppi)))
         arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))
         arvot-nyt (arvot)]
     [:span

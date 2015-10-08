@@ -5,7 +5,8 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   (:require [cheshire.core :as cheshire]
             [clj-time.coerce :as coerce]
             [taoensso.timbre :as log]
-            [clj-time.format :as format]))
+            [clj-time.format :as format]
+            [clojure.java.jdbc :as jdbc]))
 
 
 (defn yksi
@@ -223,3 +224,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                      avain
                      .getValue
                      (cheshire/decode true)))))
+
+
+(extend-protocol jdbc/ISQLValue
+  java.util.Date
+  (sql-value [v]
+      (sql-timestamp v)))
