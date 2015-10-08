@@ -336,9 +336,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
 (defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
-
-         (run!
-           (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
+  (let [ch (chan)]
+    (run! (let [koko @nav/kartan-koko]
+            (go (>! ch koko))))
+    (go (loop [edellinen-koko @nav/kartan-koko]
+          (let [nykyinen-koko (<! ch)]
+            (log "KARTAN KOKO " (pr-str edellinen-koko) " => " (pr-str nykyinen-koko))
+            (when (and (= :S edellinen-koko)
+                       (not= :S nykyinen-koko))
+              (<! (timeout 150))
+              (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+            (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
