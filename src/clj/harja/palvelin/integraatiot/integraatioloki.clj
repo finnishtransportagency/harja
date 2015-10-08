@@ -14,7 +14,8 @@
   (kirjaa-rest-viesti [integraatioloki tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit])
   (kirjaa-saapunut-jms-viesti [integraatioloki jarjestelma integraatio viesti-id viesti])
   (kirjaa-lahteva-jms-kuittaus [integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja])
-  (kirjaa-saapunut-jms-kuittaus [integraatioloki kuittaus ulkoinen-id integraatio onnistunut]))
+  (kirjaa-saapunut-jms-kuittaus [integraatioloki kuittaus ulkoinen-id integraatio onnistunut])
+  (kirjaa-alkanut-tiedoston-haku [integraatiloki jarjestelma integraatio lahde]))
 
 (defn tee-integraatiolokin-puhdistus-tehtava [this paivittainen-puhdistusaika]
   (if paivittainen-puhdistusaika
@@ -41,9 +42,18 @@
    :sisaltotyyppi sisaltotyyppi
    :siirtotyyppi  "HTTP"
    :osoite        osoite
-   :sisalto       sisalto
+   :sisalto       (str sisalto)
    :otsikko       (when otsikko (str otsikko))
    :parametrit    parametrit})
+
+(defn tee-tiedoston-hakuviesti [osoite]
+  {:suunta        "sisään"
+   :sisaltotyyppi nil
+   :siirtotyyppi  nil
+   :osoite        osoite
+   :sisalto       nil
+   :otsikko       nil
+   :parametrit    nil})
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
   (integraatiloki/luo-integraatioviesti<! db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
@@ -92,6 +102,9 @@
       (kirjaa-onnistunut-integraatio integraatioloki lokiviesti nil nil ulkoinen-id)
       (kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti nil nil ulkoinen-id))))
 
+(defn lokita-alkanut-tiedoston-haku [integraatiloki jarjestelma integraatio lahde]
+  (kirjaa-alkanut-integraatio integraatiloki jarjestelma integraatio nil (tee-tiedoston-hakuviesti lahde)))
+
 (defrecord Integraatioloki [paivittainen-puhdistusaika]
   component/Lifecycle
   (start [this]
@@ -109,4 +122,5 @@
   (kirjaa-rest-viesti [this tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit] (lokita-rest-viesti (:db this) tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit))
   (kirjaa-saapunut-jms-viesti [this jarjestelma integraatio viesti-id viesti] (lokita-saapunut-jms-viesti this jarjestelma integraatio viesti-id viesti))
   (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja))
-  (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut)))
+  (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut))
+  (kirjaa-alkanut-tiedoston-haku [this jarjestelma integraatio lahde] (lokita-alkanut-tiedoston-haku this jarjestelma integraatio lahde)))
