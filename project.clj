@@ -220,7 +220,7 @@
             "tuotanto-notest"     ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
             "pre-pdo"             ["do" "clean," "deps"]
             "pdo-tuotanto"        ["pdo" "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "doc"]
-            "post-pdo"            ["do" "uberjar"]
+            "post-pdo"            ["do" "less" "once," "uberjar"]
             }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
