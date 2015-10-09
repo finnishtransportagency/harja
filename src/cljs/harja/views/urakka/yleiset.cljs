@@ -1,7 +1,7 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [clojure.string :as string]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
@@ -20,8 +20,7 @@
             [cljs-time.core :as t]
             [harja.domain.roolit :as roolit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal]
-            [harja.views.kartta :as kartta])
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
  
@@ -143,7 +142,6 @@
                                        :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
                                        :disabled   (not (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur)))}
           [:paallystys :paikkaus]])]]
-     [kartta/kartan-paikka]
 
      [grid/grid
       {:otsikko "Urakkaan liitetyt käyttäjät"

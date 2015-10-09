@@ -1,6 +1,6 @@
 (ns harja.views.urakka.laadunseuranta
   (:require [reagent.core :refer [atom]]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
@@ -12,10 +12,15 @@
 
 
 
+(def kartan-edellinen-koko (atom nil))
 
 (defn laadunseuranta []
   (let [ur @nav/valittu-urakka]
     (komp/luo
+      (komp/sisaan-ulos #(do
+                          (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                          (nav/vaihda-kartan-koko! :M))
+                        #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
       (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
       (fn []
         [bs/tabs

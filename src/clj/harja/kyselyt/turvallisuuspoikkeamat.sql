@@ -17,8 +17,15 @@ SELECT
   t.tr_loppuetaisyys,
   t.tr_alkuosa,
   t.tr_loppuosa,
-  t.tyyppi
+  t.tyyppi,
+
+  k.id              AS korjaavatoimenpide_id,
+  k.kuvaus          AS korjaavatoimenpide_kuvaus,
+  k.suoritettu      AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
 FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k
+    ON t.id = k.turvallisuuspoikkeama
 WHERE t.urakka = :urakka
       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
 
@@ -174,7 +181,7 @@ WHERE ulkoinen_id = :id AND
 --name: aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
+  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY,
   tr_numero        = :numero,
   tr_alkuetaisyys  = :aet,
   tr_loppuetaisyys = :let,

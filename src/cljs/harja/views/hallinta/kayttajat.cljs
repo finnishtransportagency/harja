@@ -13,7 +13,7 @@
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
 
             [harja.ui.protokollat :as protokollat]
             [harja.ui.kentat :refer [tee-kentta]]
@@ -22,7 +22,8 @@
             [harja.asiakas.tapahtumat :as t]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [harja.domain.roolit :refer [+rooli->kuvaus+]])
+            [harja.domain.roolit :refer [+rooli->kuvaus+]]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -156,7 +157,7 @@
     (log "poista kuuntelija")
     (kuuntelija))
   ;; poista kartan pakotus
-  (swap! nav/tarvitsen-karttaa
+  (swap! nav/tarvitsen-isoa-karttaa
          (fn [tk]
            (disj tk a))))
 
@@ -166,7 +167,7 @@
     (r/create-class
       {:component-will-update
        (fn [this _]
-         (if (not (@nav/tarvitsen-karttaa avain))
+         (if (not (@nav/tarvitsen-isoa-karttaa avain))
            (when-let [kk @kuuntelija]
              (log "en tarvitse karttaa, mutta minulla on kuuntelija... poistetaan!")
              (kk)
@@ -174,13 +175,13 @@
 
        :reagent-render
        (fn [g]
-         (let [tk @nav/tarvitsen-karttaa
+         (let [tk @nav/tarvitsen-isoa-karttaa
                kk @kuuntelija]
 
            [:span
-            [:button.btn.btn-default.pull-right
+            [:button.nappi-ensisijainen.pull-right
              {:on-click #(do (.preventDefault %)
-                             (swap! nav/tarvitsen-karttaa
+                             (swap! nav/tarvitsen-isoa-karttaa
                                     (fn [tk]
                                       (if (tk avain)
                                         (disj tk avain)
@@ -420,7 +421,7 @@
 
           (let [tyyppi @tyyppi]
             [:form.form-horizontal
-
+             [kartta/kartan-paikka]
              ;; Valitaan käyttäjän tyyppi
              [:div.form-group
               [:label.col-sm-2.control-label {:for "kayttajatyyppi"}

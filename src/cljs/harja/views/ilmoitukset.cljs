@@ -14,7 +14,7 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
 
-            [bootstrap :as bs]
+            [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [clojure.string :refer [capitalize]]
@@ -213,7 +213,9 @@
         (pollauksen-merkki)
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(reset! tiedot/valittu-ilmoitus %)
+          :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %)
+                              (kartta/keskita-kartta-pisteeseen
+                                (get-in % [:sijainti :coordinates])))
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
@@ -225,9 +227,16 @@
 
          @tiedot/haetut-ilmoitukset]]])))
 
+(def kartan-edellinen-koko (atom nil))
+
 (defn ilmoitukset []
   (komp/luo
-    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset nav/pakota-nakyviin?)
+    (komp/sisaan-ulos #(do
+                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (nav/vaihda-kartan-koko! :L))
+                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+
+    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
     (fn []
