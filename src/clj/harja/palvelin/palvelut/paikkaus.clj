@@ -40,7 +40,7 @@
                               (for [urakka-id urakka-idt]
                                 {urakka-id (mapv :id (urakat-q/hae-urakan-sopimukset db urakka-id))})))
 
-          _ (log/debug "Haetaan paikkaustoteumat urakoista/sopimuksista: " (pr-str sopimukset) )
+          _ (log/debug "Haetaan paikkaustoteumat urakoista/sopimuksista: " (pr-str sopimukset))
           vastaus (apply (comp vec flatten merge)
 
                          (for [urakka-id urakka-idt]

@@ -118,10 +118,7 @@
         (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
 (defn hae-toteumat-tilannekuvaan [db user {:keys [hallintayksikko urakka alku loppu toimenpidekoodit alue]}]
-  (log/debug "Haetaan toteumia tilannekuvaan.")
-  (log/debug (pr-str hallintayksikko urakka))
-  (log/debug (pr-str alue))
-  (log/debug (pr-str toimenpidekoodit))
+  (log/debug "Haetaan toteumia tilannekuvaan, mukana" (count toimenpidekoodit) "toimenpidekoodia.")
 
   (when urakka (roolit/vaadi-lukuoikeus-urakkaan user urakka))
   (jdbc/with-db-transaction [db db]
@@ -160,7 +157,6 @@
                                                              0 rajaa-urakalla?
                                                              hallintayksikko_annettu hallintayksikko)))
 
-            _ (log/debug (pr-str (count kyselyn_tulos)))
             mankeloitava (into []
                                (comp
                                  (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
@@ -172,7 +168,7 @@
                     {:tehtava     :tehtavat
                      :materiaali  :materiaalit
                      :reittipiste :reittipisteet})]
-        (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa tilannekuvaan."))
+        (log/debug "Löydettiin" (count tulos) "toteumaa tilannekuvaan.")
 
         tulos))))
 >>>>>>> a738bde... Päivitä maininnat historiakuvasta tilannekuvaksi

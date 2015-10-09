@@ -31,6 +31,12 @@
 
             true))))))
 
+(defn- viesti [mille mista ilman]
+  (str ", "
+       (if (annettu? mille)
+         (str mista " " (pr-str mille))
+         (str ilman))))
+
 (defn hae-ilmoitukset
   [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
   (let [aikavali-alku (when (first aikavali)
@@ -38,13 +44,18 @@
         aikavali-loppu (when (second aikavali)
                          (konv/sql-date (second aikavali)))
         tyypit (mapv name tyypit)
-        _ (log/debug "HY ja urakka annettu? " (annettu? hallintayksikko) (annettu? urakka))
-        _ (log/debug "HY ja urakka: " hallintayksikko urakka)
-        _ (log/debug "Aikavälit annettu? " (annettu? aikavali-alku) (annettu? aikavali-loppu))
-        _ (log/debug "Aikavälit: " aikavali-alku aikavali-loppu)
-        _ (log/debug "Tyypit annettu ja tyypit: " (annettu? tyypit) tyypit)
-        _ (log/debug "Hakuehto annettu ja hakuehto:" (annettu? hakuehto) (str "%" hakuehto "%"))
-        _ (log/debug "Suljetut ja/tai avoimet?" (if (:suljetut tilat) true false) (if (:avoimet tilat) true false))
+        viesti (str "Haetaan ilmoituksia: "
+                    (viesti hallintayksikko "hallitanyksiköstä" "ilman hallintayksikköä")
+                    (viesti urakka "urakasta" "ilman urakkaa")
+                    (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
+                    (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                    (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                    (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
+                    (cond
+                      (:avoimet tilat) ", mutta vain avoimet."
+                      (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
+                      (:suljetut tilat) ", ainoastaan suljetut."))
+        _ (log/debug viesti)
         mankeloitava (into []
                            (comp
                              (harja.geo/muunna-pg-tulokset :sijainti)
@@ -84,7 +95,7 @@
                               (:kuittaukset %))))
                 mankeloitu)]
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
-    (log/debug "Joiden kuittaukset ovat tulleet: " (map :uusinkuittaus tulos))
+    (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
 
     tulos))
 
@@ -94,7 +105,6 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-ilmoitukset
                       (fn [user tiedot #_[{:keys [hallintayksikko urakka tilat tyypit aikavali hakuehto]} tiedot]]
-                        (log/debug ":hae-ilmoitukset")
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
                                          (:hakuehto tiedot))))
