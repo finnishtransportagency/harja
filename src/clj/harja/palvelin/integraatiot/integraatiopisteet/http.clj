@@ -18,6 +18,7 @@
       "get" @(http/get url kutsu)
       "put" @(http/put url kutsu)
       "delete" @(http/delete url kutsu)
+      "head" @(http/head url kutsu)
       (throw+
         {:type    :http-kutsu-epaonnistui
          :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Tuntematon HTTP metodi:" metodi)}]}))))
@@ -48,7 +49,7 @@
             (throw+ {:type    :http-kutsu-epaonnistui
                      :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
           (do
-            (let [vastausdata (kasittele-vastaus body)]
+            (let [vastausdata (kasittele-vastaus body headers)]
               (log/debug " Kutsu palveluun: " url " onnistui. ")
               (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti nil tapahtuma-id nil)
               vastausdata))))
@@ -60,5 +61,11 @@
           {:type    :http-kutsu-epaonnistui
            :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.toString e))}]})))))
 
+(defn laheta-get-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kasittele-vastaus-fn]
+  (laheta-kutsu integraatioloki integraatio jarjestelma url "get" otsikot parametrit nil kasittele-vastaus-fn))
+
 (defn laheta-post-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kutsudata kasittele-vastaus-fn]
   (laheta-kutsu integraatioloki integraatio jarjestelma url "post" otsikot parametrit kutsudata kasittele-vastaus-fn))
+
+(defn laheta-head-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kasittele-vastaus-fn]
+  (laheta-kutsu integraatioloki integraatio jarjestelma url "head" otsikot parametrit nil kasittele-vastaus-fn))

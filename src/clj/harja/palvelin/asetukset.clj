@@ -10,54 +10,59 @@
 
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin                              {:portti s/Int
-                                                :url    s/Str}
-   :kehitysmoodi                               Boolean
-   :tietokanta                                 {:palvelin   s/Str
-                                                :tietokanta s/Str
-                                                :portti     s/Int
-                                                :kayttaja   s/Str
-                                                :salasana   s/Str}
-   :fim                                        {:url s/Str}
-   :log                                        {(s/optional-key :gelf)    {:palvelin s/Str
-                                                                           :taso     s/Keyword}
-                                                (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+  {:http-palvelin                         {:portti s/Int
+                                           :url    s/Str}
+   :kehitysmoodi                          Boolean
+   :tietokanta                            {:palvelin   s/Str
+                                           :tietokanta s/Str
+                                           :portti     s/Int
+                                           :kayttaja   s/Str
+                                           :salasana   s/Str}
+   :fim                                   {:url s/Str}
+   :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
+                                                                      :taso     s/Keyword}
+                                           (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
 
-                                                (s/optional-key :email)   {:taso          s/Keyword
-                                                                           :palvelin      s/Str
-                                                                           :vastaanottaja [s/Str]}}
-   (s/optional-key :integraatiot)              {:paivittainen-lokin-puhdistusaika [s/Num]}
-   (s/optional-key :sonja)                     {:url                     s/Str
-                                                :kayttaja                s/Str
-                                                :salasana                s/Str
-                                                (s/optional-key :tyyppi) s/Keyword}
-   (s/optional-key :sampo)                     {:lahetysjono-sisaan       s/Str
-                                                :kuittausjono-sisaan      s/Str
-                                                :lahetysjono-ulos         s/Str
-                                                :kuittausjono-ulos        s/Str
-                                                :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tloik)                     {:ilmoitusviestijono   s/Str
-                                                :ilmoituskuittausjono s/Str}
-   (s/optional-key :tierekisteri)              {:url s/Str}
+                                           (s/optional-key :email)   {:taso          s/Keyword
+                                                                      :palvelin      s/Str
+                                                                      :vastaanottaja [s/Str]}}
+   (s/optional-key :integraatiot)         {:paivittainen-lokin-puhdistusaika [s/Num]}
+   (s/optional-key :sonja)                {:url                     s/Str
+                                           :kayttaja                s/Str
+                                           :salasana                s/Str
+                                           (s/optional-key :tyyppi) s/Keyword}
+   (s/optional-key :sampo)                {:lahetysjono-sisaan       s/Str
+                                           :kuittausjono-sisaan      s/Str
+                                           :lahetysjono-ulos         s/Str
+                                           :kuittausjono-ulos        s/Str
+                                           :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :tloik)                {:ilmoitusviestijono   s/Str
+                                           :ilmoituskuittausjono s/Str}
+   (s/optional-key :tierekisteri)         {:url s/Str}
 
-   :ilmatieteenlaitos                          {:lampotilat-url s/Str}
-   :tieosoiteverkon-tuontivali                 s/Int
-   (s/optional-key :tieosoiteverkon-shapefile) s/Str
-   (s/optional-key :hoitoluokkien-shapefile) s/Str
+   :ilmatieteenlaitos                     {:lampotilat-url s/Str}
+
+   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                             s/Int
+                                           (s/optional-key :tieosoiteverkon-shapefile)              s/Str
+                                           (s/optional-key :tieosoiteverkon-alk-osoite)             s/Str
+                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde)        s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-shapefile)       s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-osoite)      s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde) s/Str}
    })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
-  {:http-palvelin              {:portti 3000 :url "http://localhost:3000/"}
-   :kehitysmoodi               true
-   :tietokanta                 {:palvelin   "localhost"
-                                :tietokanta "harja"
-                                :portti     5432
-                                :kayttaja   "harja"
-                                :salasana   ""}
+  {:http-palvelin        {:portti 3000 :url "http://localhost:3000/"}
+   :kehitysmoodi         true
+   :tietokanta           {:palvelin   "localhost"
+                          :tietokanta "harja"
+                          :portti     5432
+                          :kayttaja   "harja"
+                          :salasana   ""}
 
-   :log                        {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
-   :tieosoiteverkon-tuontivali 1
+   :log                  {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
+   :geometriapaivitykset {:tuontivali 1}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]

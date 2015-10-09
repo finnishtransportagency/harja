@@ -107,6 +107,9 @@
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.1"]
+
+                 ;; Apache ANT core
+                 [org.apache.ant/ant "1.9.6"]
                  ]
 
   :dev-dependencies [;; Selain REPL
@@ -126,6 +129,7 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
+                 ["harja-data" "http://185.26.50.104/mvn/"]
                  ]
 
 
@@ -137,6 +141,7 @@
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
             [lein-auto "0.1.2"]
+            [lein-pdo "0.1.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
             ]                                               ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
@@ -214,6 +219,7 @@
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
+            "tuotanto-notest"     ["do" "clean," "deps," "gitlog," "compile," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
             }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

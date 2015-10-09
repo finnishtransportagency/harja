@@ -19,7 +19,7 @@
                       otsikot
                       nil
                       kutsudata
-                      (fn [vastaus-xml]
+                      (fn [vastaus-xml _]
                         (kasittele-vastaus
                           vastaus-xml
                           (str "Tietueiden haku epäonnistui (URL: " url ") tr-osoitteella: " (pr-str tierekisteriosoitevali)

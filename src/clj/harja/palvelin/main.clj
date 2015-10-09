@@ -9,7 +9,7 @@
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    
+
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
@@ -18,7 +18,7 @@
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
-    
+
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
     [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
@@ -52,11 +52,9 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
 
-    ;; Tieosoiteverkon tuonti
-    [harja.palvelin.tyokalut.tieverkon-tuonti :as tieosoiteverkko]
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
     [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
-    
+
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
     [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
@@ -72,6 +70,7 @@
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
+    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
@@ -100,12 +99,12 @@
                        [:todennus])
 
       :pdf-vienti (component/using
-                   (pdf-vienti/luo-pdf-vienti)
-                   [:http-palvelin])
+                    (pdf-vienti/luo-pdf-vienti)
+                    [:http-palvelin])
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
-      
+
       ;; Integraatioloki
       :integraatioloki (component/using (integraatioloki/->Integraatioloki
                                           (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
@@ -135,9 +134,9 @@
                                      [:db :integraatioloki])
 
       :raportointi (component/using
-                    (raportointi/luo-raportointi)
-                    [:db :pdf-vienti])
-      
+                     (raportointi/luo-raportointi)
+                     [:db :pdf-vienti])
+
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
                         (kayttajatiedot/->Kayttajatiedot)
@@ -176,11 +175,11 @@
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
       :muokkauslukko (component/using
-                    (muokkauslukko/->Muokkauslukko)
-                    [:http-palvelin :db])
+                       (muokkauslukko/->Muokkauslukko)
+                       [:http-palvelin :db])
       :paikkaus (component/using
-                    (paikkaus/->Paikkaus)
-                    [:http-palvelin :db])
+                  (paikkaus/->Paikkaus)
+                  [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
                         [:http-palvelin :db])
@@ -229,25 +228,22 @@
                                 [:http-palvelin :db])
 
       :integraatioloki-palvelu (component/using
-                                (integraatioloki-palvelu/->Integraatioloki)
-                                [:http-palvelin :db])
+                                 (integraatioloki-palvelu/->Integraatioloki)
+                                 [:http-palvelin :db])
       :raportit (component/using
-                 (raportit/->Raportit)
-                 [:http-palvelin :db :raportointi :pdf-vienti])
+                  (raportit/->Raportit)
+                  [:http-palvelin :db :raportointi :pdf-vienti])
 
       :tyokoneenseuranta (component/using
-                          (tyokoneenseuranta/->TyokoneseurantaHaku)
-                          [:http-palvelin :db])
+                           (tyokoneenseuranta/->TyokoneseurantaHaku)
+                           [:http-palvelin :db])
 
       :tr-haku (component/using (tierek-haku/->TierekisteriHaku) [:http-palvelin :db])
-      
-      ;; tieosoiteverkon tuonti
-      :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
-                                                (:tieosoiteverkon-shapefile asetukset)
-                                                (:hoitoluokkien-shapefile asetukset)
-                                                (:tieosoiteverkon-tuontivali asetukset))
-                                               [:db])
-      
+
+      :geometriapaivitykset (component/using (geometriapaivitykset/->Geometriapaivitykset
+                                               (:geometriapaivitykset asetukset))
+                                             [:db :integraatioloki])
+
       ;; Harja API
       :api-urakat (component/using
                     (api-urakat/->Urakat)
@@ -256,29 +252,29 @@
                        (api-havainnot/->Havainnot)
                        [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
       :api-paivystajatiedot (component/using
-                          (api-paivystajatiedot/->Paivystajatiedot)
-                          [:http-palvelin :db :integraatioloki])
+                              (api-paivystajatiedot/->Paivystajatiedot)
+                              [:http-palvelin :db :integraatioloki])
       :api-pistetoteuma (component/using
                           (api-pistetoteuma/->Pistetoteuma)
                           [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
-                          (api-reittitoteuma/->Reittitoteuma)
-                          [:http-palvelin :db :integraatioloki])
+                           (api-reittitoteuma/->Reittitoteuma)
+                           [:http-palvelin :db :integraatioloki])
       :api-varustetoteuma (component/using
-                           (api-varustetoteuma/->Varustetoteuma)
-                           [:http-palvelin :db :tierekisteri :integraatioloki])
+                            (api-varustetoteuma/->Varustetoteuma)
+                            [:http-palvelin :db :tierekisteri :integraatioloki])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tyokoneenseuranta (component/using
-                              (api-tyokoneenseuranta/->Tyokoneenseuranta)
-                              [:http-palvelin :db])
+                               (api-tyokoneenseuranta/->Tyokoneenseuranta)
+                               [:http-palvelin :db])
       :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
                                                         [:db])
       :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                        [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
+                                                  [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
-                                                        [:db])
+                                                  [:db])
       :api-varusteet (component/using (api-varusteet/->Varusteet)
                                       [:http-palvelin :db :integraatioloki :tierekisteri])
       )))
@@ -289,9 +285,9 @@
   (Locale/setDefault (Locale. "fi" "FI"))
   (alter-var-root #'harja-jarjestelma
                   (constantly
-                   (-> (lue-asetukset asetusfile)
-                       luo-jarjestelma
-                       component/start))))
+                    (-> (lue-asetukset asetusfile)
+                        luo-jarjestelma
+                        component/start))))
 
 (defn sammuta-jarjestelma []
   (when harja-jarjestelma

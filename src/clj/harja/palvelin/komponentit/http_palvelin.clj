@@ -162,7 +162,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                  (reitita (todennus/todenna-pyynto todennus req)
                                           (conj (mapv :fn @kasittelijat)
                                                 resurssit)))
-                               {:port portti})))
+                               {:port portti
+                                :thread 64})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")

@@ -1,0 +1,108 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: Varmistetaan, että Harjan sovellushakemisto on olemassa
+      file: path=/opt/harja state=directory owner=harja group=harja mode="u=rwx,g=rwx,o=rx"
+      
+    - name: kirjoita serviced konfiguraatio
+      template: src=templates/centos7-service-template.j2 dest=/etc/systemd/system/harja.service mode=755
+      with_items:
+        - description: "Harja testiymparisto"
+          start_file: /opt/harja/harja.sh
+          user_name: harja
+          user_group: harja
+          workingdir: /opt/harja
+
+    - name: pysayta harja
+      service: name=harja state=stopped
+      when: '{{harja_migrate_only}} == false'
+
+    - name: tuhoa kanta
+      sudo: yes
+      sudo_user: postgres
+      postgresql_db: name=harja state=absent
+      when: '{{harja_migrate_only}} == false'
+
+    - name: luo kanta
+      sudo: yes
+      sudo_user: postgres
+      postgresql_db: name=harja owner=harja state=present
+
+    - name: tee postgis-extensio
+      sudo: yes
+      sudo_user: postgres
+      postgresql_ext: db=harja name=postgis state=present
+
+    - name: tee pg_stat_statements -ekstensio
+      sudo: yes
+      sudo_user: postgres
+      postgresql_ext: db=harja name=pg_stat_statements state=present
+
+    - name: fetch
+      sudo: yes
+      sudo_user: harja
+      command: git fetch
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: checkaa ulos oikea branch
+      sudo: yes
+      sudo_user: harja
+      command: git checkout '{{harja_branch}}'
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: pull
+      sudo: yes
+      sudo_user: harja
+      command: git pull
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: aja tietokantamigraatiot
+      sudo: yes
+      sudo_user: harja
+      command: mvn compile flyway:migrate -Dflyway.password=harja123
+      args:
+        chdir: /opt/harja-build/harja-repo/tietokanta
+
+    - name: dumppaa testidata
+      sudo: yes
+      sudo_user: harja
+      shell: psql -p5432 harja -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+      args:
+        chdir: /opt/harja-build/harja-repo/tietokanta
+      when: '{{harja_migrate_only}} == false'
+
+    - name: buildi
+      sudo: yes
+      sudo_user: harja
+      command: /usr/local/bin/lein tuotanto-notest
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: Kopioi viimeisin Harja jar
+      command: cp target/harja-0.0.1-SNAPSHOT-standalone.jar /opt/harja/harja-nightly.jar
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: Kopioi sovelluksen konfiguraatio
+      command: cp test_envs/upcloud/templates/asetukset_dev.edn /opt/harja/asetukset.edn
+      args:
+        chdir: /opt/harja-build/harja-repo
+        
+    - name: Kopioi käynnistysskripti
+      command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
+      args:
+        chdir: /opt/harja-build/harja-repo
+
+    - name: Käynnistä Harja
+      sudo: yes
+      service: name=harja state=restarted
+      register: start
+
+      
+
+    
+  
