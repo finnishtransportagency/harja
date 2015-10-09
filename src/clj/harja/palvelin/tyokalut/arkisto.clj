@@ -21,12 +21,11 @@
         (let [tiedostopolku (str kohdepolku "/" (.replace (str (.getName tiedosto)) "./._" ""))]
           (io/copy zip-virta (io/file tiedostopolku)))))))
 
-
 (defn pura-paketti [kohdetiedoston-polku]
   (let [tiedostotyyppi (FilenameUtils/getExtension kohdetiedoston-polku)]
     (case tiedostotyyppi
       "zip" (pura-zip-paketti kohdetiedoston-polku)
-      "g" (pura-gzip-paketti kohdetiedoston-polku)
+      "gz" (pura-gzip-paketti kohdetiedoston-polku)
       "tgz" (pura-gzip-paketti kohdetiedoston-polku)
       (throw+ {:type  :tuntematon-arkisto-tyyppi
                :error "Ei voida purkaa pakettia: " kohdetiedoston-polku ". Tuntematon tiedostotyyppi: " tiedostotyyppi "."}))))
