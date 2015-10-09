@@ -38,11 +38,20 @@
                               "hallintayksikko" "Hallintayksikkö"
                               "koko maa" "Koko maa")]] t
               (if (= "urakka" konteksti)
-                (conj t ["Urakka" (:nimi (first (urakat-q/hae-urakka db urakka-id)))])
+                (let [ur (first (urakat-q/hae-urakka db urakka-id))]
+                  (concat t [["Urakka" (:nimi ur)]
+                             ["Urakoitsija" (:urakoitsija_nimi ur)]]))
+                
                 t)
 
               (if (= "hallintayksikko" konteksti)
-                (conj t ["Hallintayksikkö" (:nimi (first (organisaatiot-q/hae-organisaatio db hallintayksikko-id)))])
+                (concat t [["Hallintayksikkö" (:nimi (first (organisaatiot-q/hae-organisaatio db hallintayksikko-id)))]
+                           ["Urakoita käynnissä" (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
+                                                         db hallintayksikko-id))]])
+                t)
+
+              (if (= "koko maa" konteksti)
+                (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))])
                 t))))
 
 (defrecord Raportointi [raportit]

@@ -312,3 +312,16 @@ FROM hanke
 WHERE id = (SELECT hanke
             FROM urakka
             WHERE id = :id)
+
+-- name: hae-hallintayksikon-kaynnissa-olevat-urakat
+-- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakoista
+SELECT id, nimi
+  FROM urakka
+ WHERE hallintayksikko = :hal
+   AND alkupvm <= current_date AND loppupvm >= current_date;
+
+-- name: hae-kaynnissa-olevat-urakat
+-- Palauttaa nimen ja id:n koko maan käynnissä olevista urakoista
+SELECT id, nimi
+  FROM urakka
+ WHERE alkupvm <= current_date AND loppupvm >= current_date;
