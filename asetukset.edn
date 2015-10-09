@@ -45,9 +45,9 @@
 
  :geometriapaivitykset {:tuontivali                             5
                         :tieosoiteverkon-shapefile              "file://shp/Tieosoiteverkko.shp"
-                        :tieosoiteverkon-alk-osoite             nil
-                        :tieosoiteverkon-alk-tuontikohde        nil
+                        :tieosoiteverkon-alk-osoite             ""
+                        :tieosoiteverkon-alk-tuontikohde        ""
                         :soratien-hoitoluokkien-shapefile       "file://tl132/tl132.shp"
-                        :soratien-hoitoluokkien-alk-osoite      nil
-                        :soratien-hoitoluokkien-alk-tuontikohde nil}
+                        :soratien-hoitoluokkien-alk-osoite      ""
+                        :soratien-hoitoluokkien-alk-tuontikohde ""}
  }

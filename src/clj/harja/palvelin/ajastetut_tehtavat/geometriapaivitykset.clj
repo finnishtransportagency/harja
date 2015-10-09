@@ -76,7 +76,7 @@
                      tuontivali
                      tieosoiteverkon-alk-osoite
                      tieosoiteverkon-alk-tuontikohde
-                     "Tieosoiteverkko.zip"
+                     "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
 (defn tee-tieverkon-paivitystehtava [this {:keys [tieosoiteverkon-alk-osoite
@@ -105,7 +105,7 @@
                      tuontivali
                      soratien-hoitoluokkien-alk-osoite
                      soratien-hoitoluokkien-alk-tuontikohde
-                     "Hoitoluokat.tgz"
+                     "soratien-hoitoluokat.tgz"
                      (fn [] (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan (:db this) soratien-hoitoluokkien-shapefile)))))
 
 (defn tee-soratien-hoitoluokkien-paivitystehtava [this {:keys [tuontivali

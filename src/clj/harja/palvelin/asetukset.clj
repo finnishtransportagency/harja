@@ -42,13 +42,13 @@
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
-   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                      s/Int
-                                           (s/optional-key :tieosoiteverkon-shapefile)       s/Str
-                                           (s/optional-key :tieosoiteverkon-alk-osoite)      s/Str
-                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde) s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-shapefile)         s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-alk-osoite)        s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde)   s/Str}
+   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                             s/Int
+                                           (s/optional-key :tieosoiteverkon-shapefile)              s/Str
+                                           (s/optional-key :tieosoiteverkon-alk-osoite)             s/Str
+                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde)        s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-shapefile)       s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-osoite)      s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde) s/Str}
    })
 
 (def oletusasetukset

@@ -1,17 +1,19 @@
 (ns harja.palvelin.ajastetut-tehtavat.geometriapaivitykset-test
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.test :refer [deftest is use-fixtures]]
+            [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.alk-komponentti :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :as testi]
+            [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+
 
 (defn aja-tieverkon-paivitys []
   "REPL-testiajofunktio"
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
@@ -31,7 +33,7 @@
 
 (defn aja-soratien-hoitoluokkien-paivitys []
   "REPL-testiajofunktio"
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
