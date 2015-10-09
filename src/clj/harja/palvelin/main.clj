@@ -52,8 +52,6 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
 
-    ;; Tieosoiteverkon tuonti
-    [harja.palvelin.integraatiot.paikkatietojarjestelma.tieverkon-tuonti :as tieosoiteverkko]
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
     [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
 
@@ -241,13 +239,6 @@
                            [:http-palvelin :db])
 
       :tr-haku (component/using (tierek-haku/->TierekisteriHaku) [:http-palvelin :db])
-
-      ;; tieosoiteverkon tuonti
-      :tieosoiteverkon-tuonti (component/using (tieosoiteverkko/->Tieverkontuonti
-                                                 (:tieosoiteverkon-shapefile (:geometriapaivitykset asetukset))
-                                                 (:hoitoluokkien-shapefile (:geometriapaivitykset asetukset))
-                                                 (:tieosoiteverkon-tuontivali (:geometriapaivitykset asetukset)))
-                                               [:db])
 
       :geometriapaivitykset (component/using (geometriapaivitykset/->Geometriapaivitykset
                                                (:geometriapaivitykset asetukset))

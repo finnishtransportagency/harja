@@ -4,11 +4,6 @@
     [taoensso.timbre :as log]
     [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
     [harja.palvelin.integraatiot.integraatiopisteet.tiedosto :as tiedosto]
-
-    ;; poista
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.testi :as testi]
     [clj-time.coerce :as time-coerce]))
 
 (defprotocol AlkPalvelut
@@ -48,16 +43,3 @@
   (hae-tiedosto [this integraatio url kohde]
     (when (not (empty? url))
       (lataa-tiedosto (:integraatioloki this) integraatio url kohde))))
-
-;; todo: poista
-(defn aja-tiedoston-muutospaivamaara-kysely []
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (kysy-tiedoston-muutospaivamaara integraatioloki "tieverkon-muutospaivamaaran-haku" "http://185.26.50.104/Tieosoiteverkko.zip")))
-
-(defn aja-tiedoston-haku []
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (lataa-tiedosto integraatioloki "tieverkon-haku" "http://185.26.50.104/Tieosoiteverkko.zip" "/Users/mikkoro/Desktop/Tieosoiteverkko.zip")))

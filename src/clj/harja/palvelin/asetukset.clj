@@ -42,12 +42,13 @@
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
-   (s/optional-key :geometriapaivitykset) {(s/optional-key :tieosoiteverkon-tuontivali)      s/Int
+   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                      s/Int
                                            (s/optional-key :tieosoiteverkon-shapefile)       s/Str
-                                           (s/optional-key :hoitoluokkien-shapefile)         s/Str
                                            (s/optional-key :tieosoiteverkon-alk-osoite)      s/Str
-                                           (s/optional-key :tieosoiteverkon-alk-tuontivali)  s/Int
-                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde) s/Str}
+                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde) s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-shapefile)         s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-osoite)        s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde)   s/Str}
    })
 
 (def oletusasetukset
@@ -61,7 +62,7 @@
                           :salasana   ""}
 
    :log                  {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
-   :geometriapaivitykset {:tieosoiteverkon-tuontivali 1}
+   :geometriapaivitykset {:tuontivali 1}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]

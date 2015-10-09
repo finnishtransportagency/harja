@@ -43,10 +43,11 @@
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tieosoiteverkon-tuontivali      1
+ :geometriapaivitykset {:tuontivali                      5
                         :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko.shp"
                         :tieosoiteverkon-alk-osoite      ""
-                        :tieosoiteverkon-alk-tuontivali  1
                         :tieosoiteverkon-alk-tuontikohde ""
-                        :hoitoluokkien-shapefile         "file://tl132/tl132.shp"}
+                        :soratien-hoitoluokkien-shapefile         "file://tl132/tl132.shp"
+                        :soratien-hoitoluokkien-alk-osoite        ""
+                        :soratien-hoitoluokkien-alk-tuontikohde   ""}
  }
