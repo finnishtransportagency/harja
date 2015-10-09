@@ -11,16 +11,14 @@
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille db
-                                                                                                   urakka-id
-                                                                                                   (konv/sql-timestamp alkupvm)
-                                                                                                   (konv/sql-timestamp loppupvm)))
+  (let [toteuma-parametrit [db
+                            urakka-id
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)]
+        toteutuneet-materiaalit (into []
+                                      (apply materiaalit-q/hae-urakan-toteutuneet-materiaalit-raportille toteuma-parametrit))
         suunnitellut-materiaalit (into []
-                                       (materiaalit-q/hae-urakan-suunnitellut-materiaalit-raportille db
-                                                                                                    urakka-id
-                                                                                                    (konv/sql-timestamp alkupvm)
-                                                                                                    (konv/sql-timestamp loppupvm)))
+                                       (apply materiaalit-q/hae-urakan-suunnitellut-materiaalit-raportille toteuma-parametrit))
         suunnitellut-materiaalit-ilman-toteumia (filter
                                                   (fn [materiaali]
                                                     (not-any?
@@ -54,16 +52,6 @@
                                                                                                       (konv/sql-timestamp loppupvm)))]
     toteutuneet-materiaalit))
 
-(defn muodosta-materiaalisarakkeet
-  "Käy läpi materiaalitoteumat ja muodostaa toteumissa esiintyvistä materiaaleista yhden sarakkeen kustakin."
-  [materiaalitoteumat]
-  (let [materiaalit (distinct (mapv (fn [materiaali]
-                                      (select-keys materiaali [:materiaali_nimi :materiaali_nimi_lyhenne]))
-                                    materiaalitoteumat))]
-    (mapv (fn [materiaali]
-            {:otsikko     (:materiaali_nimi materiaali)
-             :leveys      "33%"})
-          materiaalit)))
 
 
 (defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm

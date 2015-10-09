@@ -6,6 +6,8 @@
             [harja.palvelin.raportointi.pdf :as pdf]
             [taoensso.timbre :as log]
             [harja.kyselyt.raportit :as raportit-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             ;; vaaditaan built in raportit
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
@@ -27,7 +29,22 @@
 (defn SQL [& haku-ja-parametrit]
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
-                    
+
+(defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id] :as parametrit} raportti]
+  (assoc-in raportti
+            [1 :tietoja]
+            (as-> [["Kohde" (case konteksti
+                              "urakka" "Urakka"
+                              "hallintayksikko" "Hallintayksikkö"
+                              "koko maa" "Koko maa")]] t
+              (if (= "urakka" konteksti)
+                (conj t ["Urakka" (:nimi (first (urakat-q/hae-urakka db urakka-id)))])
+                t)
+
+              (if (= "hallintayksikko" konteksti)
+                (conj t ["Hallintayksikkö" (:nimi (first (organisaatiot-q/hae-organisaatio db hallintayksikko-id)))])
+                t))))
+
 (defrecord Raportointi [raportit]
   component/Lifecycle
   (start [{db :db
@@ -39,10 +56,8 @@
     (pdf-vienti/rekisteroi-pdf-kasittelija!
      pdf-vienti :raportointi
      (fn [kayttaja params]
-       (let [rapos (suorita-raportti this kayttaja params)]
-         (log/debug "SUORITETTU RAPORTTI: " (pr-str rapos))
-         (pdf/muodosta-pdf
-          rapos))))
+       (let [raportti (suorita-raportti this kayttaja params)]
+         (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti)))))
 
     this)
 
@@ -67,12 +82,12 @@
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
-         (condp = konteksti
-           "urakka" (assoc parametrit
-                           :urakka-id (:urakka-id suorituksen-tiedot))
-           "hallintayksikko" (assoc parametrit
-                                    :hallintayksikko-id (:hallintayksikko-id suorituksen-tiedot))
-           "koko maa" parametrit))))))
+                        (condp = konteksti
+                          "urakka" (assoc parametrit
+                                          :urakka-id (:urakka-id suorituksen-tiedot))
+                          "hallintayksikko" (assoc parametrit
+                                                   :hallintayksikko-id (:hallintayksikko-id suorituksen-tiedot))
+                          "koko maa" parametrit))))))
 
 
 (defn luo-raportointi []

@@ -137,7 +137,7 @@
                         :footer {:sisalto (luo-footer (:nimi raportin-tunnistetiedot))}}
          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
-                    [:fo:block {:padding "2mm" :border "solid 0.2mm black"}
+                    [:fo:block {:padding "2mm" :border "solid 0.2mm black" :margin-bottom "2mm"}
                      (muodosta-pdf [:yhteenveto tiedot])])]
                  (mapcat #(if (seq? %)
                                 (map muodosta-pdf %)
