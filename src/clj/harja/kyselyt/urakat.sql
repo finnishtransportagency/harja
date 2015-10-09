@@ -6,12 +6,10 @@ OR alkupvm BETWEEN :alku AND :loppu
 OR loppupvm IS NULL AND :loppu > NOW();
 
 -- name: hae-kaynnissa-olevat-urakat
-SELECT
-  u.id,
-  u.nimi,
-  u.tyyppi
-FROM urakka u
-WHERE u.loppupvm IS NULL OR u.loppupvm > NOW();
+SELECT u.id, u.nimi, u.tyyppi
+  FROM urakka u
+ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+   AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
@@ -318,10 +316,6 @@ WHERE id = (SELECT hanke
 SELECT id, nimi
   FROM urakka
  WHERE hallintayksikko = :hal
-   AND alkupvm <= current_date AND loppupvm >= current_date;
+   AND (alkupvm IS NULL OR alkupvm <= current_date)
+   AND (loppupvm IS NULL OR loppupvm >= current_date);
 
--- name: hae-kaynnissa-olevat-urakat
--- Palauttaa nimen ja id:n koko maan käynnissä olevista urakoista
-SELECT id, nimi
-  FROM urakka
- WHERE alkupvm <= current_date AND loppupvm >= current_date;
