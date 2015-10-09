@@ -155,7 +155,7 @@
                  (swap! rivit + (/ erotus 19))))))})
 
       (fn [{:keys [nimi koko on-focus lomake?]} data]
-        [:span
+        [:span.kentta-text
          [:textarea {:value       @data
                      :on-change   #(muuta! data %)
                      :on-focus    on-focus

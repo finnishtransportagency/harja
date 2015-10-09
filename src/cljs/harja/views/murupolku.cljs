@@ -22,7 +22,7 @@
       (let [valinta-auki (:valinta-auki (reagent/state (reagent/current-component)))
             urakkatyyppi @nav/valittu-urakkatyyppi
             urakoitsija @nav/valittu-urakoitsija]
-        [:span {:class (when (empty? @nav/tarvitsen-karttaa)
+        [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                          (cond
                            (= @nav/sivu :hallinta) "hide"
                            (= @nav/sivu :about) "hide"

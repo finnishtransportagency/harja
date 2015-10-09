@@ -333,9 +333,16 @@
      (when @raportti-valmis-naytettavaksi?
        [raporttinakyma @valittu-raporttityyppi])]))
 
+(def kartan-edellinen-koko (atom nil))
+
 (defn raportit []
   (komp/luo
     (komp/lippu nakymassa?)
+    (komp/sisaan-ulos #(do
+                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (nav/vaihda-kartan-koko! :M))
+                      #(do
+                        (nav/vaihda-kartan-koko! @kartan-edellinen-koko)))
     (fn []
       (if (roolit/roolissa? roolit/tilaajan-kayttaja)
         [:span
