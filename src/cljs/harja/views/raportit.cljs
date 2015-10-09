@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
-            [harja.transit :as t])
+            [harja.transit :as t]
+            [clojure.string :as str])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -34,74 +35,8 @@
 ;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
 (defonce suoritettu-raportti (atom nil))
 
-(def raportti-valmis-naytettavaksi?
-  (reaction (let [valittu-raporttityyppi @valittu-raporttityyppi
-                  konteksti (:konteksti valittu-raporttityyppi)
-                  v-ur @nav/valittu-urakka
-                  v-hal @nav/valittu-hallintayksikko
-                  v-aikavali @u/valittu-aikavali]
-              (when valittu-raporttityyppi
-                (if (= :testiraportti (:nimi valittu-raporttityyppi))
-                  true
-                  (if (= konteksti #{:urakka}) ; Pelkkä urakka -konteksti
-                    (and v-ur
-                         v-hal)
-                    (if (or (contains? (:parametrit valittu-raporttityyppi) :valitun-hallintayksikon-aikavali)
-                            (contains? (:parametrit valittu-raporttityyppi) :koko-maan-aikavali))
-                      (and (not (nil? v-aikavali)) (not (empty? (keep identity v-aikavali))))
-                      false)))))))
-(def nakymassa? (atom nil))
-
-(defonce yksikkohintaiset-toteumat
-         (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      alkupvm (first @u/valittu-hoitokauden-kuukausi)
-                      loppupvm (second @u/valittu-hoitokauden-kuukausi)
-                      nakymassa? @nakymassa?
-                      tama-raportti-valittu? (= :yks-hint-raportti (:nimi @valittu-raporttityyppi))]
-                     (when (and urakka-id alkupvm loppupvm nakymassa? tama-raportti-valittu?)
-                       (log "[RAPORTTI] Haetaan yks. hint. kuukausiraportti parametreilla: " urakka-id alkupvm loppupvm)
-                       (raportit/hae-yksikkohintaisten-toiden-kuukausiraportti urakka-id alkupvm loppupvm))))
-(defonce yksikkohintaiset-toteumat-kaikkine-tietoineen
-         (reaction
-           (when
-             @nav/valittu-urakka
-             @yksikkohintaiset-toteumat
-             (let [tehtavat (map
-                              (fn [tasot] (let [kolmostaso (nth tasot 2)
-                                                nelostaso (nth tasot 3)]
-                                            (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                              @u/urakan-toimenpiteet-ja-tehtavat)
-                   toteumat-tehtavatietoineen (mapv
-                                                (fn [toteuma]
-                                                  (let [tehtavan-tiedot (first
-                                                                          (filter
-                                                                            (fn [tehtava]
-                                                                              (= (:id tehtava) (:toimenpidekoodi_id toteuma)))
-                                                                            tehtavat))
-                                                        yksikkohinta-hoitokaudella (or (:yksikkohinta
-                                                                                         (first
-                                                                                           (filter
-                                                                                             (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                            (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                             @u/urakan-yks-hint-tyot))) nil)
-                                                        suunniteltu-maara-hoitokaudella (or (:maara
-                                                                                              (first
-                                                                                                (filter
-                                                                                                  (fn [tyo] (and (= (:tehtava tyo) (:toimenpidekoodi_id toteuma))
-                                                                                                                 (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                  @u/urakan-yks-hint-tyot))) nil)]
-                                                    (-> toteuma
-                                                        (merge (dissoc tehtavan-tiedot :id))
-                                                        (assoc :yksikkohinta yksikkohinta-hoitokaudella)
-                                                        (assoc :suunniteltu-maara-hoitokaudella suunniteltu-maara-hoitokaudella))))
-                                                @yksikkohintaiset-toteumat)]
-               toteumat-tehtavatietoineen))))
-
-
-(defonce raporttityypit
-  (reaction<! [nakymassa? @nakymassa?]
-    (when nakymassa?
-      (raportit/hae-raportit))))
+;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
+(defonce raporttityypit (atom nil))
 
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
@@ -202,41 +137,44 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                                      )))
 
      [:div.row
-      [:div.col-md-4
-       [napit/palvelinkutsu-nappi "Suorita"
-        #(go (reset! suoritettu-raportti :ladataan)
-             (let [raportti (<! (case konteksti
-                                  "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                                 (arvot))
-                                  "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                                               (:nimi raporttityyppi) (arvot))
-                                  "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                             (:nimi raporttityyppi)
-                                                                             (arvot))))]
-               (if-not (k/virhe? raportti)
-                 (reset! suoritettu-raportti raportti)
-                 (do
-                   (reset! suoritettu-raportti nil)
-                   raportti))))
-        {:disabled (contains? arvot-nyt :virhe)}]]
-      [:div.col-md-2.col-md-offset-6.raportin-pdf
-       [:form {:target "_blank" :method "POST" :id "raporttipdf"
-               :action (k/pdf-url :raportointi)}
-        [:input {:type "hidden" :name "parametrit"
-                 :value ""}]
-        [:button.nappi-ensisijainen.pull-right
-         {:type "submit"
-          :on-click #(do (let [input (-> js/document
-                                         (.getElementById "raporttipdf")
-                                         (aget "parametrit"))
-                               parametrit (case konteksti
-                                            "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) (arvot))
-                                            "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) (arvot))
-                                            "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) (arvot)))]
-                           (set! (.-value input)
-                                 (t/clj->transit parametrit)))
-                         true)}
-         (ikonit/print) " Tallenna PDF"]]]]]))
+      [:div.col-md-12
+       [:div.raportin-toiminnot
+        
+        [:form {:target "_blank" :method "POST" :id "raporttipdf"
+                :action (k/pdf-url :raportointi)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value ""}]
+         [:button.nappi-ensisijainen.pull-right
+          {:type "submit"
+           :on-click #(do (let [input (-> js/document
+                                          (.getElementById "raporttipdf")
+                                          (aget "parametrit"))
+                                parametrit (case konteksti
+                                             "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) (arvot))
+                                             "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) (arvot))
+                                             "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) (arvot)))]
+                            (set! (.-value input)
+                                  (t/clj->transit parametrit)))
+                          true)}
+          (ikonit/print) " Tallenna PDF"]]
+        [napit/palvelinkutsu-nappi " Tee raportti"
+         #(go (reset! suoritettu-raportti :ladataan)
+              (let [raportti (<! (case konteksti
+                                   "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                                  (arvot))
+                                   "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                                                (:nimi raporttityyppi) (arvot))
+                                   "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
+                                                                              (:nimi raporttityyppi)
+                                                                              (arvot))))]
+                (if-not (k/virhe? raportti)
+                  (reset! suoritettu-raportti raportti)
+                  (do
+                    (reset! suoritettu-raportti nil)
+                    raportti))))
+         {:ikoni [ikonit/list]
+          :disabled (contains? arvot-nyt :virhe)}]]]
+      ]]))
 
 
 (defn raporttivalinnat []
@@ -252,15 +190,24 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                                
             ]
         [:div.raporttivalinnat
-         [:div.raportin-tyyppi
-          [:div.label-ja-alasveto
-           [:span.alasvedon-otsikko "Valitse raportti"]
-           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
-                                 ;;\u2014 on väliviivan unikoodi
-                                 :format-fn  #(if % (:kuvaus %) "Valitse")
-                                 :valitse-fn #(reset! valittu-raporttityyppi %)
-                                 :class      "valitse-raportti-alasveto"}
-            @mahdolliset-raporttityypit]]]
+         [:h3 "Raportin tiedot"]
+         [yleiset/tietoja {}
+          "Kohde" (case konteksti
+                    "urakka" "Urakka"
+                    "hallintayksikko" "Hallintayksikkö"
+                    "koko maa" "Koko maa")
+          "Urakka" (when (= "urakka" konteksti)
+                     (:nimi v-ur))
+          "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
+                                (:nimi v-hal))
+          "Raportti" [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                                           ;;\u2014 on väliviivan unikoodi
+                                           :format-fn  #(if % (:kuvaus %) "Valitse")
+                                           :valitse-fn #(reset! valittu-raporttityyppi %)
+                                           :class      "valitse-raportti-alasveto"}
+            @mahdolliset-raporttityypit]
+            ]
+         
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
             [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]
@@ -293,7 +240,8 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
 
 (defn raportit []
   (komp/luo
-    (komp/lippu nakymassa?)
+   (komp/sisaan #(when (nil? @raporttityypit)
+                   (go (reset! raporttityypit (<! (raportit/hae-raportit))))))
     (komp/sisaan-ulos #(do
                         (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
                         (nav/vaihda-kartan-koko! :M))
