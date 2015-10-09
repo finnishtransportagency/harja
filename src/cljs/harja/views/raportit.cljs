@@ -125,6 +125,9 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                                     (:parametrit raporttityyppi)))
         arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))
         arvot-nyt (arvot)]
+
+    ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
+    (reset! suoritettu-raportti nil)
     [:span
      
      (map-indexed (fn [i cols]
