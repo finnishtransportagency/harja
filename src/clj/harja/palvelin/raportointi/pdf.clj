@@ -117,7 +117,7 @@
        [:fo:table-cell
         [:fo:block {:margin-left "5mm"} (str arvo)]]])]])
 
-(defn- luo-footer [raportin-nimi]
+(defn- luo-header [raportin-nimi]
   (let [nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
     [:fo:table
      [:fo:table-column {:column-width "40%"}]
@@ -134,7 +134,7 @@
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (apply fo/dokumentti {:orientation (or (:orientaatio raportin-tunnistetiedot) :portrait)
-                        :footer {:sisalto (luo-footer (:nimi raportin-tunnistetiedot))}}
+                        :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                     [:fo:block {:padding "2mm" :border "solid 0.2mm black" :margin-bottom "2mm"}
