@@ -149,6 +149,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                   :value ""}]
          [:button.nappi-ensisijainen.pull-right
           {:type "submit"
+           :disabled (contains? arvot-nyt :virhe)
            :on-click #(do (let [input (-> js/document
                                           (.getElementById "raporttipdf")
                                           (aget "parametrit"))
