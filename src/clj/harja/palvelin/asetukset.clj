@@ -71,14 +71,16 @@
                 %2)
               oletukset asetukset))
 
+(defn validoi-asetukset [asetukset]
+  (s/validate Asetukset asetukset))
+
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
   [tiedosto]
   (->> tiedosto
        slurp
        read-string
-       (yhdista-asetukset oletusasetukset)
-       (s/validate Asetukset)))
+       (yhdista-asetukset oletusasetukset)))
 
 
 (defn konfiguroi-lokitus [asetukset]

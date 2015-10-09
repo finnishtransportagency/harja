@@ -1,85 +1,90 @@
 (ns harja.palvelin.main
   (:require
+   [taoensso.timbre :as log]
+   ;; Yleiset palvelinkomponentit
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.fim :as fim]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.sonja :as sonja]
+   [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
 
-    ;; Yleiset palvelinkomponentit
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.fim :as fim]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.sonja :as sonja]
-    [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+   ;; Integraatiokomponentit
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
+   [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+   [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
 
-    ;; Integraatiokomponentit
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
-    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+   ;; Raportointi
+   [harja.palvelin.raportointi :as raportointi]
 
-    ;; Raportointi
-    [harja.palvelin.raportointi :as raportointi]
+   ;; Harjan bisneslogiikkapalvelut
+   [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+   [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
+   [harja.palvelin.palvelut.haku :as haku]
+   [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
+   [harja.palvelin.palvelut.indeksit :as indeksit]
+   [harja.palvelin.palvelut.urakat :as urakat]
+   [harja.palvelin.palvelut.urakan-toimenpiteet :as urakan-toimenpiteet]
+   [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+   [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+   [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
+   [harja.palvelin.palvelut.toteumat :as toteumat]
+   [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
+   [harja.palvelin.palvelut.yhteyshenkilot]
+   [harja.palvelin.palvelut.paallystys :as paallystys]
+   [harja.palvelin.palvelut.paikkaus :as paikkaus]
+   [harja.palvelin.palvelut.kayttajat :as kayttajat]
+   [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
+   [harja.palvelin.palvelut.materiaalit :as materiaalit]
+   [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
+   [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
+   [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
+   [harja.palvelin.palvelut.lampotilat :as lampotilat]
+   [harja.palvelin.palvelut.maksuerat :as maksuerat]
+   [harja.palvelin.palvelut.liitteet :as liitteet]
+   [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
+   [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+   [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+   [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+   [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
+   [harja.palvelin.palvelut.raportit :as raportit]
+   [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
 
-    ;; Harjan bisneslogiikkapalvelut
-    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
-    [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
-    [harja.palvelin.palvelut.haku :as haku]
-    [harja.palvelin.palvelut.hallintayksikot :as hallintayksikot]
-    [harja.palvelin.palvelut.indeksit :as indeksit]
-    [harja.palvelin.palvelut.urakat :as urakat]
-    [harja.palvelin.palvelut.urakan-toimenpiteet :as urakan-toimenpiteet]
-    [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-    [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
-    [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
-    [harja.palvelin.palvelut.toteumat :as toteumat]
-    [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
-    [harja.palvelin.palvelut.yhteyshenkilot]
-    [harja.palvelin.palvelut.paallystys :as paallystys]
-    [harja.palvelin.palvelut.paikkaus :as paikkaus]
-    [harja.palvelin.palvelut.kayttajat :as kayttajat]
-    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
-    [harja.palvelin.palvelut.materiaalit :as materiaalit]
-    [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
-    [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
-    [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
-    [harja.palvelin.palvelut.lampotilat :as lampotilat]
-    [harja.palvelin.palvelut.maksuerat :as maksuerat]
-    [harja.palvelin.palvelut.liitteet :as liitteet]
-    [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
-    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
-    [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
-    [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-    [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
-    [harja.palvelin.palvelut.raportit :as raportit]
-    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
+   ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
+   [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
 
-    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
-    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
+   ;; Harja API
+   [harja.palvelin.integraatiot.api.urakat :as api-urakat]
+   [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
+   [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
+   [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
+   [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
+   [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
+   [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
+   [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
+   [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
+   [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
+   [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
 
-    ;; Harja API
-    [harja.palvelin.integraatiot.api.urakat :as api-urakat]
-    [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
-    [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
-    [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
-    [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-    [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
-    [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
-    [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
-    [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
-    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
-    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
+   ;; Ajastetut tehtävät
+   [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
+   [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
 
-    ;; Ajastetut tehtävät
-    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
-    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
-
-    [com.stuartsierra.component :as component]
-    [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus]])
+   [com.stuartsierra.component :as component]
+   [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
   (:import [java.util Locale])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
+    (try
+      (validoi-asetukset asetukset)
+      (catch Exception e
+        (log/error e "Validointivirhe asetuksissa!")))
+    
     (component/system-map
       :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
                                      (:portti tietokanta)
