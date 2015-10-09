@@ -9,6 +9,7 @@ Oletuksena muodostuu A4 sivu.
   :margin         mäppi eri reunojen margineja, oletus {:left \"1cm\" :right \"1cm\" :top \"1cm\" :bottom \"1cm\"}
   :footer         footerin määrittelevä mäppi, jossa avaimet :extent (koko esim. sentteinä) ja :sisalto
   :header         headerin määrittelevä mäppi, jossa avaimet :extent ja :sisalto
+  :orientation    sivun orientaatio, joko :portrait (pysty, oletus) tai :landscape
 
 "
   
@@ -16,14 +17,17 @@ Oletuksena muodostuu A4 sivu.
   (let [margin (merge (:margin optiot)
                       {:left "1cm" :right "1cm" :top "1cm" :bottom "1cm"})
         header (merge (:header optiot) {:extent "1cm"})
-        footer (merge (:footer optiot) {:extent "1cm"})]
+        footer (merge (:footer optiot) {:extent "1cm"})
+        [page-height page-width] (if (= :landscape (:orientation optiot))
+                                   ["21cm" "29.7cm"]
+                                   ["29.7cm" "21cm"])]
     
     [:fo:root {:xmlns:fo "http://www.w3.org/1999/XSL/Format"}
      
      ;; Layoutin konffi
      [:fo:layout-master-set
       [:fo:simple-page-master {:master-name "first"
-                               :page-height "29.7cm" :page-width "21cm"
+                               :page-height page-height :page-width page-width
                                :margin-top (:top margin) :margin-bottom (:bottom margin) :margin-left (:left margin) :margin-right (:right margin)}
        [:fo:region-body {:region-name "xsl-region-body" :margin-top "1cm"}]
        [:fo:region-before {:region-name "xsl-region-before" :extent (:extent header)}]

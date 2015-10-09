@@ -17,8 +17,9 @@
          (map (fn [raportti]
                 (as-> raportti r
                   (dissoc r :id)
-                  (assoc r :parametrit
-                         (map #(dissoc % :id) (:parametrit r))))))
+                  (assoc r
+                         :nimi (keyword (:nimi r))
+                         :parametrit (map #(dissoc % :id) (:parametrit r))))))
          (map (juxt (comp keyword :nimi)
                     (fn [raportti]
                       (assoc raportti

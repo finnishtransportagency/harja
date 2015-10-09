@@ -62,6 +62,7 @@
                                  (pvm/vuosi aikavali-alkupvm))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
+    
     [:raportti {:nimi "Laskutusyhteenveto"}
      (map (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
             (taulukko otsikko tyhja
