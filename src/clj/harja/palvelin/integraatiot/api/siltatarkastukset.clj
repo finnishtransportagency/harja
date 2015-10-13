@@ -12,7 +12,18 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn luo-siltatarkastuas [ulkoinen-id urakka-id tarkastus silta kayttaja db]
+(defn api-tulos->kirjain [tulos-nimi]
+  (case tulos-nimi
+    "eiToimenpiteita" "A"
+    "puhdistettava" "B"
+    "urakanKunnostettava" "C"
+    "korjausOhjelmoitava" "D"))
+
+(defn api-kohde->numero [kohde-nimi]
+  ; TODO
+  )
+
+(defn luo-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
   (silta-q/luo-siltatarkastus<!
     db
@@ -40,12 +51,14 @@
   (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-luojalla db ulkoinen-id (:id kayttaja)))]
     (if siltatarkastus-kannassa
       (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db)
-      (luo-siltatarkastuas ulkoinen-id urakka-id tarkastus silta kayttaja db))))
+      (luo-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db))))
 
 (defn lisaa-siltatarkastuskohteet [ulkoinen-id tarkastus silta kayttaja db]
-  ;; TODO Poista vanha
-  ;; TODO Lisää uudet
-  )
+  (silta-q/poista-siltatarkastuskohteet! siltatarkastus-id)
+  (silta-q/luo-siltatarkastuksen-kohde<! tulos
+                                         lisatieto
+                                         siltatarkastus-id
+                                         kohde))
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/debug "DB on " (pr-str db))

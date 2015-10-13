@@ -151,6 +151,4 @@ UPDATE siltatarkastus
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
-UPDATE siltatarkastus
-   SET poistettu = TRUE
- WHERE id = :id;
+DELETE FROM siltatarkastus WHERE siltatarkastus = :siltatarkastus;
