@@ -68,9 +68,6 @@ SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkast
        JOIN silta s ON st1.silta=s.id
  WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka) AND st1.poistettu = false;
 
-       
-       
-
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
 SELECT id, silta, urakka,
@@ -92,6 +89,14 @@ SELECT id, silta, urakka,
 	 WHERE k.siltatarkastus=id) as kohteet
   FROM siltatarkastus
  WHERE id = :id AND poistettu = false;
+
+-- name: hae-siltatarkastus-idlla-ja-luojalla
+-- Hakee yhden siltatarkastuksen
+SELECT id, silta, urakka,
+  tarkastusaika, tarkastaja,
+  luotu, luoja, muokattu, muokkaaja, poistettu
+FROM siltatarkastus
+WHERE id = :id AND luoja = :luoja AND poistettu = false;
 
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
