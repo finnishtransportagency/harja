@@ -49,7 +49,7 @@
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
-  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+  (validointi/tarkista-urakka-ja-kayttaja db id kayttaja)
   (let [urakka-id (Long/parseLong id)
         ulkoinen-id (get-in [:siltatarkastus :tunniste :id] data)
         silta (silta-q/hae-silta-numerolla (get-in [:siltatarkastus :siltanumero] data))]
