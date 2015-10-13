@@ -82,7 +82,7 @@
 
 (defn lisaa-siltatarkastuskohteet [sillantarkastuskohteet siltatarkastus-id db]
   (log/debug "Tallennetaan siltatarkastuskohteet")
-  (let [tallenna-kohdekohderyhma (fn [kohderyhma]
+  (let [tallenna-kohderyhma (fn [kohderyhma]
                                    (doseq [kohde (keys kohderyhma)]
                                      (silta-q/luo-siltatarkastuksen-kohde<! db
                                                                             (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
@@ -90,10 +90,10 @@
                                                                             siltatarkastus-id
                                                                             (api-kohde->numero (name kohde)))))]
     (silta-q/poista-siltatarkastuskohteet! db siltatarkastus-id)
-    (tallenna-kohdekohderyhma (:alusrakenne sillantarkastuskohteet))
-    (tallenna-kohdekohderyhma (:paallysrakenne sillantarkastuskohteet))
-    (tallenna-kohdekohderyhma (:varusteetJaLaitteet sillantarkastuskohteet))
-    (tallenna-kohdekohderyhma (:siltapaikanRakenteet sillantarkastuskohteet))))
+    (tallenna-kohderyhma (:alusrakenne sillantarkastuskohteet))
+    (tallenna-kohderyhma (:paallysrakenne sillantarkastuskohteet))
+    (tallenna-kohderyhma (:varusteetJaLaitteet sillantarkastuskohteet))
+    (tallenna-kohderyhma (:siltapaikanRakenteet sillantarkastuskohteet))))
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
