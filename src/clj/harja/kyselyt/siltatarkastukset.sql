@@ -102,14 +102,14 @@ WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = false;
 -- Hakee sillan siltanumerolla
 SELECT id, tyyppi, siltanro, siltanimi
 FROM silta
-WHERE siltanro
+WHERE siltanro = :siltanumero;
 
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
 INSERT
   INTO siltatarkastus
        (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu, ulkoinen_id)
-VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false, ulkoinen_id);
+VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false, :ulkoinen_id);
 
 -- name: paivita-siltatarkastus<!
 -- Päivittää siltatarkastuksen
