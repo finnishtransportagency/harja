@@ -19,10 +19,6 @@
     "urakanKunnostettava" "C"
     "korjausOhjelmoitava" "D"))
 
-(defn api-kohde->numero [kohde-nimi]
-  ; TODO
-  )
-
 (defn luo-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
   (silta-q/luo-siltatarkastus<!
@@ -53,12 +49,25 @@
       (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db)
       (luo-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db))))
 
-(defn lisaa-siltatarkastuskohteet [ulkoinen-id tarkastus silta kayttaja db]
-  (silta-q/poista-siltatarkastuskohteet! siltatarkastus-id)
-  (silta-q/luo-siltatarkastuksen-kohde<! tulos
-                                         lisatieto
-                                         siltatarkastus-id
-                                         kohde))
+#_(defn lisaa-siltatarkastuskohteet [ulkoinen-id tarkastus silta kayttaja db]
+  (let [kohteet (:sillantarkastuskohteet tarkastus)
+        aluerakenne (:aluerakenne kohteet)
+        paallysrakenne (:paallystysrakenne kohteet)
+        varusteet-ja-laitteet (:varusteetJaLaitteet kohteet)
+        siltapaikan-rakenteet (:siltapaikanRakenteet kohteet)]
+    (silta-q/poista-siltatarkastuskohteet! siltatarkastus-id)
+    ;; Aluerakenne
+    (silta-q/luo-siltatarkastuksen-kohde<! (api-tulos->kirjain (:maatukienSiisteysJaKunto aluerakenne))
+                                           lisatieto
+                                           siltatarkastus-id
+                                           kohde)
+    ;; Päällystysrakenne
+    ;; TODO
+    ;; Varusteet ja laitteet
+    ;; TODO
+    ;; Siltapaikan rakenteet
+    ;; TODO
+    ))
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/debug "DB on " (pr-str db))
@@ -72,7 +81,7 @@
                                 (if silta
                                   (do
                                     (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja transaktio)
-                                    (lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja transaktio))
+                                    #_(lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja transaktio))
                                   ; FIXME Virhe: siltaa ei löydy
                                   )))))
 
