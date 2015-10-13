@@ -102,6 +102,17 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
     {:toimenpide-id (:id tpi)}
     {:virhe "Ei tpi valintaa"}))
 
+(defonce urakoittain? (atom false))
+
+(defmethod raportin-parametri "urakoittain" [p]
+  [:div.urakoittain
+   [:input {:type "checkbox" :checked @urakoittain?
+            :on-change #(swap! urakoittain? not)}]
+   [:span {:on-click #(swap! urakoittain? not)} " " (:nimi p)]])
+
+(defmethod raportin-parametri-arvo "urakoittain" [p]
+  {:urakoittain? @urakoittain?})
+
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
 
