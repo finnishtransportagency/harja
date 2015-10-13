@@ -39,10 +39,7 @@
                                 20 "A" 21 "A" 22 "A" 23 "A" 24 "A"))
         odotettu-kohteen-lisatieto (fn [kohde]
                                      (case kohde
-                                       4 "Kansi likainen"
-                                       9 "Saumat lohkeilleet"
-                                       19 "Korjattava"
-                                       nil))
+                                       4 "Kansi likainen" 9 "Saumat lohkeilleet" 19 "Korjattava" nil))
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -69,8 +66,8 @@
   (let [ulkoinen-id 666
         siltanumero (ffirst (hae-siltanumerot))
         tarkastusaika "2004-01-30T12:00:00Z"
-        tarkastaja-etunimi "Martti"
-        tarkastaja-sukunimi "Ahtisaari"
+        tarkastaja-etunimi "Simo"
+        tarkastaja-sukunimi "Siili"
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/virheellinen_siltatarkastus_ei_kaikkia_kohteita.json"
                                                     slurp
