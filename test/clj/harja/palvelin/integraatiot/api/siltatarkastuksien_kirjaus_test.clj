@@ -65,8 +65,8 @@
   (let [ulkoinen-id 787878
         siltanumero (first (second (hae-siltanumerot)))
         tarkastusaika "2016-01-30T12:00:00Z"
-        tarkastaja-etunimi "Simo"
-        tarkastaja-sukunimi "Sillantarkastaja"
+        tarkastaja-etunimi "Siooo"
+        tarkastaja-sukunimi "Silttttttarkaja"
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -81,9 +81,9 @@
       (is (= (nth siltatarkastus-kannassa 1) (str ulkoinen-id)))
       (is (= (nth siltatarkastus-kannassa 2) (str tarkastaja-etunimi " " tarkastaja-sukunimi))))
 
-  ;; Nyt Simo huomaa virheen tarkastuksessa ja yrittää vierittää vastuun Antti Ahtaajalle
-  (let [tarkastaja-etunimi "Antti"
-        tarkastaja-sukunimi "Ahtaaja"
+  ;; Nyt Simo huomaa typottaneensa oman nimensä täysin ja korjaa tilanteen
+  (let [tarkastaja-etunimi "Simo"
+        tarkastaja-sukunimi "Sillantarkastaja"
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
