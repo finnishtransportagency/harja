@@ -99,8 +99,8 @@
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction [transaktio db]
-                              (let [ulkoinen-id (get-in data [:siltatarkastus :tunniste :id])
-                                    siltanumero (get-in data [:siltatarkastus :siltanumero])
+                              (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
+                                    siltanumero (Integer. (get-in data [:siltatarkastus :siltanumero]))
                                     silta (first (silta-q/hae-silta-numerolla transaktio siltanumero))]
                                 (if silta
                                   (do

@@ -151,4 +151,4 @@ UPDATE siltatarkastus
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
-DELETE FROM siltatarkastus WHERE siltatarkastus = :siltatarkastus;
+DELETE FROM siltatarkastuskohde WHERE siltatarkastus = :siltatarkastus;
