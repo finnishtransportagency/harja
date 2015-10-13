@@ -56,8 +56,7 @@
                                 21 "A"
                                 22 "A"
                                 23 "A"
-                                24 "A")
-                              )
+                                24 "A"))
         odotettu-kohteen-lisatieto (fn [kohde]
                                      (case kohde
                                        4 "Kansi likainen"
@@ -94,6 +93,22 @@
         tarkastaja-sukunimi "Ahtisaari"
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/virheellinen_siltatarkastus_ei_kaikkia_kohteita.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__ETUNIMI__" tarkastaja-etunimi)
+                                                    (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
+                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
+    (is (not= 200 (:status vastaus-lisays)))))
+
+(deftest yrita-tallentaa-siltatarkastus-olemattomalle-sillalle
+  (let [ulkoinen-id 999
+        siltanumero 1
+        tarkastusaika "2004-01-30T12:00:00Z"
+        tarkastaja-etunimi "Martti"
+        tarkastaja-sukunimi "Ahtisaari"
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                                                (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
