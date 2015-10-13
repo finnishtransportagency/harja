@@ -352,7 +352,7 @@
                         "Tälle päivälle on jo kirjattu tarkastus.")]
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys-col 4
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :leveys-col 4
             :tyyppi  :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
