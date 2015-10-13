@@ -119,8 +119,8 @@ UPDATE siltatarkastus
        tarkastusaika = :tarkastusaika,
        tarkastaja = :tarkastaja,
        luoja = :luoja,
-       poistettu = :poistettu,
-       ulkoinen_id = :ulkoinen_id;
+       poistettu = :poistettu
+ WHERE ulkoinen_id = :ulkoinen_id;
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
