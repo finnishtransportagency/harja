@@ -48,17 +48,18 @@
   )
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
+  (log/debug "DB on " (pr-str db))
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (jdbc/with-db-transaction [db db]
+    (jdbc/with-db-transaction [transaktio db]
                               (let [ulkoinen-id (get-in [:siltatarkastus :tunniste :id] data)
                                     silta (silta-q/hae-silta-numerolla (get-in [:siltatarkastus :siltanumero] data))]
                                 (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
                                 (if silta
                                   (do
-                                    (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db)
-                                    (lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db))
+                                    (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja transaktio)
+                                    (lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja transaktio))
                                   ; FIXME Virhe: siltaa ei löydy
                                   )))))
 

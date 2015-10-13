@@ -149,3 +149,8 @@ UPDATE siltatarkastus
    SET poistettu = TRUE
  WHERE id = :id;
 
+-- name: poista-siltatarkastuskohteet!
+-- Poistaa siltatarkastuksen kohteet siltatarkastuksen
+UPDATE siltatarkastus
+   SET poistettu = TRUE
+ WHERE id = :id;
