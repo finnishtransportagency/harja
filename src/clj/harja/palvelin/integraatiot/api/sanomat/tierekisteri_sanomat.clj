@@ -84,21 +84,21 @@
    :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
 
 (defn luo-tietueen-lisayssanoma [data]
-      (-> data
-          (assoc :tietue (:varuste data))
-          (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
-                                             " "
-                                             (get-in data [:lisaaja :henkilo :sukunimi])))
-          (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
-          (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
-          (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
-          (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
-          (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
-          (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
-                                                        (get-in data [:varuste :sijainti :tie :alkupvm])))
-          (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
-          (dissoc :otsikko)
-          (dissoc :varuste)))
+  (-> data
+      (assoc :tietue (:varuste data))
+      (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
+                                         " "
+                                         (get-in data [:lisaaja :henkilo :sukunimi])))
+      (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
+      (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
+      (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
+      (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
+      (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
+      (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
+                                                    (get-in data [:varuste :sijainti :tie :alkupvm])))
+      (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
+      (dissoc :otsikko)
+      (dissoc :varuste)))
 
 (defn luo-tietueen-paivityssanoma [data]
   (-> data
@@ -138,6 +138,12 @@
                         :puoli   (get parametrit "puoli")
                         :alkupvm (get parametrit "alkupvm")})))
 
+(defn muunna-tietolajin-hakuvastaus [vastausdata ominaisuudet]
+  (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
+                    (map (fn [o]
+                           {:ominaisuus o})
+                         ominaisuudet)) :onnistunut))
+
 (defn muunna-tietueiden-hakuvastaus [vastausdata]
   (-> vastausdata
       (dissoc :onnistunut)
@@ -147,13 +153,8 @@
                                (map #(clojure.set/rename-keys % {:tietue :varuste}) tietue)))
       (clojure.set/rename-keys {:tietueet :varusteet})))
 
-(defn muunna-tietolajin-hakuvastaus [vastausdata ominaisuudet]
-  (dissoc (assoc-in vastausdata [:tietolaji :arvot]
-                    (map (fn [o]
-                           {:ominaisuus o})
-                         ominaisuudet)) :onnistunut))
-
 (defn muunna-tietueen-hakuvastaus [vastausdata]
+
   (-> vastausdata
       (dissoc :onnistunut)
       (puhdista-tietue-xf)

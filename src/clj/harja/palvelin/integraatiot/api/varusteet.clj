@@ -16,7 +16,7 @@
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-          ominaisuudet (get-in vastausdata [:tietolaji :arvot])
+          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
@@ -83,8 +83,8 @@
       http :hae-tietueet
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
-                         (fn [_ data kayttaja _]
-                           (hae-tietueet tierekisteri data kayttaja)))))
+                         (fn [parametrit _ kayttaja _]
+                           (hae-tietueet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
