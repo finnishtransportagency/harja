@@ -12,11 +12,23 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn luo-tai-paivita-siltatarkastus [ulkoinen-id data kayttaja db]
-  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-idlla-ja-luojalla))])
+(defn luo-siltatarkastuas [ulkoinen-id tarkastus kayttaja db]
+  (log/debug "Luodaan uusi siltarkastus")
+  ; TODO
   )
 
-(defn lisaa-siltatarkastuskohteet [ulkoinen-id data kayttaja db]
+(defn paivita-siltatarkastus [ulkoinen-id tarkastus kayttaja db]
+  (log/debug "Päivitetään vanha siltarkastus")
+  ; TODO
+  )
+
+(defn luo-tai-paivita-siltatarkastus [ulkoinen-id tarkastus kayttaja db]
+  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-luojalla db ulkoinen-id (:id kayttaja)))]
+    (if siltatarkastus-kannassa
+      (paivita-siltatarkastus ulkoinen-id tarkastus kayttaja db)
+      (luo-siltatarkastuas ulkoinen-id tarkastus kayttaja db))))
+
+(defn lisaa-siltatarkastuskohteet [ulkoinen-id tarkastus kayttaja db]
   ;; TODO Poista vanha
   ;; TODO Lisää uudet
   )
@@ -27,8 +39,8 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
     (jdbc/with-db-transaction [db db]
-                              (luo-tai-paivita-siltatarkastus id ulkoinen-id kayttaja db)
-                              (lisaa-siltatarkastuskohteet id ulkoinen-id kayttaja db))))
+                              (luo-tai-paivita-siltatarkastus ulkoinen-id tarkastus kayttaja db)
+                              (lisaa-siltatarkastuskohteet ulkoinen-id tarkastus kayttaja db))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -36,8 +48,8 @@
     (julkaise-reitti
       http :lisaa-siltatarkastus
       (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
-        (kasittele-kutsu db integraatioloki :hae-tietolaji request nil json-skeemat/+tietolajien-haku+
-                         (fn [_ data kayttaja db]
+        (kasittele-kutsu db integraatioloki :hae-tietolaji request json-skeemat/+siltatarkastuksen-kirjaus+ nil
+                         (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db)))))
     this)
 

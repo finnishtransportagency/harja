@@ -90,13 +90,13 @@ SELECT id, silta, urakka,
   FROM siltatarkastus
  WHERE id = :id AND poistettu = false;
 
--- name: hae-siltatarkastus-idlla-ja-luojalla
--- Hakee yhden siltatarkastuksen
+-- name: hae-siltatarkastus-ulkoisella-idlla-ja-luojalla
+-- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
 SELECT id, silta, urakka,
   tarkastusaika, tarkastaja,
   luotu, luoja, muokattu, muokkaaja, poistettu
 FROM siltatarkastus
-WHERE id = :id AND luoja = :luoja AND poistettu = false;
+WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = false;
 
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
