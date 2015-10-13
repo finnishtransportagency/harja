@@ -58,6 +58,12 @@
                                 23 "A"
                                 24 "A")
                               )
+        odotettu-kohteen-lisatieto (fn [kohde]
+                                     (case kohde
+                                       4 "Kansi likainen"
+                                       9 "Saumat lohkeilleet"
+                                       19 "Korjattava"
+                                       nil))
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -76,7 +82,9 @@
     (let [kohteet-kannassa (q (str "SELECT kohde, tulos, lisatieto FROM siltatarkastuskohde WHERE siltatarkastus = " siltatarkastus-kannassa-id ";"))]
     (is (= (count kohteet-kannassa) 24))
     (doseq [kohde kohteet-kannassa]
-      (is (= (second kohde) (odotettu-kohdetulos (first kohde)))))))))
+      (is (= (second kohde) (odotettu-kohdetulos (first kohde)))))
+    (doseq [kohde kohteet-kannassa]
+      (is (= (nth kohde 2) (odotettu-kohteen-lisatieto (first kohde)))))))))
 
 (deftest yrita-tallentaa-virheellinen-siltatarkastus-ilman-kaikkia-kohteita
   (let [ulkoinen-id 666
