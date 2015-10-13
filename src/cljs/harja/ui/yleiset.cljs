@@ -428,33 +428,44 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva?]}]
    (let [piiloita? (and piiloita-kun-kiinni? (not (some (fn [[_ r]] (:auki r)) @rivit)))]
      (when aina-joku-auki?
-     (when-not (some (fn [[_ r]] (:auki r)) @rivit)
-       (pakota-haitarin-rivi-auki rivit)))
-   [:div.harja-haitari
-    (when leijuva? {:class "leijuva" :style {:top (laske-haitarin-paikka leijuva?)}})
-    (when otsikko [:div.haitari-otsikko otsikko])
-    [:div.haitari
-     (for [[avain rivi] @rivit]
-       (luo-haitarin-rivi
-         piiloita?
-         (reagent/wrap
-          rivi
-          (fn [uusi]
-            (swap! rivit assoc avain uusi)
-            ;; Jos vain yksi voi olla auki ja tämä rivi aukaistiin, sulje muut.
-            (when (and (:auki uusi) vain-yksi-auki?)
-              (reset! rivit (into {} (map
-                                      (fn [[a r]]
-                                        (if-not (= avain a)
-                                          [a (assoc r :auki false)]
-                                          [a r]))
-                                      @rivit))))
+       (when-not (some (fn [[_ r]] (:auki r)) @rivit)
+         (pakota-haitarin-rivi-auki rivit)))
+     [:div.harja-haitari
+      (when leijuva? {:class "leijuva" :style {:top (laske-haitarin-paikka leijuva?)}})
+      (when otsikko [:div.haitari-otsikko (if (string? otsikko)
+                                            otsikko
+                                            [otsikko])])
+      [:div.haitari
+       (for [[avain rivi] @rivit]
+         (luo-haitarin-rivi
+           piilota?
+           (r/wrap
+             rivi
+             (fn [uusi]
+               (swap! rivit assoc avain uusi)
+               ;; Jos vain yksi voi olla auki ja tämä rivi aukaistiin, sulje muut.
+               (when (and (:auki uusi) vain-yksi-auki?)
+                 (reset! rivit (into {} (map
+                                          (fn [[a r]]
+                                            (if-not (= avain a)
+                                              [a (assoc r :auki false)]
+                                              [a r]))
+                                          @rivit))))
 
-            ;; Jos rivi suljettiin, ja jonkun pitää olla auki, ja yksikään ei ole auki,
-            ;; niin älä sulje riviä.
-            (when (and (not (:auki uusi)) aina-joku-auki?)
-              (when-not (some (fn [[_ r]] (:auki r)) @rivit)
-                (swap! rivit assoc-in [avain :auki] true)))))))]])))
+               ;; Jos rivi suljettiin, ja jonkun pitää olla auki, ja yksikään ei ole auki,
+               ;; niin älä sulje riviä.
+               (when (and (not (:auki uusi)) aina-joku-auki?)
+                 (when-not (some (fn [[_ r]] (:auki r)) @rivit)
+                   (swap! rivit assoc-in [avain :auki] true)))))))]])))
+
+(defn pudotuspaneeli
+  ([sisalto] (pudotuspaneeli sisalto {}))
+  ([sisalto opts]
+   (let [piilota? (or (:piilota-kun-kiinni? opts) false)
+         rivi (atom (assoc opts :sisalto sisalto
+                                :auki (or (:auki opts) false)))]
+     (fn [sisalto opts]
+       [:div.harja-haitari [:div.haitari (luo-haitarin-rivi piilota? rivi)]]))))
 
 (def +valitse-kuukausi+
   "- Valitse kuukausi -")
