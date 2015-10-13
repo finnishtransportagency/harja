@@ -98,12 +98,31 @@ SELECT id, silta, urakka,
 FROM siltatarkastus
 WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = false;
 
+-- name: hae-silta-idlla TODO
+-- Hakee yhden sillan id:llä
+-- SELECT id, silta, urakka,
+--  tarkastusaika, tarkastaja,
+--  luotu, luoja, muokattu, muokkaaja, poistettu
+-- FROM siltatarkastus
+-- WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = false;
+
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
 INSERT
   INTO siltatarkastus
-       (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu)
-VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false);
+       (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu, ulkoinen_id)
+VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false, ulkoinen_id);
+
+-- name: paivita-siltatarkastus<!
+-- Päivittää siltatarkastuksen
+UPDATE siltatarkastus
+   SET silta = :silta,
+       urakka = :urakka,
+       tarkastusaika = :tarkastusaika,
+       tarkastaja = :tarkastusaika,
+       luoja = :luoja
+       poistettu = :poistettu
+       ulkoinen_id = :ulkoinen_id;
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella

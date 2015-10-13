@@ -12,21 +12,35 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn luo-siltatarkastuas [ulkoinen-id tarkastus kayttaja db]
+(defn luo-siltatarkastuas [ulkoinen-id urakka-id tarkastus kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
-  ; TODO
-  )
+  (silta-q/luo-siltatarkastus<!
+    db
+    silta
+    urakka-id
+    (:tarkastusaika tarkastus)
+    (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
+    (:id kayttaja)
+    false
+    ulkoinen-id))
 
-(defn paivita-siltatarkastus [ulkoinen-id tarkastus kayttaja db]
+(defn paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus kayttaja db]
   (log/debug "Päivitetään vanha siltarkastus")
-  ; TODO
-  )
+  (silta-q/paivita-siltatarkastus<!
+    db
+    silta
+    urakka-id
+    (:tarkastusaika tarkastus)
+    (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
+    (:id kayttaja)
+    false
+    ulkoinen-id))
 
-(defn luo-tai-paivita-siltatarkastus [ulkoinen-id tarkastus kayttaja db]
+(defn luo-tai-paivita-siltatarkastus [ulkoinen-id urakka-id {tarkastus :siltatarkastus} kayttaja db]
   (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-luojalla db ulkoinen-id (:id kayttaja)))]
     (if siltatarkastus-kannassa
-      (paivita-siltatarkastus ulkoinen-id tarkastus kayttaja db)
-      (luo-siltatarkastuas ulkoinen-id tarkastus kayttaja db))))
+      (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus kayttaja db)
+      (luo-siltatarkastuas ulkoinen-id urakka-id tarkastus kayttaja db))))
 
 (defn lisaa-siltatarkastuskohteet [ulkoinen-id tarkastus kayttaja db]
   ;; TODO Poista vanha
@@ -39,8 +53,8 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
     (jdbc/with-db-transaction [db db]
-                              (luo-tai-paivita-siltatarkastus ulkoinen-id tarkastus kayttaja db)
-                              (lisaa-siltatarkastuskohteet ulkoinen-id tarkastus kayttaja db))))
+                              (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id tarkastus kayttaja db)
+                              (lisaa-siltatarkastuskohteet ulkoinen-id urakka-id tarkastus kayttaja db))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
