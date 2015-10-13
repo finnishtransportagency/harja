@@ -62,11 +62,11 @@
          (:id kayttaja)
          ulkoinen-id)))
 
-(defn paivita-siltatarkastus [ulkoinen-id urakka-id silta tarkastus kayttaja db]
+(defn paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Päivitetään vanha siltarkastus")
   (:id (silta-q/paivita-siltatarkastus<!
          db
-         silta
+         (:id silta)
          urakka-id
          (pvm-string->java-sql-date (:tarkastusaika tarkastus))
          (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))

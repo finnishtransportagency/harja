@@ -117,9 +117,9 @@ UPDATE siltatarkastus
    SET silta = :silta,
        urakka = :urakka,
        tarkastusaika = :tarkastusaika,
-       tarkastaja = :tarkastusaika,
-       luoja = :luoja
-       poistettu = :poistettu
+       tarkastaja = :tarkastaja,
+       luoja = :luoja,
+       poistettu = :poistettu,
        ulkoinen_id = :ulkoinen_id;
 
 -- name: hae-siltatarkastusten-kohteet
