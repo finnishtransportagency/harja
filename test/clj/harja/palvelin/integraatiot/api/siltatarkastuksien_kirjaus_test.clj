@@ -18,7 +18,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tallenna-pistetoteuma
+(deftest tallenna-siltatarkastus
   (let [ulkoinen-id 12345
         tarkastaja-etunimi "Martti"
         tarkastaja-sukunimi "Ahtisaari"
@@ -38,6 +38,17 @@
     (let [kohteet-kannassa (q (str "SELECT kohde, tulos, lisatieto FROM siltatarkastuskohde WHERE siltatarkastus = " siltatarkastus-kannassa-id))]
     (is (= (count kohteet-kannassa) 24))))))
 
+(deftest yrita-tallentaa-virheellinen-siltatarkastus-ilman-kaikkia-kohteita
+  (let [ulkoinen-id 12345
+        tarkastaja-etunimi "Martti"
+        tarkastaja-sukunimi "Ahtisaari"
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                                                (-> "test/resurssit/api/virheellinen_siltatarkastus_ei_kaikkia_kohteita.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__ETUNIMI__" tarkastaja-etunimi)
+                                                    (.replace "__SUKUNIMI__" tarkastaja-sukunimi)))]
+    (is (not= 200 (:status vastaus-lisays)))))
 
 #_(deftest paivita-siltatarkastus
   ; TODO
