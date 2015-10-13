@@ -90,8 +90,8 @@
                                                                             siltatarkastus-id
                                                                             (api-kohde->numero (name kohde)))))]
     (silta-q/poista-siltatarkastuskohteet! db siltatarkastus-id)
-    (tallenna-kohdekohderyhma (:aluerakenne sillantarkastuskohteet))
-    (tallenna-kohdekohderyhma (:paallystysrakenne sillantarkastuskohteet))
+    (tallenna-kohdekohderyhma (:alusrakenne sillantarkastuskohteet))
+    (tallenna-kohdekohderyhma (:paallysrakenne sillantarkastuskohteet))
     (tallenna-kohdekohderyhma (:varusteetJaLaitteet sillantarkastuskohteet))
     (tallenna-kohdekohderyhma (:siltapaikanRakenteet sillantarkastuskohteet))))
 
