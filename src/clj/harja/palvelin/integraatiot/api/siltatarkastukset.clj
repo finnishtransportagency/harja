@@ -49,30 +49,31 @@
 
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
-  (validointi/tarkista-urakka-ja-kayttaja db id kayttaja)
-  (let [urakka-id (Long/parseLong id)
-        ulkoinen-id (get-in [:siltatarkastus :tunniste :id] data)
-        silta (silta-q/hae-silta-numerolla (get-in [:siltatarkastus :siltanumero] data))]
-    (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
-    (if silta
-      (jdbc/with-db-transaction [db db]
-                                (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db)
-                                (lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db))
-      ; FIXME Virhe: siltaa ei löydy
-      )))
+  (let [urakka-id (Integer/parseInt id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction [db db]
+                              (let [ulkoinen-id (get-in [:siltatarkastus :tunniste :id] data)
+                                    silta (silta-q/hae-silta-numerolla (get-in [:siltatarkastus :siltanumero] data))]
+                                (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
+                                (if silta
+                                  (do
+                                    (luo-tai-paivita-siltatarkastus ulkoinen-id urakka-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db)
+                                    (lisaa-siltatarkastuskohteet ulkoinen-id (get-in [:siltatarkastus :siltanumero] data) silta kayttaja db))
+                                  ; FIXME Virhe: siltaa ei löydy
+                                  )))))
 
-  (defrecord Siltatarkastukset []
-    component/Lifecycle
-    (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-      (julkaise-reitti
-        http :lisaa-siltatarkastus
-        (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
-          (kasittele-kutsu db integraatioloki :hae-tietolaji request json-skeemat/+siltatarkastuksen-kirjaus+ nil
-                           (fn [parametrit data kayttaja db]
-                             (lisaa-siltatarkastus parametrit data kayttaja db)))))
-      this)
+(defrecord Siltatarkastukset []
+  component/Lifecycle
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+    (julkaise-reitti
+      http :lisaa-siltatarkastus
+      (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
+        (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request json-skeemat/+siltatarkastuksen-kirjaus+ nil
+                         (fn [parametrit data kayttaja db]
+                           (lisaa-siltatarkastus parametrit data kayttaja db)))))
+    this)
 
-    (stop [{http :http-palvelin :as this}]
-      (poista-palvelut http
-                       :lisaa-siltatarkastus)
-      this))
+  (stop [{http :http-palvelin :as this}]
+    (poista-palvelut http
+                     :lisaa-siltatarkastus)
+    this))
