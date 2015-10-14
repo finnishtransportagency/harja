@@ -54,7 +54,7 @@
                 (mapv (fn [virhe]
                         {:virhe
                          {:koodi  (:koodi virhe)
-                          :viesti (:viesti virhe)}})
+                          :viesti "Sisäinen käsittelyvirhe"}})
                       virheet)})]
     {:status  status
      :headers {"Content-Type" "application/json"}
@@ -158,20 +158,17 @@
                         (when (not (nil? ex))
                           (.printStackTrace ex (java.io.PrintWriter. w))
                           (recur (.getNextException ex))))
-                      (log/error "Sisemmät virheet: " (.toString w)))
+                      (log/error "Sisäiset virheet: " (.toString w)))
                     (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (.getMessage e)}]))
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+}]))
                   (catch Exception e
                     (log/error "Tapahtui poikkeus: " e)
                     (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (.getMessage e)}]))
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+}]))
                   (catch Object poikkeus
                     (log/error (:throwable &throw-context) "Tapahtui poikkeus")
                     (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (str poikkeus)}])))]
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+}])))]
     (when integraatioloki
       (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
     vastaus))
