@@ -14,13 +14,13 @@
   },
   "siltatarkastus": {
     "tunniste": {
-      "id": 34547744
+      "id": __ID__
     },
-    "siltanumero": "6666",
-    "tarkastusaika": "2016-01-30T12:00:00Z",
+    "siltanumero": "__SILTANUMERO__",
+    "tarkastusaika": "__TARKASTUSAIKA__",
     "tarkastaja": {
-      "etunimi": "Teija",
-      "sukunimi": "Tarkkailija"
+      "etunimi": "__ETUNIMI__",
+      "sukunimi": "__SUKUNIMI__"
     },
     "sillantarkastuskohteet": {
       "alusrakenne": {
