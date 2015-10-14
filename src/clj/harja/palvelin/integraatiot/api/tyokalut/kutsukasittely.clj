@@ -158,17 +158,23 @@
                     (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
                   ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
                   (catch SQLException e
-                    (log/error "Tapahtui odottamaton SQL-poikkeus: " e)
+                    (log/error "Tapahtui SQL-poikkeus: " e)
+                    (let [w (java.io.StringWriter.)]
+                      (loop [ex (.getNextException e)]
+                        (when (not (nil? ex))
+                          (.printStackTrace ex (java.io.PrintWriter. w))
+                          (recur (.getNextException ex))))
+                      (log/error "Sisemmät virheet: " (.toString w)))
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}]))
                   (catch Exception e
-                    (log/error "Tapahtui odottamaton poikkeus: " e)
+                    (log/error "Tapahtui poikkeus: " e)
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}]))
-                  (catch Object e
-                    (log/error (:throwable &throw-context) "Tapahtui odottamaton poikkeus")
+                  (catch Object poikkeus
+                    (log/error (:throwable &throw-context) "Tapahtui poikkeus")
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}])))]
