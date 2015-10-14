@@ -89,8 +89,10 @@
            :nimi :materiaali :fmt :nimi :leveys "35%"
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
-           :muokattava? (fn [{:keys [materiaali]}]
-                          (nil? (materiaalit-ilman-maksimimaaria (:nimi materiaali))))
+           :muokattava? (fn [rivi]
+                          (if (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
+                            (:maara rivi)
+                            "Ei syötettävissä"))
            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
@@ -126,6 +128,10 @@
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
           :muokattava? (fn [{:keys [materiaali]}]
                          (nil? (materiaalit-ilman-maksimimaaria (:nimi materiaali))))
+          :hae (fn [rivi]
+                 (if (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
+                   (:maara rivi)
+                   "Ei syötettävissä"))
           :tyyppi :positiivinen-numero}
          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
           :tyyppi :string :muokattava? (constantly false)}]
