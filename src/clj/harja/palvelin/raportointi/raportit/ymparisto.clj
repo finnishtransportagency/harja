@@ -68,7 +68,7 @@
              ))
                     
       (for [[{:keys [urakka materiaali]} kuukaudet] materiaalit
-            :let [yhteensa (reduce + (keep :maara kuukaudet))
+            :let [yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
                   maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))]]
         (into []
               (concat
