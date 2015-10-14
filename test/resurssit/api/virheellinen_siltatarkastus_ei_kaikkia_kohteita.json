@@ -14,13 +14,13 @@
   },
   "siltatarkastus": {
     "tunniste": {
-      "id": 34547744
+      "id": __ID__
     },
     "siltanumero": "6666",
     "tarkastusaika": "2016-01-30T12:00:00Z",
     "tarkastaja": {
-      "etunimi": "Teija",
-      "sukunimi": "Tarkkailija"
+      "etunimi": "__ETUNIMI__",
+      "sukunimi": "__SUKUNIMI__"
     },
     "sillantarkastuskohteet": {
       "alusrakenne": {
@@ -67,9 +67,6 @@
           "ehdotettutoimenpide": "eiToimenpiteita"
         },
         "laakerit": {
-          "ehdotettutoimenpide": "eiToimenpiteita"
-        },
-        "syoksytorvet": {
           "ehdotettutoimenpide": "eiToimenpiteita"
         },
         "tippuputket": {

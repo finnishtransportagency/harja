@@ -98,7 +98,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   siltatarkastus)
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
-  (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user))
+  (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user) nil)
         id (:id luotu-tarkastus)]
     (doseq [[kohde [tulos lisatieto]] kohteet]
       (q/luo-siltatarkastuksen-kohde<! db tulos lisatieto id kohde))
