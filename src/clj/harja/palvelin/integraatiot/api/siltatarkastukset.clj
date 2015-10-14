@@ -13,43 +13,41 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn api-tulos->kirjain [tulos-nimi]
-  (case tulos-nimi
-    "eiToimenpiteita" "A"
-    "puhdistettava" "B"
-    "urakanKunnostettava" "C"
-    "korjausOhjelmoitava" "D"))
+(def api-tulos->kirjain
+  {"eiToimenpiteita" "A"
+   "puhdistettava" "B"
+   "urakanKunnostettava" "C"
+   "korjausOhjelmoitava" "D"})
 
-(defn api-kohde->numero [kohde-nimi]
-  (case kohde-nimi
-    ;; Alusrakenne
-    "maatukienSiisteysJaKunto" 1
-    "valitukienSiisteysJaKunto" 2
-    "laakeritasojenSiisteysJaKunto" 3
-    ;; Päällysrakenne
-    "kansilaatta" 4
-    "paallysteenKunto" 5
-    "reunapalkinSiisteysJaKunto" 6
-    "reunapalkinLiikuntasauma" 7
-    "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto" 8
-    "sillanpaidenSaumat" 9
-    "sillanJaPenkereenRaja" 10
-    ;; Varusteet ja laitteet
-    "kaiteidenJaSuojaverkkojenVauriot" 11
-    "liikuntasaumalaitteidenSiisteysJaKunto" 12
-    "laakerit" 13
-    "syoksytorvet" 14
-    "tippuputket" 15
-    "kosketussuojatJaNiidenKiinnitykset" 16
-    "valaistuslaitteet" 17
-    "johdotJaKaapelit" 18
-    "liikennemerkit" 19
-    ;; Siltapaikan rakenteet
-    "kuivatuslaitteidenSiisteysJaKunto" 20
-    "etuluiskienSiisteysJaKunto" 21
-    "keilojenSiisteysJaKunto" 22
-    "tieluiskienSiisteysJaKunto" 23
-    "portaidenSiisteysJaKunto" 24))
+(def api-kohde->numero
+  {;; Alusrakenne
+   "maatukienSiisteysJaKunto" 1
+   "valitukienSiisteysJaKunto" 2
+   "laakeritasojenSiisteysJaKunto" 3
+   ;; Päällysrakenne
+   "kansilaatta" 4
+   "paallysteenKunto" 5
+   "reunapalkinSiisteysJaKunto" 6
+   "reunapalkinLiikuntasauma" 7
+   "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto" 8
+   "sillanpaidenSaumat" 9
+   "sillanJaPenkereenRaja" 10
+   ;; Varusteet ja laitteet
+   "kaiteidenJaSuojaverkkojenVauriot" 11
+   "liikuntasaumalaitteidenSiisteysJaKunto" 12
+   "laakerit" 13
+   "syoksytorvet" 14
+   "tippuputket" 15
+   "kosketussuojatJaNiidenKiinnitykset" 16
+   "valaistuslaitteet" 17
+   "johdotJaKaapelit" 18
+   "liikennemerkit" 19
+   ;; Siltapaikan rakenteet
+   "kuivatuslaitteidenSiisteysJaKunto" 20
+   "etuluiskienSiisteysJaKunto" 21
+   "keilojenSiisteysJaKunto" 22
+   "tieluiskienSiisteysJaKunto" 23
+   "portaidenSiisteysJaKunto" 24})
 
 (defn luo-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
