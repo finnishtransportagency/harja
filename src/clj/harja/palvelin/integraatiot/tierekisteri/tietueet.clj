@@ -10,7 +10,7 @@
   (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tierekisteriosoitevali) ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [kutsudata (kutsusanoma/muodosta-kutsu tierekisteriosoitevali tietolaji muutospvm)
         palvelu-url (str url "/haetietueet")
-        otsikot {"Content-Type" "text/xml"}
+        otsikot {"Content-Type" "text/xml; charset=utf-8"}
         vastausdata (http/laheta-post-kutsu
                       integraatioloki
                       "hae-tietueet"
