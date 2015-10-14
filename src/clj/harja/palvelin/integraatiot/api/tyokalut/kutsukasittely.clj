@@ -173,8 +173,8 @@
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}]))
-                  (catch Object poikkeus
-                    (log/error (:throwable &throw-context) "Tapahtui poikkeus")
+                  (catch Object e
+                    (log/error (:throwable &throw-context) "Tapahtui poikkeus: " e)
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}])))]
