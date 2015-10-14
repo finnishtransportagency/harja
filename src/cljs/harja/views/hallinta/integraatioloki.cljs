@@ -120,10 +120,11 @@
                   (js/Math.round (* .25 lkm-max))
                   (js/Math.round (* .5 lkm-max))
                   (js/Math.round (* .75 lkm-max))
-                  lkm-max]]
+                  lkm-max]
+           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
        [vis/bars {:width         w
                   :height        (min 200 h)
-                  :label-fn      #(if (< (count pvm-kohtaiset-maarat-summattu) 10)
+                  :label-fn      #(if nayta-labelit?
                                    (pvm/paiva-kuukausi (:pvm %))
                                    (constantly ""))
                   :value-fn      :maara
