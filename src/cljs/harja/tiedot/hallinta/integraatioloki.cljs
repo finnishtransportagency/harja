@@ -3,10 +3,12 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.pvm :as pvm]
             [cljs-time.core :as time]
             [harja.atom :refer [paivita!]]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -14,8 +16,11 @@
 (defn hae-jarjestelmien-integraatiot []
   (k/post! :hae-jarjestelmien-integraatiot nil))
 
+(defn hae-integraatiotapahtumien-maarat [jarjestelma integraatio]
+  (k/post! :hae-integraatiotapahtumien-maarat {:jarjestelma jarjestelma
+                                               :integraatio integraatio}))
+
 (defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali]
-  (log "Aikavali: " aikavali)
   (k/post! :hae-integraatiotapahtumat
            (merge {:jarjestelma (:jarjestelma jarjestelma)
                    :integraatio integraatio}
@@ -43,11 +48,26 @@
                valittu-aikavali @valittu-aikavali
                nakymassa? @nakymassa?]
               (when nakymassa?
-                ;;(reset! valittu-tapahtuma nil)
                 (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
 
+(defonce tapahtumien-maarat
+         (reaction<! [valittu-jarjestelma @valittu-jarjestelma
+                      valittu-integraatio @valittu-integraatio
+                      valittu-aikavali @valittu-aikavali
+                      nakymassa? @nakymassa?]
+                     (when nakymassa?
+                       (go (let [maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))]
+                          (if valittu-aikavali
+                            (filter #(pvm/valissa? (:pvm %)
+                                                   (first valittu-aikavali)
+                                                   (second valittu-aikavali))
+                                    maarat)
+                            maarat))))))
+
 (defn nayta-tapahtumat-eilisen-jalkeen []
-  (reset! valittu-aikavali [(time/yesterday) (harja.pvm/nyt)]))
+  (let [eilen (pvm/aikana (time/yesterday) 0 0 0 0)
+        tanaan (pvm/aikana (time/today) 23 59 59 999)]
+    (reset! valittu-aikavali [eilen tanaan])))
 
 (defn nayta-uusimmat-tapahtumat []
   (reset! valittu-aikavali nil))

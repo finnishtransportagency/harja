@@ -86,10 +86,26 @@ SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnist
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
    AND (:integraatio_annettu = false OR nimi ILIKE :integraatio)
 ORDER BY alkanut DESC
- LIMIT 50
+ LIMIT 50;
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
 SELECT *
 FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
+
+-- name: hae-integraatiotapahtumien-maarat
+-- Hakee annetun integraation tapahtumien määrät päivittäin ryhmiteltynä
+
+SELECT
+  date_trunc('day', it.alkanut) as pvm,
+  it.integraatio as integraatio,
+  i.jarjestelma as jarjestelma,
+  i.nimi as nimi,
+  count(*) as maara
+FROM integraatiotapahtuma it
+  JOIN integraatio i ON it.integraatio = i.id
+WHERE (:jarjestelma_annettu = false OR i.jarjestelma ILIKE :jarjestelma)
+      AND (:integraatio_annettu = false OR i.nimi ILIKE :integraatio)
+GROUP BY pvm, integraatio, jarjestelma, nimi
+ORDER BY pvm;
