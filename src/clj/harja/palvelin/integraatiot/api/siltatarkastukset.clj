@@ -100,22 +100,22 @@
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction [transaktio db]
-                              (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
-                                    siltanumero (Integer. (get-in data [:siltatarkastus :siltanumero]))
-                                    silta (first (silta-q/hae-silta-numerolla transaktio siltanumero))]
-                                (if silta
-                                  (do
-                                    (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
-                                    (let [siltatarkastus-id (luo-tai-paivita-siltatarkastus
-                                                              ulkoinen-id
-                                                              urakka-id
-                                                              (:siltatarkastus data)
-                                                              silta
-                                                              kayttaja
-                                                              transaktio)]
-                                      (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
-                                      (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)))
-                                  (throw (RuntimeException. (format (str "Siltaa numerolla " siltanumero " ei löydy.")))))))))
+      (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
+            siltanumero (Integer. (get-in data [:siltatarkastus :siltanumero]))
+            silta (first (silta-q/hae-silta-numerolla transaktio siltanumero))]
+        (if silta
+          (do
+            (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
+            (let [siltatarkastus-id (luo-tai-paivita-siltatarkastus
+                                      ulkoinen-id
+                                      urakka-id
+                                      (:siltatarkastus data)
+                                      silta
+                                      kayttaja
+                                      transaktio)]
+              (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
+              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)))
+          (throw (RuntimeException. (format (str "Siltaa numerolla " siltanumero " ei löydy.")))))))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
