@@ -14,6 +14,7 @@
             <xs:sequence>
                 <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns1:tietolajitunniste"/>
                 <xs:element minOccurs="0" name="muutospvm" type="xs:date"/>
+                <xs:element minOccurs="0" name="voimassaolopvm" type="xs:date"/>
                 <xs:element minOccurs="0" maxOccurs="1" name="tie" type="ns2:tieHakuehto"/>
             </xs:sequence>
         </xs:complexType>
