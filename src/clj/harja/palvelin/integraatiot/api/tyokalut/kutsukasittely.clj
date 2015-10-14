@@ -131,47 +131,47 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
 
-  (let [body
-        (if (:body request)
-          (slurp (:body request))
-          nil)
-        tapahtuma-id (when integraatioloki (lokita-kutsu integraatioloki resurssi request body))]
-    (let [vastaus
-          (try+
-            (let
-              [parametrit (:params request)
-               kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-               kutsun-data (lue-kutsu kutsun-skeema request body)
-               vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-              (tee-vastaus vastauksen-skeema vastauksen-data))
-            (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-              (kasittele-invalidi-json virheet))
-            (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-              (kasittele-viallinen-kutsu virheet))
-            (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
-              (kasittele-sisainen-kasittelyvirhe virheet))
-            (catch #(get % :virheet) poikkeus
-              (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
-            (catch SQLException e
-              (log/error "Tapahtui SQL-poikkeus: " e)
-              (let [w (java.io.StringWriter.)]
-                (loop [ex (.getNextException e)]
-                  (when (not (nil? ex))
-                    (.printStackTrace ex (java.io.PrintWriter. w))
-                    (recur (.getNextException ex))))
-                (log/error "Sisemmät virheet: " (.toString w)))
-              (kasittele-sisainen-kasittelyvirhe
-                [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                  :viesti (.getMessage e)}]))
-            (catch Exception e
-              (log/error "Tapahtui poikkeus: " e) 
-              (kasittele-sisainen-kasittelyvirhe
-                [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                  :viesti (.getMessage e)}]))
-            (catch Object poikkeus
-              (log/error (:throwable &throw-context) "Tapahtui poikkeus")
-              (kasittele-sisainen-kasittelyvirhe
-                [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                  :viesti (str poikkeus)}])))]
-      (when integraatioloki (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
-      vastaus)))
+  (let [body (if (:body request)
+               (slurp (:body request))
+               nil)
+        tapahtuma-id (when integraatioloki
+                       (lokita-kutsu integraatioloki resurssi request body))
+        vastaus (try+
+                  (let
+                    [parametrit (:params request)
+                     kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                     kutsun-data (lue-kutsu kutsun-skeema request body)
+                     vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                    (tee-vastaus vastauksen-skeema vastauksen-data))
+                  (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+                    (kasittele-invalidi-json virheet))
+                  (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
+                    (kasittele-viallinen-kutsu virheet))
+                  (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
+                    (kasittele-sisainen-kasittelyvirhe virheet))
+                  (catch #(get % :virheet) poikkeus
+                    (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
+                  (catch SQLException e
+                    (log/error "Tapahtui SQL-poikkeus: " e)
+                    (let [w (java.io.StringWriter.)]
+                      (loop [ex (.getNextException e)]
+                        (when (not (nil? ex))
+                          (.printStackTrace ex (java.io.PrintWriter. w))
+                          (recur (.getNextException ex))))
+                      (log/error "Sisemmät virheet: " (.toString w)))
+                    (kasittele-sisainen-kasittelyvirhe
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti (.getMessage e)}]))
+                  (catch Exception e
+                    (log/error "Tapahtui poikkeus: " e)
+                    (kasittele-sisainen-kasittelyvirhe
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti (.getMessage e)}]))
+                  (catch Object poikkeus
+                    (log/error (:throwable &throw-context) "Tapahtui poikkeus")
+                    (kasittele-sisainen-kasittelyvirhe
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti (str poikkeus)}])))]
+    (when integraatioloki
+      (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+    vastaus))
