@@ -10,10 +10,12 @@
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn parsi-paivamaara [teksti]
-  (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") teksti)))
-       (catch ParseException e
-         (log/error e "Virhe parsiessa päivämäärää: " teksti)
-         nil)))
+  (if teksti
+    (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") teksti)))
+         (catch ParseException e
+           (log/error e "Virhe parsiessa päivämäärää: " teksti)
+           nil))
+    nil))
 
 (defn lue-ilmoittaja [ilmoittaja]
   {:etunimi      (z/xml1-> ilmoittaja :etunimi z/text)
