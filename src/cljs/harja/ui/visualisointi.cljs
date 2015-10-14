@@ -121,7 +121,7 @@
 
 (defn bars [_ data]
   (let [hover (atom nil)]
-    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks]}  data]
+    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks format-amount]}  data]
       (let [label-fn (or label-fn first)
             value-fn (or value-fn second)
             key-fn (or key-fn hash)
@@ -135,13 +135,15 @@
             min-value (reduce min (map value-fn data))
             value-range (- max-value min-value)
             value-height #(/ (* (- height my) %) max-value)
+            format-amount (or format-amount #(.toFixed % 2))
             ]
         (log "Value range " min-value " -- " max-value " == " value-range)
         [:svg {:width width :height height}
          ;; render ticks that are in the min-value - max-value range
-         (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
+         (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)])
                :let [tick-y (- height (value-height tick) hmy)]]
-           [:g 
+           ^{:key tick}
+           [:g
             [:text {:font-size "8pt" :text-anchor "end" :x (- mx 3) :y tick-y}
              (str tick)]
             [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
@@ -153,7 +155,7 @@
                               value (value-fn d)
                               bar-height (value-height value)
                               x (+ mx (* bar-width i))] ;; FIXME: scale min-max
-                          ^{:key (key-fn d)}
+                          ^{:key i}
                           [:g {:on-mouse-over #(reset! hover d)
                                :on-mouse-out #(reset! hover nil)}
                            [:rect {:x x
@@ -164,7 +166,7 @@
                                         ;(when (= hovered d)
                            [:text {:x (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
                                    :text-anchor "end"}
-                            (.toFixed value 2)]
+                            (format-amount value)]
                            [:text {:x (+ x (/ bar-width 2)) :y height
                                    :text-anchor "end"}
                             label]]))

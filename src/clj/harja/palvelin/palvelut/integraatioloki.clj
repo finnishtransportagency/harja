@@ -6,32 +6,6 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]))
 
-(declare hae-jarjestelmien-integraatiot)
-(declare hae-integraatiotapahtumat)
-(declare hae-integraatiotapahtuman-viestit)
-
-(defrecord Integraatioloki []
-  component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-jarjestelmien-integraatiot
-                      (fn [kayttaja _]
-                        (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtumat
-                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
-                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtuman-viestit
-                      (fn [kayttaja tapahtuma-id]
-                        (hae-integraatiotapahtuman-viestit (:db this) kayttaja tapahtuma-id)))
-    this)
-
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :hae-jarjestelmien-integraatiot)
-    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
-    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtuman-viestit)
-    this))
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
   ;; todo: read-stringing käyttö voi olla turvatonta. kysy tatulta parempi tapa.
@@ -72,7 +46,6 @@
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen]
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
-  (log/debug "Haetaan tapahtumat järjestelmän:" jarjestelma ", integraatiolle:" integraatio ", alkaen:" alkaen ", paattyen:" paattyen)
   (let [tapahtumat
         (into []
               tapahtuma-xf
@@ -85,15 +58,18 @@
                 (q/hae-uusimmat-integraatiotapahtumat db
                                                       (if jarjestelma true false) jarjestelma
                                                       (if integraatio true false) integraatio)))]
-    (log/debug "Tapahtumat:" tapahtumat)
-    tapahtumat
-    #_(let [tapahtumat-viesteineen
-          (mapv #(assoc % :viestit
-                        (into []
-                              viesti-xf
-                              (q/hae-integraatiotapahtuman-viestit db (:id %)))) tapahtumat)]
-      (log/debug "Tapahtumat viesteineen:" tapahtumat-viesteineen)
-      tapahtumat-viesteineen)))
+    tapahtumat))
+
+(defn hae-integraatiotapahtumien-maarat
+  [db kayttaja jarjestelma integraatio]
+  (when (roolit/tilaajan-kayttaja? kayttaja)
+    (let [
+          jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
+          maarat (q/hae-integraatiotapahtumien-maarat
+                   db
+                   (if jarjestelma true false) jarjestelma
+                   (if integraatio true false) integraatio)]
+      maarat)))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
@@ -102,3 +78,31 @@
         (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))
 
 
+
+(defrecord Integraatioloki []
+  component/Lifecycle
+  (start [this]
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-jarjestelmien-integraatiot
+                      (fn [kayttaja _]
+                        (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-integraatiotapahtumat
+                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
+                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-integraatiotapahtumien-maarat
+                      (fn [kayttaja {:keys [jarjestelma integraatio]}]
+                        (hae-integraatiotapahtumien-maarat (:db this) kayttaja jarjestelma integraatio)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-integraatiotapahtuman-viestit
+                      (fn [kayttaja tapahtuma-id]
+                        (hae-integraatiotapahtuman-viestit (:db this) kayttaja tapahtuma-id)))
+    this)
+
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :hae-jarjestelmien-integraatiot)
+    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
+    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumien-maarat)
+    (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtuman-viestit)
+    this))
