@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.http
   (:require [taoensso.timbre :as log]
             [org.httpkit.client :as http]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn rakenna-http-kutsu [metodi otsikot parametrit kutsudata]
@@ -20,7 +21,7 @@
       "delete" @(http/delete url kutsu)
       "head" @(http/head url kutsu)
       (throw+
-        {:type    :http-kutsu-epaonnistui
+        {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
          :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Tuntematon HTTP metodi:" metodi)}]}))))
 
 (defn laheta-kutsu [integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
@@ -46,7 +47,7 @@
           (do
             (log/error " Kutsu palveluun: " url " epäonnistui virhe: " error)
             (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
-            (throw+ {:type    :http-kutsu-epaonnistui
+            (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
                      :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
           (do
             (let [vastausdata (kasittele-vastaus body headers)]
@@ -58,7 +59,7 @@
         (log/error " HTTP-kutsukäsittelyssä tapahtui poikkeus: " e " (järjestelmä: " jarjestelma ", integraatio: " integraatio ", URL: " url ") ")
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
         (throw+
-          {:type    :http-kutsu-epaonnistui
+          {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
            :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.toString e))}]})))))
 
 (defn laheta-get-kutsu [integraatioloki integraatio jarjestelma url otsikot parametrit kasittele-vastaus-fn]

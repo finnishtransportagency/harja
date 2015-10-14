@@ -54,9 +54,7 @@
                 (mapv (fn [virhe]
                         {:virhe
                          {:koodi  (:koodi virhe)
-                          :viesti (if (not= (:koodi virhe) virheet/+sisainen-kasittelyvirhe-koodi+)
-                                    (:viesti virhe)
-                                    "Sisäinen käsittelyvirhe")}})
+                          :viesti (:viesti virhe)}})
                       virheet)})]
     {:status  status
      :headers {"Content-Type" "application/json"}
@@ -145,35 +143,35 @@
                      kutsun-data (lue-kutsu kutsun-skeema request body)
                      vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
                     (tee-vastaus vastauksen-skeema vastauksen-data))
+                  ;; Tiedossa olevat poikkeustilanteet (virhetiedot pääosin julkisia):
                   (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
                     (kasittele-invalidi-json virheet))
                   (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
                     (kasittele-viallinen-kutsu virheet))
                   (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
                     (kasittele-sisainen-kasittelyvirhe virheet))
+                  (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                    (kasittele-sisainen-kasittelyvirhe
+                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+}
+                       {:viesti "Käsittelyvirhe ulkoisessa järjestelmässä"}]))
                   (catch #(get % :virheet) poikkeus
                     (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
+                  ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
                   (catch SQLException e
-                    (log/error "Tapahtui SQL-poikkeus: " e)
-                    (let [w (java.io.StringWriter.)]
-                      (loop [ex (.getNextException e)]
-                        (when (not (nil? ex))
-                          (.printStackTrace ex (java.io.PrintWriter. w))
-                          (recur (.getNextException ex))))
-                      (log/error "Sisemmät virheet: " (.toString w)))
+                    (log/error "Tapahtui odottamaton SQL-poikkeus: " e)
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (.getMessage e)}]))
+                        :viesti "Sisäinen käsittelyvirhe"}]))
                   (catch Exception e
-                    (log/error "Tapahtui poikkeus: " e)
+                    (log/error "Tapahtui odottamaton poikkeus: " e)
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (.getMessage e)}]))
-                  (catch Object poikkeus
-                    (log/error (:throwable &throw-context) "Tapahtui poikkeus")
+                        :viesti "Sisäinen käsittelyvirhe"}]))
+                  (catch Object e
+                    (log/error (:throwable &throw-context) "Tapahtui odottamaton poikkeus")
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti (str poikkeus)}])))]
+                        :viesti "Sisäinen käsittelyvirhe"}])))]
     (when integraatioloki
       (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
     vastaus))
