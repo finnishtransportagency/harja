@@ -28,6 +28,12 @@
     ;; lisätään kaikkiin riveihin valittu hoitokausi
     (assoc rivi :alkupvm alkupvm :loppupvm loppupvm)))
 
+; From: Leppänen Anne <Anne.Leppanen@liikennevirasto.fi> 
+; Date: Monday 14 September 2015 16:27
+; Asiakkaalta tulleen palautteen perusteella liuoksilla ja kaliumformiaatilla ei ole maksimimäärää
+(def materiaalit-ilman-maksimimaaria #{"Talvisuolaliuos CaCl2"
+                                       "Talvisuolaliuos NaCl"
+                                       "Kaliumformiaatti"})
   
 (defn pohjavesialueiden-materiaalit-grid
   "Listaa pohjavesialueiden materiaalit ja mahdollistaa kartalta valinnan."
@@ -83,7 +89,8 @@
            :nimi :materiaali :fmt :nimi :leveys "35%"
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
-           :muokattava? (constantly voi-muokata?)
+           :muokattava? (fn [{:keys [materiaali]}]
+                          (nil? (materiaalit-ilman-maksimimaaria (:nimi materiaali))))
            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
@@ -115,10 +122,10 @@
         [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
           :muokattava? (constantly false)
           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
-          :validoi [[:ei-tyhja "Valitse materiaali"]]
-          }
+          :validoi [[:ei-tyhja "Valitse materiaali"]]}
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
-          :muokattava? (constantly voi-muokata?)
+          :muokattava? (fn [{:keys [materiaali]}]
+                         (nil? (materiaalit-ilman-maksimimaaria (:nimi materiaali))))
           :tyyppi :positiivinen-numero}
          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
           :tyyppi :string :muokattava? (constantly false)}]
