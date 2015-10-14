@@ -2,4 +2,7 @@
   (:require [harja.shp :as shp]))
 
 (defn tuo [shapefile]
-  (map shp/feature-propertyt (shp/featuret (shp/lue-shapefile shapefile))))
+  (let [sh (shp/lue-shapefile shapefile)
+        props (map shp/feature-propertyt (shp/featuret sh))]
+    (.dispose sh)
+    props))
