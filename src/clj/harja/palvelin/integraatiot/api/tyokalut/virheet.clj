@@ -7,6 +7,8 @@
 (def +invalidi-json-koodi+ "invalidi-json")
 (def +sisainen-kasittelyvirhe-koodi+ "sisainen-kasittelyvirhe")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
+(def +tuntematon-silta+ "tuntematon-silta")
+(def +tuntematon-materiaali+ "tuntematon-materiaali")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tyhja-vastaus+ "tyhja-vastaus")
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
