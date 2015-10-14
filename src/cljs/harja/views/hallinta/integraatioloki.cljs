@@ -126,7 +126,7 @@
                   :height        (min 200 h)
                   :label-fn      #(if nayta-labelit?
                                    (pvm/paiva-kuukausi (:pvm %))
-                                   (constantly ""))
+                                   "")
                   :value-fn      :maara
                   :format-amount str
                   :ticks         tikit}
