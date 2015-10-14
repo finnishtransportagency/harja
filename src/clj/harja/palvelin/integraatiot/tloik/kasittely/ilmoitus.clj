@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.tloik.sanomat.viestikuittaus-sanoma :as viestikuittaus]
+            [harja.palvelin.integraatiot.tloik.sanomat.kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
@@ -73,7 +73,7 @@
       (paivita-ilmoitus db id urakka-id ilmoitus)
       (luo-ilmoitus db urakka-id ilmoitus))
     (log/debug "Ilmoitus käsitelty onnistuneesti")
-    (viestikuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
+    (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
 
 
 

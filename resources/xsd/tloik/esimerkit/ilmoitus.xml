@@ -1,0 +1,31 @@
+<ilmoitus>
+    <viestiId>14324234</viestiId>
+    <ilmoitusId>3213123</ilmoitusId>
+    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+    <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
+    <urakkatyyppi>hoito</urakkatyyppi>
+    <vapaateksti>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</vapaateksti>
+    <yhteydenottopyynto>false</yhteydenottopyynto>
+    <sijainti>
+        <tienumero>4</tienumero>
+        <x>41.40338</x>
+        <y>2.17403</y>
+    </sijainti>
+    <ilmoittaja>
+        <etunimi>Matti</etunimi>
+        <sukunimi>Meikäläinen</sukunimi>
+        <matkapuhelin>08023394852</matkapuhelin>
+        <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+        <tyyppi>tienkayttaja</tyyppi>
+    </ilmoittaja>
+    <lahettaja>
+        <etunimi>Pekka</etunimi>
+        <sukunimi>Päivystäjä</sukunimi>
+        <matkapuhelin>929304449282</matkapuhelin>
+        <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+    </lahettaja>
+    <seliteet>
+        <selite>auraustarve</selite>
+        <selite>aurausvallitNakemaesteena</selite>
+    </seliteet>
+</ilmoitus>

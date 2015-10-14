@@ -5,47 +5,51 @@
 
   <xs:complexType name="kuittaus">
     <xs:sequence>
-      <xs:element name="ilmoitusId" type="xs:int"/>
-      <xs:element name="kasittelija" type="kasittelija" minOccurs="0"/>
-      <xs:element name="kuitattu" type="xs:dateTime" minOccurs="0"/>
-      <xs:element name="kuittaaja" type="kasittelija" minOccurs="0"/>
+      <xs:element name="aika" type="xs:dateTime" minOccurs="0"/>
       <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="0"/>
-      <xs:element name="vapaateksti" type="xs:string" minOccurs="0"/>
       <xs:element name="viestiId" type="xs:string" minOccurs="0"/>
+      <xs:element name="valitustiedot" type="valitustiedot" minOccurs="0"/>
+      <xs:element name="virhe" type="xs:string" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="kasittelija">
+  <xs:complexType name="valitustiedot">
     <xs:sequence>
-      <xs:element name="henkilo" type="henkilo" minOccurs="0"/>
-      <xs:element name="organisaatio" type="organisaatio" minOccurs="0"/>
+      <xs:element name="urakka" type="urakka" minOccurs="0"/>
+      <xs:element name="urakoitsija" type="urakoitsija" minOccurs="0"/>
+      <xs:element name="paivystaja" type="paivystaja" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="henkilo">
+  <xs:complexType name="urakka">
     <xs:sequence>
-      <xs:element name="etunimi" type="xs:string" minOccurs="0"/>
-      <xs:element name="matkapuhelin" type="xs:string" minOccurs="0"/>
-      <xs:element name="sahkoposti" type="xs:string" minOccurs="0"/>
-      <xs:element name="sukunimi" type="xs:string" minOccurs="0"/>
-      <xs:element name="tyopuhelin" type="xs:string" minOccurs="0"/>
+      <xs:element name="id" type="xs:int" minOccurs="0"/>
+      <xs:element name="nimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="tyyppi" type="xs:string" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="organisaatio">
+  <xs:complexType name="urakoitsija">
     <xs:sequence>
       <xs:element name="nimi" type="xs:string" minOccurs="0"/>
       <xs:element name="ytunnus" type="xs:string" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="paivystaja">
+    <xs:sequence>
+      <xs:element name="etunimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="sukunimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="puhelinnumero" type="xs:string" minOccurs="0"/>
+      <xs:element name="sahkopostiosoite" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:simpleType name="kuittaustyyppi">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="vastaanotto"/>
-      <xs:enumeration value="lopetus"/>
-      <xs:enumeration value="vastaus"/>
-      <xs:enumeration value="muutos"/>
-      <xs:enumeration value="aloitus"/>
+      <xs:enumeration value="virhe"/>
+      <xs:enumeration value="valitetty"/>
+      <xs:enumeration value="vastaanotettu"/>
     </xs:restriction>
   </xs:simpleType>
 </xs:schema>
