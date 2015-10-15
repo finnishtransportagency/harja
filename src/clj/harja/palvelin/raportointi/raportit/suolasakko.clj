@@ -80,5 +80,3 @@
        {:leveys "10%" :otsikko "Käytetty suolamäärä"}
        {:leveys "10%" :otsikko "Suolaerotus"}
        {:leveys "10%" :otsikko "Sakko/Bonus"}]]]))
-
-    
