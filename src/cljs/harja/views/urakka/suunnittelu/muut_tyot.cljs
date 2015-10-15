@@ -4,7 +4,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
+                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
@@ -28,80 +28,67 @@
                                 :loppupvm (:loppupvm ur)
                                 :sopimus sopimusnumero) tyot)
             res (<! (muut-tyot/tallenna-muutoshintaiset-tyot (:id @nav/valittu-urakka)
-                      (into [] tyot)))]
+                                                             (into [] tyot)))]
         (reset! atomi res)
         res)))
-
-(defn ryhmittele-tehtavat
-      "Ryhmittelee 4. tason tehtävät. Lisää väliotsikot eri tehtävien väliin"
-  [toimenpiteet-tasoittain tyorivit]
-  (let [otsikko (fn [{:keys [tehtava]}]
-                  (or
-                    (some (fn [[_ t2 t3 t4]]
-                            (when (= (:id t4) tehtava)
-                              (str (:nimi t2) " / " (:nimi t3))))
-                      toimenpiteet-tasoittain)
-                    "Muut tehtävät"))
-        otsikon-mukaan (group-by otsikko tyorivit)]
-    (mapcat (fn [[otsikko rivit]]
-              (concat [(grid/otsikko otsikko)] rivit))
-      (seq otsikon-mukaan))))
 
 (defn muut-tyot [ur]
   (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
         tehtavat (map #(nth % 3) tehtavat-tasoineen)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        ryhmitellyt-muutoshintaiset-tyot (reaction (ryhmittele-tehtavat tehtavat-tasoineen @u/muutoshintaiset-tyot))
         g (grid/grid-ohjaus)
         jo-valitut-tehtavat (atom nil)]
     (komp/luo
       (fn []
-        [:div.muut-tyot
-         [valinnat/urakan-sopimus ur]
-         [grid/grid
-          {:otsikko      "Muutos- ja lisätyöhinnat"
-           :tyhja        (if (nil? @u/muutoshintaiset-tyot)
-                           [ajax-loader "Muutoshintaisia töitä haetaan..."]
-                           "Ei muutoshintaisia töitä")
-           :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                    (:id @nav/valittu-urakka)
-                                                    #(tallenna-tyot
-                                                      % u/muutoshintaiset-tyot)
-                                                    :ei-mahdollinen)
-           :ohjaus       g
-           :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
-                                                                        (:tehtava rivi))
-                                                                      (vals (grid/hae-muokkaustila %)))))
-           :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)}
+        (let [valittu-tpi-id (:tpi_id @u/valittu-toimenpideinstanssi)
+              valitut-tyot (reaction
+                             (filter #(and
+                                       (= (:sopimus %) (first @u/valittu-sopimusnumero))
+                                       (= (:toimenpideinstanssi %) valittu-tpi-id))
+                                     @u/muutoshintaiset-tyot))
+              valitun-tpin-tehtavat-tasoineen (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                      valittu-tpi-id
+                                      toimenpideinstanssit tehtavat-tasoineen)]
+          [:div.muut-tyot
+           [valinnat/urakan-sopimus ur]
+           [valinnat/urakan-toimenpide+muut ur]
+           (if-not (empty? valitun-tpin-tehtavat-tasoineen)
+             [grid/grid
+             {:otsikko      "Muutos- ja lisätyöhinnat"
+              :tyhja        (if (nil? @u/muutoshintaiset-tyot)
+                              [ajax-loader "Muutoshintaisia töitä haetaan..."]
+                              "Ei muutoshintaisia töitä")
+              :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                       (:id @nav/valittu-urakka)
+                                                       #(tallenna-tyot
+                                                         % u/muutoshintaiset-tyot)
+                                                       :ei-mahdollinen)
+              :ohjaus       g
+              :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
+                                                                          (:tehtava rivi))
+                                                                        (vals (grid/hae-muokkaustila %)))))
+              :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)}
 
-          [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
-            :tyyppi        :valinta
-            :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
-            :valinta-arvo  :tpi_id
-            :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-            :valinnat      toimenpideinstanssit
-            :leveys "25%"
-            :aseta         #(assoc %1 :toimenpideinstanssi %2
-                                      :tehtavanimi nil)
-            :muokattava?   #(neg? (:id %))}
-           {:otsikko       "Tehtävä" :nimi :tehtavanimi
-            :valinta-arvo  #(:nimi (nth % 3))
-            :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-            :tyyppi        :valinta
-            :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                               (:toimenpideinstanssi %)
-                               toimenpideinstanssit (filter (fn [t]
-                                                              (not ((disj @jo-valitut-tehtavat (:tehtava %))
-                                                                     (:id (nth t 3))))) tehtavat-tasoineen))
-            :muokattava?   #(neg? (:id %))
-            :aseta         #(assoc %1 :tehtavanimi %2
-                                      :tehtava (:id (urakan-toimenpiteet/tehtava-nimella %2 tehtavat))
-                                      :yksikko (:yksikko (urakan-toimenpiteet/tehtava-nimella %2 tehtavat)))
-            :leveys        "45%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
-           {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna muutoshinta / yksikkö"]]
-            :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys "20%"}]
+             [{:otsikko       "Tehtävä" :nimi :tehtavanimi
+               :jos-tyhja "Ei valittavia tehtäviä"
+               :valinta-arvo  #(:nimi (nth % 3))
+               :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+               :tyyppi        :valinta
+               :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                valittu-tpi-id
+                                toimenpideinstanssit (filter (fn [t]
+                                                               (not ((disj @jo-valitut-tehtavat (:tehtava %))
+                                                                      (:id (nth t 3))))) valitun-tpin-tehtavat-tasoineen))
+               :muokattava?   #(neg? (:id %))
+               :aseta         #(assoc %1 :tehtavanimi %2
+                                         :tehtava (:id (urakan-toimenpiteet/tehtava-nimella %2 tehtavat))
+                                         :yksikko (:yksikko (urakan-toimenpiteet/tehtava-nimella %2 tehtavat)))
+               :leveys        "45%"}
+              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
+              {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea
+               :validoi [[:ei-tyhja "Anna muutoshinta / yksikkö"]]
+               :tyyppi  :positiivinen-numero :fmt fmt/euro-opt :leveys "20%"}]
 
-          @ryhmitellyt-muutoshintaiset-tyot]]))))
+              @valitut-tyot]
+             [vihje "Ei tehtäviä valitulla toimenpiteellä tässä urakassa"])])))))
 
