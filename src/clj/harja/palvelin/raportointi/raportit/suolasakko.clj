@@ -15,8 +15,8 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             urakka-id
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)]
+                            #_(konv/sql-timestamp alkupvm) ; TODO Käytä aikaväliä, miten?
+                            #_(konv/sql-timestamp loppupvm)]
         materiaalin-tiedot (into [] (apply hae-tiedot-suolasakkoraportille toteuma-parametrit))]
         materiaalin-tiedot))
 

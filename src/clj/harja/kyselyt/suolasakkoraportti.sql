@@ -12,4 +12,4 @@ SELECT
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
-WHERE lt.urakka = :urakkah;
+WHERE lt.urakka = :urakka;
