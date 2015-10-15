@@ -6,6 +6,7 @@ SELECT
   ss.maksukuukausi AS sakko_maksukuukausi,
   ss.indeksi AS sakko_indeksi,
   ss.urakka,
+  ss.indeksi,
   lt.alkupvm AS lampotila_alkupvm,
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,

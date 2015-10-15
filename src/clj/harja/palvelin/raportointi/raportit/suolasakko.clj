@@ -83,7 +83,8 @@
        {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä (t)"}
        {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
        {:leveys "10%" :otsikko "Suolaerotus (t)"}
-         {:leveys "10%" :otsikko "Sakko/Bonus"}]
+       {:leveys "10%" :otsikko "Sakko/Bonus"}
+       {:leveys "10%" :otsikko "Indeksi"}]
         (for [rivi raportin-data]
            [(:urakka_nimi rivi)
             (str (:keskilampotila rivi) " C")
@@ -91,4 +92,5 @@
             (:suola_suunniteltu rivi)
             (:suola_kaytetty rivi)
             (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-            (fmt/euro-opt (:suolasakko rivi))])]]))
+            (fmt/euro-opt (:suolasakko rivi))
+            (:indeksi rivi)])]]))
