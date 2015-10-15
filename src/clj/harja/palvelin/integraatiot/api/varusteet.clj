@@ -17,24 +17,42 @@
            :virheet [{:koodi  virheet/+puutteelliset-parametrit+
                       :viesti selite}]}))
 
+(defn tarkista-parametrit [saadut vaaditut]
+  (doseq [vaadittu vaaditut]
+    (when (not (get saadut (:parametri vaadittu)))
+      (heita-virheelliset-parametrit-poikkeus (:selite vaadittu)))))
+
 (defn tarkista-tietolajihaun-parametrit [parametrit]
-  (when (not (get parametrit "tunniste"))
-    (heita-virheelliset-parametrit-poikkeus "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)")))
+  (tarkista-parametrit
+    parametrit
+    [{:parametri "tunniste"
+      :selite    "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)"}]))
 
 (defn tarkista-tietueiden-haun-parametrit [parametrit]
-  (cond
-    (not (get parametrit "tietolajitunniste")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)")
-    (not (get parametrit "numero")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman tien numeroa (URL-parametri: numero)")
-    (not (get parametrit "aosa")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman alkuosaa (URL-parametri: aosa)")
-    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman alkuetäisyyttä (URL-parametri: aet)")
-    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuosaa (URL-parametri: losa)")
-    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuetäisyyttä (URL-parametri: let)")
-    (not (get parametrit "voimassaolopvm")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)")))
+  (tarkista-parametrit
+    parametrit
+    [{:parametri "tietolajitunniste"
+      :selite    "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"}
+     {:parametri "numero"
+      :selite    "Tietueita ei voi hakea ilman tien numeroa (URL-parametri: numero)"}
+     {:parametri "aosa"
+      :selite    "Tietueita ei voi hakea ilman alkuosaa (URL-parametri: aosa)"}
+     {:parametri "aet"
+      :selite    "Tietueita ei voi hakea ilman alkuetäisyyttä (URL-parametri: aet)"}
+     {:parametri "aet"
+      :selite    "Tietueita ei voi hakea ilman loppuosaa (URL-parametri: losa)"}
+     {:parametri "aet"
+      :selite    "Tietueita ei voi hakea ilman loppuetäisyyttä (URL-parametri: let)"}
+     {:parametri "voimassaolopvm"
+      :selite    "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)"}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
-  (cond
-    (not (get parametrit "tunniste")) (heita-virheelliset-parametrit-poikkeus "Tietuetta ei voi hakea ilman livi-tunnistetta (URL-parametri: tunniste)")
-    (not (get parametrit "tietolajitunniste")) (heita-virheelliset-parametrit-poikkeus "Tietuetta ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)")))
+  (tarkista-parametrit
+    parametrit
+    [{:parametri "tunniste"
+      :selite    "Tietuetta ei voi h¡akea ilman livi-tunnistetta (URL-parametri: tunniste)"}
+     {:parametri "tietolajitunniste"
+      :selite    "Tietuetta ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"}]))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
