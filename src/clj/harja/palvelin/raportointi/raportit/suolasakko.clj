@@ -18,8 +18,8 @@
                             urakka-id
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
                             ; FIXME .getYear vanhentunut & vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)]
+                            #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
+                            #_(konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
@@ -89,7 +89,7 @@
             (str (:keskilampotila rivi) " C")
             (str (:pitkakeskilampotila rivi) "C")
             0 ; TODO
-            0
+            (:suola_kaytetty rivi)
             0
             (fmt/euro-opt (:suolasakko rivi))])]]]
       (log/debug "View: " view)
