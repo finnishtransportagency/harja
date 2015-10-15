@@ -90,9 +90,9 @@
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
            :muokattava? (fn [rivi]
-                          (if (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
-                            (:maara rivi)
-                            "Ei syötettävissä"))
+                          (if (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))
+                            "Ei syötettävissä"
+                            (:maara rivi)))
            :validoi [[:ei-tyhja "Kirjoita määrä"]]}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali)  :leveys "5%"
            :tyyppi :string :muokattava? (constantly false)}]
@@ -126,8 +126,10 @@
           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
           :validoi [[:ei-tyhja "Valitse materiaali"]]}
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
-          :muokattava? (fn [{:keys [materiaali]}]
-                         (nil? (materiaalit-ilman-maksimimaaria (:nimi materiaali))))
+          :muokattava? (fn [rivi]
+                         (if (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))
+                           "Ei syötettävissä"
+                           (:maara rivi)))
           :hae (fn [rivi]
                  (if (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
                    (:maara rivi)
