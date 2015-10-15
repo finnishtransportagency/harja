@@ -121,6 +121,10 @@
     (not (nil? valittu))
     (= (get asia tunniste) (get valittu tunniste))))
 
+;; Palauttaa joukon vektoreita, joten kutsu (mapcat kartalla-xf @jutut)
+;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
+;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
+;; jos vastaisuudessa tulee samankaltaisia tilanteita.
 (defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu :id))
