@@ -202,6 +202,13 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
+(defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      nakymassa? (= :muut @suunnittelun-valittu-valilehti)]
+                     (when (and ur nakymassa?)
+                       (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
+
+
 (defonce urakan-organisaatio
          (reaction<! [ur (:id @nav/valittu-urakka)]
                      (when ur
