@@ -32,7 +32,8 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -379,6 +380,14 @@
 
     (komp/luo
       (fn []
+        (log "Muut työt!")
+        (log (pr-str (map
+                       #(assoc % :tyyppi-kartalla :toteuma)
+                       @tyorivit)))
+        (reset! muut-tyot/muut-tyot-kartalla (mapcat #(kartalla-xf % @valittu-toteuma)
+                                                  (map
+                                                    #(assoc % :tyyppi-kartalla :toteuma)
+                                                    @tyorivit)))
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
@@ -433,9 +442,11 @@
 
 
 (defn muut-tyot-toteumat []
-  (fn []
-    [:span
-     [kartta/kartan-paikka]
-     (if @valittu-toteuma
-       [toteutuneen-muun-tyon-muokkaus]
-       [muut-tyot-toteumalistaus])]))
+  (komp/luo
+    (komp/lippu muut-tyot/karttataso-muut-tyot)
+    (fn []
+      [:span
+       [kartta/kartan-paikka]
+       (if @valittu-toteuma
+         [toteutuneen-muun-tyon-muokkaus]
+         [muut-tyot-toteumalistaus])])))

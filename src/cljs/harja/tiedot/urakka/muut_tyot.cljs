@@ -24,3 +24,6 @@
   [toteuma]
   (k/post! :tallenna-muiden-toiden-toteuma
            toteuma ))
+
+(def karttataso-muut-tyot (atom false))
+(def muut-tyot-kartalla (atom nil))
