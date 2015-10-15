@@ -15,9 +15,10 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             urakka-id
-                            #_(konv/sql-timestamp alkupvm) ; TODO Käytä aikaväliä, miten?
-                            #_(konv/sql-timestamp loppupvm)]
-        materiaalin-tiedot (into [] (apply hae-tiedot-suolasakkoraportille toteuma-parametrit))]
+                            (.getYear (konv/sql-timestamp alkupvm))
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)]
+        materiaalin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
         materiaalin-tiedot))
 
 ; TODO
@@ -45,7 +46,7 @@
 
 (defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [[konteksti toteumat]
+  (let [[konteksti raportin-data]
         (cond
           (and urakka-id hk-alkupvm hk-loppupvm)
           [:urakka (muodosta-suolasakkoraportti-urakalle db user {:urakka-id urakka-id
@@ -71,12 +72,15 @@
                      ", Suolabonus/sakkoraportti "
                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))]
     [:raportti {:nimi otsikko}
-     [:taulukko {:otsikko otsikko
+     [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
-      [{:leveys "10%" :otsikko "Urakka"}
-       {:leveys "10%" :otsikko "Keskiläpötila"}
-       {:leveys "10%" :otsikko "Pitkän aikavälin kesklämpätila"}
-       {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä"}
-       {:leveys "10%" :otsikko "Käytetty suolamäärä"}
-       {:leveys "10%" :otsikko "Suolaerotus"}
-       {:leveys "10%" :otsikko "Sakko/Bonus"}]]]))
+      (concat
+        [{:leveys "10%" :otsikko "Urakka"}
+         {:leveys "10%" :otsikko "Keskiläpötila"}
+         {:leveys "10%" :otsikko "Pitkän aikavälin kesklämpätila"}
+         {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä"}
+         {:leveys "10%" :otsikko "Käytetty suolamäärä"}
+         {:leveys "10%" :otsikko "Suolaerotus"}
+         {:leveys "10%" :otsikko "Sakko/Bonus"}]
+
+        )]]))

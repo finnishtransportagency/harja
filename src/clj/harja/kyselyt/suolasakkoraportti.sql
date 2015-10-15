@@ -1,4 +1,4 @@
--- name: hae-tiedot-suolasakkoraportille
+-- name: hae-tiedot-urakan-suolasakkoraportille
 SELECT
   ss.maara AS sakko_maara,
   ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
@@ -12,4 +12,7 @@ SELECT
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
-WHERE lt.urakka = :urakka;
+WHERE lt.urakka = :urakka
+AND ss.hoitokauden_alkuvuosi = :alkuvuosi
+AND lt.alkupvm = :alkupvm
+AND lt.loppupvm = :loppupvm;
