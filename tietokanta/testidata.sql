@@ -779,6 +779,50 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 NOW(),
 st_makepoint(499820, 7249885) ::POINT, 2);
 
+-- Reittipisteet muutostyölle
+-- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:00.00',
+        NOW(),
+        st_makepoint(453919, 7187099) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:03.00',
+        NOW(),
+        st_makepoint(453271, 7188395) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:06.00',
+        NOW(),
+        st_makepoint(453399, 7189019) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:09.00',
+        NOW(),
+        st_makepoint(453820, 7189885) ::POINT, 2);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:00.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES
+  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:03.00' :: TIMESTAMP ),
+   NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:06.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:09.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
 -- Reittipisteet yksikköhintaiselle työlle
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
