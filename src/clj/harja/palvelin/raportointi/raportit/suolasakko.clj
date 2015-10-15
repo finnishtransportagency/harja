@@ -6,7 +6,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [yesql.core :refer [defqueries]]))
+            [yesql.core :refer [defqueries]]
+            [harja.fmt :as fmt]))
 
 (defqueries "harja/kyselyt/suolasakkoraportti.sql")
 
@@ -90,6 +91,6 @@
             0 ; TODO
             0
             0
-            0])]]]
+            (fmt/euro-opt (:suolasakko rivi))])]]]
       (log/debug "View: " view)
       view)))

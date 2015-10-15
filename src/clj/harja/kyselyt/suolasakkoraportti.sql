@@ -9,7 +9,8 @@ SELECT
   lt.alkupvm AS lampotila_alkupvm,
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
-  lt.pitka_keskilampotila as pitkakeskilampotila
+  lt.pitka_keskilampotila as pitkakeskilampotila,
+  (SELECT "hoitokauden_suolasakko"(4, '2014-10-01', '2015-09-30')) AS suolasakko
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
