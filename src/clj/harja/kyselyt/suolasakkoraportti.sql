@@ -28,7 +28,7 @@ SELECT
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
-  LEFT JOIN urakka u ON ss.urakka = u.id
+  LEFT JOIN urakka u ON lt.urakka = u.id
 WHERE lt.urakka = :urakka
 AND ss.hoitokauden_alkuvuosi = :alkuvuosi
 AND lt.alkupvm >= '2014-10-01'
