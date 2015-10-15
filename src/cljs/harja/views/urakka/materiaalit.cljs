@@ -248,7 +248,6 @@
              [:button.btn.btn-primary
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
-                              (reset! tuleville? false)
                               (go 
                                 (let [rivit (concat (vals @yleiset-materiaalit-muokattu)
                                                     (vals @pohjavesialue-materiaalit-muokattu))
@@ -264,5 +263,6 @@
                                                                         rivit))]
                                   (when uudet-materiaalit
                                     (viesti/nayta! "Materiaalit tallennettu." :success)
+                                    (reset! tuleville? false)
                                     (reset! urakan-materiaalit uudet-materiaalit)))))}
               "Tallenna materiaalit"]])])))))
