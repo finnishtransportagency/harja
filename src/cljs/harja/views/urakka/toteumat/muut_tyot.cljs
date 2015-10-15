@@ -33,11 +33,32 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
+            [harja.geo :as geo])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defonce valittu-toteuma (atom nil))
+(def keskita-valittuun!
+  (run!
+    @nav/kartan-kokovalinta
+    (let [valitun-alue (when @muut-tyot/valittu-toteuma (:alue (first (kartalla-xf (assoc @muut-tyot/valittu-toteuma :tyyppi-kartalla :toteuma)))))]
+      (if (get-in valitun-alue [:alue :points])
+        (do
+          (log "Keskitetään valittuun tapahtumaan: " (pr-str valitun-alue))
+          (kartta/keskita-kartta-alueeseen! (geo/extent valitun-alue)))
+        (let [kaikkien-alue (keep :alue @muut-tyot/muut-tyot-kartalla)]
+          (if-not (empty? kaikkien-alue)
+            (do
+              (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))
+              ;; FIXME: Kauhea häxi. Kun kartta aukaistaan, asetetaan 'jossain' näkymään valitun urakan alue.
+              ;; Ts. rasittava race condition joista jälkimmäisenä tuleva zoom-taso jää voimaan
+              ;; Kartan zoomailulle / extent logiikalle pitänee tehdä joku yhteinen järkevä ratkaisu, joten pidetään
+              ;; tämä ehkä tällaisena toistaiseksi..
+              (js/setTimeout #(do (log "Keskitetään laajalla alueelle: " (pr-str kaikkien-alue))
+                                 (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))) 1000))
+            (do
+              (log "Keskitetään urakkaan")
+              (kartta/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))))))
 
 (defn hae-muutoshintainen-tyo-tpklla [tpk]
   (first (filter (fn [muutoshinta]
@@ -122,7 +143,7 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   []
-  (let [toteuma @valittu-toteuma
+  (let [toteuma @muut-tyot/valittu-toteuma
         muokattu (atom (if (get-in toteuma [:toteuma :id])
                          (assoc toteuma
                            :sopimus @u/valittu-sopimusnumero
@@ -154,9 +175,9 @@
     (komp/luo
       (fn []
         [:div.muun-tyon-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
+         [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
           (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
-         (if (get-in @valittu-toteuma [:tehtava :id])
+         (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
            (if lomaketta-voi-muokata?
              [:h3 "Muokkaa toteumaa"]
              [:h3 "Tarkastele toteumaa"])
@@ -178,7 +199,7 @@
                                                      (do
                                                        (korosta-rivia muokatun-id)
                                                        (reset! tallennus-kaynnissa false)
-                                                       (reset! valittu-toteuma nil)))
+                                                       (reset! muut-tyot/valittu-toteuma nil)))
                                      :kun-virhe    (reset! tallennus-kaynnissa false)}]
                                    (when (and (not jarjestelman-lisaama-toteuma?)
                                               (get-in @muokattu [:toteuma :id]))
@@ -204,7 +225,7 @@
                                                                                                                              ;; Tallennus ok
                                                                                                                              (do (viesti/nayta! "Toteuma poistettu")
                                                                                                                                  (reset! tallennus-kaynnissa false)
-                                                                                                                                 (reset! valittu-toteuma nil))
+                                                                                                                                 (reset! muut-tyot/valittu-toteuma nil))
 
                                                                                                                              ;; Epäonnistui jostain syystä
                                                                                                                              (reset! tallennus-kaynnissa false)))))}
@@ -380,18 +401,11 @@
 
     (komp/luo
       (fn []
-        (log "Muut työt!")
-        (log (pr-str (map
-                       #(assoc % :tyyppi-kartalla :toteuma)
-                       @tyorivit)))
-        (reset! muut-tyot/muut-tyot-kartalla (mapcat #(kartalla-xf % @valittu-toteuma)
-                                                  (map
-                                                    #(assoc % :tyyppi-kartalla :toteuma)
-                                                    @tyorivit)))
+        (reset! muut-tyot/haetut-muut-tyot @tyorivit)
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})
+           [:button.nappi-ensisijainen {:on-click #(reset! muut-tyot/valittu-toteuma {})
                                         :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus
                                                                                (:id @nav/valittu-urakka)))}
             (ikonit/plus) " Lisää toteuma"]
@@ -401,7 +415,7 @@
              :tyhja         (if (nil? @valitut-muut-tyot)
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
-             :rivi-klikattu #(reset! valittu-toteuma %)
+             :rivi-klikattu #(reset! muut-tyot/valittu-toteuma %)
              :rivin-luokka  #(aseta-rivin-luokka %)
              :tunniste      #(get-in % [:toteuma :id])}
             [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
@@ -447,6 +461,6 @@
     (fn []
       [:span
        [kartta/kartan-paikka]
-       (if @valittu-toteuma
+       (if @muut-tyot/valittu-toteuma
          [toteutuneen-muun-tyon-muokkaus]
          [muut-tyot-toteumalistaus])])))

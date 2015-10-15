@@ -1,11 +1,14 @@
 (ns harja.tiedot.urakka.muut-tyot
   "Tämä nimiavaruus hallinnoi urakan yksikköhintaisia töitä."
   (:require [harja.asiakas.kommunikaatio :as k]
+            [reagent.core :refer [atom]]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
-            [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.pvm :as pvm]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 
 (defn hae-urakan-muutoshintaiset-tyot [urakka-id]
@@ -16,14 +19,22 @@
   "Tallentaa muutoshintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id tyot]
   (let [hyotykuorma {:urakka-id urakka-id
-                     :tyot tyot}]
+                     :tyot      tyot}]
     (k/post! :tallenna-muutoshintaiset-tyot
              hyotykuorma)))
 
 (defn tallenna-muiden-toiden-toteuma
   [toteuma]
   (k/post! :tallenna-muiden-toiden-toteuma
-           toteuma ))
+           toteuma))
 
-(def karttataso-muut-tyot (atom false))
-(def muut-tyot-kartalla (atom nil))
+(defonce karttataso-muut-tyot (atom false))
+(defonce haetut-muut-tyot (atom nil))
+(defonce valittu-toteuma (atom nil))
+(defonce muut-tyot-kartalla (reaction
+                              (when @karttataso-muut-tyot
+                                (mapcat #(kartalla-xf % @valittu-toteuma)
+                                        (map
+                                          #(assoc % :tyyppi-kartalla :toteuma)
+                                          @haetut-muut-tyot)))))
+(harja.loki/tarkkaile! "Muut työt kartalla: " muut-tyot-kartalla)
