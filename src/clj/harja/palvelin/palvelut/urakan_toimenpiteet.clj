@@ -7,7 +7,25 @@
 
             [harja.kyselyt.urakan-toimenpiteet :as q]))
 
-(declare hae-urakan-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat)
+(defn hae-urakan-toimenpiteet
+  "Palvelu, joka palauttaa urakan toimenpiteet"
+  [db user urakka-id]
+  (into []
+        (q/hae-urakan-toimenpiteet db urakka-id)))
+
+
+(defn hae-urakan-toimenpiteet-ja-tehtavat
+  "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
+  [db user urakka-id]
+  (into []
+        (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)))
+
+(defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
+  "Palvelu, joka palauttaa urakan yksikkohintaiset toimenpiteet ja tehtävät"
+  [db urakka-id]
+  (let [kaikki (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)
+        yksikkohintaiset (into [] (filter #(not-any? :kokonaishintainen %) kaikki))]
+    yksikkohintaiset))
 
 (defrecord Urakan-toimenpiteet []
   component/Lifecycle
@@ -30,24 +48,3 @@
     (poista-palvelu (:http-palvelin this) :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat)
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet)
     this))
-
-
-(defn hae-urakan-toimenpiteet
-  "Palvelu, joka palauttaa urakan toimenpiteet"
-  [db user urakka-id]
-  (into []
-        (q/hae-urakan-toimenpiteet db urakka-id)))
-
-
-(defn hae-urakan-toimenpiteet-ja-tehtavat
-  "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
-  [db user urakka-id]
-  (into []
-        (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)))
-
-(defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  "Palvelu, joka palauttaa urakan yksikkohintaiset toimenpiteet ja tehtävät"
-  [db urakka-id]
-  (let [kaikki (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)
-        yksikkohintaiset (into [] (filter #(not-any? :kokonaishintainen %) kaikki))]
-    yksikkohintaiset))
