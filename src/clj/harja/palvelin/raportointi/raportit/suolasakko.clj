@@ -74,7 +74,7 @@
                        :koko-maa "KOKO MAA")
                      ", Suolabonus/sakkoraportti "
                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))]
-    (let [view [:raportti {:nimi otsikko}
+    [:raportti {:nimi otsikko}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "10%" :otsikko "Urakka"}
@@ -91,6 +91,4 @@
             (:suola_suunniteltu rivi)
             (:suola_kaytetty rivi)
             (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-            (fmt/euro-opt (:suolasakko rivi))])]]]
-      (log/debug "View: " view)
-      view)))
+            (fmt/euro-opt (:suolasakko rivi))])]]))
