@@ -79,13 +79,16 @@
                      "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
+(defn tee-alkuajastus []
+  (time/plus- (time/now) (time/seconds 10)))
+
 (defn tee-tieverkon-paivitystehtava [this {:keys [tieosoiteverkon-alk-osoite
                                                   tieosoiteverkon-alk-tuontikohde
                                                   tieosoiteverkon-shapefile
                                                   tuontivali]}]
   (when (not (and tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde))
     (chime-at
-      (periodic-seq (time/now) (-> tuontivali time/minutes))
+      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
       (fn [_]
         (try
           (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
@@ -113,7 +116,7 @@
                                                                soratien-hoitoluokkien-alk-tuontikohde
                                                                soratien-hoitoluokkien-shapefile]}]
   (when (not (and soratien-hoitoluokkien-alk-osoite soratien-hoitoluokkien-alk-tuontikohde))
-    (chime-at (periodic-seq (time/now) (-> tuontivali time/minutes))
+    (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
               (fn [_]
                 (try
                   (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan (:db this) soratien-hoitoluokkien-shapefile)
@@ -128,6 +131,8 @@
     (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-hakutehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paivitystehtava this asetukset)))
   (stop [this]
-    (:tieverkon-hakutehtava this)
-    (:soratien-hoitoluokkien-hakutehtava this)
+    (apply (:tieverkon-hakutehtava this) [])
+    (apply (:soratien-hoitoluokkien-hakutehtava this) [])
+    (apply (:tieverkon-paivitystehtava this) [])
+    (apply (:soratien-hoitoluokkien-paivitystehtava this) [])
     this))
