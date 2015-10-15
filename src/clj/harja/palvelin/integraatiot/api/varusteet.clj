@@ -50,7 +50,7 @@
   (tarkista-parametrit
     parametrit
     [{:parametri "tunniste"
-      :selite    "Tietuetta ei voi h¡akea ilman livi-tunnistetta (URL-parametri: tunniste)"}
+      :selite    "Tietuetta ei voi hakea ilman livi-tunnistetta (URL-parametri: tunniste)"}
      {:parametri "tietolajitunniste"
       :selite    "Tietuetta ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"}]))
 
