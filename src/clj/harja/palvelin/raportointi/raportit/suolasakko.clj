@@ -78,19 +78,19 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "10%" :otsikko "Urakka"}
-         {:leveys "10%" :otsikko "Keskiläpötila"}
-         {:leveys "10%" :otsikko "Pitkän aikavälin keskilämpötila"}
-         {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä"}
-         {:leveys "10%" :otsikko "Käytetty suolamäärä"}
-         {:leveys "10%" :otsikko "Suolaerotus"}
+       {:leveys "10%" :otsikko "Keskiläpötila ("}
+       {:leveys "10%" :otsikko "Pitkän aikavälin keskilämpötila"}
+       {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä (t)"}
+       {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
+       {:leveys "10%" :otsikko "Suolaerotus (t)"}
          {:leveys "10%" :otsikko "Sakko/Bonus"}]
         (for [rivi raportin-data]
            [(:urakka_nimi rivi)
             (str (:keskilampotila rivi) " C")
             (str (:pitkakeskilampotila rivi) "C")
-            0 ; TODO
+            (:suola_suunniteltu rivi)
             (:suola_kaytetty rivi)
-            0
+            (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
             (fmt/euro-opt (:suolasakko rivi))])]]]
       (log/debug "View: " view)
       view)))
