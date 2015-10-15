@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.suolasakko
-  "Materiaaliraportti"
+  "Suolasakkoraportti"
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.urakat :as urakat-q]
