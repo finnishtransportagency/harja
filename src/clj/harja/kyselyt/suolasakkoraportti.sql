@@ -5,7 +5,7 @@ SELECT
   ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
   ss.maksukuukausi AS sakko_maksukuukausi,
   ss.indeksi AS sakko_indeksi,
-  ss.urakka,
+  lt.urakka,
   ss.indeksi,
   lt.alkupvm AS lampotila_alkupvm,
   lt.loppupvm AS lampotila_loppupvm,
