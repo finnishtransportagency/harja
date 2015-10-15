@@ -78,7 +78,7 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "10%" :otsikko "Urakka"}
-       {:leveys "10%" :otsikko "Keskiläpötila ("}
+       {:leveys "10%" :otsikko "Keskiläpötila"}
        {:leveys "10%" :otsikko "Pitkän aikavälin keskilämpötila"}
        {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä (t)"}
        {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
