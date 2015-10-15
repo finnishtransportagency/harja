@@ -438,7 +438,7 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
@@ -454,7 +454,7 @@
                       :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
                                                      :anchor         #js [0.5 0.5]
                                                      :opacity        1
-                                                     :scale          0.5
+                                                     :scale          (or scale 0.5)
                                                      :size           #js [32 32]
                                                      :zIndex         6
                                                      :rotateWithView false
