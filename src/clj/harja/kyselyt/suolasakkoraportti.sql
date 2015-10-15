@@ -11,7 +11,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  --(SELECT "hoitokauden_suolasakko"(:urakka, '2014-10-01', '2015-09-30')) AS suolasakko, -- FIXME ERROR: function hoitokauden_suolasakko(bigint, unknown, unknown) does not exist???
+  -- (SELECT "hoitokauden_suolasakko"(:urakka, '2014-10-01', '2015-09-30')) AS suolasakko, -- FIXME wtf function hoitokauden_suolasakko(bigint, unknown, unknown) does not exist???
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.urakka = :urakka
@@ -23,7 +23,7 @@ SELECT
     JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
     JOIN toteuma t ON tm.toteuma = t.id
     WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
-        AND t.urakka = 4
+        AND t.urakka = :urakka
         AND t.alkanut >= '2014-10-01' AND t.alkanut <= '2015-09-30')
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
