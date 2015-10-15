@@ -89,8 +89,7 @@
            :nimi :materiaali :fmt :nimi :leveys "35%"
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Määrä" :nimi :maara :leveys "15%" :tyyppi :positiivinen-numero
-           :muokattava? (fn [rivi]
-                          (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
+           :muokattava? (fn [rivi] (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))))
            :hae (fn [rivi]
                   (if (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))
                     "Ei syötettävissä"
@@ -128,7 +127,7 @@
           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
           :validoi [[:ei-tyhja "Valitse materiaali"]]}
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
-          :muokattava? (fn [rivi] (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi])))
+          :muokattava? (fn [rivi] (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))))
           :hae (fn [rivi]
                  (if (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))
                    "Ei syötettävissä"
