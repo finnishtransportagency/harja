@@ -16,7 +16,7 @@
   (let [toteuma-parametrit [db
                             urakka-id
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            ; FIXME .getYear vanhentunut, mutta vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
+                            ; FIXME .getYear vanhentunut & vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
                             (konv/sql-timestamp alkupvm)
                             (konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]

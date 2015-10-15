@@ -18,5 +18,5 @@ WHERE lt.urakka = :urakka
 AND ss.hoitokauden_alkuvuosi = :alkuvuosi
 AND lt.alkupvm :: DATE >= :alkupvm
 AND lt.alkupvm :: DATE <= :loppupvm;
--- FIXME Pitäisi rajata tarkasti alku = alku ja loppu = loppu, mutta jostain syystä ei toiminut niin.
--- Jotain tekemistä timezonen kanssa?
+-- FIXME Pitäisi rajata tarkasti alku = alku ja loppu = loppu, jotta tulos varmasti pyydetyltä aikaväliltä.
+-- Mutta jostain syystä ei toiminut niin. Jotain tekemistä timezonen kanssa?
