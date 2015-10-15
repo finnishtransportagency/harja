@@ -37,4 +37,3 @@
                                         (map
                                           #(assoc % :tyyppi-kartalla :toteuma)
                                           @haetut-muut-tyot)))))
-(harja.loki/tarkkaile! "Muut työt kartalla: " muut-tyot-kartalla)

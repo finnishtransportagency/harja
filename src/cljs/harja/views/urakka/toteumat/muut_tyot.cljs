@@ -34,7 +34,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -458,6 +459,7 @@
 (defn muut-tyot-toteumat []
   (komp/luo
     (komp/lippu muut-tyot/karttataso-muut-tyot)
+    (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (fn []
       [:span
        [kartta/kartan-paikka]
