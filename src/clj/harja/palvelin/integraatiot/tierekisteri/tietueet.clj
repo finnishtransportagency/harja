@@ -6,9 +6,9 @@
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn hae-tietueet [integraatioloki url tierekisteriosoitevali tietolaji muutospvm]
+(defn hae-tietueet [integraatioloki url tierekisteriosoitevali tietolaji voimassaolopvm]
   (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tierekisteriosoitevali) ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
-  (let [kutsudata (kutsusanoma/muodosta-kutsu tierekisteriosoitevali tietolaji muutospvm)
+  (let [kutsudata (kutsusanoma/muodosta-kutsu tierekisteriosoitevali tietolaji voimassaolopvm)
         palvelu-url (str url "/haetietueet")
         otsikot {"Content-Type" "text/xml; charset=utf-8"}
         vastausdata (http/laheta-post-kutsu
@@ -24,9 +24,9 @@
                           vastaus-xml
                           (str "Tietueiden haku epäonnistui (URL: " url ") tr-osoitteella: " (pr-str tierekisteriosoitevali)
                                " & tietolajitunnisteella: " tietolaji
-                               " & muutospäivämäärällä: " muutospvm ".")
+                               " & voimassaolopäivämäärällä: " voimassaolopvm ".")
                           :tietueiden-haku-epaonnistui
                           (str "Tietueiden haku palautti virheitä (URL: " url ") tr-osoitteella: " (pr-str tierekisteriosoitevali)
                                " & tietolajitunnisteella: " tietolaji
-                               " & muutospäivämäärällä: " muutospvm "."))))]
+                               " & voimassaolopäivämäärällä: " voimassaolopvm "."))))]
     vastausdata))
