@@ -15,11 +15,12 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             urakka-id
-                            (.getYear (konv/sql-timestamp alkupvm))
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)]
-        materiaalin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
-        materiaalin-tiedot))
+                            #_(.getYear (konv/sql-timestamp alkupvm)) ; FIXME Kannan pvm:n käsittely bugittaa :(
+                            #_(konv/sql-timestamp alkupvm) ; FIXME Kannan pvm:n käsittely bugittaa :(
+                            #_(konv/sql-timestamp loppupvm)] ; FIXME Kannan pvm:n käsittely bugittaa :(
+        raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
+    (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
+    raportin-tiedot))
 
 ; TODO
 #_(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
@@ -71,16 +72,22 @@
                        :koko-maa "KOKO MAA")
                      ", Suolabonus/sakkoraportti "
                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))]
-    [:raportti {:nimi otsikko}
+    (let [view [:raportti {:nimi otsikko}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
-      (concat
-        [{:leveys "10%" :otsikko "Urakka"}
+      [{:leveys "10%" :otsikko "Urakka"}
          {:leveys "10%" :otsikko "Keskiläpötila"}
          {:leveys "10%" :otsikko "Pitkän aikavälin kesklämpätila"}
          {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä"}
          {:leveys "10%" :otsikko "Käytetty suolamäärä"}
          {:leveys "10%" :otsikko "Suolaerotus"}
          {:leveys "10%" :otsikko "Sakko/Bonus"}]
-
-        )]]))
+        (for [rivi raportin-data]
+           [(:urakka_nimi rivi)
+            1
+            2
+            3
+            4
+            5])]]]
+      (log/debug "View: " view)
+      view)))
