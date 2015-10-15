@@ -2,52 +2,54 @@
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]))
 
-(defn oletusalue [asia]
+(defn oletusalue [asia on-valittu?]
   (merge
     (:sijainti asia)
-    {:color  "green"
+    {:color  (if (on-valittu? asia) "blue" "green")
      :radius 300
      :stroke {:color "black" :width 10}}))
 
-(defmulti kartalla-xf :tyyppi-kartalla)
+(defmulti
+  ^{:private true}
+  asia-kartalle :tyyppi-kartalla)
 
-(defmethod kartalla-xf :tiedoitus [ilmoitus]
+(defmethod asia-kartalle :tiedoitus [ilmoitus on-valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus))])
+     :alue (oletusalue ilmoitus on-valittu?))])
 
-(defmethod kartalla-xf :kysely [ilmoitus]
+(defmethod asia-kartalle :kysely [ilmoitus on-valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus))])
+     :alue (oletusalue ilmoitus on-valittu?))])
 
-(defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
+(defmethod asia-kartalle :toimenpidepyynto [ilmoitus on-valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus))])
+     :alue (oletusalue ilmoitus on-valittu?))])
 
-(defmethod kartalla-xf :havainto [havainto]
+(defmethod asia-kartalle :havainto [havainto on-valittu?]
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :alue (oletusalue havainto))])
+     :alue (oletusalue havainto on-valittu?))])
 
-(defmethod kartalla-xf :pistokoe [tarkastus]
+(defmethod asia-kartalle :pistokoe [tarkastus on-valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :alue (oletusalue tarkastus))])
+     :alue (oletusalue tarkastus on-valittu?))])
 
-(defmethod kartalla-xf :laaduntarkastus [tarkastus]
+(defmethod asia-kartalle :laaduntarkastus [tarkastus on-valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :alue (oletusalue tarkastus))])
+     :alue (oletusalue tarkastus on-valittu?))])
 
-(defmethod kartalla-xf :toteuma [toteuma]
+(defmethod asia-kartalle :toteuma [toteuma on-valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
   (let [reittipisteet (map
@@ -65,13 +67,13 @@
                                                                    pvm/ennen?
                                                                    reittipisteet))})]))
 
-(defmethod kartalla-xf :turvallisuuspoikkeama [tp]
+(defmethod asia-kartalle :turvallisuuspoikkeama [tp on-valittu?]
   [(assoc tp
      :type :turvallisuuspoikkeama
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-     :alue (oletusalue tp))])
+     :alue (oletusalue tp on-valittu?))])
 
-(defmethod kartalla-xf :paallystyskohde [pt]
+(defmethod asia-kartalle :paallystyskohde [pt on-valittu?]
   (mapv
     (fn [kohdeosa]
       (assoc kohdeosa
@@ -80,7 +82,7 @@
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 
-(defmethod kartalla-xf :paikkaustoteuma [pt]
+(defmethod asia-kartalle :paikkaustoteuma [pt on-valittu?]
   ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
   (mapv
     (fn [kohdeosa]
@@ -103,7 +105,7 @@
                         (* (Math/sin lat1) (Math/cos lat2) (Math/cos (- lon2 lon1)))))
          (* 2 Math/PI))))
 
-(defmethod kartalla-xf :tyokone [tyokone]
+(defmethod asia-kartalle :tyokone [tyokone on-valittu?]
   (assoc tyokone
     :type :tyokone
     :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
@@ -112,4 +114,14 @@
            :direction   (- (suunta-radiaaneina tyokone))
            :img         "images/tyokone.png"}))
 
-(defmethod kartalla-xf :default [_])
+(defmethod asia-kartalle :default [_ _ _])
+
+(defn on-valittu? [valittu tunniste asia ]
+  (and
+    (not (nil? valittu))
+    (= (get asia tunniste) (get valittu tunniste))))
+
+(defn kartalla-xf
+  ([asia] (kartalla-xf asia nil nil))
+  ([asia valittu] (kartalla-xf asia valittu :id))
+  ([asia valittu tunniste] (asia-kartalle asia (partial on-valittu? valittu tunniste))))
