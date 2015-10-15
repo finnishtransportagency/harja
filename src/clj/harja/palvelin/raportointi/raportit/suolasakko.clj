@@ -15,9 +15,10 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             urakka-id
-                            #_(.getYear (konv/sql-timestamp alkupvm)) ; FIXME Kannan pvm:n käsittely bugittaa :(
-                            #_(konv/sql-timestamp alkupvm) ; FIXME Kannan pvm:n käsittely bugittaa :(
-                            #_(konv/sql-timestamp loppupvm)] ; FIXME Kannan pvm:n käsittely bugittaa :(
+                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
+                            ; FIXME .getYear vanhentunut, mutta vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))

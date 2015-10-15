@@ -15,6 +15,8 @@ FROM lampotilat lt
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
   LEFT JOIN urakka u ON ss.urakka = u.id
 WHERE lt.urakka = :urakka
---AND ss.hoitokauden_alkuvuosi = :alkuvuosi
---AND lt.alkupvm = :alkupvm
---AND lt.loppupvm = :loppupvm;
+AND ss.hoitokauden_alkuvuosi = :alkuvuosi
+AND lt.alkupvm :: DATE >= :alkupvm
+AND lt.alkupvm :: DATE <= :loppupvm;
+-- FIXME Pitäisi rajata tarkasti alku = alku ja loppu = loppu, mutta jostain syystä ei toiminut niin.
+-- Jotain tekemistä timezonen kanssa?
