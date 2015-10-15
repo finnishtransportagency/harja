@@ -29,6 +29,7 @@
   [{type :type :as g}]
   (case type
     :line (:points g)
+    :arrow-line (:points g)
     :multiline (mapcat :points (:lines g))
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
@@ -74,6 +75,9 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod extent :polygon [{coordinates :coordinates}]
   (laske-pisteiden-extent coordinates))
+
+(defmethod extent :arrow-line [{points :points}]
+  (laske-pisteiden-extent points))
   
 (defn extent-monelle [geometriat]
   (laske-pisteiden-extent (mapcat pisteet geometriat)))
