@@ -9,7 +9,7 @@
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
 (defn muodosta-xml-sisalto [tunniste muutospvm]
-  [:haeTietolajit
+  [:haeTietolaji
    [:tietolajitunniste tunniste]
    (when (not (nil? muutospvm)) [:muutospvm (xml/formatoi-paivamaara muutospvm)])])
 

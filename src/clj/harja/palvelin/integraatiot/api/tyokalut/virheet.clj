@@ -10,3 +10,4 @@
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tyhja-vastaus+ "tyhja-vastaus")
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
+(def +puutteelliset-parametrit+ "puutteelliset-parametrit")
