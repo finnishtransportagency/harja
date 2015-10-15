@@ -8,10 +8,36 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat])
+            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn heita-virheelliset-parametrit-poikkeus [selite]
+  (throw+ {:type    virheet/+viallinen-kutsu+
+           :virheet [{:koodi  virheet/+puutteelliset-parametrit+
+                      :viesti selite}]}))
+
+(defn tarkista-tietolajihaun-parametrit [parametrit]
+  (when (not (get parametrit "tunniste"))
+    (heita-virheelliset-parametrit-poikkeus "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)")))
+
+(defn tarkista-tietueiden-haun-parametrit [parametrit]
+  (cond
+    (not (get parametrit "tietolajitunniste")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)")
+    (not (get parametrit "numero")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman tien numeroa (URL-parametri: numero)")
+    (not (get parametrit "aosa")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman alkuosaa (URL-parametri: aosa)")
+    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman alkuetäisyyttä (URL-parametri: aet)")
+    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuosaa (URL-parametri: losa)")
+    (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuetäisyyttä (URL-parametri: let)")
+    (not (get parametrit "numero")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)")))
+
+(defn tarkista-tietueen-haun-parametrit [parametrit]
+  (cond
+    (not (get parametrit "tunniste")) (heita-virheelliset-parametrit-poikkeus "Tietuetta ei voi hakea ilman livi-tunnistetta (URL-parametri: tunniste)")
+    (not (get parametrit "tietolajitunniste")) (heita-virheelliset-parametrit-poikkeus "Tietuetta ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)")))
+
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
+  (tarkista-tietolajihaun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
@@ -21,38 +47,27 @@
       muunnettu-vastausdata)))
 
 (defn hae-tietueet [tierekisteri parametrit kayttaja]
+  (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        muutospvm (get parametrit "muutospaivamaara")]
-    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " muutospäivämäärällä " muutospvm
+        voimassaolopvm (get parametrit "voimassaolopvm")]
+    (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
-    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste muutospvm)
+    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
-
-      ;; Jos tietueita ei löydy, on muunnetussa vastausdatassa tyhjä vektori avaimella tietueet
-      ;; Tässä tapauksessa palautamme tyhjän kartan
       (if (> (count (:varusteet muunnettu-vastausdata)) 1)
         muunnettu-vastausdata
         {}))))
 
 (defn hae-tietue [tierekisteri parametrit kayttaja]
+  (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
-          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueen-hakuvastaus vastausdata)]
-
-      ;; Jos tietuetunnisteella ei löydy tietuetta, palauttaa tierekisteripalvelu XML:n jossa tietue on nil
-      ;; Tässä tapauksessa me palautamme tyhjän kartan. Samalla tunnisteella voi myös virheellisesti löytyä
-      ;; useampi tietue, jolloin palautamme virheen.
-      (cond
-        (:tietueet vastausdata)
-        (throw+ {:type    :tierekisteri-kutsu-epaonnistui
-                 :virheet [{:viesti (str "Varusteen haku epäonnistui, koska tunniste " tunniste " palautti virheellisesti "
-                                         (count (:tietueet vastausdata)) " tietuetta.")
-                            :koodi  :tunniste-palautti-monta-tietuetta}]})
-        (:tietue vastausdata) muunnettu-vastausdata
-        :else {}))))
+          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
+      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
+        muunnettu-vastausdata {}))))
 
 (defn lisaa-tietue [tierekisteri data kayttaja]
   (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
