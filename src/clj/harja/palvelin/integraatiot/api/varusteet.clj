@@ -18,9 +18,9 @@
                       :viesti selite}]}))
 
 (defn tarkista-parametrit [saadut vaaditut]
-  (doseq [vaadittu vaaditut]
-    (when (not (get saadut (:parametri vaadittu)))
-      (heita-virheelliset-parametrit-poikkeus (:selite vaadittu)))))
+  (doseq [{:keys [parametri selite]} vaaditut]
+    (when (not (get saadut parametri))
+      (heita-virheelliset-parametrit-poikkeus selite))))
 
 (defn tarkista-tietolajihaun-parametrit [parametrit]
   (tarkista-parametrit

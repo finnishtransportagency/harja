@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.varusteet
+(ns harja.palvelin.integraatiot.api.varusteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
