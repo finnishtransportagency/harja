@@ -29,7 +29,7 @@
     (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman alkuetäisyyttä (URL-parametri: aet)")
     (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuosaa (URL-parametri: losa)")
     (not (get parametrit "aet")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman loppuetäisyyttä (URL-parametri: let)")
-    (not (get parametrit "numero")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)")))
+    (not (get parametrit "voimassaolopvm")) (heita-virheelliset-parametrit-poikkeus "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)")))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
   (cond
