@@ -82,8 +82,10 @@
 
 (defmethod raportin-parametri-arvo "kontekstin_hoitokausi" [p]
   (let [[alku loppu] @u/valittu-kontekstin-hoitokausi]
-    {:hk-alkupvm alku
-     :hk-loppupvm loppu}))
+    (if (and alku loppu)
+      {:hk-alkupvm  alku
+       :hk-loppupvm loppu}
+      {:virhe "Valitse hoitokausi"})))
 
 (defmethod raportin-parametri "hoitokauden-kuukausi" [p]
   [valinnat/hoitokauden-kuukausi])
@@ -133,7 +135,8 @@
                                            (= k konteksti)))
                                     (:parametrit raporttityyppi)))
         arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))
-        arvot-nyt (arvot)]
+        arvot-nyt (arvot)
+        _ (log "Arvot: " (pr-str arvot-nyt))]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (reset! suoritettu-raportti nil)
@@ -213,8 +216,7 @@
                                            :format-fn  #(if % (:kuvaus %) "Valitse")
                                            :valitse-fn #(reset! valittu-raporttityyppi %)
                                            :class      "valitse-raportti-alasveto"}
-            @mahdolliset-raporttityypit]
-            ]
+            @mahdolliset-raporttityypit]]
          
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
