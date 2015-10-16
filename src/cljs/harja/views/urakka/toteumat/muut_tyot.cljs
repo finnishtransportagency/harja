@@ -45,7 +45,6 @@
     (let [valitun-alue (when @muut-tyot/valittu-toteuma (:alue (first (kartalla-xf (assoc @muut-tyot/valittu-toteuma :tyyppi-kartalla :toteuma)))))]
       (if (get-in valitun-alue [:alue :points])
         (do
-          (log "Keskitetään valittuun tapahtumaan: " (pr-str valitun-alue))
           (kartta/keskita-kartta-alueeseen! (geo/extent valitun-alue)))
         (let [kaikkien-alue (keep :alue @muut-tyot/muut-tyot-kartalla)]
           (if-not (empty? kaikkien-alue)
@@ -55,10 +54,9 @@
               ;; Ts. rasittava race condition joista jälkimmäisenä tuleva zoom-taso jää voimaan
               ;; Kartan zoomailulle / extent logiikalle pitänee tehdä joku yhteinen järkevä ratkaisu, joten pidetään
               ;; tämä ehkä tällaisena toistaiseksi..
-              (js/setTimeout #(do (log "Keskitetään laajalla alueelle: " (pr-str kaikkien-alue))
-                                 (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))) 1000))
+              (js/setTimeout #(do
+                               (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))) 1000))
             (do
-              (log "Keskitetään urakkaan")
               (kartta/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))))))
 
 (defn hae-muutoshintainen-tyo-tpklla [tpk]
@@ -144,37 +142,37 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   []
-  (let [toteuma @muut-tyot/valittu-toteuma
-        muokattu (atom (if (get-in toteuma [:toteuma :id])
-                         (assoc toteuma
-                           :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
-                         ;; alustetaan arvoja uudelle toteumalle
-                         (assoc toteuma
-                           :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
-                           :tyyppi :muutostyo
-                           :hinnoittelu :yksikkohinta)))
-        valmis-tallennettavaksi? (reaction (let [m @muokattu]
-                                             (and
-                                               (get-in m [:tehtava :toimenpidekoodi])
-                                               (:tyyppi m)
-                                               (:alkanut m)
-                                               (:paattynyt m)
-                                               (or (if (= (:hinnoittelu @muokattu) :paivanhinta)
-                                                     (get-in m [:tehtava :paivanhinta])
-                                                     (get-in m [:tehtava :maara]))))))
-        tallennus-kaynnissa (atom false)
-        tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
-        tehtavat (map #(nth % 3) tehtavat-tasoineen)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
-        lomaketta-voi-muokata? (and
-                                 (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
-                                 (not jarjestelman-lisaama-toteuma?))]
-
-    (komp/luo
-      (fn []
+  (komp/luo
+    (fn []
+      (let [toteuma @muut-tyot/valittu-toteuma
+            _ (log "Tehdään lomake (taisi)" (pr-str toteuma))
+            muokattu (atom (if (get-in toteuma [:toteuma :id])
+                             (assoc toteuma
+                               :sopimus @u/valittu-sopimusnumero
+                               :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
+                             ;; alustetaan arvoja uudelle toteumalle
+                             (assoc toteuma
+                               :sopimus @u/valittu-sopimusnumero
+                               :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                               :tyyppi :muutostyo
+                               :hinnoittelu :yksikkohinta)))
+            valmis-tallennettavaksi? (reaction (let [m @muokattu]
+                                                 (and
+                                                   (get-in m [:tehtava :toimenpidekoodi])
+                                                   (:tyyppi m)
+                                                   (:alkanut m)
+                                                   (:paattynyt m)
+                                                   (or (if (= (:hinnoittelu @muokattu) :paivanhinta)
+                                                         (get-in m [:tehtava :paivanhinta])
+                                                         (get-in m [:tehtava :maara]))))))
+            tallennus-kaynnissa (atom false)
+            tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+            tehtavat (map #(nth % 3) tehtavat-tasoineen)
+            toimenpideinstanssit @u/urakan-toimenpideinstanssit
+            jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
+            lomaketta-voi-muokata? (and
+                                     (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                     (not jarjestelman-lisaama-toteuma?))]
         [:div.muun-tyon-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
           (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
@@ -462,6 +460,7 @@
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (fn []
       [:span
+       (log "Valittu taisi vaihtua..? " (pr-str @muut-tyot/valittu-toteuma))
        [kartta/kartan-paikka]
        (if @muut-tyot/valittu-toteuma
          [toteutuneen-muun-tyon-muokkaus]
