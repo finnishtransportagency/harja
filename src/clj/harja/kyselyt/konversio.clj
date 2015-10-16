@@ -36,8 +36,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   Muunna aluksi rivien rakenne nested mapiksi alaviiva->rakenne funktiolla, ja syötä
   tulos tälle funktiolle.
 
-  Rivien yhdistäminen tehdään aina id:n perusteella - olettaa että emorivillä JA lapsirivillä
-  on nimenomaan avain 'id'.
+  Rivien yhdistäminen tehdän oletusarvoisesti id:n perusteella, mutta 'emorivin' group-by funktion voi
+  myös syöttää itse. Esim [{:toteuma {:id 1} :reittipiste {..}} ..] voidaan haluta groupata funktiolla
+  #(get-in % [:toteuma :id])
 
   Parametrit:
   * kaikki-rivit: Vektori mäppejä, jossa yksi 'rivi' sisältää avaimen 'lapselle', joka on mäppi.
@@ -52,9 +53,10 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   TÄRKEÄÄ! Jos lapsiriviä on useampia, konversio PITÄÄ tehdä yhdellä kutsulla (eli antamalla useampi
   avain-arvo -pari mäppiin). Funktio tunnistaa uniikit rivit kaikista-riveistä poistamalla lapsirivit,
   joten jos kaikkia lapsirivejä ei määrittele, ei konversio toimi oikein."
-  [kaikki-rivit sarake-vektori]
-  (vec 
-   (for [[id rivit] (group-by :id kaikki-rivit)]
+  ([kaikki-rivit sarake-vektori] (sarakkeet-vektoriin kaikki-rivit sarake-vektori :id))
+  ([kaikki-rivit sarake-vektori group-fn]
+  (vec
+   (for [[id rivit] (group-by group-fn kaikki-rivit)]
      (loop [rivi (first rivit)
             [[sarake vektori] & sarakkeet] (seq sarake-vektori)]
        (if-not sarake
@@ -66,10 +68,10 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
                                                        (when (:id lapsi)
                                                          lapsi))
                                                     rivit)))))
-                sarakkeet))))))
+                sarakkeet)))))))
 
 
-      
+
 #_(defn sarakkeet-vektoriin
     "Muuntaa muodon: [{:id 1 :juttu {:id 1}} {:id 1 :juttu {:id 2}}]
   muotoon:         [{:id 1 :jutut [{:id 1} {:id 2}]}]

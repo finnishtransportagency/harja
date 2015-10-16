@@ -345,7 +345,8 @@
     (into []
           muut-tyot-xf
           (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
-    {:reittipiste :reittipisteet}))
+    {:reittipiste :reittipisteet}
+    #(get-in % [:toteuma :id])))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
