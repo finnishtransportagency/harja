@@ -99,5 +99,5 @@
          (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi))
          (:suola_kaytetty rivi)
          (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-         (fmt/euro-opt (:suolasakko rivi))
+         (fmt/euro-opt (* (:ylitys rivi) (:sakko_maara_per_tonni rivi)))
          (:indeksi rivi)])]]))
