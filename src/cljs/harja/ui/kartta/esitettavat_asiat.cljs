@@ -122,7 +122,7 @@
 (defn on-valittu? [valittu tunniste asia]
   (and
     (not (nil? valittu))
-    (= (get asia tunniste) (get valittu tunniste))))
+    (= (get-in asia tunniste) (get-in valittu tunniste))))
 
 ;; Palauttaa joukon vektoreita, joten kutsu (mapcat kartalla-xf @jutut)
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
@@ -130,5 +130,5 @@
 ;; jos vastaisuudessa tulee samankaltaisia tilanteita.
 (defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
-  ([asia valittu] (kartalla-xf asia valittu :id))
+  ([asia valittu] (kartalla-xf asia valittu [:id]))
   ([asia valittu tunniste] (asia-kartalle asia (partial on-valittu? valittu tunniste))))
