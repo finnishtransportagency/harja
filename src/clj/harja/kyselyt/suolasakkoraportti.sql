@@ -11,7 +11,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  -- (SELECT "hoitokauden_suolasakko"(:urakka, '2014-10-01', '2015-09-30')) AS suolasakko, -- FIXME wtf function hoitokauden_suolasakko(bigint, unknown, unknown) does not exist???
+  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.urakka = :urakka
@@ -19,6 +19,15 @@ SELECT
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
         AND mk.alkupvm >= :alkupvm
         AND mk.alkupvm <= :loppupvm),
+  (SELECT AVG(arvo/100)
+  FROM indeksi
+  WHERE nimi = ss.indeksi
+  AND ((vuosi = :alkuvuosi AND kuukausi = 10) OR
+  (vuosi = :alkuvuosi AND kuukausi = 11) OR
+  (vuosi = :alkuvuosi AND kuukausi = 12) OR
+  (vuosi = :loppuvuosi AND kuukausi = 1) OR
+  (vuosi = :loppuvuosi AND kuukausi = 2) OR
+  (vuosi = :loppuvuosi AND kuukausi = 3))) AS kerroin,
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
     JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
@@ -29,7 +38,7 @@ SELECT
         AND t.alkanut <= :loppupvm)
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
-                             AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
+  AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
   LEFT JOIN urakka u ON lt.urakka = u.id
 WHERE lt.urakka = :urakka
 AND ss.hoitokauden_alkuvuosi = :alkuvuosi
@@ -49,7 +58,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  -- (SELECT "hoitokauden_suolasakko"(:urakka, '2014-10-01', '2015-09-30')) AS suolasakko, -- FIXME wtf function hoitokauden_suolasakko(bigint, unknown, unknown) does not exist???
+  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -87,7 +96,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  -- (SELECT "hoitokauden_suolasakko"(:urakka, '2014-10-01', '2015-09-30')) AS suolasakko, -- FIXME wtf function hoitokauden_suolasakko(bigint, unknown, unknown) does not exist???
+  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.materiaali IN (SELECT id FROM materiaalikoodi

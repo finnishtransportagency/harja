@@ -82,6 +82,7 @@
        {:leveys "10%" :otsikko "Keskiläpötila"}
        {:leveys "10%" :otsikko "Pitkän aikavälin keskilämpötila"}
        {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä (t)"}
+       {:leveys "10%" :otsikko "Kerroin"}
        {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
        {:leveys "10%" :otsikko "Suolaerotus (t)"}
        {:leveys "10%" :otsikko "Sakko/Bonus"}
@@ -91,6 +92,7 @@
          (str (:keskilampotila rivi) " C")
          (str (:pitkakeskilampotila rivi) "C")
          (:suola_suunniteltu rivi)
+         (format "%.2f" (:kerroin rivi))
          (:suola_kaytetty rivi)
          (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
          (fmt/euro-opt (:suolasakko rivi))
