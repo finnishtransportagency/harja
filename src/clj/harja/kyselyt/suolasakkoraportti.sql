@@ -19,7 +19,6 @@ FROM (SELECT
         lt.keskilampotila AS keskilampotila,
         lt.pitka_keskilampotila AS pitkakeskilampotila,
         (lt.keskilampotila - lt.pitka_keskilampotila) as erotus,
-        (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS hoitokauden_suolasakko,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
          WHERE mk.urakka = :urakka
@@ -75,7 +74,6 @@ FROM (SELECT
         lt.keskilampotila as keskilampotila,
         lt.pitka_keskilampotila as pitkakeskilampotila,
         (lt.keskilampotila - lt.pitka_keskilampotila) as erotus,
-        (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS hoitokauden_suolasakko,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
          WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -130,7 +128,6 @@ FROM (SELECT
         lt.keskilampotila as keskilampotila,
         lt.pitka_keskilampotila as pitkakeskilampotila,
         (lt.keskilampotila - lt.pitka_keskilampotila) as erotus,
-        (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS hoitokauden_suolasakko,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
          WHERE mk.materiaali IN (SELECT id FROM materiaalikoodi
