@@ -145,7 +145,6 @@
   (komp/luo
     (fn []
       (let [toteuma @muut-tyot/valittu-toteuma
-            _ (log "Tehdään lomake (taisi)" (pr-str toteuma))
             muokattu (atom (if (get-in toteuma [:toteuma :id])
                              (assoc toteuma
                                :sopimus @u/valittu-sopimusnumero
@@ -184,7 +183,6 @@
          [lomake {:luokka       :horizontal
                   :voi-muokata? lomaketta-voi-muokata?
                   :muokkaa!     (fn [uusi]
-                                  (log "MUOKATAAN " (pr-str uusi))
                                   (reset! muokattu uusi))
                   :footer       (when (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                   [:span
@@ -459,8 +457,7 @@
     (komp/lippu muut-tyot/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (fn []
-      [:span
-       (log "Valittu taisi vaihtua..? " (pr-str @muut-tyot/valittu-toteuma))
+      [:spans
        [kartta/kartan-paikka]
        (if @muut-tyot/valittu-toteuma
          [toteutuneen-muun-tyon-muokkaus]
