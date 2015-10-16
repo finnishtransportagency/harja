@@ -31,7 +31,7 @@
     "Lisää uuden kuuntelijan annetulle jonolle. Jos jonolla on monta kuuntelijaa, viestit välitetään jokaiselle kuuntelijalle.
 Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blokkaa käsittelyn ajan, joten samasta jonosta voidaan lukea vain yksi viesti kerrallaan. Jos käsittelijä haluaa tehdä jotain pitkäaikaista, täytyy sen hoitaa se uudessa säikeessä.")
 
-  (laheta [this jono viesti]
+  (laheta [this jono viesti] [this jono viesti otsikot]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
 (defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
@@ -136,16 +136,20 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       ;; palauta funktio, jolla kuuntelu voidaan lopettaa
       #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn)))
 
-  (laheta [{:keys [istunto jonot]} jonon-nimi viesti]
+  (laheta [{:keys [istunto jonot]} jonon-nimi viesti {:keys [correlation-id]}]
     (try
       (let [producer (varmista-producer istunto jonot jonon-nimi)
             msg (luo-viesti viesti istunto)]
         (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
+        (when correlation-id
+          (.setJMSCorrelationID msg correlation-id))
         (.send producer msg)
         (.getJMSMessageID msg))
-
       (catch Exception e
-        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
+        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
+
+  (laheta [this jonon-nimi viesti]
+    (laheta this jonon-nimi viesti nil)))
 
 
 (defn luo-sonja [asetukset]
@@ -160,9 +164,11 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (kuuntele [this jonon-nimi kuuntelija-fn]
         (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
         #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
-      (laheta [this jonon-nimi viesti]
+      (laheta [this jonon-nimi viesti otsikot]
         (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
-        (str "ID:" (System/currentTimeMillis))))))
+        (str "ID:" (System/currentTimeMillis)))
+      (laheta [this jonon-nimi viesti]
+        (laheta this jonon-nimi viesti nil)))))
 
 
 ;;(def +sampo-to-harja+ "Harja13-16.SampoToHarja.Msg") ;; SAMPO -> Harja (SAMPOn hankkeet,urakat, jne)
