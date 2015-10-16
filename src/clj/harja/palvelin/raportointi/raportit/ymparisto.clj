@@ -6,11 +6,6 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql")
 
-(hae-ymparistoraportti-urakoittain (:db harja.palvelin.main/harja-jarjestelma)
-                                   (pvm/luo-pvm 2005 9 1)
-                                   (pvm/luo-pvm 2006 8 30)
-                                   true 9)
-
 
 (defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id]
   (sort-by (comp :nimi :materiaali first)
@@ -43,8 +38,7 @@
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")]
-    (println "PARAMETRIT: " parametrit)
-    
+        
     [:raportti {:otsikko "Ympäristöraportti"
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Ympäristöraportti"}
@@ -66,28 +60,63 @@
               {:otsikko "Tot-%" :leveys "8%"}
               {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]
              ))
+
+      
+      (keep identity
+            (mapcat (fn [[{:keys [urakka materiaali]} kuukaudet]]
+                      (let [yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
+                            maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
+                            luokitellut (filter :luokka kuukaudet)
+                            kuukaudet (filter (comp not :luokka) kuukaudet)
+                            kk-arvot (keep :kk kuukaudet)]
+                        (concat
+                         ;; Normaali materiaalikohtainen rivi
+                         [(into []
+                                (concat
+
+                                 ;; Urakan nimi, jos urakoittain jaottelu päällä
+                                 (when urakoittain?
+                                   [(:nimi urakka)])
+                                 
+                                 ;; Materiaalin nimi
+                                 [(:nimi materiaali)]
+
+                                 ;; Kuukausittaiset määrät
+                                 (->> kuukaudet
+                                      (filter :kk)
+                                      (sort-by :kk)
+                                      (map #(or (:maara %) 0)))
+
+                                 ;; Yhteensä, toteumaprosentti ja maksimimäärä
+                                 [yhteensa
+                                  (if maksimi (format "%.2f%%" (/ (* 100.0 yhteensa) maksimi)) "-")
+                                  (or maksimi "-")]))]
+
+                         ;; Mahdolliset hoitoluokkakohtaiset rivit
+                         (map (fn [[luokka kuukaudet]]
+                                (let [arvot (group-by :kk kuukaudet)]
+                                  (into []
+                                        (concat 
+                                         (when urakoittain?
+                                           (:nimi urakka))
+                                         [(str " - "
+                                               (case luokka
+                                                 1 "Is"
+                                                 2 "I"
+                                                 3 "Ib"
+                                                 4 "TIb"
+                                                 5 "II"
+                                                 6 "III"
+                                                 7 "K1"
+                                                 8 "K2"))]
+                                         
+                                         (for [kk kk-arvot
+                                               :let [arvo (first (get arvot kk))]]
+                                           (or (:maara arvo) 0))
+
+                                         [(reduce + (map (comp :maara first) (vals arvot))) "-" "-"]))))
+                              (group-by :luokka luokitellut)))))
                     
-      (for [[{:keys [urakka materiaali]} kuukaudet] materiaalit
-            :let [yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
-                  maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))]]
-        (into []
-              (concat
-
-               ;; Urakan nimi, jos urakoittain jaottelu päällä
-               (when urakoittain?
-                 [(:nimi urakka)])
-               
-               ;; Materiaalin nimi
-               [(:nimi materiaali)]
-
-               ;; Kuukausittaiset määrät
-               (->> kuukaudet
-                    (filter :kk)
-                    (sort-by :kk)
-                    (map #(or (:maara %) 0)))
-
-               ;; Yhteensä, toteumaprosentti ja maksimimäärä
-               [yhteensa
-                (if maksimi (format "%.2f%%" (/ (* 100.0 yhteensa) maksimi)) "-")
-                (or maksimi "-")])))
+                                              
+                    materiaalit))
       ]]))

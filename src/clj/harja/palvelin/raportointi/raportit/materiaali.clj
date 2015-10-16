@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.raportit.materiaali
+¨(ns harja.palvelin.raportointi.raportit.materiaali
   "Materiaaliraportti"
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
