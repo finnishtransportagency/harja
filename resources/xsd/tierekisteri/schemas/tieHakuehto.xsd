@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.solita.fi/harja/tierekisteri/tieHakuehto"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/puoli"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/puoli" schemaLocation="puoli.xsd"/>
+    <xs:complexType name="tieHakuehto">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="numero" type="xs:int"/>
+            <xs:element minOccurs="1" maxOccurs="1" name="aet" type="xs:int"/>
+            <xs:element minOccurs="1" maxOccurs="1" name="aosa" type="xs:int"/>
+            <xs:element minOccurs="1" maxOccurs="1" name="let" type="xs:int"/>
+            <xs:element minOccurs="1" maxOccurs="1" name="losa" type="xs:int"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="ajr" type="xs:int"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="puoli" type="ns1:puoli"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

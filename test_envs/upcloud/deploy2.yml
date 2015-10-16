@@ -18,6 +18,11 @@
       service: name=harja state=stopped
       when: '{{harja_migrate_only}} == false'
 
+    - name: tapa porsaat
+      sudo: yes
+      sudo_user: harja
+      command: psql -p5432 -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'harja' AND pid <> pg_backend_pid();"
+
     - name: tuhoa kanta
       sudo: yes
       sudo_user: postgres

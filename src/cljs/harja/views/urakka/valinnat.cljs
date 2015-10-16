@@ -33,6 +33,13 @@
            identity)
    u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+(defn urakan-toimenpide+muut []
+  (valinnat/urakan-toimenpide
+    (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                         [{:tpi_nimi "Muut"}]))
+            identity)
+    u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi
     ur

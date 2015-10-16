@@ -278,6 +278,11 @@
    [pvm]
    (t/year (d pvm)))
 
+(defn paiva
+  "Palauttaa annetun DateTime päivän."
+  [pvm]
+  (t/day (d pvm)))
+
 (defn kuukausi
    "Palauttaa annetun DateTime kuukauden."
   [pvm]
@@ -285,6 +290,11 @@
   ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
+
+(defn paiva-kuukausi
+  "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
+  [pvm]
+  (str (paiva pvm) "." (kuukausi pvm) "."))
 
  (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
    (let [vuosi (first vuosi-kk)

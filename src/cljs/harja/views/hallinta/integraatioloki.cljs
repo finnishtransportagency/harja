@@ -5,12 +5,15 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.integraatioloki :as tiedot]
             [harja.pvm :as pvm]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader livi-pudotusvalikko]]
+            [harja.ui.visualisointi :as vis]
             [harja.ui.grid :refer [grid]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.modal :refer [modal] :as modal])
+            [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.grid :as grid])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
@@ -98,36 +101,100 @@
             :komponentti #(nayta-sisalto (:sisalto %))}]
           @viestit]]]))))
 
+(defn tapahtumien-maarat-graafi [tiedot]
+  (let [w (int (* 0.85 @yleiset/leveys))
+        h (int (/ w 3))
+        tiedot-pvm-sortattu (sort-by :pvm tiedot)
+        eka-pvm (pvm/pvm (:pvm (first tiedot-pvm-sortattu)))
+        vika-pvm (pvm/pvm (:pvm (last tiedot-pvm-sortattu)))
+        pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
+        pvm-kohtaiset-maarat-summattu (sort-by :pvm
+                                               (map (fn [rivit]
+                                                      (zipmap [:pvm :maara]
+                                                              [(:pvm (first rivit))
+                                                               (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
+    [:span.pylvaat
+     [:h5 (str "Vastaanotetut pyynnöt " eka-pvm " - " vika-pvm)]
+     (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
+           tikit [0
+                  (js/Math.round (* .25 lkm-max))
+                  (js/Math.round (* .5 lkm-max))
+                  (js/Math.round (* .75 lkm-max))
+                  lkm-max]
+           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
+       [vis/bars {:width         w
+                  :height        (min 200 h)
+                  :label-fn      #(if nayta-labelit?
+                                   (pvm/paiva-kuukausi (:pvm %))
+                                   "")
+                  :value-fn      :maara
+                  :format-amount str
+                  :ticks         tikit}
+       pvm-kohtaiset-maarat-summattu])]))
+
+(defn eniten-kutsutut-integraatiot [tiedot]
+  (let [ryhmittele #(group-by :integraatio %)
+        ryhmitellyt (vals (ryhmittele tiedot))
+        maarat-summattu (map (fn [rivit]
+                               (zipmap [:integraatio :jarjestelma :nimi :maara]
+                                       [(:integraatio (first rivit))
+                                        (:jarjestelma (first rivit))
+                                        (:nimi (first rivit))
+                                        (reduce + (keep :maara rivit))]))
+                             ryhmitellyt)
+        eniten-kutsutut (take 5 (reverse (sort-by :maara maarat-summattu)))]
+    [grid
+     {:otsikko "Eniten kutsutut integraatiot"
+      :voi-muokata? false
+      :tunniste       :integraatio}
+
+     [{:otsikko     "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
+      {:otsikko     "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
+      {:otsikko     "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
+
+     eniten-kutsutut]
+    ))
+
 (defn tapahtumien-paanakyma []
   [:span
    [:div.container
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko "Järjestelmä"]
      [livi-pudotusvalikko {:valinta    @tiedot/valittu-jarjestelma
-                           ;;\u2014 on väliviivan unikoodi
                            :format-fn  #(if % (:jarjestelma %)
-                                            "Kaikki järjestelmät")
-                           :valitse-fn #(reset! tiedot/valittu-jarjestelma %)
+                                              "Kaikki järjestelmät")
+                           :valitse-fn #(do
+                                         (reset! tiedot/valittu-jarjestelma %)
+                                         (when-not (and @tiedot/valittu-jarjestelma
+                                                        (contains? (:integraatiot @tiedot/valittu-jarjestelma)
+                                                                   @tiedot/valittu-integraatio))
+                                           (reset! tiedot/valittu-integraatio nil)))
                            :class      "suunnittelu-alasveto"}
-      (vec (concat [nil]
-                   @tiedot/jarjestelmien-integraatiot))]]
+      (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
 
     (when @tiedot/valittu-jarjestelma
       [:div.label-ja-alasveto
        [:span.alasvedon-otsikko "Integraatio"]
        [livi-pudotusvalikko {:valinta    @tiedot/valittu-integraatio
-                             ;;\u2014 on väliviivan unikoodi
                              :format-fn  #(if % (str %) "Kaikki integraatiot")
                              :valitse-fn #(reset! tiedot/valittu-integraatio %)
                              :class      "suunnittelu-alasveto"}
         (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
 
+
     (if (nil? @tiedot/valittu-aikavali)
       [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä aikaväliltä"]
       [:span
        [valinnat/aikavali tiedot/valittu-aikavali]
-       [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat)} "Näytä uusimmat tapahtumat"]])
-    
+       [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat)} "Näytä tapahtumahistoria"]])
+
+    (if-not (empty? @tiedot/tapahtumien-maarat)
+      [:div.integraatio-tilastoja
+       [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
+       (when-not @tiedot/valittu-integraatio
+         [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
+      [:div "Ei pyyntöjä annetuilla parametreillä"])
+
     [grid
      {:otsikko       (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
       :tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
@@ -168,18 +235,13 @@
             (tiedot/paivita-tapahtumat!))
           (recur))))
     #(reset! paivita? false)))
-        
+
 (defn integraatioloki []
-  (let [lopeta-paivitys! (aloita-tapahtumien-paivitys!)]
-    (komp/luo
-   
-     (komp/lippu tiedot/nakymassa?)
-     {:component-will-unmount
-      (fn [this]
-        (lopeta-paivitys!))}
-   
+  (komp/luo
+    (komp/ulos (aloita-tapahtumien-paivitys!))
+    (komp/lippu tiedot/nakymassa?)
     (fn []
-      [:div
-       [tapahtumien-paanakyma]]))))
+      [:div.integraatioloki
+       [tapahtumien-paanakyma]])))
 
 

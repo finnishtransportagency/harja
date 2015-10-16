@@ -48,8 +48,8 @@
               "type": "object",
               "required": true,
               "properties": {
-                "maatukienSiisteysJaaKunto": {
-                  "id": "urn:harja/siltatarkastus/sillantarkastuskohteet/alusrakenne/maatukienSiisteysJaaKunto",
+                "maatukienSiisteysJaKunto": {
+                  "id": "urn:harja/siltatarkastus/sillantarkastuskohteet/alusrakenne/maatukienSiisteysJaKunto",
                   "type": "object",
                   "required": true,
                   "additionalProperties": false,

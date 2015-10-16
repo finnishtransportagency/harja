@@ -13,8 +13,6 @@
             <xs:element minOccurs="0" maxOccurs="1" name="losa" type="xs:int"/>
             <xs:element minOccurs="0" maxOccurs="1" name="ajr" type="xs:int"/>
             <xs:element minOccurs="0" maxOccurs="1" name="puoli" type="ns1:puoli"/>
-            <xs:element minOccurs="0" maxOccurs="1" name="alkupvm" type="xs:date"/>
-            <xs:element minOccurs="0" maxOccurs="1" name="loppupvm" type="xs:date"/>
         </xs:sequence>
     </xs:complexType>
 </xs:schema>

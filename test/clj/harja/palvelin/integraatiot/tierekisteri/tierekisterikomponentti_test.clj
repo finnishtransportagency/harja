@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.testi :refer :all]
             [clojure.java.io :as io]
-            [slingshot.slingshot :refer [try+]])
+            [slingshot.slingshot :refer [try+]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use org.httpkit.fake))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -42,15 +43,14 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietueet-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietueet") vastaus-xml]
-      (let [tierekisteriosoitevali {:numero  1
-                                    :aet     1
-                                    :aosa    1
-                                    :let     1
-                                    :losa    1
-                                    :ajr     1
-                                    :puoli   1
-                                    :alkupvm "2015-05-25"}
-            vastausdata (tierekisteri/hae-tietueet (:tierekisteri jarjestelma) tierekisteriosoitevali "tl506" nil)]
+      (let [tierekisteriosoitevali {:numero 1
+                                    :aet    1
+                                    :aosa   1
+                                    :let    1
+                                    :losa   1
+                                    :ajr    1
+                                    :puoli  1}
+            vastausdata (tierekisteri/hae-tietueet (:tierekisteri jarjestelma) tierekisteriosoitevali "tl506" "2015-05-25")]
         (is (true? (:onnistunut vastausdata)))
         (is (= 3 (count (:tietueet vastausdata))))
 
@@ -68,7 +68,7 @@
                                                             :losa    1,
                                                             :ajr     1,
                                                             :puoli   1,
-                                                            :alkupvm #inst "2017-03-02T22:00:00.000-00:00"}},
+                                                            :alkupvm nil}},
                                :loppupvm    #inst "2015-03-02T22:00:00.000-00:00",
                                :piiri       "1",
                                :karttapvm   #inst "2015-03-02T22:00:00.000-00:00",
@@ -97,7 +97,7 @@
                                                           :losa    1,
                                                           :ajr     1,
                                                           :puoli   1,
-                                                          :alkupvm #inst "2017-03-02T22:00:00.000-00:00"}},
+                                                          :alkupvm nil}},
                              :loppupvm    #inst "2015-03-02T22:00:00.000-00:00",
                              :piiri       "1",
                              :karttapvm   #inst "2015-03-02T22:00:00.000-00:00",
@@ -193,7 +193,6 @@
       (try+
         (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
-        (catch [:type :http-kutsu-epaonnistui] {:keys [virheet]}
-          (let [virhe (first virheet)]
-            (is (= :poikkeus (:koodi virhe)))))))))
+        (catch [:type :tierekisteri-kutsu-epaonnistui] {:keys [virheet]}
+          (is (.contains (second virheet) "Tietolajia ei löydy")))))))
 

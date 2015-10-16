@@ -68,9 +68,6 @@ SELECT (SELECT COUNT(k1.kohde) FROM siltatarkastuskohde k1 WHERE k1.siltatarkast
        JOIN silta s ON st1.silta=s.id
  WHERE s.id IN (SELECT silta FROM sillat_alueurakoittain WHERE urakka = :urakka) AND st1.poistettu = false;
 
-       
-       
-
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
 SELECT id, silta, urakka,
@@ -93,12 +90,37 @@ SELECT id, silta, urakka,
   FROM siltatarkastus
  WHERE id = :id AND poistettu = false;
 
+-- name: hae-siltatarkastus-ulkoisella-idlla-ja-luojalla
+-- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
+SELECT id, silta, urakka,
+  tarkastusaika, tarkastaja,
+  luotu, luoja, muokattu, muokkaaja, poistettu
+FROM siltatarkastus
+WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = false;
+
+-- name: hae-silta-numerolla
+-- Hakee sillan siltanumerolla
+SELECT id, tyyppi, siltanro, siltanimi
+FROM silta
+WHERE siltanro = :siltanumero;
+
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
 INSERT
   INTO siltatarkastus
-       (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu)
-VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false);
+       (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu, ulkoinen_id)
+VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, false, :ulkoinen_id);
+
+-- name: paivita-siltatarkastus<!
+-- Päivittää siltatarkastuksen
+UPDATE siltatarkastus
+   SET silta = :silta,
+       urakka = :urakka,
+       tarkastusaika = :tarkastusaika,
+       tarkastaja = :tarkastaja,
+       luoja = :luoja,
+       poistettu = :poistettu
+ WHERE ulkoinen_id = :ulkoinen_id;
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
@@ -127,3 +149,6 @@ UPDATE siltatarkastus
    SET poistettu = TRUE
  WHERE id = :id;
 
+-- name: poista-siltatarkastuskohteet!
+-- Poistaa siltatarkastuksen kohteet siltatarkastuksen
+DELETE FROM siltatarkastuskohde WHERE siltatarkastus = :siltatarkastus;

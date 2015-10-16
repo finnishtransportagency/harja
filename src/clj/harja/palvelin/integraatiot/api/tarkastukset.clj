@@ -61,8 +61,6 @@
 
           nil)))))
 
-
-
 ;; Määritellään tarkastustyypit, joiden lisäämiselle tehdään API palvelut
 (def tarkastukset
   [{:palvelu       :lisaa-tiestotarkastus

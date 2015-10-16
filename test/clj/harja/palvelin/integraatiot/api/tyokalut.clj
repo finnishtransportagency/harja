@@ -18,3 +18,21 @@
   @(http/get (reduce str (concat ["http://localhost:" portti] api-polku-vec))
              {:headers {"OAM_REMOTE_USER" kayttaja
                         "Content-Type"    "application/json"}}))
+
+(defn put-kutsu
+  "Tekee PUT-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
+  Body on json string (tai muu http-kitin ymmärtämä input)."
+  [api-polku-vec kayttaja portti body]
+  @(http/put (reduce str (concat ["http://localhost:" portti] api-polku-vec))
+             {:body    body
+              :headers {"OAM_REMOTE_USER" kayttaja
+                        "Content-Type"    "application/json"}}))
+
+(defn delete-kutsu
+  "Tekee DELETE-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
+  Body on json string (tai muu http-kitin ymmärtämä input)."
+  [api-polku-vec kayttaja portti body]
+  @(http/delete (reduce str (concat ["http://localhost:" portti] api-polku-vec))
+                {:body    body
+                 :headers {"OAM_REMOTE_USER" kayttaja
+                           "Content-Type"    "application/json"}}))

@@ -24,7 +24,7 @@
     },
     "sillantarkastuskohteet": {
       "alusrakenne": {
-        "maatukienSiisteysJaaKunto": {
+        "maatukienSiisteysJaKunto": {
           "ehdotettutoimenpide": "eiToimenpiteita"
         },
         "valitukienSiisteysJaKunto": {
