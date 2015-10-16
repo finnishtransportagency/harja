@@ -21,7 +21,7 @@ fi
 
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
-git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui"
+git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui, tarkista että remote on olemassa: git remote add $HARJA_ENV ssh://root@$HARJA_ENV:/opt/harja-repo"
 
 pushd test_envs/upcloud
 ansible-playbook deploy2.yml -i inventory/harjadev --extra-vars "harja_migrate_only=false harja_branch=$BRANCH" --limit $HARJA_ENV || error_exit "Deploy epäonnistui"
