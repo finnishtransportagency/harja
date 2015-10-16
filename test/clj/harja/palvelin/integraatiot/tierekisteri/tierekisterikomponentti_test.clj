@@ -135,7 +135,7 @@
                                                   :puoli   "1"
                                                   :alkupvm nil}}
                               :tietolaji   {:tietolajitunniste "tl505"
-                                            :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+                                            :arvot             "----livitunniste----        2                             ----livitunniste----          01  "}}
                     :lisatty "2015-05-26+03:00"}
             vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
         (is (true? (:onnistunut vastausdata)))))))
