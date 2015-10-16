@@ -87,9 +87,10 @@
        {:leveys "10%" :otsikko "Kohtuullistarkistettu sakkoraja (t)"}
        {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
        {:leveys "10%" :otsikko "Suolaerotus (t)"}
+       {:leveys "10%" :otsikko "Sakko / tonni"}
        {:leveys "10%" :otsikko "Sakko"}
        {:leveys "10%" :otsikko "Indeksi"}
-       {:leveys "10%" :otsikko "Indeksikorotettu"}]
+       {:leveys "10%" :otsikko "Indeksikorotettu sakko"}]
       (for [rivi raportin-data]
         (let [sakko (* (:ylitys rivi)
                        (:sakko_maara_per_tonni rivi))
@@ -105,6 +106,7 @@
          (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi))
          (:suola_kaytetty rivi)
          (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-         (fmt/euro-opt (* (:ylitys rivi) (:sakko_maara_per_tonni rivi)))
+         (fmt/euro-opt (:sakko_maara_per_tonni rivi))
+         (fmt/euro-opt sakko)
          (fmt/euro-opt (- indeksikorotettu-sakko sakko))
          (fmt/euro-opt (* (:kerroin rivi) sakko))]))]]))
