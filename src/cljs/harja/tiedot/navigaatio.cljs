@@ -99,6 +99,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
               (when (and id urakat)
                 (some #(when (= id (:id %)) %) urakat)))))
 
+;; Atomi, joka sisältää valitun kontekstin (hallintayksikön / koko maan) urakat (tai nil)
+(defonce valitun-kontekstin-urakat (reaction
+                                     (when @valittu-hallintayksikko
+                                             @urakkalista))) ; FIXME Muuten koko maan urakat
+
 (defonce edellinen-valittu-urakkatyyppi (atom nil))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi

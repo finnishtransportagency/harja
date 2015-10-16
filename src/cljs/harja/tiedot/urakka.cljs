@@ -63,6 +63,15 @@
                            (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
+(defn urakoiden-hoitokaudet
+  [urakat]
+  #_(let [hoitokaudet (distinct (into []
+                                      (for [urakka urakat]
+                                        (urakan-hoitokaudet urakka))))]
+      (log "Hoitokaudet: " (pr-str hoitokaudet))
+      hoitokaudet) ;; FIXME Fuu fuu kun tänä ei toimi
+  (hoitokaudet (first urakat)))
+
 (defonce valitun-urakan-hoitokaudet
          (reaction (when-let [ur @nav/valittu-urakka]
                      (hoitokaudet ur))))
@@ -93,6 +102,10 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
+(defonce valittu-kontekstin-hoitokausi (atom nil))
+
+(defn valitse-kontekstin-hoitokausi! [hk]
+  (reset! valittu-kontekstin-hoitokausi hk))
 
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
