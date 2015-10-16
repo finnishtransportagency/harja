@@ -17,7 +17,6 @@
   (let [toteuma-parametrit [db
                             urakka-id
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            ; FIXME .getYear vanhentunut & vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
                             #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
                             #_(konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
@@ -31,7 +30,6 @@
   (let [toteuma-parametrit [db
                             hallintayksikko-id
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            ; FIXME .getYear vanhentunut & vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
                             #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
                             #_(konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille toteuma-parametrit))]
@@ -43,7 +41,6 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            ; FIXME .getYear vanhentunut & vuoden "purkaminen" suoraan SQL:llä ei toiminut :(
                             #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
                             #_(konv/sql-timestamp loppupvm)]
         raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille toteuma-parametrit))]
