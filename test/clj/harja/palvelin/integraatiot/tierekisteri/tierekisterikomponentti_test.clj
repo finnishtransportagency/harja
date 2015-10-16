@@ -193,7 +193,6 @@
       (try+
         (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
-        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-          (let [virhe (first virheet)]
-            (is (= :poikkeus (:koodi virhe)))))))))
+        (catch [:type :tierekisteri-kutsu-epaonnistui] {:keys [virheet]}
+          (is (.contains (second virheet) "Tietolajia ei löydy")))))))
 
