@@ -80,7 +80,7 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "15%" :otsikko "Urakka"}
-       {:leveys "7%" :otsikko "Keski\u00ADlämpötila"}
+       {:leveys "7%" :otsikko "Keski\u00ADlämpö\u00ADtila"}
        {:leveys "7%" :otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
        {:leveys "8%" :otsikko "Sopimuk\u00ADsen mukainen suola\u00ADmäärä (t)"}
        {:leveys "7%" :otsikko "Sakkoraja (t)"}
