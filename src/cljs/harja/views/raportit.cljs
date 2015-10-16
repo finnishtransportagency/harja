@@ -37,6 +37,7 @@
 
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
+(tarkkaile! "Raporttityypit: " raporttityypit)
 
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
@@ -60,12 +61,12 @@
 
 (defmulti raportin-parametri
   "Muodosta UI-komponentti raportin parametristä. Komponentin tulee olla täysin
-itsenäinen ja sisällettävä otsikon ja muun tarpeellisen."
+  itsenäinen ja sisällettävä otsikon ja muun tarpeellisen."
   :tyyppi)
 
 (defmulti raportin-parametri-arvo
   "Hae raportin parametrin arvo. Palauttaa mäppinä raportin parametrin arvon (tai arvot).
-Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
+  Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
   :tyyppi)
 
 (defmethod raportin-parametri "hoitokausi" [p]
@@ -73,6 +74,14 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
 
 (defmethod raportin-parametri-arvo "hoitokausi" [p]
   (let [[alku loppu] @u/valittu-hoitokausi]
+    {:hk-alkupvm alku
+     :hk-loppupvm loppu}))
+
+(defmethod raportin-parametri "kontekstin_hoitokausi" [p]
+  [valinnat/kontekstin-hoitokaudet @nav/valitun-kontekstin-urakat])
+
+(defmethod raportin-parametri-arvo "kontekstin_hoitokausi" [p]
+  (let [[alku loppu] @u/valittu-kontekstin-hoitokausi]
     {:hk-alkupvm alku
      :hk-loppupvm loppu}))
 
@@ -177,9 +186,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
                     (reset! suoritettu-raportti nil)
                     raportti))))
          {:ikoni [ikonit/list]
-          :disabled (contains? arvot-nyt :virhe)}]]]
-      ]]))
-
+          :disabled (contains? arvot-nyt :virhe)}]]]]]))
 
 (defn raporttivalinnat []
   (komp/luo
@@ -189,10 +196,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
-                        :default "koko maa")
-            
-                               
-            ]
+                        :default "koko maa")]
         [:div.raporttivalinnat
          [:h3 "Raportin tiedot"]
          [yleiset/tietoja {}
@@ -214,9 +218,7 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
          
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
-            [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]
-            
-            ])]))))
+            [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]])]))))
 
 (defn raporttivalinnat-ja-raportti []
   (let [v-ur @nav/valittu-urakka

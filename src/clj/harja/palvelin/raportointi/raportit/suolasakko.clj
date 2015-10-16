@@ -51,6 +51,7 @@
     raportin-tiedot))
 
 (defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm hallintayksikko-id] :as parametrit}]
+  (log/debug "Ajat:" (pr-str hk-alkupvm hk-loppupvm))
   (let [[konteksti raportin-data]
         (cond
           (and urakka-id hk-alkupvm hk-loppupvm)
@@ -85,12 +86,12 @@
        {:leveys "10%" :otsikko "Suolaerotus (t)"}
        {:leveys "10%" :otsikko "Sakko/Bonus"}
        {:leveys "10%" :otsikko "Indeksi"}]
-        (for [rivi raportin-data]
-           [(:urakka_nimi rivi)
-            (str (:keskilampotila rivi) " C")
-            (str (:pitkakeskilampotila rivi) "C")
-            (:suola_suunniteltu rivi)
-            (:suola_kaytetty rivi)
-            (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-            (fmt/euro-opt (:suolasakko rivi))
-            (:indeksi rivi)])]]))
+      (for [rivi raportin-data]
+        [(:urakka_nimi rivi)
+         (str (:keskilampotila rivi) " C")
+         (str (:pitkakeskilampotila rivi) "C")
+         (:suola_suunniteltu rivi)
+         (:suola_kaytetty rivi)
+         (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
+         (fmt/euro-opt (:suolasakko rivi))
+         (:indeksi rivi)])]]))
