@@ -67,7 +67,7 @@
   "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen"
   [urakat]
   (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
-        viimeinen-vuosi (pvm/vuosi (t/latest (map :loppupvm urakat)))]
+        viimeinen-vuosi (t/year (t/now))]
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
                (pvm/hoitokauden-loppupvm (inc vuosi))])
