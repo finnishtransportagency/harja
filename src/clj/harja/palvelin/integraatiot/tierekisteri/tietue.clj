@@ -33,7 +33,12 @@
 
 (defn lisaa-tietue [integraatioloki url tiedot]
   (log/debug "Lisätään tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
+
+
+  ;; todo: korvaa arvoihin livitunniste {---livitunniste---}
+  (let [tiedot (assoc-in tiedot [:tietue :] )
+
+        kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
         palvelu-url (str url "/lisaatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu
