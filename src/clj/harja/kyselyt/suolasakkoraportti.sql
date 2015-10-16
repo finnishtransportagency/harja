@@ -17,22 +17,24 @@ SELECT
    WHERE mk.urakka = :urakka
         AND mk.materiaali IN (SELECT id FROM materiaalikoodi
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
-        AND mk.alkupvm = '2014-10-01' AND mk.loppupvm = '2015-09-30'),
+        AND mk.alkupvm >= :alkupvm
+        AND mk.alkupvm <= :loppupvm),
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
-    JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
+    JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
     JOIN toteuma t ON tm.toteuma = t.id
     WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
         AND t.urakka = :urakka
-        AND t.alkanut >= '2014-10-01' AND t.alkanut <= '2015-09-30')
+        AND t.alkanut >= :alkupvm
+        AND t.alkanut <= :loppupvm)
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
   LEFT JOIN urakka u ON lt.urakka = u.id
 WHERE lt.urakka = :urakka
 AND ss.hoitokauden_alkuvuosi = :alkuvuosi
-AND lt.alkupvm >= '2014-10-01'
-AND lt.alkupvm <= '2015-09-30';
+AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
+AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi;
 
 -- name: hae-tiedot-hallintayksikon-suolasakkoraportille
 SELECT
@@ -53,22 +55,24 @@ SELECT
    WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
         AND mk.materiaali IN (SELECT id FROM materiaalikoodi
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
-        AND mk.alkupvm = '2014-10-01' AND mk.loppupvm = '2015-09-30'),
+        AND mk.alkupvm >= :alkupvm
+        AND mk.alkupvm <= :loppupvm),
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
     JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
     JOIN toteuma t ON tm.toteuma = t.id
     WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
         AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-        AND t.alkanut >= '2014-10-01' AND t.alkanut <= '2015-09-30')
+        AND t.alkanut >= :alkupvm
+        AND t.alkanut <= :loppupvm)
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
   LEFT JOIN urakka u ON lt.urakka = u.id
 WHERE lt.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
 AND ss.hoitokauden_alkuvuosi = :alkuvuosi
-AND lt.alkupvm >= '2014-10-01'
-AND lt.alkupvm <= '2015-09-30';
+AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
+AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi;
 
 -- name: hae-tiedot-koko-maan-suolasakkoraportille
 SELECT
@@ -88,17 +92,19 @@ SELECT
    FROM materiaalin_kaytto mk
    WHERE mk.materiaali IN (SELECT id FROM materiaalikoodi
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
-        AND mk.alkupvm = '2014-10-01' AND mk.loppupvm = '2015-09-30'),
+        AND mk.alkupvm >= :alkupvm
+        AND mk.alkupvm <= :loppupvm),
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
     JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
     JOIN toteuma t ON tm.toteuma = t.id
     WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
-        AND t.alkanut >= '2014-10-01' AND t.alkanut <= '2015-09-30')
+        AND t.alkanut >= :alkupvm
+        AND t.alkanut <= :loppupvm)
 FROM lampotilat lt
   LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                              AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
   LEFT JOIN urakka u ON lt.urakka = u.id
 WHERE ss.hoitokauden_alkuvuosi = :alkuvuosi
-AND lt.alkupvm >= '2014-10-01'
-AND lt.alkupvm <= '2015-09-30';
+AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
+AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi;

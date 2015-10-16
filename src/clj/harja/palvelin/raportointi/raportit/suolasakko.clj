@@ -16,9 +16,10 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             urakka-id
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
-                            #_(konv/sql-timestamp loppupvm)]
+                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
@@ -29,9 +30,10 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             hallintayksikko-id
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
-                            #_(konv/sql-timestamp loppupvm)]
+                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille toteuma-parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
@@ -41,8 +43,10 @@
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            #_(konv/sql-timestamp alkupvm) ; FIXME Miksei päivämäärät toimi ;_____;
-                            #_(konv/sql-timestamp loppupvm)]
+                            (konv/sql-timestamp alkupvm)
+                            (konv/sql-timestamp loppupvm)
+                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
+                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille toteuma-parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
