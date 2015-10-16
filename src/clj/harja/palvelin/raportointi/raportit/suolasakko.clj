@@ -96,7 +96,7 @@
          (:suola_suunniteltu rivi)
          (format "%.2f" (* (:suola_suunniteltu rivi) 1.05))
          (format "%.4f" (:kerroin rivi))
-         (format "%.2f" (* (:suola_suunniteltu rivi) (:kerroin rivi)))
+         (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi))
          (:suola_kaytetty rivi)
          (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
          (fmt/euro-opt (:suolasakko rivi))
