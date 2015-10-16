@@ -6,6 +6,7 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]))
 
 (defn urakan-sopimus [ur]
@@ -16,7 +17,9 @@
 
 (defn kontekstin-hoitokaudet [urakat]
   (valinnat/kontekstin-hoitokaudet
-    (u/urakoiden-hoitokaudet urakat)
+    (if @nav/valittu-hallintayksikko
+      (u/urakoiden-hoitokaudet urakat)
+      (u/edelliset-hoitokaudet))
     u/valittu-kontekstin-hoitokausi
     u/valitse-kontekstin-hoitokausi!))
 

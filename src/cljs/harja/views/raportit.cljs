@@ -78,7 +78,7 @@
      :hk-loppupvm loppu}))
 
 (defmethod raportin-parametri "kontekstin_hoitokausi" [p]
-  [valinnat/kontekstin-hoitokaudet @nav/valitun-kontekstin-urakat])
+  [valinnat/kontekstin-hoitokaudet @nav/hallintayksikon-urakkalista])
 
 (defmethod raportin-parametri-arvo "kontekstin_hoitokausi" [p]
   (let [[alku loppu] @u/valittu-kontekstin-hoitokausi]

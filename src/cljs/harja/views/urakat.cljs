@@ -38,7 +38,7 @@
       [kartta/kartan-paikka hallintayksikot]]]))
 
 (defn valitse-urakka []
-  (let [urakkalista @nav/urakkalista
+  (let [urakkalista @nav/hallintayksikon-urakkalista
         suodatettu-urakkalista @nav/suodatettu-urakkalista]
     [:div.row
      [:div.col-md-4
