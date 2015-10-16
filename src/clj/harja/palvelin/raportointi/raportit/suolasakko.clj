@@ -14,13 +14,13 @@
 (defn muodosta-suolasakkoraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille urakka-kontekstissa: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteuma-parametrit [db
-                            urakka-id
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)
-                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille toteuma-parametrit))]
+  (let [parametrit [db
+                    urakka-id
+                    (konv/sql-timestamp alkupvm)
+                    (konv/sql-timestamp loppupvm)
+                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
+                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
+        raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
@@ -28,25 +28,25 @@
 (defn muodosta-suolasakkoraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteuma-parametrit [db
-                            hallintayksikko-id
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)
-                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille toteuma-parametrit))]
+  (let [parametrit [db
+                    hallintayksikko-id
+                    (konv/sql-timestamp alkupvm)
+                    (konv/sql-timestamp loppupvm)
+                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
+                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
+        raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
 (defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteuma-parametrit [db
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)
-                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                            (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille toteuma-parametrit))]
+  (let [parametrit [db
+                    (konv/sql-timestamp alkupvm)
+                    (konv/sql-timestamp loppupvm)
+                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
+                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
+        raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille parametrit))]
     (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
@@ -56,13 +56,13 @@
         (cond
           (and urakka-id hk-alkupvm hk-loppupvm)
           [:urakka (muodosta-suolasakkoraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm hk-alkupvm
-                                                                  :loppupvm hk-loppupvm})]
+                                                                  :alkupvm   hk-alkupvm
+                                                                  :loppupvm  hk-loppupvm})]
 
           (and hallintayksikko-id hk-alkupvm hk-loppupvm)
           [:hallintayksikko (muodosta-suolasakkoraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm hk-alkupvm
-                                                                                    :loppupvm hk-loppupvm})]
+                                                                                    :alkupvm            hk-alkupvm
+                                                                                    :loppupvm           hk-loppupvm})]
           (and hk-alkupvm hk-loppupvm)
           [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm hk-alkupvm :loppupvm hk-loppupvm})]
 
