@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clojure.walk :as walk])
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import [java.sql SQLException]))
+  (:import [java.sql SQLException]
+           (java.io StringWriter PrintWriter)))
 
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta        suunta
@@ -151,18 +152,16 @@
                   (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
                     (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                    (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+}
-                       {:viesti "Käsittelyvirhe ulkoisessa järjestelmässä"}]))
+                    (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch #(get % :virheet) poikkeus
                     (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
                   ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
                   (catch SQLException e
                     (log/error "Tapahtui SQL-poikkeus: " e)
-                    (let [w (java.io.StringWriter.)]
+                    (let [w (StringWriter.)]
                       (loop [ex (.getNextException e)]
                         (when (not (nil? ex))
-                          (.printStackTrace ex (java.io.PrintWriter. w))
+                          (.printStackTrace ex (PrintWriter. w))
                           (recur (.getNextException ex))))
                       (log/error "Sisemmät virheet: " (.toString w)))
                     (kasittele-sisainen-kasittelyvirhe
