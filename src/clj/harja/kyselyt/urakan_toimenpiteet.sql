@@ -70,7 +70,7 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE t4.taso = 4 AND
       t4.kokonaishintainen IS NOT TRUE AND
-      t4.id NOT IN (SELECT distinct tehtava FROM muutoshintainen_tyo WHERE urakka = :urakka AND yksikkohinta IS NOT NULL) AND
+      t4.id NOT IN (SELECT distinct tehtava FROM muutoshintainen_tyo WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS false) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
                 WHERE urakka = :urakka) AND
