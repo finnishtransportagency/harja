@@ -79,23 +79,23 @@
                 :nimi otsikko}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
-      [{:leveys "10%" :otsikko "Urakka"}
-       {:leveys "10%" :otsikko "Keskiläpötila"}
-       {:leveys "10%" :otsikko "Pitkän aikavälin keskilämpötila"}
-       {:leveys "10%" :otsikko "Sopimuksen mukainen suolamäärä (t)"}
-       {:leveys "10%" :otsikko "Sakkoraja (t)"}
-       {:leveys "10%" :otsikko "Kerroin"}
-       {:leveys "10%" :otsikko "Kohtuullistarkistettu sakkoraja (t)"}
-       {:leveys "10%" :otsikko "Käytetty suolamäärä (t)"}
-       {:leveys "10%" :otsikko "Suolaerotus (t)"}
-       {:leveys "10%" :otsikko "Sakko / tonni"}
-       {:leveys "10%" :otsikko "Sakko"}
-       {:leveys "10%" :otsikko "Indeksi"}
-       {:leveys "10%" :otsikko "Indeksikorotettu sakko"}]
+      [{:leveys "15%" :otsikko "Urakka"}
+       {:leveys "7%" :otsikko "Keski\u00ADläpötila"}
+       {:leveys "7%" :otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
+       {:leveys "8%" :otsikko "Sopimuk\u00ADsen mukainen suola\u00ADmäärä (t)"}
+       {:leveys "7%" :otsikko "Sakkoraja (t)"}
+       {:leveys "7%" :otsikko "Kerroin"}
+       {:leveys "7%" :otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
+       {:leveys "7%" :otsikko "Käytetty suola\u00ADmäärä (t)"}
+       {:leveys "7%" :otsikko "Suola\u00ADerotus (t)"}
+       {:leveys "7%" :otsikko "Sakko / tonni"}
+       {:leveys "7%" :otsikko "Sakko"}
+       {:leveys "7%" :otsikko "Indeksi"}
+       {:leveys "7%" :otsikko "Indeksi\u00ADkorotettu sakko"}]
       (for [rivi raportin-data]
         (let [sakko (* (:ylitys rivi)
                        (:sakko_maara_per_tonni rivi))
-              indeksikorotettu-sakko (* (:kerroin rivi) ; Indeksikorotettu sakko - sakko
+              indeksikorotettu-sakko (* (:kerroin rivi)
                                         (* (:ylitys rivi)
                                            (:sakko_maara_per_tonni rivi)))]
         [(:urakka_nimi rivi)
