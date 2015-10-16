@@ -11,7 +11,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
+  (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.urakka = :urakka
@@ -58,7 +58,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
+  (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -105,7 +105,7 @@ SELECT
   lt.loppupvm AS lampotila_loppupvm,
   lt.keskilampotila as keskilampotila,
   lt.pitka_keskilampotila as pitkakeskilampotila,
-  --(SELECT "hoitokauden_suolasakko"(:urakka, :alkupvm, :loppupvm)) AS suolasakko,
+  (SELECT hoitokauden_suolasakko(:urakka::integer, :alkupvm::date, :loppupvm::date)) AS suolasakko,
   (SELECT SUM(maara) AS suola_suunniteltu
    FROM materiaalin_kaytto mk
    WHERE mk.materiaali IN (SELECT id FROM materiaalikoodi
