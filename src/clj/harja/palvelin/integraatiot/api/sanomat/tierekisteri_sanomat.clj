@@ -152,10 +152,3 @@
       (update-in [:tietueet] (fn [tietue]
                                (map #(clojure.set/rename-keys % {:tietue :varuste}) tietue)))
       (clojure.set/rename-keys {:tietueet :varusteet})))
-
-(defn muunna-tietueen-hakuvastaus [vastausdata]
-
-  (-> vastausdata
-      (dissoc :onnistunut)
-      (puhdista-tietue-xf)
-      (clojure.set/rename-keys {:tietue :varuste})))

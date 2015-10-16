@@ -4,8 +4,8 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
-                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
@@ -189,7 +189,7 @@
            [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
 
          [grid/grid
-          {:otsikko                (str "Yksikköhintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+          {:otsikko                "Urakkasopimuksen mukaiset yksikköhinnat"
            :tyhja                  (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
            :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                               (:id ur)
@@ -220,4 +220,5 @@
             (hoidon-sarakkeet)
             (yllapidon-sarakkeet))
 
-               @tyorivit-joilla-hinta]]))))
+               @tyorivit-joilla-hinta]
+         [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]]))))

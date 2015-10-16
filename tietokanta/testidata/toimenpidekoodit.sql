@@ -1437,8 +1437,7 @@ VALUES
 
 --Nelostason toimenpiteitä Sorateiden hoidon alle testikäyttöä varten
 INSERT INTO toimenpidekoodi (nimi,yksikko, taso, emo, kokonaishintainen)
-     VALUES ('Sorastus', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false),
-            ('Kelirikon hoito ja routaheitt. tas. mursk.', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false),
+     VALUES ('Kelirikon hoito ja routaheitt. tas. mursk.', 't', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false),
             ('Sorateiden kaventaminen', 'm', 4, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), false);
 
 --Tuoteryhmä (taso 1) ja tuote (taso 2) Samposta tuleville kategorisoimattomille toimenpiteille (taso 3)
@@ -1495,7 +1494,7 @@ INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden muokkaushöyläys', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden pölynsidonta', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorateiden tasaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
-UPDATE toimenpidekoodi SET kokonaishintainen = TRUE WHERE nimi = 'Sorastus' AND emo in (SELECT id FROM toimenpidekoodi WHERE koodi='23124');
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Sorastus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23124'));
 -- Alueurakan liikenneympäristön hoidon
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Tiestotarkastus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, kokonaishintainen, emo) VALUES ('Harjaus', 4, 'tiekm', true, (SELECT id FROM toimenpidekoodi WHERE koodi='23111'));

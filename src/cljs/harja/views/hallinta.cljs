@@ -11,11 +11,9 @@
             [harja.ui.grid :as g]
             ))
 
-(def valittu-valilehti "Valittu välilehti" (atom :kayttajat))
+(defonce valittu-valilehti (atom :kayttajat))
 
 (defn hallinta []
-  ;; FIXME: miten hallinta valitaa, "linkkejä" vai tabeja vai jotain muuta?
-
   [bs/tabs {:style :tabs :classes "tabs-taso1" :active valittu-valilehti}
 
    "Käyttäjät"

@@ -1,0 +1,22 @@
+<kuittaus>
+    <aika>2015-09-29T15:49:45</aika>
+    <kuittaustyyppi>valitetty</kuittaustyyppi>
+    <viestiId>14324234</viestiId>
+    <valitustiedot>
+        <urakka>
+            <id>3</id>
+            <nimi>Oulun alueurakka 2014-2019</nimi>
+            <tyyppi>hoito</tyyppi>
+        </urakka>
+        <urakoitsija>
+            <nimi>Puulaaki Oy</nimi>
+            <ytunnus>1234567-8</ytunnus>
+        </urakoitsija>
+        <paivystaja>
+            <etunimi>Päivi</etunimi>
+            <sukunimi>Päivystäjä</sukunimi>
+            <puhelinnumero>0986578749309</puhelinnumero>
+            <sahkopostiosoite>paivi.paivystaja@puulaaki.fi</sahkopostiosoite>
+        </paivystaja>
+    </valitustiedot>
+</kuittaus>
