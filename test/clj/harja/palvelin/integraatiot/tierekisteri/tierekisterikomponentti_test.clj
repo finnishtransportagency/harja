@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.testi :refer :all]
             [clojure.java.io :as io]
-            [slingshot.slingshot :refer [try+]])
+            [slingshot.slingshot :refer [try+]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use org.httpkit.fake))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -192,7 +193,6 @@
       (try+
         (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
-        (catch [:type :http-kutsu-epaonnistui] {:keys [virheet]}
-          (let [virhe (first virheet)]
-            (is (= :poikkeus (:koodi virhe)))))))))
+        (catch [:type :tierekisteri-kutsu-epaonnistui] {:keys [virheet]}
+          (is (.contains (second virheet) "Tietolajia ei löydy")))))))
 
