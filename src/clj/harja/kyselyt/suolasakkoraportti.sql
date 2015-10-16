@@ -66,6 +66,15 @@ SELECT
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
         AND mk.alkupvm >= :alkupvm
         AND mk.alkupvm <= :loppupvm),
+        (SELECT AVG(arvo/100)
+  FROM indeksi
+  WHERE nimi = ss.indeksi
+  AND ((vuosi = :alkuvuosi AND kuukausi = 10) OR
+  (vuosi = :alkuvuosi AND kuukausi = 11) OR
+  (vuosi = :alkuvuosi AND kuukausi = 12) OR
+  (vuosi = :loppuvuosi AND kuukausi = 1) OR
+  (vuosi = :loppuvuosi AND kuukausi = 2) OR
+  (vuosi = :loppuvuosi AND kuukausi = 3))) AS kerroin,
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
     JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
@@ -103,6 +112,15 @@ SELECT
    WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
         AND mk.alkupvm >= :alkupvm
         AND mk.alkupvm <= :loppupvm),
+        (SELECT AVG(arvo/100)
+  FROM indeksi
+  WHERE nimi = ss.indeksi
+  AND ((vuosi = :alkuvuosi AND kuukausi = 10) OR
+  (vuosi = :alkuvuosi AND kuukausi = 11) OR
+  (vuosi = :alkuvuosi AND kuukausi = 12) OR
+  (vuosi = :loppuvuosi AND kuukausi = 1) OR
+  (vuosi = :loppuvuosi AND kuukausi = 2) OR
+  (vuosi = :loppuvuosi AND kuukausi = 3))) AS kerroin,
    (SELECT SUM(maara) AS suola_kaytetty
     FROM toteuma_materiaali tm
     JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
