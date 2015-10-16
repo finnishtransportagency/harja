@@ -75,7 +75,8 @@
                        :koko-maa "KOKO MAA")
                      ", Suolabonus/sakkoraportti "
                      (pvm/pvm (or hk-alkupvm hk-alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm hk-loppupvm)))]
-    [:raportti {:nimi otsikko}
+    [:raportti {:orientaatio :landscape
+                :nimi otsikko}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "10%" :otsikko "Urakka"}
