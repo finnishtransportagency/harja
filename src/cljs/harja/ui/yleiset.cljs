@@ -485,3 +485,5 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div.vihjeen-sisalto
      (harja.ui.ikonit/info-sign)
      (str " " teksti)]]))
+
+(def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")

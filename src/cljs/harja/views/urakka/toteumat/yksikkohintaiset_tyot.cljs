@@ -306,9 +306,6 @@
                          tehtavien-summat @tehtavien-summat]
 
                      (when tehtavien-summat
-                       (log "Rivien pohja tehty: " (pr-str rivit))
-                       (log "Tehtävien summat saatu: " (pr-str tehtavien-summat))
-                       (log "Rakennetaan lopulliset rivit.")
                        (-> (lisaa-tyoriveille-yksikkohinta rivit)
                            (lisaa-tyoriveille-suunniteltu-maara)
                            (lisaa-tyoriveille-suunnitellut-kustannukset)
