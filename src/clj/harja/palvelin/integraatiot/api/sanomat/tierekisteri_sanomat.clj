@@ -13,34 +13,34 @@
        (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
        (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
 
-(defn luo-varusteen-lisayssanoma [otsikko kirjaaja varustetoteuma]
+(defn luo-varusteen-lisayssanoma [otsikko kirjaaja data]
   {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                              (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                              "")
              :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
              :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tietue  {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
-             :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
-             :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :paattynyt]))
-             :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
-             :piiri       (get-in varustetoteuma [:varuste :piiri])
-             :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-             :urakka      (get-in varustetoteuma [:varuste :tierekisteriurakkakoodi])
-             :sijainti    {:tie {:numero   (get-in varustetoteuma [:varuste :sijainti :tie :numero])
-                                 :aet      (get-in varustetoteuma [:varuste :sijainti :tie :aet])
-                                 :aosa     (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
-                                 :let      (get-in varustetoteuma [:varuste :sijainti :tie :let])
-                                 :losa     (get-in varustetoteuma [:varuste :sijainti :tie :losa])
-                                 :ajr      (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
-                                 :puoli    (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
+   :tietue  {:tunniste    (get-in data [:varuste :tunniste])
+             :alkupvm     (xml/json-date-time->xml-xs-date (get-in data [:toteuma :alkanut]))
+             :loppupvm    (xml/json-date-time->xml-xs-date (get-in data [:toteuma :paattynyt]))
+             :karttapvm   (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm]))
+             :piiri       (get-in data [:varuste :piiri])
+             :kuntoluokka (get-in data [:varuste :kuntoluokitus])
+             :urakka      (get-in data [:varuste :tierekisteriurakkakoodi])
+             :sijainti    {:tie {:numero   (get-in data [:varuste :sijainti :tie :numero])
+                                 :aet      (get-in data [:varuste :sijainti :tie :aet])
+                                 :aosa     (get-in data [:varuste :sijainti :tie :aosa])
+                                 :let      (get-in data [:varuste :sijainti :tie :let])
+                                 :losa     (get-in data [:varuste :sijainti :tie :losa])
+                                 :ajr      (get-in data [:varuste :sijainti :tie :ajr])
+                                 :puoli    (get-in data [:varuste :sijainti :tie :puoli])
                                  :alkupvm  (xml/json-date-time->xml-xs-date
-                                             (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm]))
+                                             (get-in data [:varuste :sijainti :tie :alkupvm]))
                                  :loppupvm (xml/json-date-time->xml-xs-date
-                                             (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm]))}}
-             :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
-                           :arvot             (get-in varustetoteuma [:varuste :arvot])}}
-   :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
+                                             (get-in data [:varuste :sijainti :tie :loppupvm]))}}
+             :tietolaji   {:tietolajitunniste (get-in data [:varuste :tietolaji])
+                           :arvot             (get-in data [:varuste :arvot])}}
+   :lisatty (xml/json-date-time->xml-xs-date (get-in data [:toteuma :alkanut]))})
 
 (defn luo-varusteen-paivityssanoma [otsikko kirjaaja varustetoteuma]
   {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
@@ -84,6 +84,7 @@
    :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
 
 (defn luo-tietueen-lisayssanoma [data]
+  (println "----tunniste:" (:tunniste data))
   (-> data
       (assoc :tietue (:varuste data))
       (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])

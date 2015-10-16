@@ -79,7 +79,8 @@
       [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml
        (str "http://localhost:" portti kutsu) :allow]
       (let [vastaus (api-tyokalut/post-kutsu [kutsu] kayttaja portti kutsu-data)]
-        (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")))))
+        (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
+        (is (.contains (:body vastaus) "Uusi varuste lisätty onnistuneesti tunnisteella:"))))))
 
 (deftest tarkista-tietueen-paivittaminen
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))
