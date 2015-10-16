@@ -64,15 +64,15 @@
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
 (defn urakoiden-hoitokaudet
-  "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli 10 vuotta
+  "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli N vuotta
   vanhoja hoitokausia."
-  [urakat]
+  [urakat n]
   (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
         viimeinen-vuosi (t/year (t/now))
         ensimmainen-vuosi (if (>= (- (t/year (t/now))
                                      ensimmainen-vuosi)
-                                  10)
-                            (- (t/year (t/now)) 10)
+                                  n)
+                            (- (t/year (t/now)) n)
                             ensimmainen-vuosi)]
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
@@ -80,9 +80,9 @@
             (range ensimmainen-vuosi viimeinen-vuosi))))
 
 (defn edelliset-hoitokaudet
-  "Palauttaa kymmenen edellistä hoitokautta alkaen nykyajasta."
-  []
-  (let [ensimmainen-vuosi (- (t/year (t/now)) 10)
+  "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
+  [n]
+  (let [ensimmainen-vuosi (- (t/year (t/now)) n)
         viimeinen-vuosi (t/year (t/now))]
     (mapv (fn [vuosi]
             [(pvm/hoitokauden-alkupvm vuosi)

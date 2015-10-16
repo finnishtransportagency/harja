@@ -18,8 +18,8 @@
 (defn kontekstin-hoitokaudet [urakat]
   (valinnat/kontekstin-hoitokaudet
     (if @nav/valittu-hallintayksikko
-      (u/urakoiden-hoitokaudet urakat)
-      (u/edelliset-hoitokaudet))
+      (u/urakoiden-hoitokaudet urakat 5)
+      (u/edelliset-hoitokaudet 5))
     u/valittu-kontekstin-hoitokausi
     u/valitse-kontekstin-hoitokausi!))
 

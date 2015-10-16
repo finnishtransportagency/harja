@@ -42,7 +42,6 @@
   (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [toteuma-parametrit [db
-                            (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
                             (konv/sql-timestamp alkupvm)
                             (konv/sql-timestamp loppupvm)
                             (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
