@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="kuittaus" type="kuittaus"/>
+
+  <xs:complexType name="kuittaus">
+    <xs:sequence>
+      <xs:element name="aika" type="xs:dateTime" minOccurs="1"/>
+      <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1"/>
+      <xs:element name="viestiId" type="xs:string" minOccurs="1"/>
+      <xs:element name="virhe" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="kuittaustyyppi">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="virhe"/>
+      <xs:enumeration value="vastaanotettu"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+

@@ -28,5 +28,5 @@
   (let [xsd-polku "xsd/tloik/"]
     (is (true? (validoi xsd-polku "ilmoitus.xsd" xml-esimerkit/+ilmoitus+)))
     (is (true? (validoi xsd-polku "ilmoitustoimenpide.xsd" xml-esimerkit/+ilmoitustoimenpide+)))
-    (is (true? (validoi xsd-polku "kuittaus.xsd" xml-esimerkit/+valityskuittaus+)))
-    (is (true? (validoi xsd-polku "kuittaus.xsd" xml-esimerkit/+vastaanottokuittus+)))))
+    (is (true? (validoi xsd-polku "harja-kuittaus.xsd" xml-esimerkit/+valityskuittaus+)))
+    (is (true? (validoi xsd-polku "tloik-kuittaus.xsd" xml-esimerkit/+vastaanottokuittus+)))))
