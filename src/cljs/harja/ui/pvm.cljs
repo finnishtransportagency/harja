@@ -76,9 +76,7 @@ Seuraavat optiot ovat mahdollisia:
 
                                  (if sijainti
                                   (let [[x y w] sijainti]
-                                    {:style {:left     x
-                                             :top      y
-                                             :width    w
+                                    {:style {:width    w
                                              :position "absolute"
                                              :z-index  100}})
                                   (when leveys {:style {:width leveys}})))
