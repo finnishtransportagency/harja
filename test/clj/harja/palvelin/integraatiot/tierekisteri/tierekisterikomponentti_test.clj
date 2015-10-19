@@ -20,7 +20,7 @@
 (deftest tarkista-tietolajin-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietolaji-response.xml"))]
     (with-fake-http
-      [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
+      [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is "tl506" (get-in vastausdata [:tietolaji :tunniste]))
