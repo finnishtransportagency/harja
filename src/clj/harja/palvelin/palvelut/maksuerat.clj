@@ -7,8 +7,6 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]))
 
-
-
 (def aseta-kustannussuunnitelman-tila-xf
   (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
 
@@ -16,8 +14,6 @@
   (map #(-> %
             (assoc-in [:maksuera :tyyppi] (keyword (:tyyppi (:maksuera %))))
             (assoc-in [:maksuera :tila] (keyword (:tila (:maksuera %)))))))
-
-
 
 (def maksuera-xf
   (comp (map konversio/alaviiva->rakenne)
@@ -32,7 +28,7 @@
     (assoc (first muunnetut-tilat) :numero maksueranumero)))
 
 (defn laheta-maksuera-sampoon
-  [sampo db user maksueranumero]
+  [sampo db _ maksueranumero]
   (assert (not (nil? maksueranumero)) " maksueranumero ei saa olla nil.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
   (let [tulos (sampo/laheta-maksuera-sampoon sampo maksueranumero)
