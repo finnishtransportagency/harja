@@ -65,7 +65,7 @@
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
-(defn hae-tietueet [tierekisteri parametrit kayttaja]
+(defn hae-varusteet [tierekisteri parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
@@ -78,7 +78,7 @@
         muunnettu-vastausdata
         {}))))
 
-(defn hae-tietue [tierekisteri parametrit kayttaja]
+(defn hae-varuste [tierekisteri parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
@@ -123,14 +123,14 @@
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
                          (fn [parametrit _ kayttaja _]
-                           (hae-tietueet tierekisteri parametrit kayttaja)))))
+                           (hae-varusteet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil json-skeemat/+varusteen-haku-vastaus+
                          (fn [parametrit _ kayttaja _]
-                           (hae-tietue tierekisteri parametrit kayttaja)))))
+                           (hae-varuste tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
