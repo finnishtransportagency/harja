@@ -338,11 +338,26 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
+(defn zoomaa-geometriaan
+  "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
+  valittuun hallintayksikköön tai urakkaan"
+  []
+  (if-not (empty? (keep :alue @tasot/geometriat))
+    (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
+    (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
+
+(defn kuuntele-valittua! [atomi]
+  (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
+                                                (if uusi
+                                                  (keskita-kartta-alueeseen! (geo/extent uusi))
+                                                  (zoomaa-geometriaan))))
+  #(remove-watch atomi :kartan-valittu-kuuntelija))
+
 (defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner 
   (let [ch (chan)]
     (run! @nav/valittu-hallintayksikko
           @nav/valittu-urakka
-          (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+          (zoomaa-geometriaan))
     (run! (let [koko @nav/kartan-koko]
             (go (>! ch koko))))
     (go (loop [edellinen-koko @nav/kartan-koko]
@@ -351,13 +366,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
             (when (and (= :S edellinen-koko)
                        (not= :S nykyinen-koko))
               (<! (timeout 150))
-              (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+              (zoomaa-geometriaan))
             (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
     {:component-did-mount (fn [_]
-                            (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
+                            (zoomaa-geometriaan))}
     (fn []
       (let [hals @hal/hallintayksikot
            v-hal @nav/valittu-hallintayksikko
