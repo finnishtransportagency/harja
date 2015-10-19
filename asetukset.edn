@@ -44,11 +44,11 @@
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  :geometriapaivitykset {:tuontivali                             5
-                        :tieosoiteverkon-shapefile              "file://shp/Tieosoiteverkko.shp"
-                        :pohjavesialue-shapefile                "file://Pohjavesialue/PTV_TIIRA_KP_POHJAVESIALUE.shp"
+                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko.shp"
+                        :pohjavesialueen-shapefile                 "file://Pohjavesialue/PTV_TIIRA_KP_POHJAVESIALUE.shp"
                         ;; :tieosoiteverkon-alk-osoite             ""
                         ;; :tieosoiteverkon-alk-tuontikohde        ""
-                        :soratien-hoitoluokkien-shapefile       "file://tl132/tl132.shp"
+                        :soratien-hoitoluokkien-shapefile          "file://tl132/tl132.shp"
                         ;; :soratien-hoitoluokkien-alk-osoite      ""
                         ;; :soratien-hoitoluokkien-alk-tuontikohde ""
                         }

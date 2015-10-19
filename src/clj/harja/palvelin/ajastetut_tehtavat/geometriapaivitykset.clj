@@ -79,6 +79,22 @@
                      "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
+(defn tee-pohjavesialueiden-hakutehtava [this {:keys [tuontivali
+                                              tieosoiteverkon-alk-osoite
+                                              tieosoiteverkon-alk-tuontikohde
+                                              tieosoiteverkon-shapefile]}]
+  (when (and tuontivali
+             tieosoiteverkon-alk-osoite
+             tieosoiteverkon-alk-tuontikohde
+             tieosoiteverkon-shapefile)
+    (ajasta-paivitys this
+                     "pohjavesialue"
+                     tuontivali
+                     tieosoiteverkon-alk-osoite
+                     tieosoiteverkon-alk-tuontikohde
+                     "pohjavesialue.zip"
+                     (fn [] (pohjavesialueiden-tuonti/vie-pohjavesialue-kantaan (:db this) tieosoiteverkon-shapefile)))))
+
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
@@ -94,6 +110,19 @@
           (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
           (catch Exception e
             (log/debug "Tieosoiteverkon tuonnissa tapahtui poikkeus: " e)))))))
+
+(defn tee-pohjavesialueiden-paivitystehtava [this {:keys [tieosoiteverkon-alk-osoite
+                                                  tieosoiteverkon-alk-tuontikohde
+                                                  tieosoiteverkon-shapefile
+                                                  tuontivali]}]
+  (when (not (and tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde))
+    (chime-at
+      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+      (fn [_]
+        (try
+          (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
+          (catch Exception e
+            (log/debug "Pohjavesialueiden tuonnissa tapahtui poikkeus: " e)))))))
 
 (defn tee-soratien-hoitoluokkien-hakutehtava [this {:keys [tuontivali
                                                            soratien-hoitoluokkien-alk-osoite
@@ -128,11 +157,15 @@
   (start [this]
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-hakutehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paivitystehtava this asetukset))
+    (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-hakutehtava this asetukset))
+    (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paivitystehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-hakutehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paivitystehtava this asetukset)))
   (stop [this]
     (apply (:tieverkon-hakutehtava this) [])
     (apply (:soratien-hoitoluokkien-hakutehtava this) [])
+    (apply (:pohjavesialueiden-hakutehtava this) [])
+    (apply (:pohjavesialueiden-paivitystehtava this) [])
     (apply (:tieverkon-paivitystehtava this) [])
     (apply (:soratien-hoitoluokkien-paivitystehtava this) [])
     this))
