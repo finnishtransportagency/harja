@@ -38,7 +38,8 @@
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")]
-        
+
+    (println "RAPORTTI: " (pr-str materiaalit))
     [:raportti {:otsikko "Ympäristöraportti"
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Ympäristöraportti"}
@@ -68,7 +69,7 @@
                             maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
                             luokitellut (filter :luokka kuukaudet)
                             kuukaudet (filter (comp not :luokka) kuukaudet)
-                            kk-arvot (keep :kk kuukaudet)]
+                            kk-arvot (sort (keep :kk kuukaudet))]
                         (concat
                          ;; Normaali materiaalikohtainen rivi
                          [(into []
@@ -94,11 +95,12 @@
 
                          ;; Mahdolliset hoitoluokkakohtaiset rivit
                          (map (fn [[luokka kuukaudet]]
+                                (println "LUOKKA " luokka " kuukaudet: " (pr-str kuukaudet) " KK-ARVOT: " (pr-str kk-arvot))
                                 (let [arvot (group-by :kk kuukaudet)]
                                   (into []
                                         (concat 
                                          (when urakoittain?
-                                           (:nimi urakka))
+                                           [(:nimi urakka)])
                                          [(str " - "
                                                (case luokka
                                                  1 "Is"

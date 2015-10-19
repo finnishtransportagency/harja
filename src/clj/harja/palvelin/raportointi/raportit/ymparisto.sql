@@ -57,68 +57,72 @@ SELECT *
 
 -- name: hae-ymparistoraportti-urakoittain
 -- Hakee ympäristöraportin, mutta jokaiselle urakalle on omat rivinsä
-WITH RECURSIVE kuukaudet (kk) AS (
-  -- Haetaan kaikki kuukaudet alkupvm-loppupvm välillä
-  VALUES (date_trunc('month', :alkupvm::date))
-  UNION ALL
-  (SELECT date_trunc('month', kk + interval '1 month')
-     FROM kuukaudet
-    WHERE kk + interval '1 month' < :loppupvm)
-), urakat AS (
-  SELECT id, nimi -- rivit kaikille käynnissä
-    FROM urakka   -- oleville urakoille
-   WHERE (:alkupvm BETWEEN alkupvm AND loppupvm
-          OR
-	  :loppupvm BETWEEN alkupvm AND loppupvm)
-	 AND
-	 (:hal_annettu = false OR hallintayksikko = :hal)
-), hoitoluokat AS (
-  --      Is   I    Ib   TIb  II  III  K1   K2
-  VALUES (1), (2), (3), (4), (5), (6), (7), (8)
-)
-SELECT -- haetaan käytetyt määrät per materiaali ja kk
-       NULL as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       urk.id as urakka_id, urk.nimi as urakka_nimi,
-       (SELECT SUM(tm.maara)
-          FROM toteuma_materiaali tm
-	       JOIN toteuma t ON tm.toteuma=t.id
-         WHERE tm.materiaalikoodi = mk.id
-	   AND t.urakka = urk.id
-	   AND date_trunc('month', t.alkanut) = kkt.kk) as maara
-  FROM kuukaudet kkt
-       CROSS JOIN materiaalikoodi mk
-       CROSS JOIN urakat urk
-UNION
-SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
-       hk.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       urk.id as urakka_id, urk.nimi as urakka_nimi,
-       (SELECT SUM(rm.maara)
-          FROM reitti_materiaali rm
-	       JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
-	       JOIN toteuma t1 ON rp1.toteuma=t1.id
-	 WHERE rm.materiaalikoodi = mk.id
-	   AND rp1.hoitoluokka = hl.column1
-	   AND t1.urakka = urk.id
-	   AND date_trunc('month', rp1.aika) = kkt.kk) as maara
-  FROM kuukaudet kkt
-       CROSS JOIN materiaalikoodi mk
-       CROSS JOIN urakat urk
-       CROSS JOIN hoitoluokat hl
-UNION
-SELECT -- Haetaan suunnitelmat materiaaleille
-       NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
-       mks.id as materiaali_id, mks.nimi as materiaali_nimi,
-       urk.id as urakka_id, urk.nimi as urakka_nimi,
-       (SELECT SUM(s.maara)
-          FROM materiaalin_kaytto s
-	 WHERE s.materiaali = mks.id
-	   AND s.urakka = urk.id
-	   AND (s.alkupvm BETWEEN :alkupvm AND :loppupvm
-	        OR
-		s.loppupvm BETWEEN :alkupvm AND :loppupvm)) as maara
-  FROM materiaalikoodi mks
-       CROSS JOIN urakat urk
-ORDER BY materiaali_nimi;
+SELECT *
+  FROM (WITH RECURSIVE kuukaudet (kk) AS (
+        -- Haetaan kaikki kuukaudet alkupvm-loppupvm välillä
+	 VALUES (date_trunc('month', :alkupvm::date))
+       UNION ALL
+       (SELECT date_trunc('month', kk + interval '1 month')
+          FROM kuukaudet
+         WHERE kk + interval '1 month' < :loppupvm)
+     ), urakat AS (
+       SELECT id, nimi -- rivit kaikille käynnissä
+         FROM urakka   -- oleville urakoille
+        WHERE (:alkupvm BETWEEN alkupvm AND loppupvm
+               OR
+     	  :loppupvm BETWEEN alkupvm AND loppupvm)
+     	 AND
+     	 (:hal_annettu = false OR hallintayksikko = :hal)
+     ), hoitoluokat AS (
+       --      Is   I    Ib   TIb  II  III  K1   K2
+       VALUES (1), (2), (3), (4), (5), (6), (7), (8)
+     )
+     SELECT -- haetaan käytetyt määrät per materiaali ja kk
+            NULL as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+            urk.id as urakka_id, urk.nimi as urakka_nimi,
+            (SELECT SUM(tm.maara)
+               FROM toteuma_materiaali tm
+     	       JOIN toteuma t ON tm.toteuma=t.id
+              WHERE tm.materiaalikoodi = mk.id
+     	   AND t.urakka = urk.id
+     	   AND date_trunc('month', t.alkanut) = kkt.kk) as maara
+       FROM kuukaudet kkt
+            CROSS JOIN materiaalikoodi mk
+            CROSS JOIN urakat urk
+     UNION
+     SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
+            hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+            urk.id as urakka_id, urk.nimi as urakka_nimi,
+            (SELECT SUM(rm.maara)
+               FROM reitti_materiaali rm
+     	            JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
+     	            JOIN toteuma t1 ON rp1.toteuma=t1.id
+     	      WHERE rm.materiaalikoodi = mk.id
+     	        AND rp1.hoitoluokka = hl.column1
+     	        AND t1.urakka = urk.id
+     	        AND date_trunc('month', rp1.aika) = kkt.kk) as maara
+       FROM kuukaudet kkt
+            CROSS JOIN materiaalikoodi mk
+            CROSS JOIN urakat urk
+            CROSS JOIN hoitoluokat hl
+     UNION
+     SELECT -- Haetaan suunnitelmat materiaaleille
+            NULL as luokka,
+            NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
+            mks.id as materiaali_id, mks.nimi as materiaali_nimi,
+            urk.id as urakka_id, urk.nimi as urakka_nimi,
+            (SELECT SUM(s.maara)
+               FROM materiaalin_kaytto s
+     	 WHERE s.materiaali = mks.id
+     	   AND s.urakka = urk.id
+     	   AND (s.alkupvm BETWEEN :alkupvm AND :loppupvm
+     	        OR
+     		s.loppupvm BETWEEN :alkupvm AND :loppupvm)) as maara
+       FROM materiaalikoodi mks
+            CROSS JOIN urakat urk) AS raportti
+ WHERE -- poistetaan hoitoluokitellut rivit, joilla ei ole määrää
+       NOT (luokka IS NOT NULL AND maara IS NULL)
+       ORDER BY materiaali_nimi;
 
 
 -- name: testi
