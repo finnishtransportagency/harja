@@ -74,7 +74,7 @@
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
-      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
+      (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
 
@@ -85,8 +85,9 @@
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
-      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
-        muunnettu-vastausdata {}))))
+      (if (> (count (:varusteet muunnettu-vastausdata)) 0)
+        muunnettu-vastausdata
+        {}))))
 
 (defn lisaa-varuste [tierekisteri db data kayttaja]
   (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")

@@ -84,7 +84,6 @@
    :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
 
 (defn luo-tietueen-lisayssanoma [data]
-  (println "----tunniste:" (:tunniste data))
   (-> data
       (assoc :tietue (:varuste data))
       (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
