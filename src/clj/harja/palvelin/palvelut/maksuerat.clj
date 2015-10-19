@@ -7,25 +7,7 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]))
 
-(declare hae-urakan-maksuerat)
-(declare laheta-maksuerat-sampoon)
 
-(defrecord Maksuerat []
-  component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-urakan-maksuerat (fn [user urakka-id]
-                                              (hae-urakan-maksuerat (:db this) user urakka-id)))
-
-    (julkaise-palvelu (:http-palvelin this)
-                      :laheta-maksuerat-sampoon (fn [user maksueranumerot]
-                                                  (laheta-maksuerat-sampoon (:sampo this) (:db this) user maksueranumerot)))
-    this)
-
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :hae-urakan-maksuerat)
-    (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
-    this))
 
 (def aseta-kustannussuunnitelman-tila-xf
   (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
@@ -51,6 +33,7 @@
 
 (defn laheta-maksuera-sampoon
   [sampo db user maksueranumero]
+  (assert (not (nil? maksueranumero)) " maksueranumero ei saa olla nil.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
   (let [tulos (sampo/laheta-maksuera-sampoon sampo maksueranumero)
         tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
@@ -74,3 +57,20 @@
           (laheta-maksuera-sampoon sampo db user maksueranumero))
         maksueranumerot))
 
+
+(defrecord Maksuerat []
+  component/Lifecycle
+  (start [this]
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-urakan-maksuerat (fn [user urakka-id]
+                                              (hae-urakan-maksuerat (:db this) user urakka-id)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :laheta-maksuerat-sampoon (fn [user maksueranumerot]
+                                                  (laheta-maksuerat-sampoon (:sampo this) (:db this) user maksueranumerot)))
+    this)
+
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :hae-urakan-maksuerat)
+    (poista-palvelu (:http-palvelin this) :laheta-maksuerat-sampoon)
+    this))
