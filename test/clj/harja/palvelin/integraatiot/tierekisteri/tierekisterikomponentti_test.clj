@@ -189,10 +189,10 @@
 (deftest tarkista-virhevastauksen-kasittely
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
-      [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
+      [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (try+
         (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
-        (catch [:type :tierekisteri-kutsu-epaonnistui] {:keys [virheet]}
-          (is (.contains (second virheet) "Tietolajia ei löydy")))))))
+        (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
+          (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))
 
