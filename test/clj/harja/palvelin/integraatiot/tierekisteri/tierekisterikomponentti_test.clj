@@ -107,7 +107,7 @@
                              :kuntoluokka "1",
                              :alkupvm     #inst "2015-03-02T22:00:00.000-00:00",
                              :tunniste    "1245rgfsd"}
-            tietue (:tietue vastausdata)]
+            tietue (:tietue (first (:tietueet  vastausdata)))]
         (is (true? (:onnistunut vastausdata)))
         (is (= odotettu-tietue tietue))))))
 
