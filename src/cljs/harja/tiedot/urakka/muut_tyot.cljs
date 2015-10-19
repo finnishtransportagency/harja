@@ -33,7 +33,7 @@
 (defonce valittu-toteuma (atom nil))
 (defonce muut-tyot-kartalla (reaction
                               (when @karttataso-muut-tyot
-                                (mapcat #(kartalla-xf % @valittu-toteuma [:toteuma :id])
-                                        (map
-                                          #(assoc % :tyyppi-kartalla :toteuma)
-                                          @haetut-muut-tyot)))))
+                                (remove nil? (mapcat #(kartalla-xf % @valittu-toteuma [:toteuma :id])
+                                                     (map
+                                                       #(assoc % :tyyppi-kartalla :toteuma)
+                                                       @haetut-muut-tyot))))))
