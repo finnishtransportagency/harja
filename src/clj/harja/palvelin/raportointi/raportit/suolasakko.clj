@@ -74,10 +74,18 @@
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Suolabonus/sakkoraportti "
-                     (pvm/pvm (or hk-alkupvm hk-alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm hk-loppupvm)))]
+                     (pvm/pvm (or hk-alkupvm hk-alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm hk-loppupvm)))
+        laske-sakko (fn [rivi] (* (:ylitys rivi)
+                                  (:sakko_maara_per_tonni rivi)))
+        laske-indeksikorotettu-sakko (fn [rivi] (* (:kerroin rivi)
+                                                   (* (:ylitys rivi)
+                                                      (:sakko_maara_per_tonni rivi))))
+
+        ]
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}
-     [:taulukko {:otsikko                    otsikko}
+     [:taulukko {:otsikko                    otsikko
+                 :viimeinen-rivi-yhteenveto? true}
       [{:leveys "15%" :otsikko "Urakka"}
        {:otsikko "Keski\u00ADlämpö\u00ADtila"}
        {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
@@ -91,12 +99,8 @@
        {:otsikko "Sakko"}
        {:otsikko "Indeksi"}
        {:otsikko "Indeksi\u00ADkorotettu sakko"}]
-      (for [rivi raportin-data]
-        (let [sakko (* (:ylitys rivi)
-                       (:sakko_maara_per_tonni rivi))
-              indeksikorotettu-sakko (* (:kerroin rivi)
-                                        (* (:ylitys rivi)
-                                           (:sakko_maara_per_tonni rivi)))]
+      (concat
+        (for [rivi raportin-data]
         [(:urakka_nimi rivi)
          (str (:keskilampotila rivi) " °C")
          (str (:pitkakeskilampotila rivi) " °C")
@@ -107,6 +111,29 @@
          (:suola_kaytetty rivi)
          (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
          (fmt/euro-opt (:sakko_maara_per_tonni rivi))
-         (fmt/euro-opt sakko)
-         (fmt/euro-opt (- indeksikorotettu-sakko sakko))
-         (fmt/euro-opt (* (:kerroin rivi) sakko))]))]]))
+         (fmt/euro-opt (laske-sakko rivi))
+         (fmt/euro-opt (- (laske-indeksikorotettu-sakko rivi) (laske-sakko rivi)))
+         (fmt/euro-opt (* (:kerroin rivi) (laske-sakko rivi)))])
+      [["Yhteensä"
+        nil
+        nil
+        (reduce + (mapv :suola_suunniteltu raportin-data))
+        nil
+        nil
+        nil
+        (reduce + (mapv :suola_kaytetty raportin-data))
+        (-
+          (reduce + (mapv :suola_kaytetty raportin-data))
+          (reduce + (mapv :suola_suunniteltu raportin-data)))
+        nil
+        (fmt/euro-opt
+          (reduce + (mapv
+                      (fn [rivi]
+                        (laske-sakko rivi))
+                      raportin-data)))
+        nil
+        (fmt/euro-opt
+          (reduce + (mapv
+                    (fn [rivi]
+                      (laske-indeksikorotettu-sakko rivi))
+                    raportin-data)))]])]]))
