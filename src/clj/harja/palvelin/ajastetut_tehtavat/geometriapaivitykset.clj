@@ -12,6 +12,7 @@
             [harja.palvelin.tyokalut.kansio :as kansio]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
