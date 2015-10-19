@@ -7,17 +7,20 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-pohjavesialue-entry [db pohjavesialue]
-  (p/vie-pohjavesialuetauluun! db (:nimi pohjavesialue)
-                               (:tunnus pohjavesialue)
-                               (.toString (:the_geom pohjavesialue))))
+  (if (:the_geom pohjavesialue)
+    (p/vie-pohjavesialuetauluun! db
+                                 (:urakka_lyh pohjavesialue)
+                                 (:urakka_id pohjavesialue)
+                                 (.toString (:the_geom pohjavesialue)))
+    (log/debug "Pohjavesialuetta ei voida tuoda: " (:loc_error pohjavesialue))))
 
 (defn vie-pohjavesialue-kantaan [db shapefile]
   (if shapefile
     (do
       (log/debug (str "Tuodaan pohjavesialuetta kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
-        (p/tuhoa-pohjavesialuedata! transaktio)
-        (doseq [tv (shapefile/tuo shapefile)]
-          (vie-pohjavesialue-entry transaktio tv)))
+                                (p/tuhoa-pohjavesialuedata! transaktio)
+                                (doseq [pohjavesialue (shapefile/tuo shapefile)]
+                                  (vie-pohjavesialue-entry transaktio pohjavesialue)))
       (log/debug "Pohjavesialueen tuonti kantaan valmis."))
     (log/debug "Pohjavesialueen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
