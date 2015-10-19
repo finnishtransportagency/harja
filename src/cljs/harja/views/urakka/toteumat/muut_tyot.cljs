@@ -39,7 +39,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def keskita-valittuun!
+#_(def keskita-valittuun!
   (run!
     @nav/kartan-kokovalinta
     (let [valitun-alue (when @muut-tyot/valittu-toteuma (:alue (first (kartalla-xf (assoc @muut-tyot/valittu-toteuma :tyyppi-kartalla :toteuma)))))]
