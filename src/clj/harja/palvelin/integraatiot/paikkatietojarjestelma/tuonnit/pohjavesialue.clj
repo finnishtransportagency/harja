@@ -6,9 +6,10 @@
             [harja.kyselyt.pohjavesialueet :as p]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn vie-pohjavesialue-entry [db tv]
-  (p/vie-pohjavesialuetauluun! db (:osoite3 tv) (:tie tv) (:ajorata tv) (:osa tv)
-                           (:tiepiiri tv) (:tr_pituus tv) (.toString (:the_geom tv))))
+(defn vie-pohjavesialue-entry [db pohjavesialue]
+  (p/vie-pohjavesialuetauluun! db (:nimi pohjavesialue)
+                               (:tunnus pohjavesialue)
+                               (.toString (:the_geom pohjavesialue))))
 
 (defn vie-pohjavesialue-kantaan [db shapefile]
   (if shapefile
