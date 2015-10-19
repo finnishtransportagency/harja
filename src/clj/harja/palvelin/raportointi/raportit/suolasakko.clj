@@ -77,21 +77,20 @@
                      (pvm/pvm (or hk-alkupvm hk-alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm hk-loppupvm)))]
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}
-     [:taulukko {:otsikko                    otsikko
-                 :viimeinen-rivi-yhteenveto? true}
+     [:taulukko {:otsikko                    otsikko}
       [{:leveys "15%" :otsikko "Urakka"}
-       {:leveys "7%" :otsikko "Keski\u00ADlämpö\u00ADtila"}
-       {:leveys "7%" :otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
-       {:leveys "8%" :otsikko "Sopimuk\u00ADsen mukainen suola\u00ADmäärä (t)"}
-       {:leveys "7%" :otsikko "Sakkoraja (t)"}
-       {:leveys "7%" :otsikko "Kerroin"}
-       {:leveys "7%" :otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
-       {:leveys "7%" :otsikko "Käytetty suola\u00ADmäärä (t)"}
-       {:leveys "7%" :otsikko "Suola\u00ADerotus (t)"}
-       {:leveys "7%" :otsikko "Sakko / tonni"}
-       {:leveys "7%" :otsikko "Sakko"}
-       {:leveys "7%" :otsikko "Indeksi"}
-       {:leveys "7%" :otsikko "Indeksi\u00ADkorotettu sakko"}]
+       {:otsikko "Keski\u00ADlämpö\u00ADtila"}
+       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
+       {:otsikko "Sopimuk\u00ADsen mukainen suola\u00ADmäärä (t)"}
+       {:otsikko "Sakko\u00ADraja (t)"}
+       {:otsikko "Kerroin"}
+       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
+       {:otsikko "Käytetty suola\u00ADmäärä (t)"}
+       {:otsikko "Suola\u00ADerotus (t)"}
+       {:otsikko "Sakko / tonni"}
+       {:otsikko "Sakko"}
+       {:otsikko "Indeksi"}
+       {:otsikko "Indeksi\u00ADkorotettu sakko"}]
       (for [rivi raportin-data]
         (let [sakko (* (:ylitys rivi)
                        (:sakko_maara_per_tonni rivi))
@@ -99,8 +98,8 @@
                                         (* (:ylitys rivi)
                                            (:sakko_maara_per_tonni rivi)))]
         [(:urakka_nimi rivi)
-         (str (:keskilampotila rivi) " C")
-         (str (:pitkakeskilampotila rivi) "C")
+         (str (:keskilampotila rivi) " °C")
+         (str (:pitkakeskilampotila rivi) " °C")
          (:suola_suunniteltu rivi)
          (format "%.2f" (* (:suola_suunniteltu rivi) 1.05))
          (format "%.4f" (:kerroin rivi))
