@@ -52,23 +52,24 @@
 (defmethod asia-kartalle :toteuma [toteuma on-valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
-  (let [reittipisteet (map
+  (let [reittipisteet (keep
                         (fn [[_ arvo]] (first arvo))
                         (group-by :id (:reittipisteet toteuma)))]
-    [(assoc toteuma
-       :type :toteuma
-       :nimi (or (:nimi toteuma)
-                 (get-in toteuma [:tehtava :nimi])
-                 (if (> 1 (count (:tehtavat toteuma)))
-                   (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
-                   (str (:toimenpide (first (:tehtavat toteuma))))))
-       :alue {
-              :type   :arrow-line
-              :scale (if (on-valittu? toteuma) 0.8 0.5) ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-              :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                   :aika
-                                                                   pvm/ennen?
-                                                                   reittipisteet))})]))
+    [(when-not (empty? reittipisteet)
+       (assoc toteuma
+         :type :toteuma
+         :nimi (or (:nimi toteuma)
+                   (get-in toteuma [:tehtava :nimi])
+                   (if (> 1 (count (:tehtavat toteuma)))
+                     (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
+                     (str (:toimenpide (first (:tehtavat toteuma))))))
+         :alue {
+                :type   :arrow-line
+                :scale  (if (on-valittu? toteuma) 0.8 0.5)  ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
+                                                                     :aika
+                                                                     pvm/ennen?
+                                                                     reittipisteet))}))]))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp on-valittu?]
   [(assoc tp
