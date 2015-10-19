@@ -31,7 +31,7 @@
         valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      (assoc vastaus :lisatietoja (str "Uuden varusteen livitunniste on: " livitunniste)))))
+      (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)))))
 
 (defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
