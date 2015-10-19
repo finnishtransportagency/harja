@@ -80,20 +80,20 @@
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
 (defn tee-pohjavesialueiden-hakutehtava [this {:keys [tuontivali
-                                              tieosoiteverkon-alk-osoite
-                                              tieosoiteverkon-alk-tuontikohde
-                                              tieosoiteverkon-shapefile]}]
+                                              pohjavesialueen-alk-osoite
+                                              pohjavesialueen-alk-tuontikohde
+                                              pohjavesialueen-shapefile]}]
   (when (and tuontivali
-             tieosoiteverkon-alk-osoite
+             pohjavesialueen-alk-osoite
              tieosoiteverkon-alk-tuontikohde
-             tieosoiteverkon-shapefile)
+             pohjavesialueen-shapefile)
     (ajasta-paivitys this
                      "pohjavesialue"
                      tuontivali
                      tieosoiteverkon-alk-osoite
                      tieosoiteverkon-alk-tuontikohde
                      "pohjavesialue.zip"
-                     (fn [] (pohjavesialueiden-tuonti/vie-pohjavesialue-kantaan (:db this) tieosoiteverkon-shapefile)))))
+                     (fn [] (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)))))
 
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
@@ -111,16 +111,16 @@
           (catch Exception e
             (log/debug "Tieosoiteverkon tuonnissa tapahtui poikkeus: " e)))))))
 
-(defn tee-pohjavesialueiden-paivitystehtava [this {:keys [tieosoiteverkon-alk-osoite
-                                                  tieosoiteverkon-alk-tuontikohde
-                                                  tieosoiteverkon-shapefile
+(defn tee-pohjavesialueiden-paivitystehtava [this {:keys [pohjavesialueen-alk-osoite
+                                                  pohjavesialueen-alk-tuontikohde
+                                                  pohjavesialueen-shapefile
                                                   tuontivali]}]
-  (when (not (and tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde))
+  (when (not (and pohjavesialueen-alk-osoite pohjavesialueen-alk-tuontikohde))
     (chime-at
       (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
       (fn [_]
         (try
-          (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
+          (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)
           (catch Exception e
             (log/debug "Pohjavesialueiden tuonnissa tapahtui poikkeus: " e)))))))
 
