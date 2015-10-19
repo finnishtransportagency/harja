@@ -8,12 +8,12 @@
       <xs:element name="aika" type="xs:dateTime" minOccurs="1"/>
       <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1"/>
       <xs:element name="viestiId" type="xs:string" minOccurs="1"/>
-      <xs:element name="valitustiedot" type="valitustiedot" minOccurs="0"/>
+      <xs:element name="valitystiedot" type="valitystiedot" minOccurs="0"/>
       <xs:element name="virhe" type="xs:string" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="valitustiedot">
+  <xs:complexType name="valitystiedot">
     <xs:sequence>
       <xs:element name="ilmoitusId" type="xs:int" minOccurs="0"/>
       <xs:element name="urakka" type="urakka" minOccurs="0"/>
