@@ -45,6 +45,7 @@
 
  :geometriapaivitykset {:tuontivali                             5
                         :tieosoiteverkon-shapefile              "file://shp/Tieosoiteverkko.shp"
+                        :pohjavesialue-shapefile                "file://Pohjavesialue/PTV_TIIRA_KP_POHJAVESIALUE.shp"
                         ;; :tieosoiteverkon-alk-osoite             ""
                         ;; :tieosoiteverkon-alk-tuontikohde        ""
                         :soratien-hoitoluokkien-shapefile       "file://tl132/tl132.shp"
