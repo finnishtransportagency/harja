@@ -4,7 +4,8 @@
             [clojure.core.async :refer [<! go] :as async]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log])
-  (:import (javax.jms Message Session TextMessage)))
+  (:import (javax.jms Message Session TextMessage)
+           (java.util UUID)))
 
 (defrecord FeikkiSonja [kuuntelijat viesti-id]
   component/Lifecycle
@@ -26,7 +27,7 @@
                (conj vanhat-kuuntelijat kuuntelija))))
     #(swap! kuuntelijat update-in [nimi] disj kuuntelija))
 
-  (laheta [_ nimi viesti]
+  (laheta [_ nimi viesti {:keys [correlation-id]}]
     (log/info "Feikki Sonja lähettää jonoon: " nimi)
     (let [msg (sonja/luo-viesti viesti (reify javax.jms.Session
                                          (createTextMessage [this]
@@ -35,13 +36,17 @@
                                              (reify TextMessage
                                                (getJMSMessageID [_] id)
                                                (setText [_ t] (reset! txt t))
-                                               (getText [_] @txt))))))]
+                                               (getText [_] @txt)
+                                               (getJMSCorrelationID [_] correlation-id))))))]
       (go (<! (async/timeout (rand-int 100)))               ;; sadan millisekunnin päästä lähetys
           (log/debug "Lähetys menossa.")
           (doseq [k (get @kuuntelijat nimi)]
             (log/debug "Kutsutaan kuuntelijaa:" k)
             (k msg)))
-      (.getJMSMessageID msg))))
+      (.getJMSMessageID msg)))
+
+  (laheta [this nimi viesti]
+    (sonja/laheta this nimi viesti nil)))
 
 
 (defn feikki-sonja []

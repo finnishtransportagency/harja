@@ -31,8 +31,6 @@
 (defonce valittu-taso2 (atom nil))
 (defonce valittu-taso3 (atom nil))
 
-(defonce valittu-toimenpidekoodi (atom nil))
-
 (defn resetoi-koodit [tiedot]
   (loop [acc {}
          [tpk & tpkt] tiedot]
@@ -122,11 +120,11 @@
                                            :ei-mahdollinen)
                :tunniste :id}
 
-              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "70%"}
-               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "15%"}
+              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :validoi [[:ei-tyhja "Anna tehtävän nimi"]] :leveys "70%"}
+               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]] :leveys "15%"}
                {:otsikko "Hinnoittelu" :boolean-otsikko "Kokonaishintainen" :nimi :kokonaishintainen :tyyppi :boolean :leveys "15%"
-                :fmt     #(if % "Kokonaishintainen" "Yksikkohintainen")}]
-              tehtavat]))
+                :fmt     #(if % "Kokonaishintainen" "Yksikköperusteinen")}]
+              (sort-by (juxt :kokonaishintainen :nimi) tehtavat)]))
          ]))
 
     {:displayName         "toimenpidekoodit"
