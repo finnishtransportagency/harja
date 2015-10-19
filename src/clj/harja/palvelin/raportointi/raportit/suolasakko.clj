@@ -105,27 +105,28 @@
        {:otsikko "Indeksi\u00ADkorotettu sakko"}]
       (concat
         (for [rivi raportin-data]
-          [(:urakka_nimi rivi)
-           (str (:keskilampotila rivi) " °C")
-           (str (:pitkakeskilampotila rivi) " °C")
-           (:suola_suunniteltu rivi)
-           (when (:suola_suunniteltu rivi)
-             (format "%.2f" (* (:suola_suunniteltu rivi) 1.05)))
-           (when (:kerroin rivi)
-             (format "%.4f" (:kerroin rivi)))
-           (when (:kohtuullistarkistettu_sakkoraja rivi)
-             (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
-           (:suola_kaytetty rivi)
-           (when (and (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-             (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi)))
-           (fmt/euro-opt (:sakko_maara_per_tonni rivi))
-           (fmt/euro-opt (laske-sakko rivi))
-           (let [sakko (laske-sakko rivi)
-                 indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi) ]
+          (let [sakko (laske-sakko rivi)
+                indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi)]
+            [(:urakka_nimi rivi)
+             (str (:keskilampotila rivi) " °C")
+             (str (:pitkakeskilampotila rivi) " °C")
+             (:suola_suunniteltu rivi)
+             (when (:suola_suunniteltu rivi)
+               (format "%.2f" (* (:suola_suunniteltu rivi) 1.05)))
+             (if (:kerroin rivi)
+               (format "%.4f" (:kerroin rivi))
+               "Indeksi puuttuu!")
+             (when (:kohtuullistarkistettu_sakkoraja rivi)
+               (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
+             (:suola_kaytetty rivi)
+             (when (and (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
+               (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi)))
+             (fmt/euro-opt (:sakko_maara_per_tonni rivi))
+             (fmt/euro-opt (laske-sakko rivi))
              (when (and sakko indeksikorotettu-sakko)
-               (fmt/euro-opt (- (laske-indeksikorotettu-sakko rivi) (laske-sakko rivi)))))
-           (when (:kerroin rivi)
-             (fmt/euro-opt (* (:kerroin rivi) (laske-sakko rivi))))])
+               (fmt/euro-opt (- indeksikorotettu-sakko sakko)))
+             (when (and (:kerroin rivi) sakko)
+               (fmt/euro-opt (* (:kerroin rivi) sakko)))]))
         [["Yhteensä"
           nil
           nil
