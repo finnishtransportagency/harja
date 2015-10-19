@@ -40,7 +40,7 @@
   (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietolaji-response.xml"
         validi-kutsu "/api/varusteet/tietolaji?tunniste=tl506"
         virheellinen-kutsu "/api/varusteet/tietolaji"
-        tierekisteri-resurssi "/haetietolajit"
+        tierekisteri-resurssi "/haetietolaji"
         oletettu-vastaus "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 

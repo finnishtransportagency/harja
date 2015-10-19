@@ -139,10 +139,12 @@
                         :alkupvm (get parametrit "alkupvm")})))
 
 (defn muunna-tietolajin-hakuvastaus [vastausdata ominaisuudet]
-  (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
-                    (map (fn [o]
-                           {:ominaisuus o})
-                         ominaisuudet)) :onnistunut))
+  (dissoc
+    (dissoc (assoc-in vastausdata [:tietolaji :ominaisuudet]
+                      (map (fn [o]
+                             {:ominaisuus o})
+                           ominaisuudet)) :onnistunut)
+    :tietueet))
 
 (defn muunna-tietueiden-hakuvastaus [vastausdata]
   (-> vastausdata
