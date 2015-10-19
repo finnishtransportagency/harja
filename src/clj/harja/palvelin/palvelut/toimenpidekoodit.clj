@@ -58,7 +58,10 @@
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
   (jdbc/with-db-transaction [c db]
     (doseq [rivi lisattavat]
-      (lisaa-toimenpidekoodi c user rivi))
+      (let [rivi (if (nil? (:kokonaishintainen rivi))
+                   (assoc rivi :kokonaishintainen false)
+                   rivi)]
+        (lisaa-toimenpidekoodi c user rivi)))
     (doseq [rivi muokattavat]
       (muokkaa-toimenpidekoodi c user rivi))
     (doseq [id poistettavat]
