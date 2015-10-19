@@ -823,6 +823,49 @@ INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:09.00' :: TIMESTAMP ),
         NOW(), 1350, 10);
 
+-- Toinen muutoshintainen työ
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:00.00',
+        NOW(),
+        st_makepoint(440919, 7207099) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:03.00',
+        NOW(),
+        st_makepoint(440271, 7208395) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:06.00',
+        NOW(),
+        st_makepoint(440399, 7209019) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:09.00',
+        NOW(),
+        st_makepoint(440820, 7209885) ::POINT, 2);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:00.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES
+  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:03.00' :: TIMESTAMP ),
+   NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:06.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:09.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
 -- Reittipisteet yksikköhintaiselle työlle
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
