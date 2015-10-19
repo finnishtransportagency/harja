@@ -1,8 +1,7 @@
 (ns harja.palvelin.integraatiot.tierekisteri.vastauksenkasittely
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
-            [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.vastaus :as vastaussanoma])
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
