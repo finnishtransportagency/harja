@@ -86,13 +86,13 @@
                                               pohjavesialueen-shapefile]}]
   (when (and tuontivali
              pohjavesialueen-alk-osoite
-             tieosoiteverkon-alk-tuontikohde
+             pohjavesialueen-alk-tuontikohde
              pohjavesialueen-shapefile)
     (ajasta-paivitys this
                      "pohjavesialue"
                      tuontivali
-                     tieosoiteverkon-alk-osoite
-                     tieosoiteverkon-alk-tuontikohde
+                     pohjavesialueen-alk-osoite
+                     pohjavesialueen-alk-tuontikohde
                      "pohjavesialue.zip"
                      (fn [] (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)))))
 
