@@ -159,8 +159,12 @@
      (fn []
        (lopeta-pollaus))}
     (fn []
-      [:div
-       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat]
+      (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
+            maksuerarivit @maksuerarivit
+            maksuerarivit-ilman-otsikkoja  (filter (fn [rivi]
+                                             (not (contains? rivi :teksti)))
+                                           maksuerarivit)]
+        [:div
          [grid/grid
           {:otsikko  "Maksuerät"
            :tyhja    "Ei maksueriä."
@@ -185,7 +189,15 @@
                                                        :type     "button"
                                                        :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
             :leveys      "7%"}]
-          @maksuerarivit])
-       [:button.nappi-ensisijainen {:class    (if (= (count @kuittausta-odottavat-maksuerat) (count @maksuerarivit)) "disabled" "")
+          maksuerarivit]
+       [:button.nappi-ensisijainen {:class    (if (= (count kuittausta-odottavat)
+                                                     (count maksuerarivit-ilman-otsikkoja))
+                                                "disabled"
+                                                "")
                                     :on-click #(do (.preventDefault %)
-                                                   (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki"]])))
+                                                   (laheta-maksuerat
+                                                     (into #{}
+                                                           (map
+                                                             (fn [rivi]
+                                                               (:numero rivi))
+                                                             maksuerarivit-ilman-otsikkoja))))} "Lähetä kaikki"]]))))
