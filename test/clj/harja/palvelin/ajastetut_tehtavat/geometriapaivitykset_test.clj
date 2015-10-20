@@ -73,7 +73,7 @@
 
 (def kayttaja "jvh")
 
-(deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla []
+(deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)
@@ -87,3 +87,16 @@
       [{:url fake-tiedosto-url :method :head} fake-vastaus]
       (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara alk "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
         (is (= muokkausaika (time-coerce/to-sql-time (java.util.Date. fake-muokkausaika))))))))
+
+(deftest testaa-tiedoston-lataus-alk-alustalla
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
+        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)
+        lahdetiedosto "test/resurssit/arkistot/test_zip.zip"
+        kohdetiedosto "test/resurssit/download_test.zip"]
+    (component/start integraatioloki)
+    (component/start alk)
+
+    (alk/hae-tiedosto alk "tieverkko-haku" lahdetiedosto kohdetiedosto)
+    (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
+    (clojure.java.io/delete-file kohdetiedosto)))
