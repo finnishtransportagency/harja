@@ -269,6 +269,10 @@
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
+;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
+(defn nykyinen-zoom-taso []
+  (-> (.getView @the-kartta) (.getZoom)))
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -284,7 +288,7 @@
         _ (reset!
             openlayers-kartan-leveys
             (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
-        _ (reset! the-kartta ol3)                           ;; puhtaasi REPL tunkkausta varten
+        _ (reset! the-kartta ol3)
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)

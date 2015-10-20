@@ -27,6 +27,11 @@
 (def kartta-kontentin-vieressa? (atom false))
 
 (def +kartan-korkeus-s+ 26)
+;; Mitä suurempi arvo, sitä lähemmäs ollaan zoomattu
+;; Kun kartalle on piirretty esim toteumia, pyritään karttaa pitämään siten, että kaikki toteumat mahtuvat kartalle
+;; Kun jokin toteuma valitaan, zoomataan kartta siihen JOS nykyinen zoom on sama tai suurempi kuin tämä arvo.
+;; Zoom-taso on kympin luokkaa jos Oulun urakassa on tapahtunut jotain Haukiputaalla ja Ahmaksella.
+(def +valinnan-zoomaamisen-raja+ 10)
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
@@ -193,12 +198,11 @@
 (defonce nakyman-geometriat (atom {}))
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
-;; PENDING: suurin piirtien hyvä kohta "koko suomen" sijainniksi ja zoom-tasoksi, saa tarkentaa
 (def +koko-suomi-sijainti+ [431704.1 7211111])
 (def +koko-suomi-zoom-taso+ 6)
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
-(defonce zoom-taso (atom +koko-suomi-zoom-taso+))
+(defonce zoom-taso (atom +koko-suomi-zoom-taso+)) ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
 
 (defonce kartta-kuuntelija
          (t/kuuntele! :hallintayksikkovalinta-poistettu
@@ -342,6 +346,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
+  (log "Zoomaa geometriaan")
   (if-not (empty? (keep :alue @tasot/geometriat))
     (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
     (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
@@ -349,7 +354,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
                                                 (if uusi
-                                                  (keskita-kartta-alueeseen! (geo/extent uusi))
+                                                  (when (<= (openlayers/nykyinen-zoom-taso) +valinnan-zoomaamisen-raja+)
+                                                    (keskita-kartta-alueeseen! (geo/extent uusi)))
                                                   (zoomaa-geometriaan))))
   #(remove-watch atomi :kartan-valittu-kuuntelija))
 
@@ -357,6 +363,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   (let [ch (chan)]
     (run! @nav/valittu-hallintayksikko
           @nav/valittu-urakka
+          (log "run! zoomaa")
           (zoomaa-geometriaan))
     (run! (let [koko @nav/kartan-koko]
             (go (>! ch koko))))
@@ -366,12 +373,14 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
             (when (and (= :S edellinen-koko)
                        (not= :S nykyinen-koko))
               (<! (timeout 150))
+              (log "Joku muu zoomaa")
               (zoomaa-geometriaan))
             (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
     {:component-did-mount (fn [_]
+                            (log "Mounttas zoomaa")
                             (zoomaa-geometriaan))}
     (fn []
       (let [hals @hal/hallintayksikot
