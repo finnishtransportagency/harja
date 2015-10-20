@@ -11,11 +11,14 @@
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
   {:http-palvelin                         {:portti s/Int
-                                           :url    s/Str}
+                                           :url    s/Str
+                                           (s/optional-key :threads) s/Int
+                                           (s/optional-key :max-body-size) s/Int}
    :kehitysmoodi                          Boolean
    :tietokanta                            {:palvelin   s/Str
                                            :tietokanta s/Str
                                            :portti     s/Int
+                                           (s/optional-key :yhteyspoolin-koko) s/Int
                                            :kayttaja   s/Str
                                            :salasana   s/Str}
    :fim                                   {:url s/Str}
@@ -53,11 +56,14 @@
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
-  {:http-palvelin        {:portti 3000 :url "http://localhost:3000/"}
+  {:http-palvelin        {:portti 3000 :url "http://localhost:3000/"
+                          :threads 64
+                          :max-body-size (* 1024 1024 16)}
    :kehitysmoodi         true
    :tietokanta           {:palvelin   "localhost"
                           :tietokanta "harja"
                           :portti     5432
+                          :yhteyspoolin-koko 64
                           :kayttaja   "harja"
                           :salasana   ""}
 
