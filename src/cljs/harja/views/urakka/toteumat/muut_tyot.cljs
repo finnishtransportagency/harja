@@ -456,6 +456,7 @@
   (komp/luo
     (komp/lippu muut-tyot/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
+    (komp/ulos (kartta/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
     (fn []
       [:spans
        [kartta/kartan-paikka]
