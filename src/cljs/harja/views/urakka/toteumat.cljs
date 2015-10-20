@@ -7,6 +7,7 @@
             [harja.tiedot.urakka :as u]
             [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
@@ -39,6 +40,9 @@
 
          "Yksikköhintaiset työt" :yksikkohintaiset-tyot
          [yks-hint-tyot/yksikkohintaisten-toteumat]
+
+         "Kokonaishintaiset työt" :kokonaishintaiset
+         [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]
 
          "Muutos- ja lisätyöt" :muut-tyot
          [muut-tyot/muut-tyot-toteumat]
