@@ -232,28 +232,27 @@
 
 
 (defn sillan-tarkastukset []
-  (let [
-        muut-tarkastukset (reaction (let [kaikki @st/valitun-sillan-tarkastukset
-                                          aika (:tarkastusaika @st/valittu-tarkastus)]
-                                      (when aika
-                                        (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
-        siltatarkastussarakkeet (reaction (let [muut @muut-tarkastukset]
-                                              (siltatarkastuksen-sarakkeet muut)))
-        siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
-                                            muut @muut-tarkastukset]
-                                        (when tark (siltatarkastusten-rivit tark muut))))]
+  (komp/luo
+    (fn []
+      (let [muut-tarkastukset (reaction (let [kaikki @st/valitun-sillan-tarkastukset
+                                              aika (:tarkastusaika @st/valittu-tarkastus)]
+                                          (when aika
+                                            (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
+            siltatarkastussarakkeet (reaction (let [muut @muut-tarkastukset]
+                                                (siltatarkastuksen-sarakkeet muut)))
+            siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
+                                                muut @muut-tarkastukset]
+                                            (if tark
+                                              (siltatarkastusten-rivit tark muut)
+                                              [])))]
+        [:div.siltatarkastukset
+         [:button.nappi-toissijainen {:on-click #(reset! st/valittu-silta nil)
+                                      :style    {:display "block"}}
+          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
 
-    (komp/luo
-     
-     (fn []
-       [:div.siltatarkastukset
-        [:button.nappi-toissijainen {:on-click #(reset! st/valittu-silta nil)
-                                     :style {:display "block"}}
-         (ikonit/chevron-left) " Takaisin siltaluetteloon"]
+         [sillan-perustiedot @st/valittu-silta]
 
-          [sillan-perustiedot @st/valittu-silta]
-
-          [:div.siltatarkastus-kontrollit
+         [:div.siltatarkastus-kontrollit
           [:div.label-ja-alasveto.alasveto-sillan-tarkastaja
            [:span.alasvedon-otsikko "Tarkastus"]
            [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
@@ -285,27 +284,24 @@
           [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen true)}
            [:span.livicon-plus " Uusi tarkastus"]]]
 
-        [grid/grid
-         {:otsikko      (if @st/valittu-tarkastus
-                          (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
-                          "Sillan tarkastus")
-          :tyhja        (if (nil? @st/valitun-sillan-tarkastukset)
-                          ;[ajax-loader "Sillan tarkastuksia haetaan..."] FIXME ajax loader jää pyörimään jos ei tarkastuksia
-                          "Ei vielä tarkastuksia"
-                          "Sillasta ei ole vielä tarkastuksia Harjassa.")
-          :tunniste     :kohdenro
-          :voi-lisata?  false
-          :voi-poistaa? (constantly false)
-          :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                   (:id @nav/valittu-urakka)
-                                                   #(paivita-siltatarkastus! %)
-                                                   :ei-mahdollinen)
-          }
+         [grid/grid
+          {:otsikko      (if @st/valittu-tarkastus
+                           (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
+                           "Sillan tarkastus")
+           :tyhja        "Sillasta ei ole tarkastuksia Harjassa"
+           :tunniste     :kohdenro
+           :voi-lisata?  false
+           :voi-poistaa? (constantly false)
+           :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                    (:id @nav/valittu-urakka)
+                                                    #(paivita-siltatarkastus! %)
+                                                    :ei-mahdollinen)
+           }
 
-         ;; sarakkeet
-         @siltatarkastussarakkeet
+          ;; sarakkeet
+          @siltatarkastussarakkeet
 
-         @siltatarkastusrivit]]))))
+          @siltatarkastusrivit]]))))
 
 (defn uuden-siltatarkastusten-rivit [uusi-tarkastus]
   (siltatarkastusten-rivit uusi-tarkastus []))
