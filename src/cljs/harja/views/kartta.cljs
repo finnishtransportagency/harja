@@ -27,11 +27,6 @@
 (def kartta-kontentin-vieressa? (atom false))
 
 (def +kartan-korkeus-s+ 26)
-;; Mitä suurempi arvo, sitä lähemmäs ollaan zoomattu
-;; Kun kartalle on piirretty esim toteumia, pyritään karttaa pitämään siten, että kaikki toteumat mahtuvat kartalle
-;; Kun jokin toteuma valitaan, zoomataan kartta siihen JOS nykyinen zoom on sama tai suurempi kuin tämä arvo.
-;; Zoom-taso on kympin luokkaa jos Oulun urakassa on tapahtunut jotain Haukiputaalla ja Ahmaksella.
-(def +valinnan-zoomaamisen-raja+ 10)
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
@@ -67,7 +62,7 @@
 ;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
 ;; kerralla paikan asetuksen... läheta false kanavaan
 
-(defn- elementti-idlla-odota 
+(defn- elementti-idlla-odota
   "Pollaa DOMia 10ms välein kunnes annettu elementti löytyy. Palauttaa kanavan, josta
   elementin voi lukea."
   [id]
@@ -75,7 +70,7 @@
         (if elt
           elt
           (do (log "odotellaan elementtiä " id)
-            (<! (timeout 10))
+              (<! (timeout 10))
               (recur (.getElementById js/document id)))))))
 
 (defn odota-mount-tai-timeout
@@ -92,72 +87,72 @@
                 (recur))))))))
 
 (defonce kartan-sijaintipaivitys
-  (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
-    (go (loop [naulattu? nil
-               x nil
-               y nil
-               w nil
-               h nil
-               offset-y nil]
-          (let [ensimmainen-kerta? (nil? naulattu?)
-                paivita (<! paivita-kartan-sijainti)
-                _ (log "KARTAN PÄIVITYS EVENT: " (pr-str paivita))
-                aseta (when-not paivita
-                        ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
-                        ;; seuraava päivitys aina asettaa kartan paikan.
-                        
-                        ;; Odotetaan joko seuraavaa eventtiä paivita-kartan-sijainti (jos uusi komponentti
-                        ;; tuli näkyviin, tai timeout 20ms (jos kartta oikeasti lähti näkyvistä)
-                        (case (<! (odota-mount-tai-timeout))
-                          :mount true
-                          :timeout 
-                          ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
-                          (do ;; (log "KARTTA LÄHTI OIKEASTI")
-                            (aseta-kartan-sijainti x (- @yleiset/korkeus) w h false)
-                            (recur nil nil nil w h nil))))
-                paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
-                [uusi-x uusi-y uusi-w uusi-h] (yleiset/sijainti paikka-elt)
-                uusi-offset-y (yleiset/offset-korkeus paikka-elt)]
+         (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
+           (go (loop [naulattu? nil
+                      x nil
+                      y nil
+                      w nil
+                      h nil
+                      offset-y nil]
+                 (let [ensimmainen-kerta? (nil? naulattu?)
+                       paivita (<! paivita-kartan-sijainti)
+                       _ (log "KARTAN PÄIVITYS EVENT: " (pr-str paivita))
+                       aseta (when-not paivita
+                               ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
+                               ;; seuraava päivitys aina asettaa kartan paikan.
 
-            ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
+                               ;; Odotetaan joko seuraavaa eventtiä paivita-kartan-sijainti (jos uusi komponentti
+                               ;; tuli näkyviin, tai timeout 20ms (jos kartta oikeasti lähti näkyvistä)
+                               (case (<! (odota-mount-tai-timeout))
+                                 :mount true
+                                 :timeout
+                                 ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
+                                 (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
+                                   (aseta-kartan-sijainti x (- @yleiset/korkeus) w h false)
+                                   (recur nil nil nil w h nil))))
+                       paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
+                       [uusi-x uusi-y uusi-w uusi-h] (yleiset/sijainti paikka-elt)
+                       uusi-offset-y (yleiset/offset-korkeus paikka-elt)]
 
-            
-            (cond
-              ;; Eka kerta, asetetaan kartan sijainti
-              (or (= :aseta paivita) aseta (nil? naulattu?))
-              (let [naulattu? (neg? uusi-y)]
-                                        ;(log "EKA KERTA")
-                (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
-                (when (or (not= w uusi-w) (not= h uusi-h))
-                  (reagent/next-tick #(openlayers/invalidate-size!)))
-                (recur naulattu?
-                       uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                   ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
 
-              ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
-              ;; koko pitää asettaa
-              (and (not naulattu?) (neg? uusi-y))
-              (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
-                  (recur true
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
-              
-              ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
-              (and naulattu? (pos? uusi-y))
-              (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
-                  (recur false
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-              ;; jos w/h muuttuu
-              (or (not= w uusi-w)
-                  (not= h uusi-h))
-              (do (when-not transition-end-tuettu?
-                    (go (<! (async/timeout 150))
-                        (openlayers/invalidate-size!)))
-                  (recur naulattu?
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                   (cond
+                     ;; Eka kerta, asetetaan kartan sijainti
+                     (or (= :aseta paivita) aseta (nil? naulattu?))
+                     (let [naulattu? (neg? uusi-y)]
+                       ;(log "EKA KERTA")
+                       (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
+                       (when (or (not= w uusi-w) (not= h uusi-h))
+                         (reagent/next-tick #(openlayers/invalidate-size!)))
+                       (recur naulattu?
+                              uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-              :default
-              (recur naulattu?
-                     uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
+                     ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
+                     ;; koko pitää asettaa
+                     (and (not naulattu?) (neg? uusi-y))
+                     (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                         (recur true
+                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+                     ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
+                     (and naulattu? (pos? uusi-y))
+                     (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                         (recur false
+                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+                     ;; jos w/h muuttuu
+                     (or (not= w uusi-w)
+                         (not= h uusi-h))
+                     (do (when-not transition-end-tuettu?
+                           (go (<! (async/timeout 150))
+                               (openlayers/invalidate-size!)))
+                         (recur naulattu?
+                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+
+                     :default
+                     (recur naulattu?
+                            uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
 
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
@@ -168,22 +163,22 @@
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
-     (komp/kuuntelija :ikkunan-koko-muuttunut #(paivita true))
-     {:component-did-mount #(do
-                              (events/listen js/window
-                                             EventType/SCROLL
-                                             scroll-kuuntelija)
-                              (paivita :mount))
-      :component-did-update   #(paivita :aseta)
-      :component-will-unmount (fn [this]
-                                ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
-                                (events/unlisten js/window EventType/SCROLL scroll-kuuntelija)
-                                (paivita false))}
+      (komp/kuuntelija :ikkunan-koko-muuttunut #(paivita true))
+      {:component-did-mount    #(do
+                                 (events/listen js/window
+                                                EventType/SCROLL
+                                                scroll-kuuntelija)
+                                 (paivita :mount))
+       :component-did-update   #(paivita :aseta)
+       :component-will-unmount (fn [this]
+                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
+                                 (events/unlisten js/window EventType/SCROLL scroll-kuuntelija)
+                                 (paivita false))}
 
-     (fn []
-       [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
-                                    :margin-bottom "5px"
-                                    :width  "100%"}}]))))
+      (fn []
+        [:div#kartan-paikka {:style {:height        (fmt/pikseleina @kartan-korkeus)
+                                     :margin-bottom "5px"
+                                     :width         "100%"}}]))))
 
 (defn kartan-paikka
   [& args]
@@ -202,7 +197,7 @@
 (def +koko-suomi-zoom-taso+ 6)
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
-(defonce zoom-taso (atom +koko-suomi-zoom-taso+)) ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
+(defonce zoom-taso (atom +koko-suomi-zoom-taso+))           ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
 
 (defonce kartta-kuuntelija
          (t/kuuntele! :hallintayksikkovalinta-poistettu
@@ -210,15 +205,15 @@
                            (reset! zoom-taso +koko-suomi-zoom-taso+))))
 
 (defonce urakka-kuuntelija
-  (t/kuuntele! :urakka-valittu
-               #(openlayers/hide-popup!)))
+         (t/kuuntele! :urakka-valittu
+                      #(openlayers/hide-popup!)))
 
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
 (def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
 
 (defonce kartan-koon-paivitys
-  (run! (do @yleiset/ikkunan-koko
-            (openlayers/invalidate-size!))))
+         (run! (do @yleiset/ikkunan-koko
+                   (openlayers/invalidate-size!))))
 
 (defn kartan-koko-kontrollit
   []
@@ -239,29 +234,29 @@
                                                                         (not v-ur))) "hide")}
 
 
-       ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
-       [:div.kartan-koko-napit {:style {:left "-50%"
-                                        :position   "absolute"
-                                        :text-align "center"
-                                        :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
-                                        :width "100%"
-                                        :z-index    100}}
-        (if (= :S koko)
-          [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
-           "Näytä kartta"]
-          [:span
-           (when-not @kartta-kontentin-vieressa? ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
-             [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
-                                                             (case koko
-                                                               :M :L
-                                                               :L :M
-                                                               ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
-                                                               ;; suurenna | pienennä | piilota
-                                                               :XL :M))}
-              muuta-kokoa-teksti])
+     ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
+     [:div.kartan-koko-napit {:style {:left       "-50%"
+                                      :position   "absolute"
+                                      :text-align "center"
+                                      :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
+                                      :width      "100%"
+                                      :z-index    100}}
+      (if (= :S koko)
+        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
+         "Näytä kartta"]
+        [:span
+         (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
+           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
+                                                           (case koko
+                                                             :M :L
+                                                             :L :M
+                                                             ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
+                                                             ;; suurenna | pienennä | piilota
+                                                             :XL :M))}
+            muuta-kokoa-teksti])
 
-           [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-            "Piilota kartta"]])]]))
+         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
+          "Piilota kartta"]])]]))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -292,10 +287,10 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   (openlayers/hide-popup!))
 
 (defonce poista-popup-kun-tasot-muuttuvat
-  (tapahtumat/kuuntele! :karttatasot-muuttuneet
-                        (fn [_]
-                          (poista-popup!))))
-   
+         (tapahtumat/kuuntele! :karttatasot-muuttuneet
+                               (fn [_]
+                                 (poista-popup!))))
+
 
 (def aseta-klik-kasittelija! openlayers/aseta-klik-kasittelija!)
 (def poista-klik-kasittelija! openlayers/poista-klik-kasittelija!)
@@ -325,7 +320,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
 (defn poista-geometria! [avain]
   (swap! nakyman-geometriat dissoc avain))
-         
+
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
                                     :ymin (aget newextent 1)
@@ -342,144 +337,176 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
-(defn zoomaa-geometriaan
+(defn zoomaa-geometrioihin
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (log "Zoomaa geometriaan")
+  (log "BAZBAZ: Zoomaa geometriaan")
   (if-not (empty? (keep :alue @tasot/geometriat))
     (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
     (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
 
+;; Mitä suurempi arvo, sitä lähemmäs ollaan zoomattu
+;; Kun kartalle on piirretty esim toteumia, pyritään karttaa pitämään siten, että kaikki toteumat mahtuvat kartalle
+;; Kun jokin toteuma valitaan, zoomataan kartta siihen JOS nykyinen zoom on sama tai pienempi kuin tämä arvo.
+;; Zoom-taso on kympin luokkaa jos Oulun urakassa on tapahtunut jotain Haukiputaalla ja Ahmaksella.
+(def +valinnan-zoomaamisen-raja+ 10)
+;; 12 ja 13 välillä oleva erokin on jo huomattava. Voi olla että tällainen hard-koodattu zoom-taso ei toimi,
+;; vaan "valitun" zoom-taso pitää laskea dynaamisesti. Esim asetetaan extent ja otetaan zoomia taaksepäin askel tai kaksi,
+;; tai valittaessa zoomataan sisäänpäin yksi tai kaksi askelta..
+(def +valitun-geometrian-zoomtaso+ 13)
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
-                                                (if uusi
-                                                  (when (<= (openlayers/nykyinen-zoom-taso) +valinnan-zoomaamisen-raja+)
-                                                    (keskita-kartta-alueeseen! (geo/extent uusi)))
-                                                  (zoomaa-geometriaan))))
+                                                (when-not uusi
+                                                  #_(when (and (:alue uusi) #_(<= (openlayers/nykyinen-zoom-taso) +valinnan-zoomaamisen-raja+))
+                                                      ;; Kartta pomppaa ikävästi, mutta pikaisen openlayers API:n tutkimisen
+                                                      ;; jälkeen tälle ei vaan voi mitään..
+                                                      (log "BAZBAZ: Valittu, keskitetään ja zoomataan")
+                                                      (keskita-kartta-alueeseen! (geo/extent (:alue uusi)))
+                                                      #_(openlayers/aseta-zoom +valitun-geometrian-zoomtaso+))
+
+                                                  (do
+                                                    (log "BAZBAZ: Ei enää valittua, zoomataan geometrioihin")
+                                                    (zoomaa-geometrioihin)))))
   #(remove-watch atomi :kartan-valittu-kuuntelija))
 
-(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner 
-  (let [ch (chan)]
-    (run! @nav/valittu-hallintayksikko
-          @nav/valittu-urakka
-          (log "run! zoomaa")
-          (zoomaa-geometriaan))
-    (run! (let [koko @nav/kartan-koko]
-            (go (>! ch koko))))
-    (go (loop [edellinen-koko @nav/kartan-koko]
-          (let [nykyinen-koko (<! ch)]
-            (log "KARTAN KOKO " (pr-str edellinen-koko) " => " (pr-str nykyinen-koko))
-            (when (and (= :S edellinen-koko)
-                       (not= :S nykyinen-koko))
-              (<! (timeout 150))
-              (log "Joku muu zoomaa")
-              (zoomaa-geometriaan))
-            (recur nykyinen-koko))))))
+(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
+         (let [ch (chan)]
+           ;; Koska valittu urakka ja hallintayksikkö on osa geometrioita, tämä hoitaa myös urakan valitsemisen
+           (run! @tasot/geometriat
+                   (zoomaa-geometrioihin))
+           (run! (let [koko @nav/kartan-koko]
+                   (go (>! ch koko))))
+           (go (loop [edellinen-koko @nav/kartan-koko]
+                 (let [nykyinen-koko (<! ch)]
+                   (<! (timeout 150))
+                   (log "BAZBAZ: Kartan koko zoomaa")
+                   (zoomaa-geometrioihin)
+                   #_(when (and (= :S edellinen-koko)
+                                (not= :S nykyinen-koko))
+                       (<! (timeout 150))
+                       (log "BAZBAZ: Joku muu zoomaa")
+                       (zoomaa-geometrioihin))
+                   (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
     {:component-did-mount (fn [_]
-                            (log "Mounttas zoomaa")
-                            (zoomaa-geometriaan))}
+                            (log "BAZBAZ: Mounttas zoomaa")
+                            (zoomaa-geometrioihin)
+
+                            #_(harja.loki/tarkkaile! "Hallintayksikkö" nav/valittu-hallintayksikko)
+                            #_(harja.loki/tarkkaile! "Urakka" nav/valittu-urakka))}
     (fn []
       (let [hals @hal/hallintayksikot
-           v-hal @nav/valittu-hallintayksikko
-           koko @nav/kartan-koko
-           koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
-                  :L
-                  koko)]
+            v-hal @nav/valittu-hallintayksikko
+            koko @nav/kartan-koko
+            koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+                   :L
+                   koko)]
 
-       [openlayers
-        {:id          "kartta"
-         :width       "100%"
-         ;; set width/height as CSS units, must set height as pixels!
-         :height      (fmt/pikseleina @kartan-korkeus)
-         :style       (when (= koko :S)
-                        {:display "none"}) ;;display none estää kartan korkeuden animoinnin suljettaessa
-         :class       (when (or
-                              (= :hidden koko)
-                              (= :S koko))
-                        "piilossa")
-         :view        kartta-sijainti
-         :zoom        zoom-taso
-         :selection   nav/valittu-hallintayksikko
-         :on-zoom     paivita-extent
-         :on-drag     (fn [item event]
-                        (paivita-extent item event)
-                        (t/julkaise! {:aihe :karttaa-vedetty}))
-         :on-mount    (fn [initialextent] (paivita-extent nil initialextent))
-         :on-click    (fn [at]
-                        (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                        (poista-popup!))
-         :on-select   (fn [item event]
-                        (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                          (condp = (:type item)
-                            :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-                                  (nav/valitse-hallintayksikko item))
-                            :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-                                  (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                            (do
-                              (keskita-kartta-pisteeseen (js->clj (.-coordinate event)))
-                              (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))))))
-         :tooltip-fn  (fn [geom]
-                        (and geom
-                             [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
-         :geometries
-                      (doall (concat (cond
-                                       ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
-                                       ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
-                                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
-                                       nil
+        [openlayers
+         {:id                 "kartta"
+          :width              "100%"
+          ;; set width/height as CSS units, must set height as pixels!
+          :height             (fmt/pikseleina @kartan-korkeus)
+          :style              (when (= koko :S)
+                                {:display "none"})          ;;display none estää kartan korkeuden animoinnin suljettaessa
+          :class              (when (or
+                                      (= :hidden koko)
+                                      (= :S koko))
+                                "piilossa")
+          :view               kartta-sijainti
+          :zoom               zoom-taso
+          :selection          nav/valittu-hallintayksikko
+          :on-zoom            paivita-extent
+          :on-drag            (fn [item event]
+                                (paivita-extent item event)
+                                (t/julkaise! {:aihe :karttaa-vedetty}))
+          :on-mount           (fn [initialextent] (paivita-extent nil initialextent))
+          :on-click           (fn [at]
+                                (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
+                                (poista-popup!))
+          :on-select          (fn [item event]
+                                (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
+                                  (condp = (:type item)
+                                    :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+                                          (nav/valitse-hallintayksikko item))
+                                    :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
+                                          (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+                                    (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+          :on-dblclick        nil
+          :on-dblclick-select (fn [item event]
+                                (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
+                                  (condp = (:type item)
+                                    :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+                                          (nav/valitse-hallintayksikko item))
+                                    :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
+                                          (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+                                    (do (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))
+                                        (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
 
-                                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
-                                       [(assoc v-hal :valittu true)]
+                                        ;; Estetään zoomaaminen kun tuplaklikillä valitaan geometria
+                                        (.stopPropagation event)
+                                        (.preventDefault event)))))
+          :tooltip-fn         (fn [geom]
+                                (and geom
+                                     [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
+          :geometries
+                              (doall (concat (cond
+                                               ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
+                                               ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
+                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
+                                               nil
 
-                                       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
-                                       [(assoc @nav/valittu-urakka :valittu true)]
+                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
+                                               [(assoc v-hal :valittu true)]
 
-                                       ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                                       (nil? v-hal)
-                                       hals
+                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
+                                               [(assoc @nav/valittu-urakka :valittu true)]
 
-                                       ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                                       (nil? @nav/valittu-urakka)
-                                       (vec (concat [(assoc v-hal
-                                                       :valittu true)]
-                                                    @nav/urakat-kartalla))
+                                               ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+                                               (nil? v-hal)
+                                               hals
 
-                                       ;; Valittu urakka, mitä näytetään?
-                                       :default [(assoc @nav/valittu-urakka
-                                                   :valittu true
-                                                   :harja.ui.openlayers/fit-bounds true)])
-                                     @tasot/geometriat
-                                     (vals @nakyman-geometriat)))
+                                               ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+                                               (nil? @nav/valittu-urakka)
+                                               (vec (concat [(assoc v-hal
+                                                               :valittu true)]
+                                                            @nav/urakat-kartalla))
 
-         :geometry-fn (fn [piirrettava]
-                        (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
-                          (when (map? alue)
-                            (assoc alue
-                              :fill (if (:valittu piirrettava) false true)
-                              :stroke (if stroke
-                                        stroke
-                                        (when (or (:valittu piirrettava)
-                                                  (= :silta (:type piirrettava)))
-                                          {:width 3}))
-                              ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
-                              :color (or (:color alue)
-                                         (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
-                              :zindex (or (:zindex alue) (case (:type piirrettava)
-                                                           :hy 0
-                                                           :ur 1
-                                                           :pohjavesialueet 2
-                                                           :sillat 3
-                                                           4))
-                              ;;:marker (= :silta (:type hy))
-                              ))))
+                                               ;; Valittu urakka, mitä näytetään?
+                                               :default [(assoc @nav/valittu-urakka
+                                                           :valittu true
+                                                           :harja.ui.openlayers/fit-bounds true)])
+                                             @tasot/geometriat
+                                             (vals @nakyman-geometriat)))
 
-         :layers      [{:type  :mml
-                        :url   (str (k/wmts-polku) "maasto/wmts")
-                        :layer "taustakartta"}]}]))))
+          :geometry-fn        (fn [piirrettava]
+                                (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
+                                  (when (map? alue)
+                                    (assoc alue
+                                      :fill (if (:valittu piirrettava) false true)
+                                      :stroke (if stroke
+                                                stroke
+                                                (when (or (:valittu piirrettava)
+                                                          (= :silta (:type piirrettava)))
+                                                  {:width 3}))
+                                      ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
+                                      :color (or (:color alue)
+                                                 (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
+                                      :zindex (or (:zindex alue) (case (:type piirrettava)
+                                                                   :hy 0
+                                                                   :ur 1
+                                                                   :pohjavesialueet 2
+                                                                   :sillat 3
+                                                                   4))
+                                      ;;:marker (= :silta (:type hy))
+                                      ))))
+
+          :layers             [{:type  :mml
+                                :url   (str (k/wmts-polku) "maasto/wmts")
+                                :layer "taustakartta"}]}]))))
 
 (defn kartta []
   [:div
