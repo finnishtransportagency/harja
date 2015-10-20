@@ -7,10 +7,8 @@
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.testi :refer :all]
-            [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.tyokalut.kansio :as kansio]
-            [clojure.java.io :as io]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue :as pohjavesialueen-tuonti]))
 
 (defn aja-tieverkon-paivitys []
   "REPL-testiajofunktio"
@@ -30,6 +28,25 @@
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
           "file:///Users/mikkoro/Desktop/Tieverkko-testi/Tieosoiteverkko.shp")))))
+
+(defn aja-pohjavesialueen-paivitys []
+  "REPL-testiajofunktio"
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
+        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+    (component/start integraatioloki)
+    (component/start alk)
+    (geometriapaivitykset/tarkista-paivitys
+      alk
+      testitietokanta
+      "pohjavesialue"
+      "http://185.26.50.104/Pohjavesialue.zip"
+      "/Users/jarihan/Desktop/Pohjavesialue-testi/"
+      "Pohjavesialue.zip"
+      (fn []
+        (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan
+          testitietokanta
+          "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Pohjavesialue.shp")))))
 
 
 (defn aja-soratien-hoitoluokkien-paivitys []
