@@ -39,7 +39,7 @@
   (let [ehostettu-data (assoc tiedot
                          :hoitokauden_alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
                          :lt_alkupvm (first @u/valittu-hoitokausi)
-                         :lt_lopppvm (second @u/valittu-hoitokausi)
+                         :lt_loppupvm (second @u/valittu-hoitokausi)
                          :urakka (:id @nav/valittu-urakka))]
     (k/post! :tallenna-suolasakko-ja-lampotilat ehostettu-data)))
 

@@ -2,7 +2,8 @@
     <aika>2015-09-29T15:49:45</aika>
     <kuittaustyyppi>valitetty</kuittaustyyppi>
     <viestiId>14324234</viestiId>
-    <valitustiedot>
+    <valitystiedot>
+        <ilmoitusId>3213123</ilmoitusId>
         <urakka>
             <id>3</id>
             <nimi>Oulun alueurakka 2014-2019</nimi>
@@ -18,5 +19,5 @@
             <puhelinnumero>0986578749309</puhelinnumero>
             <sahkopostiosoite>paivi.paivystaja@puulaaki.fi</sahkopostiosoite>
         </paivystaja>
-    </valitustiedot>
+    </valitystiedot>
 </kuittaus>
