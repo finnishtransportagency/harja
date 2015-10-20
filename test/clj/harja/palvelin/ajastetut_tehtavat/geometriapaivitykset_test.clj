@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
+            [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 
@@ -49,3 +50,19 @@
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
           "file:///Users/mikkoro/Desktop/Soratiehoitoluokat-testi/Sorateiden-hoitoluokat.shp")))))
+
+(def +arkistot-polku+ "test/resurssit/arkistot/")
+
+(deftest testaa-pura-macissa-tehty-zip
+  (arkisto/pura-paketti (str +arkistot-polku+ "test_zip_mac.zip"))
+  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
+  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
+  (clojure.java.io/delete-file (str +arkistot-polku+ "kuva.png"))
+  (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt")))
+
+(deftest testaa-pura-gzip
+  (arkisto/pura-paketti (str +arkistot-polku+ "test_gzip_mac.tgz"))
+  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
+  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
+  (clojure.java.io/delete-file (str +arkistot-polku+ "kuva.png"))
+  (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt")))
