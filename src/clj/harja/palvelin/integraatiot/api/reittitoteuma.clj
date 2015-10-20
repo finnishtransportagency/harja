@@ -14,7 +14,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [clojure.java.jdbc :as jdbc]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -66,7 +67,9 @@
     (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
-        (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
+        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi  virheet/+tuntematon-materiaali+
+                            :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
       (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]

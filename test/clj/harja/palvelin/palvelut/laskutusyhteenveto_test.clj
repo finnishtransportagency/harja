@@ -40,55 +40,52 @@
           _ (log/debug "haetut-tiedot-liikenneymparisto" haetut-tiedot-liikenneymparisto)
           _ (log/debug "haetut-tiedot-soratiet" haetut-tiedot-soratiet)
 
-          odotetut-talvihoito {:yht_laskutettu_ind_korotettuna 2098.0000000000000000M,
-                               :suolasakot_laskutetaan 2280.00000M,
-                               :kaikki_laskutetaan_ind_korotus 511.680000000000076000000M,
-                               :sakot_laskutetaan_ind_korotettuna 0.0M,
-                               :kaikki_paitsi_kht_laskutettu_ind_korotus 150.90000000000000000M,
-                               :muutostyot_laskutettu 1000.0M,
-                               :kht_laskutettu 35000.0M,
-                               :kaikki_laskutetaan 9291.680000000000076000000M,
-                               :kht_laskutetaan_ind_korotettuna 3717.0000000000000000M,
-                               :yht_laskutettu_ind_korotus 98.0000000000000000M,
-                               :kaikki_laskutettu 40923.90000000000000000M,
-                               :muutostyot_laskutettu_ind_korotus 59.00000000000000000M,
-                               :kht_laskutetaan 3500M,
-                               :kaikki_paitsi_kht_laskutettu 5923.90000000000000000M,
-                               :sakot_laskutettu_ind_korotettuna 103.9000000000000000M,
-                               :kht_laskutettu_ind_korotus 1673.0000000000000000M,
-                               :sakot_laskutetaan 0.0M,
-                               :kht_laskutetaan_ind_korotus 217.0000000000000000M,
-                               :yht_laskutetaan 0.0M,
-                               :erilliskustannukset_laskutettu_ind_korotus -10.0000000000000000M,
-                               :muutostyot_laskutetaan_ind_korotus 62.00000000000000000M,
-                               :suolasakot_laskutettu_ind_korotettuna 0.0M,
-                               :muutostyot_laskutetaan 1000.0M,
-                               :suolasakot_laskutetaan_ind_korotus 108.680000000000076000000M,
-                               :erilliskustannukset_laskutetaan 2000.0M,
-                               :yht_laskutetaan_ind_korotettuna 0.0M,
-                               :nimi "Talvihoito",
-                               :yht_laskutettu 2000.0M,
-                               :muutostyot_laskutettu_ind_korotettuna 1059.00000000000000000M,
-                               :erilliskustannukset_laskutettu_ind_korotettuna
-                               990.0000000000000000M,
-                               :muutostyot_laskutetaan_ind_korotettuna 1062.00000000000000000M,
-                               :erilliskustannukset_laskutetaan_ind_korotettuna
-                               2124.0000000000000000M,
-                               :sakot_laskutetaan_ind_korotus 0.0M,
-                               :kaikki_paitsi_kht_laskutetaan 5791.680000000000076000000M,
-                               :suolasakot_laskutettu 0.0M,
-                               :kaikki_paitsi_kht_laskutetaan_ind_korotus
-                               294.680000000000076000000M,
-                               :suolasakot_laskutetaan_ind_korotettuna 2388.680000000000076000000M,
-                               :kaikki_laskutettu_ind_korotus 1823.90000000000000000M,
-                               :erilliskustannukset_laskutetaan_ind_korotus 124.0000000000000000M,
-                               :tuotekoodi "23100",
-                               :sakot_laskutettu_ind_korotus 3.9000000000000000M,
-                               :sakot_laskutettu 100.0M,
-                               :erilliskustannukset_laskutettu 1000.0M,
-                               :kht_laskutettu_ind_korotettuna 36673.0000000000000000M,
-                               :suolasakot_laskutettu_ind_korotus 0.0M,
-                               :yht_laskutetaan_ind_korotus 0.0M}         
+          odotetut-talvihoito {:erilliskustannukset_laskutetaan                 2000.0M
+                               :erilliskustannukset_laskutetaan_ind_korotettuna 2124.0000000000000000M
+                               :erilliskustannukset_laskutetaan_ind_korotus     124.0000000000000000M
+                               :erilliskustannukset_laskutettu                  1000.0M
+                               :erilliskustannukset_laskutettu_ind_korotettuna  990.0000000000000000M
+                               :erilliskustannukset_laskutettu_ind_korotus      -10.0000000000000000M
+                               :kaikki_laskutetaan                              9291.680000000000076000000M
+                               :kaikki_laskutetaan_ind_korotus                  511.680000000000076000000M
+                               :kaikki_laskutettu                               40934.52000000000000000M
+                               :kaikki_laskutettu_ind_korotus                   1824.52000000000000000M
+                               :kaikki_paitsi_kht_laskutetaan                   5791.680000000000076000000M
+                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       294.680000000000076000000M
+                               :kaikki_paitsi_kht_laskutettu                    5924.52000000000000000M
+                               :kaikki_paitsi_kht_laskutettu_ind_korotus        150.90000000000000000M
+                               :kht_laskutetaan                                 3500.0M
+                               :kht_laskutetaan_ind_korotettuna                 3717.0000000000000000M
+                               :kht_laskutetaan_ind_korotus                     217.0000000000000000M
+                               :kht_laskutettu                                  35010.0M
+                               :kht_laskutettu_ind_korotettuna                  36683.6200000000000000M
+                               :kht_laskutettu_ind_korotus                      1673.6200000000000000M
+                               :muutostyot_laskutetaan                          1000.0M
+                               :muutostyot_laskutetaan_ind_korotettuna          1062.00000000000000000M
+                               :muutostyot_laskutetaan_ind_korotus              62.00000000000000000M
+                               :muutostyot_laskutettu                           1000.0M
+                               :muutostyot_laskutettu_ind_korotettuna           1059.00000000000000000M
+                               :muutostyot_laskutettu_ind_korotus               59.00000000000000000M
+                               :nimi                                            "Talvihoito"
+                               :sakot_laskutetaan                               0.0M
+                               :sakot_laskutetaan_ind_korotettuna               0.0M
+                               :sakot_laskutetaan_ind_korotus                   0.0M
+                               :sakot_laskutettu                                100.0M
+                               :sakot_laskutettu_ind_korotettuna                103.9000000000000000M
+                               :sakot_laskutettu_ind_korotus                    3.9000000000000000M
+                               :suolasakot_laskutetaan                          2280.00000M
+                               :suolasakot_laskutetaan_ind_korotettuna          2388.680000000000076000000M
+                               :suolasakot_laskutetaan_ind_korotus              108.680000000000076000000M
+                               :suolasakot_laskutettu                           0.0M
+                               :suolasakot_laskutettu_ind_korotettuna           0.0M
+                               :suolasakot_laskutettu_ind_korotus               0.0M
+                               :tuotekoodi                                      "23100"
+                               :yht_laskutetaan                                 0.0M
+                               :yht_laskutetaan_ind_korotettuna                 0.0M
+                               :yht_laskutetaan_ind_korotus                     0.0M
+                               :yht_laskutettu                                  2000.0M
+                               :yht_laskutettu_ind_korotettuna                  2098.0000000000000000M
+                               :yht_laskutettu_ind_korotus                      98.0000000000000000M}
 
           odotetut-liikenneymparisto {:yht_laskutettu_ind_korotettuna 1039.0000000000000000M,
                                       :suolasakot_laskutetaan 0.0M,

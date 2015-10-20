@@ -10,7 +10,8 @@
             [harja.kyselyt.siltatarkastukset :as silta-q]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
@@ -113,7 +114,9 @@
                                       transaktio)]
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
               (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)))
-          (throw (RuntimeException. (format (str "Siltaa numerolla " siltanumero " ei löydy.")))))))))
+          (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                   :virheet [{:koodi  virheet/+tuntematon-silta+
+                              :viesti (str "Siltaa numerolla " siltanumero " ei löydy.")}]}))))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle

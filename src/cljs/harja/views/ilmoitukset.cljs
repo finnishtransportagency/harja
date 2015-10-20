@@ -22,7 +22,7 @@
 
 (defn pollauksen-merkki
   []
-  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" ""])
+  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti"])
 
 (defn urakan-sivulle-nappi
   [ilmoitus]

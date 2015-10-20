@@ -15,7 +15,6 @@
     (is (true? (validoi xsd-polku "haeTietolaji.xsd" xml-esimerkit/+hae-tietolaji-request+)))
     (is (true? (validoi xsd-polku "haeTietue.xsd" xml-esimerkit/+hae-tietue-request+)))
     (is (true? (validoi xsd-polku "haeTietueet.xsd" xml-esimerkit/+hae-tietueet-request+)))
-    (is (true? (validoi xsd-polku "lisaaTietue.xsd" xml-esimerkit/+lisaa-tietue-request+)))
     (is (true? (validoi xsd-polku "paivitaTietue.xsd" xml-esimerkit/+paivita-tietue-request+)))
     (is (true? (validoi xsd-polku "poistaTietue.xsd" xml-esimerkit/+poista-tietue-request+)))
     (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+hae-tietue-response+)))
@@ -29,7 +28,5 @@
   (let [xsd-polku "xsd/tloik/"]
     (is (true? (validoi xsd-polku "ilmoitus.xsd" xml-esimerkit/+ilmoitus+)))
     (is (true? (validoi xsd-polku "ilmoitustoimenpide.xsd" xml-esimerkit/+ilmoitustoimenpide+)))
-    (is (true? (validoi xsd-polku "kuittaus.xsd" xml-esimerkit/+valityskuittaus+)))
-    (is (true? (validoi xsd-polku "kuittaus.xsd" xml-esimerkit/+vastaanottokuittus+)))))
-
-
+    (is (true? (validoi xsd-polku "harja-kuittaus.xsd" xml-esimerkit/+valityskuittaus+)))
+    (is (true? (validoi xsd-polku "tloik-kuittaus.xsd" xml-esimerkit/+vastaanottokuittus+)))))

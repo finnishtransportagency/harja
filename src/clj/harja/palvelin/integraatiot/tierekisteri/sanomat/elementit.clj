@@ -22,9 +22,7 @@
        (when (:let tie) [:let (:let tie)])
        (when (:losa tie) [:losa (:losa tie)])
        (when (:ajr tie) [:ajr (:ajr tie)])
-       (when (:puoli tie) [:puoli (:puoli tie)])
-       (when (:alkupvm tie) [:alkupvm (:alkupvm tie)])
-       (when (:loppupvm tie) [:loppupvm (:loppupvm tie)])]]
+       (when (:puoli tie) [:puoli (:puoli tie)])]]
      [:tietolaji
       [:tietolajitunniste (get-in tietue [:tietolaji :tietolajitunniste])]
       [:arvot (get-in tietue [:tietolaji :arvot])]]]))
