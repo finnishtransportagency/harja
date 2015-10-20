@@ -53,16 +53,15 @@
 
 (def +arkistot-polku+ "test/resurssit/arkistot/")
 
-(deftest testaa-pura-macissa-tehty-zip
-  (arkisto/pura-paketti (str +arkistot-polku+ "test_zip_mac.zip"))
+(defn testaa-tiedoston-purku [tiedosto-nimi]
+  (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
   (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
   (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
   (clojure.java.io/delete-file (str +arkistot-polku+ "kuva.png"))
   (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt")))
 
-(deftest testaa-pura-gzip
-  (arkisto/pura-paketti (str +arkistot-polku+ "test_gzip_mac.tgz"))
-  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
-  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
-  (clojure.java.io/delete-file (str +arkistot-polku+ "kuva.png"))
-  (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt")))
+(deftest testaa-pura-macissa-tehty-zip
+  (testaa-tiedoston-purku"test_zip_mac.zip"))
+
+(deftest testaa-pura-macissa-tehty-gzip
+  (testaa-tiedoston-purku"test_gzip_mac.tgz"))
