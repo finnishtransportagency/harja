@@ -214,6 +214,13 @@
                  (when-let [g (tapahtuman-geometria this e)]
                    (on-select g e))))))))
 
+;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
+(defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
+  (.on ol3 "dblclick" (fn [e]
+                        (when on-select
+                          (when-let [g (tapahtuman-geometria this e)]
+                            (on-select g e))))))
+
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
@@ -273,6 +280,9 @@
 (defn nykyinen-zoom-taso []
   (-> (.getView @the-kartta) (.getZoom)))
 
+(defn aseta-zoom [zoom]
+  (-> (.getView @the-kartta) (.setZoom zoom)))
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -299,7 +309,7 @@
     (when (animaatio/transition-end-tuettu?)
       (animaatio/kasittele-transition-end (.getElementById js/document (:id mapspec))
                                           #(.updateSize ol3)))
-    
+
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
@@ -336,8 +346,8 @@
                                       {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center (clj->js @view)
-                                 :zoom   @zoom
+    (.setView ol3 (ol.View. #js {:center  (clj->js @view)
+                                 :zoom    @zoom
                                  :maxZoom 20
                                  :minZoom 5}))
 
@@ -350,6 +360,7 @@
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-dblclick-kasittelija this ol3 (:on-dblclick mapspec) (:on-dblclick-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
