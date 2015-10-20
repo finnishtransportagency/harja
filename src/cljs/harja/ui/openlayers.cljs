@@ -326,7 +326,7 @@
                    (nayta-popup! this coordinate content))
 
                  ::invalidate-size
-                 (do (log "OL3:updateSize kutsuttu")
+                 (do
                      (.updateSize ol3)
                      (.render ol3))
 
