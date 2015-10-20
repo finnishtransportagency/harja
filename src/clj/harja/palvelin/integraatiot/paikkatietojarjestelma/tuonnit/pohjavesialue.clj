@@ -12,7 +12,7 @@
                                  (:urakka_lyh pohjavesialue)
                                  (:urakka_id pohjavesialue)
                                  (.toString (:the_geom pohjavesialue)))
-    (log/debug "Pohjavesialuetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error pohjavesialue))))
+    (log/warn "Pohjavesialuetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error pohjavesialue))))
 
 (defn vie-pohjavesialue-kantaan [db shapefile]
   (if shapefile
