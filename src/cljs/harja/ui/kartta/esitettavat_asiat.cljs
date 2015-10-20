@@ -2,7 +2,7 @@
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]))
 
-(defn oletusalue [asia on-valittu?]
+(defn- oletusalue [asia on-valittu?]
   (merge
     (:sijainti asia)
     {:color  (if (on-valittu? asia) "blue" "green")
@@ -120,7 +120,7 @@
 
 (defmethod asia-kartalle :default [_ _ _])
 
-(defn on-valittu? [valittu tunniste asia]
+(defn- on-valittu? [valittu tunniste asia]
   (and
     (not (nil? valittu))
     (= (get-in asia tunniste) (get-in valittu tunniste))))
@@ -129,7 +129,12 @@
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
 ;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
 ;; jos vastaisuudessa tulee samankaltaisia tilanteita.
-(defn kartalla-xf
+(defn- kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu [:id]))
   ([asia valittu tunniste] (asia-kartalle asia (partial on-valittu? valittu tunniste))))
+
+(defn kartalla-esitettavaan-muotoon
+  ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
+  ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu :id))
+  ([asiat valittu tunniste] (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))
