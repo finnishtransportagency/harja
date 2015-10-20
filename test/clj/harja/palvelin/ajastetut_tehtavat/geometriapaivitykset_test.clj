@@ -76,9 +76,6 @@
 (deftest testaa-pura-macissa-tehty-gzip
   (testaa-tiedoston-purku"test_gzip_mac.tgz"))
 
-(deftest testaa-pura-macissa-tehty-gzip
-  (testaa-tiedoston-purku"test_gzip_mac.tgz"))
-
 (deftest testaa-pura-zip
   (testaa-tiedoston-purku "test_zip.zip"))
 
