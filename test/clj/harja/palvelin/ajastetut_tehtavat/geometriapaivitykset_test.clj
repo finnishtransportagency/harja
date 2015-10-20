@@ -58,8 +58,9 @@
 
 (defn testaa-tiedoston-purku [tiedosto-nimi]
   (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
-  ; Tarkista, että tiedostot purkautuivat
+  ; Tarkista, että tiedostot purkautuivat oikein
   (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
+  (is (= "Terve!" (slurp (str +arkistot-polku+ "teksti.txt"))))
   (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
   ; Siirrä puretut tiedostot target-kansioon
   (io/copy (io/file (str +arkistot-polku+ "teksti.txt")) (io/file (str +arkistot-target-polku+ "teksti.txt")))
