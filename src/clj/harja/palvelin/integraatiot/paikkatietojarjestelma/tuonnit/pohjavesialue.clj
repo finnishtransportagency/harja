@@ -19,8 +19,9 @@
     (do
       (log/debug (str "Tuodaan pohjavesialuetta kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
-                                (p/tuhoa-pohjavesialuedata! transaktio)
-                                (doseq [pohjavesialue (shapefile/tuo shapefile)]
-                                  (vie-pohjavesialue-entry transaktio pohjavesialue)))
+        (p/tuhoa-pohjavesialuedata! transaktio)
+        (doseq [pohjavesialue (shapefile/tuo shapefile)]
+          (vie-pohjavesialue-entry transaktio pohjavesialue)))
+      (p/paivita-hallintayksikoiden-pohjavesialueet db)
       (log/debug "Pohjavesialueen tuonti kantaan valmis."))
     (log/debug "Pohjavesialueen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
