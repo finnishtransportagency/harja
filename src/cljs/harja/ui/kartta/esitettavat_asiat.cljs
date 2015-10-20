@@ -1,6 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.loki :refer [log]]))
 
 (defn- oletusalue [asia on-valittu?]
   (merge
@@ -129,7 +130,7 @@
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
 ;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
 ;; jos vastaisuudessa tulee samankaltaisia tilanteita.
-(defn- kartalla-xf
+(defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu [:id]))
   ([asia valittu tunniste] (asia-kartalle asia (partial on-valittu? valittu tunniste))))
@@ -137,4 +138,7 @@
 (defn kartalla-esitettavaan-muotoon
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu :id))
-  ([asiat valittu tunniste] (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))
+  ([asiat valittu tunniste]
+   ;; tarkastetaan että edes jollain on..
+   (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
+   (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))

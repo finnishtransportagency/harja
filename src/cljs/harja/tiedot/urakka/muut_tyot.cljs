@@ -6,7 +6,7 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -33,4 +33,9 @@
 (defonce valittu-toteuma (atom nil))
 (defonce muut-tyot-kartalla (reaction
                               (when @karttataso-muut-tyot
-                                (kartalla-esitettavaan-muotoon @haetut-muut-tyot @valittu-toteuma [:toteuma :id]))))
+                                (kartalla-esitettavaan-muotoon
+                                  (map
+                                    #(assoc % :tyyppi-kartalla :toteuma)
+                                    @haetut-muut-tyot)
+                                  @valittu-toteuma
+                                  [:toteuma :id]))))
