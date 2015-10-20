@@ -73,7 +73,7 @@
 
 (def kayttaja "jvh")
 
-(deftest testaa-tiedoston-lataus-akl-alustalla []
+(deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)
