@@ -44,7 +44,7 @@
 (defn- aseta-kartan-sijainti [x y w h naulattu?]
   (let [karttasailio (yleiset/elementti-idlla "kartta-container")
         tyyli (.-style karttasailio)]
-    (log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+    #_(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
     (if naulattu?
       (do
         (set! (.-position tyyli) "fixed")
@@ -69,7 +69,7 @@
   (go (loop [elt (.getElementById js/document id)]
         (if elt
           elt
-          (do (log "odotellaan elementtiä " id)
+          (do #_(log "odotellaan elementtiä " id)
               (<! (timeout 10))
               (recur (.getElementById js/document id)))))))
 
@@ -96,7 +96,6 @@
                       offset-y nil]
                  (let [ensimmainen-kerta? (nil? naulattu?)
                        paivita (<! paivita-kartan-sijainti)
-                       _ (log "KARTAN PÄIVITYS EVENT: " (pr-str paivita))
                        aseta (when-not paivita
                                ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
                                ;; seuraava päivitys aina asettaa kartan paikan.
@@ -157,7 +156,6 @@
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
   [kartan-koko & args]
-  (log "KARTAN-PAIKKAVARAUS!")
   (let [paivita (fn [paikkavaraus]
                   (go (>! paivita-kartan-sijainti paikkavaraus)))
         scroll-kuuntelija (fn [_]
@@ -331,7 +329,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   []
   (let [v-hal @nav/valittu-hallintayksikko
         v-ur @nav/valittu-urakka]
-    (log "ZOOMAILLAAN, v-hal: " v-hal ", v-ur: " v-ur)
     (if-let [alue (and v-ur (:alue v-ur))]
       (keskita-kartta-alueeseen! (geo/extent alue))
       (if-let [alue (and v-hal (:alue v-hal))]
@@ -341,59 +338,57 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (log "BAZBAZ: Zoomaa geometriaan")
   (if-not (empty? (keep :alue @tasot/geometriat))
     (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
     (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
 
-;; Mitä suurempi arvo, sitä lähemmäs ollaan zoomattu
-;; Kun kartalle on piirretty esim toteumia, pyritään karttaa pitämään siten, että kaikki toteumat mahtuvat kartalle
-;; Kun jokin toteuma valitaan, zoomataan kartta siihen JOS nykyinen zoom on sama tai pienempi kuin tämä arvo.
-;; Zoom-taso on kympin luokkaa jos Oulun urakassa on tapahtunut jotain Haukiputaalla ja Ahmaksella.
-(def +valinnan-zoomaamisen-raja+ 10)
-;; 12 ja 13 välillä oleva erokin on jo huomattava. Voi olla että tällainen hard-koodattu zoom-taso ei toimi,
-;; vaan "valitun" zoom-taso pitää laskea dynaamisesti. Esim asetetaan extent ja otetaan zoomia taaksepäin askel tai kaksi,
-;; tai valittaessa zoomataan sisäänpäin yksi tai kaksi askelta..
-(def +valitun-geometrian-zoomtaso+ 13)
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
                                                 (when-not uusi
-                                                  #_(when (and (:alue uusi) #_(<= (openlayers/nykyinen-zoom-taso) +valinnan-zoomaamisen-raja+))
-                                                      ;; Kartta pomppaa ikävästi, mutta pikaisen openlayers API:n tutkimisen
-                                                      ;; jälkeen tälle ei vaan voi mitään..
-                                                      (log "BAZBAZ: Valittu, keskitetään ja zoomataan")
-                                                      (keskita-kartta-alueeseen! (geo/extent (:alue uusi)))
-                                                      #_(openlayers/aseta-zoom +valitun-geometrian-zoomtaso+))
-
-                                                  (do
-                                                    (log "BAZBAZ: Ei enää valittua, zoomataan geometrioihin")
-                                                    (zoomaa-geometrioihin)))))
+                                                  (zoomaa-geometrioihin))))
   #(remove-watch atomi :kartan-valittu-kuuntelija))
 
 (defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
          (let [ch (chan)]
-           ;; Koska valittu urakka ja hallintayksikkö on osa geometrioita, tämä hoitaa myös urakan valitsemisen
-           (run! @tasot/geometriat
-                   (zoomaa-geometrioihin))
+           (run! @nav/valittu-hallintayksikko
+                 @nav/valittu-urakka
+                 ;; Reagoidaan hallintayksikön tai urakan muutokseen vain jos geometriat ovat tyhjiä
+                 ;; Tälle ei pitäisi olla tarvetta, mutta tuntui että tätä runia ajettiin joskus turhaan, ja kartta
+                 ;; käyttäytyi oudosti. Nyt tässä halutaan reagoida vain kun vaihdetaan urakkaa tai hy:tä, ts. kun
+                 ;; geometriat ovat tyhjät.
+                 (when (empty? @tasot/geometriat)
+                   (zoomaa-geometrioihin)))
            (run! (let [koko @nav/kartan-koko]
                    (go (>! ch koko))))
            (go (loop [edellinen-koko @nav/kartan-koko]
                  (let [nykyinen-koko (<! ch)]
                    (<! (timeout 150))
-                   (log "BAZBAZ: Kartan koko zoomaa")
+                   ;; Aiemmin zoomattiin vain kun edellinen koko oli S ja nykyinen ei ole S. Miksi..?
                    (zoomaa-geometrioihin)
-                   #_(when (and (= :S edellinen-koko)
-                                (not= :S nykyinen-koko))
-                       (<! (timeout 150))
-                       (log "BAZBAZ: Joku muu zoomaa")
-                       (zoomaa-geometrioihin))
                    (recur nykyinen-koko))))))
 
 (defn kartta-openlayers []
   (komp/luo
     {:component-did-mount (fn [_]
-                            (log "BAZBAZ: Mounttas zoomaa")
                             (zoomaa-geometrioihin)
+
+                            (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
+                                       (fn [_ _ vanha uusi]
+                                         ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
+                                         ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
+                                         ;; Tällainen workaround piti tehdä, koska asian valitseminen muutta
+                                         ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
+                                         ;; Tästä muutos ei mene läpi, koska valitsemisen myötä avaimet kuitenkin pysyvät samana.
+                                         ;; On toki mahdollista, että kartan geometriat muuttuvat mutta avaimet sattuvat
+                                         ;; pysymään täysin samana, mutta tämä on toivottavasti epätodennäköistä..
+                                         (if-not (and
+                                                     (= (flatten (map (comp sort keys) vanha))
+                                                        (flatten (map (comp sort keys) uusi)))
+                                                     ;; Ei voida luottaa että geometrioilla on :id avain, mutta tämä
+                                                     ;; ainakin auttaa tunnistamisessa.
+                                                     (= (sort (map :id vanha))
+                                                        (sort (map :id uusi))))
+                                           (zoomaa-geometrioihin))))
 
                             #_(harja.loki/tarkkaile! "Hallintayksikkö" nav/valittu-hallintayksikko)
                             #_(harja.loki/tarkkaile! "Urakka" nav/valittu-urakka))}
