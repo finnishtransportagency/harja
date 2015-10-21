@@ -70,8 +70,8 @@
         (if elt
           elt
           (do #_(log "odotellaan elementtiä " id)
-              (<! (timeout 10))
-              (recur (.getElementById js/document id)))))))
+            (<! (timeout 10))
+            (recur (.getElementById js/document id)))))))
 
 (defn odota-mount-tai-timeout
   "Odottaa, että paivita-kartan-sijainti kanavaan tulee :mount tapahtuma tai 150ms timeout.
@@ -342,6 +342,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
     (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
 
+(defonce pida-geometriat-nakyvilla? (atom true))
+
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
                                                 (when-not uusi
@@ -381,14 +383,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                          ;; Tästä muutos ei mene läpi, koska valitsemisen myötä avaimet kuitenkin pysyvät samana.
                                          ;; On toki mahdollista, että kartan geometriat muuttuvat mutta avaimet sattuvat
                                          ;; pysymään täysin samana, mutta tämä on toivottavasti epätodennäköistä..
-                                         (if-not (and
+                                         (when @pida-geometriat-nakyvilla?
+                                           (if-not (and
                                                      (= (flatten (map (comp sort keys) vanha))
                                                         (flatten (map (comp sort keys) uusi)))
                                                      ;; Ei voida luottaa että geometrioilla on :id avain, mutta tämä
                                                      ;; ainakin auttaa tunnistamisessa.
                                                      (= (sort (map :id vanha))
                                                         (sort (map :id uusi))))
-                                           (zoomaa-geometrioihin))))
+                                             (zoomaa-geometrioihin)))))
 
                             #_(harja.loki/tarkkaile! "Hallintayksikkö" nav/valittu-hallintayksikko)
                             #_(harja.loki/tarkkaile! "Urakka" nav/valittu-urakka))}
