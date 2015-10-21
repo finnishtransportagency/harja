@@ -4,6 +4,7 @@
             [cljs.core.async :refer [<! >! timeout]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -21,6 +22,15 @@
        [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
        [:span.liite-nimi (:nimi tiedosto)])]))
 
+(defn tarkista-liite [liite]
+  (let [max-koko-tavuina 16000000
+        whitelist #{"image/png" "application/zip" "image/jpeg"}]
+    (if (> (:koko liite) max-koko-tavuina)
+      {:hyvaksytty false :viesti (str "Liite on liian suuri (max-koko " max-koko-tavuina " tavua).")} ;; FIXME Näytä megatavuina
+      (if (nil? (whitelist (:tyyppi liite)))
+        {:hyvaksytty false :viesti "Tiedostotyyppi ei ole sallittu."}
+        {:hyvaksytty true :viesti nil}))))
+
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
 Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
@@ -36,8 +46,9 @@ Optiot voi sisältää:
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
-        edistyminen (atom nil)]
-    
+        edistyminen (atom nil)
+        virheviesti (atom nil)]
+
     (fn [{:keys [liite-ladattu nappi-teksti] :as opts}]
       (if-let [tiedosto @tiedosto]
         ;; Tiedosto on jo ladatty palvelimelle, näytetään se
@@ -47,20 +58,27 @@ Optiot voi sisältää:
         (if-let [edistyminen @edistyminen]
           ;; Siirto menossa, näytetään progress
           [:progress {:value edistyminen :max 100}]
-          
+
           ;; Tiedostoa ei vielä valittu
-          [:div.file-upload.nappi-toissijainen
-           [:span (ikonit/upload) (or nappi-teksti " Valitse tiedosto")]
-           [:input.upload
-            {:type "file"
-             :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
+          [:span
+           [:div.file-upload.nappi-toissijainen
+            [:span (ikonit/upload) (or nappi-teksti " Valitse tiedosto")]
+            [:input.upload
+             {:type      "file"
+              :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
                            (go
                              (loop [ed (<! ch)]
                                (if (number? ed)
                                  (do (reset! edistyminen ed)
                                      (recur (<! ch)))
-
-                                 (liite-ladattu (reset! tiedosto ed))))))}]])))))
-          
-                                   
-                                 
+                                 (do
+                                   (let [tarkistus-tulos (tarkista-liite ed)]
+                                     (if (:hyvaksytty tarkistus-tulos)
+                                       (do
+                                         (log "Liite OK. Tiedot: " (pr-str ed))
+                                         (liite-ladattu (reset! tiedosto ed)))
+                                       (do
+                                         (reset! virheviesti "Liite hylätty: " (:viesti tarkistus-tulos))
+                                         (reset! edistyminen nil)
+                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))))))))))}]
+            [:span.liite-virheviesti @virheviesti]]])))))
