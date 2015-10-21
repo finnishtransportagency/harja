@@ -23,7 +23,7 @@
        [:span.liite-nimi (:nimi tiedosto)])]))
 
 (defn tarkista-liite [liite]
-  (let [max-koko-tavuina 16000000
+  (let [max-koko-tavuina 16000000 ; FIXME Nämä pitäisi ehkä laittaa jonnekin asetustiedostoon? --> Laitetaan cljc:n niin pysyy synkassa frontilla ja backendilla
         whitelist #{"image/png" "application/zip" "image/jpeg"}]
     (if (> (:koko liite) max-koko-tavuina)
       {:hyvaksytty false :viesti (str "Liite on liian suuri (max-koko " max-koko-tavuina " tavua).")} ;; FIXME Näytä megatavuina
@@ -60,7 +60,7 @@ Optiot voi sisältää:
           [:progress {:value edistyminen :max 100}]
 
           ;; Tiedostoa ei vielä valittu
-          [:span
+          [:span.liitekomponentti
            [:div.file-upload.nappi-toissijainen
             [:span (ikonit/upload) (or nappi-teksti " Valitse tiedosto")]
             [:input.upload
@@ -78,7 +78,7 @@ Optiot voi sisältää:
                                          (log "Liite OK. Tiedot: " (pr-str ed))
                                          (liite-ladattu (reset! tiedosto ed)))
                                        (do
-                                         (reset! virheviesti "Liite hylätty: " (:viesti tarkistus-tulos))
+                                         (reset! virheviesti (str "Liite hylätty: " (:viesti tarkistus-tulos)))
                                          (reset! edistyminen nil)
-                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))))))))))}]
-            [:span.liite-virheviesti @virheviesti]]])))))
+                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))))))))))}]]
+            [:div.liite-virheviesti @virheviesti]])))))
