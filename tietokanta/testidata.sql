@@ -678,7 +678,7 @@ VALUES
 -- Havainnot
 
 INSERT INTO havainto (kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
-VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(1, 2)::GEOMETRY, 5);
+VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
 
 -- Sanktiot
 
