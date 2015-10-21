@@ -240,17 +240,14 @@ Jos parametri ei ole kelvollisessa tilassa, palauta {:virhe \"Syy\"}."
              (not (nil? r))
              [raportti/muodosta-html r]))]))
 
-(def kartan-edellinen-koko (atom nil))
-
 (defn raportit []
   (komp/luo
    (komp/sisaan #(when (nil? @raporttityypit)
                    (go (reset! raporttityypit (<! (raportit/hae-raportit))))))
-    (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
-                        (nav/vaihda-kartan-koko! :M))
-                      #(do
-                        (nav/vaihda-kartan-koko! @kartan-edellinen-koko)))
+   (komp/sisaan-ulos #(do
+                       (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
+                       (nav/vaihda-kartan-koko! :M))
+                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
       (if (roolit/roolissa? roolit/tilaajan-kayttaja)
         [:span

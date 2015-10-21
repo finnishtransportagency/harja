@@ -462,3 +462,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartta-openlayers]])
+
+
+;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi
+;; tämä on täällä eikä ui.yleiset koska olisi tullut syklinen riippuvuus
+(defn sisalto-ja-kartta-2-palstana
+  "Luo BS-rivin ja sarakkeet, joissa toisella puolella parameterinä annettava sisältö, toisella kartta."
+  [sisalto]
+  [:div.row
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   "col-sm-12"
+                   "col-sm-6")}
+    sisalto]
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   ""
+                   "col-sm-6")}
+    [kartan-paikka]]])

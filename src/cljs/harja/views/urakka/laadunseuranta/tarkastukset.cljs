@@ -240,7 +240,6 @@
                          }]]]
      ]))
 
-(def kartan-edellinen-koko (atom nil))
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
@@ -251,9 +250,9 @@
     ;; tarkastuslistauksessa
     (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
                         (nav/vaihda-kartan-koko! :XL))
-                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/kuuntelija
       :tarkastus-klikattu
       (fn [e tarkastus]
@@ -262,14 +261,6 @@
 
     (fn []
       [:span.tarkastukset
-       [:div.row
-        [:div {:class (if (= @nav/kartan-koko :S)
-                        "col-sm-12"
-                        "col-sm-6")}
-         (if @laadunseuranta/valittu-tarkastus
-           [tarkastus laadunseuranta/valittu-tarkastus]
-           [tarkastuslistaus])]
-        [:div {:class (if (= @nav/kartan-koko :S)
-                        ""
-                        "col-sm-6")}
-         [kartta/kartan-paikka]]]])))
+       [kartta/sisalto-ja-kartta-2-palstana (if @laadunseuranta/valittu-tarkastus
+                                       [tarkastus laadunseuranta/valittu-tarkastus]
+                                       [tarkastuslistaus])]])))

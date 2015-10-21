@@ -399,7 +399,7 @@
                                       (reset! tallennus-kaynnissa false)
                                       (reset! uuden-syottaminen false))
                                   ;; Epäonnistui jostain syystä
-                                  ;; fixme: pitäisköhän näyttää se käyttäjällekin ;)
+                                  (viesti/nayta! "Tallentaminen epäonnistui" ::danger 1500)
                                   (reset! tallennus-kaynnissa false)))))}
            (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not @voi-tallentaa?)
@@ -408,11 +408,13 @@
 (defn siltatarkastukset []
 
   (komp/luo
-    {:component-will-mount (fn [_]
-                             (kartta-tasot/taso-paalle! :sillat))
-     :component-will-unmount (fn [_]
-                               (kartta-tasot/taso-pois! :sillat))}
-
+    (komp/sisaan-ulos #(do
+                        (kartta-tasot/taso-paalle! :sillat)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (nav/vaihda-kartan-koko! :L))
+                      #(do
+                        (kartta-tasot/taso-pois! :sillat)
+                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn []
       (if @uuden-syottaminen
         [uuden-tarkastuksen-syottaminen]

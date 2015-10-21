@@ -227,14 +227,12 @@
 
          @tiedot/haetut-ilmoitukset]]])))
 
-(def kartan-edellinen-koko (atom nil))
-
 (defn ilmoitukset []
   (komp/luo
     (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
                         (nav/vaihda-kartan-koko! :L))
-                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
 
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
