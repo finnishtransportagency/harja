@@ -33,7 +33,8 @@
     :multiline (mapcat :points (:lines g))
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
-    :point [(:coordinates g)]))
+    :point [(:coordinates g)]
+    :circle [(:coordinates g)]))
 
 (defn keskipiste
   "Laske annetun geometrian keskipiste ottamalla keskiarvon kaikista pisteistä.
@@ -63,12 +64,18 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
   (laske-pisteiden-extent (mapcat :points lines)))
 
 ;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
-(def pisteen-extent-laajennus 35)
+(def pisteen-extent-laajennus 350)
 
-(defmethod extent :point [{c :coordinates}]
+(defn- extent-point-circle [c]
   (let [d pisteen-extent-laajennus
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
+
+(defmethod extent :point [{c :coordinates}]
+  (extent-point-circle c))
+
+(defmethod extent :circle [{c :coordinates}]
+  (extent-point-circle c))
 
 (defmethod extent :multipolygon [{polygons :polygons}]
   (laske-pisteiden-extent (mapcat :coordinates polygons)))
