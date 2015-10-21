@@ -70,17 +70,12 @@
 
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-
-  ;; todo: poista
-  (println "-------------------------------------- HAETAAn. " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [toteumat (into []
-                       (comp
-                         toteuma-xf
-                         toteumien-tehtavat->map-xf)
-                       (q/hae-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi)))]
-    (println " ----- TOTEUMAT:" toteumat)
-    toteumat))
+  (into []
+        (comp
+          toteuma-xf
+          toteumien-tehtavat->map-xf)
+        (q/hae-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
@@ -499,6 +494,19 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+
+  (println "------- PARAMETRIT: " urakka-id sopimus-id alkupvm loppupvm)
+
+  (let [toteumat (into []
+                       (map konv/alaviiva->rakenne
+                            (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                              db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))]
+    ;; todo: poista
+    (println "------ TOTEUMAT: " toteumat)
+    toteumat))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -558,6 +566,9 @@
                                                                   (:toteumamateriaalit tiedot)
                                                                   (:hoitokausi tiedot)
                                                                   (:sopimus tiedot))))
+      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
+                        (fn [user tiedot]
+                          (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
       this))
 
   (stop [this]

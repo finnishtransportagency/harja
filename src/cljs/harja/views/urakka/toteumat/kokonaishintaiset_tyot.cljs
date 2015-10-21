@@ -13,11 +13,10 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.komponentti :as komponentti])
+            [harja.ui.komponentti :as komponentti]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-
 
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
@@ -28,7 +27,12 @@
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])}
-      [{:otsikko "Tapahtunut" :nimi :suorittajan_ytunnus :leveys "15%" :tyyppi :string}]
+      [{:otsikko "Alkanut" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
+       {:otsikko "Päättynyt" :tyyppi :pvm :fmt pvm/pvm :nimi :paattynyt :leveys "10%"}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "10%"}
+       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
+       {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
+       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "10%"}]
       @tiedot/haetut-toteumat]]))
 
 (defn kokonaishintaiset-toteumat []

@@ -3,15 +3,23 @@
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def nakymassa? (atom true))
-(defonce valittu-toteuma (atom nil))
+(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+  (log (str "parametrit: " urakka-id sopimus-id alkupvm loppupvm))
+  (k/post! :urakan-kokonaishintaisten-toteumien-tehtavat
+           {:urakka-id  urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm    alkupvm
+            :loppupvm   loppupvm}))
+
+(def nakymassa? (atom false))
 (def karttataso (atom false))
+(defonce valittu-toteuma (atom nil))
 
 (defonce haetut-toteumat
          (reaction<!
@@ -21,7 +29,7 @@
             toimenpide @urakka/valittu-toimenpideinstanssi
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (toteumat/hae-urakan-toteumat urakka-id sopimus-id hoitokausi "kokonaishintainen"))))
+             (hae-toteumat urakka-id sopimus-id hoitokausi))))
 
 ;; todo: poista
 (tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
