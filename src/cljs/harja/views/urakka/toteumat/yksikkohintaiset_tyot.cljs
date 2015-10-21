@@ -29,7 +29,7 @@
 
 (defonce tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                        [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                       nakymassa? @toteumat/yksikkohintaiset-tyot-nakymassa?
+                                       nakymassa? @toteumat/yksikkohintaiset-toteumat-nakymassa?
                                        valittu-hoitokausi @u/valittu-hoitokausi]
                                       (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
                                         (log "Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi)
@@ -353,7 +353,7 @@
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
-    (komp/lippu toteumat/yksikkohintaiset-tyot-nakymassa?)
+    (komp/lippu toteumat/yksikkohintaiset-toteumat-nakymassa?)
 
     (fn []
       [:span

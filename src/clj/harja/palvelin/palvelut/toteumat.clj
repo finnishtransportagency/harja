@@ -70,6 +70,8 @@
 
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+
+  ;; todo: poista
   (println "-------------------------------------- HAETAAn. " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteumat (into []

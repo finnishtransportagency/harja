@@ -11,10 +11,12 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
+(defonce yksikkohintaiset-toteumat-nakymassa? (atom false))
+(defonce kokonaishintaiset-toteumat-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
+(def karttataso-kokonaishintainen-toteuma (atom false))
 
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do

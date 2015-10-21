@@ -7,13 +7,16 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-toteumat :as tiedot]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.komponentti :as komponentti]
+            )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -22,7 +25,7 @@
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
   []
-  (let [urakka @nav/valittu-urakka]
+  (let [urakka @navigaatio/valittu-urakka]
     [:div.sanktiot
      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
      [grid/grid
@@ -32,7 +35,9 @@
       @tiedot/haetut-toteumat]]))
 
 (defn kokonaishintaiset-toteumat []
-  (fn []
-    [:span
-     [kartta/kartan-paikka]
-     [kokonaishintaisten-toteumien-listaus]]))
+  (komponentti/luo
+    (komponentti/lippu toteumat/kokonaishintaiset-toteumat-nakymassa? toteumat/karttataso-kokonaishintainen-toteuma)
+    (fn []
+      [:span
+       [kartta/kartan-paikka]
+       [kokonaishintaisten-toteumien-listaus]])))
