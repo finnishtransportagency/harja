@@ -39,26 +39,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-#_(def keskita-valittuun!
-  (run!
-    @nav/kartan-kokovalinta
-    (let [valitun-alue (when @muut-tyot/valittu-toteuma (:alue (first (kartalla-xf (assoc @muut-tyot/valittu-toteuma :tyyppi-kartalla :toteuma)))))]
-      (if (get-in valitun-alue [:alue :points])
-        (do
-          (kartta/keskita-kartta-alueeseen! (geo/extent valitun-alue)))
-        (let [kaikkien-alue (keep :alue @muut-tyot/muut-tyot-kartalla)]
-          (if-not (empty? kaikkien-alue)
-            (do
-              (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))
-              ;; FIXME: Kauhea häxi. Kun kartta aukaistaan, asetetaan 'jossain' näkymään valitun urakan alue.
-              ;; Ts. rasittava race condition joista jälkimmäisenä tuleva zoom-taso jää voimaan
-              ;; Kartan zoomailulle / extent logiikalle pitänee tehdä joku yhteinen järkevä ratkaisu, joten pidetään
-              ;; tämä ehkä tällaisena toistaiseksi..
-              (js/setTimeout #(do
-                               (kartta/keskita-kartta-alueeseen! (geo/extent-monelle kaikkien-alue))) 1000))
-            (do
-              (kartta/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))))))
-
 (defn hae-muutoshintainen-tyo-tpklla [tpk]
   (first (filter (fn [muutoshinta]
                    (= (:tehtava muutoshinta) tpk))
