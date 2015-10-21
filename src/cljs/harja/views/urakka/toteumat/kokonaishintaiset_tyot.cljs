@@ -4,20 +4,18 @@
             [cljs.core.async :refer [<! >! chan]]
             [cljs.core.async :refer [<! timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.toteumat.kokonaishintaiset-toteumat :as tiedot]
-            [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
-            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.komponentti :as komponentti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-
 
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
@@ -32,7 +30,9 @@
       @tiedot/haetut-toteumat]]))
 
 (defn kokonaishintaiset-toteumat []
-  (fn []
-    [:span
-     [kartta/kartan-paikka]
-     [kokonaishintaisten-toteumien-listaus]]))
+  (komponentti/luo
+    (komponentti/lippu tiedot/nakymassa? tiedot/karttataso)
+    (fn []
+      [:span
+       [kartta/kartan-paikka]
+       [kokonaishintaisten-toteumien-listaus]])))

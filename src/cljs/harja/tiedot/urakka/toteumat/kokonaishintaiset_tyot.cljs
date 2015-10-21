@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.toteumat.kokonaishintaiset-toteumat
+(ns harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
@@ -9,10 +9,9 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-;; todo: miten tämä asetetaan oikein
 (def nakymassa? (atom true))
 (defonce valittu-toteuma (atom nil))
-
+(def karttataso (atom false))
 
 (defonce haetut-toteumat
          (reaction<!
@@ -24,4 +23,5 @@
            (when nakymassa?
              (toteumat/hae-urakan-toteumat urakka-id sopimus-id hoitokausi "kokonaishintainen"))))
 
+;; todo: poista
 (tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
