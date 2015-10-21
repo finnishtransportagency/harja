@@ -24,7 +24,7 @@
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
-
+                                                                d
   
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi

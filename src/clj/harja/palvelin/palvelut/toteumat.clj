@@ -70,12 +70,15 @@
 
 
 (defn hae-urakan-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
+  (println "-------------------------------------- HAETAAn. " urakka-id sopimus-id alkupvm loppupvm tyyppi)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (comp
-          toteuma-xf
-          toteumien-tehtavat->map-xf)
-        (q/hae-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
+  (let [toteumat (into []
+                       (comp
+                         toteuma-xf
+                         toteumien-tehtavat->map-xf)
+                       (q/hae-urakan-toteumat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi)))]
+    (println " ----- TOTEUMAT:" toteumat)
+    toteumat))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
