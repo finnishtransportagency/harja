@@ -4,32 +4,28 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.urakka :as urakka])
+            [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce yksikkohintaiset-toteumat-nakymassa? (atom false))
-(defonce kokonaishintaiset-toteumat-nakymassa? (atom false))
+(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
-(def karttataso-kokonaishintainen-toteuma (atom false))
 
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do
          (assoc %
-         :type :yksikkohintainen-toteuma
-         :alue {:type   :arrow-line
-                :points (mapv (comp :coordinates :sijainti)
-                              (sort-by
-                               :aika
-                               pvm/ennen?
-                               (:reittipisteet %)))}))))
+           :type :yksikkohintainen-toteuma
+           :alue {:type   :arrow-line
+                  :points (mapv (comp :coordinates :sijainti)
+                                (sort-by
+                                  :aika
+                                  pvm/ennen?
+                                  (:reittipisteet %)))}))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
@@ -104,9 +100,9 @@
 
 (defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]
   (k/post! :urakan-erilliskustannukset
-    {:urakka-id urakka-id
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+           {:urakka-id urakka-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
 
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
@@ -117,6 +113,7 @@
                                                     :hoitokausi hoitokausi
                                                     :sopimus sopimus-id}))
 
+
 (defn hae-urakan-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]
   (log "tiedot: hae urakan muut työt" urakka-id sopimus-id alkupvm loppupvm)
   (k/post! :urakan-muut-tyot
@@ -124,15 +121,3 @@
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
-
-(defonce haetut-toteumat
-         (reaction<!
-           [urakka-id (:id @navigaatio/valittu-urakka)
-            sopimus-id (first @urakka/valittu-sopimusnumero)
-            hoitokausi @urakka/valittu-hoitokausi
-            toimenpide @urakka/valittu-toimenpideinstanssi
-            kokonaishintaiset-toteumat-nakymassa? @kokonaishintaiset-toteumat-nakymassa?]
-           (when kokonaishintaiset-toteumat-nakymassa?
-             (hae-urakan-toteumat urakka-id sopimus-id hoitokausi "kokonaishintainen"))))
-
-(tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
