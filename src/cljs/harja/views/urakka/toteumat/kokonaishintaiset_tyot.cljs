@@ -30,9 +30,9 @@
      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
-       :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])}
+       :tyhja   (if @toteumat/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])}
       [{:otsikko "Tapahtunut" :nimi :suorittajan_ytunnus :leveys "15%" :tyyppi :string}]
-      @tiedot/haetut-toteumat]]))
+      @toteumat/haetut-toteumat]]))
 
 (defn kokonaishintaiset-toteumat []
   (komponentti/luo

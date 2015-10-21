@@ -4,9 +4,11 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.ui.protokollat :refer [Haku hae]])
+            [harja.ui.protokollat :refer [Haku hae]]
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -115,7 +117,6 @@
                                                     :hoitokausi hoitokausi
                                                     :sopimus sopimus-id}))
 
-
 (defn hae-urakan-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]
   (log "tiedot: hae urakan muut työt" urakka-id sopimus-id alkupvm loppupvm)
   (k/post! :urakan-muut-tyot
@@ -123,3 +124,15 @@
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
+
+(defonce haetut-toteumat
+         (reaction<!
+           [urakka-id (:id @navigaatio/valittu-urakka)
+            sopimus-id (first @urakka/valittu-sopimusnumero)
+            hoitokausi @urakka/valittu-hoitokausi
+            toimenpide @urakka/valittu-toimenpideinstanssi
+            kokonaishintaiset-toteumat-nakymassa? @kokonaishintaiset-toteumat-nakymassa?]
+           (when kokonaishintaiset-toteumat-nakymassa?
+             (hae-urakan-toteumat urakka-id sopimus-id hoitokausi "kokonaishintainen"))))
+
+(tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
