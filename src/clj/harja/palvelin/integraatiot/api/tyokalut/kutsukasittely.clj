@@ -21,7 +21,10 @@
    :otsikko       (str (walk/keywordize-keys (:headers viesti)))
    :parametrit    (str (:params viesti))})
 
-(defn poista-liitteet-logituksesta [body]
+(defn poista-liitteet-logituksesta
+  "Etsii avainpolun, joka päättyy avaimeen liitteet. Käsittelee sen alta löytyvät liitteet tyhjentäen niiden
+   sisällön"
+  [body]
   (let [body-clojure-mappina (cheshire/decode body true)
         avainpolut (avaimet/keys-in body-clojure-mappina)
         avainpolku-liitteet (first (filter
