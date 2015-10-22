@@ -12,6 +12,8 @@
                          "application/excel"
                          "application/rtf"
                          "application/pdf"
+                         "application/vnd.oasis.opendocument.text"
+                         "application/vnd.oasis.opendocument.spreadsheet"
                          "text/plain"}]
     (if (> (:koko liite) max-koko-tavuina)
       {:hyvaksytty false :viesti (str "Liite on liian suuri (sallittu koko " max-koko-tavuina " tavua).")}
