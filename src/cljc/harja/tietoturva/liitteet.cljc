@@ -6,9 +6,13 @@
                          "image/tiff"
                          "image/jpeg"
                          "application/zip"
+                         "application/x-compressed"
+                         "application/x-zip-compressed"
                          "application/msword"
                          "application/excel"
-                         "application/pdf"}]
+                         "application/rtf"
+                         "application/pdf"
+                         "text/plain"}]
     (if (> (:koko liite) max-koko-tavuina)
       {:hyvaksytty false :viesti (str "Liite on liian suuri (sallittu koko " max-koko-tavuina " tavua).")}
       (if (nil? (mime-whitelist (:tyyppi liite)))
