@@ -129,8 +129,8 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
            (reset! optiot uudet-optiot))}
 
         (komp/sisaan-ulos #(do
+                            (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko)
-                              (reset! nav/kartan-edellinen-koko kartan-koko)
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair))
                           #(do
