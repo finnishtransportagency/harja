@@ -1,4 +1,4 @@
-(ns harja.liitteet)
+(ns harja.tietoturva.liitteet)
 
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 16000000

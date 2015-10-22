@@ -6,7 +6,7 @@
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.liitteet :as liitteet])
+            [harja.tietoturva.liitteet :as t-liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn liitetiedosto
@@ -64,7 +64,7 @@ Optiot voi sisältää:
                                  (do (reset! edistyminen ed)
                                      (recur (<! ch)))
                                  (do
-                                   (let [tarkistus-tulos (liitteet/tarkista-liite ed)]
+                                   (let [tarkistus-tulos (t-liitteet/tarkista-liite ed)]
                                      (if (:hyvaksytty tarkistus-tulos)
                                        (do
                                          (log "Liite OK. Tiedot: " (pr-str ed))
