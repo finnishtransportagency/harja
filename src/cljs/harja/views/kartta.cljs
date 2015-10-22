@@ -233,8 +233,7 @@
 
 
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
-     [:div.kartan-koko-napit {:style {:left       "-50%"
-                                      :position   "absolute"
+     [:div.kartan-koko-napit {:style {:position   "absolute"
                                       :text-align "center"
                                       :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
                                       :width      "100%"
