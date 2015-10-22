@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [vihje]]
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]
@@ -145,10 +144,10 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
           [:div.tr-valitsin-teksti.form-control
-           [vihje (case @tila
-                            :ei-valittu "Valitse alkupiste"
-                            :alku-valittu "Valitse loppupiste"
-                            "")]
+           [:div (case @tila
+                   :ei-valittu "Valitse alkupiste"
+                   :alku-valittu "Valitse loppupiste"
+                   "")]
 
            (when-let [virhe @virhe]
              [:div.virhe virhe])])))))
