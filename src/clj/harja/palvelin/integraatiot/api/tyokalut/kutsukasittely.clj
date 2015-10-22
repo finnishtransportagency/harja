@@ -31,11 +31,15 @@
                                      (fn [avainpolku]
                                        (= (last avainpolku) :liitteet))
                                      avainpolut))
-        liitteet-ilman-sisaltoja (mapv (fn [liite]
-                                         (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
-                                       (get-in body-clojure-mappina avainpolku-liitteet))
-        body-ilman-liittteiden-sisaltoa (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja)]
-    (cheshire/encode body-ilman-liittteiden-sisaltoa))) ;; FIXME Formatoi takaisin kivaan muotoon, miten? :(
+        liitteet-ilman-sisaltoja (when avainpolku-liitteet
+                                   (mapv (fn [liite]
+                                           (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
+                                         (get-in body-clojure-mappina avainpolku-liitteet)))
+        body-ilman-liittteiden-sisaltoa (when liitteet-ilman-sisaltoja
+                                          (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
+    (if avainpolku-liitteet
+      (cheshire/encode body-ilman-liittteiden-sisaltoa)     ;; FIXME Formatoi takaisin kivaan muotoon, miten? :(
+      body)))
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
