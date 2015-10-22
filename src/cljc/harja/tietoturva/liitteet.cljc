@@ -11,6 +11,7 @@
                          "application/msword"
                          "application/excel"
                          "application/rtf"
+                         "text/rtf"
                          "application/pdf"
                          "application/vnd.oasis.opendocument.text"
                          "application/vnd.oasis.opendocument.spreadsheet"
