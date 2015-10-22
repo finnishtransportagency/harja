@@ -68,7 +68,6 @@ Optiot voi sisältää:
                                      (log "Liite OK. Tiedot: " (pr-str ed))
                                      (liite-ladattu (reset! tiedosto ed)))
                                    (do
-                                     (reset! virheviesti "Tiedosto on liian suuri tai tyyppiä ei ole sallittu.")
-                                     (reset! edistyminen nil)
-                                     (log "Liite hylätty.")))))))}]]
+                                     (reset! virheviesti "Liitteen lisääminen epäonnistui")
+                                     (reset! edistyminen nil)))))))}]]
            [:div.liite-virheviesti @virheviesti]])))))
