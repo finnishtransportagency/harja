@@ -7,7 +7,8 @@
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 
@@ -19,7 +20,9 @@
     "erityisalueetNaClLiuos" "Erityisalueet NaCl-liuos"
     "hiekoitushiekka" "Hiekoitushiekka"
     "kaliumformiaatti" "Kaliumformiaatti"
-    (throw (RuntimeException. (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)))))
+    (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi  virheet/+tuntematon-materiaali+
+                        :viesti (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)}]})))
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
@@ -92,7 +95,9 @@
     (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
-      (if (nil? materiaalikoodi-id) (throw (RuntimeException. (format "Materiaalia %s ei löydy tietokannasta" materiaali-nimi))))
+      (if (nil? materiaalikoodi-id) (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                                             :virheet [{:koodi  virheet/+tuntematon-materiaali+
+                                                        :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
       (toteumat/luo-toteuma-materiaali<!
         db
         toteuma-id

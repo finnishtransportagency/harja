@@ -6,7 +6,7 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/schemas/")
 
-(def +testi-xml+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<haeTietolajit><tietolajitunniste>tl506</tietolajitunniste></haeTietolajit>")
+(def +testi-xml+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<haeTietolaji><tietolajitunniste>tl506</tietolajitunniste></haeTietolaji>")
 
 (deftest tarkista-kutsu
   (let [kutsu-xml (tietolajin-hakukutsu/muodosta-kutsu "tl506" nil)]

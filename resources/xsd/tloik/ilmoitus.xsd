@@ -5,19 +5,18 @@
 
     <xs:complexType name="ilmoitus">
         <xs:sequence>
-            <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="0"/>
+            <xs:element name="viestiId" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="versionumero" type="xs:int" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="urakkatyyppi" type="urakkatyyppi" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="vapaateksti" type="xs:string" minOccurs="0"/>
+            <xs:element name="yhteydenottopyynto" type="xs:boolean" minOccurs="0"/>
+            <xs:element name="sijainti" type="sijainti" minOccurs="1" maxOccurs="1"/>
             <xs:element name="ilmoittaja" type="ilmoittaja" minOccurs="0"/>
-            <xs:element name="ilmoitusId" type="xs:int"/>
-            <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="0"/>
-            <xs:element name="valitettu" type="xs:dateTime" minOccurs="0"/>
             <xs:element name="lahettaja" type="henkilo" minOccurs="0"/>
             <xs:element name="seliteet" type="selitteet" minOccurs="0"/>
-            <xs:element name="sijainti" type="sijainti" minOccurs="0"/>
-            <xs:element name="urakkatyyppi" type="urakkatyyppi" minOccurs="0"/>
-            <xs:element name="vapaateksti" type="xs:string" minOccurs="0"/>
-            <xs:element name="viestiId" type="xs:string" minOccurs="0"/>
-            <xs:element name="yhteydenottopyynto" type="xs:boolean" minOccurs="0"/>
-            <xs:element name="vastaanottaja" type="organisaatio" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -25,7 +24,7 @@
         <xs:complexContent>
             <xs:extension base="henkilo">
                 <xs:sequence>
-                    <xs:element name="tyyppi" type="ilmoittajatyyppi" minOccurs="0"/>
+                    <xs:element name="tyyppi" type="ilmoittajatyyppi" minOccurs="1" maxOccurs="1"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -34,24 +33,26 @@
     <xs:complexType name="henkilo">
         <xs:sequence>
             <xs:element name="etunimi" type="xs:string" minOccurs="0"/>
-            <xs:element name="matkapuhelin" type="xs:string" minOccurs="0"/>
-            <xs:element name="sahkoposti" type="xs:string" minOccurs="0"/>
             <xs:element name="sukunimi" type="xs:string" minOccurs="0"/>
+            <xs:element name="matkapuhelin" type="xs:string" minOccurs="0"/>
             <xs:element name="tyopuhelin" type="xs:string" minOccurs="0"/>
+            <xs:element name="sahkoposti" type="xs:string" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="selitteet">
         <xs:sequence>
-            <xs:element name="selite" type="selite" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="selite" type="selite" nillable="true" minOccurs="1" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="sijainti">
         <xs:sequence>
-            <xs:element name="tienumero" type="xs:integer" minOccurs="0"/>
-            <xs:element name="x" type="xs:double"/>
-            <xs:element name="y" type="xs:double"/>
+            <xs:element name="tienumero" type="xs:integer" minOccurs="1"/>
+            <xs:element name="x" type="xs:integer" minOccurs="1"/>
+            <xs:element name="y" type="xs:integer" minOccurs="1"/>
+            <xs:element name="tieosa" type="xs:integer" minOccurs="0"/>
+            <xs:element name="etaisyys" type="xs:integer" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 

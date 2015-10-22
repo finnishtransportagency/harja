@@ -151,7 +151,6 @@
               lomaketta-voi-muokata? (and
                                        (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                        (not jarjestelman-lisaama-toteuma?))]
-          (log "Muokattu on: " (pr-str @muokattu))
           [:div.muun-tyon-tiedot
            [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
             (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
@@ -177,6 +176,7 @@
                                                          (korosta-rivia muokatun-id)
                                                          (reset! tallennus-kaynnissa false)
                                                          (reset! muut-tyot/valittu-toteuma nil)))
+
                                        :kun-virhe    (reset! tallennus-kaynnissa false)}]
                                      (when (and (not jarjestelman-lisaama-toteuma?)
                                                 (get-in @muokattu [:toteuma :id]))
@@ -203,6 +203,7 @@
                                                                                                                                (do (viesti/nayta! "Toteuma poistettu")
                                                                                                                                    (reset! tallennus-kaynnissa false)
                                                                                                                                    (reset! muut-tyot/valittu-toteuma nil))
+
 
                                                                                                                                ;; Epäonnistui jostain syystä
                                                                                                                                (reset! tallennus-kaynnissa false)))))}
@@ -276,7 +277,7 @@
                   :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                   :leveys-col    3}
                  {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero
-                  :pakollinen? true
+                  :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                   :hae         #(get-in % [:tehtava :maara])
                   :vihje       (if (= :paivanhinta (:hinnoittelu @muokattu))
                                  "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
@@ -288,6 +289,7 @@
                   :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
                  (when (= (:hinnoittelu @muokattu) :paivanhinta)
                    {:otsikko       "Päivän hinta" :nimi :paivanhinta
+                    :pakollinen? (= :paivanhinta (:hinnoittelu @muokattu))
                     :hae           #(get-in % [:tehtava :paivanhinta])
                     :yksikko       "€"
                     :aseta         (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
@@ -299,7 +301,7 @@
                     :vihje       (if (:yksikkohinta-suunniteltu? @muokattu)
                                    "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
                                    "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
-                                   varten Suunnittelu > Muut työt -osioon.")
+                                   varten Suunnittelun Muutos- ja lisätyöt -osioon.")
                     :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                     :yksikko     (str "€ / " (:yksikko @muokattu))
                     :leveys-col  3})

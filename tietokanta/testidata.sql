@@ -33,7 +33,9 @@ INSERT INTO organisaatio (tyyppi, ytunnus, nimi, sampoid) VALUES ('urakoitsija',
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun alueurakka pääsopimus', '2005-10-01','2010-09-30','1H05228/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun alueurakka pääsopimus','2014-10-01','2019-09-30','2H16339/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Oulun alueurakka lisäsopimus', '2005-10-01','2010-09-30','2H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE sampoid='1H05228/01'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Oulun alueurakka lisäsopimus', '2014-10-01','2019-09-30','5H16339/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE sampoid='2H16339/01'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pudasjärvi pääsopimus', '2007-10-01','2012-09-30','3H05228/40', (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Pudasjärvi lisäsopimus', '2007-10-01','2012-09-30','9H143239/01', (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM sopimus WHERE sampoid='3H05228/40'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porin pääsopimus', '2007-10-01','2012-09-30','4H05111/22', (SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen pääsopimus', '2007-06-01','2012-09-30','5H05228/10', (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen pääsopimus', '2007-06-01','2012-09-30','5H05229/10', (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka'));
@@ -378,15 +380,6 @@ INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinsta
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus) VALUES (2006, 9, 1500, '2006-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Sorateiden hoito TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null));
 
 \i testidata/pohjavesialueet.sql
-
--- Luodaan matskut
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Talvisuolaliuos NaCl', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Talvisuolaliuos CaCl2', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Erityisalueet NaCl', 't', 'hoito'::urakkatyyppi, true, 'talvisuola'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Erityisalueet NaCl-liuos', 't', 'hoito'::urakkatyyppi, true, 'talvisuola'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Hiekoitushiekka', 't', 'hoito'::urakkatyyppi, false, 'muu'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Kaliumformiaatti', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
-INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi) VALUES ('Talvisuola NaCl, rakeinen', 't', 'hoito'::urakkatyyppi, false, 'talvisuola'::materiaalityyppi);
 
 -- Materiaalin käytöt
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, null, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
@@ -915,6 +908,7 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
 SELECT paivita_urakoiden_alueet();
+SELECT paivita_hallintayksikoiden_pohjavesialueet();
 
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql

@@ -159,9 +159,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
       (swap! lopetus-fn
              (constantly
               (http/run-server (fn [req]
-                                 (reitita (todennus/todenna-pyynto todennus req)
-                                          (conj (mapv :fn @kasittelijat)
-                                                resurssit)))
+                                 (try+
+                                   (reitita (todennus/todenna-pyynto todennus req)
+                                            (conj (mapv :fn @kasittelijat)
+                                                  resurssit))
+                                   (catch [:virhe :todennusvirhe] _
+                                     {:status 403 :body "Todennusvirhe"})))
                                {:port portti
                                 :thread 64})))
       this))

@@ -64,8 +64,7 @@
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
-      (is (xml/validoi +xsd-polku+ "viestikuittaus.xsd" xml) "Kuittaus on validia XML:ää.")
-
+      (is (xml/validoi +xsd-polku+ "harja-kuittaus.xsd" xml) "Kuittaus on validia XML:ää.")
       (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
       (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
       (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))

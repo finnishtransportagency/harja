@@ -54,7 +54,7 @@
                              {:tehtava-id (Integer/parseInt (first splitattu))
                               :tpk-id     (Integer/parseInt (second splitattu))
                               :nimi       (get splitattu 2)
-                              :maara      (Integer/parseInt (get splitattu 3))
+                              :maara      (Double/parseDouble (get splitattu 3))
                               }))
                          (:tehtavat %))))))
 

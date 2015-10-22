@@ -105,18 +105,18 @@
                                          (swap! tr-sijainnit assoc osoite sijainti))))))))))))
          
          }
-        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna nimi"]]}
+         {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna tienumero"]]}
+         {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna alkuosa"]]}
+         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuosa"]]}
+         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
          {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
           :hae (fn [rivi]
                  (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
                                                                 :losa (:tr_loppuosa rivi)})))
-          :leveys  "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
+          :leveys  "10%"}
+         {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna kvl"]]}
          {:otsikko       "Nykyinen päällyste"
           :nimi          :nykyinen_paallyste
           :fmt           #(paallystys-pot/hae-paallyste-koodilla %)
@@ -126,7 +126,7 @@
           :validoi       [[:ei-tyhja "Anna päällystetyyppi"]]
           :valinta-nayta :nimi
           :leveys        "20%"}
-         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna arvo"]]}]
+         {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna toimenpide"]]}]
         kohdeosat]
 
        [paallystyskohdeosa-virheet tr-virheet]

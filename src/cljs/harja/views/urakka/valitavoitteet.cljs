@@ -55,10 +55,7 @@
                                                         (aseta-tavoitteet res)
                                                         (reset! tallennus-kaynnissa false)))
                                                   (log "merkitään " (pr-str vt) " valmiiksi"))}
-          "Merkitse valmiiksi"]]
-        ]])))
-
-
+          "Merkitse valmiiksi"]]]])))
             
 (defn valitavoite-lomake [opts ur vt]
   (let [{:keys [pvm merkitsija merkitty kommentti]} (:valmis vt)]
@@ -112,22 +109,11 @@
                          
           :vetolaatikot (into {}
                               (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
-                              @tavoitteet)
-          }
+                              @tavoitteet)}
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-          {:otsikko "Nimi" :leveys "55%" :nimi :nimi :tyyppi :string}
+          {:otsikko "Nimi" :leveys "55%" :nimi :nimi :tyyppi :string :pituus-max 128}
           {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm :tyyppi :pvm}
           {:otsikko "Tila" :leveys "25%" :tyyppi :string :muokattava? (constantly false)
-           :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
-          
-                                   
-                                          
-                                     
-          ]
-
+           :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
          @tavoitteet]]))))
-
-         
-            
-            

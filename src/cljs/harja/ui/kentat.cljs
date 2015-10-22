@@ -326,7 +326,7 @@
            (vaihtoehto-nayta v)]]]))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi on-focus]} data]
+                                        valinnat valinnat-fn rivi on-focus jos-tyhja]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
   (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
@@ -341,7 +341,9 @@
                                                  (valinta-arvo %)
                                                  %))
                           :on-focus   on-focus
-                          :format-fn  (or valinta-nayta str)}
+                          :format-fn  (if (empty? valinnat)
+                                        (constantly (or jos-tyhja "Ei valintoja"))
+                                        (or valinta-nayta str))}
      valinnat]))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo valinnat valinnat-fn rivi hae]} data]
