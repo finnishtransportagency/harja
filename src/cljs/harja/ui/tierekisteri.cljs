@@ -143,11 +143,11 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                          :enter-painettu
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-          [:span
-           (case @tila
-             :ei-valittu "Valitse alkupiste"
-             :alku-valittu "Valitse loppupiste"
-             "")
+          [:div.tr-valitsin-teksti.form-control
+           [:div (case @tila
+                   :ei-valittu "Valitse alkupiste"
+                   :alku-valittu "Valitse loppupiste"
+                   "")]
 
            (when-let [virhe @virhe]
              [:div.virhe virhe])])))))
