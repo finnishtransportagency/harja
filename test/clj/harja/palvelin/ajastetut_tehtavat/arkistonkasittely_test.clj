@@ -7,7 +7,7 @@
             [clojure.java.io :as io]))
 
 (def +arkistot-polku+ "test/resurssit/arkistot/")
-(def +arkistot-target-polku+ "test/resurssit/arkistot/target/")
+(def +arkistot-target-polku+ "test/resurssit/arkistot/arkisto_target/")
 
 (defn testaa-tiedoston-purku [tiedosto-nimi]
   (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
@@ -22,13 +22,13 @@
   (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt"))
   ; Tyhjennä target-kansio
   (kansio/poista-tiedostot +arkistot-target-polku+)
-  (is (= 0 (count (.listFiles (clojure.java.io/file +arkistot-target-polku+))))))
+  (is (= 1 (count (.listFiles (clojure.java.io/file +arkistot-target-polku+)))))) ;; .gitkeep tiedosto jää
 
 (deftest testaa-pura-macissa-tehty-zip
-  (testaa-tiedoston-purku"test_zip_mac.zip"))
+  (testaa-tiedoston-purku "test_zip_mac.zip"))
 
 (deftest testaa-pura-macissa-tehty-gzip
-  (testaa-tiedoston-purku"test_gzip_mac.tgz"))
+  (testaa-tiedoston-purku "test_gzip_mac.tgz"))
 
 (deftest testaa-pura-zip
   (testaa-tiedoston-purku "test_zip.zip"))
