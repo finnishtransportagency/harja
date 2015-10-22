@@ -65,10 +65,11 @@
       
       (keep identity
             (mapcat (fn [[{:keys [urakka materiaali]} kuukaudet]]
-                      (let [yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
-                            maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
+                      
+                      (let [maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
                             luokitellut (filter :luokka kuukaudet)
                             kuukaudet (filter (comp not :luokka) kuukaudet)
+                            yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
                             kk-arvot (sort (keep :kk kuukaudet))]
                         (concat
                          ;; Normaali materiaalikohtainen rivi
@@ -95,7 +96,6 @@
 
                          ;; Mahdolliset hoitoluokkakohtaiset rivit
                          (map (fn [[luokka kuukaudet]]
-                                (println "LUOKKA " luokka " kuukaudet: " (pr-str kuukaudet) " KK-ARVOT: " (pr-str kk-arvot))
                                 (let [arvot (group-by :kk kuukaudet)]
                                   (into []
                                         (concat 
