@@ -5,7 +5,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.liitteet :as liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn liitetiedosto
@@ -21,15 +22,6 @@
      (if-not naytettava?
        [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
        [:span.liite-nimi (:nimi tiedosto)])]))
-
-(defn tarkista-liite [liite]
-  (let [max-koko-tavuina 16000000 ; FIXME Nämä pitäisi ehkä laittaa jonnekin asetustiedostoon? --> Laitetaan cljc:n niin pysyy synkassa frontilla ja backendilla
-        whitelist #{"image/png" "application/zip" "image/jpeg"}]
-    (if (> (:koko liite) max-koko-tavuina)
-      {:hyvaksytty false :viesti (str "Liite on liian suuri (max-koko " max-koko-tavuina " tavua).")} ;; FIXME Näytä megatavuina
-      (if (nil? (whitelist (:tyyppi liite)))
-        {:hyvaksytty false :viesti "Tiedostotyyppi ei ole sallittu."}
-        {:hyvaksytty true :viesti nil}))))
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
@@ -72,7 +64,7 @@ Optiot voi sisältää:
                                  (do (reset! edistyminen ed)
                                      (recur (<! ch)))
                                  (do
-                                   (let [tarkistus-tulos (tarkista-liite ed)]
+                                   (let [tarkistus-tulos (liitteet/tarkista-liite ed)]
                                      (if (:hyvaksytty tarkistus-tulos)
                                        (do
                                          (log "Liite OK. Tiedot: " (pr-str ed))
