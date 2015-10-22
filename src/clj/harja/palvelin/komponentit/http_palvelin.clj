@@ -128,13 +128,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
   :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
                       ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa 
-                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
-")
+                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
 
   (poista-palvelu [this nimi]
-    "Poistaa nimetyn palvelun käsittelijän.")
-
-  )
+    "Poistaa nimetyn palvelun käsittelijän."))
 
 (defn- arityt
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
