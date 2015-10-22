@@ -65,7 +65,6 @@ Optiot voi sisältää:
                                      (recur (<! ch)))
                                  (if (and ed (not (k/virhe? ed)))
                                    (do
-                                     (log "Liite OK. Tiedot: " (pr-str ed))
                                      (liite-ladattu (reset! tiedosto ed)))
                                    (do
                                      (reset! virheviesti "Liitteen lisääminen epäonnistui")
