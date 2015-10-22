@@ -14,13 +14,13 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komponentti]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as urakan-tiedot])
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn tee-taulukko []
   (let [toteumat @tiedot/haetut-toteumat]
+    ;; todo: poista
     (log "----------------------- toteumat: " (pr-str toteumat))
 
     [:span

@@ -498,7 +498,7 @@
   ;; todo: palauta käyttöön
   #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
 
-  (println "------- PARAMETRIT: " urakka-id sopimus-id alkupvm loppupvm)
+  (println "------- PARAMETRIT: " urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava)
 
   (let [toteumat (into []
                        (map konv/alaviiva->rakenne

@@ -9,13 +9,14 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide]
   (log (str "parametrit: " urakka-id sopimus-id alkupvm loppupvm))
   (k/post! :urakan-kokonaishintaisten-toteumien-tehtavat
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
             :alkupvm    alkupvm
-            :loppupvm   loppupvm}))
+            :loppupvm   loppupvm
+            :toimenpide toimenpide}))
 
 (def nakymassa? (atom false))
 (def karttataso (atom false))
@@ -27,12 +28,13 @@
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
             kuukausi @urakka/valittu-hoitokauden-kuukausi
-            toimenpide @urakka/valittu-toimenpideinstanssi
+            toimenpide (:id @urakka/valittu-toimenpideinstanssi)
             nakymassa? @nakymassa?]
            (when nakymassa?
              (hae-toteumat urakka-id sopimus-id
                            (or kuukausi
-                               hoitokausi)))))
+                               hoitokausi)
+                           toimenpide))))
 
 ;; todo: poista
 (tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
