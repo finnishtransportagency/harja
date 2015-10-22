@@ -295,8 +295,7 @@
            :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                     (:id @nav/valittu-urakka)
                                                     #(paivita-siltatarkastus! %)
-                                                    :ei-mahdollinen)
-           }
+                                                    :ei-mahdollinen)}
 
           ;; sarakkeet
           @siltatarkastussarakkeet
@@ -349,7 +348,7 @@
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :leveys-col 4
-            :tyyppi  :string :pituus-max 128
+            :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
           @lomakkeen-tiedot]
@@ -382,7 +381,6 @@
            ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "30%"
             :pituus-max 255}]
-
           @taulukon-rivit]
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
