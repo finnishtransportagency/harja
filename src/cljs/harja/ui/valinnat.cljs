@@ -38,15 +38,23 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
-                         :format-fn  #(let [[alkupvm _] %
-                                            kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                       (if %
-                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))
-                                         "Valitse"))
+                         :format-fn  #(if %
+                                       (let [[alkupvm _] %
+                                             kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                                       "Koko hoitokausi")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
                          }
     hoitokauden-kuukaudet]])
+
+(defn urakan-hoitokausi-ja-kuukausi
+  [ur
+   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
+   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
+  [:span
+   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
 
 (defn aikavali
   [valittu-aikavali-atom]

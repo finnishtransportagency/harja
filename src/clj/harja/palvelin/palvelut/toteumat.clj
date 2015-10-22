@@ -494,15 +494,16 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  ;; todo: palauta käyttöön
+  #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
 
   (println "------- PARAMETRIT: " urakka-id sopimus-id alkupvm loppupvm)
 
   (let [toteumat (into []
                        (map konv/alaviiva->rakenne
                             (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
-                              db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))]
+                              db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) toimenpide tehtava)))]
     ;; todo: poista
     (println "------ TOTEUMAT: " toteumat)
     toteumat))

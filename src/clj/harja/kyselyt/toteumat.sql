@@ -583,6 +583,9 @@ WHERE
   AND t.paattynyt <= :paattynyt
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
--- todo:laajenna ottamaan mukaan toimenpide instanssi ja yksittäinen toimenpidekoodi
+  AND (:toimenpide::integer IS NULL OR tk.emo = :toimenpide)
+  AND (:tehtava::integer IS NULL OR tk.id = :tehtava)
 ORDER BY t.alkanut
+LIMIT 501;
+
 

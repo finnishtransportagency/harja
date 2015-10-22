@@ -14,26 +14,42 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komponentti]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as urakan-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn kokonaishintaisten-toteumien-listaus
-  "Kokonaishintaisten töiden toteumat"
-  []
-  (let [urakka @navigaatio/valittu-urakka]
-    [:div.sanktiot
-     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+(defn tee-taulukko []
+  (let [toteumat @tiedot/haetut-toteumat]
+    (log "----------------------- toteumat: " (pr-str toteumat))
+
+    [:span
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])}
-      [{:otsikko "Alkanut" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
-       {:otsikko "Päättynyt" :tyyppi :pvm :fmt pvm/pvm :nimi :paattynyt :leveys "10%"}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "10%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "10%"}]
-      @tiedot/haetut-toteumat]]))
+      (take 500 toteumat)]
+     (when (> (count toteumat) 500)
+       [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
+
+(defn tee-valinnat []
+  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @navigaatio/valittu-urakka]
+  (let [urakka @navigaatio/valittu-urakka]
+    [:span
+     (urakka-valinnat/urakan-sopimus urakka)
+     (urakka-valinnat/urakan-hoitokausi-ja-kuukausi urakka)
+     (urakka-valinnat/urakan-toimenpide-ja-tehtava)]))
+
+(defn kokonaishintaisten-toteumien-listaus
+  "Kokonaishintaisten töiden toteumat"
+  []
+  [:div.sanktiot
+   (tee-valinnat)
+   (tee-taulukko)])
 
 (defn kokonaishintaiset-toteumat []
   (komponentti/luo

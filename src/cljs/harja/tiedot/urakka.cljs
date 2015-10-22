@@ -33,6 +33,11 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
+(defonce valitun-toimenpiteen-tehtavat
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+                     (when urakka-id
+                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat urakka-id))))
+
 (defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]
@@ -100,30 +105,30 @@
   (reset! valittu-hoitokausi hk))
 
 (defonce valittu-hoitokauden-kuukausi
-  (reaction
-   (let [hk @valittu-hoitokausi
-         ur @nav/valittu-urakka
-         kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
-         nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-         edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
-     (when (and hk ur)
-       (cond
-         ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
-         ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
-         (kuuluu-hoitokauteen? edellinen-kk)
-         edellinen-kk
+         (reaction
+           (let [hk @valittu-hoitokausi
+                 ur @nav/valittu-urakka
+                 kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
+                 nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
+                 edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+             (when (and hk ur)
+               (cond
+                 ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
+                 ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
+                 (kuuluu-hoitokauteen? edellinen-kk)
+                 edellinen-kk
 
-         ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
-         (kuuluu-hoitokauteen? nykyinen-kk)
-         nykyinen-kk
+                 ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
+                 (kuuluu-hoitokauteen? nykyinen-kk)
+                 nykyinen-kk
 
-         ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
-         (pvm/ennen? (pvm/nyt) (first hk))
-         (first (pvm/hoitokauden-kuukausivalit hk))
-         
-         ;; fallback on hoitokauden viimeinen kuukausi
-         :default
-         (last (pvm/hoitokauden-kuukausivalit hk)))))))
+                 ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
+                 (pvm/ennen? (pvm/nyt) (first hk))
+                 (first (pvm/hoitokauden-kuukausivalit hk))
+
+                 ;; fallback on hoitokauden viimeinen kuukausi
+                 :default
+                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
@@ -201,6 +206,12 @@
          (reaction<! [ur (:id @nav/valittu-urakka)]
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+
+(defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      nakymassa? (= :kokonaishintaiset @toteumat-valilehti)]
+                     (when (and ur nakymassa?)
+                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)

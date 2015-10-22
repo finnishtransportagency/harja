@@ -26,10 +26,13 @@
            [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
+            kuukausi @urakka/valittu-hoitokauden-kuukausi
             toimenpide @urakka/valittu-toimenpideinstanssi
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (hae-toteumat urakka-id sopimus-id hoitokausi))))
+             (hae-toteumat urakka-id sopimus-id
+                           (or kuukausi
+                               hoitokausi)))))
 
 ;; todo: poista
 (tarkkaile! "---- TOTEUMAT: " haetut-toteumat)

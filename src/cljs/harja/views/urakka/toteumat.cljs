@@ -38,11 +38,11 @@
       (fn []
         [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
 
-         "Yksikköhintaiset työt" :yksikkohintaiset-tyot
-         [yks-hint-tyot/yksikkohintaisten-toteumat]
-
          "Kokonaishintaiset työt" :kokonaishintaiset
          [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]
+
+         "Yksikköhintaiset työt" :yksikkohintaiset-tyot
+         [yks-hint-tyot/yksikkohintaisten-toteumat]
 
          "Muutos- ja lisätyöt" :muut-tyot
          [muut-tyot/muut-tyot-toteumat]

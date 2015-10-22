@@ -15,31 +15,13 @@
   (into []
         (q/hae-urakan-toimenpiteet db urakka-id)))
 
-
 (defn hae-urakan-toimenpiteet-ja-tehtavat
   "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
-  [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)))
-
-(defn hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  "Palvelu, joka palauttaa urakan yksikkohintaiset toimenpiteet ja tehtävät
-
-  Ei palauta toimenpidekoodeja joilla kokonaishintainen = true
-  Ei palauta toimenpidekoodeja joille urakassa on annettu hinta muutoshintainen_tyo taulussa."
-  [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id :yksikkohintaiset))
-
-(defn hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
-  "Palvelu, joka palauttaa urakan muutoshintaiset toimenpiteet ja tehtävät.
-
-  Ei saa palauta toimenpidekoodeja joilla kokonaishintainen = true
-  Ei saa palauta toimenpidekoodeja joille urakassa on annettu hinta yksikkohintainen_tyo taulussa"
-  [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id :muutoshintaiset))
+  ([db user urakka-id] (hae-urakan-toimenpiteet-ja-tehtavat db user urakka-id nil))
+  ([db user urakka-id tyyppi]
+   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+   (into []
+         (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id tyyppi))))
 
 (defrecord Urakan-toimenpiteet []
   component/Lifecycle
@@ -49,13 +31,17 @@
         :urakan-toimenpiteet-ja-tehtavat (fn [user urakka-id]
                                            (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
       (julkaise-palvelu
+        :urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
+                                                             (hae-urakan-toimenpiteet-ja-tehtavat
+                                                               (:db this) user urakka-id :kokonaishintaiset)))
+      (julkaise-palvelu
         :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
-                                                            (hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-                                                              (:db this) user urakka-id)))
+                                                            (hae-urakan-toimenpiteet-ja-tehtavat
+                                                              (:db this) user urakka-id :yksikkohintaiset)))
       (julkaise-palvelu
         :urakan-muutoshintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
-                                                            (hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
-                                                              (:db this) user urakka-id)))
+                                                           (hae-urakan-toimenpiteet-ja-tehtavat
+                                                             (:db this) user urakka-id :muutoshintaiset)))
       (julkaise-palvelu
         :urakan-toimenpiteet (fn [user urakka-id]
                                (hae-urakan-toimenpiteet (:db this) user urakka-id))))
@@ -63,6 +49,7 @@
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet-ja-tehtavat)
+    (poista-palvelu (:http-palvelin this) :urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat)
     (poista-palvelu (:http-palvelin this) :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat)
     (poista-palvelu (:http-palvelin this) :urakan-muutoshintaiset-toimenpiteet-ja-tehtavat)
     (poista-palvelu (:http-palvelin this) :urakan-toimenpiteet)

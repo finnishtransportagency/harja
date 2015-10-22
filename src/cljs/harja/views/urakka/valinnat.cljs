@@ -20,6 +20,17 @@
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
+(defn urakan-hoitokausi-ja-kuukausi [urakka]
+  (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
+    [valinnat/urakan-hoitokausi-ja-kuukausi
+     urakka
+     (u/hoitokaudet urakka)
+     u/valittu-hoitokausi
+     u/valitse-hoitokausi!
+     kuukaudet
+     u/valittu-hoitokauden-kuukausi
+     u/valitse-hoitokauden-kuukausi!]))
+
 (defn aikavali [ur]
   (valinnat/aikavali u/valittu-aikavali))
 
@@ -28,10 +39,10 @@
 
 (defn urakan-toimenpide+kaikki []
   (valinnat/urakan-toimenpide
-   (r/wrap (vec (concat [{:tpi_nimi "Kaikki"}]
-                        @u/urakan-toimenpideinstanssit))
-           identity)
-   u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+    (r/wrap (vec (concat [{:tpi_nimi "Kaikki"}]
+                         @u/urakan-toimenpideinstanssit))
+            identity)
+    u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-toimenpide+muut []
   (valinnat/urakan-toimenpide
@@ -39,6 +50,9 @@
                          [{:tpi_nimi "Muut"}]))
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+
+(defn urakan-toimenpide-ja-tehtava []
+  (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi
@@ -61,13 +75,13 @@
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
-   ur
-   u/valittu-sopimusnumero u/valitse-sopimusnumero!
-   (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
-   (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
-                        [{:tpi_nimi "Muut"}]))
-           identity)
-   u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+    ur
+    u/valittu-sopimusnumero u/valitse-sopimusnumero!
+    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                         [{:tpi_nimi "Muut"}]))
+            identity)
+    u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (valinnat/urakan-hoitokausi-ja-toimenpide
