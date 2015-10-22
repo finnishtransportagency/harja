@@ -33,7 +33,6 @@
                        [alkupvm loppupvm])
         materiaalit (if urakoittain?
                       (hae-raportti-urakoittain db alku loppu hallintayksikko-id)
-                      ;; FIXME: urakka-id tai hallintayksikkö id
                       (hae-raportti db alku loppu urakka-id hallintayksikko-id))
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
