@@ -11,6 +11,7 @@
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tilannekuva/tilannekuvassa?)
+    (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false) #(reset! kartta/pida-geometriat-nakyvilla? true))
     (fn []
       [:span.tilannekuva
        [bs/tabs

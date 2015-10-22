@@ -214,6 +214,13 @@
                  (when-let [g (tapahtuman-geometria this e)]
                    (on-select g e))))))))
 
+;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
+(defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
+  (.on ol3 "dblclick" (fn [e]
+                        (when on-select
+                          (when-let [g (tapahtuman-geometria this e)]
+                            (on-select g e))))))
+
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
@@ -269,6 +276,13 @@
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
+;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
+(defn nykyinen-zoom-taso []
+  (-> (.getView @the-kartta) (.getZoom)))
+
+(defn aseta-zoom [zoom]
+  (-> (.getView @the-kartta) (.setZoom zoom)))
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -284,7 +298,7 @@
         _ (reset!
             openlayers-kartan-leveys
             (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
-        _ (reset! the-kartta ol3)                           ;; puhtaasi REPL tunkkausta varten
+        _ (reset! the-kartta ol3)
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)
@@ -295,7 +309,7 @@
     (when (animaatio/transition-end-tuettu?)
       (animaatio/kasittele-transition-end (.getElementById js/document (:id mapspec))
                                           #(.updateSize ol3)))
-    
+
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
@@ -312,7 +326,7 @@
                    (nayta-popup! this coordinate content))
 
                  ::invalidate-size
-                 (do (log "OL3:updateSize kutsuttu")
+                 (do
                      (.updateSize ol3)
                      (.render ol3))
 
@@ -332,8 +346,8 @@
                                       {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center (clj->js @view)
-                                 :zoom   @zoom
+    (.setView ol3 (ol.View. #js {:center  (clj->js @view)
+                                 :zoom    @zoom
                                  :maxZoom 20
                                  :minZoom 5}))
 
@@ -346,6 +360,7 @@
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-dblclick-kasittelija this ol3 (:on-dblclick mapspec) (:on-dblclick-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
@@ -438,7 +453,7 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
@@ -454,7 +469,7 @@
                       :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
                                                      :anchor         #js [0.5 0.5]
                                                      :opacity        1
-                                                     :scale          0.5
+                                                     :scale          (or scale 0.5)
                                                      :size           #js [32 32]
                                                      :zIndex         6
                                                      :rotateWithView false

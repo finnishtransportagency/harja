@@ -671,7 +671,7 @@ VALUES
 -- Havainnot
 
 INSERT INTO havainto (kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
-VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(1, 2)::GEOMETRY, 5);
+VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::havainnon_kasittelytapa, '', 'hylatty'::havainnon_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2005-10-11 06:06.37', '2005-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), 'Täysin turha testihavainto', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
 
 -- Sanktiot
 
@@ -771,6 +771,93 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 '2008-09-09 10:09.00',
 NOW(),
 st_makepoint(499820, 7249885) ::POINT, 2);
+
+-- Reittipisteet muutostyölle
+-- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:00.00',
+        NOW(),
+        st_makepoint(453919, 7187099) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:03.00',
+        NOW(),
+        st_makepoint(453271, 7188395) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:06.00',
+        NOW(),
+        st_makepoint(453399, 7189019) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+        '2005-11-13 00:09.00',
+        NOW(),
+        st_makepoint(453820, 7189885) ::POINT, 2);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:00.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES
+  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:03.00' :: TIMESTAMP ),
+   NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:06.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:09.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+-- Toinen muutoshintainen työ
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:00.00',
+        NOW(),
+        st_makepoint(440919, 7207099) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:03.00',
+        NOW(),
+        st_makepoint(440271, 7208395) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:06.00',
+        NOW(),
+        st_makepoint(440399, 7209019) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+        '2005-11-13 10:09.00',
+        NOW(),
+        st_makepoint(440820, 7209885) ::POINT, 2);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:00.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES
+  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:03.00' :: TIMESTAMP ),
+   NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:06.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
+
+INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
+VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:09.00' :: TIMESTAMP ),
+        NOW(), 1350, 10);
 
 -- Reittipisteet yksikköhintaiselle työlle
 
