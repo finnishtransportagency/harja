@@ -13,15 +13,15 @@
   "Olemassaolevan liitteen näyttäminen. Näyttää pikkukuvan ja tiedoston nimen."
   [tiedosto]
   (let [naytettava? (zero? (.indexOf (:tyyppi tiedosto) "image/"))] ; jos kuva MIME tyyppi, näytetään modaalissa
-    [:div.liite {:on-click #(modal/nayta!
-                             {:otsikko (str "Liite: " (:nimi tiedosto))}
-                             [:div.liite-ikkuna
-                              [:img {:src (k/liite-url (:id tiedosto))}]])}
-     [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
-     ;; FIXME: voiko tässä poistaa myös?
-     (if-not naytettava?
-       [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
-       [:span.liite-nimi (:nimi tiedosto)])]))
+      [:div.liite {:on-click #(modal/nayta!
+                               {:otsikko (str "Liite: " (:nimi tiedosto))}
+                               [:div.liite-ikkuna
+                                [:img {:src (k/liite-url (:id tiedosto))}]])}
+       [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
+       ;; FIXME: voiko tässä poistaa myös?
+       (if-not naytettava?
+         [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
+         [:span.liite-nimi (:nimi tiedosto)])]))
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
@@ -63,16 +63,12 @@ Optiot voi sisältää:
                                (if (number? ed)
                                  (do (reset! edistyminen ed)
                                      (recur (<! ch)))
-                                 (do
-                                   (let [tarkistus-tulos (t-liitteet/tarkista-liite ed)]
-                                     (if (:hyvaksytty tarkistus-tulos)
-                                       (do
-                                         (log "Liite OK. Tiedot: " (pr-str ed))
-                                         (liite-ladattu (reset! tiedosto ed)))
-                                       (do
-                                         (reset! virheviesti (str "Liite hylätty: " (:viesti tarkistus-tulos)))
-                                         (reset! edistyminen nil)
-                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))
-                                         (log "Tyyppi oli: " (:tyyppi ed))
-                                         (log "Koko oli: " (:koko ed))))))))))}]]
-            [:div.liite-virheviesti @virheviesti]])))))
+                                 (if (and ed (not (k/virhe? ed)))
+                                   (do
+                                     (log "Liite OK. Tiedot: " (pr-str ed))
+                                     (liite-ladattu (reset! tiedosto ed)))
+                                   (do
+                                     (reset! virheviesti "Tiedosto on liian suuri tai tyyppiä ei ole sallittu.")
+                                     (reset! edistyminen nil)
+                                     (log "Liite hylätty.")))))))}]]
+           [:div.liite-virheviesti @virheviesti]])))))
