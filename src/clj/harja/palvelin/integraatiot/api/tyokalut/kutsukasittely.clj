@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kayttajat :as q]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [harja.tyokalut.avaimet :as avaimet])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)))
@@ -20,12 +21,25 @@
    :otsikko       (str (walk/keywordize-keys (:headers viesti)))
    :parametrit    (str (:params viesti))})
 
+(defn poista-liitteet-logituksesta [body]
+  (let [body-clojure-mappina (cheshire/decode body true)
+        avainpolut (avaimet/keys-in body-clojure-mappina)
+        avainpolku-liitteet (first (filter
+                                     (fn [avainpolku]
+                                       (= (last avainpolku) :liitteet))
+                                     avainpolut))
+        liitteet-ilman-sisaltoja (mapv (fn [liite]
+                                         (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
+                                       (get-in body-clojure-mappina avainpolku-liitteet))
+        body-ilman-liittteiden-sisaltoa (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja)]
+    body-ilman-liittteiden-sisaltoa))
+
 (defn lokita-kutsu [integraatioloki resurssi request body]
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
   (log/debug "Kutsu:" request)
   (log/debug "Parametrit: " (:params request))
   (log/debug "Headerit: " (:headers request))
-  (log/debug "Sisältö:" body)
+  (log/debug "Sisältö:" (poista-liitteet-logituksesta body))
 
   (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil (tee-lokiviesti "sisään" body request)))
 
