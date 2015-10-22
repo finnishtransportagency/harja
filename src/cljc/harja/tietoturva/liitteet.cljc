@@ -15,8 +15,10 @@
                          "application/vnd.oasis.opendocument.text"
                          "application/vnd.oasis.opendocument.spreadsheet"
                          "text/plain"}]
-    (if (> (:koko liite) max-koko-tavuina)
-      {:hyvaksytty false :viesti (str "Liite on liian suuri (sallittu koko " max-koko-tavuina " tavua).")}
-      (if (nil? (mime-whitelist (:tyyppi liite)))
-        {:hyvaksytty false :viesti "Tiedostotyyppi ei ole sallittu."}
-        {:hyvaksytty true :viesti nil}))))
+    (if (and (:koko liite) (:tyyppi liite))
+      (if (> (:koko liite) max-koko-tavuina)
+        {:hyvaksytty false :viesti (str "Liite on liian suuri (sallittu koko " max-koko-tavuina " tavua).")}
+        (if (nil? (mime-whitelist (:tyyppi liite)))
+          {:hyvaksytty false :viesti "Tiedostotyyppi ei ole sallittu."}
+          {:hyvaksytty true :viesti nil}))
+      {:hyvaksytty false :viesti "Järjestelmä ei voi käsitellä tiedostoa."})))

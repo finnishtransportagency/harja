@@ -72,5 +72,7 @@ Optiot voi sisältää:
                                        (do
                                          (reset! virheviesti (str "Liite hylätty: " (:viesti tarkistus-tulos)))
                                          (reset! edistyminen nil)
-                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))))))))))}]]
+                                         (log "Liite hylätty: " (:viesti tarkistus-tulos))
+                                         (log "Tyyppi oli: " (:tyyppi ed))
+                                         (log "Koko oli: " (:koko ed))))))))))}]]
             [:div.liite-virheviesti @virheviesti]])))))
