@@ -378,23 +378,16 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                        (fn [_ _ vanha uusi]
                                          ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
                                          ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
-                                         ;; Tällainen workaround piti tehdä, koska asian valitseminen muutta
+                                         ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
                                          ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
-                                         ;; Tästä muutos ei mene läpi, koska valitsemisen myötä avaimet kuitenkin pysyvät samana.
-                                         ;; On toki mahdollista, että kartan geometriat muuttuvat mutta avaimet sattuvat
-                                         ;; pysymään täysin samana, mutta tämä on toivottavasti epätodennäköistä..
                                          (when @pida-geometriat-nakyvilla?
-                                           (if-not (and
-                                                     (= (flatten (map (comp sort keys) vanha))
-                                                        (flatten (map (comp sort keys) uusi)))
-                                                     ;; Ei voida luottaa että geometrioilla on :id avain, mutta tämä
-                                                     ;; ainakin auttaa tunnistamisessa.
-                                                     (= (sort (map :id vanha))
-                                                        (sort (map :id uusi))))
-                                             (zoomaa-geometrioihin)))))
-
-                            #_(harja.loki/tarkkaile! "Hallintayksikkö" nav/valittu-hallintayksikko)
-                            #_(harja.loki/tarkkaile! "Urakka" nav/valittu-urakka))}
+                                           (if (or
+                                                 (not (= (count vanha) (count uusi)))
+                                                 (some false?
+                                                       (map
+                                                         (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
+                                                         vanha uusi)))
+                                             (zoomaa-geometrioihin))))))}
     (fn []
       (let [hals @hal/hallintayksikot
             v-hal @nav/valittu-hallintayksikko
