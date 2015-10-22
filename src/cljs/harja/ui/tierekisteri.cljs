@@ -120,9 +120,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
 
-    (let [kartan-koko @nav/kartan-koko
-          kartan-edellinen-koko @nav/kartan-edellinen-koko]
-
+    (let [kartan-koko @nav/kartan-koko]
       (komp/luo
         {:component-will-receive-props
          (fn [_ _ uudet-optiot]
@@ -130,14 +128,12 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
         (komp/sisaan-ulos #(do
                             (reset! nav/kartan-edellinen-koko kartan-koko)
-                            (when-not (= :XL kartan-koko)
+                            (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair))
                           #(do
-                            (when (or (= :hidden kartan-edellinen-koko)
-                                      (= :S kartan-edellinen-koko))
-                              (reset! nav/kartan-koko @nav/kartan-edellinen-koko)
-                              (reset! nav/kartan-edellinen-koko nil))
+                            (reset! nav/kartan-koko @nav/kartan-edellinen-koko)
+                            (reset! nav/kartan-edellinen-koko nil)
                             (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
         (komp/kuuntelija :esc-painettu
