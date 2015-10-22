@@ -32,7 +32,7 @@
                                          (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
                                        (get-in body-clojure-mappina avainpolku-liitteet))
         body-ilman-liittteiden-sisaltoa (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja)]
-    body-ilman-liittteiden-sisaltoa))
+    (cheshire/encode body-ilman-liittteiden-sisaltoa))) ;; FIXME Formatoi takaisin kivaan muotoon, miten? :(
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
   (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
