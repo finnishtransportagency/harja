@@ -481,12 +481,36 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
+(defmethod luo-feature :tack-icon [{:keys [coordinates img]}])
+
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style.
+    (.setStyle [(ol.style.Style.
                  #js {:image (ol.style.Icon.
-                               #js {:src })}))))
+                               #js {:src "images/karttaikonit/kartta-suuntanuoli-sininen.svg"
+                                    :rotation (or direction 0)})
+                      :zIndex 4})
 
+                (ol.style.Style.
+                  #js {:image  (ol.style.Icon.
+                                 #js {:src      (str "images/karttaikonit/" img)
+                                      :rotation (or direction 0)})
+                       :zIndex 4})])))
+
+(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style.
+                 #js {:image  (ol.style.Icon.
+                                #js {:src          img
+                                     :anchor       (if anchor
+                                                     (clj->js anchor)
+                                                     #js [0.5 1])
+                                     :opacity      1
+                                     ;;:size         #js [40 40]
+                                     :rotation     (or direction 0)
+                                     :anchorXUnits "fraction"
+                                     :anchorYUnits "fraction"})
+                      :zIndex 4}))))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -505,21 +529,6 @@
                                                                   :opacity      1
                                                                   :size         #js [62 62]})
                                      :zIndex (or zindex 4)}))))
-
-(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style.
-                 #js {:image  (ol.style.Icon.
-                                #js {:src          img
-                                     :anchor       (if anchor
-                                                     (clj->js anchor)
-                                                     #js [0.5 1])
-                                     :opacity      1
-                                     ;;:size         #js [40 40]
-                                     :rotation     (or direction 0)
-                                     :anchorXUnits "fraction"
-                                     :anchorYUnits "fraction"})
-                      :zIndex 4}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
