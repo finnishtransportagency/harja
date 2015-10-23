@@ -25,11 +25,11 @@
       {:otsikko "Kokonaishintaisten töiden toteumat"
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :tunniste :toteumaid}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "10%"}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
-       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "10%"}]
+       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
       (take 500 toteumat)]
      (when (> (count toteumat) 500)
        [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
