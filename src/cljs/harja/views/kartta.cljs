@@ -57,7 +57,12 @@
         (set! (.-left tyyli) (fmt/pikseleina x))
         (set! (.-top tyyli) (fmt/pikseleina y))
         (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))))))
+        (set! (.-height tyyli) (fmt/pikseleina h))))
+    ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
+    (when (= :S @nav/kartan-koko)
+      (set! (.-left tyyli) "")
+      (set! (.-right tyyli) (fmt/pikseleina 20))
+      (set! (.-width tyyli) (fmt/pikseleina 100)))))
 
 ;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
 ;; kerralla paikan asetuksen... läheta false kanavaan
