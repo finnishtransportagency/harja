@@ -370,23 +370,25 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
 (defn kartta-openlayers []
   (komp/luo
-    {:component-did-mount (fn [_]
-                            (zoomaa-geometrioihin)
 
-                            (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
-                                       (fn [_ _ vanha uusi]
-                                         ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
-                                         ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
-                                         ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
-                                         ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
-                                         (when @pida-geometriat-nakyvilla?
-                                           (if (or
-                                                 (not (= (count vanha) (count uusi)))
-                                                 (some false?
-                                                       (map
-                                                         (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
-                                                         vanha uusi)))
-                                             (zoomaa-geometrioihin))))))}
+    (komp/sisaan
+      (fn [_]
+        (zoomaa-geometrioihin)
+
+        (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
+                   (fn [_ _ vanha uusi]
+                     ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
+                     ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
+                     ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
+                     ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
+                     (when @pida-geometriat-nakyvilla?
+                       (when (or
+                               (not (= (count vanha) (count uusi)))
+                               (some false?
+                                     (map
+                                       (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
+                                       vanha uusi)))
+                         (zoomaa-geometrioihin)))))))
     (fn []
       (let [hals @hal/hallintayksikot
             v-hal @nav/valittu-hallintayksikko

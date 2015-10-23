@@ -428,9 +428,7 @@
                          "Urak. järj."
                          "Harja")
               :tyyppi  :string :muokattava? (constantly false) :leveys "10%"}]
-            @tyorivit
-            ]])
-        ))))
+            @tyorivit]])))))
 
 
 
@@ -440,7 +438,7 @@
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (komp/ulos (kartta/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
     (fn []
-      [:spans
+      [:span
        [kartta/kartan-paikka]
        (if @muut-tyot/valittu-toteuma
          [toteutuneen-muun-tyon-muokkaus]
