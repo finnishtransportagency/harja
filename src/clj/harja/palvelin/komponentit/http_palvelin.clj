@@ -140,10 +140,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
+(defrecord HttpPalvelin [asetukset kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
-    (log/info "HttpPalvelin käynnistetään portissa " portti)
+    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
@@ -162,8 +162,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                                   resurssit))
                                    (catch [:virhe :todennusvirhe] _
                                      {:status 403 :body "Todennusvirhe"})))
-                               {:port portti
-                                :thread 64})))
+                               {:port (or (:portti asetukset) asetukset)
+                                :thread (or (:threads asetukset) 8)
+                                :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
@@ -197,8 +198,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
            (fn [kasittelijat]
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
-(defn luo-http-palvelin [portti kehitysmoodi]
-  (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
+(defn luo-http-palvelin [asetukset kehitysmoodi]
+  (->HttpPalvelin asetukset (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
   (julkaise-palvelu http nimi  (wrap-params reitti)
