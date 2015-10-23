@@ -7,7 +7,7 @@
     "tunniste": {
       "id": "urn:harja/tunniste",
       "type": "string",
-      "required": true
+      "required": false
     },
     "sijainti": {
       "id": "urn:harja/havainnot/0/sijainti",

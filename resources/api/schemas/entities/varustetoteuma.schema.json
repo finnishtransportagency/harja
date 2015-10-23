@@ -6,8 +6,7 @@
   "properties": {
     "tunniste": {
       "id": "urn:harja/tunniste",
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "tietolaji": {
       "id": "urn:harja/tietolaji",
