@@ -4,7 +4,6 @@
             [cljs-time.core :as time]
             [cljs-time.coerce :as tc]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat :as toteumat]
@@ -12,7 +11,8 @@
             [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [cljs-time.core :as t])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -63,6 +63,32 @@
                            (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                      [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
 
+(defn urakoiden-hoitokaudet
+  "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli N vuotta
+  vanhoja hoitokausia."
+  [urakat n]
+  (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
+        viimeinen-vuosi (t/year (t/now))
+        ensimmainen-vuosi (if (>= (- (t/year (t/now))
+                                     ensimmainen-vuosi)
+                                  n)
+                            (- (t/year (t/now)) n)
+                            ensimmainen-vuosi)]
+      (mapv (fn [vuosi]
+              [(pvm/hoitokauden-alkupvm vuosi)
+               (pvm/hoitokauden-loppupvm (inc vuosi))])
+            (range ensimmainen-vuosi viimeinen-vuosi))))
+
+(defn edelliset-hoitokaudet
+  "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
+  [n]
+  (let [ensimmainen-vuosi (- (t/year (t/now)) n)
+        viimeinen-vuosi (t/year (t/now))]
+    (mapv (fn [vuosi]
+            [(pvm/hoitokauden-alkupvm vuosi)
+             (pvm/hoitokauden-loppupvm (inc vuosi))])
+          (range ensimmainen-vuosi viimeinen-vuosi))))
+
 (defonce valitun-urakan-hoitokaudet
          (reaction (when-let [ur @nav/valittu-urakka]
                      (hoitokaudet ur))))
@@ -93,6 +119,10 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
+(defonce valittu-kontekstin-hoitokausi (atom nil))
+
+(defn valitse-kontekstin-hoitokausi! [hk]
+  (reset! valittu-kontekstin-hoitokausi hk))
 
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 

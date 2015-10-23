@@ -21,8 +21,8 @@
                        :hae-raportit
                        (fn [user]
                          (reduce-kv (fn [acc nimi raportti]
-                                      ;; Otetaan suoritus fn pois frontille lähetettävästä
-                                      (assoc acc nimi (dissoc raportti :suorita)))
+                                      ;; Otetaan suoritus fn ja koodi pois frontille lähetettävästä
+                                      (assoc acc nimi (dissoc raportti :suorita :koodi)))
                                     {}
                                     (hae-raportit raportointi)))
 

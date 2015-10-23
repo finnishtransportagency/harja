@@ -11,7 +11,7 @@
     (assert (and (vector? elementti)
                  (> (count elementti) 1)
                  (keyword? (first elementti)))
-            "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä.")
+            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?]} sarakkeet data]]

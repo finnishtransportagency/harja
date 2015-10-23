@@ -32,11 +32,12 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
+            [harja.geo :as geo]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-(defonce valittu-toteuma (atom nil))
 
 (defn hae-muutoshintainen-tyo-tpklla [tpk]
   (first (filter (fn [muutoshinta]
@@ -121,41 +122,39 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   []
-  (let [toteuma @valittu-toteuma
-        muokattu (atom (if (get-in toteuma [:toteuma :id])
-                         (assoc toteuma
-                           :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
-                         ;; alustetaan arvoja uudelle toteumalle
-                         (assoc toteuma
-                           :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
-                           :tyyppi :muutostyo
-                           :hinnoittelu :yksikkohinta)))
-        valmis-tallennettavaksi? (reaction (let [m @muokattu]
-                                             (and
-                                               (get-in m [:tehtava :toimenpidekoodi])
-                                               (:tyyppi m)
-                                               (:alkanut m)
-                                               (:paattynyt m)
-                                               (or (if (= (:hinnoittelu @muokattu) :paivanhinta)
-                                                     (get-in m [:tehtava :paivanhinta])
-                                                     (get-in m [:tehtava :maara]))))))
-        tallennus-kaynnissa (atom false)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit
-        jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
-        lomaketta-voi-muokata? (and
-                                 (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
-                                 (not jarjestelman-lisaama-toteuma?))]
-
-    (komp/luo
+  (komp/luo
+    (let [muokattu (reaction (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
+                           (assoc @muut-tyot/valittu-toteuma
+                             :sopimus @u/valittu-sopimusnumero
+                             :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
+                           ;; alustetaan arvoja uudelle toteumalle
+                           (assoc @muut-tyot/valittu-toteuma
+                             :sopimus @u/valittu-sopimusnumero
+                             :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                             :tyyppi :muutostyo
+                             :hinnoittelu :yksikkohinta)))]
       (fn []
-        (let [tehtavat-tasoineen @u/urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
-              tehtavat (map #(nth % 3) tehtavat-tasoineen)]
+        (let [valmis-tallennettavaksi? (reaction (let [m @muokattu]
+                                                   (and
+                                                     (get-in m [:tehtava :toimenpidekoodi])
+                                                     (:tyyppi m)
+                                                     (:alkanut m)
+                                                     (:paattynyt m)
+                                                     (or (if (= (:hinnoittelu @muokattu) :paivanhinta)
+                                                           (get-in m [:tehtava :paivanhinta])
+                                                           (get-in m [:tehtava :maara]))))))
+              tallennus-kaynnissa (atom false)
+              tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+              tehtavat (map #(nth % 3) tehtavat-tasoineen)
+              toimenpideinstanssit @u/urakan-toimenpideinstanssit
+              jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
+              lomaketta-voi-muokata? (and
+                                       (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                       (not jarjestelman-lisaama-toteuma?))]
           [:div.muun-tyon-tiedot
-           [:button.nappi-toissijainen {:on-click #(reset! valittu-toteuma nil)}
+           [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
             (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
-           (if (get-in @valittu-toteuma [:tehtava :id])
+           (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
              (if lomaketta-voi-muokata?
                [:h3 "Muokkaa toteumaa"]
                [:h3 "Tarkastele toteumaa"])
@@ -163,7 +162,6 @@
            [lomake {:luokka       :horizontal
                     :voi-muokata? lomaketta-voi-muokata?
                     :muokkaa!     (fn [uusi]
-                                    (log "MUOKATAAN " (pr-str uusi))
                                     (reset! muokattu uusi))
                     :footer       (when (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                     [:span
@@ -177,7 +175,8 @@
                                                        (do
                                                          (korosta-rivia muokatun-id)
                                                          (reset! tallennus-kaynnissa false)
-                                                         (reset! valittu-toteuma nil)))
+                                                         (reset! muut-tyot/valittu-toteuma nil)))
+
                                        :kun-virhe    (reset! tallennus-kaynnissa false)}]
                                      (when (and (not jarjestelman-lisaama-toteuma?)
                                                 (get-in @muokattu [:toteuma :id]))
@@ -203,7 +202,8 @@
                                                                                                                                ;; Tallennus ok
                                                                                                                                (do (viesti/nayta! "Toteuma poistettu")
                                                                                                                                    (reset! tallennus-kaynnissa false)
-                                                                                                                                   (reset! valittu-toteuma nil))
+                                                                                                                                   (reset! muut-tyot/valittu-toteuma nil))
+
 
                                                                                                                                ;; Epäonnistui jostain syystä
                                                                                                                                (reset! tallennus-kaynnissa false)))))}
@@ -380,10 +380,11 @@
 
     (komp/luo
       (fn []
+        (reset! muut-tyot/haetut-muut-tyot @tyorivit)
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [:button.nappi-ensisijainen {:on-click #(reset! valittu-toteuma {})
+           [:button.nappi-ensisijainen {:on-click #(reset! muut-tyot/valittu-toteuma {})
                                         :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus
                                                                                (:id @nav/valittu-urakka)))}
             (ikonit/plus) " Lisää toteuma"]
@@ -393,7 +394,7 @@
              :tyhja         (if (nil? @valitut-muut-tyot)
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
-             :rivi-klikattu #(reset! valittu-toteuma %)
+             :rivi-klikattu #(reset! muut-tyot/valittu-toteuma %)
              :rivin-luokka  #(aseta-rivin-luokka %)
              :tunniste      #(get-in % [:toteuma :id])}
             [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
@@ -427,16 +428,18 @@
                          "Urak. järj."
                          "Harja")
               :tyyppi  :string :muokattava? (constantly false) :leveys "10%"}]
-            @tyorivit
-            ]])
-        ))))
+            @tyorivit]])))))
 
 
 
 (defn muut-tyot-toteumat []
-  (fn []
-    [:span
-     [kartta/kartan-paikka]
-     (if @valittu-toteuma
-       [toteutuneen-muun-tyon-muokkaus]
-       [muut-tyot-toteumalistaus])]))
+  (komp/luo
+    (komp/lippu muut-tyot/karttataso-muut-tyot)
+    (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
+    (komp/ulos (kartta/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
+    (fn []
+      [:span
+       [kartta/kartan-paikka]
+       (if @muut-tyot/valittu-toteuma
+         [toteutuneen-muun-tyon-muokkaus]
+         [muut-tyot-toteumalistaus])])))

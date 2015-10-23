@@ -61,7 +61,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (and (map? vastaus)
            (or
              (not (nil? (get vastaus :failure)))
-             (not (nil? (get vastaus :virhe)))))))
+             (not (nil? (get vastaus :virhe)))
+             (not (nil? (get vastaus :error)))))))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.

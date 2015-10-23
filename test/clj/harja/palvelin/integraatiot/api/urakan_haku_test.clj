@@ -36,8 +36,8 @@
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
-    (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
+    (is (= 403 (:status vastaus)))
+    (is (.contains (:body vastaus) "Todennusvirhe"))))
 
 (deftest urakan-haku-ytunnuksella-toimii
   (let [ytunnus "1565583-5"

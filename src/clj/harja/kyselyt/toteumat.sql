@@ -165,23 +165,35 @@ FROM toteuma_tehtava tt
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
-  tt.id              AS tehtava_id,
-  tt.toteuma         AS toteuma_id,
-  tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
-  tt.maara           AS tehtava_maara,
-  tt.lisatieto       AS tehtava_lisatieto,
-  tt.paivan_hinta    AS tehtava_paivanhinta,
+  tt.id                           AS tehtava_id,
+  tt.toteuma                      AS toteuma_id,
+  tt.toimenpidekoodi              AS tehtava_toimenpidekoodi,
+  tt.maara                        AS tehtava_maara,
+  tt.lisatieto                    AS tehtava_lisatieto,
+  tt.paivan_hinta                 AS tehtava_paivanhinta,
   t.tyyppi,
   t.alkanut,
   t.paattynyt,
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
-  tpk.emo            AS tehtava_emo,
-  tpk.nimi           AS tehtava_nimi,
-  o.nimi             AS organisaatio,
+
+  tpk.emo                         AS tehtava_emo,
+  tpk.nimi                        AS tehtava_nimi,
+  o.nimi                          AS organisaatio,
   k.kayttajanimi,
-  k.jarjestelma      AS jarjestelmasta
+  k.jarjestelma                   AS jarjestelmasta,
+
+  rp.id                           AS reittipiste_id,
+  rp.aika                         AS reittipiste_aika,
+  rp.sijainti                     AS reittipiste_sijainti,
+
+  rt.id                           AS reittipiste_tehtava_id,
+  rt.toimenpidekoodi              AS reittipiste_tehtava_toimenpidekoodi,
+  rt.maara                        AS reittipiste_tehtava_maara,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS reittipiste_tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
   INNER JOIN toteuma t ON tt.toteuma = t.id
@@ -193,6 +205,8 @@ FROM toteuma_tehtava tt
                                          'lisatyo' :: toteumatyyppi, 'muutostyo' :: toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
+  LEFT JOIN reittipiste rp ON t.id = rp.toteuma
+  LEFT JOIN reitti_tehtava rt ON rp.id = rt.reittipiste
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
