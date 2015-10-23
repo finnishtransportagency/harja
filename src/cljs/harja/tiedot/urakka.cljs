@@ -235,7 +235,8 @@
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
-                      nakymassa? (= :kokonaishintaiset-tyot @toteumat-valilehti)]
+                      nakymassa? (and (= :toteumat @urakan-valittu-valilehti)
+                                      (= :kokonaishintaiset-tyot @toteumat-valilehti))]
                      (when (and ur nakymassa?)
                        (go
                          (group-by
