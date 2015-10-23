@@ -276,6 +276,7 @@
   (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
                             {:tyyppi :silta :selitys "Silta"}
                             {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
+        selitetyt-tyypit (into #{} (map :tyyppi ikonien-selitykset))
         esitettavat-tyypit (remove nil? (keys (group-by :tyyppi-kartalla @tasot/geometriat)))
         geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
                                                      (first
@@ -283,14 +284,12 @@
                                                                  (= (:tyyppi-kartalla geo) tyyppi))
                                                                @tasot/geometriat)))
                                                    esitettavat-tyypit)]
-  (if (and (not= :S @nav/kartan-koko)
-           (some
-             (fn [asia]
-               (some (fn [sel]
-                       (= (:tyyppi sel) asia))
-                     ikonien-selitykset))
-             esitettavat-tyypit)
-           @ikonien-selitykset-nakyvissa?)
+    (if (and (not= :S @nav/kartan-koko)
+             (some
+               (fn [geometrian-tyyppi]
+                 (geometrian-tyyppi selitetyt-tyypit))
+               esitettavat-tyypit)
+             @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
          [:div
@@ -433,10 +432,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                      (when @pida-geometriat-nakyvilla?
                        (when (or
                                (not (= (count vanha) (count uusi)))
+
+                               ;; Tässä vertaillaan järjestyksessä, joten periaatteessa voi tulla false positive
                                (some false?
                                      (map
                                        (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
                                        vanha uusi)))
+
                          (zoomaa-geometrioihin)))))))
     (fn []
       (let [hals @hal/hallintayksikot
