@@ -100,7 +100,7 @@
                   reitti-hoitoluokka (ffirst (q (str "SELECT hoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
               (is (= (count reitti-tehtava-idt) 2))
               (is (= (count reitti-materiaali-idt) 1))
-              (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
+              (is (= reitti-hoitoluokka 7))))               ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
           (doseq [reittipiste-id reittipiste-idt]
             (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))
@@ -119,6 +119,6 @@
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          varuste-kannassa (first (q (str "SELECT tunniste FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
+          varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
-      (is (= varuste-kannassa ["HARJ951547ZK"])))))
+      (is (= varuste-arvot-kannassa ["----livitunniste----        2                           ----livitunniste----          01  "])))))

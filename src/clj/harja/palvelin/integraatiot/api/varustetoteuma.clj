@@ -20,7 +20,9 @@
 (defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
   (let [vastauksen-data
         {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))}]
-    (when uusi-id (assoc vastauksen-data :id uusi-id))))
+    (if uusi-id
+      (assoc vastauksen-data :id uusi-id)
+      vastauksen-data)))
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
