@@ -53,7 +53,8 @@
            [muut-tyot/muut-tyot ur]
 
            "Suola" :suola
-           [suola/suola]
+           (when (= :hoito (:tyyppi ur))
+             [suola/suola])
            
            "Materiaalit"
            :materiaalit
