@@ -53,14 +53,17 @@
                                      :tyyppi    tyyppi}))
 
 (def tarkastus-xf
-  (map #(assoc %
-         :type :tarkastus
-         :alue {:type        :icon
-                :coordinates (geo/ikonin-sijainti (:sijainti %))
-                :direction   0
-                :img         (if (= (:id %) (:id @valittu-tarkastus))
-                               "images/tyokone_highlight.png"
-                               "images/tyokone.png")})))
+  (comp (map
+          #(assoc %
+            :type :tarkastus
+            :alue {:type        :icon
+                   :coordinates (geo/ikonin-sijainti (:sijainti %))
+                   :direction   0
+                   :img         (if (= (:id %) (:id @valittu-tarkastus))
+                                  "images/tyokone_highlight.png"
+                                  "images/tyokone.png")}))
+        (map
+          #(assoc % :tyyppi-kartalla :tarkastus))))
 
 (defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie

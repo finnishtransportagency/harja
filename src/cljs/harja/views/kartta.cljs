@@ -273,14 +273,14 @@
 
 (defn kartan-ikonien-selitykset []
   (if (and (not= :S @nav/kartan-koko) @nayta-ikonien-selitykset?)
-    (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"}
+    (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
                               {:tyyppi :silta :selitys "Silta"}
                               {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
-          esitettavat-tyypit (keys (group-by :type @tasot/geometriat))
+          esitettavat-tyypit (keys (group-by :tyyppi-kartalla @tasot/geometriat))
           geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
                                                        (first
                                                          (filter (fn [geo]
-                                                                   (= (:type geo) tyyppi))
+                                                                   (= (:tyyppi-kartalla geo) tyyppi))
                                                                  @tasot/geometriat)))
                                                      esitettavat-tyypit)]
       (log "Geo: " (pr-str @tasot/geometriat))
@@ -289,7 +289,7 @@
         (for [geo geometriat-ilman-duplikaattityyppeja]
           (let [selitys (first (filter
                                  (fn [selitys]
-                                   (= (:tyyppi selitys) (:type geo))) ; FIXME Käytä tyyppi kartalla
+                                   (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
                                  ikonien-selitykset))]
             (if selitys
               [:tr
