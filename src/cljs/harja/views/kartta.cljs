@@ -271,10 +271,11 @@
 (defn nayta-ikonien-selitykset [boolean]
   (reset! nayta-ikonien-selitykset? boolean))
 
-(defn kartan-ikonien-selitteet []
+(defn kartan-ikonien-selitykset []
   (if (and (not= :S @nav/kartan-koko) @nayta-ikonien-selitykset?)
-    (let [ikonien-selitykset [{:tyyppi  :tarkastus
-                               :selitys "Tarkastus"}]
+    (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"}
+                              {:tyyppi :silta :selitys "Silta"}
+                              {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
           esitettavat-tyypit (keys (group-by :type @tasot/geometriat))
           geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
                                                        (first
@@ -282,6 +283,7 @@
                                                                    (= (:type geo) tyyppi))
                                                                  @tasot/geometriat)))
                                                      esitettavat-tyypit)]
+      (log "Geo: " (pr-str @tasot/geometriat))
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        [:table
         (for [geo geometriat-ilman-duplikaattityyppeja]
@@ -293,7 +295,7 @@
               [:tr
                [:td.ikoni-sarake [:img.ikoni {:src (get-in geo [:alue :img])}]]
                [:td.selitys-sarake (:selitys selitys)]]
-              (log "Geometrialle tyypillä " (:type geo) " ei löydy selitystä"))))]])))
+              (log "Geometrialle tyypillä " (pr-str (:type geo)) " ei löydy selitystä"))))]])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
@@ -532,5 +534,5 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
-   [kartan-ikonien-selitteet]
+   [kartan-ikonien-selitykset]
    [kartta-openlayers]])
