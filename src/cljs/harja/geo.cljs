@@ -34,6 +34,7 @@
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
     :point [(:coordinates g)]
+    :icon [(:coordinates g)]
     :circle [(:coordinates g)]))
 
 (defn keskipiste
@@ -75,6 +76,9 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
   (extent-point-circle c))
 
 (defmethod extent :circle [{c :coordinates}]
+  (extent-point-circle c))
+
+(defmethod extent :icon [{c :coordinates}]
   (extent-point-circle c))
 
 (defmethod extent :multipolygon [{polygons :polygons}]
