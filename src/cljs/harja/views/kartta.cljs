@@ -297,11 +297,11 @@
                                     ikonien-selitykset))]
                (if selitys
                  [:tr
-                  [:td.ikoni-sarake [:img.ikoni {:src (get-in geo [:alue :img])}]]
-                  [:td.selitys-sarake (:selitys selitys)]]
+                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (get-in geo [:alue :img])}]]
+                  [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
-          [:div.sulje-selitykset.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki false))} "Sulje"]]
-         [:span.avaa-selitykset.livicon-question-circle.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki true))}])])))
+          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki false))} "Sulje"]]
+         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki true))}])])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
