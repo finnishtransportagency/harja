@@ -36,6 +36,7 @@
 
 (def turvallisuuspoikkeama-kartalla-xf
   #(assoc %
+    :tyyppi-kartalla :turvallisuuspoikkeama
     :type :turvallisuuspoikkeama
     :alue {:type        :icon
            :coordinates (geo/ikonin-sijainti (:sijainti %))
