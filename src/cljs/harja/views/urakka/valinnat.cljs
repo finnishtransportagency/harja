@@ -33,7 +33,7 @@
   (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
     [valinnat/urakan-hoitokausi-ja-kuukausi
      urakka
-     (u/hoitokaudet urakka)
+     u/valitun-urakan-hoitokaudet
      u/valittu-hoitokausi
      u/valitse-hoitokausi!
      kuukaudet

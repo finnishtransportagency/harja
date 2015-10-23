@@ -23,11 +23,16 @@
 
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
+  (log "-------------------------- hoitokaudet: " (pr-str hoitokaudet))
+  (log "-------------------------- VALINTAFUNKKARI: " valitse-fn)
+
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                          ;;\u2014 on väliviivan unikoodi
-                         :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
+                         :format-fn  #(do
+                                       (log "-------------------------- HOITOKAUSI" (pr-str %))
+                                       (if % (fmt/pvm-vali-opt %) "Valitse"))
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
                          }

@@ -127,6 +127,7 @@
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
+  (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
   (reset! valittu-hoitokausi hk))
 
 (defonce valittu-hoitokauden-kuukausi
