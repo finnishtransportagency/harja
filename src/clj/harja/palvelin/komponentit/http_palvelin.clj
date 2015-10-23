@@ -5,16 +5,18 @@
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
+            [ring.middleware.session :as session]
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
             [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
-
+            [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
+            [ring.middleware.anti-forgery :as csrf]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -143,6 +145,19 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
+(def +sessioattribuutit+ {:cookie-attrs {:max-age 3600}})
+
+(defn wrap-anti-csrf [f]
+  (csrf/wrap-anti-forgery f))
+
+(defn index-kasittelija [kehitysmoodi req]
+  (let [uri (:uri req)]
+    (when (or (= uri "/")
+              (= uri "/index.html"))
+      {:status 200
+       :headers {"Content-Type" "text/html"}
+       :body (index/tee-paasivu kehitysmoodi)})))
+
 (defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
@@ -150,18 +165,16 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
-                      ;;(let [files-route (route/files "" {:root "dev-resources"})]
-                      ;;  (fn [req]
-                      ;;    (let [resp (files-route req)]
-                      ;;      (if (= 200 (:status resp))
-                      ;;        (update-in resp :headers 
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-              (http/run-server (fn [req]
-                                 (reitita (todennus/todenna-pyynto todennus req)
-                                          (conj (mapv :fn @kasittelijat)
-                                                resurssit)))
+              (http/run-server (session/wrap-session
+                                (fn [req]
+                                  (reitita (todennus/todenna-pyynto todennus req)
+                                           (conj (mapv :fn @kasittelijat)
+                                                 (wrap-anti-csrf (partial index-kasittelija kehitysmoodi))
+                                                 resurssit)))
+                                +sessioattribuutit+)
                                {:port portti
                                 :thread 64})))
       this))
@@ -186,11 +199,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
         (when (ar 2)
           ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
           (swap! kasittelijat
-                 conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
+                 conj {:nimi nimi :fn (wrap-anti-csrf (transit-post-kasittelija nimi palvelu-fn optiot))}))
         (when (ar 1)
           ;; GET metodi, vain käyttäjätiedot parametrina
           (swap! kasittelijat
-                 conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
+                 conj {:nimi nimi :fn (wrap-anti-csrf (transit-get-kasittelija nimi palvelu-fn optiot))})))))
 
   (poista-palvelu [this nimi]
     (swap! kasittelijat

@@ -26,9 +26,12 @@
                (put! chan (if transducer (into [] transducer vastaus) vastaus)))
              (close! chan))]
 
+    ;(log "X-XSRF-Token on " (.-anti_csrf_token js/window))
+    
     (ajax-request {:uri             (str (polku) (name palvelu))
                    :method          metodi
                    :params          parametrit
+                   :headers         {"X-CSRF-Token" (.-anti_csrf_token js/window)}
                    :format          (transit-request-format transit/write-optiot)
                    :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                               :raw    true})
