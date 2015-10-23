@@ -271,11 +271,11 @@
   "Ottaa vectorin mappeja, joilla on avaimina ikoni-url (linkki ikonin kuvatiedostoon) ja selitys (ikonin selitysteksti)"
   [ikonit]
   (let [ikonit [{:ikoni-url "images/tyokone.png" ;; TODO Hardkoodattu testidata
-                 :selitys "Hieno työkone"}
+                 :selitys "Työkone"}
                 {:ikoni-url "images/tyokone.png"
-                 :selitys "Vielä hienompi työkone"}
+                 :selitys "Aurausauto"}
                 {:ikoni-url "images/tyokone_highlight.png"
-                 :selitys "Paras työkone ikinä!"}]]
+                 :selitys "Varustetoteuma"}]]
   [:div.kartan-selitykset.kartan-ikonien-selitykset
    [:table
     (for [ikoni ikonit]
