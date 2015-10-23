@@ -270,32 +270,38 @@
 ;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
 ;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
 (def ikonien-selitykset-nakyvissa? (atom true))
+(def ikonien-selitykset-auki (atom false))
 
 (defn kartan-ikonien-selitykset []
-  (if (and (not= :S @nav/kartan-koko) @ikonien-selitykset-nakyvissa?)
-    (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
-                              {:tyyppi :silta :selitys "Silta"}
-                              {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
-          esitettavat-tyypit (keys (group-by :tyyppi-kartalla @tasot/geometriat))
-          geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
-                                                       (first
-                                                         (filter (fn [geo]
-                                                                   (= (:tyyppi-kartalla geo) tyyppi))
-                                                                 @tasot/geometriat)))
-                                                     esitettavat-tyypit)]
-      (log "Geo: " (pr-str @tasot/geometriat))
+  (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
+                            {:tyyppi :silta :selitys "Silta"}
+                            {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
+        esitettavat-tyypit (keys (group-by :tyyppi-kartalla @tasot/geometriat))
+        geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
+                                                     (first
+                                                       (filter (fn [geo]
+                                                                 (= (:tyyppi-kartalla geo) tyyppi))
+                                                               @tasot/geometriat)))
+                                                   esitettavat-tyypit)]
+  (if (and (not= :S @nav/kartan-koko)
+           (> (count esitettavat-tyypit) 0)
+           @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
-       [:table
-        (for [geo geometriat-ilman-duplikaattityyppeja]
-          (let [selitys (first (filter
-                                 (fn [selitys]
-                                   (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
-                                 ikonien-selitykset))]
-            (if selitys
-              [:tr
-               [:td.ikoni-sarake [:img.ikoni {:src (get-in geo [:alue :img])}]]
-               [:td.selitys-sarake (:selitys selitys)]]
-              (log "Geometrialle tyypillä " (pr-str (:type geo)) " ei löydy selitystä"))))]])))
+       (if @ikonien-selitykset-auki
+         [:div
+          [:table
+           (for [geo geometriat-ilman-duplikaattityyppeja]
+             (let [selitys (first (filter
+                                    (fn [selitys]
+                                      (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
+                                    ikonien-selitykset))]
+               (if selitys
+                 [:tr
+                  [:td.ikoni-sarake [:img.ikoni {:src (get-in geo [:alue :img])}]]
+                  [:td.selitys-sarake (:selitys selitys)]]
+                 (log "Geometrialle tyypillä " (pr-str (:type geo)) " ei löydy selitystä"))))]
+          [:div.sulje-selitykset.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki false))} "Sulje"]]
+         [:span.avaa-selitykset.livicon-question-circle.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki true))}])])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
