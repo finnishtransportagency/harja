@@ -72,7 +72,7 @@
           [:koko-maa (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
 
           :default
-          ;; Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
+          ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
           nil)
         otsikko (str (case konteksti
                        :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))

@@ -33,6 +33,18 @@
                          }
     @hoitokaudet]])
 
+(defn kontekstin-hoitokaudet
+  [hoitokaudet valittu-hoitokausi-atom valitse-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Hoitokausi"]
+   [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
+                         ;;\u2014 on väliviivan unikoodi
+                         :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
+                         :valitse-fn valitse-fn
+                         :class      "suunnittelu-alasveto"
+                         }
+    hoitokaudet]])
+
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
   [:div.label-ja-alasveto
@@ -89,8 +101,6 @@
   [:span
    [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
    [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]])
-
-
 
 (defn urakan-sopimus-ja-toimenpide
   [ur
