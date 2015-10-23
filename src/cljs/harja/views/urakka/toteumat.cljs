@@ -38,7 +38,7 @@
       (fn []
         [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
 
-         "Kokonaishintaiset työt" :kokonaishintaiset
+         "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]
 
          "Yksikköhintaiset työt" :yksikkohintaiset-tyot

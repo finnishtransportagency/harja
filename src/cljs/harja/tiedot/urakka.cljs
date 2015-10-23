@@ -194,7 +194,7 @@
 
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
-(defonce toteumat-valilehti (atom :kokonaishintaiset))
+(defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
 (defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
@@ -204,7 +204,7 @@
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
-                      nakymassa? (= :kokonaishintaiset @toteumat-valilehti)]
+                      nakymassa? (= :kokonaishintaiset-tyot @toteumat-valilehti)]
                      (when (and ur nakymassa?)
                        (go
                          (group-by
