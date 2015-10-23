@@ -17,12 +17,10 @@
             [harja.kyselyt.livitunnisteet :as livitunnisteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tee-onnistunut-vastaus [lisatietoja]
+(defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
   (let [vastauksen-data
-        {:ilmoitukset
-         (str "Varustetoteuma kirjattu onnistuneesti."
-              (when lisatietoja lisatietoja))}]
-    vastauksen-data))
+        {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))}]
+    (when uusi-id (assoc vastauksen-data :uusiId uusi-id))))
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
@@ -31,7 +29,7 @@
         valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)))))
+      (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
 (defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
@@ -110,7 +108,7 @@
 
     (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]
       (log/debug "Tietojen päivitys tierekisteriin suoritettu")
-      (tee-onnistunut-vastaus (:lisatietoja vastaus)))))
+      (tee-onnistunut-vastaus vastaus))))
 
 (defrecord Varustetoteuma []
   component/Lifecycle
