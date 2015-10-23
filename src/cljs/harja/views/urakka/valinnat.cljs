@@ -51,8 +51,13 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-(defn urakan-toimenpide-ja-tehtava []
-  (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+(defn urakan-kokonaishintainen-toimenpide-ja-tehtava []
+  (valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava
+    u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
+    u/valittu-kokonaishintainen-toimenpide
+    u/valitse-kokonaishintainen-toimenpide
+    u/valittu-kokonaishintainen-tehtava
+    u/valitse-kokonaishintainen-tehtava!))
 
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi

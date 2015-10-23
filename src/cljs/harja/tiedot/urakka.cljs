@@ -33,11 +33,6 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce valitun-toimenpiteen-tehtavat
-         (reaction<! [urakka-id (:id @nav/valittu-urakka)]
-                     (when urakka-id
-                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat urakka-id))))
-
 (defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]
@@ -211,7 +206,30 @@
          (reaction<! [ur (:id @nav/valittu-urakka)
                       nakymassa? (= :kokonaishintaiset @toteumat-valilehti)]
                      (when (and ur nakymassa?)
-                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+                       (go
+                         (group-by
+                           (juxt :tpi_id :tpi_nimi)
+                           (<! (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur)))))))
+
+(defonce valittu-kokonaishintainen-toimenpide (atom nil))
+
+(defn valitse-kokonaishintainen-toimenpide [tpi]
+  (reset! valittu-kokonaishintainen-toimenpide tpi))
+
+(defonce valittu-kokonaishintainen-tehtava (atom nil))
+
+(defn valitse-kokonaishintainen-tehtava! [tpi]
+  (reset! valittu-kokonaishintainen-tehtava tpi))
+
+;; todo: poista
+(tarkkaile! "---- urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat: " urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat)
+
+;; todo: poista
+(tarkkaile! "---- valittu-kokonaishintainen-toimenpide: " valittu-kokonaishintainen-toimenpide)
+
+;; todo: poista
+(tarkkaile! "---- valittu-kokonaishintainen-tehtava: " valittu-kokonaishintainen-tehtava)
+
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
@@ -220,7 +238,6 @@
                                    (= :muut-tyot @toteumat-valilehti))]
                      (when (and ur nakymassa?)
                        (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
-
 
 (defonce urakan-organisaatio
          (reaction<! [ur (:id @nav/valittu-urakka)]

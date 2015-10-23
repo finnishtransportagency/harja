@@ -23,6 +23,11 @@
    (into []
          (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id tyyppi))))
 
+(defn hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat [db user urakka-id]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (q/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat db urakka-id)))
+
 (defrecord Urakan-toimenpiteet []
   component/Lifecycle
   (start [this]
@@ -32,8 +37,8 @@
                                            (hae-urakan-toimenpiteet-ja-tehtavat (:db this) user urakka-id)))
       (julkaise-palvelu
         :urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
-                                                             (hae-urakan-toimenpiteet-ja-tehtavat
-                                                               (:db this) user urakka-id :kokonaishintaiset)))
+                                                             (hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
+                                                               (:db this) user urakka-id)))
       (julkaise-palvelu
         :urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat (fn [user urakka-id]
                                                             (hae-urakan-toimenpiteet-ja-tehtavat

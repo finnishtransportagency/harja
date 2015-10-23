@@ -28,9 +28,13 @@
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
             kuukausi @urakka/valittu-hoitokauden-kuukausi
-            toimenpide (:id @urakka/valittu-toimenpideinstanssi)
+            toimenpide  (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+            tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
+             (log "------- Haettava toimenpide: "(pr-str toimenpide))
+             (log "------- Haettava tehtävä: "(pr-str tehtava))
+
              (hae-toteumat urakka-id sopimus-id
                            (or kuukausi
                                hoitokausi)

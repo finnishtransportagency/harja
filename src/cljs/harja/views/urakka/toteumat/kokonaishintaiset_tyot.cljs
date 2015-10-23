@@ -13,6 +13,7 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.tiedot.urakka :as urakan-tiedot]
             [harja.ui.komponentti :as komponentti]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -26,7 +27,8 @@
     [:span
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
-       :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])}
+       :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
+       :tunniste :toteumaid}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "10%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
@@ -42,7 +44,7 @@
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
      (urakka-valinnat/urakan-hoitokausi-ja-kuukausi urakka)
-     (urakka-valinnat/urakan-toimenpide-ja-tehtava)]))
+     (urakka-valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava)]))
 
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"

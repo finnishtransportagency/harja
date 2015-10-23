@@ -49,6 +49,8 @@ WHERE urakka = :urakka;
 --name: hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet jotka ovat kokonaishintaisia
 SELECT
+  tpi.id               AS tpi_id,
+  tpi.nimi             AS tpi_nimi,
   t4.id                AS t4_id,
   t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
@@ -67,12 +69,11 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
   LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+  LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide
 WHERE t4.taso = 4 AND
       t4.kokonaishintainen IS TRUE AND
-      t3.id IN (SELECT toimenpide
-                FROM toimenpideinstanssi
-                WHERE urakka = :urakka) AND
-      t4.poistettu = FALSE;
+      t4.poistettu = FALSE AND
+      tpi.urakka = :urakka;
 
 -- name: hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet jotka eivät ole kokonaishintaisia
@@ -97,7 +98,9 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE t4.taso = 4 AND
       t4.kokonaishintainen IS NOT TRUE AND
-      t4.id NOT IN (SELECT distinct tehtava FROM muutoshintainen_tyo WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS false) AND
+      t4.id NOT IN (SELECT DISTINCT tehtava
+                    FROM muutoshintainen_tyo
+                    WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS FALSE) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
                 WHERE urakka = :urakka) AND
@@ -126,8 +129,10 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE t4.taso = 4 AND
-    t4.kokonaishintainen IS NOT TRUE AND
-    t4.id NOT IN (SELECT distinct tehtava FROM yksikkohintainen_tyo WHERE urakka = :urakka AND yksikkohinta IS NOT NULL) AND
+      t4.kokonaishintainen IS NOT TRUE AND
+      t4.id NOT IN (SELECT DISTINCT tehtava
+                    FROM yksikkohintainen_tyo
+                    WHERE urakka = :urakka AND yksikkohinta IS NOT NULL) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
                 WHERE urakka = :urakka) AND
