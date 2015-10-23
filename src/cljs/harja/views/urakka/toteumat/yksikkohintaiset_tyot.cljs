@@ -12,7 +12,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.pvm :as pvm]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]

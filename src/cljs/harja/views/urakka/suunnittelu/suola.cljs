@@ -1,5 +1,5 @@
-(ns harja.views.urakka.toteumat.suolasakot
-  "Urakan toteumien suolasakot-näkymä"
+(ns harja.views.urakka.suunnittelu.suola
+  "Urakan suolan käytön suunnittelu"
   (:require [reagent.core :refer [atom wrap]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.tiedot.urakka.lampotilat :as lampotilat]
@@ -128,7 +128,7 @@
           @valitun-hoitokauden-tiedot]
          ]))))
 
-(defn suolasakot []
+(defn suola []
   (komp/luo
     (komp/lippu suolasakot-nakyvissa?)
     (fn []
