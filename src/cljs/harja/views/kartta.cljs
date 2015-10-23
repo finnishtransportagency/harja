@@ -285,10 +285,12 @@
                                                    esitettavat-tyypit)
         _ (log "Geo: " (pr-str esitettavat-tyypit))]
   (if (and (not= :S @nav/kartan-koko)
-           (some true? (map
-                         (fn [selitys geo]
-                           (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
-                         ikonien-selitykset geometriat-ilman-duplikaattityyppeja))
+           (some
+             (fn [asia]
+               (some (fn [sel]
+                       (= (:tyyppi sel) asia))
+                     ikonien-selitykset))
+             esitettavat-tyypit)
            @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
@@ -302,7 +304,7 @@
                (if selitys
                  ^{:key (:tyyppi selitys)}
                  [:tr
-                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (get-in geo [:alue :img])}]]
+                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
                   [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
