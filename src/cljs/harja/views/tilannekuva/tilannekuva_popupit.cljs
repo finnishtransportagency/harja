@@ -125,7 +125,7 @@
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
                         [:p [:b (str/join ", " (map (comp str/capitalize name) (:tyyppi tapahtuma)))]]
-                        [:div (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:divaattynyt tapahtuma))]
+                        [:div (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
                         [:div "Käsitelty: " (pvm/pvm-aika (:kasitelty tapahtuma))]
                         [:div "Työtehtävä: " (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
                         [:div (:vammat tapahtuma) ", " (:sairaalavuorokaudet tapahtuma) "/" (:sairauspoissaolopaivat tapahtuma)]
