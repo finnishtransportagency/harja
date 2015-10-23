@@ -13,19 +13,25 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat])
+            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
+            [harja.kyselyt.livitunnisteet :as livitunnisteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti"}]
-    vastauksen-data))
+(defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
+  (let [vastauksen-data
+        {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))}]
+    (if uusi-id
+      (assoc vastauksen-data :id uusi-id)
+      vastauksen-data)))
 
-(defn lisaa-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
-  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)]
+  (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
+        varustetoteuma (assoc-in varustetoteuma [:varuste :tunniste] livitunniste)
+        valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      vastaus)))
+      (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
 (defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
@@ -45,10 +51,10 @@
   "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri kirjaaja data]
+  [tierekisteri db kirjaaja data]
   (when tierekisteri
     (case (get-in data [:varustetoteuma :varuste :toimenpide])
-      "lisatty" (lisaa-varuste-tierekisteriin tierekisteri kirjaaja data)
+      "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
       "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
       "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data))))
 
@@ -101,9 +107,10 @@
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
-    (paivita-muutos-tierekisteriin tierekisteri kirjaaja data)
-    (log/debug "Tietojen päivitys tierekisteriin suoritettu")
-    (tee-onnistunut-vastaus)))
+
+    (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]
+      (log/debug "Tietojen päivitys tierekisteriin suoritettu")
+      (tee-onnistunut-vastaus vastaus))))
 
 (defrecord Varustetoteuma []
   component/Lifecycle

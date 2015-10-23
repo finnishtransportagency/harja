@@ -3,10 +3,10 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]))
 
-(defn- oletusalue [asia on-valittu?]
+(defn- oletusalue [asia valittu?]
   (merge
     (:sijainti asia)
-    {:color  (if (on-valittu? asia) "blue" "green")
+    {:color  (if (valittu? asia) "blue" "green")
      :radius 300
      :stroke {:color "black" :width 10}}))
 
@@ -14,43 +14,43 @@
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
 
-(defmethod asia-kartalle :tiedoitus [ilmoitus on-valittu?]
+(defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus on-valittu?))])
+     :alue (oletusalue ilmoitus valittu?))])
 
-(defmethod asia-kartalle :kysely [ilmoitus on-valittu?]
+(defmethod asia-kartalle :kysely [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus on-valittu?))])
+     :alue (oletusalue ilmoitus valittu?))])
 
-(defmethod asia-kartalle :toimenpidepyynto [ilmoitus on-valittu?]
+(defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus on-valittu?))])
+     :alue (oletusalue ilmoitus valittu?))])
 
-(defmethod asia-kartalle :havainto [havainto on-valittu?]
+(defmethod asia-kartalle :havainto [havainto valittu?]
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :alue (oletusalue havainto on-valittu?))])
+     :alue (oletusalue havainto valittu?))])
 
-(defmethod asia-kartalle :pistokoe [tarkastus on-valittu?]
+(defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :alue (oletusalue tarkastus on-valittu?))])
+     :alue (oletusalue tarkastus valittu?))])
 
-(defmethod asia-kartalle :laaduntarkastus [tarkastus on-valittu?]
+(defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :alue (oletusalue tarkastus on-valittu?))])
+     :alue (oletusalue tarkastus valittu?))])
 
-(defmethod asia-kartalle :toteuma [toteuma on-valittu?]
+(defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
   (let [reittipisteet (keep
@@ -66,19 +66,21 @@
                      (str (:toimenpide (first (:tehtavat toteuma))))))
          :alue {
                 :type   :arrow-line
-                :scale  (if (on-valittu? toteuma) 0.8 0.5)  ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :scale  (if (valittu? toteuma) 0.8 0.5)  ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
                 :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
                                                                      :aika
                                                                      pvm/ennen?
                                                                      reittipisteet))}))]))
 
-(defmethod asia-kartalle :turvallisuuspoikkeama [tp on-valittu?]
+(defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
   [(assoc tp
      :type :turvallisuuspoikkeama
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-     :alue (oletusalue tp on-valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in tp [:sijainti :coordinates])})])
 
-(defmethod asia-kartalle :paallystyskohde [pt on-valittu?]
+(defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
     (fn [kohdeosa]
       (assoc kohdeosa
@@ -87,7 +89,7 @@
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 
-(defmethod asia-kartalle :paikkaustoteuma [pt on-valittu?]
+(defmethod asia-kartalle :paikkaustoteuma [pt valittu?]
   ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
   (mapv
     (fn [kohdeosa]
@@ -110,7 +112,7 @@
                         (* (Math/sin lat1) (Math/cos lat2) (Math/cos (- lon2 lon1)))))
          (* 2 Math/PI))))
 
-(defmethod asia-kartalle :tyokone [tyokone on-valittu?]
+(defmethod asia-kartalle :tyokone [tyokone valittu?]
   (assoc tyokone
     :type :tyokone
     :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
@@ -121,7 +123,7 @@
 
 (defmethod asia-kartalle :default [_ _ _])
 
-(defn- on-valittu? [valittu tunniste asia]
+(defn- valittu? [valittu tunniste asia]
   (and
     (not (nil? valittu))
     (= (get-in asia tunniste) (get-in valittu tunniste))))
@@ -133,11 +135,11 @@
 (defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu [:id]))
-  ([asia valittu tunniste] (asia-kartalle asia (partial on-valittu? valittu tunniste))))
+  ([asia valittu tunniste] (asia-kartalle asia (partial valittu? valittu tunniste))))
 
 (defn kartalla-esitettavaan-muotoon
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
-  ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu :id))
+  ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
    ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")

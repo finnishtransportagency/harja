@@ -87,7 +87,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defonce valittu-urakka-id (atom nil))
 
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
-(defonce urakkalista 
+(defonce hallintayksikon-urakkalista
   (reaction<! [yks @valittu-hallintayksikko]
               (when yks
                 (ur/hae-hallintayksikon-urakat yks))))
@@ -95,7 +95,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun urakan (tai nil)
 (defonce valittu-urakka
   (reaction (let [id @valittu-urakka-id
-                  urakat @urakkalista]
+                  urakat @hallintayksikon-urakkalista]
               (when (and id urakat)
                 (some #(when (= id (:id %)) %) urakat)))))
 
@@ -114,7 +114,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                          (first +urakkatyypit+))))))
 
 (defn paivita-urakka [urakka-id funktio & argumentit]
-  (swap! urakkalista (fn [urakat]
+  (swap! hallintayksikon-urakkalista (fn [urakat]
                        (mapv #(if (= urakka-id (:id %))
                                (apply funktio % argumentit)
                                % ) urakat)))
@@ -238,7 +238,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction
    (let [v-ur-tyyppi (:arvo @valittu-urakkatyyppi)
          v-urk @valittu-urakoitsija
-         urakkalista @urakkalista]
+         urakkalista @hallintayksikon-urakkalista]
      (into []
            (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
@@ -256,7 +256,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def render-lupa-u? (reaction
                       (or (nil? @valittu-urakka-id) ;; urakkaa ei annettu urlissa, ei estetä latausta
                           (nil? @valittu-hallintayksikko) ;; hy:tä ei saatu asetettua -> ei estetä latausta
-                          (some? @urakkalista))))
+                          (some? @hallintayksikon-urakkalista))))
 
 ;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
 (def render-lupa? (reaction

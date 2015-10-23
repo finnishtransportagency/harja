@@ -178,6 +178,7 @@
                                 (str (:etunimi %)
                                      (when-let [suku (:sukunimi %)]
                                        (str " " suku))))
+        :pituus-max 64
         :aseta (fn [yht arvo]
                  (assoc yht :nimi arvo))
         :tyyppi :string :leveys "15%"

@@ -9,6 +9,7 @@
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
             [clojure.string :as str]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
 
             [clojure.set :refer [rename-keys]])
 
@@ -63,108 +64,11 @@
 
 (def haetut-asiat (atom nil))
 
-(defn oletusalue [asia]
-  (merge
-    (:sijainti asia)
-    {:color  "green"
-     :radius 300
-     :stroke {:color "black" :width 10}}))
-
-;; Aiemmin kartalla-xf palautti dispatching valuena yksinkertaisesti :tyyppi avaimen alla olevan arvon.
-;; Tämä rikkoontui kun vastaan tuli erikoistapauksia - ilmoituksilla ei ole :tyyppiä vaan :ilmoitustyyppi, ja
-;; turvallisuuspoikkeamilla on 0-3 tyyppiä.
-(defmulti kartalla-xf (fn [kartta]
-                        (cond
-                          (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
-                          (:tilannekuvatyyppi kartta) (:tilannekuvatyyppi kartta)
-                          :else (:tyyppi kartta))))
-
-(defmethod kartalla-xf :tiedoitus [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :kysely [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :havainto [havainto]
-  [(assoc havainto
-     :type :havainto
-     :nimi (or (:nimi havainto) "Havainto")
-     :alue (oletusalue havainto))])
-
-(defmethod kartalla-xf :pistokoe [tarkastus]
-  [(assoc tarkastus
-     :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Pistokoe")
-     :alue (oletusalue tarkastus))])
-
-(defmethod kartalla-xf :laaduntarkastus [tarkastus]
-  [(assoc tarkastus
-     :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :alue (oletusalue tarkastus))])
-
-(defmethod kartalla-xf :toteuma [toteuma]
-  ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
-  ;; monta kertaa fronttiin.
-  (let [reittipisteet (map
-                        (fn [[_ arvo]] (first arvo))
-                        (group-by :id (:reittipisteet toteuma)))]
-    [(assoc toteuma
-       :type :toteuma
-       :nimi (or (:nimi toteuma) (if (> 1 (count (:tehtavat toteuma)))
-                                   (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
-                                   (str (:toimenpide (first (:tehtavat toteuma))))))
-       :alue {
-              :type   :arrow-line
-              :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                   :aika
-                                                                   pvm/ennen?
-                                                                   reittipisteet))})]))
-
-(defmethod kartalla-xf :turvallisuuspoikkeama [tp]
-  [(assoc tp
-     :type :turvallisuuspoikkeama
-     :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-     :alue (oletusalue tp))])
-
-(defmethod kartalla-xf :paallystyskohde [pt]
-  (mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paallystyskohde
-        :nimi (or (:nimi pt) "Päällystyskohde")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
-
-(defmethod kartalla-xf :paikkaustoteuma [pt]
-  ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
-  (mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paikkaustoteuma
-        :nimi (or (:nimi pt) "Paikkaus")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
-
-(defmethod kartalla-xf :default [_])
-
 (def historiakuvan-asiat-kartalla
   (reaction
     @haetut-asiat
     (when @karttataso-historiakuva
-      (into [] (mapcat kartalla-xf) @haetut-asiat))))
+      (kartalla-esitettavaan-muotoon @haetut-asiat))))
 
 (defn kasaa-parametrit []
   {:hallintayksikko @nav/valittu-hallintayksikko-id
@@ -200,48 +104,55 @@
                                          @toimenpidekoodit))
           tulos (yhdista
                   (when @hae-turvallisuuspoikkeamat? (mapv
-                                                       #(assoc % :tilannekuvatyyppi :turvallisuuspoikkeama)
+                                                       #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
                                                        (<! (k/post! :hae-turvallisuuspoikkeamat (rename-keys
                                                                                                   yhteiset-parametrit
                                                                                                   {:urakka :urakka-id})))))
-                  (when @hae-tarkastukset? (<! (k/post! :hae-urakan-tarkastukset (rename-keys
-                                                                                   yhteiset-parametrit
-                                                                                   {:urakka :urakka-id
-                                                                                    :alku   :alkupvm
-                                                                                    :loppu  :loppupvm}))))
+                  (when @hae-tarkastukset?
+                    (mapv
+                      #(assoc % :tyyppi-kartalla :tarkastus)
+                      (<! (k/post! :hae-urakan-tarkastukset (rename-keys
+                                                             yhteiset-parametrit
+                                                             {:urakka :urakka-id
+                                                              :alku   :alkupvm
+                                                              :loppu  :loppupvm})))))
                   (when @hae-havainnot? (mapv
-                                          #(assoc % :tilannekuvatyyppi :havainto)
+                                          #(assoc % :tyyppi-kartalla :havainto)
                                           (<! (k/post! :hae-urakan-havainnot (rename-keys
                                                                                yhteiset-parametrit
                                                                                {:urakka :urakka-id})))))
                   (when @hae-paikkaustyot? (remove
                                              #(empty? (:kohdeosat %))
                                              (mapv
-                                               #(assoc % :tilannekuvatyyppi :paikkaustoteuma)
+                                               #(assoc % :tyyppi-kartalla :paikkaustoteuma)
                                                (<! (k/post! :urakan-paikkaustoteumat (rename-keys
                                                                                        yhteiset-parametrit
                                                                                        {:urakka :urakka-id}))))))
                   (when @hae-paallystystyot? (remove
                                                #(empty? (:kohdeosat %))
                                                (mapv
-                                                 #(assoc % :tilannekuvatyyppi :paallystyskohde)
+                                                 #(assoc % :tyyppi-kartalla :paallystyskohde)
                                                  (<! (k/post! :urakan-paallystyskohteet (rename-keys
                                                                                           yhteiset-parametrit
                                                                                           {:urakka :urakka-id}))))))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
-                    (<! (k/post! :hae-ilmoitukset (assoc
-                                                    yhteiset-parametrit
-                                                    :aikavali [(:alku yhteiset-parametrit)
-                                                               (:loppu yhteiset-parametrit)]
-                                                    :tilat #{:avoimet}
-                                                    :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
-                                                                          (when @hae-kyselyt? :kysely)
-                                                                          (when @hae-tiedoitukset? :tiedoitus)])))))
+                    (mapv
+                      #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+                      (<! (k/post! :hae-ilmoitukset (assoc
+                                                     yhteiset-parametrit
+                                                     :aikavali [(:alku yhteiset-parametrit)
+                                                                (:loppu yhteiset-parametrit)]
+                                                     :tilat #{:avoimet}
+                                                     :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
+                                                                           (when @hae-kyselyt? :kysely)
+                                                                           (when @hae-tiedoitukset? :tiedoitus)]))))))
                   (when-not (empty? haettavat-toimenpidekoodit)
-                    (<! (k/post! :hae-toteumat-historiakuvaan (assoc
-                                                                yhteiset-parametrit
-                                                                :toimenpidekoodit
-                                                                haettavat-toimenpidekoodit)))))]
+                    (mapv
+                      #(assoc % :tyyppi-kartalla :toteuma)
+                      (<! (k/post! :hae-toteumat-historiakuvaan (assoc
+                                                                 yhteiset-parametrit
+                                                                 :toimenpidekoodit
+                                                                 haettavat-toimenpidekoodit))))))]
       (reset! haetut-asiat tulos))))
 
 (def +bufferi+ 1000) ;1s

@@ -40,10 +40,9 @@
       }
     },
     "varuste": {
-      "tunniste": "HARJ951547ZK",
       "tietolaji": "tl505",
       "toimenpide": "lisatty",
-      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  ",
+      "arvot": "----livitunniste----        2                           ----livitunniste----          01  ",
       "sijainti": {
         "tie": {
           "numero": 89,

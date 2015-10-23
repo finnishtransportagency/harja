@@ -20,7 +20,7 @@
 (deftest tarkista-tietolajin-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietolaji-response.xml"))]
     (with-fake-http
-      [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
+      [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is "tl506" (get-in vastausdata [:tietolaji :tunniste]))
@@ -107,7 +107,7 @@
                              :kuntoluokka "1",
                              :alkupvm     #inst "2015-03-02T22:00:00.000-00:00",
                              :tunniste    "1245rgfsd"}
-            tietue (:tietue vastausdata)]
+            tietue (:tietue (first (:tietueet  vastausdata)))]
         (is (true? (:onnistunut vastausdata)))
         (is (= odotettu-tietue tietue))))))
 
@@ -136,7 +136,7 @@
                                                   :puoli   "1"
                                                   :alkupvm nil}}
                               :tietolaji   {:tietolajitunniste "tl505"
-                                            :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+                                            :arvot             "----livitunniste----        2                             ----livitunniste----          01  "}}
                     :lisatty "2015-05-26+03:00"}
             vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
         (is (true? (:onnistunut vastausdata)))))))
@@ -189,10 +189,10 @@
 (deftest tarkista-virhevastauksen-kasittely
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
-      [(str +testi-tierekisteri-url+ "/haetietolajit") vastaus-xml]
+      [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (try+
         (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
-        (catch [:type :tierekisteri-kutsu-epaonnistui] {:keys [virheet]}
-          (is (.contains (second virheet) "Tietolajia ei löydy")))))))
+        (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
+          (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))
 
