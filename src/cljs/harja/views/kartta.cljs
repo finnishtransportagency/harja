@@ -282,9 +282,13 @@
                                                        (filter (fn [geo]
                                                                  (= (:tyyppi-kartalla geo) tyyppi))
                                                                @tasot/geometriat)))
-                                                   esitettavat-tyypit)]
+                                                   esitettavat-tyypit)
+        _ (log "Geo: " (pr-str esitettavat-tyypit))]
   (if (and (not= :S @nav/kartan-koko)
-           (> (count esitettavat-tyypit) 0)
+           (some true? (map
+                         (fn [selitys geo]
+                           (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
+                         ikonien-selitykset geometriat-ilman-duplikaattityyppeja))
            @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
@@ -296,12 +300,19 @@
                                       (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
                                     ikonien-selitykset))]
                (if selitys
+                 ^{:key (:tyyppi selitys)}
                  [:tr
                   [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (get-in geo [:alue :img])}]]
                   [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
-          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki false))} "Sulje"]]
-         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki true))}])])))
+          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
+                                                                        (reset! ikonien-selitykset-auki false)
+                                                                        (.stopPropagation event)
+                                                                        (.preventDefault event))} "Sulje"]]
+         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
+                                                                                               (reset! ikonien-selitykset-auki true)
+                                                                                               (.stopPropagation event)
+                                                                                               (.preventDefault event))}])])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
@@ -472,7 +483,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                     :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
                                           (t/julkaise! (assoc item :aihe :urakka-klikattu)))
                                     (do (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))
-                                        (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
 
                                         ;; Estetään zoomaaminen kun tuplaklikillä valitaan geometria
                                         (.stopPropagation event)
