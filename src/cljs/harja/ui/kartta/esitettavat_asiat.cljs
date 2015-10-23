@@ -76,7 +76,9 @@
   [(assoc tp
      :type :turvallisuuspoikkeama
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-     :alue (oletusalue tp valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in tp [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
