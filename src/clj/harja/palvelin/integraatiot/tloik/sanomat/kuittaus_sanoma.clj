@@ -19,7 +19,7 @@
 (defn muodosta [viesti-id aika kuittaustyyppi vastaanottaja virhe]
   (let [sisalto (muodosta-viesti viesti-id aika kuittaustyyppi vastaanottaja virhe)
         xml (tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "kuittaus.xsd" xml)
+    (if (xml/validoi +xsd-polku+ "harja-kuittaus.xsd" xml)
       xml
       (do
         (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")

@@ -5,10 +5,10 @@
 
   <xs:complexType name="toimenpide">
     <xs:sequence>
-      <xs:element name="viestiId" type="xs:string" minOccurs="0"/>
-      <xs:element name="ilmoitusId" type="xs:int"/>
-      <xs:element name="tyyppi" type="tyyppi" minOccurs="0"/>
-      <xs:element name="tehty" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="viestiId" type="xs:string" minOccurs="1"/>
+      <xs:element name="ilmoitusId" type="xs:int" minOccurs="1"/>
+      <xs:element name="tyyppi" type="tyyppi" minOccurs="1"/>
+      <xs:element name="aika" type="xs:dateTime" minOccurs="1"/>
       <xs:element name="vapaateksti" type="xs:string" minOccurs="0"/>
       <xs:element name="kasittelija" type="kasittelija" minOccurs="0"/>
       <xs:element name="ilmoittaja" type="kasittelija" minOccurs="0"/>
@@ -24,8 +24,8 @@
 
   <xs:complexType name="henkilo">
     <xs:sequence>
-      <xs:element name="etunimi" type="xs:string" minOccurs="0"/>
-      <xs:element name="sukunimi" type="xs:string" minOccurs="0"/>
+      <xs:element name="etunimi" type="xs:string" minOccurs="1"/>
+      <xs:element name="sukunimi" type="xs:string" minOccurs="1"/>
       <xs:element name="matkapuhelin" type="xs:string" minOccurs="0"/>
       <xs:element name="tyopuhelin" type="xs:string" minOccurs="0"/>
       <xs:element name="sahkoposti" type="xs:string" minOccurs="0"/>
@@ -34,8 +34,8 @@
 
   <xs:complexType name="organisaatio">
     <xs:sequence>
-      <xs:element name="nimi" type="xs:string" minOccurs="0"/>
-      <xs:element name="ytunnus" type="xs:string" minOccurs="0"/>
+      <xs:element name="nimi" type="xs:string" minOccurs="1"/>
+      <xs:element name="ytunnus" type="xs:string" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

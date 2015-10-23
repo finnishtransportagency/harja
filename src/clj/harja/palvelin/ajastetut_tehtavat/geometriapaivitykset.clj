@@ -12,6 +12,7 @@
             [harja.palvelin.tyokalut.kansio :as kansio]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
@@ -79,6 +80,22 @@
                      "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
+(defn tee-pohjavesialueiden-hakutehtava [this {:keys [tuontivali
+                                              pohjavesialueen-alk-osoite
+                                              pohjavesialueen-alk-tuontikohde
+                                              pohjavesialueen-shapefile]}]
+  (when (and tuontivali
+             pohjavesialueen-alk-osoite
+             pohjavesialueen-alk-tuontikohde
+             pohjavesialueen-shapefile)
+    (ajasta-paivitys this
+                     "pohjavesialue"
+                     tuontivali
+                     pohjavesialueen-alk-osoite
+                     pohjavesialueen-alk-tuontikohde
+                     "pohjavesialue.zip"
+                     (fn [] (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)))))
+
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
@@ -94,6 +111,19 @@
           (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
           (catch Exception e
             (log/debug "Tieosoiteverkon tuonnissa tapahtui poikkeus: " e)))))))
+
+(defn tee-pohjavesialueiden-paivitystehtava [this {:keys [pohjavesialueen-alk-osoite
+                                                  pohjavesialueen-alk-tuontikohde
+                                                  pohjavesialueen-shapefile
+                                                  tuontivali]}]
+  (when (not (and pohjavesialueen-alk-osoite pohjavesialueen-alk-tuontikohde))
+    (chime-at
+      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+      (fn [_]
+        (try
+          (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)
+          (catch Exception e
+            (log/debug "Pohjavesialueiden tuonnissa tapahtui poikkeus: " e)))))))
 
 (defn tee-soratien-hoitoluokkien-hakutehtava [this {:keys [tuontivali
                                                            soratien-hoitoluokkien-alk-osoite
@@ -128,11 +158,15 @@
   (start [this]
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-hakutehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paivitystehtava this asetukset))
+    (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-hakutehtava this asetukset))
+    (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paivitystehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-hakutehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paivitystehtava this asetukset)))
   (stop [this]
     (apply (:tieverkon-hakutehtava this) [])
     (apply (:soratien-hoitoluokkien-hakutehtava this) [])
+    (apply (:pohjavesialueiden-hakutehtava this) [])
+    (apply (:pohjavesialueiden-paivitystehtava this) [])
     (apply (:tieverkon-paivitystehtava this) [])
     (apply (:soratien-hoitoluokkien-paivitystehtava this) [])
     this))

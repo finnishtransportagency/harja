@@ -10,7 +10,8 @@
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.tiedot.urakka.muut-tyot :as muut-tyot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 
@@ -29,7 +30,8 @@
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla
                                          @paallystys/paallystyskohteet-kartalla
-                                         @paallystys/paikkauskohteet-kartalla)]
+                                         @paallystys/paikkauskohteet-kartalla
+                                         @muut-tyot/muut-tyot-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))
@@ -44,7 +46,8 @@
     :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
     :nykytilanne nykytilanne/karttataso-nykytilanne
-    :paallystyskohteet paallystys/karttataso-paallystyskohteet))
+    :paallystyskohteet paallystys/karttataso-paallystyskohteet
+    :muut-tyot muut-tyot/karttataso-muut-tyot))
 
 (defonce nykyiset-karttatasot
   (reaction (into #{}

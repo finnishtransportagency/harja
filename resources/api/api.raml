@@ -347,6 +347,34 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+      get:
+        is: [secured]
+        description: Päivystäjätietojen haku.
+        queryParameters:
+          alkaen:
+              description: Päivystykset alkaen
+              type: date
+              example: 2015-01-01
+          paattyen:
+              description: Päivystykset päättyen
+              type: date
+              example: 2015-01-01
+        responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/paivystajatietojen-haku-response.json
+                  schema: paivystajatietojen-haku-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
@@ -411,9 +439,9 @@ documentation:
           example: 12
         voimassaolopvm:
           description: Päivämäärä jonka sisällä varusteiden on oltava voimassa
-          type: integer
+          type: date
           required: true
-          example: 12
+          example: 2015-01-01
         puoli:
           description: Tien puoli, jolta varusteet haetaan
           type: integer
