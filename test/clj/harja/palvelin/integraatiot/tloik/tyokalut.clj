@@ -16,6 +16,7 @@
 (def +testi-ilmoitus-sanoma+ "<ilmoitus>
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
+  <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
@@ -23,8 +24,8 @@
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
   <tienumero>4</tienumero>
-  <x>452935.0</x>
-  <y>7186873.0</y>
+  <x>452935</x>
+  <y>7186873</y>
   </sijainti>
   <ilmoittaja>
   <etunimi>Matti</etunimi>

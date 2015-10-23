@@ -5,4 +5,4 @@
   (let [kansio (clojure.java.io/file kansio)
         tiedostot (.listFiles kansio)]
     (doseq [tiedosto tiedostot]
-      (io/delete-file tiedosto))))
+      (when-not (= ".gitkeep" (.getName tiedosto) )(io/delete-file tiedosto)))))

@@ -5,6 +5,7 @@
             [clojure.core.cache :as cache]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kayttajat :as q]
+            [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
             ))
 
@@ -35,6 +36,8 @@
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
   (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
+(def todennusvirhe {:virhe :todennusvirhe})
+
 (defrecord HttpTodennus []
   component/Lifecycle
   (start [this]
@@ -51,8 +54,11 @@
           kayttaja-id (headerit "oam_remote_user")]
       
       ;;(log/info "KOKA: " kayttaja-id)
-      (assoc req
-        :kayttaja (koka-remote-id->kayttajatiedot (:db this) kayttaja-id)))))
+      (if (nil? kayttaja-id)
+        (throw+ todennusvirhe)
+        (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot (:db this) kayttaja-id)]
+          (assoc req :kayttaja kayttajatiedot)
+          (throw+ todennusvirhe))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
   component/Lifecycle
