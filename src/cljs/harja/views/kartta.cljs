@@ -303,7 +303,8 @@
                (if selitys
                  ^{:key (:tyyppi selitys)}
                  [:tr
-                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
+                  [:td.kartan-ikonien-selitykset-ikoni-sarake
+                   [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
                   [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
