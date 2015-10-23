@@ -269,13 +269,18 @@
 
 (defn kartan-ikonien-selitteet []
   (if (not= :S @nav/kartan-koko)
-    (let [ikonien-selitykset [{:tyyppi    :tarkastus
-                               :selitys   "Tarkastus"}]
-          geometriat @tasot/geometriat]
-      (log "Geometriat: " (pr-str geometriat))
+    (let [ikonien-selitykset [{:tyyppi  :tarkastus
+                               :selitys "Tarkastus"}]
+          esitettavat-tyypit (keys (group-by :type @tasot/geometriat))
+          geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
+                                                       (first
+                                                         (filter (fn [geo]
+                                                                   (= (:type geo) tyyppi))
+                                                                 @tasot/geometriat)))
+                                                     esitettavat-tyypit)]
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        [:table
-        (for [geo geometriat]
+        (for [geo geometriat-ilman-duplikaattityyppeja]
           (let [selitys (first (filter
                                  (fn [selitys]
                                    (= (:tyyppi selitys) (:type geo))) ; FIXME Käytä tyyppi kartalla
