@@ -266,13 +266,13 @@
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 (def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
 
-(def nayta-ikonien-selitykset? (atom true))
-
-(defn nayta-ikonien-selitykset [boolean]
-  (reset! nayta-ikonien-selitykset? boolean))
+(def ikonien-selitykset-nakyvissa-oletusarvo true)
+;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
+;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
+(def ikonien-selitykset-nakyvissa? (atom true))
 
 (defn kartan-ikonien-selitykset []
-  (if (and (not= :S @nav/kartan-koko) @nayta-ikonien-selitykset?)
+  (if (and (not= :S @nav/kartan-koko) @ikonien-selitykset-nakyvissa?)
     (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
                               {:tyyppi :silta :selitys "Silta"}
                               {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
