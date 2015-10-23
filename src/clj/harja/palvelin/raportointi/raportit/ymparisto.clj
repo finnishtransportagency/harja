@@ -38,7 +38,6 @@
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")]
 
-    (println "RAPORTTI: " (pr-str materiaalit))
     [:raportti {:otsikko "Ympäristöraportti"
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Ympäristöraportti"}
@@ -58,10 +57,8 @@
 
              [{:otsikko "Määrä yhteensä" :leveys "8%"}
               {:otsikko "Tot-%" :leveys "8%"}
-              {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]
-             ))
+              {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]))
 
-      
       (keep identity
             (mapcat (fn [[{:keys [urakka materiaali]} kuukaudet]]
                       
@@ -117,7 +114,5 @@
 
                                          [(reduce + (map (comp :maara first) (vals arvot))) "-" "-"]))))
                               (group-by :luokka luokitellut)))))
-                    
-                                              
-                    materiaalit))
-      ]]))
+                                                                  
+                    materiaalit))]]))
