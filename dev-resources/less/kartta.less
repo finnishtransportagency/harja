@@ -43,7 +43,7 @@
     }
 }
 
-.kartan-kontrollit {
+.kartan-kontrollit, .kartan-selitykset {
     position: absolute;
     z-index: 2; //kartan päällä
 }
@@ -55,9 +55,24 @@
         margin-left: 20px;
     }
 }
+
 .kartan-yleiset-kontrollit {
     left: 0;
     top: 60px;
+}
+
+.kartan-ikonien-selitykset {
+    right: 10px;
+    bottom: 10px;
+
+    .ikoni-sarake, .selitys-sarake {
+        padding: 3px;
+    }
+
+    .ikoni {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 #kartta-container {

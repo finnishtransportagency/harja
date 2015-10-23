@@ -265,7 +265,23 @@
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
   []
   (let [sisalto @kartan-yleiset-kontrollit-sisalto]
-    [:span.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+    [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+
+(defn kartan-ikonien-selitteet
+  "Ottaa vectorin mappeja, joilla on avaimina ikoni-url (linkki ikonin kuvatiedostoon) ja selitys (ikonin selitysteksti)"
+  [ikonit]
+  (let [ikonit [{:ikoni-url "images/tyokone.png" ;; TODO Hardkoodattu testidata
+                 :selitys "Hieno työkone"}
+                {:ikoni-url "images/tyokone.png"
+                 :selitys "Vielä hienompi työkone"}
+                {:ikoni-url "images/tyokone_highlight.png"
+                 :selitys "Paras työkone ikinä!"}]]
+  [:div.kartan-selitykset.kartan-ikonien-selitykset
+   [:table
+    (for [ikoni ikonit]
+      [:tr
+       [:td.ikoni-sarake [:img.ikoni {:src (:ikoni-url ikoni)}]]
+       [:td.selitys-sarake (:selitys ikoni)]])]]))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
@@ -504,4 +520,5 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
+   [kartan-ikonien-selitteet]
    [kartta-openlayers]])
