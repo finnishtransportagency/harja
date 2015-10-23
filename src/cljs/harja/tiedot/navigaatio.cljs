@@ -41,7 +41,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-kokovalinta "Kartan koko" (atom :S))
 
 (defn vaihda-kartan-koko! [uusi-koko]
+  (log "in nav/vaihda kartan koko, uusi koko: " (pr-str uusi-koko))
   (let [vanha-koko @kartan-kokovalinta]
+    (log "in nav/vaihda kartan, vanha koko: " (pr-str vanha-koko))
     (when uusi-koko
       (reset! kartan-kokovalinta uusi-koko)
       (t/julkaise! {:aihe :kartan-koko-vaihdettu

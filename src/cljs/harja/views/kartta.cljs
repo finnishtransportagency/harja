@@ -244,7 +244,9 @@
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
-        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
+        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(do
+                                                                                     (log "Näytä kartta klikattu, koko nyt:" (pr-str @nav/kartan-koko))
+                                                                                     (nav/vaihda-kartan-koko! :L))}
          "Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
