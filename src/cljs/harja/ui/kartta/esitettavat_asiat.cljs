@@ -78,8 +78,7 @@
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
      :alue {:type        :tack-icon
             :img         "kartta-hairion-hallinta-sininen.svg"
-            :coordinates (get-in tp [:sijainti :coordinates])
-            })])
+            :coordinates (get-in tp [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
