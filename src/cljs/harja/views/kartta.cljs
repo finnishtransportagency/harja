@@ -10,7 +10,7 @@
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.views.kartta.tasot :as tasot]
             [cljs.core.async :refer [timeout <! >! chan] :as async]
             [harja.asiakas.kommunikaatio :as k]
@@ -189,6 +189,7 @@
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
 (defonce nakyman-geometriat (atom {}))
+(tarkkaile! "Geo " tasot/geometriat)
 
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 (def +koko-suomi-sijainti+ [431704.1 7211111])
@@ -270,18 +271,19 @@
 (defn kartan-ikonien-selitteet
   "Ottaa vectorin mappeja, joilla on avaimina ikoni-url (linkki ikonin kuvatiedostoon) ja selitys (ikonin selitysteksti)"
   [ikonit]
-  (let [ikonit [{:ikoni-url "images/tyokone.png" ;; TODO Hardkoodattu testidata
-                 :selitys "Työkone"}
-                {:ikoni-url "images/tyokone.png"
-                 :selitys "Aurausauto"}
-                {:ikoni-url "images/tyokone_highlight.png"
-                 :selitys "Varustetoteuma"}]]
-  [:div.kartan-selitykset.kartan-ikonien-selitykset
-   [:table
-    (for [ikoni ikonit]
-      [:tr
-       [:td.ikoni-sarake [:img.ikoni {:src (:ikoni-url ikoni)}]]
-       [:td.selitys-sarake (:selitys ikoni)]])]]))
+  (if (not= :S @nav/kartan-koko)
+    (let [ikonit [{:ikoni-url "images/tyokone.png"          ;; TODO Hardkoodattu testidata
+                   :selitys   "Työkone"}
+                  {:ikoni-url "images/tyokone.png"
+                   :selitys   "Aurausauto"}
+                  {:ikoni-url "images/tyokone_highlight.png"
+                   :selitys   "Varustetoteuma"}]]
+      [:div.kartan-selitykset.kartan-ikonien-selitykset
+       [:table
+        (for [ikoni ikonit]
+          [:tr
+           [:td.ikoni-sarake [:img.ikoni {:src (:ikoni-url ikoni)}]]
+           [:td.selitys-sarake (:selitys ikoni)]])]])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
