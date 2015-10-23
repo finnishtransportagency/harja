@@ -3,8 +3,8 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "uusiId": {
-      "id": "urn:harja/virheet",
+    "id": {
+      "id": "urn:harja/id",
       "type": "string"
     },
     "virheet": {

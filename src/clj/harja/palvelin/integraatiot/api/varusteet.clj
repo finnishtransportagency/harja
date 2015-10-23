@@ -95,7 +95,7 @@
         data (assoc-in data [:varuste :tunniste] livitunniste)
         lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
-    {:uusiId      livitunniste
+    {:id      livitunniste
      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)}))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
