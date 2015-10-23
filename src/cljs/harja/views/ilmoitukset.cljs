@@ -194,6 +194,7 @@
          {:nimi        :hakuehto :otsikko "Hakusana"
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
+          :pituus-max  64
           :leveys-col  6}
 
          (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat" :leveys-col 6}
