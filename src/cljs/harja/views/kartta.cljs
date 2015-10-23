@@ -299,7 +299,7 @@
                  [:tr
                   [:td.ikoni-sarake [:img.ikoni {:src (get-in geo [:alue :img])}]]
                   [:td.selitys-sarake (:selitys selitys)]]
-                 (log "Geometrialle tyypillä " (pr-str (:type geo)) " ei löydy selitystä"))))]
+                 (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
           [:div.sulje-selitykset.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki false))} "Sulje"]]
          [:span.avaa-selitykset.livicon-question-circle.klikattava {:on-click (fn [] (reset! ikonien-selitykset-auki true))}])])))
 
