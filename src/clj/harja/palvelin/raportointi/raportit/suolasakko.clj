@@ -21,7 +21,6 @@
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
                     (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille parametrit))]
-    (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
 
@@ -35,7 +34,6 @@
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
                     (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille parametrit))]
-    (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
 (defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
@@ -47,7 +45,6 @@
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
                     (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
         raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille parametrit))]
-    (log/debug (str "Raporttidata saatu: " (pr-str raportin-tiedot)))
     raportin-tiedot))
 
 (defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm hallintayksikko-id] :as parametrit}]
