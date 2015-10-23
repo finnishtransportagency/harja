@@ -481,6 +481,12 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
+(defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style.
+                 #js {:image (ol.style.Icon.
+                               #js {:src })}))))
+
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
