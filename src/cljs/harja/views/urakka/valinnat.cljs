@@ -6,13 +6,22 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]))
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
 
 (defn urakan-hoitokausi [ur]
-  (valinnat/urakan-hoitokausi ur (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!))
+  (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
+
+(defn kontekstin-hoitokaudet [urakat]
+  (valinnat/kontekstin-hoitokaudet
+    (if @nav/valittu-hallintayksikko
+      (u/urakoiden-hoitokaudet urakat 5)
+      (u/edelliset-hoitokaudet 5))
+    u/valittu-kontekstin-hoitokausi
+    u/valitse-kontekstin-hoitokausi!))
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
@@ -44,7 +53,7 @@
   (valinnat/urakan-sopimus-ja-hoitokausi
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
-    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!))
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
 
 (defn urakan-sopimus-ja-toimenpide [ur]
   (valinnat/urakan-sopimus-ja-toimenpide
@@ -56,14 +65,14 @@
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
-    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
    ur
    u/valittu-sopimusnumero u/valitse-sopimusnumero!
-   (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+   u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
    (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
                         [{:tpi_nimi "Muut"}]))
            identity)
@@ -72,19 +81,19 @@
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (valinnat/urakan-hoitokausi-ja-toimenpide
     ur
-    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-hoitokausi-ja-aikavali [ur]
   (valinnat/urakan-hoitokausi-ja-aikavali
     ur
-    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
     u/valittu-aikavali))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
     ur
     u/valittu-sopimusnumero u/valitse-sopimusnumero!
-    (u/hoitokaudet ur) u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
     u/valittu-aikavali
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))

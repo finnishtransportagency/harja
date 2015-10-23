@@ -51,7 +51,10 @@
                                            (s/optional-key :tieosoiteverkon-alk-tuontikohde)        s/Str
                                            (s/optional-key :soratien-hoitoluokkien-shapefile)       s/Str
                                            (s/optional-key :soratien-hoitoluokkien-alk-osoite)      s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde) s/Str}
+                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde) s/Str
+                                           (s/optional-key :pohjavesialueen-shapefile)              s/Str
+                                           (s/optional-key :pohjavesialueen-alk-osoite)             s/Str
+                                           (s/optional-key :pohjavesialueen-alk-tuontikohde)        s/Str}
    })
 
 (def oletusasetukset

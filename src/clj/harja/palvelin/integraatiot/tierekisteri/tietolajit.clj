@@ -8,7 +8,7 @@
 (defn hae-tietolajit [integraatioloki url tunniste muutospvm]
   (log/debug "Hae tietolajin: " tunniste " ominaisuudet muutospäivämäärällä: " muutospvm " Tierekisteristä")
   (let [kutsudata (kutsusanoma/muodosta-kutsu tunniste muutospvm)
-        palvelu-url (str url "/haetietolajit")
+        palvelu-url (str url "/haetietolaji")
         otsikot {"Content-Type" "text/xml; charset=utf-8"}
         vastausdata (http/laheta-post-kutsu
                       integraatioloki

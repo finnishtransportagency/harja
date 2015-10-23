@@ -9,6 +9,15 @@
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn aseta-tunniste-arvoihin [tiedot]
+  (assoc-in tiedot
+            [:tietue :tietolaji :arvot]
+            (.replaceAll
+              (get-in tiedot [:tietue :tietolaji :arvot] )
+              "----livitunniste----"
+              (get-in tiedot [:tietue :tunniste] ))))
+
+
 (defn hae-tietue [integraatioloki url id tietolaji]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [kutsudata (haku-kutsusanoma/muodosta-kutsu id tietolaji)
@@ -33,7 +42,8 @@
 
 (defn lisaa-tietue [integraatioloki url tiedot]
   (log/debug "Lisätään tietue")
-  (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
+  (let [tiedot (aseta-tunniste-arvoihin tiedot)
+        kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
         palvelu-url (str url "/lisaatietue")
         otsikot {"Content-Type" "text/xml"}
         vastausdata (http/laheta-post-kutsu

@@ -332,6 +332,7 @@
 
 (def muut-tyot-xf
   (comp
+    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
     muut-tyot-rahasumma-xf
     muut-tyot-maara-xf
     (map konv/alaviiva->rakenne)
@@ -340,9 +341,12 @@
 (defn hae-urakan-muut-tyot [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        muut-tyot-xf
-        (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
+  (konv/sarakkeet-vektoriin
+    (into []
+          muut-tyot-xf
+          (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+    {:reittipiste :reittipisteet}
+    #(get-in % [:toteuma :id])))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
