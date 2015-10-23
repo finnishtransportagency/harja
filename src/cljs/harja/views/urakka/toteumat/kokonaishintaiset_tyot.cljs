@@ -13,7 +13,6 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.urakka :as urakan-tiedot]
             [harja.ui.komponentti :as komponentti]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -21,9 +20,6 @@
 
 (defn tee-taulukko []
   (let [toteumat @tiedot/haetut-toteumat]
-    ;; todo: poista
-    (log "----------------------- toteumat: " (pr-str toteumat))
-
     [:span
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"

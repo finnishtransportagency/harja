@@ -221,16 +221,6 @@
 (defn valitse-kokonaishintainen-tehtava! [tpi]
   (reset! valittu-kokonaishintainen-tehtava tpi))
 
-;; todo: poista
-(tarkkaile! "---- urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat: " urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat)
-
-;; todo: poista
-(tarkkaile! "---- valittu-kokonaishintainen-toimenpide: " valittu-kokonaishintainen-toimenpide)
-
-;; todo: poista
-(tarkkaile! "---- valittu-kokonaishintainen-tehtava: " valittu-kokonaishintainen-tehtava)
-
-
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
                       nakymassa? (or

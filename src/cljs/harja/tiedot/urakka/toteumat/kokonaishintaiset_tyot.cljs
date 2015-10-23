@@ -33,14 +33,8 @@
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (log "------- Haettava toimenpide: " (pr-str toimenpide))
-             (log "------- Haettava tehtävä: " (pr-str tehtava))
-
              (hae-toteumat urakka-id sopimus-id
                            (or kuukausi
                                hoitokausi)
                            toimenpide
                            tehtava))))
-
-;; todo: poista
-(tarkkaile! "---- TOTEUMAT: " haetut-toteumat)
