@@ -12,8 +12,6 @@
             [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
-
-
 (defn tallenna-liite [liitteet req]
   (let [parametrit (:params req)
         liite (get parametrit "liite")

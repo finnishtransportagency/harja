@@ -159,18 +159,22 @@
      (fn []
        (lopeta-pollaus))}
     (fn []
-      [:div
-       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat]
+      (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
+            maksuerarivit @maksuerarivit
+            maksuerarivit-ilman-otsikkoja  (filter (fn [rivi]
+                                             (not (contains? rivi :teksti)))
+                                           maksuerarivit)]
+        [:div
          [grid/grid
           {:otsikko  "Maksuerät"
            :tyhja    "Ei maksueriä."
            :tallenna nil
            :tunniste :numero}
-          [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "10%" :pituus 16
+          [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
             :hae     (fn [rivi] (:numero rivi))}
            {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16
             :hae     (fn [rivi] (:nimi (:maksuera rivi)))}
-           {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "18%"
+           {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "16%"
             :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
            {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16
             :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:maksuera rivi)))}
@@ -184,8 +188,16 @@
                              [:button.nappi-ensisijainen.nappi-grid {:class    (str "nappi-ensisijainen " (if (contains? kuittausta-odottavat maksueranumero) "disabled"))
                                                        :type     "button"
                                                        :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
-            :leveys      "7%"}]
-          @maksuerarivit])
-       [:button.nappi-ensisijainen {:class    (if (= (count @kuittausta-odottavat-maksuerat) (count @maksuerarivit)) "disabled" "")
+            :leveys      "10%"}]
+          maksuerarivit]
+       [:button.nappi-ensisijainen {:class    (if (= (count kuittausta-odottavat)
+                                                     (count maksuerarivit-ilman-otsikkoja))
+                                                "disabled"
+                                                "")
                                     :on-click #(do (.preventDefault %)
-                                                   (laheta-maksuerat (into #{} (mapv (fn [rivi] (:numero rivi)) @maksuerarivit))))} "Lähetä kaikki"]])))
+                                                   (laheta-maksuerat
+                                                     (into #{}
+                                                           (map
+                                                             (fn [rivi]
+                                                               (:numero rivi))
+                                                             maksuerarivit-ilman-otsikkoja))))} "Lähetä kaikki"]]))))

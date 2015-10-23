@@ -1,6 +1,7 @@
 <ilmoitus>
     <viestiId>14324234</viestiId>
     <ilmoitusId>3213123</ilmoitusId>
+    <versionumero>1</versionumero>
     <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
     <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
     <urakkatyyppi>hoito</urakkatyyppi>
@@ -8,8 +9,8 @@
     <yhteydenottopyynto>false</yhteydenottopyynto>
     <sijainti>
         <tienumero>4</tienumero>
-        <x>41.40338</x>
-        <y>2.17403</y>
+        <x>4140338</x>
+        <y>217403</y>
     </sijainti>
     <ilmoittaja>
         <etunimi>Matti</etunimi>

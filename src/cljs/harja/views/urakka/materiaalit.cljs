@@ -47,8 +47,7 @@
                                  (reset! nav/kartan-koko :S))
                              (do (reset! karttavalinta? true)
                                  (reset! nav/kartan-koko :M))))
-        g (grid/grid-ohjaus)
-        ]
+        g (grid/grid-ohjaus)]
     
     (komp/luo 
      (komp/kuuntelija

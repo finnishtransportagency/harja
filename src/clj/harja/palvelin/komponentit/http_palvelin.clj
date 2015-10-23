@@ -128,13 +128,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
   :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
                       ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa 
-                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
-")
+                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
 
   (poista-palvelu [this nimi]
-    "Poistaa nimetyn palvelun käsittelijän.")
-
-  )
+    "Poistaa nimetyn palvelun käsittelijän."))
 
 (defn- arityt
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
@@ -159,9 +156,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
       (swap! lopetus-fn
              (constantly
               (http/run-server (fn [req]
-                                 (reitita (todennus/todenna-pyynto todennus req)
-                                          (conj (mapv :fn @kasittelijat)
-                                                resurssit)))
+                                 (try+
+                                   (reitita (todennus/todenna-pyynto todennus req)
+                                            (conj (mapv :fn @kasittelijat)
+                                                  resurssit))
+                                   (catch [:virhe :todennusvirhe] _
+                                     {:status 403 :body "Todennusvirhe"})))
                                {:port portti
                                 :thread 64})))
       this))
