@@ -583,8 +583,11 @@ WHERE
   AND t.paattynyt <= :paattynyt
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
-  AND (:toimenpide::integer IS NULL OR tk.emo = :toimenpide)
-  AND (:tehtava::integer IS NULL OR tk.id = :tehtava)
+  AND (:toimenpide :: INTEGER IS NULL OR
+       tk.emo = (SELECT toimenpide
+                 FROM toimenpideinstanssi
+                 WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 ORDER BY t.alkanut
 LIMIT 501;
 
