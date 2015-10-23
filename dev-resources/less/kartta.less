@@ -43,7 +43,7 @@
     }
 }
 
-.kartan-kontrollit {
+.kartan-kontrollit, .kartan-selitykset {
     position: absolute;
     z-index: 2; //kartan päällä
 }
@@ -55,9 +55,38 @@
         margin-left: 20px;
     }
 }
+
 .kartan-yleiset-kontrollit {
     left: 0;
     top: 60px;
+}
+
+.kartan-ikonien-selitykset {
+    right: 5px;
+    bottom: 5px;
+    font-size: 0.8em;
+    background-color: @harmaa10;
+    border: 1px solid @harmaa6;
+    padding: 2px;
+}
+
+.kartan-ikonien-selitykset-ikoni-sarake, .kartan-ikonien-selitykset-selitys-sarake {
+    padding: 3px;
+}
+
+.kartan-ikonien-selitykset-ikoni {
+    height: 24px;
+}
+
+.kartan-ikonien-selitykset-avaa {
+    font-size: 20px;
+    color: @sininen3;
+}
+
+.kartan-ikonien-selitykset-sulje {
+    text-align: right;
+    padding-right: 5px;
+    color: @sininen3;
 }
 
 #kartta-container {

@@ -389,8 +389,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +korostuksen-kesto+ 4000)
 
 (defn taulukko2
-  "Otsikoille ja arvoille annettavien luokkien tulee noudattaa Bootstrap-sarakkeille annettavien luokkien kaavaa.
-  "
+  "Otsikoille ja arvoille annettavien luokkien tulee noudattaa Bootstrap-sarakkeille annettavien luokkien kaavaa."
   [otsikko-class arvo-class otsikko-max-pituus arvo-max-pituus & otsikot-ja-arvot]
   [:span
    (keep-indexed (fn [i [otsikko arvo]]

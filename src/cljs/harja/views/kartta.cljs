@@ -10,7 +10,7 @@
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.views.kartta.tasot :as tasot]
             [cljs.core.async :refer [timeout <! >! chan] :as async]
             [harja.asiakas.kommunikaatio :as k]
@@ -257,15 +257,62 @@
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
-(def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
-(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
-
-
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
   []
   (let [sisalto @kartan-yleiset-kontrollit-sisalto]
-    [:span.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+    [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
+
+(def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
+(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
+
+(def ikonien-selitykset-nakyvissa-oletusarvo true)
+;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
+;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
+(def ikonien-selitykset-nakyvissa? (atom true))
+(def ikonien-selitykset-auki (atom false))
+
+(defn kartan-ikonien-selitykset []
+  (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
+                            {:tyyppi :silta :selitys "Silta"}
+                            {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
+        esitettavat-tyypit (remove nil? (keys (group-by :tyyppi-kartalla @tasot/geometriat)))
+        geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
+                                                     (first
+                                                       (filter (fn [geo]
+                                                                 (= (:tyyppi-kartalla geo) tyyppi))
+                                                               @tasot/geometriat)))
+                                                   esitettavat-tyypit)
+        _ (log "Geo: " (pr-str esitettavat-tyypit))]
+  (if (and (not= :S @nav/kartan-koko)
+           (some true? (map
+                         (fn [selitys geo]
+                           (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
+                         ikonien-selitykset geometriat-ilman-duplikaattityyppeja))
+           @ikonien-selitykset-nakyvissa?)
+      [:div.kartan-selitykset.kartan-ikonien-selitykset
+       (if @ikonien-selitykset-auki
+         [:div
+          [:table
+           (for [geo geometriat-ilman-duplikaattityyppeja]
+             (let [selitys (first (filter
+                                    (fn [selitys]
+                                      (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
+                                    ikonien-selitykset))]
+               (if selitys
+                 ^{:key (:tyyppi selitys)}
+                 [:tr
+                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (get-in geo [:alue :img])}]]
+                  [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
+                 (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
+          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
+                                                                        (reset! ikonien-selitykset-auki false)
+                                                                        (.stopPropagation event)
+                                                                        (.preventDefault event))} "Sulje"]]
+         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
+                                                                                               (reset! ikonien-selitykset-auki true)
+                                                                                               (.stopPropagation event)
+                                                                                               (.preventDefault event))}])])))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
@@ -436,7 +483,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                     :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
                                           (t/julkaise! (assoc item :aihe :urakka-klikattu)))
                                     (do (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))
-                                        (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu"))))
 
                                         ;; Estetään zoomaaminen kun tuplaklikillä valitaan geometria
                                         (.stopPropagation event)
@@ -504,4 +550,5 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
+   [kartan-ikonien-selitykset]
    [kartta-openlayers]])
