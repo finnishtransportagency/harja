@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.livitunnisteet :as livitunnisteet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn heita-virheelliset-parametrit-poikkeus [selite]
@@ -64,7 +65,7 @@
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
-(defn hae-tietueet [tierekisteri parametrit kayttaja]
+(defn hae-varusteet [tierekisteri parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
@@ -73,34 +74,41 @@
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
-      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
+      (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
 
-(defn hae-tietue [tierekisteri parametrit kayttaja]
+(defn hae-varuste [tierekisteri parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
-      (if (> (count (:varusteet muunnettu-vastausdata)) 1)
-        muunnettu-vastausdata {}))))
+      (if (> (count (:varusteet muunnettu-vastausdata)) 0)
+        muunnettu-vastausdata
+        {}))))
 
-(defn lisaa-tietue [tierekisteri data kayttaja]
-  (log/debug "Lisätään tietue käyttäjän " kayttaja " pyynnöstä.")
-  (let [lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
-    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)))
+(defn lisaa-varuste [tierekisteri db data kayttaja]
+  (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")
+  (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
+        data (assoc-in data [:varuste :tunniste] livitunniste)
+        lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
+    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
+    {:id      livitunniste
+     :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)}))
 
-(defn paivita-tietue [tierekisteri data kayttaja]
-  (log/debug "Päivitetään tietue käyttäjän " kayttaja " pyynnöstä.")
+(defn paivita-varuste [tierekisteri data kayttaja]
+  (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma data)]
-    (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue)))
+    (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
+  {:ilmoitukset "Varuste päivitetty onnistuneesti"})
 
-(defn poista-tietue [tierekisteri data kayttaja]
-  (log/debug "Poistetaan tietue käyttäjän " kayttaja " pyynnöstä.")
+(defn poista-varuste [tierekisteri data kayttaja]
+  (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma data)]
-    (tierekisteri/poista-tietue tierekisteri poistettava-tietue)))
+    (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
+  {:ilmoitukset "Varuste poistettu onnistuneesti"})
 
 (defrecord Varusteet []
   component/Lifecycle
@@ -117,35 +125,35 @@
       (GET "/api/varusteet/varusteet" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
                          (fn [parametrit _ kayttaja _]
-                           (hae-tietueet tierekisteri parametrit kayttaja)))))
+                           (hae-varusteet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu db integraatioloki :hae-tietue request nil json-skeemat/+varusteen-haku-vastaus+
                          (fn [parametrit _ kayttaja _]
-                           (hae-tietue tierekisteri parametrit kayttaja)))))
+                           (hae-varuste tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :lisaa-tietue request json-skeemat/+varusteen-lisays+ nil
+        (kasittele-kutsu db integraatioloki :lisaa-tietue request json-skeemat/+varusteen-lisays+ json-skeemat/+kirjausvastaus+
                          (fn [_ data kayttaja _]
-                           (lisaa-tietue tierekisteri data kayttaja)))))
+                           (lisaa-varuste tierekisteri db data kayttaja)))))
 
     (julkaise-reitti
       http :paivita-tietue
       (PUT "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :paivita-tietue request json-skeemat/+varusteen-paivitys+ nil
+        (kasittele-kutsu db integraatioloki :paivita-tietue request json-skeemat/+varusteen-paivitys+ json-skeemat/+kirjausvastaus+
                          (fn [_ data kayttaja _]
-                           (paivita-tietue tierekisteri data kayttaja)))))
+                           (paivita-varuste tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :poista-tietue request json-skeemat/+varusteen-poisto+ nil
+        (kasittele-kutsu db integraatioloki :poista-tietue request json-skeemat/+varusteen-poisto+ json-skeemat/+kirjausvastaus+
                          (fn [_ data kayttaja _]
-                           (poista-tietue tierekisteri data kayttaja)))))
+                           (poista-varuste tierekisteri data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

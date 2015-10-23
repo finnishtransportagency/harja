@@ -40,7 +40,7 @@
   (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietolaji-response.xml"
         validi-kutsu "/api/varusteet/tietolaji?tunniste=tl506"
         virheellinen-kutsu "/api/varusteet/tietolaji"
-        tierekisteri-resurssi "/haetietolajit"
+        tierekisteri-resurssi "/haetietolaji"
         oletettu-vastaus "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
@@ -79,7 +79,8 @@
       [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml
        (str "http://localhost:" portti kutsu) :allow]
       (let [vastaus (api-tyokalut/post-kutsu [kutsu] kayttaja portti kutsu-data)]
-        (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")))))
+        (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
+        (is (.contains (:body vastaus) "Uusi varuste lisätty onnistuneesti tunnisteella:"))))))
 
 (deftest tarkista-tietueen-paivittaminen
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))
