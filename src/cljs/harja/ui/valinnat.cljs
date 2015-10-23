@@ -31,7 +31,7 @@
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
                          }
-    hoitokaudet]])
+    @hoitokaudet]])
 
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
@@ -68,8 +68,7 @@
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
                (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))
-               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
-    ]])
+               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])
 
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
