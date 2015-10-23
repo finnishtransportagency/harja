@@ -327,8 +327,8 @@
 
                  ::invalidate-size
                  (do
-                     (.updateSize ol3)
-                     (.render ol3))
+                   (.updateSize ol3)
+                   (.render ol3))
 
                  ::hide-popup
                  (poista-popup! this)
@@ -481,21 +481,30 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
-(defmethod luo-feature :tack-icon [{:keys [coordinates img]}])
+(defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (clj->js [(ol.style.Style.
+                           #js {:image  (ol.style.Icon.
+                                          #js {:src      (str "images/karttaikonit/" pohja)
+                                               :rotation (or rotation 0)
+                                               :anchor   (if anchor
+                                                           (clj->js anchor)
+                                                           #js [0.5 0.5])})
+                                :zIndex 4})
+
+                         (ol.style.Style.
+                           #js {:image  (ol.style.Icon.
+                                          #js {:src    (str "images/karttaikonit/" img)
+                                               :anchor (if anchor
+                                                         (clj->js anchor)
+                                                         #js [0.5 0.5])})
+                                :zIndex 5})]))))
+
+(defmethod luo-feature :tack-icon [{:keys [coordinates img]}]
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img 0 [0.5 1]))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle [(ol.style.Style.
-                 #js {:image (ol.style.Icon.
-                               #js {:src "images/karttaikonit/kartta-suuntanuoli-sininen.svg"
-                                    :rotation (or direction 0)})
-                      :zIndex 4})
-
-                (ol.style.Style.
-                  #js {:image  (ol.style.Icon.
-                                 #js {:src      (str "images/karttaikonit/" img)
-                                      :rotation (or direction 0)})
-                       :zIndex 4})])))
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -572,7 +581,7 @@
                               (.addFeature features new-shape)
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when (not (or (= :arrow-line (:type geom)) (= :icon (:type geom))))
+                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :sticker-icon})
                                 (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
