@@ -257,18 +257,22 @@
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
-(def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
-(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
-
-
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
   []
   (let [sisalto @kartan-yleiset-kontrollit-sisalto]
     [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
 
+(def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
+(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
+
+(def nayta-ikonien-selitykset? (atom true))
+
+(defn nayta-ikonien-selitykset [boolean]
+  (reset! nayta-ikonien-selitykset? boolean))
+
 (defn kartan-ikonien-selitteet []
-  (if (not= :S @nav/kartan-koko)
+  (if (and (not= :S @nav/kartan-koko) @nayta-ikonien-selitykset?)
     (let [ikonien-selitykset [{:tyyppi  :tarkastus
                                :selitys "Tarkastus"}]
           esitettavat-tyypit (keys (group-by :type @tasot/geometriat))
