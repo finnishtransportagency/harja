@@ -12,7 +12,8 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]
-            [harja.palvelin.raportointi.raportit.suolasakko]))
+            [harja.palvelin.raportointi.raportit.suolasakko]
+            [harja.palvelin.raportointi.raportit.ymparisto]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
