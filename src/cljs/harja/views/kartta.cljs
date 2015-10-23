@@ -282,8 +282,7 @@
                                                        (filter (fn [geo]
                                                                  (= (:tyyppi-kartalla geo) tyyppi))
                                                                @tasot/geometriat)))
-                                                   esitettavat-tyypit)
-        _ (log "Geo: " (pr-str esitettavat-tyypit))]
+                                                   esitettavat-tyypit)]
   (if (and (not= :S @nav/kartan-koko)
            (some
              (fn [asia]
