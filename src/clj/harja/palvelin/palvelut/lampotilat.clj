@@ -113,6 +113,12 @@
                               (tallenna-lampotilat! db user lampotila))
                             (hae-urakan-suolasakot-ja-lampotilat db user (:urakka tiedot))))
 
+(defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
+  (roolit/vaadi-urakanvalvoja user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (q/aseta-suolasakon-kaytto! db kaytossa? urakka-id)
+    (:kaytossa (first (q/onko-suolasakko-kaytossa? db urakka-id)))))
+
 (defrecord Lampotilat [ilmatieteenlaitos-url]
   component/Lifecycle
   (start [this]
@@ -129,6 +135,9 @@
       (julkaise-palvelu http :tallenna-suolasakko-ja-lampotilat
                         (fn [user tiedot]
                           (tallenna-suolasakko-ja-lampotilat (:db this) user tiedot)))
+      (julkaise-palvelu http :aseta-suolasakon-kaytto
+                        (fn [user tiedot]
+                          (aseta-suolasakon-kaytto (:db this) user tiedot)))
       this))
 
   (stop [this]
@@ -136,5 +145,6 @@
                      :tallenna-lampotilat!
                      :hae-lampotilat-ilmatieteenlaitokselta
                      :hae-urakan-suolasakot-ja-lampotilat
-                     :tallenna-suolasakko-ja-lampotilat)
+                     :tallenna-suolasakko-ja-lampotilat
+                     :aseta-suolasakon-kaytto)
     this))

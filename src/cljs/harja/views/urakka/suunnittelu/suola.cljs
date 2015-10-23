@@ -2,7 +2,7 @@
   "Urakan suolan käytön suunnittelu"
   (:require [reagent.core :refer [atom wrap]]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.tiedot.urakka.lampotilat :as lampotilat]
+            [harja.tiedot.urakka.suola :as suola]
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.domain.roolit :as roolit]
@@ -33,7 +33,12 @@
          (reaction<! [ur @nav/valittu-urakka
                       nakymassa? @suolasakot-nakyvissa?]
                      (when (and ur nakymassa?)
-                       (lampotilat/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
+                       (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
+
+(defonce suolasakko-kaytossa?
+  (reaction (let [ss @suolasakot-ja-lampotilat]
+              (or (empty? ss)
+                  (some :kaytossa ss)))))
 
 (defn tallenna-suolasakko-ja-lampotilat
   [tiedot]
@@ -80,7 +85,9 @@
                                       :kun-onnistuu #(do
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [{:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
+          [
+
+           {:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
             :valinta-nayta #(if (nil? %) yleiset/+valitse-kuukausi+ (second %))
@@ -117,8 +124,16 @@
   (komp/luo
     (komp/lippu suolasakot-nakyvissa?)
     (fn []
-      (let [ur @nav/valittu-urakka]
+      (let [ur @nav/valittu-urakka
+            kaytossa? @suolasakko-kaytossa?]
         [:span.suolasakot
-         [valinnat/urakan-hoitokausi ur]
-         (when @u/valittu-hoitokausi
-           [lampotila-lomake])]))))
+         [yleiset/raksiboksi "Suolasakko käytössä" kaytossa?
+          #(go (reset! suolasakko-kaytossa?
+                       (<! (suola/aseta-suolasakon-kaytto (:id ur)
+                                                          (not kaytossa?)))))
+          nil false]
+         (when @suolasakko-kaytossa?
+           [:span
+            [valinnat/urakan-hoitokausi ur]
+            (when @u/valittu-hoitokausi
+              [lampotila-lomake])])]))))

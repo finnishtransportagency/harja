@@ -164,6 +164,14 @@ rooleista."
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
+#?(:clj
+   (defn vaadi-urakanvalvoja
+     [kayttaja urakka-id]
+     (when-not (rooli-urakassa? kayttaja urakanvalvoja urakka-id)
+       (let [viesti (format "Käyttäjä '%1$s' ei ole urakanvalvoja urakassa %2$s", (:kayttajanimi kayttaja) urakka-id)]
+         (backlog/warn viesti)
+         (throw+ (->EiOikeutta viesti))))))
+
 (defn osapuoli
      "Päättelee kuka osapuoli on kyseessä roolien perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
