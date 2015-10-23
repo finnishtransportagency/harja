@@ -276,7 +276,7 @@
   (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
                             {:tyyppi :silta :selitys "Silta"}
                             {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
-        esitettavat-tyypit (keys (group-by :tyyppi-kartalla @tasot/geometriat))
+        esitettavat-tyypit (remove nil? (keys (group-by :tyyppi-kartalla @tasot/geometriat)))
         geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
                                                      (first
                                                        (filter (fn [geo]
