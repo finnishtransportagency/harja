@@ -10,7 +10,6 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
-  (log (str "parametrit: " urakka-id sopimus-id alkupvm loppupvm))
   (k/post! :urakan-kokonaishintaisten-toteumien-tehtavat
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
@@ -33,8 +32,4 @@
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (hae-toteumat urakka-id sopimus-id
-                           (or kuukausi
-                               hoitokausi)
-                           toimenpide
-                           tehtava))))
+             (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))

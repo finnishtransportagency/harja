@@ -100,9 +100,7 @@
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-toimenpideinstanssi-atom
                           ;;\u2014 on väliviivan unikoodi
-                          :format-fn  #(do
-                                        (log "-------- nykyinen toimenpide:" (str (second (first %))))
-                                        (if % (str (second (first %))) "Kaikki toimenpiteet"))
+                          :format-fn  #(if % (str (second (first %))) "Kaikki toimenpiteet")
                           :valitse-fn #(do
                                         (valitse-kokonaishintainen-tehtava-fn nil)
                                         (valitse-kokonaishintainen-toimenpide-fn %))}
@@ -112,9 +110,7 @@
     [:span.alasvedon-otsikko "Tehtävä"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
                           ;;\u2014 on väliviivan unikoodi
-                          :format-fn  #(do
-                                        (log "-------- nykyinen toimenpide:" (str (:t4_nimi %)))
-                                        (if % (str (:t4_nimi %)) "Kaikki tehtävät"))
+                          :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
      (concat [nil] (second @valittu-kokonaishintainen-toimenpideinstanssi-atom))]]])
 
