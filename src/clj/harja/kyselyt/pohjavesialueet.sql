@@ -6,14 +6,9 @@ SELECT id, nimi, alue, tunnus
 
 -- name: hae-urakan-pohjavesialueet
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet
-SELECT id, nimi, alue, tunnus
-  FROM pohjavesialueet_hallintayksikoittain p
- WHERE ST_CONTAINS((SELECT au.alue 
-                      FROM urakka u
-		           JOIN hanke h ON u.hanke = h.id
-			   JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
-		     WHERE u.id = :urakka),
-	            p.alue);
+SELECT nimi, tunnus, alue 
+  FROM pohjavesialueet_urakoittain 
+ WHERE urakka = :urakka;
 		    
 
 -- name: tuhoa-pohjavesialuedata!
