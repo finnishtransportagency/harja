@@ -11,16 +11,9 @@
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
 
 
-
-(def kartan-edellinen-koko (atom nil))
-
 (defn laadunseuranta []
   (let [ur @nav/valittu-urakka]
     (komp/luo
-      (komp/sisaan-ulos #(do
-                          (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
-                          (nav/vaihda-kartan-koko! :M))
-                        #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
       (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
       (fn []
         [bs/tabs

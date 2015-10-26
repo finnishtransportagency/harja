@@ -534,7 +534,6 @@
                                          (aget 0)
                                          yleiset/sijainti-sailiossa)
                              [x y w h] sij]
-                         (log "lomake? " (pr-str lomake?) " SIJAINTI: " (pr-str sij))
                          (when x
                            ;; PENDIN: kovakoodattua asemointia!
                            (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39))
