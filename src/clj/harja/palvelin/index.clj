@@ -18,6 +18,7 @@
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"
         "window.anti_csrf_token=\"" *anti-forgery-token* "\";"]]
       [:body {:onload "harja.asiakas.main.harja()"}
+       [:div#anti-csrf-token {:style "display: none;"} *anti-forgery-token*]
        [:div#app]
        [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
        [:script {:src "js/harja.js" :type "text/javascript"}]
@@ -38,4 +39,5 @@
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"
         "window.anti_csrf_token=\"" *anti-forgery-token* "\";"]]
       [:body {:onload "harja.asiakas.main.harja()"}
+       [:div#anti-csrf-token {:style "display: none;"} *anti-forgery-token*]
        [:div#app]]])))
