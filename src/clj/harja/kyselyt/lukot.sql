@@ -1,6 +1,6 @@
--- name: yrita-asetaa-lukko
-SELECT pg_try_advisory_lock(:lukko-id);
+-- name: aseta-lukko
+SELECT aseta_lukko(:tunniste, :lukko, :aikaraja);
 
--- name: vapauta-lukkovapauta
-SELECT pg_advisory_unlock(:lukko-id);
+-- name: avaa-lukko
+SELECT avaa_lukko(:tunniste);
 
